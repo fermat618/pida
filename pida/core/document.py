@@ -133,9 +133,6 @@ class document(object):
             self.markup_attributes = markup_attributes
         if markup_string is not None:
             self.markup_string = markup_string
-        base.pidacomponent.__init__(self)
-                     
-    def init(self):
         self.__reset()
 
     def __reset(self):
