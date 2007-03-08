@@ -26,12 +26,6 @@ class Service(object):
             singletons=(IOptions,)
         )
 
-    def _register_events_config(self, config_cls):
-        self.reg.register_plugin(
-            instance = config_cls(self),
-            singletons=(IEvents,)
-        )
-
     # Public Options API
     def get_options(self):
         return self.reg.get_singleton(IOptions)
@@ -41,6 +35,16 @@ class Service(object):
 
     def opt(self, name):
         return self.get_option(name).value
+
+    ##########
+    # Events
+
+    # Private Events API
+    def _register_events_config(self, config_cls):
+        self.reg.register_plugin(
+            instance = config_cls(self),
+            singletons=(IEvents,)
+        )
 
     # Public Events API
     def get_events(self):
