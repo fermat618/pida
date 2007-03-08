@@ -3,7 +3,7 @@
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 
 
-import pida.core.event as event
+from pida.core.events import Event
 import unittest
 
 class MockCallback(object):
@@ -20,13 +20,13 @@ class MockCallback(object):
         return True
 
 def c():
-    return event.event(), MockCallback()
+    return Event(), MockCallback()
 
 
 class EventTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.e = event.event()
+        self.e = Event()
         self.__dummycount = 0
         self.__dummyargs = []
         self.__dummykw = {}

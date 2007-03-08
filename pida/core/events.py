@@ -21,10 +21,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import base
 import time
 
-class event(base.pidacomponent):
+class Event(object):
 
     """
     An event dispatcher is the central events object. To use it you must first
@@ -44,7 +43,7 @@ class event(base.pidacomponent):
     riiing
     >>> 
     """
-    def init (self):
+    def __init__(self):
         self.__events = {}
         
     def create_event (self, event_name):
