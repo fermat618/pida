@@ -94,7 +94,7 @@ def relpath(target, basepath=os.curdir):
 new_file_index = 1
 
 
-class document(base.pidacomponent):
+class document(object):
     """Base document class."""
     """A real file on disk."""
     icon_name = 'new'

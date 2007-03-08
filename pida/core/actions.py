@@ -25,7 +25,6 @@
 import gtk
 
 # pida core import(s)
-import base
 import string
 
 
@@ -240,7 +239,7 @@ def action(**kwargs):
         return meth
     return wrapper
 
-class action_handler(base.pidacomponent):
+class action_handler(object):
 
     type_name = 'action-handler'
 
