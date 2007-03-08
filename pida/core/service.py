@@ -3,7 +3,9 @@ from pida.core.interfaces import IOptionsConfig
 from pida.core.plugins import Registry
 from pida.core.options import OptionsConfig
 
+
 class Service(object):
+    """Base Service Class"""
 
     options_config = OptionsConfig
 
