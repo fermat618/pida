@@ -23,14 +23,16 @@
 
 import time
 
+from base import BaseConfig
+
 class Event(object):
 
     """
-    An event dispatcher is the central events object. To use it you must first
-    create an event with the ``create_event`` method, this will return an
-    event source which is basically the function you'll use to trigger the
-    event. After that you register the callbacks. Its usage follows:
-    
+    An event dispatcher is the central events object. To use it you must
+    first create an event with the ``create_event`` method, this will return
+    an event source which is basically the function you'll use to trigger
+    the event. After that you register the callbacks. Its usage follows:
+
     >>> dispatcher = EventDispatcher()
     >>> evt_src = dispatcher.create_event ("on-ring-event")
     >>> 
@@ -45,14 +47,14 @@ class Event(object):
     """
     def __init__(self):
         self.__events = {}
-        
+
     def create_event (self, event_name):
         self.__events[event_name] = []
         def event_source (*args, **kwargs):
             for callback in self.__events[event_name]:
                 callback(*args, **kwargs)
         return event_source
-    
+
     def create_events (self, event_names, event_sources = None):
         """
         This is a utility method that creates or fills a dict-like object
@@ -65,10 +67,10 @@ class Event(object):
         for evt_name in event_names:
             event_sources[evt_name] = self.create_event(evt_name)
         return event_sources
-    
+
     def has_event(self, event_name):
         return event_name in self.__events
-    
+
     def register (self, event_name, callback):
         assert self.has_event(event_name)
         self.__events[event_name].append(callback)
@@ -105,4 +107,10 @@ class Event(object):
     def list_events(self):
         return self.__events.keys()
 
+class EventConfig(BaseConfig):
 
+    def create_all(self):
+        pass
+
+    def bind_all(self):
+        pass

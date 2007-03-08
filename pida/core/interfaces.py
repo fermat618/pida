@@ -13,12 +13,16 @@ class IBaseConfig(Interface):
 
 class IOptionsConfig(IBaseConfig):
 
-    def add_group(name, label, doc):
-        """Add a configuration group"""
-
     def add_option(group, name, label, doc):
         """Add a configuration group"""
 
+class IEventsConfig(IBaseConfig):
+
+    def create_event(name):
+        """Create an Event"""
+
+class IEvent(Interfcace):
+    """An event"""
 
 class IService(Interface):
 
