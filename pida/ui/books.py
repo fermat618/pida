@@ -118,6 +118,10 @@ class BookConfigurator(object):
     def get_book(self, name):
         return self._books[name]
 
+    def get_books(self):
+        return self._books.items()
+
+
     def get_names(self):
         return self._books.keys()
 
@@ -128,21 +132,52 @@ class BookManager(object):
         self._conf = configurator
         self._views = dict.fromkeys(self._conf.get_names(), {})
 
-    def add_view(self, name, view):
+    def add_view(self, bookname, view):
         if not self.has_view(view):
-            self._views[name][view.get_unique_id()] = view
-            self._get_book(name).append_page(view.get_toplevel())
+            self._views[bookname][view.get_unique_id()] = view
+            book = self._get_book(bookname)
+            book.append_page(view.get_toplevel())
+            book.set_current_page(-1)
+            self._focus_page(bookname)
         else:
             raise ValueError('This view is already in the manager')
 
     def remove_view(self, view):
-        book_name = self.get_book_for_view(view)
-        book = self.get_book(book_name)
+        book_name = self._get_book_for_view(view)
+        book = self._get_book(book_name)
         book.remove_page(book.page_num(view.get_toplevel()))
+        book.show_all()
         del self._views[book_name][view.get_unique_id()]
+
+    def move_view(self, bookname, view):
+        self.remove_view(view)
+        self.add_view(bookname, view)
 
     def has_view(self, view):
         return view.get_unique_id() in self._get_view_uids()
+
+    def next_page(self, bookname):
+        book = self._get_book(bookname)
+        if self._get_current_page(bookname) == book.get_n_pages() - 1:
+            book.set_current_page(0)
+        else:
+            book.next_page()
+        self._focus_page(bookname)
+
+    def prev_page(self, bookname):
+        book = self._get_book(bookname)
+        if self._get_current_page(bookname) == 0:
+            book.set_current_page(book.get_n_pages() - 1)
+        else:
+            book.prev_page()
+        self._focus_page(bookname)
+
+    def _get_current_page(self, bookname):
+        return self._get_book(bookname).get_current_page()
+
+    def _focus_page(self, bookname):
+        book = self._get_book(bookname)
+        book.get_nth_page(book.get_current_page()).grab_focus()
 
     def _get_book(self, name):
         return self._conf.get_book(name)
@@ -158,6 +193,8 @@ class BookManager(object):
         for book in self._views.values():
             uids.extend(book.keys())
         return uids
+
+
 
 
 

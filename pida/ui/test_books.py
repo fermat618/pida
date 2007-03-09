@@ -162,10 +162,19 @@ class TestBookManager(TestCase):
             br_book = gtk.Notebook(),
         )
 
+        w = gtk.Window()
+        vb = gtk.VBox()
+        w.add(vb)
+
+        for nb in self._nbSL.values():
+            vb.pack_start(nb)
+
         for name, book in self._nbSL.iteritems():
             self._SL.configure_book(name, book)
         
         self._man = BookManager(self._SL)
+
+        w.show_all()
 
         refresh_gui()
 
@@ -173,6 +182,12 @@ class TestBookManager(TestCase):
             dict(
                 get_unique_id = 1,
                 get_toplevel = gtk.Label('1')
+            )
+        )
+        self._mview2 = Mock(
+            dict(
+                get_unique_id = 2,
+                get_toplevel = gtk.Label('2')
             )
         )
 
@@ -199,6 +214,7 @@ class TestBookManager(TestCase):
         refresh_gui()
         self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 1)
         self._man.remove_view(self._mview1)
+        refresh_gui()
         self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 0)
         self.assertEqual(self._man.has_view(self._mview1), False)
 
@@ -206,4 +222,46 @@ class TestBookManager(TestCase):
         def r():
             self._man.remove_view(self._mview1)
         self.assertRaises(ValueError, r)
+
+    def test_move_view(self):
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 1)
+        self._man.move_view(BOOK_EDITOR, self._mview1)
+        refresh_gui()
+        self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 0)
+        self.assertEqual(self._SL.get_book(BOOK_EDITOR).get_n_pages(), 1)
+
+    def test_add_2_pages(self):
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self._man.add_view(BOOK_TERMINAL, self._mview2)
+        refresh_gui()
+        book = self._man._get_book(BOOK_TERMINAL)
+        self.assertEqual(book.get_n_pages(), 2)
+
+    def test_prev_page(self):
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self._man.add_view(BOOK_TERMINAL, self._mview2)
+        refresh_gui()
+        self._man.prev_page(BOOK_TERMINAL)
+        refresh_gui()
+        self._man.prev_page(BOOK_TERMINAL)
+        refresh_gui()
+        book = self._man._get_book(BOOK_TERMINAL)
+        self.assertEqual(book.get_n_pages(), 2)
+
+    def test_next_page(self):
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self._man.add_view(BOOK_TERMINAL, self._mview2)
+        refresh_gui()
+        self._man.next_page(BOOK_TERMINAL)
+        refresh_gui()
+        self._man.next_page(BOOK_TERMINAL)
+        refresh_gui()
+        book = self._man._get_book(BOOK_TERMINAL)
+        self.assertEqual(book.get_n_pages(), 2)
+
         
