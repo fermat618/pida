@@ -31,4 +31,3 @@ class OptionsConfig(BaseConfig):
 
     def get_option(self, optname):
         return self._options[optname]
-        
