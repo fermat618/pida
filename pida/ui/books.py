@@ -26,6 +26,21 @@ class BaseBookConfig(object):
     def get_name(self):
         raise NotImplementedError('Must at leaste define a Name')
 
+    def create_tab_label(self, icon, text):
+        if None in [icon, text]:
+            return None
+        if self.get_tab_position() in [gtk.POS_TOP, gtk.POS_BOTTOM]:
+            b_factory = gtk.HBox
+        else:
+            b_factory = gtk.VBox
+        b = b_factory(spacing=2)
+        b.pack_start(icon)
+        b.pack_start(gtk.Label(text))
+        b.show_all()
+        return b
+
+
+
 
 class TerminalBookConfig(BaseBookConfig):
 
@@ -94,22 +109,26 @@ class BookConfigurator(object):
         self._orientation = orientation
         self._configs = {}
         self._books = {}
+        self._widget_names = {}
         for conf in [
             TerminalBookConfig,
             EditorBookConfig,
             PluginBookConfig,
             BufferBookConfig
         ]:
-            self._configs[conf] = conf(self._orientation)
+            book_config = conf(self._orientation)
+            self._configs[book_config.get_name()] = book_config
+            self._widget_names[book_config.get_notebook_name()] = book_config
 
-    def _get_config(self, name):
-        for conf in self._configs.values():
-            if conf.get_notebook_name() == name:
-                return conf
-        raise KeyError('No Notebook attests to having that name')
+    def get_config(self, name):
+        try:
+            return self._configs[name]
+        except KeyError:
+            print self._configs
+            raise KeyError('No Notebook attests to having that name %s' % name)
 
     def configure_book(self, name, book):
-        conf = self._get_config(name)
+        conf = self._widget_names[name]
         self._books[conf.get_name()] = book
         book.set_show_tabs(conf.get_tabs_visible())
         book.set_tab_pos(conf.get_tab_position())
@@ -130,14 +149,22 @@ class BookManager(object):
 
     def __init__(self, configurator):
         self._conf = configurator
-        self._views = dict.fromkeys(self._conf.get_names(), {})
+        self._views = dict()
+        for k in self._conf.get_names():
+            self._views[k] = dict()
 
     def add_view(self, bookname, view):
         if not self.has_view(view):
             self._views[bookname][view.get_unique_id()] = view
             book = self._get_book(bookname)
-            book.append_page(view.get_toplevel())
+            tab_label = self._create_tab_label(
+                bookname,
+                view.create_tab_label_icon(),
+                view.get_tab_label_text())
+            book.append_page(view.get_toplevel(),
+                tab_label=tab_label)
             book.set_current_page(-1)
+            book.show_all()
             self._focus_page(bookname)
         else:
             raise ValueError('This view is already in the manager')
@@ -145,8 +172,7 @@ class BookManager(object):
     def remove_view(self, view):
         book_name = self._get_book_for_view(view)
         book = self._get_book(book_name)
-        book.remove_page(book.page_num(view.get_toplevel()))
-        book.show_all()
+        book.remove(view.get_toplevel())
         del self._views[book_name][view.get_unique_id()]
 
     def move_view(self, bookname, view):
@@ -193,6 +219,11 @@ class BookManager(object):
         for book in self._views.values():
             uids.extend(book.keys())
         return uids
+
+    def _create_tab_label(self, bookname, icon, text):
+        conf = self._conf.get_config(bookname)
+        return conf.create_tab_label(icon, text)
+        
 
 
 

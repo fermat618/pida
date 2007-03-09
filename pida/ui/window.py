@@ -4,6 +4,7 @@ from kiwi.ui.delegates import GladeDelegate
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
 from kiwi.environ import Library
 
+from pida.ui.books import BookManager, BookConfigurator
 
 library = Library('pida', root='../..')
 library.add_global_resources(glade='glade')
@@ -59,6 +60,21 @@ class PidaWindow(MainGladeDelegate):
         self._fix_books()
 
     def _fix_books(self):
-        pass
+        self._book_config = BookConfigurator(0)
+        for n in ['tl', 'tr', 'bl', 'br']:
+            book_name = '%s_book' % n
+            book = getattr(self, book_name)
+            self._book_config.configure_book(book_name, book)
+        self._book_man = BookManager(self._book_config)
+
+    # View API
+    def add_view(self, bookname, view):
+        self._book_man.add_view(bookname, view)
+
+    def remove_view(self, view):
+        self._book_man.remove_view(view)
+
+    def move_view(self, bookname, view):
+        self._book_man.move_view(bookname, view)
 
 
