@@ -107,7 +107,7 @@ class Event(object):
     def list_events(self):
         return self.__events.keys()
 
-class EventConfig(BaseConfig):
+class EventsConfig(BaseConfig):
 
     def create_all(self):
         pass

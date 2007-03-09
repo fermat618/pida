@@ -1,13 +1,18 @@
 import gtk
 
 from kiwi.ui.delegates import GladeDelegate
-from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno, get_input
+from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
+from kiwi.environ import Library
+
+
+library = Library('pida', root='../..')
+library.add_global_resources(glade='glade')
 
 
 class MainGladeDelegate(GladeDelegate):
 
-    def __init__(self, app, *args, **kw):
-        self._app = app
+    def __init__(self, boss, *args, **kw):
+        self._boss = boss
         GladeDelegate.__init__(self, delete_handler=self._on_delete_event, *args, **kw)
         self.create_all()
         self.show()
@@ -42,5 +47,18 @@ class MainGladeDelegate(GladeDelegate):
 
     def input_dlg(self, *args, **kw):
         return get_input(parent=self.get_toplevel(), *args, **kw)
+
+
+class PidaWindow(MainGladeDelegate):
+
+    """Main PIDA Window"""
+
+    gladefile = 'main_window'
+
+    def create_all(self):
+        self._fix_books()
+
+    def _fix_books(self):
+        pass
 
 

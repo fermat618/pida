@@ -11,18 +11,15 @@ class IBaseConfig(Interface):
         """Bind all the bindables in this configuration"""
 
 
-class IOptionsConfig(IBaseConfig):
+class IOptions(IBaseConfig):
 
     def add_option(group, name, label, doc):
         """Add a configuration group"""
 
-class IEventsConfig(IBaseConfig):
+class IEvents(IBaseConfig):
 
     def create_event(name):
         """Create an Event"""
-
-class IEvent(Interfcace):
-    """An event"""
 
 class IService(Interface):
 

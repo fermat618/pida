@@ -1,7 +1,7 @@
 
 from unittest import TestCase
 
-from pida.core.service import Service, OptionsConfig, IOptionsConfig
+from pida.core.service import Service, OptionsConfig, IOptions
 
 class MYOptions(OptionsConfig):
 
@@ -26,7 +26,7 @@ class TestOptions(TestCase):
     def test_options_setup(self):
         svc = MYService(boss=None)
         self.assertEqual(
-            svc.reg.get_singleton(IOptionsConfig).get_option('g1'),
+            svc.reg.get_singleton(IOptions).get_option('g1'),
             svc.o_test
         )
 
