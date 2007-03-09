@@ -1,0 +1,4 @@
+= A script to report bugs to launchpad =
+
+
+./lp --help for help. (More to follow)
