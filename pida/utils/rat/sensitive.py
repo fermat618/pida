@@ -63,6 +63,7 @@ class _Counter:
         self.__count -= 1
         self.__callback(self.__count)
     
+Counter = _Counter
     
 class SensitiveController:
     """
