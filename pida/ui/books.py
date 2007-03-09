@@ -131,7 +131,7 @@ class BookManager(object):
     def add_view(self, name, view):
         if not self.has_view(view):
             self._views[name][view.get_unique_id()] = view
-            self.get_book(name).append_page(view.get_toplevel())
+            self._get_book(name).append_page(view.get_toplevel())
         else:
             raise ValueError('This view is already in the manager')
 
@@ -142,18 +142,18 @@ class BookManager(object):
         del self._views[book_name][view.get_unique_id()]
 
     def has_view(self, view):
-        return view.get_unique_id() in self.get_view_uids()
+        return view.get_unique_id() in self._get_view_uids()
 
-    def get_book(self, name):
+    def _get_book(self, name):
         return self._conf.get_book(name)
         
-    def get_book_for_view(self, view):
+    def _get_book_for_view(self, view):
         for name, views in self._views.items():
             if view.get_unique_id() in views:
                 return name
         raise ValueError('View is not in any Notebook')
 
-    def get_view_uids(self):
+    def _get_view_uids(self):
         uids = []
         for book in self._views.values():
             uids.extend(book.keys())
