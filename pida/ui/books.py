@@ -101,7 +101,6 @@ class BookConfigurator(object):
             BufferBookConfig
         ]:
             self._configs[conf] = conf(self._orientation)
-            self._books[conf] = None
 
     def _get_config(self, name):
         for conf in self._configs.values():
@@ -127,12 +126,38 @@ class BookManager(object):
 
     def __init__(self, configurator):
         self._conf = configurator
-        self._views = dict.fromkeys(self._conf.get_names())
+        self._views = dict.fromkeys(self._conf.get_names(), {})
 
     def add_view(self, name, view):
-        pass
-        
+        if not self.has_view(view):
+            self._views[name][view.get_unique_id()] = view
+            self.get_book(name).append_page(view.get_toplevel())
+        else:
+            raise ValueError('This view is already in the manager')
 
+    def remove_view(self, view):
+        book_name = self.get_book_for_view(view)
+        book = self.get_book(book_name)
+        book.remove_page(book.page_num(view.get_toplevel()))
+        del self._views[book_name][view.get_unique_id()]
+
+    def has_view(self, view):
+        return view.get_unique_id() in self.get_view_uids()
+
+    def get_book(self, name):
+        return self._conf.get_book(name)
+        
+    def get_book_for_view(self, view):
+        for name, views in self._views.items():
+            if view.get_unique_id() in views:
+                return name
+        raise ValueError('View is not in any Notebook')
+
+    def get_view_uids(self):
+        uids = []
+        for book in self._views.values():
+            uids.extend(book.keys())
+        return uids
 
 
 

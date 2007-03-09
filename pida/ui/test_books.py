@@ -3,10 +3,13 @@ from unittest import TestCase
 
 import gtk
 
-from pida.ui.books import BookConfigurator
-from pida.ui.books import ORIENTATION_SIDEBAR_LEFT
-from pida.ui.books import ORIENTATION_SIDEBAR_RIGHT
+from pida.ui.books import BookConfigurator, BookManager
+from pida.ui.books import ORIENTATION_SIDEBAR_LEFT, ORIENTATION_SIDEBAR_RIGHT
+from pida.ui.books import BOOK_TERMINAL, BOOK_EDITOR, BOOK_BUFFER, BOOK_PLUGIN
+
 from pida.utils.testing import refresh_gui
+from pida.utils.testing.mock import Mock
+
 
 
 class TestConfig(TestCase):
@@ -161,8 +164,46 @@ class TestBookManager(TestCase):
 
         for name, book in self._nbSL.iteritems():
             self._SL.configure_book(name, book)
+        
+        self._man = BookManager(self._SL)
 
         refresh_gui()
 
-    def test_add_page(self):
-        pass
+        self._mview1 = Mock(
+            dict(
+                get_unique_id = 1,
+                get_toplevel = gtk.Label('1')
+            )
+        )
+
+    def test_add_view(self):
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 1)
+
+    def test_has_view(self):
+        self.assertEqual(self._man.has_view(self._mview1), False)
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self.assertEqual(self._man.has_view(self._mview1), True)
+
+    def test_add_view_twice(self):
+        def add():
+            self._man.add_view(BOOK_TERMINAL, self._mview1)
+            refresh_gui()
+        add()
+        self.assertRaises(ValueError, add)
+
+    def test_remove_view(self):
+        self._man.add_view(BOOK_TERMINAL, self._mview1)
+        refresh_gui()
+        self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 1)
+        self._man.remove_view(self._mview1)
+        self.assertEqual(self._SL.get_book(BOOK_TERMINAL).get_n_pages(), 0)
+        self.assertEqual(self._man.has_view(self._mview1), False)
+
+    def test_remove_nonexistent_view(self):
+        def r():
+            self._man.remove_view(self._mview1)
+        self.assertRaises(ValueError, r)
+        
