@@ -26,10 +26,3 @@ class IService(Interface):
     def get_name():
         """Get the name for the service"""
 
-    def register_all_config():
-        """Register all the configs"""
-    
-    def register_options_config(config):
-        """Register the class for options config"""
-
-
