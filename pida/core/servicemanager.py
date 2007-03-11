@@ -66,12 +66,15 @@ class ServiceManager(object):
 import sys
 sys.path.insert(0, os.getcwd())
 from boss import Boss
-from interfaces import IService
+from pida.core.interfaces import IService
 b = Boss(None)
 sm = ServiceManager(b)
 sm.load_services()
 print b._reg.get_singleton('testervice')
+print [i for i in b._reg.get_features(IService)]
 print b._reg.features
+print b._reg.features[IService]
+print IService
 print b._reg.singletons
 
 
