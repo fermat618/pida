@@ -1,15 +1,20 @@
 import os, imp
 
+from pida.core.interfaces import IService
+from pida.core.plugins import Registry
+
 
 class ServiceLoader(object):
 
     def get_all_services(self, service_dirs):
         for service_path in self._find_all_service_paths(service_dirs):
             module = self._load_service_module(service_path)
-            service_class = self._load_service_class(module)
-            service_class.servicename = module.servicename
-            service_class.servicefile_path = module.servicefile_path
-            yield service_class
+            if module is not None:
+                service_class = self._load_service_class(module)
+                if service_class is not None:
+                    service_class.servicename = module.servicename
+                    service_class.servicefile_path = module.servicefile_path
+                    yield service_class
 
     def load_all_services(self, service_dirs, boss):
         for service_class in self.get_all_services(service_dirs):
@@ -35,7 +40,10 @@ class ServiceLoader(object):
 
     def _load_service_module(self, service_path):
         name = os.path.basename(service_path)
-        fp, pathname, description = imp.find_module(name, [service_path])
+        try:
+            fp, pathname, description = imp.find_module(name, [service_path])
+        except ImportError:
+            return None
         module = imp.load_module(name, fp, pathname, description)
         module.servicename = name
         module.servicefile_path = self._get_servicefile_path(service_path)
@@ -45,9 +53,9 @@ class ServiceLoader(object):
         try:
             service = module.Service
         except TypeError, e:
-            raise
+            return None
         except AttributeError, e:
-            raise
+            return None
         service.servicemodule = module
         return service
 
@@ -57,25 +65,32 @@ class ServiceManager(object):
     def __init__(self, boss):
         self._boss = boss
         self._loader = ServiceLoader()
+        self._reg = Registry()
 
     def load_services(self):
         for svc in self._loader.load_all_services(
-                self._boss.service_dirs, self._boss):
-            self._boss.register_service(svc)
+                self._boss.get_service_dirs(), self._boss):
+            self.register_service(svc)
 
-import sys
-sys.path.insert(0, os.getcwd())
-from boss import Boss
-from pida.core.interfaces import IService
-b = Boss(None)
-sm = ServiceManager(b)
-sm.load_services()
-print b._reg.get_singleton('testervice')
-print [i for i in b._reg.get_features(IService)]
-print b._reg.features
-print b._reg.features[IService]
-print IService
-print b._reg.singletons
+    def register_service(self, service):
+        self._reg.register_plugin(
+            instance=service,
+            singletons=(
+                service.servicename,
+            ),
+            features=(
+                IService,
+            )
+        )
+
+    def get_service(self, name):
+        return self._reg.get_singleton(name)
+
+    def get_services(self):
+        return self._reg.get_features(IService)
+
+    
+
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

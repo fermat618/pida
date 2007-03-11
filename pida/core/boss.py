@@ -18,14 +18,3 @@ class Boss(object):
     def stop(self):
         pass
 
-    def register_service(self, service):
-        self._reg.register_plugin(
-            instance=service,
-            singletons=(
-                service.servicename,
-            ),
-            features=(
-                IService,
-            )
-        )
-        print service
