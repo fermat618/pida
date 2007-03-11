@@ -5,9 +5,10 @@ from pida.core.document import document
 #from pida.core.testing import test, assert_equal, assert_notequal
 
 from unittest import TestCase
+from tempfile import mktemp
 
 def c():
-    tmp = os.popen('tempfile').read().strip()
+    tmp = mktemp()
     f = open(tmp, 'w')
     txt ="""Hello I am a document
                vlah blah"""
@@ -17,7 +18,7 @@ def c():
     return doc, tmp, txt
 
 def d(tmp):
-    os.system('rm %s' % tmp)
+    os.remove(tmp)
 
 class DocumentTest(TestCase):
 
