@@ -1,14 +1,15 @@
 import os, imp
 
 
-
 class ServiceLoader(object):
 
     def get_all_services(self, service_dirs):
         for service_path in self._find_all_service_paths(service_dirs):
             module = self._load_service_module(service_path)
-            service = self._load_service_class(module)
-            yield service
+            service_class = self._load_service_class(module)
+            service_class.servicename = module.servicename
+            service_class.servicefile_path = module.servicefile_path
+            yield service_class
 
     def load_all_services(self, service_dirs, boss):
         for service_class in self.get_all_services(service_dirs):
@@ -50,6 +51,7 @@ class ServiceLoader(object):
         service.servicemodule = module
         return service
 
+
 class ServiceManager(object):
 
     def __init__(self, boss):
@@ -57,11 +59,20 @@ class ServiceManager(object):
         self._loader = ServiceLoader()
 
     def load_services(self):
-        pass
-        
+        for svc in self._loader.load_all_services(
+                self._boss.service_dirs, self._boss):
+            self._boss.register_service(svc)
 
-l = ServiceLoader()
-for s in l.load_all_services(['/home/ali/tmp'], None):
-    print s
+import sys
+sys.path.insert(0, os.getcwd())
+from boss import Boss
+from interfaces import IService
+b = Boss(None)
+sm = ServiceManager(b)
+sm.load_services()
+print b._reg.get_singleton('testervice')
+print b._reg.features
+print b._reg.singletons
+
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
