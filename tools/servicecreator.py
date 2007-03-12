@@ -95,6 +95,7 @@ def create_plugin(root_path, name):
     create_servicefile(path)
     log('Creating Resource directories in %s' % path)
     create_resource_dirs(path)
+    os.system('svn add %s' % path)
 
 def create_module(root_path, name):
     if not name.endswith('.py'):
@@ -114,6 +115,7 @@ def create_module(root_path, name):
     f = open(test_path, 'w')
     f.write(data)
     f.close()
+    os.system('svn add %s %s' % (path, test_path))
 
 def get_service_details():
     defpath = os.path.join(os.getcwd(), 'pida', 'services')
