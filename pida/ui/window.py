@@ -2,12 +2,9 @@ import gtk
 
 from kiwi.ui.delegates import GladeDelegate
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
-from kiwi.environ import Library
 
 from pida.ui.books import BookManager, BookConfigurator
 
-library = Library('pida', root='../..')
-library.add_global_resources(glade='glade')
 
 
 class MainGladeDelegate(GladeDelegate):
