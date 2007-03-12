@@ -99,10 +99,11 @@ Service = %(name)s
         ]
     )
     
-    def __init__(self, root_path, name, opts=None):
+    def __init__(self, root_path, name, opts):
         self._name = name
         self._root_path = root_path
         self._path = os.path.abspath(os.path.join(self._root_path, self._name))
+        self._opts = opts
 
     def _create_service_text(self):
         return self.service_template % dict(name=self._name.capitalize())
@@ -132,7 +133,9 @@ Service = %(name)s
             os.mkdir(respath)
 
     def _add_svn(self):
-        os.system('svn add %s' % self._path)
+        if self._opts.add_svn:
+            os.system('svn add %s' % self._path)
+
 
     def create(self):
         log('Creating service %s in %s' % (self._name, self._root_path))
@@ -140,13 +143,16 @@ Service = %(name)s
         self._create_service_module()
         self._create_servicefile()
         self._create_resource_dirs()
+        self._add_svn()
 
 
 class ModuleCreator(object):
     
-    def __init__(self, root_path, name, opts=None):
+    def __init__(self, root_path, name, opts):
         self._name = name
         self._root_path = root_path
+        self.path = os.path.join(self._root_path, name)
+        self._opts = opts
 
     def _create_module(self):
         create_python_file(self._root_path, self._name, '')
@@ -163,6 +169,11 @@ class ModuleCreator(object):
     def create(self):
         self._create_module()
         self._create_test_module()
+        self._add_svn()
+
+    def _add_svn(self):
+        if self._opts.add_svn:
+            os.system('svn add %s' % self._path)
 
 
 def get_service_details():
