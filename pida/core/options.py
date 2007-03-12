@@ -14,7 +14,7 @@ class OptionItem(object):
 
 class OptionsConfig(BaseConfig):
 
-    def create_all(self):
+    def create(self):
         self._options = {}
         self.create_options()
 

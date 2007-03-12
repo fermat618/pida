@@ -14,11 +14,16 @@ class Service(object):
     def __init__(self, boss=None):
         self.boss = boss
         self.reg = Registry()
-        self._register_all_config()
 
-    def _register_all_config(self):
+    def create_all(self):
         self._register_options_config(self.options_config)
         self._register_events_config(self.events_config)
+
+    def subscribe_all(self):
+        self._subscribe_foreign_events()
+
+    ##########
+    # Options
 
     def _register_options_config(self, config_cls):
         self.reg.register_plugin(
@@ -46,12 +51,21 @@ class Service(object):
             singletons=(IEvents,)
         )
 
+    def _subscribe_foreign_events(self):
+        self.get_events().subscribe_foreign_events()
+
     # Public Events API
     def get_events(self):
         return self.reg.get_singleton(IEvents)
 
     def get_event(self, name):
         return self.get_events().get(name)
+
+    def subscribe_foreign_event(self, servicename, name, callback):
+        self.boss.subscribe_event(servicename, name, callback)
+
+    def subscribe_event(self, name, callback):
+        self.get_events().subscribe_event(name, callback)
 
     def emit(self, name):
         self.get_events().emit(name)

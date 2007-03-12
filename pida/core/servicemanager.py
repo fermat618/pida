@@ -99,6 +99,13 @@ class ServiceManager(object):
     def get_services(self):
         return self._reg.get_features(IService)
 
+    def create_all(self):
+        for svc in self.get_services():
+            svc.create_all()
+
+    def subscribe_all(self):
+        for svc in self.get_services():
+            svc.subscribe_all()
     
 
 

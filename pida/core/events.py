@@ -106,10 +106,38 @@ class Event(object):
     def list_events(self):
         return self.__events.keys()
 
+
 class EventsConfig(BaseConfig):
 
-    def create_all(self):
+    def create(self):
+        self._events = Event()
+        self.create_events()
+
+    def create_events(self):
+        """Create your events here"""
+
+    def create_event(self, name):
+        self._events.create_event(name)
+
+    def subscribe_foreign_events(self):
+        """Subscribe to events here"""
+
+    def subscribe_foreign_event(self, servicename, event, callback):
+        self.svc.subscribe_foreign_event(servicename, event, callback)
+
+    def subscribe_event(self, event, callback):
+        self._events.register(event, callback)
+
+    def get(self, event):
+        return self._events.get(event)
+
+    def emit(self, event):
+        return self._events.emit(event)
+
+
+class EventManager(object):
+
+    def bind_event(self, servicename, callback):
         pass
 
-    def bind_all(self):
-        pass
+

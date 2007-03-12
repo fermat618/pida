@@ -1,20 +1,46 @@
 
-from pida.core.plugins import Registry
-from pida.core.interfaces import IService
 
+from pida.core.servicemanager import ServiceManager
+
+from pida.ui.window import PidaWindow
 
 class Boss(object):
 
-    # temporary
-    service_dirs = ['/home/ali/tmp']
 
     def __init__(self, env=None):
         self._env = env
-        self._reg = Registry()
+        self._sm = ServiceManager(self)
+        self._window = PidaWindow(self)
 
     def start(self):
-        pass
+        self._load_services()
+        self._start_services()
+        self._subscribe_services()
 
     def stop(self):
         pass
+
+    def _start_ui(self):
+        self._window.show_and_loop()
+
+    def _load_services(self):
+        self._sm.load_services()
+
+    def _start_services(self):
+        self._sm.create_all()
+
+    def _subscribe_services(self):
+        self._sm.subscribe_all()
+
+    def get_service(self, servicename):
+        return self._sm.get_service(servicename)
+
+    def get_services(self):
+        return self._sm.get_services()
+
+    def get_service_dirs(self):
+        return []
+
+    def subscribe_event(self, servicename, event):
+        self.get_service(servicename)
 
