@@ -220,7 +220,8 @@ def main():
         path, name = get_service_details()
         ServiceCreator(path, name, opts).create()
     else:
-        parser.error('The action must be one of "module", "m", "service", "s"')
+        parser.error('The action must be one of "module" or "m" for a module,'
+                     ' or "service" or "s" for a service')
 
 
 if __name__ == '__main__':
