@@ -10,6 +10,7 @@ from pida.core.servicemanager import ServiceLoader, ServiceManager
 
 from pida.utils.testing.mock import Mock
 
+from pida.core.environment import get_glade_path
 
 class ServiceLoadTest(TestCase):
 
@@ -68,6 +69,22 @@ class ServiceLoadTest(TestCase):
                 f.write('    def __init__(self, boss):\n')
                 f.write('        """A test"""\n')
             f.close()
+
+        self._tdir5 = mkdtemp()
+        self._spath5 = os.path.join(self._tdir5, 'testservice')
+        os.mkdir(self._spath5)
+        for name in ['__init__.py', 'testservice.py', 'service.pida']:
+            f = open(os.path.join(self._spath5, name), 'w')
+            if name == 'testservice.py':
+                f.write('class Service(object):\n')
+                f.write('    def __init__(self, boss):\n')
+                f.write('        """A test"""\n')
+            f.close()
+        self._gladedir = os.path.join(self._spath5, 'glade')
+        os.mkdir(self._gladedir)
+        self._dumglade = os.path.join(self._gladedir, 'banana.glade')
+        f = open(self._dumglade, 'w')
+        f.close()
         self.loader = ServiceLoader()
 
     def test_get(self):
@@ -93,6 +110,11 @@ class ServiceLoadTest(TestCase):
     def test_import_error(self):
         services = [svc for svc in self.loader.get_all_services([self._tdir4])]
         self.assertEqual(services, [])
+
+    def test_env(self):
+        self.loader.load_all_services([self._tdir5], None)
+        gp = get_glade_path('banana.glade')
+        self.assertEqual(gp, self._dumglade)
 
     def tearDown(self):
         shutil.rmtree(self._tdir)

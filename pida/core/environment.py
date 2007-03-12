@@ -11,3 +11,6 @@ def get_resource_path(resource, name):
 
 def get_uidef_path(name):
     return get_resource_path('uidef', name)
+
+def get_glade_path(name):
+    return get_resource_path('glade', name)

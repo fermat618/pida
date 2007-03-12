@@ -3,10 +3,12 @@ import os, imp
 from pida.core.interfaces import IService
 from pida.core.plugins import Registry
 
+from pida.core.environment import library
 
 class ServiceLoader(object):
 
     def get_all_services(self, service_dirs):
+        classes = []
         for service_path in self._find_all_service_paths(service_dirs):
             module = self._load_service_module(service_path)
             if module is not None:
@@ -14,11 +16,14 @@ class ServiceLoader(object):
                 if service_class is not None:
                     service_class.servicename = module.servicename
                     service_class.servicefile_path = module.servicefile_path
-                    yield service_class
+                    classes.append(service_class)
+        return classes
 
     def load_all_services(self, service_dirs, boss):
+        services = []
         for service_class in self.get_all_services(service_dirs):
-            yield service_class(boss)
+            services.append(service_class(boss))
+        return services
 
     def _find_service_paths(self, service_dir):
         for f in os.listdir(service_dir):
@@ -47,6 +52,7 @@ class ServiceLoader(object):
         module = imp.load_module(name, fp, pathname, description)
         module.servicename = name
         module.servicefile_path = self._get_servicefile_path(service_path)
+        self._register_service_env(name, service_path)
         return module
 
     def _load_service_class(self, module):
@@ -56,6 +62,12 @@ class ServiceLoader(object):
             return None
         service.servicemodule = module
         return service
+
+    def _register_service_env(self, servicename, service_path):
+        for name in ['glade', 'uidef', 'pixmaps', 'data']:
+            path = os.path.join(service_path, name)
+            if os.path.isdir(path):
+                library.add_global_resource(name, path)
 
 
 class ServiceManager(object):

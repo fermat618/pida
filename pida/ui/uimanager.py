@@ -14,6 +14,7 @@ base_menu_actions = [
     ('HelpMenu', None, 'Help', '<Alt>h', 'Help Menu', None),
 ]
 
+
 class PidaUIManager(object):
 
     def __init__(self):
