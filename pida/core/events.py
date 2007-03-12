@@ -33,17 +33,16 @@ class Event(object):
     an event source which is basically the function you'll use to trigger
     the event. After that you register the callbacks. Its usage follows:
 
-    >>> dispatcher = EventDispatcher()
+    >>> dispatcher = Event()
     >>> evt_src = dispatcher.create_event ("on-ring-event")
-    >>> 
     >>> def callback1 ():
-    >>>     print "riiiing!"
-    >>> 
-    >>> dispatcher.register_callback ("on-ring-event", callback1)
-    >>> 
+    ...     print "riiiing!"
+
+    >>> dispatcher.register("on-ring-event", callback1)
+    
     >>> evt_src ()
-    riiing
-    >>> 
+    riiiing!
+    
     """
     def __init__(self):
         self.__events = {}
