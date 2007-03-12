@@ -52,8 +52,6 @@ class ServiceLoader(object):
     def _load_service_class(self, module):
         try:
             service = module.Service
-        except TypeError, e:
-            return None
         except AttributeError, e:
             return None
         service.servicemodule = module

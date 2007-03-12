@@ -24,6 +24,8 @@ class ServiceLoadTest(TestCase):
                 f.write('class Service(object):\n')
                 f.write('    def __init__(self, boss):\n')
                 f.write('        """A test"""\n')
+            f.close()
+
         self._spath = os.path.join(self._tdir, 'testservice2')
         os.mkdir(self._spath)
         for name in ['__init__.py', 'testservice2.py', 'service.pida']:
@@ -32,6 +34,7 @@ class ServiceLoadTest(TestCase):
                 f.write('class Service(object):\n')
                 f.write('    def __init__(self, boss):\n')
                 f.write('        """A test"""\n')
+            f.close()
 
         self._tdir2 = mkdtemp()
         self._spath2 = os.path.join(self._tdir2, 'testservice')
@@ -42,6 +45,7 @@ class ServiceLoadTest(TestCase):
                 f.write('class NoService(object):\n')
                 f.write('    def __init__(self, boss):\n')
                 f.write('        """A test"""\n')
+            f.close()
 
         self._tdir3 = mkdtemp()
         self._spath3 = os.path.join(self._tdir3, 'testservice')
@@ -52,7 +56,18 @@ class ServiceLoadTest(TestCase):
                 f.write('class Service(object):\n')
                 f.write('    def __init__(self, boss):\n')
                 f.write('        """A test"""\n')
+            f.close()
 
+        self._tdir4 = mkdtemp()
+        self._spath4 = os.path.join(self._tdir4, 'nottestservice')
+        os.mkdir(self._spath4)
+        for name in ['__init__.py', 'testservice.py', 'service.pida']:
+            f = open(os.path.join(self._spath4, name), 'w')
+            if name == 'testservice.py':
+                f.write('class Service(object):\n')
+                f.write('    def __init__(self, boss):\n')
+                f.write('        """A test"""\n')
+            f.close()
         self.loader = ServiceLoader()
 
     def test_get(self):
@@ -75,10 +90,15 @@ class ServiceLoadTest(TestCase):
         services = [svc for svc in self.loader.get_all_services([self._tdir3])]
         self.assertEqual(services, [])
 
+    def test_import_error(self):
+        services = [svc for svc in self.loader.get_all_services([self._tdir4])]
+        self.assertEqual(services, [])
+
     def tearDown(self):
         shutil.rmtree(self._tdir)
         shutil.rmtree(self._tdir2)
         shutil.rmtree(self._tdir3)
+        shutil.rmtree(self._tdir4)
 
 
 class ServiceManagerTest(TestCase):
@@ -94,6 +114,7 @@ class ServiceManagerTest(TestCase):
                 f.write('class Service(object):\n')
                 f.write('    def __init__(self, boss):\n')
                 f.write('        """A test"""\n')
+            f.close()
 
         class MyService:
             servicename = 'MyService'
