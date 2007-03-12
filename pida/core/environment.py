@@ -3,8 +3,8 @@ from kiwi.environ import Library, environ
 
 library = Library('pida', root='../..')
 
-library.add_global_resource('glade', 'glade')
-library.add_global_resource('uidef', 'uidef')
+library.add_global_resource('glade', 'data/glade')
+library.add_global_resource('uidef', 'data/uidef')
 
 def get_resource_path(resource, name):
     return environ.find_resource(resource, name)
