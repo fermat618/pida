@@ -20,7 +20,7 @@ class Boss(object):
     def stop(self):
         pass
 
-    def _start_ui(self):
+    def loop_ui(self):
         self._window.show_and_loop()
 
     def _load_services(self):
