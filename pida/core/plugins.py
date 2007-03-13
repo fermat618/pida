@@ -249,6 +249,10 @@ class DynamicNamedSets(NamedSets):
             del self.data[key]
         except KeyError:
             pass
+    
+    @copy_docs(dict)
+    def clear(self):
+        self.data.clear()
 
 ##############################################################################
 ## Base classes
@@ -627,6 +631,6 @@ class Registry(object):
         for plugin in self.plugins:
             plugin.singeltons = []
             plugin.features = []
-            plugin.unplug()
+            plugin.unplug(self)
         self.plugins.clear()
 
