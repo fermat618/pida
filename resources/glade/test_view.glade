@@ -1,6 +1,18 @@
 <?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
 <!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
 <glade-interface>
+    <widget class="GtkUIManager" id="uimanager">
+        <child>
+            <widget class="GtkActionGroup" id="test_ag">
+                <child>
+                    <widget class="GtkAction" id="test_act">
+                        <property name="name">test_act</property>
+                        <property name="label" translatable="yes">test action</property>
+                    </widget>
+                </child>
+            </widget>
+        </child>
+    </widget>
     <widget class="GtkWindow" id="test_view">
         <property name="default_height">250</property>
         <property name="default_width">440</property>
