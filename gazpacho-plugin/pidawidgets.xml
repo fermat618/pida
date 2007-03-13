@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<glade-catalog name="pidawidgets" library="pidawidgets">
+  <glade-widget-classes>
+    <glade-widget-class name="PidaServiceView"
+                        adaptor-class="PidaServiceViewAdapter"
+                        generic-name="pidaserviceview"
+                        title="PIDA Service View" />
+  </glade-widget-classes>
+
+  <glade-widget-group name="pida" title="PIDA Widgets">
+    <glade-widget-class-ref name="PidaServiceView"/>
+  </glade-widget-group>
+</glade-catalog>
