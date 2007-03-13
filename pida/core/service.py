@@ -1,8 +1,11 @@
 
-from pida.core.interfaces import IOptions, IEvents, ICommands
+
+# PIDA Imports
+from pida.core.interfaces import IOptions, IEvents, ICommands, IActions, IFeatures
 from pida.core.plugins import Registry
-from pida.core.options import OptionsConfig
 from pida.core.events import EventsConfig
+from pida.core.options import OptionsConfig
+from pida.core.actions import ActionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.features import FeaturesConfig
 
@@ -14,6 +17,7 @@ class Service(object):
     events_config = EventsConfig
     commands_config = CommandsConfig
     features_config = FeaturesConfig
+    actions_config = ActionsConfig
 
     def __init__(self, boss=None):
         self.boss = boss
@@ -23,6 +27,8 @@ class Service(object):
         self._register_options_config(self.options_config)
         self._register_events_config(self.events_config)
         self._register_commands_config(self.commands_config)
+        self._register_feature_config(self.features_config)
+        self._register_actions_config(self.actions_config)
 
     def subscribe_all(self):
         self._subscribe_foreign_events()
@@ -112,11 +118,10 @@ class Service(object):
     def _subscribe_foreign_features(self):
         self._get_features().subscribe_foreign_features()
 
-    ##########
-    # Public Feature API
-
     def _get_features(self):
         return self.reg.get_singleton(IFeatures)
+
+    # Public Feature API
 
     def list_features(self):
         return self._get_features().list_features()
@@ -130,3 +135,18 @@ class Service(object):
     def features(self, name):
         return self._get_features().get_feature_providers(name)
 
+    ##########
+    # Actions
+
+    def _register_actions_config(self, config_cls):
+        self.reg.register_plugin(
+            instance = config_cls(self),
+            singletons=(IActions,)
+        )
+
+    def _get_actions(self):
+        return self.reg.get_singleton(IActions)
+
+    def get_action(self, name):
+        return self._get_actions().get_action(name)
+        

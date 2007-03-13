@@ -29,6 +29,12 @@ class IFeatures(IBaseConfig):
     
     """The features for a plugin"""
 
+class IActions(IBaseConfig):
+
+    """The actions for a service"""
+
+    def create_actions():
+        """Create actions here"""
 
 class IService(Interface):
 
