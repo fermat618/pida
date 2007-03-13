@@ -7,23 +7,28 @@ class IBaseConfig(Interface):
     def create():
         """Create all the items in this configuration"""
 
-    def bind_all():
-        """Bind all the bindables in this configuration"""
-
 
 class IOptions(IBaseConfig):
 
     def add_option(group, name, label, doc):
         """Add a configuration group"""
 
+
 class IEvents(IBaseConfig):
 
     def create_event(name):
         """Create an Event"""
 
+
 class ICommands(IBaseConfig):
     
     """The commands for a plugin"""
+
+
+class IFeatures(IBaseConfig):
+    
+    """The features for a plugin"""
+
 
 class IService(Interface):
 

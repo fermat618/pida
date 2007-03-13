@@ -23,9 +23,31 @@
 # Standard Library Imports
 from unittest import TestCase
 
+from pida.core.features import FeaturesConfig
 
+class MyFeatureConfig(FeaturesConfig):
 
+    def create_features(self):
+        self.create_feature('banana')
 
+class TestFeatureConfig(TestCase):
 
+    def setUp(self):
+        self._fc = MyFeatureConfig(self)
+        self._fc.create()
 
+    def test_add_feature(self):
+        self._fc.create_feature('banana')
+        self.assert_('banana' in self._fc.list_features())
+
+    def test_subscribe_feature(self):
+        self._fc.create_feature('banana')
+        self.assert_('banana' in self._fc.list_features())
+        inst = 123
+        self._fc.subscribe_feature('banana', inst)
+        self.assert_(123 in self._fc.get_feature_providers('banana'))
+        self.assert_(12 not in self._fc.get_feature_providers('banana'))
+        
+
+    
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

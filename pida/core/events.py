@@ -135,9 +135,3 @@ class EventsConfig(BaseConfig):
         return self._events.emit(event)
 
 
-class EventManager(object):
-
-    def bind_event(self, servicename, callback):
-        pass
-
-

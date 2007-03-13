@@ -4,6 +4,7 @@ from pida.core.plugins import Registry
 from pida.core.options import OptionsConfig
 from pida.core.events import EventsConfig
 from pida.core.commands import CommandsConfig
+from pida.core.features import FeaturesConfig
 
 
 class Service(object):
@@ -12,6 +13,7 @@ class Service(object):
     options_config = OptionsConfig
     events_config = EventsConfig
     commands_config = CommandsConfig
+    features_config = FeaturesConfig
 
     def __init__(self, boss=None):
         self.boss = boss
@@ -24,6 +26,7 @@ class Service(object):
 
     def subscribe_all(self):
         self._subscribe_foreign_events()
+        self._subscribe_foreign_features()
 
     def get_name(self):
         return self.servicename
@@ -38,11 +41,11 @@ class Service(object):
         )
 
     # Public Options API
-    def get_options(self):
+    def _get_options(self):
         return self.reg.get_singleton(IOptions)
 
     def get_option(self, name):
-        return self.get_options().get_option(name)
+        return self._get_options().get_option(name)
 
     def opt(self, name):
         return self.get_option(name).value
@@ -58,7 +61,7 @@ class Service(object):
 
     # Public Commands API
 
-    def get_commands(self):
+    def _get_commands(self):
         return self.reg.get_singleton(ICommands)
 
     def cmd(self, name, *args, **kw):
@@ -66,7 +69,7 @@ class Service(object):
             raise TypeError('You must call command %s in service %s with '
             'named arguments' % (name, self.get_name()))
         else:
-            return self.get_commands().call(name, **kw)
+            return self._get_commands().call(name, **kw)
 
     ##########
     # Events
@@ -79,22 +82,51 @@ class Service(object):
         )
 
     def _subscribe_foreign_events(self):
-        self.get_events().subscribe_foreign_events()
+        self._get_events().subscribe_foreign_events()
 
     # Public Events API
-    def get_events(self):
+    def _get_events(self):
         return self.reg.get_singleton(IEvents)
 
     def get_event(self, name):
-        return self.get_events().get(name)
+        return self._get_events().get(name)
 
     def subscribe_foreign_event(self, servicename, name, callback):
         self.boss.subscribe_event(servicename, name, callback)
 
     def subscribe_event(self, name, callback):
-        self.get_events().subscribe_event(name, callback)
+        self._get_events().subscribe_event(name, callback)
 
     def emit(self, name):
         self.get_events().emit(name)
 
+    ##########
+    # Features
+
+    def _register_feature_config(self, config_cls):
+        self.reg.register_plugin(
+            instance = config_cls(self),
+            singletons=(IFeatures,)
+        )
+
+    def _subscribe_foreign_features(self):
+        self._get_features().subscribe_foreign_features()
+
+    ##########
+    # Public Feature API
+
+    def _get_features(self):
+        return self.reg.get_singleton(IFeatures)
+
+    def list_features(self):
+        return self._get_features().list_features()
+
+    def subscribe_feature(self, feature, instance):
+        self._get_features().subscribe_feature(feature, instance)
+
+    def subscribe_foreign_feature(self, servicename, feature, instance):
+        self.boss.subscribe_feature(servicename, feature, instance)
+
+    def features(self, name):
+        return self._get_features().get_feature_providers(name)
 

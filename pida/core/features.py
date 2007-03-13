@@ -20,11 +20,40 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+from pida.core.base import BaseConfig
 
+from pida.core.plugins import Registry
 
+class FeaturesConfig(BaseConfig):
 
+    def create(self):
+        self._features = Registry()
+        self._featurenames = []
+        self.create_features()
 
+    def create_features(self):
+        """Create the features here"""
 
+    def create_feature(self, name):
+        self._featurenames.append(name)
+
+    def list_features(self):
+        return self._featurenames
+
+    def subscribe_foreign_features(self):
+        """Subscribe to features here"""
+
+    def subscribe_foreign_feature(self, servicename, featurename, instance):
+        self.svc.subscribe_foreign_feature(servicename, featurename, instance)
+
+    def subscribe_feature(self, featurename, instance):
+        self._features.register_plugin(
+            instance=instance,
+            features=(featurename,)
+        )
+
+    def get_feature_providers(self, featurename):
+        return self._features.get_features(featurename)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

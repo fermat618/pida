@@ -41,6 +41,11 @@ class Boss(object):
     def get_service_dirs(self):
         return []
 
-    def subscribe_event(self, servicename, event):
-        self.get_service(servicename)
+    def subscribe_event(self, servicename, event, callback):
+        svc = self.get_service(servicename)
+        svc.subscribe_event(event, callback)
+
+    def subscribe_feature(self, servicename, feature, instance):
+        svc = self.get_service(servicename)
+        svc.subscribe_feature(feature, instance)
 
