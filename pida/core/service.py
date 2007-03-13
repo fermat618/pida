@@ -1,5 +1,5 @@
 
-from pida.core.interfaces import IOptions, IEvents
+from pida.core.interfaces import IOptions, IEvents, ICommands
 from pida.core.plugins import Registry
 from pida.core.options import OptionsConfig
 from pida.core.events import EventsConfig
@@ -40,6 +40,20 @@ class Service(object):
 
     def opt(self, name):
         return self.get_option(name).value
+
+    ##########
+    # Commands
+
+    def _register_commands_config(self, config_cls):
+        self.reg.register_plugin(
+            instance = config_cls(self),
+            singletons=(ICommands,)
+        )
+
+    # Public Commands API
+
+    def get_commands(self):
+        return self.reg.get_singleton(ICommands)
 
     ##########
     # Events

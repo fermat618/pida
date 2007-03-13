@@ -151,7 +151,7 @@ class ModuleCreator(object):
     def __init__(self, root_path, name, opts):
         self._name = name
         self._root_path = root_path
-        self.path = os.path.join(self._root_path, name)
+        self._path = os.path.join(self._root_path, name)
         self._opts = opts
 
     def _create_module(self):

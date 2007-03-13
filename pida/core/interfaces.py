@@ -4,7 +4,7 @@ from protocols import Interface
 
 class IBaseConfig(Interface):
 
-    def create_all():
+    def create():
         """Create all the items in this configuration"""
 
     def bind_all():
@@ -20,6 +20,10 @@ class IEvents(IBaseConfig):
 
     def create_event(name):
         """Create an Event"""
+
+class ICommands(IBaseConfig):
+    
+    """The commands for a plugin"""
 
 class IService(Interface):
 
