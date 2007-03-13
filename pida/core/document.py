@@ -34,7 +34,7 @@ import codecs
 import actions
 
 
-class document_handler(actions.action_handler):
+class document_handler(object):
     
     globs = []
     type_name = 'document'
