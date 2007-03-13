@@ -1,7 +1,11 @@
 
 from unittest import TestCase
 
-from pida.core.service import Service, OptionsConfig
+from pida.core.service import Service
+
+from pida.core.options import OptionsConfig
+from pida.core.commands import CommandsConfig
+
 from pida.core.interfaces import IOptions
 
 class MYOptions(OptionsConfig):
@@ -15,9 +19,22 @@ class MYOptions(OptionsConfig):
             doc='Document for my group'
         )
 
+class MyCommands(CommandsConfig):
+
+    def do_something(self, val):
+        self.svc.something = val
+
 class MYService(Service):
     
     options_config = MYOptions
+    commands_config = MyCommands
+
+    def __init__(self, boss):
+        Service.__init__(self, boss)
+        self.something = False
+
+    def get_name(self):
+        return 'My Service Name'
 
 class TestOptions(TestCase):
 
@@ -45,4 +62,23 @@ class TestOptions(TestCase):
         self.assertEqual(
             svc.opt('g1'), 'default value'
         )
+
+class TestCommands(TestCase):
+
+    def setUp(self):
+        self.svc = MYService(boss=None)
+        self.svc.create_all()
+
+    def test_call(self):
+        self.assertEqual(self.svc.something, False)
+        self.svc.cmd('do_something', val=True)
+        self.assertEqual(self.svc.something, True)
+
+    def test_non_named(self):
+        def c():
+            self.svc.cmd('do_something', True)
+        self.assertRaises(TypeError, c)
+        
+        
+
         

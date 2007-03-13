@@ -23,9 +23,9 @@
 # Standard Library Imports
 from unittest import TestCase
 
-from pida.core.commands import CommandConfig
+from pida.core.commands import CommandsConfig
 
-class MyCommands(CommandConfig):
+class MyCommands(CommandsConfig):
     
     def do_something(self):
         self.svc.something_done = True

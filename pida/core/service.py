@@ -3,6 +3,7 @@ from pida.core.interfaces import IOptions, IEvents, ICommands
 from pida.core.plugins import Registry
 from pida.core.options import OptionsConfig
 from pida.core.events import EventsConfig
+from pida.core.commands import CommandsConfig
 
 
 class Service(object):
@@ -10,6 +11,7 @@ class Service(object):
 
     options_config = OptionsConfig
     events_config = EventsConfig
+    commands_config = CommandsConfig
 
     def __init__(self, boss=None):
         self.boss = boss
@@ -18,9 +20,13 @@ class Service(object):
     def create_all(self):
         self._register_options_config(self.options_config)
         self._register_events_config(self.events_config)
+        self._register_commands_config(self.commands_config)
 
     def subscribe_all(self):
         self._subscribe_foreign_events()
+
+    def get_name(self):
+        return self.servicename
 
     ##########
     # Options
@@ -54,6 +60,13 @@ class Service(object):
 
     def get_commands(self):
         return self.reg.get_singleton(ICommands)
+
+    def cmd(self, name, *args, **kw):
+        if args:
+            raise TypeError('You must call command %s in service %s with '
+            'named arguments' % (name, self.get_name()))
+        else:
+            return self.get_commands().call(name, **kw)
 
     ##########
     # Events

@@ -23,7 +23,7 @@
 from pida.core.base import BaseConfig
 
 
-class CommandConfig(BaseConfig):
+class CommandsConfig(BaseConfig):
 
     def call(self, name, **kw):
         cmd = getattr(self, name)
