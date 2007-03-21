@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <glade-catalog name="kiwiwidgets" library="kiwiwidgets" domain="glade-3" depends="gtk+" language="python">
   <glade-widget-classes>
-    <glade-widget-class title="HyperLink" name="HyperLink" generic-name="hyperlink"/>
+    
+    <!-- HyperLink -->
+    <glade-widget-class title="HyperLink"
+                        name="HyperLink"
+                        generic-name="hyperlink">
+        <properties>
+            <!-- Hide some event box properties -->
+            <property id="visible-window"
+                      visible="False" />
+            <property id="above-child"
+                      visible="False" />
+        </properties>
+    </glade-widget-class>
+    
     <glade-widget-class title="ObjectList" name="ObjectList" generic-name="objectlist"/>
     <glade-widget-class title="ObjectTree" name="ObjectTree" generic-name="objecttree"/>
     <glade-widget-class title="KiwiLabel" name="ProxyLabel" generic-name="kiwilabel"/>
@@ -19,13 +32,13 @@
             <!-- Disable the size query box -->
             <property id="size"
                       query="False"
-                      disabled="True"
+                      visible="False"
                       save="False" />
             <!-- Disable some HBox things we don't need -->
             <property id="spacing"
-                      disabled="True" />
+                      visible="False" />
             <property id="homogeneous"
-                      disabled="True" />
+                      visible="False" />
         </properties>
     </glade-widget-class>
 
