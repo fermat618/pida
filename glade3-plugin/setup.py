@@ -1,5 +1,4 @@
 from distutils.core import setup
-
 from os.path import join
 
 from kiwi.dist import listfiles
