@@ -21,6 +21,11 @@
                       query="False"
                       disabled="True"
                       save="False" />
+            <!-- Disable some HBox things we don't need -->
+            <property id="spacing"
+                      disabled="True" />
+            <property id="homogeneous"
+                      disabled="True" />
         </properties>
     </glade-widget-class>
 
