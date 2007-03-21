@@ -1,14 +1,20 @@
 from distutils.core import setup
 
+from os.path import join
+
 from kiwi.dist import listfiles
+
+glade3_prefix = '/usr/local'
 
 setup(
     data_files=[
-        ('/usr/local/share/glade3/catalogs', ('kiwiwidgets.xml',)),
-        ('/usr/local/lib/glade3/modules', ('kiwiwidgets.py',)),
-        ('/usr/local/share/glade3/pixmaps/22x22',
+        (join(glade3_prefix, 'share', 'glade3', 'catalogs'),
+            ('kiwiwidgets.xml',)),
+        (join(glade3_prefix, 'lib', 'glade3', 'modules'),
+            ('kiwiwidgets.py',)),
+        (join(glade3_prefix, 'share', 'glade3', 'pixmaps', '22x22'),
             listfiles('..', 'gazpacho-plugin', 'resources', 'kiwiwidgets', '*.png')),
-        ('/usr/local/share/glade3/pixmaps/16x16',
+        (join(glade3_prefix, 'share', 'glade3', 'pixmaps', '16x16'),
             listfiles('..', 'gazpacho-plugin', 'resources', 'kiwiwidgets', '*.png')),
     ]
 )
