@@ -10,7 +10,20 @@
     <glade-widget-class title="KiwiCheckButton" name="ProxyCheckButton" generic-name="kiwicheckbutton"/>
     <glade-widget-class title="KiwiRadioButton" name="ProxyRadioButton" generic-name="kiwiradiobutton"/>
     <glade-widget-class title="KiwiEntry" name="ProxyEntry" generic-name="kiwientry"/>
-    <glade-widget-class title="KiwiDateEntry" name="ProxyDateEntry" generic-name="kiwidateentry"/>
+
+    <!-- DateEntry -->
+    <glade-widget-class title="KiwiDateEntry"
+                        name="ProxyDateEntry"
+                        generic-name="kiwidateentry">
+        <properties>
+            <!-- Disable the size query box -->
+            <property id="size"
+                      query="False"
+                      disabled="True"
+                      save="False" />
+        </properties>
+    </glade-widget-class>
+
     <glade-widget-class title="KiwiSpinButton" name="ProxySpinButton" generic-name="kiwispinbutton"/>
     <glade-widget-class title="KiwiTextView" name="ProxyTextView" generic-name="kiwitextview"/>
     <glade-widget-class title="KiwiButton" name="ProxyButton" generic-name="kiwibutton"/>
