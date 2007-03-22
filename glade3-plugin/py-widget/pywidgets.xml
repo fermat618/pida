@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glade-catalog name="pywidgets" library="pywidgets" domain="glade-3" depends="gtk+" language="python">
+  <glade-widget-classes>
+    
+    <glade-widget-class title="Service View"
+                        name="ServiceView"
+                        generic-name="serviceview"
+                        adaptor="ServiceViewAdaptor">
+        <properties>
+            <property id="size" query="False" default="0" visible="False" />
+        </properties>
+    </glade-widget-class>
+    
+  </glade-widget-classes>
+
+  <glade-widget-group name="PythonWidgets" title="Python Widgets">
+    <glade-widget-class-ref name="ServiceView"/>
+  </glade-widget-group>
+</glade-catalog>
+
