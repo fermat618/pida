@@ -149,4 +149,3 @@ class Service(object):
 
     def get_action(self, name):
         return self._get_actions().get_action(name)
-        
