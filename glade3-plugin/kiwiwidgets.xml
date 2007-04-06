@@ -32,9 +32,13 @@
                         name="ProxyComboBox"
                         generic-name="kiwicombobox"/>
 
-    <glade-widget-class title="Kiwi ComboBoxEntry"
-                        name="ProxyComboBoxEntry"
-                        generic-name="kiwicomboboxentry"/>
+    <glade-widget-class title="Kiwi ComboEntry"
+                        name="ProxyComboEntry"
+                        generic-name="kiwicomboentry">
+        <properties>
+            <property id="size" visible="False" query="False" default="0"/>
+        </properties>
+    </glade-widget-class>
 
     <glade-widget-class title="Kiwi CheckButton"
                         name="ProxyCheckButton"
@@ -83,7 +87,7 @@
     <glade-widget-class-ref name="ObjectTree"/>
     <glade-widget-class-ref name="ProxyLabel"/>
     <glade-widget-class-ref name="ProxyComboBox"/>
-    <glade-widget-class-ref name="ProxyComboBoxEntry"/>
+    <glade-widget-class-ref name="ProxyComboEntry"/>
     <glade-widget-class-ref name="ProxyCheckButton"/>
     <glade-widget-class-ref name="ProxyRadioButton"/>
     <glade-widget-class-ref name="ProxyEntry"/>
