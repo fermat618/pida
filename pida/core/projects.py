@@ -94,6 +94,8 @@ class ProjectController(object):
 
     name = ''
 
+    glade_resource = None
+
     def __init__(self, project, config_section):
         self.project = proxy(project)
         self.boss = self.project.boss
