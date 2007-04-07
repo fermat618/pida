@@ -30,8 +30,9 @@ from pida.core.base import BaseConfig
 (
 TYPE_RADIO,
 TYPE_TOGGLE,
-TYPE_NORMAL
-) = range(3)
+TYPE_NORMAL,
+TYPE_MENUTOOL,
+) = range(4)
 
 
 class AccelMixin(object):
@@ -91,10 +92,21 @@ class PidaRadioAction(gtk.RadioAction, AccelMixin):
         AccelMixin.__init__(self)
         gtk.RadioAction.__init__(self, *args, **kw)
 
+class PidaMenuToolAction(gtk.Action, AccelMixin):
+
+    __gtype_name__ = "PidaMenuToolAction"
+
+    def __init__(self, *args, **kw):
+        AccelMixin.__init__(self)
+        gtk.Action.__init__(self, *args, **kw)
+        self.set_tool_item_type(gtk.MenuToolButton)
+
+
 _ACTIONS = {
     TYPE_NORMAL: PidaAction,
     TYPE_TOGGLE: PidaToggleAction,
-    TYPE_RADIO: PidaRadioAction
+    TYPE_RADIO: PidaRadioAction,
+    TYPE_MENUTOOL: PidaMenuToolAction,
 }
 
 
@@ -103,6 +115,10 @@ class ActionsConfig(BaseConfig):
     def create(self):
         self._actions = gtk.ActionGroup(self.svc.get_name())
         self.create_actions()
+        self.svc.boss.add_action_group_and_ui(
+            self._actions,
+            '%s.xml' % self.svc.get_name()
+        )
 
     def create_actions(self):
         """Create your actions here"""
@@ -118,5 +134,8 @@ class ActionsConfig(BaseConfig):
 
     def get_action(self, name):
         return self._actions.get_action(name)
+
+    def get_action_group(self):
+        return self._actions
 
         

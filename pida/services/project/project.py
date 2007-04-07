@@ -22,6 +22,8 @@
 
 import os
 
+import gtk
+
 from kiwi.ui.objectlist import Column
 
 # PIDA Imports
@@ -29,6 +31,7 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
+from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectControllerMananger, ProjectController, \
     ExecutionActionType, project_action
@@ -58,6 +61,8 @@ class ProjectListView(PidaView):
 
     label_text = 'Projects'
 
+    icon_name = 'terminal'
+
     def create_ui(self):
         self.project_ol.set_headers_visible(False)
         self.project_ol.set_columns(PROJECT_LIST_COLUMNS)
@@ -70,6 +75,28 @@ class ProjectEventsConfig(EventsConfig):
     def create_events(self):
         self.create_event('project_switched')
 
+class ProjectActionsConfig(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'project_add',
+            TYPE_NORMAL,
+            'New Project',
+            'Creates a new project',
+            gtk.STOCK_NEW,
+            self.on_project_add,
+        )
+
+        self.create_action(
+            'project_execute',
+            TYPE_MENUTOOL,
+            'Execute Project',
+            'Execute the project',
+            gtk.STOCK_EXECUTE,
+        )
+
+    def on_project_add(self, action):
+        print 'project_add'
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
@@ -92,6 +119,7 @@ class Project(Service):
     features_config = ProjectFeaturesConfig
     commands_config = ProjectCommandsConfig
     events_config = ProjectEventsConfig
+    actions_config = ProjectActionsConfig
 
     def start(self):
         self._projects = []

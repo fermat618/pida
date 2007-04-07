@@ -17,6 +17,7 @@ class Boss(object):
         self._create_services()
         self._subscribe_services()
         self._start_services()
+        self._window.start()
 
     def stop(self):
         pass
@@ -52,6 +53,10 @@ class Boss(object):
     def subscribe_feature(self, servicename, feature, instance):
         svc = self.get_service(servicename)
         svc.subscribe_feature(feature, instance)
+
+    def add_action_group_and_ui(self, actiongroup, uidef):
+        self._window.add_action_group(actiongroup)
+        self._window.add_uidef(uidef)
 
     def cmd(self, servicename, commandname, **kw):
         self.get_service(servicename).cmd(commandname, **kw)

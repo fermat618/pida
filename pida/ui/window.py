@@ -4,7 +4,9 @@ from kiwi.ui.delegates import GladeDelegate
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
 
 from pida.ui.books import BookManager, BookConfigurator
+from pida.ui.uimanager import PidaUIManager
 
+from pida.core.environment import get_uidef_path
 
 
 class MainGladeDelegate(GladeDelegate):
@@ -55,6 +57,20 @@ class PidaWindow(MainGladeDelegate):
 
     def create_all(self):
         self._fix_books()
+        self._create_ui()
+
+    def start(self):
+        self._start_ui()
+
+    def _create_ui(self):
+        self._uim = PidaUIManager()
+        
+    def _start_ui(self):
+        self._menubar = self._uim.get_menubar()
+        self._toolbar = self._uim.get_toolbar()
+        self.top_box.pack_start(self._menubar, expand=False)
+        self.top_box.pack_start(self._toolbar, expand=False)
+        self.top_box.show_all()
 
     def _fix_books(self):
         self._book_config = BookConfigurator(0)
@@ -63,6 +79,17 @@ class PidaWindow(MainGladeDelegate):
             book = getattr(self, book_name)
             self._book_config.configure_book(book_name, book)
         self._book_man = BookManager(self._book_config)
+
+    # Action group API
+    def add_action_group(self, actiongroup):
+        self._uim.add_action_group(actiongroup)
+
+    def add_uidef(self, filename):
+        try:
+            uifile = get_uidef_path(filename)
+            self._uim.add_ui_from_file(uifile)
+        except Exception, e:
+            print 'unable to get %s resource' % filename
 
     # View API
     def add_view(self, bookname, view):

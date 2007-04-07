@@ -3,7 +3,8 @@ import os, imp
 from pida.core.interfaces import IService
 from pida.core.plugins import Registry
 
-from pida.core.environment import library
+from pida.core.environment import library, environ
+
 
 class ServiceLoader(object):
 
