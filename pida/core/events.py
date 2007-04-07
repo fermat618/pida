@@ -131,7 +131,7 @@ class EventsConfig(BaseConfig):
     def get(self, event):
         return self._events.get(event)
 
-    def emit(self, event):
-        return self._events.emit(event)
+    def emit(self, event, **kw):
+        return self._events.emit(event, **kw)
 
 

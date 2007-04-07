@@ -22,11 +22,13 @@
 
 import os
 
+from kiwi.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
+from pida.core.events import EventsConfig
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectControllerMananger, ProjectController, \
     ExecutionActionType, project_action
@@ -46,6 +48,10 @@ class GenericExecutionController(ProjectController):
             self.get_option('cwd') or self.project.source_directory,
         )
 
+PROJECT_LIST_COLUMNS = [
+    Column('markup', use_markup=True)
+]
+
 class ProjectListView(PidaView):
 
     gladefile = 'project_list'
@@ -53,7 +59,17 @@ class ProjectListView(PidaView):
     label_text = 'Projects'
 
     def create_ui(self):
-        pass
+        self.project_ol.set_headers_visible(False)
+        self.project_ol.set_columns(PROJECT_LIST_COLUMNS)
+
+    def on_project_ol__selection_changed(self, ol, project):
+        self.svc.set_current_project(project)
+
+class ProjectEventsConfig(EventsConfig):
+
+    def create_events(self):
+        self.create_event('project_switched')
+
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
@@ -75,6 +91,7 @@ class Project(Service):
 
     features_config = ProjectFeaturesConfig
     commands_config = ProjectCommandsConfig
+    events_config = ProjectEventsConfig
 
     def start(self):
         self._projects = []
@@ -84,8 +101,8 @@ class Project(Service):
             self._manager.register_controller(controller_type)
 
         ###
-        view = ProjectListView(self)
-        self.boss._window.add_view('Buffer', view)
+        self.project_list = ProjectListView(self)
+        self.boss._window.add_view('Buffer', self.project_list)
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
@@ -97,10 +114,12 @@ class Project(Service):
 
     def set_current_project(self, project):
         self._project = project
+        self.emit('project_switched', project=project)
 
     def _load_project(self, project_file):
         project = self._manager.create_project(project_file)
         self._projects.append(project)
+        self.project_list.project_ol.append(project)
         return project
 
 

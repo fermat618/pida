@@ -73,6 +73,11 @@ class Project(object):
         self.options[section][name] = value
         self.options.write()
 
+    def get_markup(self):
+        return '%s %s' % (self.options['name'], self.source_directory)
+
+    markup = property(get_markup)
+
 def project_action(kind):
     def project_action_decorator(f):
         f.__kind__ = kind
