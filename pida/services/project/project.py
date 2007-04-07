@@ -27,6 +27,10 @@
 from pida.core.service import Service
 from pida.core.features import FeatureConfig
 from pida.core.interfaces import IProjectController
+from pida.core.projects import ProjectControllerMananger, ProjectController, \
+    ExecutionActionType, project_action
+
+# Some generic project controllers
 
 class GenericExecutionController(ProjectController):
 
@@ -56,6 +60,9 @@ class Project(Service):
     features_config = ProjectFeatureConfig
 
     def start(self):
+        self._manager = ProjectControllerMananger(self.boss)
+        for controller_type in self.get_feature_providers(IProjectController):
+            self._manager.register_controller(controller_type)
 
 # Required Service attribute for service loading
 Service = Project
