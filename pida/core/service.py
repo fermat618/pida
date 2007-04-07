@@ -106,8 +106,8 @@ class Service(object):
     def subscribe_event(self, name, callback):
         self._get_events().subscribe_event(name, callback)
 
-    def emit(self, name):
-        self.get_events().emit(name)
+    def emit(self, name, **kw):
+        self.get_events().emit(name, **kw)
 
     ##########
     # Features
@@ -152,3 +152,4 @@ class Service(object):
 
     def get_action(self, name):
         return self._get_actions().get_action(name)
+
