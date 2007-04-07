@@ -21,7 +21,14 @@
 #SOFTWARE.
 
 
+from pida.core.boss import Boss
 
+def main():
+    b = Boss()
+    b.loop_ui()
+
+if __name__ == '__main__':
+    main()
 
 
 
