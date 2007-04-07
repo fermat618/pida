@@ -6,6 +6,9 @@ from pida.utils.unique import create_unique_id
 
 class PidaView(GladeSlaveDelegate):
 
+    icon_name = gtk.STOCK_INFO
+    label_text = 'Pida View'
+
     def __init__(self, service, *args, **kw):
         self.svc = service
         GladeSlaveDelegate.__init__(self, *args, **kw)
@@ -19,8 +22,8 @@ class PidaView(GladeSlaveDelegate):
         return self._uid
 
     def create_tab_label_icon(self):
-        return gtk.image_new_from_stock(gtk.STOCK_INFO, gtk.ICON_SIZE_MENU)
+        return gtk.image_new_from_stock(self.icon_name, gtk.ICON_SIZE_MENU)
 
     def get_tab_label_text(self):
-        return 'Pida View'
+        return self.label_text
 
