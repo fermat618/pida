@@ -28,6 +28,9 @@ class PidaViewWidgetAdaptor(glade.get_adaptor_for_type('GtkVBox')):
     def do_add(self, pvw, child):
         pvw.add_main_widget(child)
 
+    def do_remove(self, pvw, child):
+        pvw.remove_main_widget()
+
     def do_child_get_property(self, pvw, child, prop):
         if prop in ['expand', 'fill']:
             return True
