@@ -10,7 +10,7 @@ try:
 except ImportError:
     get_pixmap_path = lambda name: '/home/ali/working/pida-next/resources/pixmaps/%s' % name
 
-#from pida.utils.unique import create_unique_id
+from pida.utils.unique import create_unique_id
 
 
 class PidaViewWidget(PropertyObject, gtk.VBox):
@@ -76,12 +76,6 @@ class PidaViewWidget(PropertyObject, gtk.VBox):
         self.add_main_widget(widget)
 
 
-if __name__ == '__main__':
-    vw = PidaViewWidget()
-    w = gtk.Window()
-    w.add(vw)
-    w.show_all()
-    gtk.main()
 
 class PidaView(GladeSlaveDelegate):
 

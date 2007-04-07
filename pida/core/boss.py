@@ -44,7 +44,11 @@ class Boss(object):
         return self._sm.get_services()
 
     def get_service_dirs(self):
-        return [self._env.get_base_service_directory()]
+        if self._env is None:
+            return []
+        else:
+            return [self._env.get_base_service_directory()]
+
 
     def subscribe_event(self, servicename, event, callback):
         svc = self.get_service(servicename)

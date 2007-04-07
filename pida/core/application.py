@@ -29,68 +29,67 @@ import warnings
 import signal
 import atexit
 
-def die_cli(message):
-    """Die in a command line way."""
-    print message
-    print 'Exiting. (this is fatal)'
-    sys.exit(1)
+#def die_cli(message):
+#    """Die in a command line way."""
+#    print message
+#    print 'Exiting. (this is fatal)'
+#    sys.exit(1)
 
 
 # First gtk import, let's check it
-try:
-    import gtk
-    from gtk import gdk
-    if gtk.pygtk_version < (2, 8):
-        die_cli('PIDA requires PyGTK >= 2.8. It only found %s.%s'
-                % gtk.pygtk_version[:2])
-except ImportError:
-    die_cli('PIDA requires Python GTK bindings. They were not found.')
+#try:
+#    import gtk
+#    from gtk import gdk
+#    if gtk.pygtk_version < (2, 8):
+#        die_cli('PIDA requires PyGTK >= 2.8. It only found %s.%s'
+#                % gtk.pygtk_version[:2])
+#except ImportError:
+#    die_cli('PIDA requires Python GTK bindings. They were not found.')
 
-try:
-    from rat import hig
-    def die_gui(message):
-        """Die in a GUI way."""
-        hig.error("Fatal error, cannot start PIDA", 
-                  message,
-                  title="PIDA")
-        die_cli(message)
-except ImportError:
-    die_gui = die_cli
+#try:
+#    from rat import hig
+#    def die_gui(message):
+#       """Die in a GUI way."""
+#        hig.error("Fatal error, cannot start PIDA", 
+#                  message,
+#                  title="PIDA")
+#        die_cli(message)
+#except ImportError:
+#    die_gui = die_cli
 
 # Python 2.4
-if sys.version_info < (2,4):
-    die_gui('Python 2.4 is required to run PIDA. Only %s.%s was found.' %
-            sys.version_info[:2])
+#if sys.version_info < (2,4):
+#    die_gui('Python 2.4 is required to run PIDA. Only %s.%s was found.' %
+#            sys.version_info[:2])
 
 
 # Setuptools is needed to run PIDA
-try:
-    import setuptools
-    import pkg_resources
-    pkg_resources.require('pida')
-except ImportError:
-    die_gui('PIDA requires <i>setuptools</i> module to be installed.')
+#try:
+#    import setuptools
+#    import pkg_resources
+#    pkg_resources.require('pida')
+#except ImportError:
+#    die_gui('PIDA requires <i>setuptools</i> module to be installed.')
 
 
 # This can test if PIDA is installed
-try:
-    from pida.core import boss
-    from pida.pidagtk import debugwindow
-    from pida.model import model
-except ImportError:
-    die_gui('PIDA is not correctly install, the <i>pida</i> module was not found.')
-
+#try:
+#    from pida.core import boss
+#    from pida.pidagtk import debugwindow
+#    from pida.model import model
+#except ImportError:
+#    die_gui('PIDA is not correctly install, the <i>pida</i> module was not found.')
 
 
 # Start lock threads here because an exception may be raised
 # and the dialog would be frozen
-gdk.threads_init()
-gdk.threads_enter()
-atexit.register(gdk.threads_leave)
+#gdk.threads_init()
+#gdk.threads_enter()
+#atexit.register(gdk.threads_leave)
 
 # Now we can use a gui exception hook
-old_excepthook = sys.excepthook
-sys.excepthook = debugwindow.show
+#old_excepthook = sys.excepthook
+#sys.excepthook = debugwindow.show
 
 
 def get_version():
@@ -102,7 +101,7 @@ def get_version():
     return version_file
 
 
-pida_version = get_version()
+#pida_version = get_version()
 
 
 class environment(object):

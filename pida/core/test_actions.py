@@ -25,6 +25,7 @@ class ActionTestCase(TestCase):
 
     def setUp(self):
         self.banana = False
+        self.boss = None
         self._acts = MyActions(self)
         self._acts.create()
         self._act = self._acts._actions.get_action('banana')

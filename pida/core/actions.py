@@ -115,10 +115,11 @@ class ActionsConfig(BaseConfig):
     def create(self):
         self._actions = gtk.ActionGroup(self.svc.get_name())
         self.create_actions()
-        self.svc.boss.add_action_group_and_ui(
-            self._actions,
-            '%s.xml' % self.svc.get_name()
-        )
+        if self.svc.boss is not None:
+            self.svc.boss.add_action_group_and_ui(
+                self._actions,
+                '%s.xml' % self.svc.get_name()
+            )
 
     def create_actions(self):
         """Create your actions here"""
