@@ -50,6 +50,8 @@ class ProjectListView(PidaView):
 
     gladefile = 'project_list'
 
+    label_text = 'Projects'
+
     def create_ui(self):
         pass
 
