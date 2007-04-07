@@ -5,7 +5,7 @@ from tempfile import mkstemp
 
 # the matching example config file
 from pida.core.projects import ProjectControllerMananger, PythonController, \
-    GenericExecutionController, ExecutionActionType
+    ExecutionActionType, project_action, ProjectController
 
 PYCONF="""
 name = My Project
@@ -15,6 +15,18 @@ execute_file = banana.py
 source_package = src
 test_command = nosetests
 """
+
+class GenericExecutionController(ProjectController):
+
+    name = 'GENERIC_EXECUTION'
+
+    @project_action(kind=ExecutionActionType)
+    def execute(self):
+        self.execute_commandline(
+            self.get_option('command_line'),
+            self.get_option('env'),
+            self.get_option('cwd') or self.project.source_directory,
+        )
 
 EXCONF = """
 name = My Project

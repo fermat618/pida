@@ -138,17 +138,6 @@ class ProjectController(object):
 
 # an example controller
 
-class GenericExecutionController(ProjectController):
-
-    name = 'GENERIC_EXECUTION'
-
-    @project_action(kind=ExecutionActionType)
-    def execute(self):
-        self.execute_commandline(
-            self.get_option('command_line'),
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
 
 class PythonController(ProjectController):
 
