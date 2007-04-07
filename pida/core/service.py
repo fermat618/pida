@@ -37,6 +37,9 @@ class Service(object):
     def get_name(self):
         return self.servicename
 
+    def start(self):
+        """Override to start up"""
+
     ##########
     # Options
 

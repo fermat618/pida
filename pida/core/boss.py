@@ -14,8 +14,9 @@ class Boss(object):
 
     def start(self):
         self._load_services()
-        self._start_services()
+        self._create_services()
         self._subscribe_services()
+        self._start_services()
 
     def stop(self):
         pass
@@ -26,11 +27,14 @@ class Boss(object):
     def _load_services(self):
         self._sm.load_services()
 
-    def _start_services(self):
+    def _create_services(self):
         self._sm.create_all()
 
     def _subscribe_services(self):
         self._sm.subscribe_all()
+
+    def _start_services(self):
+        self._sm.start_all()
 
     def get_service(self, servicename):
         return self._sm.get_service(servicename)

@@ -25,11 +25,37 @@
 
 # PIDA Imports
 from pida.core.service import Service
+from pida.core.features import FeatureConfig
+from pida.core.interfaces import IProjectController
 
+class GenericExecutionController(ProjectController):
+
+    name = 'GENERIC_EXECUTION'
+
+    @project_action(kind=ExecutionActionType)
+    def execute(self):
+        self.execute_commandline(
+            self.get_option('command_line'),
+            self.get_option('env'),
+            self.get_option('cwd') or self.project.source_directory,
+        )
+
+
+class ProjectFeatureConfig(FeatureConfig):
+
+    def create_features(self):
+        self.create_feature(IProjectController)
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('project', GenericExecutionController)
 
 # Service class
 class Project(Service):
-    """Describe your Service Here""" 
+    """The project manager service"""
+
+    features_config = ProjectFeatureConfig
+
+    def start(self):
 
 # Required Service attribute for service loading
 Service = Project

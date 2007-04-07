@@ -101,3 +101,8 @@ class IEditor(Interface):
     def set_revert_sensitive(sensitive):
         """Set the revert sensitivity"""
 
+
+class IProjectController(Interface):
+
+    """A Project Controller"""
+

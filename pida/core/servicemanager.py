@@ -106,7 +106,10 @@ class ServiceManager(object):
     def subscribe_all(self):
         for svc in self.get_services():
             svc.subscribe_all()
-    
+
+    def start_all(self):
+        for svc in self.get_services():
+            svc.start()
 
 
 
