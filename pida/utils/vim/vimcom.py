@@ -23,9 +23,12 @@
 
 
 """
+
 A library to control vim -g using its X protocol interface (with gdk).
- 
-== How it works ==
+
+============
+How it works
+============
 
 === General Communication ===
 
