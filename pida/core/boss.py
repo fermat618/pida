@@ -43,7 +43,7 @@ class Boss(object):
         return self._sm.get_services()
 
     def get_service_dirs(self):
-        return []
+        return [self._env.get_base_service_directory()]
 
     def subscribe_event(self, servicename, event, callback):
         svc = self.get_service(servicename)
@@ -52,4 +52,7 @@ class Boss(object):
     def subscribe_feature(self, servicename, feature, instance):
         svc = self.get_service(servicename)
         svc.subscribe_feature(feature, instance)
+
+    def cmd(self, servicename, commandname, **kw):
+        self.get_service(servicename).cmd(commandname, **kw)
 

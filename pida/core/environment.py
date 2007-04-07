@@ -1,3 +1,4 @@
+import os
 
 from kiwi.environ import Library, environ
 
@@ -14,3 +15,10 @@ def get_uidef_path(name):
 
 def get_glade_path(name):
     return get_resource_path('glade', name)
+
+
+class Environment(object):
+
+    def get_base_service_directory(self):
+        return os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), 'services')

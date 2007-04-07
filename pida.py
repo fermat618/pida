@@ -21,10 +21,13 @@
 #SOFTWARE.
 
 
+from pida.core.environment import Environment
 from pida.core.boss import Boss
 
 def main():
-    b = Boss()
+    b = Boss(Environment())
+    b.start()
+    b.cmd('project', 'add_directory', project_directory='/tmp/banana')
     b.loop_ui()
 
 if __name__ == '__main__':

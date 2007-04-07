@@ -20,16 +20,18 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-
+import os
 
 
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.features import FeatureConfig
+from pida.core.features import FeaturesConfig
+from pida.core.commands import CommandsConfig
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectControllerMananger, ProjectController, \
     ExecutionActionType, project_action
 
+from pida.ui.views import PidaView
 # Some generic project controllers
 
 class GenericExecutionController(ProjectController):
@@ -44,25 +46,61 @@ class GenericExecutionController(ProjectController):
             self.get_option('cwd') or self.project.source_directory,
         )
 
+class ProjectListView(PidaView):
 
-class ProjectFeatureConfig(FeatureConfig):
+    gladefile = 'project_list'
+
+    def create_ui(self):
+        pass
+
+class ProjectFeaturesConfig(FeaturesConfig):
 
     def create_features(self):
         self.create_feature(IProjectController)
 
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('project', GenericExecutionController)
+        self.subscribe_foreign_feature('project', IProjectController, GenericExecutionController)
+
+
+class ProjectCommandsConfig(CommandsConfig):
+
+    def add_directory(self, project_directory):
+        self.svc.add_directory(project_directory)
 
 # Service class
 class Project(Service):
     """The project manager service"""
 
-    features_config = ProjectFeatureConfig
+    features_config = ProjectFeaturesConfig
+    commands_config = ProjectCommandsConfig
 
     def start(self):
+        self._projects = []
+        self._project = None
         self._manager = ProjectControllerMananger(self.boss)
-        for controller_type in self.get_feature_providers(IProjectController):
+        for controller_type in self.features(IProjectController):
             self._manager.register_controller(controller_type)
+
+        ###
+        view = ProjectListView(self)
+        self.boss._window.add_view('Buffer', view)
+
+    def add_directory(self, project_directory):
+        # Add a directory to the project list
+        for name in os.listdir(project_directory):
+            if name.endswith('.pidaproject'):
+                project = self._load_project(os.path.join(project_directory, name))
+                self.set_current_project(project)
+                break
+
+    def set_current_project(self, project):
+        self._project = project
+
+    def _load_project(self, project_file):
+        project = self._manager.create_project(project_file)
+        self._projects.append(project)
+        return project
+
 
 # Required Service attribute for service loading
 Service = Project

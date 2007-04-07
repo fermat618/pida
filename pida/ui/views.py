@@ -10,6 +10,10 @@ class PidaView(GladeSlaveDelegate):
         self.svc = service
         GladeSlaveDelegate.__init__(self, *args, **kw)
         self._uid = create_unique_id()
+        self.create_ui()
+
+    def create_ui(self):
+        """Create the user interface here"""
 
     def get_unique_id(self):
         return self._uid

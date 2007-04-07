@@ -29,13 +29,15 @@ class BaseBookConfig(object):
     def create_tab_label(self, icon, text):
         if None in [icon, text]:
             return None
+        label = gtk.Label(text)
         if self.get_tab_position() in [gtk.POS_TOP, gtk.POS_BOTTOM]:
             b_factory = gtk.HBox
         else:
             b_factory = gtk.VBox
+            label.set_angle(270)
         b = b_factory(spacing=2)
         b.pack_start(icon)
-        b.pack_start(gtk.Label(text))
+        b.pack_start(label)
         b.show_all()
         return b
 
