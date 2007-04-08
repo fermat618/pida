@@ -9,7 +9,7 @@
         href="<% path_to_root %>stylesheets/rest.css"
         type="text/css" />
     <link rel="stylesheet"
-        href="<% path_to_root %>stylesheets/test.css"
+        href="<% path_to_root %>stylesheets/main.css"
         type="text/css" />
 </head>
 <body>

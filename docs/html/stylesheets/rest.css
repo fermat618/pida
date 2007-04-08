@@ -1,14 +1,17 @@
 /*
 :Authors: Ian Bicking, Michael Foord
 :Contact: fuzzyman@voidspace.org.uk
-:Date: 2006/04/01 
+:Date: 2005/08/26 
 :Version: 0.2.0
 :Copyright: This stylesheet has been placed in the public domain.
+
+rest.css - used for rest2web documents
+Content rendered by docutils as part of a website
+http://www.voidspace.org.uk/python/rest2web/
 
 Stylesheet for Docutils.
 Based on ``blue_box.css`` by Ian Bicking
 and ``default.css`` revision 3442
-Optimised for rest2web - http://www.voidspace.org.uk/python/rest2web/
 */
 
 @import url(default.css);
@@ -17,7 +20,6 @@ em, i {
   /* Typically serif fonts have much nicer italics */
   font-family: Times New Roman, Times, serif;
 }
-
 
 a.target {
   color: blue;
@@ -29,11 +31,7 @@ a.toc-backref {
 }
 
 a.toc-backref:hover {
-  background-color: inherit;
-}
-
-a:hover {
-  background-color: #cccccc;
+  background: none ! important
 }
 
 div.attention, div.caution, div.danger, div.error, div.hint,
@@ -63,43 +61,9 @@ div.warning p.admonition-title {
   margin: 0;
 }
 
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: Helvetica, Arial, sans-serif;
-  border: thin solid black;
-  /* This makes the borders rounded on Mozilla, which pleases me */
-  -moz-border-radius: 8px;
-  padding: 2px;
-  /* Padding used to be 4px, changed by Justin */
-}
-
-
-h1 {
-  background-color: #72739A;
-  color: #000000;
-}
-
-h1 a.toc-backref { 
-  color: #ffffff;
-}
-
-
-h3, h4, h5, h6 {
-  background-color: #cccccc;
-  color: #000000;
-}
-
-h2 a.toc-backref, h3 a.toc-backref, h4 a.toc-backref, h5 a.toc-backref, 
+h3 a.toc-backref, h4 a.toc-backref, h5 a.toc-backref, 
 h6 a.toc-backref { 
-  color: #555555;
-}
-
-h1.title {
-  text-align: center;
-  background-color: #444499;
-  color: #eeeeee;
-  border: medium solid black;
-  -moz-border-radius: 20px;
+  color: #000000;
 }
 
 table.footnote {
@@ -115,16 +79,8 @@ pre.literal-block, pre.doctest-block {
   padding: 5px;
 }
 
-.image {
-    border-style : solid;
-    border-width : 2px;
-}
-
-img.align-center {
-    display: block;
-    margin: auto; 
-    text-align: center;
-    margin: 10px;
+.image img { border-style : solid;
+            border-width : 2px;
 }
 
 h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
@@ -134,3 +90,10 @@ h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
 code, tt {
   color: #000066;
 }
+
+span.pre {
+  white-space: normal }
+/*
+When set to 'pre' it breaks my page layout on IE
+*/
+
