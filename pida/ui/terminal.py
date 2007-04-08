@@ -22,9 +22,10 @@
 #SOFTWARE.
 
 """
-========================
 The PIDA Terminal Widget
-========================
+
+The widget `PidaTerminal` encapsulates some of the common functions of VTE in a
+more usable format.
 
 """
 from math import floor
@@ -37,11 +38,57 @@ from kiwi.utils import gsignal, type_register
 
 from vte import Terminal
 
+
+class TerminalMatch(object):
+    """
+    A match for terminal text
+    """
+
+    def __init__(self, name, match_re, match_groups_re, callback):
+        self.name = name
+        self.match_re = match_re
+        self.match_groups_re = sre.compile(match_groups_re)
+        self.callback = callback
+
+    def __call__(self, *args, **kw):
+        self.callback(*args, **kw)
+
+
+class TerminalMenuMatch(TerminalMatch):
+    """
+    A match for terminal text that pops up a menu
+    """
+    def __init__(self, name, match_re, match_groups_re, actions=None):
+        TerminalMatch.__init__(self, name, match_re, match_groups_re,
+                               self._popup)
+        self.actions = []
+
+    def _popup(self, event, *args):
+        menu = self._generate_menu(args)
+        menu.popup(None, None, None, event.button, event.time)
+
+    def _generate_menu(self, args):
+        menu = gtk.Menu()
+        for action in self.actions:
+            menu_item = action.create_menu_item()
+            menu.add(menu_item)
+            action.match_args = args
+        return menu
+
+    def register_action(self, action):
+        """
+        Register an action with the menu for this match
+
+        :param action: A gtk.Action
+        """
+        self.actions.append(action)
+
+
 class PidaTerminal(Terminal):
 
     __gtype_name__ = 'PidaTerminal'
 
-    gsignal('match-right-clicked', int, str)
+    gsignal('match-right-clicked', gtk.gdk.Event, int, str)
 
     def __init__(self):
         Terminal.__init__(self)
@@ -50,47 +97,102 @@ class PidaTerminal(Terminal):
         self._connect_internal()
         self._init_matches()
 
-    def _init_matches(self):
-        self._match_callbacks = {}
-        self._match_res = {}
-
     def _fix_size(self):
         self.set_size_request(50, 50)
-        
+
     def _fix_events(self):
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
 
     def _connect_internal(self):
+        """
+        Connect the internal signals
+        """
         self.connect('button-press-event', self._on_button_press)
         self.connect('match-right-clicked', self._on_match_right_clicked)
 
+    def _init_matches(self):
+        """
+        Initialize the matching system
+        """
+        self._matches = {}
+
     def _get_position_from_pointer(self, x, y):
+        """
+        Get the row/column position for a pointer position
+        """
         cw = self.get_char_width()
         ch = self.get_char_height()
         return int(floor(x / cw)), int(floor(y / ch))
 
     def _on_button_press(self, term, event):
+        """
+        Called on a button press
+        """
         if event.button == 3:
             col, row = self._get_position_from_pointer(event.x, event.y)
             match = self.match_check(col, row)
             if match is not None:
                 match_str, match_num = match
-                self.emit('match-right-clicked', match_num, match_str)
+                self.emit('match-right-clicked', event, match_num, match_str)
 
-    def _on_match_right_clicked(self, term, match_num, match_str):
-        if match_num in self._match_callbacks:
-            rematch = self._match_res[match_num].match(match_str)
+    def _on_match_right_clicked(self, term, event, match_num, match_str):
+        """
+        Called when there is a right click on the terminal. Internally, this
+        checks whether there has been a match, and fires the required call
+        back or menu.
+        """
+        if match_num in self._matches:
+            rematch = self._matches[match_num].match_groups_re.match(match_str)
             match_val = [match_str]
             if rematch is not None:
                 groups = rematch.groups()
                 if groups:
                     match_val = groups
-            self._match_callbacks[match_num](*match_val)
+            self._matches[match_num](event, *match_val)
 
-    def match_add_with_callback(self, match_str, match_groups, callback):
-        match_num = self.match_add(match_str)
-        self._match_callbacks[match_num] = callback
-        self._match_res[match_num] = sre.compile(match_groups)
+    def get_named_match(self, name):
+        for match in self._matches.values():
+            if match.name == name:
+                return match
+        raise KeyError('No match named "%s" was found' % name)
+
+    def match_add_match(self, match):
+        """
+        Add a match object.
+        """
+        match_num = self.match_add(match.match_re)
+        self._matches[match_num] = match
+        return match_num
+
+    def match_add_callback(self, name, match_str, match_groups, callback):
+        """
+        Add a match with a callback.
+
+        :param name:            the name of the match
+        :param match_str:       the regular expression to match
+        :param match_groups:    a regular expression of groups which wil be
+                                passed as parameters to the callback function
+        :param callback:        the callback function to be called with the result of
+                                the match
+        """
+        match = TerminalMatch(name, match_str, match_groups, callback)
+        return self.match_add_match(match)
+
+    def match_add_menu(self, name, match_str, match_groups, menu=None):
+        """
+        Add a menu match object.
+        """
+        match = TerminalMenuMatch(name, match_str, match_groups, menu)
+        return self.match_add_match(match)
+
+    def match_menu_register_action(self, name, action):
+        """
+        Register an action with the named match
+
+        :param name: The name of the match
+        :param action: A gtk.Action to use in the menu
+        """
+        self.get_named_match(name).register_action(action)
 
 
 
@@ -101,9 +203,16 @@ if __name__ == '__main__':
     w = gtk.Window()
     t = PidaTerminal()
     t.fork_command('bash')
-    def mc(val):
-        print val
-    t.match_add_with_callback('line [0-9]+', 'line ([0-9]+)', mc)
+    def mc(event, val):
+        print event, val
+    t.match_add_callback('python-line', 'line [0-9]+', 'line ([0-9]+)', mc)
+    t.match_add_menu('python', 'ali', '')
+    a = gtk.Action('open', 'Open', 'Open this file', gtk.STOCK_OPEN)
+    def act(action):
+        print action.match_args
+    
+    a.connect('activate', act)
+    t.match_menu_register_action('python', a)
     w.add(t)
     w.show_all()
     gtk.main()
