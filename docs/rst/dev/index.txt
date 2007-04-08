@@ -1,10 +1,9 @@
 restindex
-    crumb: Documentation Home
-    page-title: PIDA Documentation Index
+    crumb: Developer
+    page-title: Developer Documentation
 /restindex
 
-========================
-PIDA Documentation Index
-========================
+==================================
+PIDA Developer Documentation Index
+==================================
 
-This is the generated PIDA documentation index.

@@ -1,0 +1,12 @@
+restindex
+    crumb: Services
+    page-title: Service Authoring
+/restindex
+
+============================
+PIDA Service Authoring Guide
+============================
+
+PIDA has a very general concept of services (you might call the plugins in
+another application. In general, a service is able to define any PIDA
+function.

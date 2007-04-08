@@ -21,9 +21,11 @@
 
     <div id="menu">
     <#
-        print_details(default_section)
+        if not default_section['pages']:
+            print '<h2>No Pages Yet</h2>'
+        else:
+            print_details(default_section)
     #>
-    <p/>
     </div><!--menu-->
 
     <div id="main>
