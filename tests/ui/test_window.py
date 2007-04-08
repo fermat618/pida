@@ -5,7 +5,7 @@ from pida.utils.testing import refresh_gui
 
 from pida.ui.window import PidaWindow
 from pida.ui.books import BOOK_TERMINAL, BOOK_PLUGIN
-from pida.ui.test_views import TestView
+from tests.ui.test_views import TestView
 
 class BasicWindowTest(TestCase):
 
