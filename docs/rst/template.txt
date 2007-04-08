@@ -22,7 +22,7 @@
     <div id="menu">
     <#
         if not default_section['pages']:
-            print '<h2>No Pages Yet</h2>'
+            print 'No Subsections'
         else:
             print_details(default_section)
     #>
