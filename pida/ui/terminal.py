@@ -96,9 +96,12 @@ class PidaTerminal(Terminal):
         self._fix_events()
         self._connect_internal()
         self._init_matches()
-        self._init_properties(**kw)
+        self.set_properties(**kw)
 
-    def _init_properties(self, **kw):
+    def set_properties(self, **kw):
+        """
+        Set properties on the widget
+        """
         for key, val in kw.items():
             getattr(self, 'set_%s' % key)(val)
 
