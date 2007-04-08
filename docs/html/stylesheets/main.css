@@ -18,7 +18,8 @@ body {
 }
 
 .document {
-    padding-left: 20px;
+    padding: 0 20px 0 20px;
+    text-align: justify;
 }
 
 #menu {

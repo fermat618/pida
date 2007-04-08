@@ -1,0 +1,5 @@
+<ui>
+    <toolbar>
+        <toolitem name="shell" action="shell" />
+    </toolbar>
+</ui>

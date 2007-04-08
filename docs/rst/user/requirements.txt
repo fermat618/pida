@@ -1,0 +1,31 @@
+restindex
+    crumb: Requirements
+    page-title: Requirements
+/restindex
+
+========================
+Requirements to run PIDA
+========================
+
+Because of the nature of PIDA there are a number of tools that may optionally
+be used, but are not absolutely required. The list of requirements is
+therefore split into absolute and relative requirements.
+
+Absolute Requirements
+=====================
+
+**Python**
+    Python is the programming language PIDA is written in. PIDA requires any
+    version of Python greater than or equal to 2.4. Python is available from
+    the `Python Web Site`_ or more likely packaged for your distribution. Most
+    desktop Linuxes come with Python preinstalled.
+
+**PyGTK**
+    PyGTK are the Python bindings for the GTK toolkit. Note that you will also
+    need to have GTK installed for them to work. These are available from the
+    `PyGTK Web Site`_ and the `GTK Web Site`_ or more likely packaged by your
+    Linux distribution.
+
+.. _Python Web Site: http://python.org/
+.. _PyGTK Web Site: http://pygtk.org/
+.. _GTK Web Site: http://gtk.org/

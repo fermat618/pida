@@ -100,3 +100,6 @@ class PidaView(GladeSlaveDelegate):
     def get_tab_label_text(self):
         return self.label_text
 
+class BaseView(PidaView):
+
+    gladefile = 'base_view'

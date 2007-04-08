@@ -65,3 +65,6 @@ class Boss(object):
     def cmd(self, servicename, commandname, **kw):
         self.get_service(servicename).cmd(commandname, **kw)
 
+    def add_view(self, bookname, view):
+        self._window.add_view(bookname, view)
+
