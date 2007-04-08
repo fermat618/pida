@@ -42,4 +42,4 @@ class AddViewTest(TestCase):
         self._w.move_view(BOOK_TERMINAL, self._v)
         refresh_gui()
         self.assertEqual(self._w._book_man.has_view(self._v), True)
-        
+
