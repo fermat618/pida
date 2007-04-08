@@ -7,9 +7,12 @@ sys.path.insert(0, '/home/ali/working/pida-next/')
 
 from pida.core import environment
 
-print environment.environ.get_resource_paths('pixmap')
 
 from pida.ui.views import PidaViewWidget
+from vte import Terminal as VteTerminal
+
+from kiwi.utils import gproperty, PropertyObject
+
 
 class PidaViewWidgetAdaptor(glade.get_adaptor_for_type('GtkVBox')):
 
@@ -45,8 +48,6 @@ class PidaViewWidgetAdaptor(glade.get_adaptor_for_type('GtkVBox')):
     def do_child_set_property(self, pvw, child, prop, val):
         if prop in ['expand', 'fill', 'padding', 'pack-type']:
             pass
-
-        
 
 
 

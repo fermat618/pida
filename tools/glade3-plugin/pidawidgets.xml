@@ -11,10 +11,16 @@
         <property id="homogeneous" visible="False" />
       </properties>
     </glade-widget-class>
+    <glade-widget-class title="VTE Terminal Widget"
+                        name="VteTerminal"
+                        generic-name="vteterminal">
+    </glade-widget-class>
+                        
   </glade-widget-classes>
 
   <glade-widget-group name="PidaWidgets" title="Pida Widgets">
     <glade-widget-class-ref name="PidaViewWidget"/>
+    <glade-widget-class-ref name="VteTerminal"/>
   </glade-widget-group>
 </glade-catalog>
 
