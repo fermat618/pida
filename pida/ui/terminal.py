@@ -90,16 +90,17 @@ class PidaTerminal(Terminal):
 
     gsignal('match-right-clicked', gtk.gdk.Event, int, str)
 
-    def __init__(self):
+    def __init__(self, **kw):
         Terminal.__init__(self)
         self._fix_size()
         self._fix_events()
         self._connect_internal()
         self._init_matches()
-        self._init_properties()
+        self._init_properties(**kw)
 
-    def _init_properties(self):
-        self.set_word_chars("-A-Za-z0-9,./?%&#_\\~")
+    def _init_properties(self, **kw):
+        for key, val in kw.items():
+            getattr(self, 'set_%s' % key)(val)
 
     def _fix_size(self):
         """
@@ -249,7 +250,9 @@ class popen(object):
 if __name__ == '__main__':
     w = gtk.Window()
     w.resize(400,400)
-    t = PidaTerminal()
+    t = PidaTerminal(
+        word_chars = "-A-Za-z0-9,./?%&#_\\~"
+    )
     t.fork_command('bash')
     def mc(event, val):
         print event, val
@@ -266,5 +269,6 @@ if __name__ == '__main__':
     w.add(t)
     w.show_all()
     t.fork_command('bash')
+
     gtk.main()
 
