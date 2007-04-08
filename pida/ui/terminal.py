@@ -87,10 +87,10 @@ class PidaTerminal(Terminal):
                     match_val = groups
             self._match_callbacks[match_num](*match_val)
 
-    def match_add_with_callback(self, match_str, callback):
+    def match_add_with_callback(self, match_str, match_groups, callback):
         match_num = self.match_add(match_str)
         self._match_callbacks[match_num] = callback
-        self._match_res[match_num] = sre.compile(match_str)
+        self._match_res[match_num] = sre.compile(match_groups)
 
 
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     t.fork_command('bash')
     def mc(val):
         print val
-    t.match_add_with_callback('line ([0-9]+)', mc)
+    t.match_add_with_callback('line [0-9]+', 'line ([0-9]+)', mc)
     w.add(t)
     w.show_all()
     gtk.main()
