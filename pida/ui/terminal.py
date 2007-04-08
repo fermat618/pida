@@ -96,8 +96,16 @@ class PidaTerminal(Terminal):
         self._fix_events()
         self._connect_internal()
         self._init_matches()
+        self._init_properties()
+
+    def _init_properties(self):
+        self.set_word_chars("-A-Za-z0-9,./?%&#_\\~")
 
     def _fix_size(self):
+        """
+        Fix the size of the terminal. Initially the widget starts very large,
+        and is unable to be resized by conventional means.
+        """
         self.set_size_request(50, 50)
 
     def _fix_events(self):
@@ -151,6 +159,12 @@ class PidaTerminal(Terminal):
             self._matches[match_num](event, *match_val)
 
     def get_named_match(self, name):
+        """
+        Get a match object for the name
+        
+        :param name: the name of the match object
+        :raises KeyError: If the named match does not exist
+        """
         for match in self._matches.values():
             if match.name == name:
                 return match
@@ -195,25 +209,62 @@ class PidaTerminal(Terminal):
         self.get_named_match(name).register_action(action)
 
 
+class popen(object):
+    def __init__(self, cmdargs, callback, kwargs):
+        self.__running = False
+        self.__readbuf = []
+        self.__callback = callback
+        self.run(cmdargs, **kwargs)
+    
+    def run(self, cmdargs, **kwargs):
+        console = subprocess.Popen(args=cmdargs, stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT,
+                                                 **kwargs)
+        self.__running = True
+        self.__readtag = gobject.io_add_watch(
+            console.stdout, gobject.IO_IN, self.cb_read)
+        self.__huptag = gobject.io_add_watch(
+            console.stdout, gobject.IO_HUP, self.cb_hup)
+        self.pid = console.pid
+
+    def cb_read(self, fd, cond):
+        data = os.read(fd.fileno(), 1024)
+        self.__readbuf.append(data)
+        return True
+
+    def cb_hup(self, fd, cond):
+        while True:
+            data = os.read(fd.fileno(), 1024)
+            if data == '':
+                break
+            self.__readbuf.append(data)
+        self.__callback(''.join(self.__readbuf))
+        self.__running = False
+        gobject.source_remove(self.__readtag)
+        return False
 
 
 
 
 if __name__ == '__main__':
     w = gtk.Window()
+    w.resize(400,400)
     t = PidaTerminal()
     t.fork_command('bash')
     def mc(event, val):
         print event, val
     t.match_add_callback('python-line', 'line [0-9]+', 'line ([0-9]+)', mc)
-    t.match_add_menu('python', 'ali', '')
+    t.match_add_menu('file', r'/[/A-Za-z0-9_\-]+', '')
     a = gtk.Action('open', 'Open', 'Open this file', gtk.STOCK_OPEN)
+    b = gtk.Action('save', 'Save', 'Save This File', gtk.STOCK_SAVE)
     def act(action):
         print action.match_args
-    
+    t.set_background_image_file('/usr/share/xfce4/backdrops/flower.png')
     a.connect('activate', act)
-    t.match_menu_register_action('python', a)
+    t.match_menu_register_action('file', a)
+    t.match_menu_register_action('file', b)
     w.add(t)
     w.show_all()
+    t.fork_command('bash')
     gtk.main()
 
