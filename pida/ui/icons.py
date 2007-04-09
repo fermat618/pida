@@ -16,8 +16,11 @@ def my_stock_add(items):
         register_named_icon(it[0], it[-1], factory)
         # and this:
         # gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
- 
-my_stock_add([("terminal", "Terminal", 0, 0, None, "terminal")])
+
+print gtk.icon_theme_get_default().get_search_path()
+
+for name in gtk.icon_theme_get_default().list_icons():
+    my_stock_add([(name, name.capitalize(), 0, 0, None, name)])
  
 #w = gtk.Window()
 #i = gtk.Image()

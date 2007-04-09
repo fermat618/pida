@@ -61,7 +61,7 @@ class ProjectListView(PidaView):
 
     label_text = 'Projects'
 
-    icon_name = 'terminal'
+    icon_name = 'emblem-package'
 
     def create_ui(self):
         self.project_ol.set_headers_visible(False)
