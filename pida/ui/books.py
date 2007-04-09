@@ -135,6 +135,9 @@ class BookConfigurator(object):
         book.set_show_tabs(conf.get_tabs_visible())
         book.set_tab_pos(conf.get_tab_position())
         book.remove_page(0)
+        if conf.get_name() != BOOK_EDITOR:
+            # Cannot drag to the editor terminal for now
+            book.set_group_id(0)
 
     def get_book(self, name):
         return self._books[name]
@@ -167,6 +170,7 @@ class BookManager(object):
                 tab_label=tab_label)
             book.set_current_page(-1)
             book.show_all()
+            book.set_tab_detachable(view.get_toplevel(), True)
             self._focus_page(bookname)
         else:
             raise ValueError('This view is already in the manager')
