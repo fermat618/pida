@@ -3,8 +3,8 @@
 <!--*- mode: xml -*-->
 <glade-interface>
   <widget class="GtkWindow" id="main_window">
-    <property name="default_width">440</property>
-    <property name="default_height">250</property>
+    <property name="default_width">800</property>
+    <property name="default_height">600</property>
     <child>
       <widget class="GtkVBox" id="main_box">
         <property name="visible">True</property>
@@ -33,7 +33,7 @@
             <child>
               <widget class="GtkVPaned" id="left_paned">
                 <property name="visible">True</property>
-                <property name="position">65</property>
+                <property name="position">450</property>
                 <property name="position_set">True</property>
                 <child>
                   <widget class="GtkNotebook" id="tl_book">
@@ -46,6 +46,7 @@
                   </widget>
                   <packing>
                     <property name="resize">False</property>
+                    <property name="shrink">False</property>
                   </packing>
                 </child>
                 <child>
@@ -66,7 +67,7 @@
               <widget class="GtkVPaned" id="right_paned">
                 <property name="visible">True</property>
                 <property name="is_focus">True</property>
-                <property name="position">65</property>
+                <property name="position">450</property>
                 <property name="position_set">True</property>
                 <child>
                   <widget class="GtkNotebook" id="tr_book">
@@ -78,6 +79,7 @@
                   </widget>
                   <packing>
                     <property name="resize">False</property>
+                    <property name="shrink">False</property>
                   </packing>
                 </child>
                 <child>
