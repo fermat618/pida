@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 
-
+from kiwi.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -31,10 +31,31 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.ui.views import PidaView
+
+PROJECT_LIST_COLUMNS = [
+    Column('markup', use_markup=True)
+]
+
+class BufferListView(PidaView):
+
+    gladefile = 'buffer_list'
+
+    icon_name = 'package_office'
+
+    label_text = 'Buffers'
+
+
+    def create_ui(self):
+        self.buffers_ol.set_columns(PROJECT_LIST_COLUMNS)
 
 # Service class
 class Buffer(Service):
     """Describe your Service Here""" 
+
+    def start(self):
+        self._view = BufferListView(self)
+        self.boss.add_view('Buffer', self._view)
 
 # Required Service attribute for service loading
 Service = Buffer

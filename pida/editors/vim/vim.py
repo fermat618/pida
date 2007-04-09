@@ -31,17 +31,17 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import BaseView
+from pida.ui.views import BlankView
 
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
 
 
-class VimView(BaseView):
+class VimView(BlankView):
 
     def create_ui(self):
         self._vim = VimEmbedWidget()
-        self.pida_widget.add_main_widget(self._vim)
+        self.pida_widget.add(self._vim)
 
     def run(self):
         self._vim.run()

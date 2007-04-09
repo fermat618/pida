@@ -104,3 +104,6 @@ class BaseView(PidaView):
 
     gladefile = 'base_view'
 
+class BlankView(PidaView):
+    
+    gladefile = 'blank_view'
