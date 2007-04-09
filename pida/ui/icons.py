@@ -17,12 +17,12 @@ def my_stock_add(items):
         # and this:
         # gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
  
-my_stock_add([("foo", "Foo", 0, 0, None, "stock_spam")])
+my_stock_add([("terminal", "Terminal", 0, 0, None, "terminal")])
  
-w = gtk.Window()
-i = gtk.Image()
-i.set_from_stock("foo", gtk.ICON_SIZE_DIALOG)
-w.add(i)
-w.show_all()
-w.connect('destroy', gtk.main_quit)
-gtk.main()
+#w = gtk.Window()
+#i = gtk.Image()
+#i.set_from_stock("foo", gtk.ICON_SIZE_DIALOG)
+#w.add(i)
+#w.show_all()
+#w.connect('destroy', gtk.main_quit)
+#gtk.main()

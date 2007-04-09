@@ -42,7 +42,7 @@ class CommanderActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Run Shell',
             'Open a shell prompt',
-            gtk.STOCK_OPEN,
+            'terminal',
             self.execute_shell
         )
 
@@ -58,6 +58,8 @@ class CommanderCommandsConfig(CommandsConfig):
         self.execute(['bash'])
 
 class TerminalView(BaseView):
+
+    icon_name = 'terminal'
 
     def create_ui(self):
         self._term = PidaTerminal()

@@ -2,4 +2,9 @@
     <toolbar>
         <toolitem name="shell" action="shell" />
     </toolbar>
+    <menubar>
+        <menu name="ToolsMenu" action="ToolsMenu">
+            <menuitem name="shell" action="shell" />
+        </menu>
+    </menubar>
 </ui>
