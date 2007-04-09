@@ -47,7 +47,10 @@ class Boss(object):
         if self._env is None:
             return []
         else:
-            return [self._env.get_base_service_directory()]
+            return [
+                self._env.get_base_editor_directory(),
+                self._env.get_base_service_directory()
+            ]
 
 
     def subscribe_event(self, servicename, event, callback):
@@ -68,3 +71,5 @@ class Boss(object):
     def add_view(self, bookname, view):
         self._window.add_view(bookname, view)
 
+    def get_pida_home(self):
+        return self._env.pida_home

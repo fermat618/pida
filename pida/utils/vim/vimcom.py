@@ -662,6 +662,8 @@ class communication_window(gtk.Window):
         else:
             print 'unhandled event', evt
 
+VimCom = communication_window
+
 
 NMAP_COM = '%smap %s :call %s<lt>CR>'
 UNMAP_COM = '%sun %s'

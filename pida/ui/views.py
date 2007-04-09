@@ -76,7 +76,6 @@ class PidaViewWidget(PropertyObject, gtk.VBox):
         self.add_main_widget(widget)
 
 
-
 class PidaView(GladeSlaveDelegate):
 
     icon_name = gtk.STOCK_INFO
@@ -100,6 +99,8 @@ class PidaView(GladeSlaveDelegate):
     def get_tab_label_text(self):
         return self.label_text
 
+
 class BaseView(PidaView):
 
     gladefile = 'base_view'
+

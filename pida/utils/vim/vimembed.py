@@ -29,11 +29,10 @@ import gtk
 import os
 import time
 
-import pida.pidagtk.contentview as contentview
 
 import subprocess
 
-class vim_embed(contentview.content_view):
+class vim_embed(object):
 
     HAS_CONTROL_BOX = False
     
@@ -85,4 +84,51 @@ class vim_embed(contentview.content_view):
         
     def grab_input_focus(self):
         self.__eb.child_focus(gtk.DIR_TAB_FORWARD)
+
+class VimEmbedWidget(gtk.EventBox):
+
+    def __init__(self, command='gvim', args=[]):
+        gtk.EventBox.__init__(self)
+        self._servername = self._generate_servername()
+        self._command = command
+        self.pid = None
+        self.args = args
+        self.r_cb_plugged = None
+        self.r_cb_unplugged = None
+        self.__eb = None
+
+    def _create_ui(self):
+        socket = gtk.Socket()
+        self.add_events(gtk.gdk.KEY_PRESS_MASK)
+        self.add(socket)
+        self.show_all()
+        print socket
+        return socket.get_id()
+
+    def _generate_servername(self):
+        return 'PIDA_EMBEDDED_%s' % time.time()
+
+    def get_server_name(self):
+        return self._servername
+
+    def should_remove(self):
+        self.service.remove_attempt()
+        return False
+
+    def run(self):
+        xid = self._create_ui()
+        args = self.args[:] # a copy
+        args.extend(['--socketid', '%s' % xid])
+        if not xid:
+            return
+        if not self.pid:
+            popen = subprocess.Popen([self._command, '--servername',
+                                      self.get_server_name(), '--cmd',
+                                      'let PIDA_EMBEDDED=1'] + args,
+                                      close_fds=True)
+            self.pid = popen.pid
+        self.show_all()
+        
+    def grab_input_focus(self):
+        self.child_focus(gtk.DIR_TAB_FORWARD)
 
