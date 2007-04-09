@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 
-
+import gtk
 
 # PIDA Imports
 from pida.core.service import Service
@@ -31,10 +31,28 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+class HelpActionsConfig(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'help_about',
+            TYPE_NORMAL,
+            'About',
+            'About PIDA',
+            gtk.STOCK_HELP,
+            self.show_about_dialog
+        )
+
+    def show_about_dialog(self, action):
+        dialog = gtk.AboutDialog()
+        resp = dialog.run()
+        dialog.destroy()
 
 # Service class
 class Help(Service):
     """Describe your Service Here""" 
+
+    actions_config = HelpActionsConfig
 
 # Required Service attribute for service loading
 Service = Help

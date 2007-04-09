@@ -1,0 +1,25 @@
+<ui>
+    <menubar>
+        <menu name="FileMenu" action="FileMenu">
+        </menu>
+    
+        <menu name="EditMenu" action="EditMenu">
+        </menu>
+        
+        <menu name="ProjectMenu" action="ProjectMenu">
+        </menu>
+        
+        <menu name="LanguageMenu" action="LanguageMenu">
+        </menu>
+        
+        <menu name="ToolsMenu" action="ToolsMenu">
+        </menu>
+        
+        <menu name="ViewMenu" action="ViewMenu">
+        </menu>
+        
+        <menu name="HelpMenu" action="HelpMenu">
+            <menuitem name="help_about" action="help_about" />
+        </menu>
+    </menubar>
+</ui>
