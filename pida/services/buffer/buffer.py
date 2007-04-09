@@ -45,17 +45,37 @@ class BufferListView(PidaView):
 
     label_text = 'Buffers'
 
-
     def create_ui(self):
         self.buffers_ol.set_columns(PROJECT_LIST_COLUMNS)
+
+class BufferCommandsConfig(CommandsConfig):
+
+    def open_file(self, file_name):
+        pass
+
+    def file_opened(self, file_name):
+        pass
 
 # Service class
 class Buffer(Service):
     """Describe your Service Here""" 
 
     def start(self):
+        self._documents = {}
         self._view = BufferListView(self)
         self.boss.add_view('Buffer', self._view)
+
+    def open_file(self, file_name):
+        pass
+
+    def file_opened(self, file_name):
+        pass
+
+    def _load_document(self, file_name):
+        pass
+
+    def _view_document(self, document):
+        pass
 
 # Required Service attribute for service loading
 Service = Buffer
