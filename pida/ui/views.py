@@ -12,6 +12,7 @@ except ImportError:
 
 from pida.utils.unique import create_unique_id
 
+from pida.ui.docks import BEH_NORMAL
 
 class PidaViewWidget(PropertyObject, gtk.VBox):
 
@@ -80,6 +81,7 @@ class PidaView(GladeSlaveDelegate):
 
     icon_name = gtk.STOCK_INFO
     label_text = 'Pida View'
+    dock_behaviour = BEH_NORMAL
 
     def __init__(self, service, *args, **kw):
         self.svc = service
@@ -102,7 +104,10 @@ class PidaView(GladeSlaveDelegate):
 
 class BaseView(PidaView):
 
-    gladefile = 'base_view'
+    gladefile = 'blank_view'
+
+    def add_main_widget(self, widget):
+        self.pida_widget.pack_start(widget)
 
 class BlankView(PidaView):
     

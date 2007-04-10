@@ -5,6 +5,9 @@ from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_inpu
 
 from pida.ui.books import BookManager, BookConfigurator
 from pida.ui.uimanager import PidaUIManager
+from pida.ui.docks import DockManager, DOCK_BUFFER, DOCK_PLUGIN, DOCK_EDITOR, \
+    DOCK_TERMINAL
+from pida.ui.paneds import PidaPaned
 
 from pida.core.environment import get_uidef_path
 
@@ -56,7 +59,9 @@ class PidaWindow(MainGladeDelegate):
     gladefile = 'main_window'
 
     def create_all(self):
-        self._fix_books()
+        #self._fix_books()
+        #self._fix_docks()
+        self._fix_paneds()
         self._create_ui()
 
     def start(self):
@@ -71,6 +76,19 @@ class PidaWindow(MainGladeDelegate):
         self.top_box.pack_start(self._menubar, expand=False)
         self.top_box.pack_start(self._toolbar, expand=False)
         self.top_box.show_all()
+
+    def _fix_paneds(self):
+        self._paned = PidaPaned()
+        self.middle_box.pack_start(self._paned)
+
+    def _fix_docks(self):
+        self._dock_man = DockManager()
+        self.left_paned.pack1(self._dock_man.get_dock(DOCK_BUFFER))
+        self.left_paned.pack2(self._dock_man.get_dock(DOCK_PLUGIN))
+        self.right_paned.pack1(self._dock_man.get_dock(DOCK_EDITOR))
+        self.right_paned.pack2(self._dock_man.get_dock(DOCK_TERMINAL))
+        self.right_paned.show_all()
+        self.left_paned.show_all()
 
     def _fix_books(self):
         self._book_config = BookConfigurator(0)
@@ -93,7 +111,7 @@ class PidaWindow(MainGladeDelegate):
 
     # View API
     def add_view(self, bookname, view):
-        self._book_man.add_view(bookname, view)
+        self._paned.add_view(bookname, view)
 
     def remove_view(self, view):
         self._book_man.remove_view(view)

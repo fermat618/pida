@@ -23,6 +23,8 @@
 
 import os
 
+import gtk
+
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -32,12 +34,16 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import BlankView
+from pida.ui.docks import BEH_PERMANENT
 
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
 
 
 class VimView(BlankView):
+
+    icon_name = gtk.STOCK_EDIT
+    dock_behaviour = BEH_PERMANENT
 
     def create_ui(self):
         self._vim = VimEmbedWidget()

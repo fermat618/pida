@@ -63,7 +63,7 @@ class TerminalView(BaseView):
 
     def create_ui(self):
         self._term = PidaTerminal()
-        self.pida_widget.add_main_widget(self._term)
+        self.add_main_widget(self._term)
         self._term.show()
 
     def execute(self, commandargs):
