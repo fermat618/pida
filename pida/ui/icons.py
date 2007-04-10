@@ -17,10 +17,10 @@ def my_stock_add(items):
         # and this:
         # gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
 
-print gtk.icon_theme_get_default().get_search_path()
-
+stock_ids = gtk.stock_list_ids()
 for name in gtk.icon_theme_get_default().list_icons():
-    my_stock_add([(name, name.capitalize(), 0, 0, None, name)])
+    if name not in stock_ids:
+        my_stock_add([(name, name.capitalize(), 0, 0, None, name)])
  
 #w = gtk.Window()
 #i = gtk.Image()
