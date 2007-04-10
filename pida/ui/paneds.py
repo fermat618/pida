@@ -9,6 +9,7 @@ PANE_PLUGIN = 'Plugin'
 POS_MAP = {
     PANE_TERMINAL: gtk.POS_BOTTOM,
     PANE_BUFFER: gtk.POS_LEFT,
+    PANE_PLUGIN: gtk.POS_RIGHT,
 }
 
 class PidaPaned(BigPaned):
@@ -25,5 +26,7 @@ class PidaPaned(BigPaned):
             lab = PaneLabel(view.icon_name, None, None, view.label_text)
             self.insert_pane(view.get_toplevel(), lab, POS, POS)
             self.show_all()
-        
+            self.present_pane(view.get_toplevel())
+            self.get_paned(POS).set_sticky_pane(True)
+
 
