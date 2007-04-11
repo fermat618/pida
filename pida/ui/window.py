@@ -5,8 +5,8 @@ from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_inpu
 
 from pida.ui.books import BookManager, BookConfigurator
 from pida.ui.uimanager import PidaUIManager
-from pida.ui.docks import DockManager, DOCK_BUFFER, DOCK_PLUGIN, DOCK_EDITOR, \
-    DOCK_TERMINAL
+#from pida.ui.docks import DockManager, DOCK_BUFFER, DOCK_PLUGIN, DOCK_EDITOR, \
+#    DOCK_TERMINAL
 from pida.ui.paneds import PidaPaned
 
 from pida.core.environment import get_uidef_path
