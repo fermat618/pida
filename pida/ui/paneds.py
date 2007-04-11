@@ -27,6 +27,5 @@ class PidaPaned(BigPaned):
             self.insert_pane(view.get_toplevel(), lab, POS, POS)
             self.show_all()
             self.present_pane(view.get_toplevel())
-            self.get_paned(POS).set_sticky_pane(True)
 
 
