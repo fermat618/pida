@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='pida',
-    packages = ('pida',),
+    packages = ('pida', 'pida.core', 'pida.ui', 'pida.utils'),
     data_files = [
         #('share/gazpacho/catalogs',
         #    listfiles('gazpacho-plugin', 'pidawidgets.xml')),
