@@ -1,10 +1,9 @@
 
-
-from kiwi.dist import setup, listfiles, listpackages, get_site_packages_dir
+from distutils.core import setup
 
 setup(
     name='pida',
-    packages = listpackages('pida'),
+    packages = ('pida',),
     data_files = [
         #('share/gazpacho/catalogs',
         #    listfiles('gazpacho-plugin', 'pidawidgets.xml')),
