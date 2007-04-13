@@ -1,7 +1,8 @@
 <ui>
-    <menubar name="main_menubar">
+    <menubar>
 
         <menu name="FileMenu" action="FileMenu">
+            <menuitem name="open_file" action="open_file" />
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
@@ -24,7 +25,8 @@
     
     </menubar>
     
-    <toolbar name="main_toolbar">
+    <toolbar>
+        <toolitem name="open_file" action="open_file" />
     </toolbar>
 
 </ui>

@@ -75,3 +75,7 @@ class Boss(object):
 
     def get_pida_home(self):
         return self._env.pida_home
+
+    def get_window(self):
+        return self._window
+    window = property(get_window)

@@ -20,6 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import gtk
 
 from kiwi.ui.objectlist import Column
 
@@ -59,6 +60,23 @@ class BufferListView(PidaGladeView):
     def on_buffers_ol__selection_changed(self, ol, item):
         self.svc.view_document(item)
 
+class BufferActionsConfig(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'open_file',
+            TYPE_NORMAL,
+            'Open File',
+            'Open a file with a graphical file browser',
+            gtk.STOCK_OPEN,
+            self.on_open_file,
+        )
+        print 'banana'
+
+    def on_open_file(self, action):
+        file_name = self.svc.boss.window.open_dlg()
+        self.svc.open_file(file_name)
+
 class BufferCommandsConfig(CommandsConfig):
 
     def open_file(self, file_name):
@@ -69,6 +87,7 @@ class Buffer(Service):
     """Describe your Service Here""" 
 
     commands_config = BufferCommandsConfig
+    actions_config = BufferActionsConfig
 
     def start(self):
         self._documents = {}

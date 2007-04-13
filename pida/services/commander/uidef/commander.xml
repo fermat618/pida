@@ -1,10 +1,32 @@
 <ui>
-    <toolbar>
-        <toolitem name="shell" action="shell" />
-    </toolbar>
     <menubar>
+
+        <menu name="FileMenu" action="FileMenu">
+        </menu>
+    
+        <menu name="EditMenu" action="EditMenu">
+        </menu>
+        
+        <menu name="ProjectMenu" action="ProjectMenu">
+        </menu>
+        
+        <menu name="LanguageMenu" action="LanguageMenu">
+        </menu>
+        
         <menu name="ToolsMenu" action="ToolsMenu">
             <menuitem name="shell" action="shell" />
         </menu>
+        
+        <menu name="ViewMenu" action="ViewMenu">
+        </menu>
+        
+        <menu name="HelpMenu" action="HelpMenu">
+        </menu>
+    
     </menubar>
+    
+    <toolbar>
+        <toolitem name="shell" action="shell" />
+    </toolbar>
+
 </ui>
