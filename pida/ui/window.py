@@ -9,7 +9,7 @@ from pida.ui.uimanager import PidaUIManager
 #    DOCK_TERMINAL
 from pida.ui.paneds import PidaPaned
 
-from pida.core.environment import get_uidef_path
+from pida.core.environment import get_uidef_path, get_pixmap_path
 
 
 class MainDelegate(Delegate):
@@ -17,7 +17,9 @@ class MainDelegate(Delegate):
     def __init__(self, boss, *args, **kw):
         self._boss = boss
         self._window = gtk.Window()
-        Delegate.__init__(self, toplevel=self._window, delete_handler=self._on_delete_event, *args, **kw)
+        self._window.set_icon_from_file(get_pixmap_path('pida-icon.png'))
+        Delegate.__init__(self, toplevel=self._window,
+            delete_handler=self._on_delete_event, *args, **kw)
         self.create_all()
         self.show()
 
