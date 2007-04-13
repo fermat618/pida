@@ -1,0 +1,382 @@
+(define-object BigPaned
+  (in-module "Moo")
+  (parent "GtkFrame")
+  (c-name "MooBigPaned")
+  (gtype-id "MOO_TYPE_BIG_PANED")
+)
+
+(define-object Paned
+  (in-module "Moo")
+  (parent "GtkBin")
+  (c-name "MooPaned")
+  (gtype-id "MOO_TYPE_PANED")
+  (fields
+    '("GtkWidget*" "button_box")
+  )
+)
+
+(define-boxed PaneLabel
+  (in-module "Moo")
+  (c-name "MooPaneLabel")
+  (gtype-id "MOO_TYPE_PANE_LABEL")
+  (copy-func "moo_pane_label_copy")
+  (release-func "moo_pane_label_free")
+)
+
+(define-boxed PaneParams
+  (in-module "Moo")
+  (c-name "MooPaneParams")
+  (gtype-id "MOO_TYPE_PANE_PARAMS")
+  (copy-func "moo_pane_params_copy")
+  (release-func "moo_pane_params_free")
+)
+
+(define-enum PanePosition
+  (in-module "Moo")
+  (c-name "MooPanePosition")
+  (gtype-id "MOO_TYPE_PANE_POSITION")
+)
+
+;; From ./moo/mooutils/moobigpaned.h
+
+(define-function moo_big_paned_new
+  (c-name "moo_big_paned_new")
+  (is-constructor-of "MooBigPaned")
+  (return-type "GtkWidget*")
+)
+
+(define-method set_pane_order
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_set_pane_order")
+  (return-type "none")
+  (parameters
+    '("int*" "order")
+  )
+)
+
+(define-method add_child
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_add_child")
+  (return-type "none")
+  (parameters
+    '("GtkWidget*" "widget")
+  )
+)
+
+(define-method remove_child
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_remove_child")
+  (return-type "none")
+)
+
+(define-method get_child
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_get_child")
+  (return-type "GtkWidget*")
+)
+
+(define-method get_paned
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_get_paned")
+  (return-type "MooPaned*")
+  (parameters
+    '("MooPanePosition" "position")
+  )
+)
+
+(define-method insert_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_insert_pane")
+  (return-type "int")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+    '("MooPaneLabel*" "pane_label")
+    '("MooPanePosition" "position")
+    '("int" "index_")
+  )
+)
+
+(define-method remove_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_remove_pane")
+  (return-type "gboolean")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method get_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_get_pane")
+  (return-type "GtkWidget*")
+  (parameters
+    '("MooPanePosition" "position")
+    '("int" "index_")
+  )
+)
+
+(define-method open_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_open_pane")
+  (return-type "none")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method hide_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_hide_pane")
+  (return-type "none")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method present_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_present_pane")
+  (return-type "none")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method get_pane_params
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_get_pane_params")
+  (return-type "MooPaneParams*")
+  (parameters
+    '("MooPanePosition" "position")
+    '("guint" "index_")
+  )
+)
+
+(define-method set_pane_params
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_set_pane_params")
+  (return-type "none")
+  (parameters
+    '("MooPanePosition" "position")
+    '("guint" "index_")
+    '("MooPaneParams*" "params")
+  )
+)
+
+
+
+;; From ./moo/mooutils/moopaned.h
+
+(define-function moo_paned_new
+  (c-name "moo_paned_new")
+  (is-constructor-of "MooPaned")
+  (return-type "GtkWidget*")
+  (properties
+    '("pane_position" (optional))
+  )
+)
+
+(define-method insert_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_insert_pane")
+  (return-type "int")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+    '("MooPaneLabel*" "pane_label")
+    '("int" "position")
+  )
+)
+
+(define-method remove_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_remove_pane")
+  (return-type "gboolean")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method n_panes
+  (of-object "MooPaned")
+  (c-name "moo_paned_n_panes")
+  (return-type "guint")
+)
+
+(define-method get_panes
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_panes")
+  (return-type "GSList*")
+)
+
+(define-method get_nth_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_nth_pane")
+  (return-type "GtkWidget*")
+  (parameters
+    '("guint" "n")
+  )
+)
+
+(define-method get_pane_num
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_pane_num")
+  (return-type "int")
+  (parameters
+    '("GtkWidget*" "widget")
+  )
+)
+
+(define-method get_label
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_label")
+  (return-type "MooPaneLabel*")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method set_sticky_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_set_sticky_pane")
+  (return-type "none")
+  (parameters
+    '("gboolean" "sticky")
+  )
+)
+
+(define-method set_pane_size
+  (of-object "MooPaned")
+  (c-name "moo_paned_set_pane_size")
+  (return-type "none")
+  (parameters
+    '("int" "size")
+  )
+)
+
+(define-method get_pane_size
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_pane_size")
+  (return-type "int")
+)
+
+(define-method get_button_box_size
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_button_box_size")
+  (return-type "int")
+)
+
+(define-method get_open_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_open_pane")
+  (return-type "int")
+)
+
+(define-method is_open
+  (of-object "MooPaned")
+  (c-name "moo_paned_is_open")
+  (return-type "gboolean")
+)
+
+(define-method open_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_open_pane")
+  (return-type "none")
+  (parameters
+    '("guint" "index_")
+  )
+)
+
+(define-method present_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_present_pane")
+  (return-type "none")
+  (parameters
+    '("guint" "index_")
+  )
+)
+
+(define-method hide_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_hide_pane")
+  (return-type "none")
+)
+
+(define-method detach_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_detach_pane")
+  (return-type "none")
+  (parameters
+    '("guint" "index_")
+  )
+)
+
+(define-method attach_pane
+  (of-object "MooPaned")
+  (c-name "moo_paned_attach_pane")
+  (return-type "none")
+  (parameters
+    '("guint" "index_")
+  )
+)
+
+(define-method get_pane_params
+  (of-object "MooPaned")
+  (c-name "moo_paned_get_pane_params")
+  (return-type "MooPaneParams*")
+  (parameters
+    '("guint" "index_")
+  )
+)
+
+(define-method set_pane_params
+  (of-object "MooPaned")
+  (c-name "moo_paned_set_pane_params")
+  (return-type "none")
+  (parameters
+    '("guint" "index_")
+    '("MooPaneParams*" "params")
+  )
+)
+
+(define-function moo_pane_params_new
+  (c-name "moo_pane_params_new")
+  (is-constructor-of "MooPaneParams")
+  (return-type "MooPaneParams*")
+)
+
+(define-method copy
+  (of-object "MooPaneParams")
+  (c-name "moo_pane_params_copy")
+  (return-type "MooPaneParams*")
+)
+
+(define-method free
+  (of-object "MooPaneParams")
+  (c-name "moo_pane_params_free")
+  (return-type "none")
+)
+
+(define-function moo_pane_label_new
+  (c-name "moo_pane_label_new")
+  (is-constructor-of "MooPaneLabel")
+  (return-type "MooPaneLabel*")
+  (parameters
+    '("const-char*" "icon_stock_id" (null-ok) (default "NULL"))
+    '("GdkPixbuf*" "pixbuf" (null-ok) (default "NULL"))
+    '("GtkWidget*" "icon" (null-ok) (default "NULL"))
+    '("const-char*" "label" (null-ok) (default "NULL"))
+    '("const-char*" "window_title" (null-ok) (default "NULL"))
+  )
+)
+
+(define-method copy
+  (of-object "MooPaneLabel")
+  (c-name "moo_pane_label_copy")
+  (return-type "MooPaneLabel*")
+)
+
+(define-method free
+  (of-object "MooPaneLabel")
+  (c-name "moo_pane_label_free")
+  (return-type "none")
+)
