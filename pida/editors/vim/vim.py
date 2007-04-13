@@ -34,7 +34,6 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaView
-from pida.ui.docks import BEH_PERMANENT
 
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
