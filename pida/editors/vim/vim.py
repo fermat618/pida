@@ -105,9 +105,6 @@ class EditorCommandsConfig(CommandsConfig):
 
 class VimView(PidaView):
 
-    icon_name = gtk.STOCK_EDIT
-    dock_behaviour = BEH_PERMANENT
-
     def create_ui(self):
         self._vim = VimEmbedWidget()
         self.add_main_widget(self._vim)
