@@ -33,21 +33,21 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import BlankView
+from pida.ui.views import PidaView
 from pida.ui.docks import BEH_PERMANENT
 
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
 
 
-class VimView(BlankView):
+class VimView(PidaView):
 
     icon_name = gtk.STOCK_EDIT
     dock_behaviour = BEH_PERMANENT
 
     def create_ui(self):
         self._vim = VimEmbedWidget()
-        self.pida_widget.add(self._vim)
+        self.add_main_widget(self._vim)
 
     def run(self):
         self._vim.run()
@@ -97,6 +97,7 @@ class Vim(Service):
         self._com = VimCom(self._cb)
         self._view = VimView(self)
         self.boss.add_view('Editor', self._view)
+        self._create_initscript()
         self._view.run()
 
     def started():
