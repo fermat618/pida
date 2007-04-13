@@ -159,14 +159,14 @@ class Service(object):
     # Logging
 
     def log_debug(self, message):
-        self.boss.log.debug('%s: %s' % (self.get_name(), message))
+        self.boss.log.debug('svc: %s: %s' % (self.get_name(), message))
 
     def log_info(self, message):
-        self.boss.log.info('%s: %s' % (self.get_name(), message))
+        self.boss.log.info('svc: %s: %s' % (self.get_name(), message))
 
     def log_warn(self, message):
-        self.boss.log.warn('%s: %s' % (self.get_name(), message))
+        self.boss.log.warn('svc: %s: %s' % (self.get_name(), message))
 
     def log_error(self, message):
-        self.boss.log.error('%s: %s' % (self.get_name(), message))
+        self.boss.log.error('svc: %s: %s' % (self.get_name(), message))
 
