@@ -82,4 +82,38 @@ __init__.py
 This file is required so that Python recognises the directory as a legitimate
 Python package.
 
+service.pida
+============
+
+This empty file is just present to identify the package as a PIDA service.
+
+data/
+=====
+
+This directory should contain any data files for the service that are not
+included in the other resource directories.
+
+
+glade/
+======
+
+This directory contains the glade files for the service's views. Although
+views can be created using Python-only, it is recommended for more detailed
+plugin views that they use glade.
+
+pixmaps/
+========
+
+This directory should contain any custom pixmaps for the service. These can be
+used in any way.
+
+uidef/
+======
+
+This directory should contain the UI Definition XML files for the service.
+These are gtk.UIManager XML files, and define the menu bar and toolbar items
+for the service. The file myservice.xml is automatically loaded by PIDA, but
+others can exist in this directory and could be used to populate popup menus
+or to be further merged with the standard UI defnition.
+
 
