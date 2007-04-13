@@ -27,10 +27,6 @@ from pida.core.boss import Boss
 def main():
     b = Boss(Environment())
     b.start()
-    bm  = b.get_service('buffer')
-    print bm
-    bm.open_file('/home/ali/.vimrc')
-    bm.open_file('/home/ali/sa.sh')
     b.loop_ui()
 
 if __name__ == '__main__':
