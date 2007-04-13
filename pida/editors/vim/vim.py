@@ -128,6 +128,9 @@ class VimCallback(object):
     def vim_bufferchange(self, server, cwd, filename, bufnum):
         self.svc.boss.get_service('buffer').cmd('open_file', file_name=filename)
 
+    def vim_bufferunload(self, server, filename):
+        print filename
+
 
 # Service class
 class Vim(Service):
