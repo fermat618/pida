@@ -25,7 +25,7 @@ import os
 import logging
 import logging.handlers
 
-def build_logger(name, filepath):
+def build_logger(name, filepath=None):
     format_str = ('%(asctime)s '
                   '%(levelname)s '
                   '%(module)s.%(name)s:%(lineno)s '
@@ -34,8 +34,11 @@ def build_logger(name, filepath):
     # logger
     logger = logging.getLogger(name)
     # to file
-    handler = logging.handlers.RotatingFileHandler(filepath,
+    if filepath is not None:
+        handler = logging.handlers.RotatingFileHandler(filepath,
                                                    'a', 16000, 3)
+    else:
+        handler = logging.StreamHandler()
     handler.setFormatter(format)
     logger.addHandler(handler)
     # optionally to stdout
