@@ -8,7 +8,6 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.features import FeaturesConfig
-from pida.core.log import build_logger
 
 
 class Service(object):
@@ -22,7 +21,6 @@ class Service(object):
 
     def __init__(self, boss=None):
         self.boss = boss
-        self.log = build_logger(self.get_name())
         self.reg = Registry()
 
     def create_all(self):

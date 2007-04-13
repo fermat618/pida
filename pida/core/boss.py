@@ -1,6 +1,7 @@
 
 
 from pida.core.servicemanager import ServiceManager
+from pida.core.log import build_logger
 
 from pida.ui.window import PidaWindow
 
@@ -9,6 +10,7 @@ class Boss(object):
 
     def __init__(self, env=None):
         self._env = env
+        self.log = build_logger('pida')
         self._sm = ServiceManager(self)
         self._window = PidaWindow(self)
 
