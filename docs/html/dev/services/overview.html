@@ -106,13 +106,41 @@ image etc.</p>
 <p>This file is required so that Python recognises the directory as a legitimate
 Python package.</p>
 </div>
+<div class="section">
+<h1><a id="service-pida" name="service-pida">service.pida</a></h1>
+<p>This empty file is just present to identify the package as a PIDA service.</p>
+</div>
+<div class="section">
+<h1><a id="data" name="data">data/</a></h1>
+<p>This directory should contain any data files for the service that are not
+included in the other resource directories.</p>
+</div>
+<div class="section">
+<h1><a id="glade" name="glade">glade/</a></h1>
+<p>This directory contains the glade files for the service's views. Although
+views can be created using Python-only, it is recommended for more detailed
+plugin views that they use glade.</p>
+</div>
+<div class="section">
+<h1><a id="pixmaps" name="pixmaps">pixmaps/</a></h1>
+<p>This directory should contain any custom pixmaps for the service. These can be
+used in any way.</p>
+</div>
+<div class="section">
+<h1><a id="uidef" name="uidef">uidef/</a></h1>
+<p>This directory should contain the UI Definition XML files for the service.
+These are gtk.UIManager XML files, and define the menu bar and toolbar items
+for the service. The file myservice.xml is automatically loaded by PIDA, but
+others can exist in this directory and could be used to populate popup menus
+or to be further merged with the standard UI defnition.</p>
+</div>
 </div>
 
 
         <div id="end">
             <p><a href="#startcontent">Return to Top</a><br />
             <small>
-                Page last modified <strong>Fri Apr 13 18:25:24 2007</strong>.
+                Page last modified <strong>Fri Apr 13 18:32:36 2007</strong>.
             </small>
             </p>
         </div>
