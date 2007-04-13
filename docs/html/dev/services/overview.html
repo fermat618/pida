@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>Service Overview</title>
+    <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO8859-1" />
+    <link rel="stylesheet"
+        href="../../stylesheets/rest.css"
+        type="text/css" />
+    <link rel="stylesheet"
+        href="../../stylesheets/main.css"
+        type="text/css" />
+</head>
+<body>
+    <div id="nav">
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+<li>&gt;</li>
+<li><a href="../index.html">Developer</a></li>
+<li>&gt;</li>
+<li><a href="index.html">Services</a></li>
+<li>&gt;</li>
+<li>Overview</li>
+
+        </ul>
+    </div>
+
+    <div id="menu">
+    <h3>Pages</h3>
+<ul><li><a href="overview.html">Service Overview</a></li></ul>
+
+    </div><!--menu-->
+
+    <div id="main>
+        <a name="startcontent" id="startcontent"></a>
+
+        <div class="document" id="service-overview">
+<h1 class="title">Service Overview</h1>
+<p>A service is comprised of a directory on the file system. This directory is a
+Python package with data.</p>
+<p>The structure of this directory is like so for a service named &quot;myservice&quot;:</p>
+<pre class="literal-block">
+myservice/
+    __init__.py
+    myservice.py
+    service.pida
+    test_myservice.py
+    data/
+    glade/
+    pixmaps/
+    uidef/
+        myservice.xml
+</pre>
+<div class="section">
+<h1><a id="myservice-py" name="myservice-py">myservice.py</a></h1>
+<p>This is the file containing the Python code for the service. It is a Python
+module and should contain an attribute <tt class="docutils literal"><span class="pre">Service</span></tt>, which is the Class which
+will be instantiated as the service.</p>
+<p>The service class has a number of class attributes which describe its
+behaviour. These behaviours are:</p>
+<blockquote>
+<ul class="simple">
+<li>Configuration</li>
+<li>Commands</li>
+<li>Events</li>
+<li>Features</li>
+<li>Actions</li>
+</ul>
+</blockquote>
+<div class="section">
+<h2><a id="configuration" name="configuration">Configuration</a></h2>
+<p>This is the global configuration options for the service.</p>
+</div>
+<div class="section">
+<h2><a id="commands" name="commands">Commands</a></h2>
+<p>Commands are the external interface for the service. They can be called by any
+other service, and this decoupling is cleaner than expecting, and calling an
+actual method on a service.</p>
+</div>
+<div class="section">
+<h2><a id="events" name="events">Events</a></h2>
+<p>Events are an asynchronous call back for the service. Any other service can
+subscribe to an event explicitly, and by subscribing is notified when an event
+occurs.</p>
+</div>
+<div class="section">
+<h2><a id="features" name="features">Features</a></h2>
+<p>Features are behaviours that a service expects other services to provide for
+it. If this makes no sense, imagine a situation in which a file-manager
+service expects any service to subscribe to its right-click menu on a file. In
+this way, the actions provided on that right-click menu are decentralized from
+the menu itself, and can be provided anywhere. This is very similar to a
+classical (e.g. Trac) <em>extension point</em>.</p>
+</div>
+<div class="section">
+<h2><a id="actions" name="actions">Actions</a></h2>
+<p>Actions are gtk.Actions and are used in the user interface. An action maps
+directly to a single toolbar and menu action, and contains the necessary
+information to create this user interface item from it, including label, stock
+image etc.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="init-py" name="init-py">__init__.py</a></h1>
+<p>This file is required so that Python recognises the directory as a legitimate
+Python package.</p>
+</div>
+</div>
+
+
+        <div id="end">
+            <p><a href="#startcontent">Return to Top</a><br />
+            <small>
+                Page last modified <strong>Fri Apr 13 18:25:24 2007</strong>.
+            </small>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

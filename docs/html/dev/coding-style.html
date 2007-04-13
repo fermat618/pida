@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>Coding Style</title>
+    <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO8859-1" />
+    <link rel="stylesheet"
+        href="../stylesheets/rest.css"
+        type="text/css" />
+    <link rel="stylesheet"
+        href="../stylesheets/main.css"
+        type="text/css" />
+</head>
+<body>
+    <div id="nav">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+<li>&gt;</li>
+<li><a href="index.html">Developer</a></li>
+<li>&gt;</li>
+<li>Coding Style</li>
+
+        </ul>
+    </div>
+
+    <div id="menu">
+    <h3>Pages</h3>
+<ul><li><a href="coding-style.html">Coding Style</a></li></ul>
+<h3>Sub Sections</h3>
+<ul><li><a href="services/index.html">Service Authoring</a></li></ul>
+
+    </div><!--menu-->
+
+    <div id="main>
+        <a name="startcontent" id="startcontent"></a>
+
+        <div class="document" id="pida-coding-style">
+<h1 class="title">PIDA Coding Style</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr><th class="docinfo-name">Author:</th>
+<td>Ali Afshar &lt;<a class="reference" href="mailto:aafshar&#37;&#52;&#48;gmail&#46;com">aafshar<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</td></tr>
+<tr class="field"><th class="docinfo-name">license:</th><td class="field-body">DQMOTGL (Don't Quote Me On This General License)</td>
+</tr>
+</tbody>
+</table>
+<div class="section">
+<h1><a id="introduction" name="introduction">Introduction</a></h1>
+<p>First read <a class="reference" href="http://www.python.org/dev/peps/pep-0008/">PEP8</a> (the PEP on how to write readable Python code). The PEP gives
+a number of good insights. The PEP gives a few options on things, and I shall
+try to clarify what I prefer here. Where this document differs from <a class="reference" href="http://www.python.org/dev/peps/pep-0008/">PEP8</a>, you
+should use what is presented here, unless you are a zealot in which case you
+should listen to the Python people (who are cleverer than me anyway). Also
+read <a class="reference" href="http://www.python.org/dev/peps/pep-0020/">PEP20</a> while you are at it.</p>
+</div>
+<div class="section">
+<h1><a id="indenting" name="indenting">Indenting</a></h1>
+<p>4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
+your settings, somehow tabs creep into emacs-written code.</p>
+</div>
+<div class="section">
+<h1><a id="line-width" name="line-width">Line Width</a></h1>
+<p>79 characters, perhaps 78 to be safe. This is negotiable, and there are times
+when 83 character lines are acceptable. You can be the judge. I am not sure
+many people use 80-character terminals these days, so we can be a bit less
+hard-line than the PEP.</p>
+<p>You can split lines however you wish. I personally use 3 different forms of
+splitting depending on the purpose.</p>
+<p>Long lists, dicts, or many paramteres to a function:</p>
+<pre class="literal-block">
+service_base_classes =  [
+    OptionsMixin,
+    commands_mixin,
+    events_mixin,
+    bindings_mixin,
+]
+</pre>
+<p>Single extra bit:</p>
+<pre class="literal-block">
+def really_long_method_or_function_name(first_parameter, second_paramater,
+    third_parameter)
+</pre>
+<p>Or:</p>
+<pre class="literal-block">
+def really_long_method_or_function_name(first_parameter, second_paramater,
+                                        third_parameter)
+</pre>
+<p>It all depends on the use at the time, and we should remember to keep it
+readable.</p>
+</div>
+<div class="section">
+<h1><a id="blank-lines" name="blank-lines">Blank Lines</a></h1>
+<p>As <a class="reference" href="http://www.python.org/dev/peps/pep-0008/">PEP8</a> for 2 lines between top-level classes and functions, with one line
+between methods.</p>
+<p>Extra blank line &quot;to indicate logical blocks&quot; should be avoided at all costs
+in my opinion. Real logical blocks should be used to indicate logical blocks!
+If you have to do this, a comment is better than a blank line.</p>
+</div>
+<div class="section">
+<h1><a id="imports" name="imports">Imports</a></h1>
+<p>Only import the function or class you want to use, for example:</p>
+<pre class="literal-block">
+from pida.ui.views import PidaView, BaseView
+</pre>
+<p>There are a few common exceptions like:</p>
+<pre class="literal-block">
+import gtk
+</pre>
+<p>Multiple top-level imports are fine too if you like, but best grouped by where
+they are comming from:</p>
+<pre class="literal-block">
+import os, sys
+import gtk, gobject, pango
+</pre>
+<p>Remember to import in this order:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>standard library imports</li>
+<li>related third party imports</li>
+<li>PIDA application/library specific imports</li>
+</ol>
+</blockquote>
+</div>
+<div class="section">
+<h1><a id="whitespace" name="whitespace">Whitespace</a></h1>
+<blockquote>
+<p>Yes:</p>
+<pre class="literal-block">
+def foo(blah, baz):
+</pre>
+<p>No:</p>
+<pre class="literal-block">
+def foo ( blah , baz ):
+
+def foo(blah,baz)
+</pre>
+</blockquote>
+<p>(that space after a comma is basic punctuation)</p>
+<p><a class="reference" href="http://www.python.org/dev/peps/pep-0008/">PEP8</a> has oodles on this.</p>
+</div>
+<div class="section">
+<h1><a id="docstrings" name="docstrings">Docstrings</a></h1>
+<p>I like having the triple quotes as doubles, and for them to be on empty lines,
+like so:</p>
+<pre class="literal-block">
+def foo():
+    &quot;&quot;&quot;
+    This is the single-line docstring
+    &quot;&quot;&quot;
+</pre>
+<p>Docstrings are plain nice, so please try to use them for all functions. I am
+guilty of being lazy, so I can't blame anyone. Also we use API generation
+which uses these doc strings, so it all helps.</p>
+<p>We use <a class="reference" href="http://codespeak.net/~mwh/pydoctor/">Pydoctor</a> with ReStructured text directives for API generation, so I
+guess you should look them up too.</p>
+</div>
+<div class="section">
+<h1><a id="strings" name="strings">Strings</a></h1>
+<p>Single quoted, unless you need single quotes in them, in which case use double
+quotes:</p>
+<pre class="literal-block">
+my_string = 'I am a banana'
+my_other_string = &quot;I am a banana's uncle&quot;
+</pre>
+</div>
+<div class="section">
+<h1><a id="naming" name="naming">Naming</a></h1>
+<blockquote>
+<ul class="simple">
+<li>Modules as lowercase single words with no underscores, except test modules
+which should start with <cite>test_</cite>.</li>
+<li>Functions as lower_case_with_underscores.</li>
+<li>Classes is CamelCase. (Note: I hate camel case, but it is useful, even
+in Python to know the difference between a class and a function. Why?
+You can subclass a class.)</li>
+<li>Module-level constants all in UPPERCASE_WITH_UNDERSCORES.</li>
+</ul>
+</blockquote>
+</div>
+<div class="section">
+<h1><a id="conditional-blocks" name="conditional-blocks">Conditional blocks</a></h1>
+<p>This is fine:</p>
+<pre class="literal-block">
+if blah:
+    baz = 1
+else:
+    baz = 2
+</pre>
+<p>And better than:</p>
+<pre class="literal-block">
+baz = 2
+if blah:
+    baz = 1
+</pre>
+<p>But I am not going to argue, needs can force you into a certain style.
+Remember, readability is key.</p>
+</div>
+<div class="section">
+<h1><a id="magic" name="magic">Magic</a></h1>
+<p>I hate magic, perhaps because I am dumb. I am really wary of using some of
+Python's shoot-me-in-the-foot techniques because I have to maintain the code,
+so. I have made these mistakes myself, and have (hopefully learned from the
+mistakes. So:</p>
+<blockquote>
+<dl class="docutils">
+<dt>Meta classes</dt>
+<dd>Never! I have yet to see a use-case for metaclasses which did not
+relate to perverting some other library or external class. I am happy
+to be enlightened.</dd>
+<dt>Decorators</dt>
+<dd>Make perfect sense in some cases, but have the danger of being over
+used, so please think carefully whether you are using them to decorate
+behaviour, or just using them for the sake of it.</dd>
+<dt>Inner classes</dt>
+<dd>I have yet to see a use-case that requires these.</dd>
+</dl>
+</blockquote>
+</div>
+<div class="section">
+<h1><a id="outroduction" name="outroduction">Outroduction</a></h1>
+<p>I am not a fascist or a little-mided person, so I am not going to force anyone
+to use any of these guideline, (except the no tabs one). So please don't be
+put off from contributing patches or code.</p>
+</div>
+</div>
+
+
+        <div id="end">
+            <p><a href="#startcontent">Return to Top</a><br />
+            <small>
+                Page last modified <strong>Mon Apr  9 23:47:33 2007</strong>.
+            </small>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
