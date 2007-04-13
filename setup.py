@@ -20,7 +20,7 @@ moo = Extension('moo_stub',
 class BuildExt(build_ext):
     def build_extension(self, ext):
         if ext.name == 'moo_stub':
-            if os.system('cd moo && make prepare'):
+            if os.system('cd tools/moo && make prepare'):
                 raise RuntimeError()
         build_ext.build_extension(self, ext)
   
