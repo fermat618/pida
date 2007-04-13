@@ -142,7 +142,7 @@ class NamedSets(object):
     
     names = keys
     
-    def __delitem__(self, name):
+    def __delitem__(self, name): 
         """
         Remove the named set.
         
@@ -306,7 +306,8 @@ class Plugin(object):
 
     def reset(self):
         """When this plugin contains a factory makes it regen the instance."""
-        del self.instance
+        if hasattr(self,"instance"):
+            del self.instance
 
     def unplug(self, registry):
         """This method is called when the service is removed from the registry"""
