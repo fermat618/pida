@@ -49,6 +49,7 @@ class BufferListView(PidaGladeView):
 
     def create_ui(self):
         self.buffers_ol.set_columns(PROJECT_LIST_COLUMNS)
+        self.buffers_ol.set_headers_visible(False)
 
     def add_document(self, document):
         self.buffers_ol.append(document)
