@@ -21,8 +21,8 @@ class Service(object):
 
     def __init__(self, boss=None):
         self.boss = boss
-        self.reg = Registry()
         self.log_debug('Loading Service')
+        self.reg = Registry()
 
     def create_all(self):
         self.log_debug('Creating Service')
