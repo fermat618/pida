@@ -122,7 +122,6 @@ class Vim(Service):
         """Open a document"""
         if not self.started: return
         if document is not self._current:
-            print self._documents
             if document.unique_id in self._documents:
                 if document.unique_id in self._newdocs:
                     fn = self._newdocs[document.unique_id]

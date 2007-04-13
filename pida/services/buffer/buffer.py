@@ -71,11 +71,27 @@ class BufferActionsConfig(ActionsConfig):
             gtk.STOCK_OPEN,
             self.on_open_file,
         )
-        print 'banana'
+        
+        self.create_action(
+            'new_file',
+            TYPE_NORMAL,
+            'New File',
+            'Create a new file',
+            gtk.STOCK_NEW,
+            self.on_new_file,
+        )
 
     def on_open_file(self, action):
         file_name = self.svc.boss.window.open_dlg()
-        self.svc.open_file(file_name)
+        if file_name:
+            self.svc.open_file(file_name)
+
+    def on_new_file(self, action):
+        file_name = self.svc.boss.window.save_dlg()
+        if file_name:
+            f = open(file_name, 'w')
+            f.close()
+            self.svc.open_file(file_name)
 
 class BufferCommandsConfig(CommandsConfig):
 

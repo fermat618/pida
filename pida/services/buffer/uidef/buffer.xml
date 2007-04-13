@@ -2,6 +2,7 @@
     <menubar>
 
         <menu name="FileMenu" action="FileMenu">
+            <menuitem name="new_file" action="new_file" />
             <menuitem name="open_file" action="open_file" />
         </menu>
     
@@ -26,6 +27,7 @@
     </menubar>
     
     <toolbar>
+        <toolitem name="new_file" action="new_file" />
         <toolitem name="open_file" action="open_file" />
     </toolbar>
 
