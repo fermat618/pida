@@ -5,11 +5,14 @@
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
+            <menuitem name="undo" action="undo" />
+            <menuitem name="redo" action="redo" />
+            <menuitem name="cut" action="cut" />
+            <menuitem name="copy" action="copy" />
+            <menuitem name="paste" action="paste" />
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
-        <menuitem action="project_add" name="project_add" />
-        <menuitem action="project_execute" name="project_execute" />
         </menu>
         
         <menu name="LanguageMenu" action="LanguageMenu">
@@ -25,8 +28,13 @@
         </menu>
     
     </menubar>
-<toolbar>
-    <toolitem action="project_add" name="project_add" />
-    <toolitem action="project_execute" name="project_execute" />
-</toolbar>
+    
+    <toolbar>
+        <toolitem name="undo" action="undo" />
+        <toolitem name="redo" action="redo" />
+        <toolitem name="cut" action="cut" />
+        <toolitem name="copy" action="copy" />
+        <toolitem name="paste" action="paste" />
+    </toolbar>
+
 </ui>

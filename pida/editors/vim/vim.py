@@ -39,6 +39,50 @@ from pida.ui.docks import BEH_PERMANENT
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
 
+class EditorActionsConfig(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'undo',
+            TYPE_NORMAL,
+            'Undo',
+            'Undo the last editor action',
+            gtk.STOCK_UNDO,
+        )
+
+        self.create_action(
+            'redo',
+            TYPE_NORMAL,
+            'Redo',
+            'Redo the last editor action',
+            gtk.STOCK_REDO,
+        )
+
+        self.create_action(
+            'cut',
+            TYPE_NORMAL,
+            'Cut',
+            'Cut the selection in the editor',
+            gtk.STOCK_CUT
+        )
+
+        self.create_action(
+            'copy',
+            TYPE_NORMAL,
+            'Copy',
+            'Copy the selection in the editor',
+            gtk.STOCK_COPY
+        )
+
+        self.create_action(
+            'paste',
+            TYPE_NORMAL,
+            'Paste',
+            'Paste the clipboard in the editor',
+            gtk.STOCK_PASTE
+        )
+
+
 class EditorCommandsConfig(CommandsConfig):
 
     def open(self, document):
@@ -78,6 +122,7 @@ class Vim(Service):
     """Describe your Service Here""" 
 
     commands_config = EditorCommandsConfig
+    actions_config = EditorActionsConfig
 
     ##### Vim Things
 
