@@ -26,7 +26,25 @@
     </menubar>
     
     <toolbar>
+        <placeholder name="OpenFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="SaveFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="EditToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ProjectToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="VcToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ToolsToolbar">
         <toolitem name="shell" action="shell" />
+        </placeholder>
+
     </toolbar>
 
 </ui>

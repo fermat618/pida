@@ -82,6 +82,22 @@ class EditorActionsConfig(ActionsConfig):
             gtk.STOCK_PASTE
         )
 
+        self.create_action(
+            'save',
+            TYPE_NORMAL,
+            'Save',
+            'Save the current document',
+            gtk.STOCK_SAVE,
+        )
+
+        self.create_action(
+            'close',
+            TYPE_NORMAL,
+            'Close Document',
+            'Close the current document',
+            gtk.STOCK_CLOSE,
+        )
+
 
 class EditorCommandsConfig(CommandsConfig):
 

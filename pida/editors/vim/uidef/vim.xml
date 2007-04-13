@@ -30,11 +30,32 @@
     </menubar>
     
     <toolbar>
+        <placeholder name="OpenFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="SaveFileToolbar">
+        <toolitem name="save" action="save" />
+        <separator/>
+        <toolitem name="close" action="close" />
+        </placeholder>
+        <separator/>
+        <placeholder name="EditToolbar">
         <toolitem name="undo" action="undo" />
         <toolitem name="redo" action="redo" />
+        <separator/>
         <toolitem name="cut" action="cut" />
         <toolitem name="copy" action="copy" />
         <toolitem name="paste" action="paste" />
+        </placeholder>
+        <separator/>
+        <placeholder name="ProjectToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="VcToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ToolsToolbar">
+        </placeholder>
     </toolbar>
 
 </ui>

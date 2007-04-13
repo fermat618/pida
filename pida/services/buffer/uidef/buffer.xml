@@ -27,8 +27,26 @@
     </menubar>
     
     <toolbar>
-        <toolitem name="new_file" action="new_file" />
-        <toolitem name="open_file" action="open_file" />
+        <placeholder name="OpenFileToolbar">
+            <toolitem name="new_file" action="new_file" />
+            <toolitem name="open_file" action="open_file" />
+        </placeholder>
+        <separator/>
+        <placeholder name="SaveFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="EditToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ProjectToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="VcToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ToolsToolbar">
+        </placeholder>
+
     </toolbar>
 
 </ui>
