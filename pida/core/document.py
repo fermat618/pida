@@ -94,7 +94,7 @@ def relpath(target, basepath=os.curdir):
 new_file_index = 1
 
 
-class document(object):
+class Document(object):
     """Base document class."""
     """A real file on disk."""
     icon_name = 'new'
@@ -385,8 +385,5 @@ def test():
     unittest.main()
     
         
-class realfile_document(document):
-    """Real file"""
-
 
 

@@ -24,7 +24,7 @@ def get_pixmap_path(name):
 
 class Environment(object):
 
-    pida_home = os.path.expanduser('~/.pida')
+    pida_home = os.path.expanduser('~/.pida2')
 
     def get_base_service_directory(self):
         return os.path.join(

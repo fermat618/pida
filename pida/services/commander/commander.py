@@ -31,7 +31,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import BaseView
+from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
 
 class CommanderActionsConfig(ActionsConfig):
@@ -57,7 +57,7 @@ class CommanderCommandsConfig(CommandsConfig):
     def execute_shell(self):
         self.execute(['bash'])
 
-class TerminalView(BaseView):
+class TerminalView(PidaView):
 
     icon_name = 'terminal'
 

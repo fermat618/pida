@@ -1,5 +1,5 @@
 import gtk
-from moo.utils import BigPaned, PaneLabel
+from moo_stub import BigPaned, PaneLabel
 
 PANE_TERMINAL = 'Terminal'
 PANE_EDITOR = 'Editor'
@@ -26,6 +26,5 @@ class PidaPaned(BigPaned):
             lab = PaneLabel(view.icon_name, None, None, view.label_text)
             self.insert_pane(view.get_toplevel(), lab, POS, POS)
             self.show_all()
-            self.present_pane(view.get_toplevel())
 
 

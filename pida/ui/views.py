@@ -1,6 +1,6 @@
 import gtk, gobject
 
-from kiwi.ui.delegates import GladeSlaveDelegate
+from kiwi.ui.delegates import GladeSlaveDelegate, SlaveDelegate
 from kiwi.utils import gsignal, gproperty, type_register, PropertyObject
 
 
@@ -77,17 +77,12 @@ class PidaViewWidget(PropertyObject, gtk.VBox):
         self.add_main_widget(widget)
 
 
-class PidaView(GladeSlaveDelegate):
+class PidaViewMixin(object):
 
     icon_name = gtk.STOCK_INFO
     label_text = 'Pida View'
     dock_behaviour = BEH_NORMAL
 
-    def __init__(self, service, *args, **kw):
-        self.svc = service
-        GladeSlaveDelegate.__init__(self, *args, **kw)
-        self._uid = create_unique_id()
-        self.create_ui()
 
     def create_ui(self):
         """Create the user interface here"""
@@ -101,14 +96,24 @@ class PidaView(GladeSlaveDelegate):
     def get_tab_label_text(self):
         return self.label_text
 
+class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 
-class BaseView(PidaView):
+    def __init__(self, service, *args, **kw):
+        self.svc = service
+        GladeSlaveDelegate.__init__(self, *args, **kw)
+        self._uid = create_unique_id()
+        self.create_ui()
 
-    gladefile = 'blank_view'
+class PidaView(SlaveDelegate, PidaViewMixin):
 
-    def add_main_widget(self, widget):
-        self.pida_widget.pack_start(widget)
+    def __init__(self, service, *args, **kw):
+        self.svc = service
+        self._main_widget = gtk.VBox()
+        SlaveDelegate.__init__(self, toplevel=self._main_widget, *args, **kw)
+        self._uid = create_unique_id()
+        self.create_ui()
 
-class BlankView(PidaView):
-    
-    gladefile = 'blank_view'
+    def add_main_widget(self, widget, *args, **kw):
+        self._main_widget.pack_start(widget, *args, **kw)
+
+

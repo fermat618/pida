@@ -1,6 +1,6 @@
 import gtk
 
-from kiwi.ui.delegates import GladeDelegate
+from kiwi.ui.delegates import Delegate
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
 
 from pida.ui.books import BookManager, BookConfigurator
@@ -12,11 +12,12 @@ from pida.ui.paneds import PidaPaned
 from pida.core.environment import get_uidef_path
 
 
-class MainGladeDelegate(GladeDelegate):
+class MainDelegate(Delegate):
 
     def __init__(self, boss, *args, **kw):
         self._boss = boss
-        GladeDelegate.__init__(self, delete_handler=self._on_delete_event, *args, **kw)
+        self._window = gtk.Window()
+        Delegate.__init__(self, toplevel=self._window, delete_handler=self._on_delete_event, *args, **kw)
         self.create_all()
         self.show()
 
@@ -51,24 +52,37 @@ class MainGladeDelegate(GladeDelegate):
     def input_dlg(self, *args, **kw):
         return get_input(parent=self.get_toplevel(), *args, **kw)
 
+    # Window API
+    
+    def resize(self, width, height):
+        self._window.resize(width, height)
 
-class PidaWindow(MainGladeDelegate):
+
+
+class PidaWindow(MainDelegate):
 
     """Main PIDA Window"""
 
-    gladefile = 'main_window'
 
     def create_all(self):
         #self._fix_books()
         #self._fix_docks()
         self._fix_paneds()
         self._create_ui()
+        self.resize(800, 600)
 
     def start(self):
         self._start_ui()
 
     def _create_ui(self):
         self._uim = PidaUIManager()
+        self.main_box = gtk.VBox()
+        self.top_box = gtk.VBox()
+        self.bottom_box = gtk.VBox()
+        self.main_box.pack_start(self.top_box, expand=False)
+        self.main_box.pack_start(self._paned)
+        self.main_box.pack_start(self.bottom_box, expand=False)
+        self._window.add(self.main_box)
         
     def _start_ui(self):
         self._menubar = self._uim.get_menubar()
@@ -76,10 +90,10 @@ class PidaWindow(MainGladeDelegate):
         self.top_box.pack_start(self._menubar, expand=False)
         self.top_box.pack_start(self._toolbar, expand=False)
         self.top_box.show_all()
+        self.main_box.show_all()
 
     def _fix_paneds(self):
         self._paned = PidaPaned()
-        self.middle_box.pack_start(self._paned)
 
     def _fix_docks(self):
         self._dock_man = DockManager()

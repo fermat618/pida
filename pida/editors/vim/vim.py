@@ -39,6 +39,10 @@ from pida.ui.docks import BEH_PERMANENT
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
 
+class EditorCommandsConfig(CommandsConfig):
+
+    def open(self, document):
+        self.svc.open(document)
 
 class VimView(PidaView):
 
@@ -65,10 +69,15 @@ class VimCallback(object):
         if self.svc.server in servers:
             self.svc.init_vim_server()
 
+    def vim_bufferchange(self, server, cwd, filename, bufnum):
+        self.svc.boss.get_service('buffer').cmd('open_file', file_name=filename)
+
 
 # Service class
 class Vim(Service):
     """Describe your Service Here""" 
+
+    commands_config = EditorCommandsConfig
 
     ##### Vim Things
 
@@ -98,6 +107,9 @@ class Vim(Service):
         self._view = VimView(self)
         self.boss.add_view('Editor', self._view)
         self._create_initscript()
+        self._newdocs = {}
+        self._documents = {}
+        self._current = None
         self._view.run()
 
     def started():
@@ -106,8 +118,43 @@ class Vim(Service):
     def get_current():
         """Get the current document"""
 
-    def open(document):
+    def open(self, document):
         """Open a document"""
+        if not self.started: return
+        if document is not self._current:
+            print self._documents
+            if document.unique_id in self._documents:
+                if document.unique_id in self._newdocs:
+                    fn = self._newdocs[document.unique_id]
+                else:
+                    fn = document.filename
+                self._com.change_buffer(self.server, fn)
+                self._com.foreground(self.server)
+            else:
+                found = False
+                #for server in self.__servers:
+                #    serverdocs = self.__servers[server]
+                #    if document.unique_id in serverdocs:
+                #        self.__cw.change_buffer(server, document.filename)
+                #        self.__cw.foreground(server)
+                #        found = True
+                #        break
+                if not found:
+                    if document.filename is None:
+                        newname = self._com.new_file(self.server)
+                        self._newdocs[document.unique_id] = newname
+                    else:
+                        self._com.open_file(self.server, document.filename)
+                    self._documents[document.unique_id] = document
+            self._current = document
+
+        #if self.single_view is not None:
+        #    self.single_view.raise_page()
+        #    if document.filename is None:
+        #        title = 'New File'
+        #    else:
+        #        title = document.filename
+        #    self.single_view.long_title = title
 
     def open_many(documents):
         """Open a few documents"""

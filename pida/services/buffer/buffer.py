@@ -31,13 +31,14 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaGladeView
+from pida.core.document import Document
 
 PROJECT_LIST_COLUMNS = [
     Column('markup', use_markup=True)
 ]
 
-class BufferListView(PidaView):
+class BufferListView(PidaGladeView):
 
     gladefile = 'buffer_list'
 
@@ -48,34 +49,55 @@ class BufferListView(PidaView):
     def create_ui(self):
         self.buffers_ol.set_columns(PROJECT_LIST_COLUMNS)
 
+    def add_document(self, document):
+        self.buffers_ol.append(document)
+
+    def set_document(self, document):
+        if self.buffers_ol.get_selected() is not document:
+            self.buffers_ol.select(document)
+
+    def on_buffers_ol__selection_changed(self, ol, item):
+        self.svc.view_document(item)
+
 class BufferCommandsConfig(CommandsConfig):
 
     def open_file(self, file_name):
-        pass
-
-    def file_opened(self, file_name):
-        pass
+        self.svc.open_file(file_name)
 
 # Service class
 class Buffer(Service):
     """Describe your Service Here""" 
 
+    commands_config = BufferCommandsConfig
+
     def start(self):
         self._documents = {}
+        self._current = None
         self._view = BufferListView(self)
         self.boss.add_view('Buffer', self._view)
 
     def open_file(self, file_name):
-        pass
+        doc = self._get_document_for_filename(file_name)
+        if doc is None:
+            doc = Document(file_name)
+            self._add_document(doc)
+        self.view_document(doc)
 
-    def file_opened(self, file_name):
-        pass
+    def _get_document_for_filename(self, file_name):
+        for uid, doc in self._documents.iteritems():
+            if doc.filename == file_name:
+                return doc
 
-    def _load_document(self, file_name):
-        pass
+    def _add_document(self, document):
+        self._documents[document.unique_id] = document
+        self._view.add_document(document)
 
-    def _view_document(self, document):
-        pass
+    def view_document(self, document):
+        if self._current is not document:
+            self._current = document
+            self._view.set_document(document)
+            self.boss.get_service('vim').cmd('open', document=document)
+
 
 # Required Service attribute for service loading
 Service = Buffer
