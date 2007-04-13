@@ -22,8 +22,10 @@ class Service(object):
     def __init__(self, boss=None):
         self.boss = boss
         self.reg = Registry()
+        self.log_debug('Loading Service')
 
     def create_all(self):
+        self.log_debug('Creating Service')
         self._register_options_config(self.options_config)
         self._register_events_config(self.events_config)
         self._register_commands_config(self.commands_config)
@@ -31,6 +33,7 @@ class Service(object):
         self._register_actions_config(self.actions_config)
 
     def subscribe_all(self):
+        self.log_debug('Subscribing Service')
         self._subscribe_foreign_events()
         self._subscribe_foreign_features()
 
@@ -152,4 +155,18 @@ class Service(object):
 
     def get_action(self, name):
         return self._get_actions().get_action(name)
+
+    # Logging
+
+    def log_debug(self, message):
+        self.boss.log.debug('%s: %s' % (self.get_name(), message))
+
+    def log_info(self, message):
+        self.boss.log.info('%s: %s' % (self.get_name(), message))
+
+    def log_warn(self, message):
+        self.boss.log.warn('%s: %s' % (self.get_name(), message))
+
+    def log_error(self, message):
+        self.boss.log.error('%s: %s' % (self.get_name(), message))
 
