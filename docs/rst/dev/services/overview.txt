@@ -49,7 +49,7 @@ behaviour. These behaviours are:
     - Actions
 
 Configuration
--------------
+~~~~~~~~~~~~~
 
 This is the global configuration options for the service.
 
