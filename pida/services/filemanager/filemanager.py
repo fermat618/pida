@@ -21,6 +21,8 @@
 #SOFTWARE.
 
 
+from weakref import proxy
+import gtk
 
 
 # PIDA Imports
@@ -31,10 +33,78 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.ui.views import PidaView
+from kiwi.ui.objectlist import Column, ObjectList
+
+class TestFile(object):
+    def __init__(self, name, manager):
+        self._name = name
+        self._manager = manager
+
+    def get_name(self):
+        return self._name
+
+    def set_name(self, new):
+        if self._name !=new:
+            self._manager.rename_file(self._name, new, self)
+            self._name = new
+        return self._name
+
+    name = property(get_name, set_name)
+
+class FilemanagerView(PidaView):
+    
+
+    label_text = 'File Manager'
+
+    def create_ui(self):
+        self.create_toolbar()
+        self.create_file_list()
+        self.create_statusbar()
+
+    def create_toolbar(self):
+        pass
+
+    def create_file_list(self):
+        self.file_list = ObjectList()
+        self.file_list.set_columns([
+            Column("name", editable=True)
+            ]);
+        #XXX: real files
+        for x in range(10):
+            self.file_list.append(TestFile("Test%d"%x, self))
+        self.file_list.show()
+        self.add_main_widget(self.file_list)
+       
+    def create_statusbar(self):
+        pass
+
+    def rename_file(self, old, new, entry):
+        print 'renaming', old, 'to' ,new
+
+class FilemanagerEvents(EventsConfig):
+    
+    def create_events(self):
+        self.create_event('browsepath_switched')
+        self.create_event('file_renamed')
+        self.subscribe_event('file_renamed', self.svc.rename_file)
+
 
 # Service class
 class Filemanager(Service):
-    """Describe your Service Here""" 
+    """the Filemanager service"""
+
+    events_config = FilemanagerEvents
+
+    def start(self):
+        self.file_view = FilemanagerView(self)
+        self.boss._window.add_view('Buffer',self.file_view)
+
+    
+    def rename_file(self, old, new, basepath):
+        pass
+
+
 
 # Required Service attribute for service loading
 Service = Filemanager
