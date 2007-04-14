@@ -139,8 +139,9 @@ class Buffer(Service):
         self.view_document(doc)
 
     def close_current(self):
-        self._remove_document(self._current)
-        self.boss.get_service('editor').cmd('close', document=document)
+        if self._current is not None:
+            self._remove_document(self._current)
+            self.boss.get_service('vim').cmd('close', document=self._current)
 
     def close_file(self, file_name):
         document = self._get_document_for_filename(file_name)
