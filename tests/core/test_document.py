@@ -1,7 +1,7 @@
 
 import os
 
-from pida.core.document import document
+from pida.core.document import Document as document
 #from pida.core.testing import test, assert_equal, assert_notequal
 
 from unittest import TestCase

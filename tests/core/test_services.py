@@ -8,6 +8,16 @@ from pida.core.commands import CommandsConfig
 
 from pida.core.interfaces import IOptions
 
+from pida.core.log import build_logger
+
+class MockBoss(object):
+
+    log = build_logger('mylog', None)
+
+    def add_action_group_and_ui(*args):
+        pass
+
+
 class MYOptions(OptionsConfig):
 
     def create_options(self):
@@ -42,7 +52,7 @@ class TestOptions(TestCase):
         pass
 
     def test_options_setup(self):
-        svc = MYService(boss=None)
+        svc = MYService(boss=MockBoss())
         svc.create_all()
         self.assertEqual(
             svc.reg.get_singleton(IOptions).get_option('g1'),
@@ -50,14 +60,14 @@ class TestOptions(TestCase):
         )
 
     def test_option_get(self):
-        svc = MYService(boss=None)
+        svc = MYService(boss=MockBoss())
         svc.create_all()
         self.assertEqual(
             svc.get_option('g1'), svc.o_test
         )
 
     def test_option_get_value(self):
-        svc = MYService(boss=None)
+        svc = MYService(boss=MockBoss())
         svc.create_all()
         self.assertEqual(
             svc.opt('g1'), 'default value'
@@ -66,7 +76,7 @@ class TestOptions(TestCase):
 class TestCommands(TestCase):
 
     def setUp(self):
-        self.svc = MYService(boss=None)
+        self.svc = MYService(boss=MockBoss())
         self.svc.create_all()
 
     def test_call(self):
