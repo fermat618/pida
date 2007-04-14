@@ -21,15 +21,10 @@
 #SOFTWARE.
 
 
-from pida.core.environment import Environment
-from pida.core.boss import Boss
 
-def main():
-    b = Boss(Environment())
-    b.start()
-    b.loop_ui()
 
 if __name__ == '__main__':
+    from pida.core.application import main
     main()
 
 
