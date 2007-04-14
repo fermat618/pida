@@ -122,6 +122,8 @@ class VimCallback(object):
 
     def vim_bufferchange(self, server, cwd, file_name, bufnum):
         if file_name:
+            if os.path.abspath(file_name) != file_name:
+                file_name = os.path.join(cwd, file_name)
             self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
 
     def vim_bufferunload(self, server, file_name):
