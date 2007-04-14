@@ -35,8 +35,6 @@
         <separator/>
         <placeholder name="SaveFileToolbar">
         <toolitem name="save" action="save" />
-        <separator/>
-        <toolitem name="close" action="close" />
         </placeholder>
         <separator/>
         <placeholder name="EditToolbar">

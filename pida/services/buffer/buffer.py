@@ -82,6 +82,16 @@ class BufferActionsConfig(ActionsConfig):
             self.on_new_file,
         )
 
+        self.create_action(
+            'close',
+            TYPE_NORMAL,
+            'Close Document',
+            'Close the current document',
+            gtk.STOCK_CLOSE,
+            self.on_close,
+        )
+
+
     def on_open_file(self, action):
         file_name = self.svc.boss.window.open_dlg()
         if file_name:
@@ -93,6 +103,9 @@ class BufferActionsConfig(ActionsConfig):
             f = open(file_name, 'w')
             f.close()
             self.svc.open_file(file_name)
+
+    def on_close(self, action):
+        self.svc.close_current()
 
 class BufferCommandsConfig(CommandsConfig):
 
@@ -118,6 +131,9 @@ class Buffer(Service):
             doc = Document(file_name)
             self._add_document(doc)
         self.view_document(doc)
+
+    def close_current(self):
+        pass#self._current.unique_id
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():

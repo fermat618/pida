@@ -33,8 +33,10 @@
         </placeholder>
         <separator/>
         <placeholder name="SaveFileToolbar">
-        </placeholder>
+        <toolitem name="close" action="close" />
         <separator/>
+        <separator/>
+        </placeholder>
         <placeholder name="EditToolbar">
         </placeholder>
         <separator/>

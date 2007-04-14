@@ -1,4 +1,4 @@
-
+import gtk
 
 from pida.core.servicemanager import ServiceManager
 from pida.core.log import build_logger
@@ -25,6 +25,7 @@ class Boss(object):
         pass
 
     def loop_ui(self):
+        #gtk.main()
         self._window.show_and_loop()
 
     def _load_services(self):

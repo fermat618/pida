@@ -89,14 +89,6 @@ class EditorActionsConfig(ActionsConfig):
             gtk.STOCK_SAVE,
         )
 
-        self.create_action(
-            'close',
-            TYPE_NORMAL,
-            'Close Document',
-            'Close the current document',
-            gtk.STOCK_CLOSE,
-        )
-
 
 class EditorCommandsConfig(CommandsConfig):
 
@@ -128,8 +120,9 @@ class VimCallback(object):
     def vim_bufferchange(self, server, cwd, filename, bufnum):
         self.svc.boss.get_service('buffer').cmd('open_file', file_name=filename)
 
-    def vim_bufferunload(self, server, filename):
-        print filename
+    def vim_bufferunload(self, server, file_name):
+        if file_name:
+            self.svc.boss.get_service('buffer').cmd('close', file_name=filename)
 
 
 # Service class
