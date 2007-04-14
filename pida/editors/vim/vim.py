@@ -95,6 +95,9 @@ class EditorCommandsConfig(CommandsConfig):
     def open(self, document):
         self.svc.open(document)
 
+    def close(self, document):
+        self.svc.close(document)
+
 class VimView(PidaView):
 
     def create_ui(self):
@@ -117,12 +120,14 @@ class VimCallback(object):
         if self.svc.server in servers:
             self.svc.init_vim_server()
 
-    def vim_bufferchange(self, server, cwd, filename, bufnum):
-        self.svc.boss.get_service('buffer').cmd('open_file', file_name=filename)
+    def vim_bufferchange(self, server, cwd, file_name, bufnum):
+        if file_name:
+            self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
 
     def vim_bufferunload(self, server, file_name):
         if file_name:
-            self.svc.boss.get_service('buffer').cmd('close', file_name=filename)
+            self.svc.remove_file(file_name)
+            self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
 
 # Service class
@@ -211,8 +216,24 @@ class Vim(Service):
     def open_many(documents):
         """Open a few documents"""
 
-    def close():
-        """Close the current document"""
+    def close(self, document):
+        if document.unique_id in self._documents:
+            self._remove_document(document)
+            self._com.close_buffer(document.filename)
+
+    def remove_file(self, file_name):
+        document = self._get_document_for_filename(file_name)
+        if document is not None:
+            self._remove_document(document)
+
+    def _remove_document(self, document):
+        del self._documents[document.unique_id]
+
+    def _get_document_for_filename(self, file_name):
+        for uid, doc in self._documents.iteritems():
+            if doc.filename == file_name:
+                return doc
+     
 
     def close_all():
         """Close all the documents"""

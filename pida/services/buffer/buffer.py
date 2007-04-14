@@ -54,6 +54,9 @@ class BufferListView(PidaGladeView):
     def add_document(self, document):
         self.buffers_ol.append(document)
 
+    def remove_document(self, document):
+        self.buffers_ol.remove(document)
+
     def set_document(self, document):
         if self.buffers_ol.get_selected() is not document:
             self.buffers_ol.select(document)
@@ -112,6 +115,9 @@ class BufferCommandsConfig(CommandsConfig):
     def open_file(self, file_name):
         self.svc.open_file(file_name)
 
+    def close_file(self, file_name):
+        self.svc.close_file(file_name)
+
 # Service class
 class Buffer(Service):
     """Describe your Service Here""" 
@@ -133,7 +139,14 @@ class Buffer(Service):
         self.view_document(doc)
 
     def close_current(self):
-        pass#self._current.unique_id
+        self._remove_document(self._current)
+        self.boss.get_service('editor').cmd('close', document=document)
+
+    def close_file(self, file_name):
+        document = self._get_document_for_filename(file_name)
+        if document is not None:
+            self._remove_document(document)
+            self.boss.get_service('vim').cmd('close', document=document)
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():
@@ -144,8 +157,12 @@ class Buffer(Service):
         self._documents[document.unique_id] = document
         self._view.add_document(document)
 
+    def _remove_document(self, document):
+        del self._documents[document.unique_id]
+        self._view.remove_document(document)
+
     def view_document(self, document):
-        if self._current is not document:
+        if document is not None and self._current is not document:
             self._current = document
             self._view.set_document(document)
             self.boss.get_service('vim').cmd('open', document=document)
