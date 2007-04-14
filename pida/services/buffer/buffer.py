@@ -20,6 +20,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+from tempfile import mkstemp
+
 import gtk
 
 from kiwi.ui.objectlist import Column
@@ -80,9 +83,18 @@ class BufferActionsConfig(ActionsConfig):
             'new_file',
             TYPE_NORMAL,
             'New File',
-            'Create a new file',
+            'Create a temporary new file',
             gtk.STOCK_NEW,
             self.on_new_file,
+        )
+
+        self.create_action(
+            'create_file',
+            TYPE_NORMAL,
+            'Create File',
+            'Create a new file',
+            gtk.STOCK_ADD,
+            self.on_add_file,
         )
 
         self.create_action(
@@ -101,6 +113,11 @@ class BufferActionsConfig(ActionsConfig):
             self.svc.open_file(file_name)
 
     def on_new_file(self, action):
+        fd, file_name = mkstemp()
+        os.close(fd)
+        self.svc.open_file(file_name)
+
+    def on_add_file(self, action):
         file_name = self.svc.boss.window.save_dlg()
         if file_name:
             f = open(file_name, 'w')

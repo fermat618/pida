@@ -88,6 +88,20 @@ class GeneratorTask(AsyncTask):
     The diference between this task and AsyncTask is that the 'work_callback'
     returns a generator. For each value the generator yields the loop_callback
     is called inside Gtk+'s main loop.
+
+    A simple example::
+
+        def work():
+            for i in range(10000):
+                yield i
+
+        def loop(val):
+            print val
+
+        gt = GeneratorTask(work, loop)
+        gt.start()
+        import gtk
+        gtk.main()
     """
     def _work_callback(self, counter, *args, **kwargs):
         for ret in self.work_callback(*args, **kwargs):
@@ -119,6 +133,7 @@ def locked(lockname):
     Both 'meth1' and 'meth2' will be wrapped with a 'lock.acquire()'
     and a 'lock.release()'.
     '''
+
 def locked(lock_name):
     """This is a factory of decorators. The decorator
     wraps an acquire() and release() around the decorated

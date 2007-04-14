@@ -4,6 +4,7 @@
         <menu name="FileMenu" action="FileMenu">
             <menuitem name="new_file" action="new_file" />
             <menuitem name="open_file" action="open_file" />
+            <menuitem name="create_file" action="create_file" />
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
@@ -30,6 +31,7 @@
         <placeholder name="OpenFileToolbar">
             <toolitem name="new_file" action="new_file" />
             <toolitem name="open_file" action="open_file" />
+            <toolitem name="create_file" action="create_file" />
         </placeholder>
         <separator/>
         <placeholder name="SaveFileToolbar">
