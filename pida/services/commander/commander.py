@@ -51,8 +51,32 @@ class CommanderOptionsConfig(OptionsConfig):
             'transparent',
             'Terminal Transparency',
             OTypeBoolean,
-            True,
+            False,
             'Whether terminals will be transparent',
+        )
+
+        self.create_option(
+            'use_background_image',
+            'Use a background image',
+            OTypeBoolean,
+            False,
+            'Whether a background image will be displayed',
+        )
+
+        self.create_option(
+            'background_image_file',
+            'Background image file',
+            OTypeString,
+            '',
+            'The file used for the background image',
+        )
+
+        self.create_option(
+            'cursor_blinks',
+            'Cursor Blinks',
+            OTypeBoolean,
+            False,
+            'Whether the cursor will blink'
         )
 
 class CommanderActionsConfig(ActionsConfig):
@@ -115,7 +139,11 @@ class Commander(Service):
         options = dict(
             font_from_string=self.opt('font'),
             background_transparent=self.opt('transparent'),
+            cursor_blinks=self.opt('cursor_blinks'),
         )
+        if self.opt('use_background_image'):
+            imagefile = self.opt('background_image_file')
+            options['background_image_file'] = imagefile
         return options
 
 
