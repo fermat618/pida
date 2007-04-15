@@ -79,6 +79,7 @@ class CommanderCommandsConfig(CommandsConfig):
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
         self.svc.execute(['bash'], env=env, cwd=cwd, title=title, icon=None)
 
+
 class TerminalView(PidaView):
 
     icon_name = 'terminal'
@@ -92,6 +93,7 @@ class TerminalView(PidaView):
 
     def execute(self, commandargs, env, cwd):
         self._term.fork_command(commandargs[0], commandargs, env, cwd)
+
 
 # Service class
 class Commander(Service):
