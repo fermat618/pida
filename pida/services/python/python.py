@@ -23,6 +23,9 @@
 # stdlib
 import sys, compiler
 
+# gtk
+import gtk
+
 # kiwi
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -51,6 +54,7 @@ class PyflakeView(PidaView):
             Column('markup', use_markup=True)
         )
         self.errors_ol.set_headers_visible(False)
+        self.errors_ol.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.add_main_widget(self.errors_ol)
         self.errors_ol.connect('double-click', self._on_errors_double_clicked)
         self.errors_ol.show_all()
