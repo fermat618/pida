@@ -19,7 +19,7 @@ class PidaPaned(BigPaned):
         BigPaned.__init__(self)
         self.set_property('enable-detaching', True)
         for pane in self.get_all_paneds():
-            pane.set_pane_size(150)
+            pane.set_pane_size(200)
             pane.set_sticky_pane(True)
 
     def get_all_pos(self):
