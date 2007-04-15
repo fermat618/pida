@@ -24,10 +24,7 @@
 from weakref import proxy
 import gtk
 
-#XXX Importing os is fine
-from os.path import abspath, exists, join, isabs, isdir, \
-        basename, dirname, normpath
-from os import listdir
+from os import listdir, path
 
 # PIDA Imports
 from pida.core.service import Service
@@ -37,41 +34,46 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.core.interfaces import IFileManager
-
 from pida.ui.views import PidaView
-from kiwi.ui.objectlist import Column, ObjectList
+from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
-class TestFile(object):
-    def __init__(self, name, path, manager):
+class FileEntry(object):
+    """The model for file entries"""
+
+    _state = None
+    _icon = None
+
+    def __init__(self, name, path_, manager):
         self._name = name
         self._manager = manager
-        self._path = join(path, name)
+        self.path = path.join(path_, name)
+    
+    @property
+    def name(self):
+        return self._name.replace("&","&amp;")
 
-    def get_name(self):
-        return self._name
-
-    def set_name(self, new):
-        if self._name !=new:
-            self._manager.rename_file(self._name, new, self)
-            self._name = new
-        return self._name
-
-    name = property(get_name, set_name)
-
-    def get_icon(self):
-        if isdir(self._path):
+    @property
+    def icon(self):
+        if self._icon is not None:
+            return self._icon
+        elif path.isdir(self.path):
             return 'stock_folder'
         else:
             #TODO: get a real mimetype icon
             return 'text-x-generic'
-
-            
-
-    icon = property(get_icon)
+    
+    @property
+    def state(self):
+        if self._state is None:
+            return ""
 
 class FilemanagerView(PidaView):
     
+    _columns = [
+        Column("icon", use_stock=True),
+        Column("state", use_markup=True),
+        Column("name", use_markup=True)
+        ]
 
     label_text = 'Files'
     
@@ -93,13 +95,10 @@ class FilemanagerView(PidaView):
     def create_file_list(self):
         self.file_list = ObjectList()
         self.file_list.set_headers_visible(False)
-        self.file_list.set_columns([
-            Column('icon', use_stock=True),
-            Column("name")
-            ]);
+        self.file_list.set_columns(self._columns);
         #XXX: real file
         self.file_list.connect('row-activated', self.act_double_click)
-        self.update_to_path()
+        self.update_to_path(path.expanduser('~'))
         self.file_list.show()
         self._vbox.pack_start(self.file_list)
        
@@ -134,7 +133,7 @@ class FilemanagerView(PidaView):
          toolitem.set_tooltip(self._tips, action.props.tooltip)
          return toolitem
 
-    # Why are these not using an action from the ActionsConfig?
+    #TODO: move to the actionsconfig
     def generate_action_button(self, name, verbose_name, tooltip, icon,
             activate_callback=None):
         act = gtk.Action(name, verbose_name, tooltip, icon)
@@ -144,17 +143,22 @@ class FilemanagerView(PidaView):
         return act
 
     def start_term(self, action):
-        self.svc.boss.cmd('commander', 'execute_shell', cwd=self.svc.path)
+        self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
 
     def update_to_path(self, new_path=None):
+        if new_path is None:
+            new_path = self.path
+        else:
+            self.path = new_path
 
-        files = [TestFile(name, self.svc.path, self) for name in listdir(self.svc.path)]
+        files = [FileEntry(name, new_path, self) for name in listdir(new_path)]
         self.file_list.add_list(files, clear=True)
     
-    def act_double_click(self, rowitem, path):
-        target = normpath(join(self.svc.path, path.name))
-        if isdir(target):
-            self.svc.go_to(target)
+    def act_double_click(self, rowitem, fileentry):
+        target = path.normpath(
+                 path.join(self.path, fileentry.name))
+        if path.isdir(target):
+            self.svc.browse(target)
         else:
             self.svc.boss.cmd('buffer', 'open_file', file_name=target)
 
@@ -169,21 +173,19 @@ class FilemanagerEvents(EventsConfig):
     def create_events(self):
         self.create_event('browsepath_switched')
         self.create_event('file_renamed')
-        # this should be in subscribe_events
+    
+    def subscribe_events(self):    
         self.subscribe_event('file_renamed', self.svc.rename_file)
 
 class FilemanagerCommandsConfig(CommandsConfig):
-    # should be renamed 'browse'
-    def go_to(self, new_path):
-        self.svc.go_to(new_path)
+    def browse(self, new_path):
+        self.svc.browse(new_path)
 
 
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create_features(self):
-        # this feature should be named, not an interface, so nothing will need
-        # importing to provide the feature
-        self.create_feature(IFileManager)
+        self.create_feature("file-manager")
 
 
 # Service class
@@ -198,9 +200,9 @@ class Filemanager(Service):
         self.file_view = FilemanagerView(self)
         self.boss._window.add_view('Buffer',self.file_view)
    
-    def go_to(self, new_path):
+    def browse(self, new_path):
         
-        new_path = abspath(new_path)
+        new_path = path.abspath(new_path)
         if new_path == self.path:
             return
         else:
@@ -208,10 +210,10 @@ class Filemanager(Service):
             self.file_view.update_to_path(new_path)
 
     def go_up(self):
-        dir = dirname(self.path)
+        dir = path.dirname(self.path)
         if not dir:
             dir = "/" #XXX: unportable, what about non-unix
-        self.go_to(dir)
+        self.browse(dir)
 
 
     def rename_file(self, old, new, basepath):
