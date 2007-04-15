@@ -76,7 +76,7 @@ class CommanderCommandsConfig(CommandsConfig):
         self.svc.execute(commandargs, env, cwd, title)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
-        self.svc.execute(['bash'], env=env, cwd=cwd, title)
+        self.svc.execute(['bash'], env=env, cwd=cwd, title=title)
 
 class TerminalView(PidaView):
 
