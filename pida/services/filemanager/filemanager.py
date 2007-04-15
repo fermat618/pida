@@ -160,6 +160,7 @@ class FilemanagerEvents(EventsConfig):
         self.subscribe_event('file_renamed', self.svc.rename_file)
 
 class FilemanagerCommandsConfig(CommandsConfig):
+    # should be renamed 'browse'
     def go_to(self, new_path):
         self.svc.go_to(new_path)
 
