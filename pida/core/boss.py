@@ -56,7 +56,7 @@ class Boss(object):
             ]
 
     def get_editor(self):
-        return self._em.editor
+        return self._sm.editor
 
     editor = property(get_editor)
 
