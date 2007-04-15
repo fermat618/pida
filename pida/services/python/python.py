@@ -36,14 +36,6 @@ from pida.ui.views import PidaView
 from pida.utils import pyflakes
 from pida.utils.gthreads import AsyncTask, gcall
 
-def decorate_pyflake_message(msg):
-    args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-    message_string = msg.message % tuple(args)
-    msg.markup = ('<tt>%s </tt><i>%s</i>\n%s' % 
-                  (msg.lineno, msg.__class__.__name__, message_string))
-    return msg
-
-
 class PyflakeView(PidaView):
     
     icon_name = 'error'
@@ -63,7 +55,16 @@ class PyflakeView(PidaView):
     def set_items(self, items):
         self.clear_items()
         for item in items:
-            self.errors_ol.append(decorate_pyflake_message(item))
+            self.errors_ol.append(self.decorate_pyflake_message(item))
+
+    def decorate_pyflake_message(msg):
+        args = [('<b>%s</b>' % arg) for arg in msg.message_args]
+        message_string = msg.message % tuple(args)
+        msg.markup = ('<tt>%s </tt><i>%s</i>\n%s' % 
+                      (msg.lineno, msg.__class__.__name__, message_string))
+        return msg
+
+
 
 class Pyflaker(object):
 
