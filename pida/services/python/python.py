@@ -25,11 +25,40 @@
 
 # PIDA Imports
 from pida.core.service import Service
+from pida.core.events import EventsConfig
 
+from pida.ui.views import PidaView
+
+class PythonView(PidaView):
+
+    def set_current_document(self, document):
+        self._current = document
+        self.refresh_view()
+
+    def refresh_view(self):
+        """Implement to refresh views"""
+
+class PythonEventsConfig(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('buffer', 'document-changed', self.on_document_changed)
+
+    def on_document_changed(self, document):
+        self.svc.set_current_document(document)
 
 # Service class
 class Python(Service):
     """Describe your Service Here""" 
+
+    events_config = PythonEventsConfig
+
+    def start(self):
+        """Start the service"""
+        self._current = None
+
+    def set_current_document(self, document):
+        self._current = document
+        print document
 
 # Required Service attribute for service loading
 Service = Python
