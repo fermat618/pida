@@ -85,9 +85,7 @@ class TerminalView(PidaView):
     icon_name = 'terminal'
 
     def create_ui(self):
-        self._term = PidaTerminal(
-            font_from_string=self.svc.opt('font')
-        )
+        self._term = PidaTerminal(**self.svc.get_options())
         self.add_main_widget(self._term)
         self._term.show()
 
@@ -111,6 +109,15 @@ class Commander(Service):
         t.execute(commandargs, env + ['PIDA_TERM=1'], cwd)
         self.boss.add_view('Terminal', t)
         self._terminals.append(t)
+
+
+    def get_options(self):
+        options = dict(
+            font_from_string=self.opt('font'),
+            background_transparent=self.opt('transparent'),
+        )
+        return options
+
 
 
 # Required Service attribute for service loading
