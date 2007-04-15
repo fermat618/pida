@@ -308,7 +308,6 @@ class communication_window(gtk.Window):
                     # the window id to a long int.
                     servers[name_id[1]] = long(int(name_id[0], 16))
         # return the list of resuts
-        print servers
         return servers
 
     def get_shell_serverlist(self):

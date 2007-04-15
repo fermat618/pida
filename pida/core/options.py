@@ -21,7 +21,7 @@ class OptionsManager(object):
         self.add_directory('pida', service.get_name())
         
     def register_option(self, option):
-        val = option.get(self._client)
+        val = self._client.get(option.key)
         if val is None:
             option.set(self._client, option.default)
 
@@ -33,6 +33,11 @@ class OTypeString(object):
     """A string configuration type"""
 
     gconf_name = 'string'
+
+class OTypeBoolean(object):
+    """A Boolean configuration type"""
+
+    gconf_name = 'bool'
 
 class OptionItem(object):
 

@@ -29,7 +29,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, OTypeString
+from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaView
@@ -44,6 +44,14 @@ class CommanderOptionsConfig(OptionsConfig):
             OTypeString,
             'Monospace 10',
             'The font used in terminals',
+        )
+
+        self.create_option(
+            'transparent',
+            'Terminal Transparency',
+            OTypeBoolean,
+            True,
+            'Whether terminals will be transparent',
         )
 
 class CommanderActionsConfig(ActionsConfig):
