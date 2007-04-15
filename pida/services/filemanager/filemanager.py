@@ -129,11 +129,8 @@ class FilemanagerView(PidaView):
             act.connect('activate', activate_callback)
         return act
 
-    #XXX: HACK clean up when the command system works better
     def start_term(self, action):
-        self.svc.boss.cmd('commander','execute', 
-                commandargs=['bash', '-c', 
-                    'cd %s;exec $0'%self.svc.path])
+        self.svc.boss.cmd('commander', 'execute_shell', cwd=self.svc.path)
 
     def update_to_path(self, new_path=None):
 
