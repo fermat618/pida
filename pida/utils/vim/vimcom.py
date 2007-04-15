@@ -270,6 +270,9 @@ class communication_window(gtk.Window):
         # decide whether to keep fetching server list
         return self.keep_fetching_serverlist
 
+    def stop_fetching_serverlist(self):
+        self.keep_fetching_serverlist = False
+
     def get_rootwindow_serverlist(self):
         """
         Get the X root window's version of the current Vim serverlist.
@@ -305,6 +308,7 @@ class communication_window(gtk.Window):
                     # the window id to a long int.
                     servers[name_id[1]] = long(int(name_id[0], 16))
         # return the list of resuts
+        print servers
         return servers
 
     def get_shell_serverlist(self):

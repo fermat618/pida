@@ -153,6 +153,7 @@ class Vim(Service):
             self._com.load_script(self.server,
                 os.path.join(self.boss.get_pida_home(), 'pida_vim_init.vim'))
             self.started = True
+            self._com.stop_fetching_serverlist()
 
     def get_server_name(self):
         return self._view.get_server_name()

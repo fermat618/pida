@@ -102,7 +102,6 @@ class VimEmbedWidget(gtk.EventBox):
         self.add_events(gtk.gdk.KEY_PRESS_MASK)
         self.add(socket)
         self.show_all()
-        print socket
         return socket.get_id()
 
     def _generate_servername(self):
@@ -116,6 +115,7 @@ class VimEmbedWidget(gtk.EventBox):
         return False
 
     def run(self):
+        print 'running'
         xid = self._create_ui()
         args = self.args[:] # a copy
         args.extend(['--socketid', '%s' % xid])
