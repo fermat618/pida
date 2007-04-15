@@ -35,6 +35,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
+from pida.core.options import OptionsConfig, OTypeString
 
 # ui
 from pida.ui.views import PidaView
@@ -121,7 +122,19 @@ class Pyflaker(object):
 
     def set_view_items(self, items):
         self._view.set_items(items)
-        
+
+
+class PythonOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'python_for_executing',
+            'Python Executable for executing',
+            OTypeString,
+            'python',
+            'The Python executable when executing a module',
+        )
+
 
 class PythonEventsConfig(EventsConfig):
 
@@ -152,6 +165,7 @@ class Python(Service):
 
     events_config = PythonEventsConfig
     actions_config = PythonActionsConfig
+    options_config = PythonOptionsConfig
 
     def start(self):
         """Start the service"""
@@ -169,8 +183,9 @@ class Python(Service):
         return self._current.filename.endswith('.py')
 
     def execute_current_document(self):
+        python_ex = self.opt('python_for_executing')
         self.boss.cmd('commander', 'execute',
-            commandargs=['python', self._current.filename],
+            commandargs=[python_ex, self._current.filename],
             cwd = self._current.directory,
             )
 
