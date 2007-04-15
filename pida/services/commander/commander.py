@@ -139,7 +139,7 @@ class Commander(Service):
     def execute(self, commandargs, env, cwd, title, icon):
         t = TerminalView(self, title, icon)
         t.execute(commandargs, env + ['PIDA_TERM=1'], cwd)
-        self.boss.add_view('Terminal', t)
+        self.boss.add_view('Terminal', t, True)
         self._terminals.append(t)
 
 
