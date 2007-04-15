@@ -167,6 +167,8 @@ class FilemanagerCommandsConfig(CommandsConfig):
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create_features(self):
+        # this feature should be named, not an interface, so nothing will need
+        # importing to provide the feature
         self.create_feature(IFileManager)
 
 
