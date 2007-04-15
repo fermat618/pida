@@ -127,6 +127,12 @@ class BufferActionsConfig(ActionsConfig):
     def on_close(self, action):
         self.svc.close_current()
 
+class BufferEventsConfig(EventsConfig):
+
+    def create_events(self):
+        self.create_event('file-saved')
+        self.create_event('document-changed')
+
 class BufferCommandsConfig(CommandsConfig):
 
     def open_file(self, file_name):
@@ -135,12 +141,16 @@ class BufferCommandsConfig(CommandsConfig):
     def close_file(self, file_name):
         self.svc.close_file(file_name)
 
+    def current_file_saved(self):
+        self.svc.file_saved()
+
 # Service class
 class Buffer(Service):
     """Describe your Service Here""" 
 
     commands_config = BufferCommandsConfig
     actions_config = BufferActionsConfig
+    events_config = BufferEventsConfig
 
     def start(self):
         self._documents = {}
@@ -184,6 +194,10 @@ class Buffer(Service):
             self._current = document
             self._view.set_document(document)
             self.boss.get_service('vim').cmd('open', document=document)
+            self.emit('document-changed', document=document)
+
+    def file_saved(self):
+        self.emit('file-saved', document=self._current)
 
 
 # Required Service attribute for service loading

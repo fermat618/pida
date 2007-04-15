@@ -131,6 +131,9 @@ class VimCallback(object):
             self.svc.remove_file(file_name)
             self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
+    def vim_filesave(self, server, file_name):
+        self.svc.boss.cmd('buffer', 'current_file_saved')
+
 
 # Service class
 class Vim(Service):
