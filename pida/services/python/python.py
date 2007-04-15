@@ -52,6 +52,7 @@ class PyflakeView(PidaView):
         )
         self.errors_ol.set_headers_visible(False)
         self.add_main_widget(self.errors_ol)
+        self.errors_ol.connect('double-click', self._on_errors_double_clicked)
         self.errors_ol.show_all()
 
     def clear_items(self):
@@ -62,12 +63,15 @@ class PyflakeView(PidaView):
         for item in items:
             self.errors_ol.append(self.decorate_pyflake_message(item))
 
-    def decorate_pyflake_message(msg):
+    def decorate_pyflake_message(self, msg):
         args = [('<b>%s</b>' % arg) for arg in msg.message_args]
         message_string = msg.message % tuple(args)
         msg.markup = ('<tt>%s </tt><i>%s</i>\n%s' % 
                       (msg.lineno, msg.__class__.__name__, message_string))
         return msg
+
+    def _on_errors_double_clicked(self, ol, item):
+        self.svc.boss.cmd('vim', 'goto_line', line=item.lineno)
 
 class Pyflaker(object):
 

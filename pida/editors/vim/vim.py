@@ -98,6 +98,9 @@ class EditorCommandsConfig(CommandsConfig):
     def close(self, document):
         self.svc.close(document)
 
+    def goto_line(self, line):
+        self.svc.goto_line(line)
+
 class VimView(PidaView):
 
     def create_ui(self):
@@ -253,8 +256,9 @@ class Vim(Service):
     def revert():
         """Revert to the loaded version of the file"""
 
-    def goto_line(linenumber):
+    def goto_line(self, line):
         """Goto a line"""
+        self._com.goto_line(self.server, line)
 
     def cut():
         """Cut to the clipboard"""
