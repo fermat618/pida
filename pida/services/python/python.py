@@ -34,6 +34,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
+from pida.core.actions import ActionsConfig, TYPE_NORMAL
 
 # ui
 from pida.ui.views import PidaView
@@ -89,8 +90,11 @@ class Pyflaker(object):
         self.refresh_view()
 
     def refresh_view(self):
-        task = AsyncTask(self.check_current, self.set_view_items)
-        task.start()
+        if self.svc.is_current_python():
+            task = AsyncTask(self.check_current, self.set_view_items)
+            task.start()
+        else:
+            self._view.clear_items()
 
     def check_current(self):
         return self.check(self._current)
@@ -127,20 +131,48 @@ class PythonEventsConfig(EventsConfig):
     def on_document_changed(self, document):
         self.svc.set_current_document(document)
 
+class PythonActionsConfig(ActionsConfig):
+    
+    def create_actions(self):
+        self.create_action(
+            'execute_python',
+            TYPE_NORMAL,
+            'Execute Python Module',
+            'Execute the current Python module in a shell',
+            gtk.STOCK_EXECUTE,
+            self.on_python_execute,
+        )
+
+    def on_python_execute(self, action):
+        self.svc.execute_current_document()
+
 # Service class
 class Python(Service):
-    """Describe your Service Here""" 
+    """Service for all things Python""" 
 
     events_config = PythonEventsConfig
+    actions_config = PythonActionsConfig
 
     def start(self):
         """Start the service"""
         self._current = None
         self._pyflaker = Pyflaker(self)
+        self.execute_action = self.get_action('execute_python')
+        self.execute_action.set_sensitive(False)
 
     def set_current_document(self, document):
         self._current = document
         self._pyflaker.set_current_document(document)
+        self.execute_action.set_sensitive(self.is_current_python())
+
+    def is_current_python(self):
+        return self._current.filename.endswith('.py')
+
+    def execute_current_document(self):
+        self.boss.cmd('commander', 'execute',
+            commandargs=['python', self._current.filename],
+            cwd = self._current.directory,
+            )
 
 # Required Service attribute for service loading
 Service = Python
