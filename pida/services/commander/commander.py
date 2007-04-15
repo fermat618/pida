@@ -20,6 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
 
 import gtk
 
@@ -71,11 +72,11 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs):
-        self.svc.execute(commandargs)
+    def execute(self, commandargs, env=[], cwd=os.getcwd()):
+        self.svc.execute(commandargs, env, cwd)
 
-    def execute_shell(self):
-        self.execute(['bash'])
+    def execute_shell(self, env=[], cwd=os.getcwd()):
+        self.svc.execute(['bash'], env=env, cwd=cwd)
 
 class TerminalView(PidaView):
 
@@ -88,8 +89,9 @@ class TerminalView(PidaView):
         self.add_main_widget(self._term)
         self._term.show()
 
-    def execute(self, commandargs):
-        self._term.fork_command(commandargs[0], commandargs)
+    def execute(self, commandargs, env, cwd):
+        print cwd
+        self._term.fork_command(commandargs[0], commandargs, env, cwd)
 
 # Service class
 class Commander(Service):
@@ -102,10 +104,11 @@ class Commander(Service):
     def start(self):
         self._terminals = []
 
-    def execute(self, commandargs):
+    def execute(self, commandargs, env, cwd):
         t = TerminalView(self)
-        t.execute(commandargs)
+        t.execute(commandargs, env + ['PIDA_TERM=1'], cwd)
         self.boss.add_view('Terminal', t)
+        self._terminals.append(t)
 
 
 # Required Service attribute for service loading

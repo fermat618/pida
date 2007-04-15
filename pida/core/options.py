@@ -60,6 +60,7 @@ class OptionItem(object):
     def set(self, client, value):
         return self._setter(client)(self.key, value)
 
+    #TODO move this to the option type
     def _getter(self, client):
         return getattr(client, 'get_%s' % self.rtype.gconf_name)
 
