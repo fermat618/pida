@@ -1,6 +1,6 @@
 import os, imp
 
-from pida.core.interfaces import IService
+from pida.core.interfaces import IService, IEditor
 from pida.core.plugins import Registry
 
 from pida.core.environment import library, environ
@@ -78,6 +78,12 @@ class ServiceManager(object):
         self._loader = ServiceLoader()
         self._reg = Registry()
 
+    def activate_services(self): 
+        self.load_services() 
+        self.create_all()
+        self.subscribe_all()
+        self.start_all()
+
     def load_services(self):
         for svc in self._loader.load_all_services(
                 self._boss.get_service_dirs(), self._boss):
@@ -111,6 +117,40 @@ class ServiceManager(object):
     def start_all(self):
         for svc in self.get_services():
             svc.start()
+
+    def activate_editor(self, name):
+        self.load_editor(name)
+        self.editor.create_all()
+        self.editor.subscribe_all()
+        self.editor.start()
+
+    def load_editor(self, name):
+        dirs = self._boss.get_editor_dirs()
+        for editor in self._loader.get_all_services(dirs):
+            print editor.servicename, name
+            if editor.servicename == name:
+                self.editor = editor(self._boss)
+                return self.editor
+        raise AttributeError('No editor found')
+
+    def register_editor(self, service):
+        self._reg.register_plugin(
+            instance=service,
+            singletons=(
+                service.servicename,
+                IEditor,
+            ),
+            features=(
+                IService,
+            )
+        )
+
+
+
+
+
+
+    
 
 
 

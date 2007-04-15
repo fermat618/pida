@@ -29,12 +29,26 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
+from pida.core.options import OptionsConfig, OTypeString
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+class EditorOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'editor_type',
+            'Editor Type',
+            OTypeString,
+            'vim',
+            'The Editor used',
+        )
 
 # Service class
 class Editor(Service):
+
     """Describe your Service Here""" 
+
+    options_config = EditorOptionsConfig
 
 # Required Service attribute for service loading
 Service = Editor

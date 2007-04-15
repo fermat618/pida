@@ -1,6 +1,6 @@
 import gtk
 
-from pida.core.servicemanager import ServiceManager
+from pida.core.servicemanager import ServiceManager 
 from pida.core.log import build_logger
 
 from pida.ui.window import PidaWindow
@@ -15,10 +15,8 @@ class Boss(object):
         self._window = PidaWindow(self)
 
     def start(self):
-        self._load_services()
-        self._create_services()
-        self._subscribe_services()
-        self._start_services()
+        self._activate_services()
+        self._activate_editor()
         self._window.start()
 
     def stop(self):
@@ -28,17 +26,12 @@ class Boss(object):
         #gtk.main()
         self._window.show_and_loop()
 
-    def _load_services(self):
-        self._sm.load_services()
+    def _activate_services(self):
+        self._sm.activate_services()
 
-    def _create_services(self):
-        self._sm.create_all()
-
-    def _subscribe_services(self):
-        self._sm.subscribe_all()
-
-    def _start_services(self):
-        self._sm.start_all()
+    def _activate_editor(self):
+        editor_name = self.get_service('editor').opt('editor_type')
+        self._sm.activate_editor(editor_name)
 
     def get_service(self, servicename):
         return self._sm.get_service(servicename)
@@ -51,10 +44,19 @@ class Boss(object):
             return []
         else:
             return [
-                self._env.get_base_editor_directory(),
                 self._env.get_base_service_directory()
             ]
 
+    def get_editor_dirs(self):
+        if self._env is None:
+            return []
+        else:
+            return [
+                self._env.get_base_editor_directory(),
+            ]
+
+    def get_editor(self):
+        return self._em.editor
 
     def subscribe_event(self, servicename, event, callback):
         svc = self.get_service(servicename)
@@ -80,3 +82,4 @@ class Boss(object):
     def get_window(self):
         return self._window
     window = property(get_window)
+
