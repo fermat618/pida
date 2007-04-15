@@ -72,11 +72,12 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command'):
-        self.svc.execute(commandargs, env, cwd, title)
+    def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
+                      icon='terminal'):
+        self.svc.execute(commandargs, env, cwd, title, icon)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
-        self.svc.execute(['bash'], env=env, cwd=cwd, title=title)
+        self.svc.execute(['bash'], env=env, cwd=cwd, title=title, icon=None)
 
 class TerminalView(PidaView):
 
@@ -90,7 +91,6 @@ class TerminalView(PidaView):
         self._term.show()
 
     def execute(self, commandargs, env, cwd):
-        print cwd
         self._term.fork_command(commandargs[0], commandargs, env, cwd)
 
 # Service class
@@ -104,8 +104,8 @@ class Commander(Service):
     def start(self):
         self._terminals = []
 
-    def execute(self, commandargs, env, cwd, title):
-        t = TerminalView(self, title)
+    def execute(self, commandargs, env, cwd, title, icon):
+        t = TerminalView(self, title, icon)
         t.execute(commandargs, env + ['PIDA_TERM=1'], cwd)
         self.boss.add_view('Terminal', t)
         self._terminals.append(t)

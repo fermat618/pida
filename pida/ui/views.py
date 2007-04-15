@@ -98,21 +98,23 @@ class PidaViewMixin(object):
 
 class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 
-    def __init__(self, service, title=None, *args, **kw):
+    def __init__(self, service, title=None, icon=None, *args, **kw):
         self.svc = service
         GladeSlaveDelegate.__init__(self, *args, **kw)
         self._uid = create_unique_id()
         self.label_text = title or self.label_text
+        self.icon_name = icon or self.icon_name
         self.create_ui()
 
 class PidaView(SlaveDelegate, PidaViewMixin):
 
-    def __init__(self, service, title=None, *args, **kw):
+    def __init__(self, service, title=None, icon=None, *args, **kw):
         self.svc = service
         self._main_widget = gtk.VBox()
         SlaveDelegate.__init__(self, toplevel=self._main_widget, *args, **kw)
         self._uid = create_unique_id()
         self.label_text = title or self.label_text
+        self.icon_name = icon or self.icon_name
         self.create_ui()
 
     def add_main_widget(self, widget, *args, **kw):
