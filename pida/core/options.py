@@ -39,6 +39,12 @@ class OTypeBoolean(object):
 
     gconf_name = 'bool'
 
+class OTypeInteger(object):
+    """An integer configuration type"""
+
+    gconf_name = 'int'
+    
+
 class OptionItem(object):
 
     def __init__(self, group, name, label, rtype, default, doc):

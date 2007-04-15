@@ -30,7 +30,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean
+from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, OTypeInteger
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaView
@@ -77,6 +77,14 @@ class CommanderOptionsConfig(OptionsConfig):
             OTypeBoolean,
             False,
             'Whether the cursor will blink'
+        )
+
+        self.create_option(
+            'scrollback_lines',
+            'Scrollback line numer',
+            OTypeInteger,
+            100,
+            'The number of lines in the terminal scrollback buffer',
         )
 
 class CommanderActionsConfig(ActionsConfig):
@@ -140,6 +148,7 @@ class Commander(Service):
             font_from_string=self.opt('font'),
             background_transparent=self.opt('transparent'),
             cursor_blinks=self.opt('cursor_blinks'),
+            scrollback_lines=self.opt('scrollback_lines'),
         )
         if self.opt('use_background_image'):
             imagefile = self.opt('background_image_file')
