@@ -24,6 +24,7 @@
 from weakref import proxy
 import gtk
 
+#XXX Importing os is fine
 from os.path import abspath, exists, join, isabs, isdir, \
         basename, dirname, normpath
 from os import listdir
@@ -60,7 +61,7 @@ class TestFile(object):
 class FilemanagerView(PidaView):
     
 
-    label_text = 'File Manager'
+    label_text = 'Files'
     
     def create_ui(self):
         self._vbox = gtk.VBox()
