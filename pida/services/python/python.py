@@ -20,21 +20,26 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# stdlib
 import sys, compiler
 
-import gtk
-
+# kiwi
 from kiwi.ui.objectlist import ObjectList, Column
 
-
 # PIDA Imports
+
+# core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 
+# ui
 from pida.ui.views import PidaView
 
+# utils
 from pida.utils import pyflakes
 from pida.utils.gthreads import AsyncTask, gcall
+
+### Pyflakes
 
 class PyflakeView(PidaView):
     
@@ -63,8 +68,6 @@ class PyflakeView(PidaView):
         msg.markup = ('<tt>%s </tt><i>%s</i>\n%s' % 
                       (msg.lineno, msg.__class__.__name__, message_string))
         return msg
-
-
 
 class Pyflaker(object):
 
