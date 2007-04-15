@@ -58,6 +58,8 @@ class Boss(object):
     def get_editor(self):
         return self._em.editor
 
+    editor = property(get_editor)
+
     def subscribe_event(self, servicename, event, callback):
         svc = self.get_service(servicename)
         svc.subscribe_event(event, callback)

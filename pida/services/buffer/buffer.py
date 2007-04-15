@@ -168,13 +168,13 @@ class Buffer(Service):
     def close_current(self):
         if self._current is not None:
             self._remove_document(self._current)
-            self.boss.get_service('vim').cmd('close', document=self._current)
+            self.boss.editor.cmd('close', document=self._current)
 
     def close_file(self, file_name):
         document = self._get_document_for_filename(file_name)
         if document is not None:
             self._remove_document(document)
-            self.boss.get_service('vim').cmd('close', document=document)
+            self.boss.editor.cmd('close', document=document)
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():
@@ -193,7 +193,7 @@ class Buffer(Service):
         if document is not None and self._current is not document:
             self._current = document
             self._view.set_document(document)
-            self.boss.get_service('vim').cmd('open', document=document)
+            self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
 
     def file_saved(self):
