@@ -37,20 +37,35 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.ui.views import PidaView
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
+state_text = dict(
+        hidden=' ',
+        none=' ',
+        )
+
+
+state_style = dict( # tuples of (color, is_bold, is_italic)
+        hidden = ('lightgrey', False, True),
+        none = ('black', False, False),
+        )
+
+
+
 class FileEntry(object):
     """The model for file entries"""
 
-    _state = None
+    _state = "none"
     _icon = None
 
     def __init__(self, name, path_, manager):
         self._name = name
+        if name.startswith('.'):
+                self._state = "hidden"
         self._manager = manager
         self.path = path.join(path_, name)
     
     @property
     def name(self):
-        return self._name.replace("&","&amp;")
+        return self.format(self._name.replace("&","&amp;"))
 
     @property
     def icon(self):
@@ -62,10 +77,21 @@ class FileEntry(object):
             #TODO: get a real mimetype icon
             return 'text-x-generic'
     
+
     @property
     def state(self):
-        if self._state is None:
-            return ""
+        text = state_text.get(self._state, ' ')
+        wrap = '<span weight="ultrabold"><tt>%s</tt></span>'
+        return wrap%self.format(text)
+        
+    def format(self, text):
+        color, b, i= state_style.get(self._state, ('black', False, False))
+
+        if b:
+            text = '<b>%s</b>'%text
+        if i:
+            text = '<i>%s</i>'%text
+        return '<span color="%s">%s</span>'%(color, text)
 
 class FilemanagerView(PidaView):
     
@@ -153,10 +179,12 @@ class FilemanagerView(PidaView):
 
         files = [FileEntry(name, new_path, self) for name in listdir(new_path)]
         self.file_list.add_list(files, clear=True)
+        self.entries = dict((entry._name, entry) for entry in files)
+
     
     def act_double_click(self, rowitem, fileentry):
         target = path.normpath(
-                 path.join(self.path, fileentry.name))
+                 path.join(self.path, fileentry._name))
         if path.isdir(target):
             self.svc.browse(target)
         else:
