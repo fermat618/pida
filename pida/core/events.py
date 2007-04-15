@@ -93,13 +93,14 @@ class Event(object):
                     if kind.startswith("pida"): 
                         kind = kind.split('.')[1]
 
-                    self.log.debug( "%s: %f -- %s: %s" % ( 
-                          event_name, elapsed, kind, classname))
+                    #self.log.debug( "%s: %f -- %s: %s" % ( 
+                    #      event_name, elapsed, kind, classname))
                 except AttributeError, v:
-                    self.log.debug(
-                    "Error couldnt extract callback informations - %s"%v)
-                    self.log.debug(
-                        "%s: %f -- %r" % (event_name, elapsed, callback))
+                    #self.log.debug(
+                    #"Error couldnt extract callback informations - %s"%v)
+                    #self.log.debug(
+                    #    "%s: %f -- %r" % (event_name, elapsed, callback))
+                    pass
 
     def get(self, event_name):
         return self.__events[event_name]
