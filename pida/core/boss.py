@@ -75,8 +75,8 @@ class Boss(object):
     def cmd(self, servicename, commandname, **kw):
         self.get_service(servicename).cmd(commandname, **kw)
 
-    def add_view(self, bookname, view):
-        self._window.add_view(bookname, view)
+    def add_view(self, bookname, view, present=False):
+        self._window.add_view(bookname, view, present)
 
     def get_pida_home(self):
         return self._env.pida_home

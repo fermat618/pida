@@ -156,7 +156,7 @@ class Buffer(Service):
         self._documents = {}
         self._current = None
         self._view = BufferListView(self)
-        self.boss.add_view('Buffer', self._view)
+        self.boss.add_view('Buffer', self._view, True)
 
     def open_file(self, file_name):
         doc = self._get_document_for_filename(file_name)

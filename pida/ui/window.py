@@ -126,8 +126,8 @@ class PidaWindow(MainDelegate):
             print 'unable to get %s resource' % filename
 
     # View API
-    def add_view(self, bookname, view):
-        self._paned.add_view(bookname, view)
+    def add_view(self, bookname, view, present=False):
+        self._paned.add_view(bookname, view, present)
 
     def remove_view(self, view):
         self._book_man.remove_view(view)

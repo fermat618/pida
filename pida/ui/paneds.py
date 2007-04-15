@@ -36,10 +36,8 @@ class PidaPaned(BigPaned):
             POS = POS_MAP[name]
             lab = PaneLabel(view.icon_name, None, None, view.label_text)
             self.insert_pane(view.get_toplevel(), lab, POS, POS)
-            def _present():
-                self.present_pane(view.get_toplevel())
             if present:
-                gcall(present)
+                gcall(self.present_pane, view.get_toplevel())
             self.show_all()
 
 
