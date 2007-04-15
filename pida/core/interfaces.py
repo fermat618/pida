@@ -106,3 +106,6 @@ class IProjectController(Interface):
 
     """A Project Controller"""
 
+class IFileManager(Interface):
+
+    """A File Manager"""

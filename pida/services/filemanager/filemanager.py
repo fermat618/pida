@@ -33,6 +33,8 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.core.interfaces import IFileManager
+
 from pida.ui.views import PidaView
 from kiwi.ui.objectlist import Column, ObjectList
 
@@ -56,13 +58,20 @@ class FilemanagerView(PidaView):
     
 
     label_text = 'File Manager'
-
+    
     def create_ui(self):
+        self._vbox = gtk.VBox()
+        self._vbox.show()
         self.create_toolbar()
+        self.create_ancestors()
         self.create_file_list()
         self.create_statusbar()
+        self.add_main_widget(self._vbox)
 
-    def create_toolbar(self):
+    def create_statusbar(self):
+        pass
+
+    def create_ancestors(self):
         pass
 
     def create_file_list(self):
@@ -74,10 +83,42 @@ class FilemanagerView(PidaView):
         for x in range(10):
             self.file_list.append(TestFile("Test%d"%x, self))
         self.file_list.show()
-        self.add_main_widget(self.file_list)
+        self._vbox.pack_start(self.file_list)
        
-    def create_statusbar(self):
-        pass
+    def create_toolbar(self):
+        self._tips = gtk.Tooltips()
+        self._toolbar = gtk.Toolbar()
+        self._toolbar.set_icon_size(gtk.ICON_SIZE_MENU)
+        self._toolbar.set_style(gtk.TOOLBAR_ICONS)
+        self._toolbar.show()
+        self._vbox.pack_start(self._toolbar, expand=False)
+        
+        gen_action = self.generate_action_button
+
+        self._newfileact = gen_action(
+                'Cmd', 'Terminal',
+                'Start a terminal here',
+                gtk.STOCK_NEW,
+                self.start_term
+                )
+        
+    def add_action_to_toolbar(self, action):
+         toolitem = action.create_tool_item()
+         self._toolbar.add(toolitem)
+         toolitem.set_tooltip(self._tips, action.props.tooltip)
+         return toolitem
+
+    def generate_action_button(self, name, verbose_name, tooltip, icon,
+            activate_callback=None):
+        act = gtk.Action(name, verbose_name, tooltip, icon)
+        toolitem = self.add_action_to_toolbar(act)
+        if activate_callback is not None:
+            act.connect('activate', activate_callback)
+        return act
+
+    #XXX: clean up when the command system works better
+    def start_term(self, action):
+        self.svc.boss.cmd('commander','execute', commandargs=['bash', '-c', 'ls','/home/'])
 
     def rename_file(self, old, new, entry):
         print 'renaming', old, 'to' ,new
@@ -89,11 +130,17 @@ class FilemanagerEvents(EventsConfig):
         self.create_event('file_renamed')
         self.subscribe_event('file_renamed', self.svc.rename_file)
 
+class FilemanagerFeatureConfig(FeaturesConfig):
+
+    def create_features(self):
+        self.create_feature(IFileManager)
+
 
 # Service class
 class Filemanager(Service):
     """the Filemanager service"""
 
+    features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
 
     def start(self):
