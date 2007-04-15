@@ -74,7 +74,9 @@ class TerminalView(PidaView):
     icon_name = 'terminal'
 
     def create_ui(self):
-        self._term = PidaTerminal()
+        self._term = PidaTerminal(
+            font_from_string=self.svc.opt('font')
+        )
         self.add_main_widget(self._term)
         self._term.show()
 

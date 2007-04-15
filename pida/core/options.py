@@ -25,6 +25,9 @@ class OptionsManager(object):
         if val is None:
             option.set(self._client, option.default)
 
+    def get_value(self, option):
+        return option.get(self._client)
+
 
 class OTypeString(object):
     """A string configuration type"""
@@ -86,4 +89,7 @@ class OptionsConfig(BaseConfig):
 
     def get_option(self, optname):
         return self._options[optname]
+
+    def get_value(self, optname):
+        return self.manager.get_value(self.get_option(optname))
 
