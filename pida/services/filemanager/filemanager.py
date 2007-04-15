@@ -24,6 +24,9 @@
 from weakref import proxy
 import gtk
 
+from os.path import abspath, exists, join, isabs, isdir, \
+        basename, dirname, normpath
+from os import listdir
 
 # PIDA Imports
 from pida.core.service import Service
@@ -76,12 +79,13 @@ class FilemanagerView(PidaView):
 
     def create_file_list(self):
         self.file_list = ObjectList()
+        self.file_list.set_headers_visible(False)
         self.file_list.set_columns([
-            Column("name", editable=True)
+            Column("name")
             ]);
-        #XXX: real files
-        for x in range(10):
-            self.file_list.append(TestFile("Test%d"%x, self))
+        #XXX: real file
+        self.file_list.connect('row-activated', self.act_double_click)
+        self.update_to_path()
         self.file_list.show()
         self._vbox.pack_start(self.file_list)
        
@@ -94,6 +98,14 @@ class FilemanagerView(PidaView):
         self._vbox.pack_start(self._toolbar, expand=False)
         
         gen_action = self.generate_action_button
+            
+        self._upact = gen_action(
+                'Up', 'Up',
+                'Browse the parent directory',
+                gtk.STOCK_GO_UP,
+                self.act_go_up
+                )
+
 
         self._newfileact = gen_action(
                 'Cmd', 'Terminal',
@@ -120,6 +132,21 @@ class FilemanagerView(PidaView):
     def start_term(self, action):
         self.svc.boss.cmd('commander','execute', commandargs=['bash', '-c', 'ls','/home/'])
 
+    def update_to_path(self, new_path=None):
+
+        files = [TestFile(name, self) for name in listdir(self.svc.path)]
+        self.file_list.add_list(files, clear=True)
+    
+    def act_double_click(self, rowitem, path):
+        target = normpath(join(self.svc.path, path.name))
+        if isdir(target):
+            self.svc.go_to(target)
+        else:
+            self.svc.boss.cmd('buffer', 'open_file', file_name=target)
+
+    def act_go_up(self, action):
+        self.svc.go_up()
+
     def rename_file(self, old, new, entry):
         print 'renaming', old, 'to' ,new
 
@@ -129,6 +156,11 @@ class FilemanagerEvents(EventsConfig):
         self.create_event('browsepath_switched')
         self.create_event('file_renamed')
         self.subscribe_event('file_renamed', self.svc.rename_file)
+
+class FilemanagerCommandsConfig(CommandsConfig):
+    def go_to(self, new_path):
+        self.svc.go_to(new_path)
+
 
 class FilemanagerFeatureConfig(FeaturesConfig):
 
@@ -144,10 +176,26 @@ class Filemanager(Service):
     events_config = FilemanagerEvents
 
     def start(self):
+        self.path = "/"
         self.file_view = FilemanagerView(self)
         self.boss._window.add_view('Buffer',self.file_view)
+   
+    def go_to(self, new_path):
+        
+        new_path = abspath(new_path)
+        if new_path == self.path:
+            return
+        else:
+            self.path = new_path
+            self.file_view.update_to_path(new_path)
 
-    
+    def go_up(self):
+        dir = dirname(self.path)
+        if not dir:
+            dir = "/" #XXX: unportable, what about non-unix
+        self.go_to(dir)
+
+
     def rename_file(self, old, new, basepath):
         pass
 
