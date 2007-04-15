@@ -43,9 +43,10 @@ from pida.ui.views import PidaView
 from kiwi.ui.objectlist import Column, ObjectList
 
 class TestFile(object):
-    def __init__(self, name, manager):
+    def __init__(self, name, path, manager):
         self._name = name
         self._manager = manager
+        self._path = join(path, name)
 
     def get_name(self):
         return self._name
@@ -57,6 +58,17 @@ class TestFile(object):
         return self._name
 
     name = property(get_name, set_name)
+
+    def get_icon(self):
+        if isdir(self._path):
+            return 'stock_folder'
+        else:
+            #TODO: get a real mimetype icon
+            return 'text-x-generic'
+
+            
+
+    icon = property(get_icon)
 
 class FilemanagerView(PidaView):
     
@@ -82,6 +94,7 @@ class FilemanagerView(PidaView):
         self.file_list = ObjectList()
         self.file_list.set_headers_visible(False)
         self.file_list.set_columns([
+            Column('icon', use_stock=True),
             Column("name")
             ]);
         #XXX: real file
@@ -135,7 +148,7 @@ class FilemanagerView(PidaView):
 
     def update_to_path(self, new_path=None):
 
-        files = [TestFile(name, self) for name in listdir(self.svc.path)]
+        files = [TestFile(name, self.svc.path, self) for name in listdir(self.svc.path)]
         self.file_list.add_list(files, clear=True)
     
     def act_double_click(self, rowitem, path):
