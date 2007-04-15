@@ -60,7 +60,7 @@ class Service(object):
         return self._get_options().get_option(name)
 
     def opt(self, name):
-        return self.get_option(name).value
+        return self.get_option(name).get()
 
     ##########
     # Commands

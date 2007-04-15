@@ -29,10 +29,22 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
+from pida.core.options import OptionsConfig, OTypeString
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
+
+class CommanderOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'font',
+            'Terminal Font',
+            OTypeString,
+            'Monospace 10',
+            'The font used in terminals',
+        )
 
 class CommanderActionsConfig(ActionsConfig):
 
@@ -75,6 +87,7 @@ class Commander(Service):
 
     commands_config = CommanderCommandsConfig
     actions_config = CommanderActionsConfig
+    options_config = CommanderOptionsConfig
 
     def start(self):
         self._terminals = []
