@@ -121,6 +121,7 @@ class FilemanagerView(PidaView):
          toolitem.set_tooltip(self._tips, action.props.tooltip)
          return toolitem
 
+    # Why are these not using an action from the ActionsConfig?
     def generate_action_button(self, name, verbose_name, tooltip, icon,
             activate_callback=None):
         act = gtk.Action(name, verbose_name, tooltip, icon)
@@ -155,6 +156,7 @@ class FilemanagerEvents(EventsConfig):
     def create_events(self):
         self.create_event('browsepath_switched')
         self.create_event('file_renamed')
+        # this should be in subscribe_events
         self.subscribe_event('file_renamed', self.svc.rename_file)
 
 class FilemanagerCommandsConfig(CommandsConfig):
