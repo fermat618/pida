@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from pida.core.service import Service
 
-from pida.core.options import OptionsConfig
+from pida.core.options import OptionsConfig, OTypeString
 from pida.core.commands import CommandsConfig
 
 from pida.core.interfaces import IOptions
@@ -24,7 +24,7 @@ class MYOptions(OptionsConfig):
         self.svc.o_test = self.create_option(
             name='g1',
             label='G1 Label',
-            rtype=None,
+            rtype=OTypeString,
             default='default value',
             doc='Document for my group'
         )
@@ -44,7 +44,7 @@ class MYService(Service):
         self.something = False
 
     def get_name(self):
-        return 'My Service Name'
+        return 'MyServiceName'
 
 class TestOptions(TestCase):
 
