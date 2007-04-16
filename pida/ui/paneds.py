@@ -43,4 +43,10 @@ class PidaPaned(BigPaned):
     def remove_view(self, view):
         self.remove_pane(view.get_toplevel())
 
+    def detach_view(self, view):
+        for paned in self.get_all_paneds():
+            pnum = paned.get_pane_num(view.get_toplevel())
+            if pnum > -1:
+                paned.detach_pane(pnum)
+                break
 

@@ -161,7 +161,7 @@ class Service(object):
         return self._get_actions().get_action(name)
 
     def get_keyboard_options(self):
-        return self.get_actions().get_keyboard_options()
+        return self._get_actions().get_keyboard_options()
 
     # Logging
 

@@ -31,6 +31,9 @@ class OptionsManager(object):
     def get_value(self, option):
         return option.get(self._client)
 
+    def set_value(self, option, value):
+        return option.set(self._client, value)
+
 
 class OTypeString(object):
     """A string configuration type"""
@@ -57,7 +60,6 @@ class OptionItem(object):
         self.rtype = rtype
         self.doc = doc
         self.default = default
-        self.value = default
         self.key = self._create_key()
         self.callback = callback
 
@@ -69,6 +71,14 @@ class OptionItem(object):
         
     def set(self, client, value):
         return self._setter(client)(self.key, value)
+
+    def get_value(self):
+        return manager.get_value(self)
+
+    def set_value(self, value):
+        return manager.set_value(self, value)
+
+    value = property(get_value, set_value)
 
     #TODO move this to the option type
     def _getter(self, client):

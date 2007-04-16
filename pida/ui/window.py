@@ -134,4 +134,7 @@ class PidaWindow(MainDelegate):
     def remove_view(self, view):
         self._paned.remove_view(view)
 
+    def detach_view(self, view):
+        self._paned.detach_view(view)
+
 

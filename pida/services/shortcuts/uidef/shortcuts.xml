@@ -5,6 +5,7 @@
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
+            <menuitem action="show_shortcuts" name="show_shortcuts" />
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
@@ -14,7 +15,6 @@
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">
-            <menuitem action="show_manhole" name="show_manhole" />
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">

@@ -96,6 +96,12 @@ class PidaViewMixin(object):
     def get_tab_label_text(self):
         return self.label_text
 
+    def get_parent_window(self):
+        return self.get_toplevel().get_parent_window()
+
+    parent_window = property(get_parent_window)
+        
+
 class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 
     def __init__(self, service, title=None, icon=None, *args, **kw):
@@ -119,5 +125,6 @@ class PidaView(SlaveDelegate, PidaViewMixin):
 
     def add_main_widget(self, widget, *args, **kw):
         self._main_widget.pack_start(widget, *args, **kw)
+
 
 

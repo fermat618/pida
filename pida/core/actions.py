@@ -74,7 +74,7 @@ class ActionsConfig(BaseConfig):
         """Create your actions here"""
 
     def create_action(self, name, atype, label, tooltip, stock_id,
-                      callback=None, accel_string=None):
+                      callback=None, accel_string=''):
         aclass = _ACTIONS[atype]
         act = aclass(name=name, label=label, tooltip=tooltip, stock_id=stock_id)
         self._actions.add_action(act)
@@ -82,8 +82,7 @@ class ActionsConfig(BaseConfig):
             callback = getattr(self, 'act_%s' % name, None)
         if callback is not None:
             act.connect('activate', callback)
-        if accel_string:
-            self._create_key_option(act, name, label, tooltip, accel_string)
+        self._create_key_option(act, name, label, tooltip, accel_string)
 
     def _create_key_option(self, act, name, label, tooltip, accel_string):
         opt = OptionItem(self._get_group_name(), name, label, OTypeString,

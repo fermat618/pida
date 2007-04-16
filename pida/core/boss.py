@@ -81,6 +81,9 @@ class Boss(object):
     def remove_view(self, view):
         self._window.remove_view(view)
 
+    def detach_view(self, view):
+        self._window.detach_view(view)
+
     def get_pida_home(self):
         return self._env.pida_home
 
