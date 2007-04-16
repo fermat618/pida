@@ -113,6 +113,10 @@ class VimView(PidaView):
     def get_server_name(self):
         return self._vim.get_server_name()
 
+    def grab_input_focus(self):
+        self._vim.grab_input_focus()
+
+
 
 class VimCallback(object):
 
@@ -259,6 +263,7 @@ class Vim(Service):
     def goto_line(self, line):
         """Goto a line"""
         self._com.goto_line(self.server, line)
+        self.grab_focus()
 
     def cut():
         """Cut to the clipboard"""
@@ -269,8 +274,9 @@ class Vim(Service):
     def paste():
         """Paste from the clipboard"""
 
-    def grab_focus():
+    def grab_focus(self):
         """Grab the focus"""
+        self._view.grab_input_focus()
 
     def set_undo_sensitive(sensitive):
         """Set the undo action sensitivity"""

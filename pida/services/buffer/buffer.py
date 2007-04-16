@@ -134,7 +134,7 @@ class BufferActionsConfig(ActionsConfig):
 class BufferEventsConfig(EventsConfig):
 
     def create_events(self):
-        self.create_event('file-saved')
+        self.create_event('document-saved')
         self.create_event('document-changed')
 
 class BufferCommandsConfig(CommandsConfig):
@@ -201,7 +201,7 @@ class Buffer(Service):
             self.emit('document-changed', document=document)
 
     def file_saved(self):
-        self.emit('file-saved', document=self._current)
+        self.emit('document-saved', document=self._current)
 
 
 # Required Service attribute for service loading
