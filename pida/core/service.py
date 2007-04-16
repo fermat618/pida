@@ -160,6 +160,9 @@ class Service(object):
     def get_action(self, name):
         return self._get_actions().get_action(name)
 
+    def get_keyboard_options(self):
+        return self.get_actions().get_keyboard_options()
+
     # Logging
 
     def log_debug(self, message):

@@ -165,6 +165,9 @@ class ActionsConfig(BaseConfig):
     def get_action_group(self):
         return self._actions
 
+    def get_keyboard_options(self):
+        return self._keyboard_options
+
     def _create_accel_path(self, name):
         return '<Actions>/%s' % name
 
