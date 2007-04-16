@@ -78,6 +78,9 @@ class Boss(object):
     def add_view(self, bookname, view, present=False):
         self._window.add_view(bookname, view, present)
 
+    def remove_view(self, view):
+        self._window.remove_view(view)
+
     def get_pida_home(self):
         return self._env.pida_home
 

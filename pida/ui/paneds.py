@@ -40,4 +40,7 @@ class PidaPaned(BigPaned):
                 gcall(self.present_pane, view.get_toplevel())
             self.show_all()
 
+    def remove_view(self, view):
+        self.remove_pane(view.get_toplevel())
+
 

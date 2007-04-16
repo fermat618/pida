@@ -132,9 +132,6 @@ class PidaWindow(MainDelegate):
         self._paned.add_view(bookname, view, present)
 
     def remove_view(self, view):
-        self._book_man.remove_view(view)
-
-    def move_view(self, bookname, view):
-        self._book_man.move_view(bookname, view)
+        self._paned.remove_view(view)
 
 
