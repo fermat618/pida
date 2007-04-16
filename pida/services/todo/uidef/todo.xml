@@ -14,10 +14,14 @@
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">
-            <menuitem action="show_todo" name="show_todo" />
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="tools">
+            <menuitem action="show_todo" name="show_todo" />
+            </placeholder>
+            <separator />
+            <placeholder name="panes"/>
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

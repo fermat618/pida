@@ -10,6 +10,7 @@ base_menu_actions = [
     ('ProjectMenu', None, 'Project', '<Alt>p', 'Project Menu', None),
     ('LanguageMenu', None, 'Language', '<Alt>l', 'Language Menu', None),
     ('ToolsMenu', None, 'Tools', '<Alt>t', 'Tools Menu', None),
+    ('ToolsDebug', None, 'Debug Pida', '<Alt>d', 'Debug Pida Menu', None),
     ('ViewMenu', None, 'View', '<Alt>v', 'View Menu', None),
     ('HelpMenu', None, 'Help', '<Alt>h', 'Help Menu', None),
 ]

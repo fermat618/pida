@@ -14,7 +14,11 @@
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">
+            <placeholder name="toolstools"/>
+            <separator />
+            <menu name="ToolsDebug" action="ToolsDebug">
             <menuitem action="show_manhole" name="show_manhole" />
+            </menu>
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
