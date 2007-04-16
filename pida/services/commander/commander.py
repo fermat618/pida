@@ -96,7 +96,8 @@ class CommanderActionsConfig(ActionsConfig):
             'Run Shell',
             'Open a shell prompt',
             'terminal',
-            self.execute_shell
+            self.execute_shell,
+            '<Shift><Control>T',
         )
 
     def execute_shell(self, action):

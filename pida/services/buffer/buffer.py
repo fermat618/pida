@@ -87,6 +87,7 @@ class BufferActionsConfig(ActionsConfig):
             'Create a temporary new file',
             gtk.STOCK_NEW,
             self.on_new_file,
+            '<Shift><Control>N',
         )
 
         self.create_action(
@@ -96,6 +97,7 @@ class BufferActionsConfig(ActionsConfig):
             'Create a new file',
             gtk.STOCK_ADD,
             self.on_add_file,
+            '<Shift><Control>A',
         )
 
         self.create_action(
@@ -105,6 +107,7 @@ class BufferActionsConfig(ActionsConfig):
             'Close the current document',
             gtk.STOCK_CLOSE,
             self.on_close,
+            '<Shift><Control>W',
         )
 
 
