@@ -115,7 +115,7 @@ class Todo(Service):
     def show_todo(self):
         self.boss.add_view('Plugin', self._view, True)
 
-    def hide_view(self):
+    def hide_todo(self):
         self.boss.remove_view(self._view)
 
     def check_current(self):
