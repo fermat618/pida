@@ -86,7 +86,6 @@ class ShortcutsView(PidaView):
         return ServiceListItem(service)
 
     def _on_selection_changed(self, otree, item):
-        print item
         if isinstance(item, ServiceListItem):
             self._current = None
             self._capture_entry.set_sensitive(False)
