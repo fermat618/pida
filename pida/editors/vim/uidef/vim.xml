@@ -5,11 +5,20 @@
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
+            <placeholder name="undo">
             <menuitem name="undo" action="undo" />
             <menuitem name="redo" action="redo" />
+            </placeholder>
+            <separator />
+            <placeholder name="cut">
             <menuitem name="cut" action="cut" />
             <menuitem name="copy" action="copy" />
             <menuitem name="paste" action="paste" />
+            </placeholder>
+            <separator />
+            <placeholder name="find" />
+            <separator />
+            <placeholder name="prefs" />
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
