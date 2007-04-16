@@ -41,8 +41,8 @@ class ManholeActionsConfig(ActionsConfig):
         self.create_action(
             'show_manhole',
             TYPE_TOGGLE,
-            'Debug PIDA',
-            'Open the PIDA Debugger Shell',
+            'PIDA Internal Shell',
+            'Open the PIDA Internal Shell',
             'face-monkey',
             self.on_show_manhole,
             '<Shift><Control>M',
