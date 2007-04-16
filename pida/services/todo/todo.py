@@ -44,6 +44,9 @@ class TodoItem(object):
 
 class TodoView(PidaView):
 
+    label_text = 'TODO'
+    icon_name =  'accessories-text-editor'
+
     def create_ui(self):
         self.todo_list = ObjectList(
             [
