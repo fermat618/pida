@@ -39,7 +39,7 @@ class ServiceListItem(object):
     def __init__(self, svc):
         self._svc = svc
         self.label = svc.get_name().capitalize()
-        self.description = svc.__doc__
+        self.doc = svc.__doc__
         self.stock_id = ''
         
 
