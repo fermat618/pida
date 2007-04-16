@@ -45,6 +45,9 @@ class ServiceListItem(object):
 
 class ShortcutsView(PidaView):
 
+    icon_name = 'key_bindings'
+    label_text = 'Shortcuts'
+
     def create_ui(self):
         self.shortcuts_list = ObjectTree(
             [
