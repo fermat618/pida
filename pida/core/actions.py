@@ -88,6 +88,7 @@ class ActionsConfig(BaseConfig):
         opt = OptionItem(self._get_group_name(), name, label, OTypeString,
                          accel_string, tooltip, self._on_shortcut_notify)
         opt.action = act
+        opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
         manager.register_option(opt)
         act.set_accel_group(self.accelerator_group)
