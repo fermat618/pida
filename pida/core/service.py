@@ -36,6 +36,7 @@ class Service(object):
         self.log_debug('Subscribing Service')
         self._subscribe_foreign_events()
         self._subscribe_foreign_features()
+        self._subscribe_keyboard_shortcuts()
 
     def get_name(self):
         return self.servicename
@@ -149,6 +150,9 @@ class Service(object):
             instance = config_cls(self),
             singletons=(IActions,)
         )
+
+    def _subscribe_keyboard_shortcuts(self):
+        self._get_actions().subscribe_keyboard_shortcuts()
 
     def _get_actions(self):
         return self.reg.get_singleton(IActions)

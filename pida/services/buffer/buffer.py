@@ -77,6 +77,7 @@ class BufferActionsConfig(ActionsConfig):
             'Open a file with a graphical file browser',
             gtk.STOCK_OPEN,
             self.on_open_file,
+            '<Shift><Control>O',
         )
         
         self.create_action(

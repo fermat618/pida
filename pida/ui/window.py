@@ -10,6 +10,7 @@ from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
 from pida.core.environment import get_uidef_path, get_pixmap_path
+from pida.core.actions import accelerator_group
 
 
 class MainDelegate(Delegate):
@@ -18,6 +19,7 @@ class MainDelegate(Delegate):
         self._boss = boss
         self._window = gtk.Window()
         self._window.set_icon_from_file(get_pixmap_path('pida-icon.png'))
+        self._window.add_accel_group(accelerator_group)
         Delegate.__init__(self, toplevel=self._window,
             delete_handler=self._on_delete_event, *args, **kw)
         self.create_all()

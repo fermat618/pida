@@ -26,6 +26,7 @@ import gtk
 
 # pida core import(s)
 from pida.core.base import BaseConfig
+from pida.core.options import OptionItem, manager, OTypeString
 
 (
 TYPE_RADIO,
@@ -110,10 +111,15 @@ _ACTIONS = {
 }
 
 
+accelerator_group = gtk.AccelGroup()
+
 class ActionsConfig(BaseConfig):
+
+    accelerator_group = accelerator_group
 
     def create(self):
         self._actions = gtk.ActionGroup(self.svc.get_name())
+        self._keyboard_options = {}
         self.create_actions()
         if self.svc.boss is not None:
             self.svc.boss.add_action_group_and_ui(
@@ -124,7 +130,8 @@ class ActionsConfig(BaseConfig):
     def create_actions(self):
         """Create your actions here"""
 
-    def create_action(self, name, atype, label, tooltip, stock_id, callback=None):
+    def create_action(self, name, atype, label, tooltip, stock_id,
+                      callback=None, accel_string=None):
         aclass = _ACTIONS[atype]
         act = aclass(name=name, label=label, tooltip=tooltip, stock_id=stock_id)
         self._actions.add_action(act)
@@ -132,11 +139,51 @@ class ActionsConfig(BaseConfig):
             callback = getattr(self, 'act_%s' % name, None)
         if callback is not None:
             act.connect('activate', callback)
+        if accel_string:
+            self._create_key_option(act, name, label, tooltip, accel_string)
+
+    def _create_key_option(self, act, name, label, tooltip, accel_string):
+        opt = OptionItem(self._get_group_name(), name, label, OTypeString,
+                         accel_string, tooltip, self._on_shortcut_notify)
+        opt.action = act
+        self._keyboard_options[name] = opt
+        manager.register_option(opt)
+        act.set_accel_group(self.accelerator_group)
+        act.set_accel_path(self._create_accel_path(name))
+        act.connect_accelerator()
+
+    def _get_shortcut_gconf_key(self, name):
+        return '/app/pida/keyboard_shortcuts/%s/%s' % (self.svc.get_name(),
+                                                       name)
+
+    def _get_group_name(self):
+        return 'keyboard_shortcuts/%s' % self.svc.get_name()
 
     def get_action(self, name):
         return self._actions.get_action(name)
 
     def get_action_group(self):
         return self._actions
+
+    def _create_accel_path(self, name):
+        return '<Actions>/%s' % name
+
+    def _set_action_keypress(self, name, accel_string):
+        keyval, modmask = gtk.accelerator_parse(accel_string)
+        gtk.accel_map_change_entry(self._create_accel_path(name),
+            keyval, modmask, True)
+
+    def _set_action_keypress_from_option(self, option):
+        self._set_action_keypress(option.name, manager.get_value(option))
+
+    def _on_shortcut_notify(self, client, id, entry, option, *args):
+        self._set_action_keypress_from_option(option)
+
+    def subscribe_keyboard_shortcuts(self):
+        for name, opt in self._keyboard_options.items():
+            self._set_action_keypress_from_option(opt)
+
+
+        
 
         

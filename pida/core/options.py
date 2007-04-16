@@ -10,6 +10,7 @@ class OptionsManager(object):
 
     def initialize_gconf(self):
         self.add_directory('pida')
+        self.add_directory('pida', 'keyboard_shortcuts')
 
     def add_directory(self, *parts):
         self._client.add_dir(
@@ -24,6 +25,8 @@ class OptionsManager(object):
         val = self._client.get(option.key)
         if val is None:
             option.set(self._client, option.default)
+        if option.callback is not None:
+            self._client.notify_add(option.key, option.callback, option)
 
     def get_value(self, option):
         return option.get(self._client)
@@ -47,7 +50,7 @@ class OTypeInteger(object):
 
 class OptionItem(object):
 
-    def __init__(self, group, name, label, rtype, default, doc):
+    def __init__(self, group, name, label, rtype, default, doc, callback):
         self.group = group
         self.name = name
         self.label = label
@@ -56,6 +59,7 @@ class OptionItem(object):
         self.default = default
         self.value = default
         self.key = self._create_key()
+        self.callback = callback
 
     def _create_key(self):
         return '/apps/pida/%s/%s' % (self.group, self.name)
@@ -73,10 +77,11 @@ class OptionItem(object):
     def _setter(self, client):
         return getattr(client, 'set_%s' % self.rtype.gconf_name)
 
+manager = OptionsManager()
 
 class OptionsConfig(BaseConfig):
 
-    manager = OptionsManager()
+    manager = manager
 
     def create(self):
         self._options = {}
@@ -91,8 +96,9 @@ class OptionsConfig(BaseConfig):
         for option in self._options.values():
             self.manager.register_option(option)
 
-    def create_option(self, name, label, rtype, default, doc):
-        opt = OptionItem(self.svc.get_name(), name, label, rtype, default, doc)
+    def create_option(self, name, label, rtype, default, doc, callback=None):
+        opt = OptionItem(self.svc.get_name(), name, label, rtype, default, doc,
+                         callback)
         self.add_option(opt)
         return opt
 
