@@ -44,6 +44,9 @@ class Service(object):
     def start(self):
         """Override to start up"""
 
+    def start2(self):
+        """Override for second phase of startup"""
+
     ##########
     # Options
 
