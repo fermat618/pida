@@ -148,6 +148,9 @@ class BufferCommandsConfig(CommandsConfig):
     def current_file_saved(self):
         self.svc.file_saved()
 
+    def get_view(self):
+        return self.svc.get_view()
+
 # Service class
 class Buffer(Service):
     """Describe your Service Here""" 
@@ -160,7 +163,10 @@ class Buffer(Service):
         self._documents = {}
         self._current = None
         self._view = BufferListView(self)
-        self.boss.add_view('Buffer', self._view, True)
+        #self.boss.add_view('Buffer', self._view, True)
+
+    def get_view(self):
+        return self._view
 
     def open_file(self, file_name):
         doc = self._get_document_for_filename(file_name)

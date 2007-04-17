@@ -210,6 +210,9 @@ class FilemanagerCommandsConfig(CommandsConfig):
     def browse(self, new_path):
         self.svc.browse(new_path)
 
+    def get_view(self):
+        return self.svc.get_view()
+
 
 class FilemanagerFeatureConfig(FeaturesConfig):
 
@@ -223,11 +226,14 @@ class Filemanager(Service):
 
     features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
+    commands_config = FilemanagerCommandsConfig
 
     def start(self):
         self.path = "/"
         self.file_view = FilemanagerView(self)
-        self.boss._window.add_view('Buffer',self.file_view)
+
+    def get_view(self):
+        return self.file_view
    
     def browse(self, new_path):
         

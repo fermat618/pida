@@ -35,7 +35,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 class WindowCommandsConfig(CommandsConfig):
 
     def add_view(self, paned, view, present=False):
-        self.svc.window.add_view(view, present)
+        self.svc.window.add_view(paned, view, present)
 
     def add_detached_view(self, paned, view):
         self.add_view(paned, view)
@@ -57,6 +57,12 @@ class Window(Service):
     def start(self):
         self.window = self.boss.get_window()
         self.gtk_window = self.window.get_toplevel()
+
+    def start2(self):
+        # Explicitly add the permanent views
+        for service in ['project', 'filemanager', 'buffer']:
+            view = self.boss.cmd(service, 'get_view')
+            self.cmd('add_view', paned='Buffer', view=view)
 
 
 # Required Service attribute for service loading

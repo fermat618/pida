@@ -112,6 +112,9 @@ class ProjectCommandsConfig(CommandsConfig):
     def add_directory(self, project_directory):
         self.svc.add_directory(project_directory)
 
+    def get_view(self):
+        return self.svc.get_view()
+
 # Service class
 class Project(Service):
     """The project manager service"""
@@ -130,7 +133,9 @@ class Project(Service):
 
         ###
         self.project_list = ProjectListView(self)
-        self.boss._window.add_view('Buffer', self.project_list)
+
+    def get_view(self):
+        return self.project_list
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
