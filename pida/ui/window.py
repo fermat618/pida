@@ -1,33 +1,28 @@
 import gtk
 
-from kiwi.ui.delegates import Delegate
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
 
-from pida.ui.books import BookManager, BookConfigurator
 from pida.ui.uimanager import PidaUIManager
-#from pida.ui.docks import DockManager, DOCK_BUFFER, DOCK_PLUGIN, DOCK_EDITOR, \
-#    DOCK_TERMINAL
 from pida.ui.paneds import PidaPaned
 
 from pida.core.environment import get_uidef_path, get_pixmap_path
 from pida.core.actions import accelerator_group
 
 
-class MainDelegate(Delegate):
+class Window(gtk.Window):
 
     def __init__(self, boss, *args, **kw):
         self._boss = boss
-        self._window = gtk.Window()
-        self._window.set_icon_from_file(get_pixmap_path('pida-icon.png'))
-        self._window.add_accel_group(accelerator_group)
-        Delegate.__init__(self, toplevel=self._window,
-            delete_handler=self._on_delete_event, *args, **kw)
+        gtk.Window.__init__(self, *args, **kw)
+        self.set_icon_from_file(get_pixmap_path('pida-icon.png'))
+        self.add_accel_group(accelerator_group)
+        self.connect('delete-event', self._on_delete_event)
         self.create_all()
         self.show()
 
     def _on_delete_event(self, window, event):
         if self.yesno_dlg('Are you sure you want to exit?'):
-            self.hide_and_quit()
+            self._boss.stop()
         else:
             return True
 
@@ -36,41 +31,33 @@ class MainDelegate(Delegate):
 
     # Dialogs
     def save_dlg(self, *args, **kw):
-        return save(parent = self.get_toplevel(), *args, **kw)
+        return save(parent = self, *args, **kw)
 
     def open_dlg(self, *args, **kw):
-        return opendlg(parent = self.get_toplevel(), *args, **kw)
+        return opendlg(parent = self, *args, **kw)
 
     def info_dlg(self, *args, **kw):
-        return info(parent = self.get_toplevel(), *args, **kw)
+        return info(parent = self, *args, **kw)
 
     def error_dlg(self, *args, **kw):
-        return error(parent = self.get_toplevel(), *args, **kw)
+        return error(parent = self, *args, **kw)
 
     def yesno_dlg(self, *args, **kw):
-        return yesno(parent = self.get_toplevel(), *args, **kw) == gtk.RESPONSE_YES
+        return yesno(parent = self, *args, **kw) == gtk.RESPONSE_YES
 
     def error_list_dlg(self, msg, errs):
         return self.error_dlg('%s\n\n* %s' % (msg, '\n\n* '.join(errs)))
 
     def input_dlg(self, *args, **kw):
-        return get_input(parent=self.get_toplevel(), *args, **kw)
-
-    # Window API
-    
-    def resize(self, width, height):
-        self._window.resize(width, height)
+        return get_input(parent=self, *args, **kw)
 
 
-
-class PidaWindow(MainDelegate):
+class PidaWindow(Window):
 
     """Main PIDA Window"""
 
 
     def create_all(self):
-        #self._fix_books()
-        #self._fix_docks()
         self._fix_paneds()
         self._create_ui()
         self.resize(800, 600)
@@ -86,7 +73,7 @@ class PidaWindow(MainDelegate):
         self.main_box.pack_start(self.top_box, expand=False)
         self.main_box.pack_start(self._paned)
         self.main_box.pack_start(self.bottom_box, expand=False)
-        self._window.add(self.main_box)
+        self.add(self.main_box)
         
     def _start_ui(self):
         self._menubar = self._uim.get_menubar()

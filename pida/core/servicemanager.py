@@ -135,7 +135,6 @@ class ServiceManager(object):
     def load_editor(self, name):
         dirs = self._boss.get_editor_dirs()
         for editor in self._loader.get_all_services(dirs):
-            print editor.servicename, name
             if editor.servicename == name:
                 self.editor = editor(self._boss)
                 return self.editor

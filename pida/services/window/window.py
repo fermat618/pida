@@ -109,7 +109,6 @@ class Window(Service):
 
     def pre_start(self):
         self.window = self.boss.get_window()
-        self.gtk_window = self.window.get_toplevel()
 
     def start(self):
         # Explicitly add the permanent views
