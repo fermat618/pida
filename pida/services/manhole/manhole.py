@@ -80,7 +80,7 @@ class Manhole(Service):
         self._view = ManholeView(self)
 
     def show_manhole(self):
-        self.boss.add_view('Terminal', self._view, True)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
 
     def hide_manhole(self):
         self.boss.remove_view(self._view)

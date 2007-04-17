@@ -18,13 +18,15 @@ class Boss(object):
         self._activate_services()
         self._activate_editor()
         self._window.start()
+        self._start_services()
+        self._start_editor()
 
     def stop(self):
         pass
 
     def loop_ui(self):
-        #gtk.main()
-        self._window.show_and_loop()
+        gtk.main()
+        #self._window.show_and_loop()
 
     def _activate_services(self):
         self._sm.activate_services()
@@ -32,6 +34,12 @@ class Boss(object):
     def _activate_editor(self):
         editor_name = self.get_service('editor').opt('editor_type')
         self._sm.activate_editor(editor_name)
+
+    def _start_services(self):
+        self._sm.start_services()
+
+    def _start_editor(self):
+        self._sm.start_editor()
 
     def get_service(self, servicename):
         return self._sm.get_service(servicename)

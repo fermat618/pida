@@ -66,6 +66,9 @@ class Service(object):
     def opt(self, name):
         return self._get_options().get_value(name)
 
+    def set_opt(self, name, value):
+        return self._get_options().set_value(name, value)
+
     ##########
     # Commands
 

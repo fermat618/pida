@@ -170,7 +170,7 @@ class Vim(Service):
 
     server = property(get_server_name)
 
-    def start(self):
+    def pre_start(self):
         """Start the editor"""
         self.started = False
         self._cb = VimCallback(self)

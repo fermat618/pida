@@ -95,6 +95,7 @@ class PidaWindow(MainDelegate):
         self.top_box.pack_start(self._toolbar, expand=False)
         self.top_box.show_all()
         self.main_box.show_all()
+        print 'show_all'
 
     def _fix_paneds(self):
         self._paned = PidaPaned()
@@ -137,4 +138,17 @@ class PidaWindow(MainDelegate):
     def detach_view(self, view):
         self._paned.detach_view(view)
 
+    # Toolbar hiding API
+
+    def set_toolbar_visibility(self, visibility):
+        if visibility:
+            self._toolbar.show_all()
+        else:
+            self._toolbar.hide_all()
+
+    def set_menubar_visibility(self, visibility):
+        if visibility:
+            self._menubar.show_all()
+        else:
+            self._menubar.hide_all()
 

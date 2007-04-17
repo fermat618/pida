@@ -121,3 +121,7 @@ class OptionsConfig(BaseConfig):
     def get_value(self, optname):
         return self.manager.get_value(self.get_option(optname))
 
+    def set_value(self, optname, value):
+        return self.manager.set_value(self.get_option(optname), value)
+
+

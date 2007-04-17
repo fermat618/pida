@@ -82,7 +82,8 @@ class ServiceManager(object):
         self.load_services() 
         self.create_all()
         self.subscribe_all()
-        self.start_all()
+        self.pre_start_all()
+
 
     def load_services(self):
         for svc in self._loader.load_all_services(
@@ -114,9 +115,11 @@ class ServiceManager(object):
         for svc in self.get_services():
             svc.subscribe_all()
 
-    def start_all(self):
+    def pre_start_all(self):
         for svc in self.get_services():
             svc.pre_start()
+
+    def start_services(self):
         for svc in self.get_services():
             svc.start()
 
@@ -124,6 +127,9 @@ class ServiceManager(object):
         self.load_editor(name)
         self.editor.create_all()
         self.editor.subscribe_all()
+        self.editor.pre_start()
+
+    def start_editor(self):
         self.editor.start()
 
     def load_editor(self, name):
