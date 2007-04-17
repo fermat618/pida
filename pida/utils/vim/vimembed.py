@@ -115,7 +115,6 @@ class VimEmbedWidget(gtk.EventBox):
         return False
 
     def run(self):
-        print 'running'
         xid = self._create_ui()
         args = self.args[:] # a copy
         args.extend(['--socketid', '%s' % xid])

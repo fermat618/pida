@@ -95,7 +95,6 @@ class PidaWindow(MainDelegate):
         self.top_box.pack_start(self._toolbar, expand=False)
         self.top_box.show_all()
         self.main_box.show_all()
-        print 'show_all'
 
     def _fix_paneds(self):
         self._paned = PidaPaned()
