@@ -154,8 +154,8 @@ class Shortcuts(Service):
         self._view = ShortcutsView(self)
 
     def show_shortcuts(self):
-        self.boss.add_view('Plugin', self._view)
-        self.boss.detach_view(self._view)
+        self.boss.cmd('window', 'add_detached_view',
+            paned='Plugin', view=self._view)
         self._view.parent_window.resize(600,400)
 
     def hide_shortcuts(self):
