@@ -124,8 +124,7 @@ class PidaWindow(Window):
     def detach_view(self, view):
         self._paned.detach_view(view)
 
-    # Toolbar hiding API
-
+    # UI hiding API
     def set_toolbar_visibility(self, visibility):
         if visibility:
             self._toolbar.show_all()
