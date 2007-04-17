@@ -124,7 +124,7 @@ class Project(Service):
     events_config = ProjectEventsConfig
     actions_config = ProjectActionsConfig
 
-    def start(self):
+    def pre_start(self):
         self._projects = []
         self._project = None
         self._manager = ProjectControllerMananger(self.boss)

@@ -34,7 +34,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL
+from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeString
 
 # ui
@@ -48,7 +48,7 @@ from pida.utils.gthreads import AsyncTask, gcall
 
 class PyflakeView(PidaView):
     
-    icon_name = 'error'
+    icon_name = 'info'
     label_text = 'Python Errors'
 
     def create_ui(self):
@@ -84,7 +84,6 @@ class Pyflaker(object):
     def __init__(self, svc):
         self.svc = svc
         self._view = PyflakeView(self.svc)
-        self.svc.boss.add_view('Plugin', self._view)
 
     def set_current_document(self, document):
         self._current = document
@@ -124,6 +123,11 @@ class Pyflaker(object):
         self._view.set_items(items)
 
 
+    def get_view(self):
+        return self._view
+        
+
+
 class PythonOptionsConfig(OptionsConfig):
 
     def create_options(self):
@@ -156,8 +160,23 @@ class PythonActionsConfig(ActionsConfig):
             self.on_python_execute,
         )
 
+        self.create_action(
+            'show_python_errors',
+            TYPE_TOGGLE,
+            'Python Errors',
+            'Show the python error browser',
+            'info',
+            self.on_show_errors,
+        )
+
     def on_python_execute(self, action):
         self.svc.execute_current_document()
+
+    def on_show_errors(self, action):
+        if action.get_active():
+            self.svc.show_errors()
+        else:
+            self.svc.hide_errors()
 
 # Service class
 class Python(Service):
@@ -167,7 +186,7 @@ class Python(Service):
     actions_config = PythonActionsConfig
     options_config = PythonOptionsConfig
 
-    def start(self):
+    def pre_start(self):
         """Start the service"""
         self._current = None
         self._pyflaker = Pyflaker(self)
@@ -188,6 +207,14 @@ class Python(Service):
             commandargs=[python_ex, self._current.filename],
             cwd = self._current.directory,
             )
+
+    def show_errors(self):
+        self.boss.cmd('window', 'add_view',
+            paned='Plugin', view=self._pyflaker.get_view())
+
+    def hide_errors(self):
+        self.boss.cmd('window', 'remove_view',
+            view=self._pyflaker.get_view())
 
 # Required Service attribute for service loading
 Service = Python

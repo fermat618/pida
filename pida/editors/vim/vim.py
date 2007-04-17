@@ -176,7 +176,7 @@ class Vim(Service):
         self._cb = VimCallback(self)
         self._com = VimCom(self._cb)
         self._view = VimView(self)
-        self.boss.add_view('Editor', self._view)
+        self.boss.cmd('window', 'add_view', paned='Editor', view=self._view)
         self._create_initscript()
         self._newdocs = {}
         self._documents = {}

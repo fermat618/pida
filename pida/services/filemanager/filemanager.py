@@ -228,7 +228,7 @@ class Filemanager(Service):
     events_config = FilemanagerEvents
     commands_config = FilemanagerCommandsConfig
 
-    def start(self):
+    def pre_start(self):
         self.path = "/"
         self.file_view = FilemanagerView(self)
 
@@ -236,7 +236,6 @@ class Filemanager(Service):
         return self.file_view
    
     def browse(self, new_path):
-        
         new_path = path.abspath(new_path)
         if new_path == self.path:
             return

@@ -159,7 +159,7 @@ class Buffer(Service):
     actions_config = BufferActionsConfig
     events_config = BufferEventsConfig
 
-    def start(self):
+    def pre_start(self):
         self._documents = {}
         self._current = None
         self._view = BufferListView(self)

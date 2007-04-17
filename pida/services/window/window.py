@@ -21,8 +21,6 @@
 #SOFTWARE.
 
 
-
-
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -54,11 +52,11 @@ class Window(Service):
 
     commands_config = WindowCommandsConfig
 
-    def start(self):
+    def pre_start(self):
         self.window = self.boss.get_window()
         self.gtk_window = self.window.get_toplevel()
 
-    def start2(self):
+    def start(self):
         # Explicitly add the permanent views
         for service in ['project', 'filemanager', 'buffer']:
             view = self.boss.cmd(service, 'get_view')

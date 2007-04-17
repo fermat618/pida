@@ -41,11 +41,11 @@ class Service(object):
     def get_name(self):
         return self.servicename
 
-    def start(self):
-        """Override to start up"""
+    def pre_start(self):
+        """Override to pre start up"""
 
-    def start2(self):
-        """Override for second phase of startup"""
+    def start(self):
+        """Override for main phase of startup"""
 
     ##########
     # Options

@@ -116,9 +116,9 @@ class ServiceManager(object):
 
     def start_all(self):
         for svc in self.get_services():
-            svc.start()
+            svc.pre_start()
         for svc in self.get_services():
-            svc.start2()
+            svc.start()
 
     def activate_editor(self, name):
         self.load_editor(name)
