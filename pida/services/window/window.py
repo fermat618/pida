@@ -32,9 +32,32 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 
+class WindowCommandsConfig(CommandsConfig):
+
+    def add_view(self, paned, view, present=False):
+        self.svc.window.add_view(view, present)
+
+    def add_detached_view(self, paned, view):
+        self.add_view(paned, view)
+        self.detach_view(view)
+
+    def remove_view(self, view):
+        self.svc.window.remove_view(view)
+
+    def detach_view(self, view):
+        self.svc.window.detach_view(view)
+
+
 # Service class
 class Window(Service):
-    """Describe your Service Here""" 
+    """The PIDA Window Manager"""
+
+    commands_config = WindowCommandsConfig
+
+    def start(self):
+        self.window = self.boss.get_window()
+        self.gtk_window = self.window.get_toplevel()
+
 
 # Required Service attribute for service loading
 Service = Window
