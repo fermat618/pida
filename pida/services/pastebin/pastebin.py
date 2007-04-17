@@ -69,9 +69,14 @@ class Dpaste(Bin):
 class PastebinEditorView(PidaGladeView):
 
     gladefile = 'paste-editor'
+    label_text = 'Paste Editor'
+    icon_name = gtk.STOCK_PASTE
 
     def on_post_button__clicked(self, button):
         self.svc.commence_paste(*self.read_values())
+
+    def on_cancel_button__clicked(self, button):
+        self.svc.cancel_paste()
 
     def read_values(self):
         return (self.paste_title.get_text(),
@@ -85,14 +90,8 @@ class PastebinEditorView(PidaGladeView):
 
 class PasteHistoryView(PidaView):
 
-    SHORT_TITLE = 'Paste'
-    LONG_TITLE = 'Paste History'
-    ICON_NAME = 'paste'
-    HAS_CONTROL_BOX = True
-    HAS_DETACH_BUTTON = True
-    HAS_CLOSE_BUTTON = True
-    HAS_SEPARATOR = False
-    HAS_TITLE = True
+    label_text = 'Paste History'
+    icon_name = gtk.STOCK_PASTE
 
     #glade_file_name = 'paste-history.glade'
 
@@ -265,6 +264,7 @@ class Pastebin(Service):
     def new_paste(self):
         self.boss.cmd('window', 'add_detached_view', paned='Terminal',
                       view=self._editor)
+        self.get_action('new_paste').set_sensitive(False)
 
     def show_pastes(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -276,9 +276,15 @@ class Pastebin(Service):
         dp = Dpaste(self)
         dp.post(*args)
         self.ensure_view_visible()
-        self.boss.cmd('window', 'remove_view', view=self._editor)
         self._view.start_pulse()
+        self._close_paste_editor()
+
+    def cancel_paste(self):
+        self._close_paste_editor()
         
+    def _close_paste_editor(self):
+        self.boss.cmd('window', 'remove_view', view=self._editor)
+        self.get_action('new_paste').set_sensitive(True)
 
     def new_paste_complete(self, url, *args):
         self._view.stop_pulse()

@@ -47,7 +47,7 @@
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                             <property name="xalign">1</property>
-                            <property name="label" translatable="yes">Syntax:</property>
+                            <property name="label" translatable="yes" context="yes">Syntax:</property>
                           </widget>
                           <packing>
                             <property name="top_attach">3</property>
@@ -60,7 +60,6 @@
                           <widget class="ProxyComboBox" id="paste_location">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="model"></property>
                           </widget>
                           <packing>
                             <property name="left_attach">1</property>
@@ -204,12 +203,12 @@
                 <property name="spacing">6</property>
                 <property name="layout_style">GTK_BUTTONBOX_END</property>
                 <child>
-                  <widget class="GtkButton" id="button1">
+                  <widget class="GtkButton" id="cancel_button">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                    <property name="label" translatable="yes">gtk-cancel</property>
+                    <property name="label" translatable="yes" context="yes">gtk-cancel</property>
                     <property name="use_stock">True</property>
                   </widget>
                 </child>
