@@ -23,6 +23,11 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="tools">
+            <menuitem action="show_pastes" name="show_pastes" />
+            </placeholder>
+            <separator />
+            <placeholder name="panes"/>
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

@@ -26,10 +26,10 @@ def fetch_url(url, content_callback, data={}):
 if __name__ == '__main__':
     
     def cc(url, data):
-        print url
+        print url, data
         gtk.main_quit()
 
-    fetch_url('http://google.com/', cc)
+    fetch_url('http://google.com/sdfsdfsdf', cc)
     import gtk
     gtk.threads_init()
     gtk.threads_enter()

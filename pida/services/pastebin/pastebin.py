@@ -20,7 +20,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import gtk
+import gtk, gobject
+
+from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -46,10 +48,11 @@ class Bin(object):
         """Override in individual pastebins"""
 
     def post(self, *args):
+        self.args = args
         fetch_url(self.PASTE_URL, self.on_posted, self.create_data_dict(*args))
 
     def on_posted(self, url, content):
-        print url
+        self.svc.new_paste_complete(url, *self.args)
 
 class Dpaste(Bin):
 
@@ -68,8 +71,7 @@ class PastebinEditorView(PidaGladeView):
     gladefile = 'paste-editor'
 
     def on_post_button__clicked(self, button):
-        dp = Dpaste(None)
-        dp.post(*self.read_values())
+        self.svc.commence_paste(*self.read_values())
 
     def read_values(self):
         return (self.paste_title.get_text(),
@@ -80,6 +82,131 @@ class PastebinEditorView(PidaGladeView):
                 ),
                 'Python',
         )
+
+class PasteHistoryView(PidaView):
+
+    SHORT_TITLE = 'Paste'
+    LONG_TITLE = 'Paste History'
+    ICON_NAME = 'paste'
+    HAS_CONTROL_BOX = True
+    HAS_DETACH_BUTTON = True
+    HAS_CLOSE_BUTTON = True
+    HAS_SEPARATOR = False
+    HAS_TITLE = True
+
+    #glade_file_name = 'paste-history.glade'
+
+    def create_ui(self):
+        self.__history_tree = ObjectList([Column('markup', use_markup=True)])
+        self.add_main_widget(self.__history_tree)
+        self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
+        self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
+        self.__tree_selected = None
+        self.__history_tree.connect('selection-changed', self.cb_paste_clicked)
+        self.__history_tree.connect('double-click', self.cb_paste_db_clicked)
+        #self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
+        #self.__history_tree.connect('right-clicked', self.cb_paste_r_clicked)
+        self.__pulse_bar = gtk.ProgressBar()
+        self.add_main_widget(self.__pulse_bar, expand=False)
+        self.__pulse_bar.show_all()
+        self.__pulse_bar.set_size_request(-1, 12)
+        self.__pulse_bar.set_pulse_step(0.01)
+        self.__history_tree.show_all()
+
+    def set(self, pastes):
+        '''Sets the paste list to the tree view.
+           First reset it, then rebuild it.
+        '''
+        self.__history_tree.clear()
+        for paste in pastes:
+            self.__history_tree.append(paste)
+        self.__tree_selected = None
+
+    def add_paste(self, item):
+        self.__history_tree.append(item)
+
+    #def on_add__clicked(self, but):
+    #    '''Callback function bound to the toolbar button new that creates a new
+    #    paste to post'''
+    #    self.service.boss.call_command('pastemanager','create_paste')
+
+    def copy_current_paste(self):
+        '''Callback function bound to the toolbar button view that copies the
+        selected paste'''
+        if self.__tree_selected != None:
+            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
+            self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
+
+    def view_current_paste(self):
+        '''Callback function bound to the toolbar button view that shows the
+        selected paste'''
+        if self.__tree_selected != None:
+            self.service.boss.call_command('pastemanager','view_paste',
+                paste=self.__tree_selected)
+        else:
+            print "ERROR: No paste selected"
+
+    def remove_current_paste(self):
+        '''Callback function bound to the toolbar button delete that removes the
+        selected paste'''
+        if self.__tree_selected != None:
+            self.service.boss.call_command('pastemanager','delete_paste',
+                paste=self.__tree_selected)
+        else:
+            print "ERROR: No paste selected"
+
+    def cb_paste_clicked(self,paste,tree_item):
+        '''Callback function called when an item is selected in the TreeView'''
+        self.__tree_selected = tree_item.value
+
+    def cb_paste_db_clicked(self,paste,tree_item):
+        '''Callback function called when an item is double clicked, and copy it
+        to the gnome/gtk clipboard'''
+        if self.__tree_selected != None:
+            # self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
+            # aa: view the paste
+            self.service.call('view_paste', paste=self.__tree_selected)
+
+    def cb_paste_m_clicked(self,paste,tree_item):
+        '''Callback function called when an item is middle clicked, and copy it
+        to the mouse buffer clipboard'''
+        if self.__tree_selected != None:
+            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
+
+    def cb_paste_r_clicked(self, paste, tree_item, event):
+        menu = gtk.Menu()
+        sensitives = (tree_item is not None)
+        for action in ['pastemanager+new_paste',
+                        None,
+                       'pastemanager+remove_paste',
+                       'pastemanager+view_paste',
+                        None,
+                        'pastemanager+copy_url_to_clipboard']:
+            if action is None:
+                menu.append(gtk.SeparatorMenuItem())
+            else:
+                act = self.service.action_group.get_action(action)
+                if 'new_paste' not in action:
+                    act.set_sensitive(sensitives)
+                mi = gtk.ImageMenuItem()
+                act.connect_proxy(mi)
+                mi.show()
+                menu.append(mi)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
+
+    def start_pulse(self):
+        '''Starts the pulse'''
+        self._pulsing = True
+        gobject.timeout_add(100, self._pulse)
+
+    def stop_pulse(self):
+        self._pulsing = False
+
+    def _pulse(self):
+        self.__pulse_bar.pulse()
+        return self._pulsing
+
 
 
 class PastebinActionsConfig(ActionsConfig):
@@ -94,8 +221,36 @@ class PastebinActionsConfig(ActionsConfig):
             self.on_new_paste,
         )
 
+        self.create_action(
+            'show_pastes',
+            TYPE_TOGGLE,
+            'Paste History',
+            'Show the paste history viewer',
+            gtk.STOCK_PASTE,
+            self.on_show_pastes,
+            '<Shift><Control>0',
+        )
+
     def on_new_paste(self, action):
         self.svc.new_paste()
+
+    def on_show_pastes(self, action):
+        if action.get_active():
+            self.svc.show_pastes()
+        else:
+            self.svc.hide_pastes()
+
+class PasteItem(object):
+
+    def __init__(self, url, *args):
+        self.url = url
+        self.title, self.name, self.content, self.syntax = args
+
+    def get_markup(self):
+        return ('<b>%s</b> (<span foreground="#0000c0">%s</span>)\n%s' %
+                    (self.title, self.syntax, self.url))
+
+    markup = property(get_markup)
 
 # Service class
 class Pastebin(Service):
@@ -103,10 +258,38 @@ class Pastebin(Service):
 
     actions_config = PastebinActionsConfig
 
+    def pre_start(self):
+        self._editor = PastebinEditorView(self)
+        self._view = PasteHistoryView(self)
+
     def new_paste(self):
-        editor = PastebinEditorView(self)
         self.boss.cmd('window', 'add_detached_view', paned='Terminal',
-                      view=editor)
+                      view=self._editor)
+
+    def show_pastes(self):
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+
+    def hide_pastes(self):
+        self.boss.cmd('window', 'remove_view', view=self._view)
+
+    def commence_paste(self, *args):
+        dp = Dpaste(self)
+        dp.post(*args)
+        self.ensure_view_visible()
+        self.boss.cmd('window', 'remove_view', view=self._editor)
+        self._view.start_pulse()
+        
+
+    def new_paste_complete(self, url, *args):
+        self._view.stop_pulse()
+        self._view.add_paste(PasteItem(url, *args))
+        self.ensure_view_visible()
+
+    def ensure_view_visible(self):
+        act = self.get_action('show_pastes')
+        if not act.get_active():
+            act.set_active(True)
+        
 
 # Required Service attribute for service loading
 Service = Pastebin
