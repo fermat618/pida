@@ -127,7 +127,8 @@ class PasteHistoryView(PidaView):
     #glade_file_name = 'paste-history.glade'
 
     def create_ui(self):
-        self.__history_tree = ObjectList([Column('markup', use_markup=True)])
+        self.__history_tree = ObjectList([Column('markup', use_markup=True, expand=True)])
+        self.__history_tree.set_headers_visible(False)
         self.add_main_widget(self.__history_tree)
         self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
         self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
