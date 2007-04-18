@@ -220,6 +220,10 @@ class FilemanagerFeatureConfig(FeaturesConfig):
     def create_features(self):
         self.create_feature("file-manager")
 
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('contexts', 'file-menu',
+            (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
+
 
 class FileManagerOptionsConfig(OptionsConfig):
     def create_options(self):
@@ -251,6 +255,21 @@ class FileManagerOptionsConfig(OptionsConfig):
                 '\..*|\.*\.py[co]',
                 'Hides files that match the regex')
 
+class FileManagerActionsConfig(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'browse-for-file',
+            TYPE_NORMAL,
+            'Browse the file directory',
+            'Browse the parent directory of this file',
+            'file-manager',
+            self.on_browse_for_file,
+        )
+
+    def on_browse_for_file(self, action):
+        new_path = path.dirname(action.contexts_kw['file_name'])
+        self.svc.cmd('browse', new_path=new_path)
 
 
 # Service class
@@ -261,6 +280,7 @@ class Filemanager(Service):
     features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
     commands_config = FilemanagerCommandsConfig
+    actions_config = FileManagerActionsConfig
 
     def pre_start(self):
         self.path = self.opt('last_browsed')
