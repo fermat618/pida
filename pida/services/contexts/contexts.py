@@ -47,10 +47,16 @@ class ContextCommandsConfig(CommandsConfig):
     def get_menu(self, context, **kw):
         return self.svc.get_menu(context, **kw)
 
-    def popup_menu(self, context, event, **kw):
+    def popup_menu(self, context, event=None, **kw):
         menu = self.get_menu(context, **kw)
         menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
+        if event is None:
+            button = 3
+            time = gtk.get_current_event_time()
+        else:
+            button = event.button
+            time = event.time
+        menu.popup(None, None, None, button, time)
 
 
 # Service class
