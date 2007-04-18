@@ -1,0 +1,31 @@
+/**/
+%%
+override moo_big_paned_find_pane kwargs
+static PyObject *
+_wrap_moo_big_paned_find_pane (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { (char*) "pane_widget", NULL };
+    PyGObject *widget;
+    int index;
+    MooPaned *child;
+    PyObject *ret;
+
+    if (!PyArg_ParseTupleAndKeywords (args, kwargs,
+                                      (char*) "O!:MooBigPaned.find_pane", kwlist,
+                                      &PyGtkWidget_Type, &widget))
+        return NULL;
+
+    if (!moo_big_paned_find_pane (MOO_BIG_PANED (self->obj), GTK_WIDGET (widget->obj),
+                                  &child, &index))
+    {
+        Py_INCREF (Py_None);
+        return Py_None;
+    }
+
+    ret = PyTuple_New (2);
+    PyTuple_SET_ITEM (ret, 0, pygobject_new (G_OBJECT (child)));
+    PyTuple_SET_ITEM (ret, 1, PyInt_FromLong (index));
+
+    return ret;
+}
+%%
