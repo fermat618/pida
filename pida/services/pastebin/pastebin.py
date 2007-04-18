@@ -124,6 +124,22 @@ class Rafb(Bin):
             ('Plain Text', 'Plain Text')
         ]
 
+class Twisted(Bin):
+
+    PASTE_URL = 'http://deadbeefbabe.org/paste/freeform_post!!addPasting'
+
+    def create_data_dict(self, title, name, content, syntax):
+        return dict(
+            author=name,
+            text=content,
+            addPasting='addPasting',
+            _charset_='',
+        )
+
+    @classmethod
+    def get_syntax_items(cls):
+        return [('Python', '')]
+
 class PastebinEditorView(PidaGladeView):
 
     gladefile = 'paste-editor'
@@ -364,7 +380,11 @@ class Pastebin(Service):
             act.set_active(True)
 
     def get_pastebin_types(self):
-        return [('DPaste', Dpaste), ('Rafb.net', Rafb)]
+        return [
+            ('DPaste', Dpaste),
+            ('Rafb.net', Rafb),
+            #('Twisted', Twisted), #Broken for some reason
+        ]
         
 
 # Required Service attribute for service loading
