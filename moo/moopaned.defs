@@ -23,6 +23,7 @@
   (gtype-id "MOO_TYPE_PANE_LABEL")
   (copy-func "moo_pane_label_copy")
   (release-func "moo_pane_label_free")
+  (docstring "PaneLabel(icon_stock_id=None, icon_pixbuf=None, icon_widget=None, label_text=None, window_title=None).")
 )
 
 (define-boxed PaneParams
@@ -37,6 +38,10 @@
     '("gboolean" "maximized")
     '("gboolean" "keep_on_top")
   )
+  (docstring "PaneParams(window_position=None, detached=False, maximized=False, keep_on_top=False).\n"
+             "\n"
+             "window_position is a gdk.Rectangle instance or None; negative width or height in it\n"
+             "means the position is not set.")
 )
 
 (define-enum PanePosition
@@ -62,6 +67,7 @@
     '("MooPaned**" "child_paned")
     '("int*" "pane_index")
   )
+  (docstring "find_pane(pane_widget) -> (paned, index) or None.")
 )
 
 (define-method set_pane_order
@@ -80,18 +86,27 @@
   (parameters
     '("GtkWidget*" "widget")
   )
+  (docstring "add_child(widget) -> None.\n"
+             "\n"
+             "Analogous to gtk.Container.add(), adds widget as the main child of BigPaned widget.")
 )
 
 (define-method remove_child
   (of-object "MooBigPaned")
   (c-name "moo_big_paned_remove_child")
   (return-type "none")
+  (docstring "remove_child() -> None.\n"
+             "\n"
+             "Analogous to gtk.Container.remove(), removes the main child widget.")
 )
 
 (define-method get_child
   (of-object "MooBigPaned")
   (c-name "moo_big_paned_get_child")
   (return-type "GtkWidget*")
+  (docstring "get_child() -> gtk.Widget.\n"
+             "\n"
+             "Returns the main child widget.")
 )
 
 (define-method get_paned
@@ -101,6 +116,9 @@
   (parameters
     '("MooPanePosition" "position")
   )
+  (docstring "get_paned(pos) -> Paned.\n"
+             "\n"
+             "Returns the paned widget at position pos.")
 )
 
 (define-method insert_pane
@@ -113,6 +131,9 @@
     '("MooPanePosition" "position")
     '("int" "index_")
   )
+  (docstring "insert_pane(pane_widget, pane_label, position, index) -> int.\n"
+             "\n"
+             "Returns index of newly inserted pane in its parent Paned widget.")
 )
 
 (define-method remove_pane
@@ -122,6 +143,9 @@
   (parameters
     '("GtkWidget*" "pane_widget")
   )
+  (docstring "remove_pane(pane_widget) -> bool.\n"
+             "\n"
+             "Returns True if pane_widget was removed.")
 )
 
 (define-method get_pane
@@ -132,6 +156,7 @@
     '("MooPanePosition" "position")
     '("int" "index_")
   )
+  (docstring "get_pane(position, index) -> gtk.Widget.")
 )
 
 (define-method open_pane
@@ -141,6 +166,7 @@
   (parameters
     '("GtkWidget*" "pane_widget")
   )
+  (docstring "open_pane(pane_widget) -> None.")
 )
 
 (define-method hide_pane
@@ -150,6 +176,7 @@
   (parameters
     '("GtkWidget*" "pane_widget")
   )
+  (docstring "hide_pane(pane_widget) -> None.")
 )
 
 (define-method present_pane
@@ -159,6 +186,9 @@
   (parameters
     '("GtkWidget*" "pane_widget")
   )
+  (docstring "present_pane(pane_widget) -> None.\n"
+             "\n"
+             "Opens the pane or presents the pane window if it's detached.")
 )
 
 (define-method attach_pane
@@ -168,6 +198,7 @@
   (parameters
     '("GtkWidget*" "pane_widget")
   )
+  (docstring "attach_pane(pane_widget) -> None.")
 )
 
 (define-method detach_pane
@@ -177,6 +208,7 @@
   (parameters
     '("GtkWidget*" "pane_widget")
   )
+  (docstring "detach_pane(pane_widget) -> None.")
 )
 
 (define-method get_pane_params
@@ -187,6 +219,7 @@
     '("MooPanePosition" "position")
     '("guint" "index_")
   )
+  (docstring "get_pane_params(position, index) -> PaneParams.")
 )
 
 (define-method set_pane_params
@@ -198,6 +231,7 @@
     '("guint" "index_")
     '("MooPaneParams*" "params")
   )
+  (docstring "set_pane_params(position, index, params) -> None.")
 )
 
 
@@ -399,9 +433,9 @@
   (return-type "MooPaneLabel*")
   (parameters
     '("const-char*" "icon_stock_id" (null-ok) (default "NULL"))
-    '("GdkPixbuf*" "pixbuf" (null-ok) (default "NULL"))
-    '("GtkWidget*" "icon" (null-ok) (default "NULL"))
-    '("const-char*" "label" (null-ok) (default "NULL"))
+    '("GdkPixbuf*" "icon_pixbuf" (null-ok) (default "NULL"))
+    '("GtkWidget*" "icon_widget" (null-ok) (default "NULL"))
+    '("const-char*" "label_text" (null-ok) (default "NULL"))
     '("const-char*" "window_title" (null-ok) (default "NULL"))
   )
 )
