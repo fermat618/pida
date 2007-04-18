@@ -36,12 +36,14 @@ moomarshals.o: moomarshals.c moomarshals.h
 	gcc $(CFLAGS) -Wno-unused moomarshals.c -c -o $@
 
 clean:
-	rm -f *.o test paned.tar.bz2 moomarshals.[ch] stock-moo.h moo-pygtk.c
+	rm -f *.o test paned.tar.bz2 moomarshals.[ch] stock-moo.h moo-pygtk.c *.pyc
 
 dist:
 	rm -fr paned.tar.bz2 paned/ && \
 	mkdir paned && \
-	cp moo-stub.c moo.override moo.defs moopaned.h moobigpaned.h $(PICS) moopaned.c moobigpaned.c test.c \
+	cp moo-stub.c moo.override moo.defs moopaned.override moopaned.defs \
+		moopaned.h moobigpaned.h $(PICS) \
+		moopaned.c moobigpaned.c test.c \
 		moomarshals.list Makefile paned/ && \
 	tar cjf paned.tar.bz2 paned/ && \
 	rm -fr paned/
@@ -53,7 +55,7 @@ distcheck:
 
 prepare: moomarshals.c moomarshals.h stock-moo.h moo-pygtk.c
 
-moo-pygtk.c: moo.defs moo.override moopaned.override
+moo-pygtk.c: moo.defs moopaned.defs moo.override moopaned.override
 	pygtk-codegen-2.0 --prefix _moo_stub \
 		--register $(PYGTK_DEFS_DIR)/gtk-types.defs \
 		--register $(PYGTK_DEFS_DIR)/gdk-types.defs \
