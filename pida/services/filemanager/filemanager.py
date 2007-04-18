@@ -26,6 +26,8 @@ import gtk
 
 from os import listdir, path
 
+import re
+
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -62,6 +64,7 @@ class FileEntry(object):
         if name.startswith('.'):
                 self._state = "hidden"
         self._manager = manager
+        self._path = path_
         self.path = path.join(path_, name)
     
     @property
@@ -180,6 +183,15 @@ class FilemanagerView(PidaView):
             self.path = new_path
 
         files = [FileEntry(name, new_path, self) for name in listdir(new_path)]
+        self.svc.log_warn("show_hidden is %r"%self.svc.opt("show_hidden"))
+        if self.svc.opt("show_hidden") == False:
+            self.svc.log_warn("removing hidden files ? ")
+            for checker in self.svc.features("file_hidden_check"):
+                self.svc.log_warn("checking hidden files with %r"%checker)
+                def _check(entry):
+                    return checker(name=entry._name, path=entry._path)
+                files = filter(_check, files)
+            self.svc.log_warn("done ?")
         self.file_list.add_list(files, clear=True)
         self.entries = dict((entry._name, entry) for entry in files)
 
@@ -218,9 +230,12 @@ class FilemanagerCommandsConfig(CommandsConfig):
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create_features(self):
-        self.create_feature("file-manager")
+        self.create_feature("file_manager")
+        self.create_feature("file_hidden_check")
 
     def subscribe_foreign_features(self):
+        self.subscribe_feature("file_hidden_check", self.svc.check_hidden_regex)
+        
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
 
@@ -252,7 +267,7 @@ class FileManagerOptionsConfig(OptionsConfig):
                 'hide_regex',
                 'Hide regex',
                 OTypeString,
-                '\..*|\.*\.py[co]',
+                '^(\..*|\.*\.py[co])$',
                 'Hides files that match the regex')
 
 class FileManagerActionsConfig(ActionsConfig):
@@ -304,6 +319,12 @@ class Filemanager(Service):
             dir = "/" #XXX: unportable, what about non-unix
         self.browse(dir)
 
+    def check_hidden_regex(self, name, path):
+        _re = self.opt('hide_regex')
+        if not re:
+            return True
+        else:
+            return re.match(_re, name) is None
 
     def rename_file(self, old, new, basepath):
         pass
