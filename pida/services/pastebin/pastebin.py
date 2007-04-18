@@ -47,12 +47,17 @@ class Bin(object):
     def create_data_dict(self, title, name, content, syntax):
         """Override in individual pastebins"""
 
+    @classmethod
+    def get_syntax_items(cls):
+        """Override to return a list of syntax item tuples (lable, value)"""
+
     def post(self, *args):
         self.args = args
         fetch_url(self.PASTE_URL, self.on_posted, self.create_data_dict(*args))
 
     def on_posted(self, url, content):
         self.svc.new_paste_complete(url, *self.args)
+
 
 class Dpaste(Bin):
 
@@ -66,6 +71,25 @@ class Dpaste(Bin):
             language = syntax,
         )
 
+    @classmethod
+    def get_syntax_items(cls):
+        return [
+            ('Python', 'Python'),
+            ('Python Interactive / Traceback', 'PythonConsole'),
+            ('SQL', 'Sql'),
+            ('HTML / Django Template', 'DjangoTemplate'),
+            ('JavaScript', 'JScript'),
+            ('CSS', 'Css'),
+            ('XML', 'Xml'),
+            ('Diff', 'Diff'),
+            ('Ruby', 'Ruby'),
+            ('Ruby HTML (ERB)', 'Rhtml'),
+            ('Haskell', 'Haskell'),
+            ('Apache Configuration', 'Apache'),
+            ('Bash Script', 'Bash'),
+            ('Plain Text', ''),
+        ]
+
 class PastebinEditorView(PidaGladeView):
 
     gladefile = 'paste-editor'
@@ -74,6 +98,9 @@ class PastebinEditorView(PidaGladeView):
 
     def create_ui(self):
         self.paste_location.prefill(self.svc.get_pastebin_types())
+
+    def on_paste_location__content_changed(self, cmb):
+        self.paste_syntax.prefill(self.paste_location.read().get_syntax_items())
 
     def on_post_button__clicked(self, button):
         paste_type = self.paste_location.read()
@@ -89,7 +116,7 @@ class PastebinEditorView(PidaGladeView):
                     self.paste_content.get_buffer().get_start_iter(),
                     self.paste_content.get_buffer().get_end_iter(),
                 ),
-                'Python',
+                self.paste_syntax.read(),
         )
 
 class PasteHistoryView(PidaView):
