@@ -5,10 +5,7 @@ from kiwi.utils import gsignal, gproperty, type_register, PropertyObject
 
 
 
-try:
-    from pida.core.environment import get_pixmap_path
-except ImportError:
-    get_pixmap_path = lambda name: '/home/ali/working/pida-next/resources/pixmaps/%s' % name
+from pida.core.environment import get_pixmap_path
 
 from pida.utils.unique import create_unique_id
 
