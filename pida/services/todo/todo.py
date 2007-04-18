@@ -119,7 +119,7 @@ class Todo(Service):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
 
     def hide_todo(self):
-        self.boss.remove_view(self._view)
+        self.boss.cmd('window','remove_view', view=self._view)
 
     def check_current(self):
         for row in self.check_document(self._current):
