@@ -26,7 +26,7 @@ class BuildExt(build_ext):
   
 setup(
       name='pida',
-      packages = ('pida',),
+      packages = (),
       ext_modules = [moo],
       data_files = [],
           #('share/gazpacho/catalogs',
