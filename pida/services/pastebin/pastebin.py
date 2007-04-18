@@ -72,8 +72,12 @@ class PastebinEditorView(PidaGladeView):
     label_text = 'Paste Editor'
     icon_name = gtk.STOCK_PASTE
 
+    def create_ui(self):
+        self.paste_location.prefill(self.svc.get_pastebin_types())
+
     def on_post_button__clicked(self, button):
-        self.svc.commence_paste(*self.read_values())
+        paste_type = self.paste_location.read()
+        self.svc.commence_paste(paste_type, *self.read_values())
 
     def on_cancel_button__clicked(self, button):
         self.svc.cancel_paste()
@@ -272,9 +276,9 @@ class Pastebin(Service):
     def hide_pastes(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
-    def commence_paste(self, *args):
-        dp = Dpaste(self)
-        dp.post(*args)
+    def commence_paste(self, paste_type, *args):
+        p = paste_type(self)
+        p.post(*args)
         self.ensure_view_visible()
         self._view.start_pulse()
         self._close_paste_editor()
@@ -295,6 +299,9 @@ class Pastebin(Service):
         act = self.get_action('show_pastes')
         if not act.get_active():
             act.set_active(True)
+
+    def get_pastebin_types(self):
+        return [('DPaste', Dpaste)]
         
 
 # Required Service attribute for service loading
