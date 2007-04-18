@@ -98,7 +98,7 @@ class Rafb(Bin):
     def create_data_dict(self, title, name, content, syntax):
         return dict(
             text=content,
-            name=name,
+            nick=name,
             desc=title,
             lang=syntax,
             cvt_tabs=4,
