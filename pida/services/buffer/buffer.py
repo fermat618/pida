@@ -87,6 +87,15 @@ class BufferActionsConfig(ActionsConfig):
         )
         
         self.create_action(
+            'open-for-file',
+            TYPE_NORMAL,
+            'Open File',
+            'Open this file',
+            gtk.STOCK_OPEN,
+            self.on_open_for_file,
+        )
+
+        self.create_action(
             'new_file',
             TYPE_NORMAL,
             'New File',
@@ -116,7 +125,6 @@ class BufferActionsConfig(ActionsConfig):
             '<Shift><Control>W',
         )
 
-
     def on_open_file(self, action):
         file_name = self.svc.boss.window.open_dlg()
         if file_name:
@@ -136,6 +144,16 @@ class BufferActionsConfig(ActionsConfig):
 
     def on_close(self, action):
         self.svc.close_current()
+
+    def on_open_for_file(self, action):
+        file_name = action.contexts_kw['file_name']
+        self.svc.open_file(file_name)
+
+class BufferFeaturesConfig(FeaturesConfig):
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('contexts', 'file-menu',
+            (self.svc.get_action_group(), 'buffer-file-menu.xml'))
 
 class BufferEventsConfig(EventsConfig):
 
@@ -164,6 +182,7 @@ class Buffer(Service):
     commands_config = BufferCommandsConfig
     actions_config = BufferActionsConfig
     events_config = BufferEventsConfig
+    features_config = BufferFeaturesConfig
 
     def pre_start(self):
         self._documents = {}
