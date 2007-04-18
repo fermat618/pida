@@ -117,7 +117,7 @@ class Rafb(Bin):
             ('Perl', 'Perl'),
             ('PHP', 'PHP'),
             ('PL/I', 'PL/I'),
-            ('Python', 'Python),
+            ('Python', 'Python'),
             ('Ruby', 'Ruby'),
             ('SQL', 'SQL'),
             ('VB', 'VB'),
