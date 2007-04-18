@@ -2540,7 +2540,7 @@ pane_new (MooPaneLabel *label)
     Pane *pane = g_new0 (Pane, 1);
     pane->detachable = TRUE;
     pane->label = moo_pane_label_copy (label);
-    pane->params = moo_pane_params_new ();
+    pane->params = moo_pane_params_new (NULL, FALSE, FALSE, FALSE);
     return pane;
 }
 
@@ -3891,9 +3891,23 @@ static gboolean pane_window_configure   (GtkWindow          *window,
 
 
 MooPaneParams*
-moo_pane_params_new (void)
+moo_pane_params_new (GdkRectangle *window_position,
+                     gboolean      detached,
+                     gboolean      maximized,
+                     gboolean      keep_on_top)
 {
-    return g_new0 (MooPaneParams, 1);
+    MooPaneParams *p;
+
+    p = g_new0 (MooPaneParams, 1);
+    if (window_position)
+        p->window_position = *window_position;
+    else
+        p->window_position.width = p->window_position.height = -1;
+    p->detached = detached != 0;
+    p->maximized = maximized != 0;
+    p->keep_on_top = keep_on_top != 0;
+
+    return p;
 }
 
 

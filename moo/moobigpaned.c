@@ -516,26 +516,33 @@ moo_big_paned_remove_pane (MooBigPaned *paned,
 }
 
 
-void
-moo_big_paned_open_pane (MooBigPaned    *paned,
-                         GtkWidget      *widget)
-{
-    int idx;
-    MooPaned *child = NULL;
-
-    g_return_if_fail (MOO_IS_BIG_PANED (paned));
-    g_return_if_fail (GTK_IS_WIDGET (widget));
-
-    moo_big_paned_find_pane (paned, widget, &child, &idx);
-    g_return_if_fail (child != NULL);
-
-    moo_paned_open_pane (child, idx);
+#define PROXY_FUNC(name)                                    \
+void                                                        \
+moo_big_paned_##name (MooBigPaned *paned,                   \
+                      GtkWidget   *widget)                  \
+{                                                           \
+    int idx;                                                \
+    MooPaned *child = NULL;                                 \
+                                                            \
+    g_return_if_fail (MOO_IS_BIG_PANED (paned));            \
+    g_return_if_fail (GTK_IS_WIDGET (widget));              \
+                                                            \
+    moo_big_paned_find_pane (paned, widget, &child, &idx);  \
+    g_return_if_fail (child != NULL);                       \
+                                                            \
+    moo_paned_##name (child, idx);                          \
 }
 
+PROXY_FUNC (open_pane)
+PROXY_FUNC (present_pane)
+PROXY_FUNC (attach_pane)
+PROXY_FUNC (detach_pane)
+
+#undef PROXY_FUNC
 
 void
-moo_big_paned_hide_pane (MooBigPaned    *paned,
-                         GtkWidget      *widget)
+moo_big_paned_hide_pane (MooBigPaned *paned,
+                         GtkWidget   *widget)
 {
     MooPaned *child = NULL;
 
@@ -546,23 +553,6 @@ moo_big_paned_hide_pane (MooBigPaned    *paned,
     g_return_if_fail (child != NULL);
 
     moo_paned_hide_pane (child);
-}
-
-
-void
-moo_big_paned_present_pane (MooBigPaned    *paned,
-                            GtkWidget      *widget)
-{
-    int idx;
-    MooPaned *child = NULL;
-
-    g_return_if_fail (MOO_IS_BIG_PANED (paned));
-    g_return_if_fail (GTK_IS_WIDGET (widget));
-
-    moo_big_paned_find_pane (paned, widget, &child, &idx);
-    g_return_if_fail (child != NULL);
-
-    moo_paned_present_pane (child, idx);
 }
 
 

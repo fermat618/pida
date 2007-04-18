@@ -150,7 +150,10 @@ void            moo_paned_set_pane_params   (MooPaned       *paned,
                                              guint           index_,
                                              MooPaneParams  *params);
 
-MooPaneParams  *moo_pane_params_new         (void);
+MooPaneParams  *moo_pane_params_new         (GdkRectangle   *window_position,
+                                             gboolean        detached,
+                                             gboolean        maximized,
+                                             gboolean        keep_on_top);
 MooPaneParams  *moo_pane_params_copy        (MooPaneParams  *params);
 void            moo_pane_params_free        (MooPaneParams  *params);
 

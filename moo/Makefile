@@ -53,7 +53,7 @@ distcheck:
 
 prepare: moomarshals.c moomarshals.h stock-moo.h moo-pygtk.c
 
-moo-pygtk.c: moo.defs moo.override
+moo-pygtk.c: moo.defs moo.override moopaned.override
 	pygtk-codegen-2.0 --prefix _moo_stub \
 		--register $(PYGTK_DEFS_DIR)/gtk-types.defs \
 		--register $(PYGTK_DEFS_DIR)/gdk-types.defs \

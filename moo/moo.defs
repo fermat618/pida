@@ -1,3 +1,5 @@
+;; -*- scheme -*-
+
 (define-object BigPaned
   (in-module "Moo")
   (parent "GtkFrame")
@@ -29,6 +31,12 @@
   (gtype-id "MOO_TYPE_PANE_PARAMS")
   (copy-func "moo_pane_params_copy")
   (release-func "moo_pane_params_free")
+  (fields
+    '("GdkRectangle" "window_position")
+    '("gboolean" "detached")
+    '("gboolean" "maximized")
+    '("gboolean" "keep_on_top")
+  )
 )
 
 (define-enum PanePosition
@@ -43,6 +51,17 @@
   (c-name "moo_big_paned_new")
   (is-constructor-of "MooBigPaned")
   (return-type "GtkWidget*")
+)
+
+(define-method find_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_find_pane")
+  (return-type "gboolean")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+    '("MooPaned**" "child_paned")
+    '("int*" "pane_index")
+  )
 )
 
 (define-method set_pane_order
@@ -136,6 +155,24 @@
 (define-method present_pane
   (of-object "MooBigPaned")
   (c-name "moo_big_paned_present_pane")
+  (return-type "none")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method attach_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_attach_pane")
+  (return-type "none")
+  (parameters
+    '("GtkWidget*" "pane_widget")
+  )
+)
+
+(define-method detach_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_detach_pane")
   (return-type "none")
   (parameters
     '("GtkWidget*" "pane_widget")
@@ -342,18 +379,18 @@
   (c-name "moo_pane_params_new")
   (is-constructor-of "MooPaneParams")
   (return-type "MooPaneParams*")
+  (parameters
+    '("GdkRectangle*" "window_position" (null-ok) (default "NULL"))
+    '("gboolean" "detached" (null-ok) (default "FALSE"))
+    '("gboolean" "maximized" (null-ok) (default "FALSE"))
+    '("gboolean" "keep_on_top" (null-ok) (default "FALSE"))
+  )
 )
 
 (define-method copy
   (of-object "MooPaneParams")
   (c-name "moo_pane_params_copy")
   (return-type "MooPaneParams*")
-)
-
-(define-method free
-  (of-object "MooPaneParams")
-  (c-name "moo_pane_params_free")
-  (return-type "none")
 )
 
 (define-function moo_pane_label_new

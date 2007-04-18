@@ -111,6 +111,10 @@ void            moo_big_paned_hide_pane         (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget);
 void            moo_big_paned_present_pane      (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget);
+void            moo_big_paned_attach_pane       (MooBigPaned    *paned,
+                                                 GtkWidget      *pane_widget);
+void            moo_big_paned_detach_pane       (MooBigPaned    *paned,
+                                                 GtkWidget      *pane_widget);
 
 MooPaneParams  *moo_big_paned_get_pane_params   (MooBigPaned    *paned,
                                                  MooPanePosition position,
