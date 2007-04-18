@@ -26,6 +26,10 @@ class Environment(object):
 
     pida_home = os.path.expanduser('~/.pida2')
 
+    def __init__(self):
+        if not os.path.exists(self.pida_home):
+            os.mkdir(self.pida_home)
+
     def get_base_service_directory(self):
         return os.path.join(
             os.path.dirname(os.path.dirname(__file__)), 'services')
