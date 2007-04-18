@@ -90,6 +90,40 @@ class Dpaste(Bin):
             ('Plain Text', ''),
         ]
 
+
+class Rafb(Bin):
+
+    PASTE_URL = 'http://www.rafb.net/paste/paste.php'
+
+    def create_data_dict(self, title, name, content, syntax):
+        return dict(
+            text=content,
+            name=name,
+            desc=title,
+            lang=syntax,
+            cvt_tabs=4,
+            submit='Paste'
+        )
+
+    @classmethod
+    def get_syntax_items(cls):
+        return [
+            ('C89', 'C89'),
+            ('C', 'C'),
+            ('C++', 'C++'), 
+            ('C#', 'C#'),
+            ('Java', 'Java'),
+            ('Pascal', 'Pascal'),
+            ('Perl', 'Perl'),
+            ('PHP', 'PHP'),
+            ('PL/I', 'PL/I'),
+            ('Python', 'Python),
+            ('Ruby', 'Ruby'),
+            ('SQL', 'SQL'),
+            ('VB', 'VB'),
+            ('Plain Text', 'Plain Text')
+        ]
+
 class PastebinEditorView(PidaGladeView):
 
     gladefile = 'paste-editor'
@@ -127,7 +161,8 @@ class PasteHistoryView(PidaView):
     #glade_file_name = 'paste-history.glade'
 
     def create_ui(self):
-        self.__history_tree = ObjectList([Column('markup', use_markup=True, expand=True)])
+        self.__history_tree = ObjectList(
+            [Column('markup', use_markup=True, expand=True)])
         self.__history_tree.set_headers_visible(False)
         self.add_main_widget(self.__history_tree)
         self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
@@ -329,7 +364,7 @@ class Pastebin(Service):
             act.set_active(True)
 
     def get_pastebin_types(self):
-        return [('DPaste', Dpaste)]
+        return [('DPaste', Dpaste), ('Rafb.net', Rafb)]
         
 
 # Required Service attribute for service loading
