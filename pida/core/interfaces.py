@@ -1,5 +1,9 @@
 
-from protocols import Interface
+try:
+    from protocols import Interface
+except ImportError:
+    class Interface:
+        """A dummy"""
 
 
 class IBaseConfig(Interface):
