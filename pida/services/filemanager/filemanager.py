@@ -33,6 +33,7 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
 
 from pida.ui.views import PidaView
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
@@ -125,7 +126,7 @@ class FilemanagerView(PidaView):
         self.file_list.set_columns(self._columns);
         #XXX: real file
         self.file_list.connect('row-activated', self.act_double_click)
-        self.update_to_path(path.expanduser('~'))
+        self.update_to_path(self.svc.path)
         self.file_list.show()
         self._vbox.pack_start(self.file_list)
        
@@ -220,16 +221,49 @@ class FilemanagerFeatureConfig(FeaturesConfig):
         self.create_feature("file-manager")
 
 
+class FileManagerOptionsConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+                'show_hidden',
+                'Show hidden files',
+                OTypeBoolean,
+                True,
+                'Shows hidden files')
+        
+        self.create_option(
+                'last_browsed_remember',
+                'Remember last Path',
+                OTypeBoolean,
+                True,
+                'Remembers the last browsed path')
+        
+        self.create_option(
+                'last_browsed',
+                'Last browsed Path',
+                OTypeString,
+                path.expanduser('~'),
+                'The last browsed path')
+        
+        self.create_option(
+                'hide_regex',
+                'Hide regex',
+                OTypeString,
+                '\..*|\.*\.py[co]',
+                'Hides files that match the regex')
+
+
+
 # Service class
 class Filemanager(Service):
     """the Filemanager service"""
 
+    options_config = FileManagerOptionsConfig
     features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
     commands_config = FilemanagerCommandsConfig
 
     def pre_start(self):
-        self.path = "/"
+        self.path = self.opt('last_browsed')
         self.file_view = FilemanagerView(self)
 
     def get_view(self):
@@ -241,6 +275,7 @@ class Filemanager(Service):
             return
         else:
             self.path = new_path
+            self.set_opt('last_browsed', new_path)
             self.file_view.update_to_path(new_path)
 
     def go_up(self):
