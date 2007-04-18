@@ -152,8 +152,10 @@ class NamedSets(object):
 
     @copy_docs(list)
     def __repr__(self):
-        return repr(self.data)
-
+        return "<%s: %r>"%(
+                self.__class__.__name__,
+                self.data
+                )
     @copy_docs(list)
     def __len__(self):
         return len(self.data)

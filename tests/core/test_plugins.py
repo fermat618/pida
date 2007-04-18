@@ -117,7 +117,7 @@ class TestDynamicNamedSets(TestCase):
         self.sets = DynamicNamedSets()
     
     def test_repr(self):
-        self.assertEqual(repr(self.sets),"{}")
+        self.assertEqual(repr(self.sets),'<DynamicNamedSets: {}>')
     
     def test_add(self):
         gen_data(self.sets)
@@ -145,7 +145,7 @@ class TestStrictNamedSets(TestCase):
     def test_create(self):
         self.assertEqual(
                 repr(StrictNamedSets(("test",))),
-                "{'test': set([])}")
+                "<StrictNamedSets: {'test': set([])}>")
 
     def test_add(self):
         gen_data(self.sets)
