@@ -67,6 +67,12 @@ class BufferListView(PidaGladeView):
     def on_buffers_ol__selection_changed(self, ol, item):
         self.svc.view_document(item)
 
+    def on_buffers_ol__right_click(self, ol, item, event):
+        self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
+                          event=event,
+                          file_name=self.svc.get_current().filename)
+        
+
 class BufferActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -208,6 +214,9 @@ class Buffer(Service):
 
     def file_saved(self):
         self.emit('document-saved', document=self._current)
+
+    def get_current(self):
+        return self._current
 
 
 # Required Service attribute for service loading

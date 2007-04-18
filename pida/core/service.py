@@ -163,6 +163,9 @@ class Service(object):
     def _get_actions(self):
         return self.reg.get_singleton(IActions)
 
+    def get_action_group(self):
+        return self._get_actions().get_action_group()
+
     def get_action(self, name):
         return self._get_actions().get_action(name)
 

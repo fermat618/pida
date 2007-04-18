@@ -100,8 +100,23 @@ class CommanderActionsConfig(ActionsConfig):
             '<Shift><Control>T',
         )
 
+        self.create_action(
+            'terminal-for-file',
+            TYPE_NORMAL,
+            'Shell in file directory',
+            'Open a shell prompt in the parent directory of this file',
+            'terminal',
+            self.on_terminal_for_file,
+            '<Shift><Control>T',
+        )
+
     def execute_shell(self, action):
         self.svc.cmd('execute_shell')
+
+    def on_terminal_for_file(self, action):
+        cwd = os.path.dirname(action.contexts_kw['file_name'])
+        self.svc.cmd('execute_shell', cwd=cwd)
+
 
 class CommanderCommandsConfig(CommandsConfig):
 
@@ -112,6 +127,11 @@ class CommanderCommandsConfig(CommandsConfig):
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
         self.svc.execute(['bash'], env=env, cwd=cwd, title=title, icon=None)
 
+class CommanderFeaturesConfig(FeaturesConfig):
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('contexts', 'file-menu',
+            (self.svc.get_action_group(), 'commander-file-menu.xml'))
 
 class TerminalView(PidaView):
 
@@ -133,6 +153,7 @@ class Commander(Service):
     commands_config = CommanderCommandsConfig
     actions_config = CommanderActionsConfig
     options_config = CommanderOptionsConfig
+    features_config = CommanderFeaturesConfig
 
     def start(self):
         self._terminals = []

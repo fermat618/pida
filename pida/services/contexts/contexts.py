@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 
-
+import gtk
 
 # PIDA Imports
 from pida.core.service import Service
@@ -30,11 +30,61 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.environment import get_uidef_path
+
+
+CONTEXT_TYPES = [
+    'file-menu',
+]
+
+class ContextFeaturesConfig(FeaturesConfig):
+
+    def create_features(self):
+        self.create_feature('file-menu')
+
+class ContextCommandsConfig(CommandsConfig):
+
+    def get_menu(self, context, **kw):
+        return self.svc.get_menu(context, **kw)
+
+    def popup_menu(self, context, event, **kw):
+        menu = self.get_menu(context, **kw)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
 
 
 # Service class
 class Contexts(Service):
     """Describe your Service Here""" 
+
+    features_config = ContextFeaturesConfig
+    commands_config = ContextCommandsConfig
+
+    def start(self):
+        self._create_uims()
+
+    def _create_uims(self):
+        self._uims = {}
+        for context in CONTEXT_TYPES:
+            uim = self._uims[context] = gtk.UIManager()
+            uim.add_ui_from_file(self.get_base_ui_definition_path(context))
+            for ag, uidef in self.features(context):
+                uim.insert_action_group(ag, 0)
+                uidef_path = get_uidef_path(uidef)
+                uim.add_ui_from_file(uidef_path)
+
+    def get_base_ui_definition_path(self, context):
+        file_name = '%s.xml' % context
+        return get_uidef_path(file_name)
+
+    def get_menu(self, context, **kw):
+        for group in self._uims[context].get_action_groups():
+            for action in group.list_actions():
+                action.contexts_kw = kw
+        menu = self._uims[context].get_toplevels('popup')[0]
+        return menu
+
+
 
 # Required Service attribute for service loading
 Service = Contexts
