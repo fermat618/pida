@@ -122,6 +122,7 @@ class ProjectActionsConfig(ActionsConfig):
             'Execute Project',
             'Execute the project',
             gtk.STOCK_EXECUTE,
+            self.on_project_execute,
         )
 
         self.create_action(
@@ -143,6 +144,9 @@ class ProjectActionsConfig(ActionsConfig):
         )
         if path:
             self.svc.cmd('add_directory', project_directory=path)
+
+    def on_project_execute(self, action):
+        self.svc.get_actions_of_kind(ExecutionActionType)[0]()
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
@@ -233,6 +237,7 @@ class Project(Service):
     def set_current_project(self, project):
         self._project = project
         self.get_action('project_remove').set_sensitive(project is not None)
+        self.get_action('project_execute').set_sensitive(project is not None)
         if project is not None:
             self.emit('project_switched', project=project)
 
@@ -253,6 +258,12 @@ class Project(Service):
         self._projects.remove(project)
         self.project_list.project_ol.remove(project, select=True)
         self._save_workspace_file()
+
+    def get_actions_of_kind(self, kind):
+        if self._project is not None:
+            return self._project.get_actions_of_kind(kind)
+        else:
+            return []
 
 
 

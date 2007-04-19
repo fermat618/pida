@@ -135,10 +135,15 @@ class ProjectController(object):
     def get_actions_of_kind(self, kind):
         return self.action_kinds[kind]
 
-    def execute_commandargs(self, args, env, cwd):
-        print 'execute', args, env, cwd
+    def execute_commandargs(self, args, cwd, env):
+        #TODO: Bad dependency
+        self.boss.cmd('commander', 'execute',
+            commandargs=args,
+            env=env,
+            cwd=cwd,
+        )
 
-    def execute_commandline(self, command, env, cwd):
+    def execute_commandline(self, command, cwd, env):
         pass
 
 

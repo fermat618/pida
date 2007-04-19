@@ -153,11 +153,19 @@ class PythonProjectController(ProjectController):
 
     @project_action(kind=ExecutionActionType)
     def execute(self):
-        self.execute_commandargs(
-            [self.get_python_executable(), self.get_option('execute_file')],
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
+        execute_file = self.get_option('execute_file')
+        execute_args = self.get_option('execute_args')
+        if execute_file is None:
+            self.boss.get_window().error_dlg('Controller has no "execute_file" set')
+        else:
+            commandargs = [self.get_python_executable(), execute_file]
+            if execute_args is not None:
+                commandargs.extend(execute_args.split())
+            self.execute_commandargs(
+                commandargs,
+                self.get_option('cwd') or self.project.source_directory,
+                self.get_option('env') or [],
+            )
 
     def get_python_executable(self):
         return self.get_option('python_executable') or 'python'
