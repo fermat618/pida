@@ -1,0 +1,17 @@
+<ui>
+<popup>
+<placeholder name="1"/>
+<separator/>
+<placeholder name="2"/>
+<separator/>
+<placeholder name="3"/>
+<separator/>
+<placeholder name="4">
+<menu action="openwith-for-file" name="openwith-for-file">
+<separator />
+<menuitem action="show_openwith" name="show_openwith" />
+</menu>
+</placeholder>
+<separator/>
+</popup>
+</ui>
