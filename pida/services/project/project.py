@@ -382,8 +382,6 @@ class Project(Service):
             menu.show_all()
             return menu
 
-         
-
     def show_properties(self, visible):
         if visible:
             self.boss.cmd('window', 'add_view', paned='Plugin',

@@ -4,7 +4,7 @@ import os
 from tempfile import mkstemp
 
 # the matching example config file
-from pida.core.projects import ProjectControllerMananger, PythonController, \
+from pida.core.projects import ProjectControllerMananger, \
     ExecutionActionType, project_action, ProjectController
 
 PYCONF="""
