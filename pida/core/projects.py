@@ -31,6 +31,7 @@ class Project(object):
         self.boss = self.manager.boss
         self.project_file = project_file
         self.source_directory = os.path.dirname(self.project_file)
+        self.name = os.path.basename(self.source_directory)
         self._create_options()
         self._create_controllers()
         self._register_actions()
@@ -74,7 +75,7 @@ class Project(object):
         self.options.write()
 
     def get_markup(self):
-        return '%s %s' % (self.options['name'], self.source_directory)
+        return '<b>%s</b>\n%s' % (self.name, self.source_directory)
 
     markup = property(get_markup)
 
@@ -142,38 +143,6 @@ class ProjectController(object):
 
 
 # an example controller
-
-
-class PythonController(ProjectController):
-
-    name = 'PYTHON_CONTROLLER'
-
-    @project_action(kind=BuildActionType)
-    def build(self):
-        self.execute_commandargs(
-            [self.get_python_executable(), 'setup.py', 'build'],
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
-
-    @project_action(kind=TestActionType)
-    def test(self):
-        self.execute_commandargs(
-            [self.get_option('test_command')],
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
-
-    @project_action(kind=ExecutionActionType)
-    def execute(self):
-        self.execute_commandargs(
-            [self.get_python_executable(), self.get_option('execute_file')],
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
-
-    def get_python_executable(self):
-        return self.get_option('python_executable') or 'python'
 
 
 

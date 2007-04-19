@@ -36,6 +36,10 @@ from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeString
+from pida.core.features import FeaturesConfig
+from pida.core.projects import ProjectController, project_action,\
+    BuildActionType, ExecutionActionType, TestActionType
+from pida.core.interfaces import IProjectController
 
 # ui
 from pida.ui.views import PidaView
@@ -127,6 +131,43 @@ class Pyflaker(object):
         return self._view
         
 
+class PythonProjectController(ProjectController):
+
+    name = 'PYTHON_CONTROLLER'
+
+    @project_action(kind=BuildActionType)
+    def build(self):
+        self.execute_commandargs(
+            [self.get_python_executable(), 'setup.py', 'build'],
+            self.get_option('env'),
+            self.get_option('cwd') or self.project.source_directory,
+        )
+
+    @project_action(kind=TestActionType)
+    def test(self):
+        self.execute_commandargs(
+            [self.get_option('test_command')],
+            self.get_option('env'),
+            self.get_option('cwd') or self.project.source_directory,
+        )
+
+    @project_action(kind=ExecutionActionType)
+    def execute(self):
+        self.execute_commandargs(
+            [self.get_python_executable(), self.get_option('execute_file')],
+            self.get_option('env'),
+            self.get_option('cwd') or self.project.source_directory,
+        )
+
+    def get_python_executable(self):
+        return self.get_option('python_executable') or 'python'
+
+class PythonFeatures(FeaturesConfig):
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('project', IProjectController,
+            PythonProjectController)
+
 
 class PythonOptionsConfig(OptionsConfig):
 
@@ -185,6 +226,7 @@ class Python(Service):
     events_config = PythonEventsConfig
     actions_config = PythonActionsConfig
     options_config = PythonOptionsConfig
+    features_config = PythonFeatures
 
     def pre_start(self):
         """Start the service"""

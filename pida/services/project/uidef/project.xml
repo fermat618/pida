@@ -9,6 +9,8 @@
         
         <menu name="ProjectMenu" action="ProjectMenu">
         <menuitem action="project_add" name="project_add" />
+        <menuitem action="project_remove" name="project_remove" />
+        <separator />
         <menuitem action="project_execute" name="project_execute" />
         </menu>
         
