@@ -3663,6 +3663,8 @@ create_pane_window (MooPaned       *paned,
 
     if (pane->label->window_title)
         gtk_window_set_title (window, pane->label->window_title);
+    else if (pane->label->label)
+        gtk_window_set_title (window, pane->label->label);
 
     if (pane->label->icon_pixbuf)
         gtk_window_set_icon (window, pane->label->icon_pixbuf);
