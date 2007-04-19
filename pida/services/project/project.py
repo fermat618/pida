@@ -125,6 +125,10 @@ class ProjectPropertiesView(PidaGladeView):
         for item in controller.create_key_items():
             self.items_list.append(item)
 
+    def set_controllers(self, controllers):
+        self.controllers_combo.prefill([(controller.name, controller) for
+            controller in controllers])
+
 
 class ProjectEventsConfig(EventsConfig):
 
@@ -223,6 +227,7 @@ class Project(Service):
         ###
         self.project_list = ProjectListView(self)
         self.project_properties_view = ProjectPropertiesView(self)
+        self.project_properties_view.set_controllers(self.features(IProjectController))
         self._read_workspace_file()
 
     def _read_workspace_file(self):
