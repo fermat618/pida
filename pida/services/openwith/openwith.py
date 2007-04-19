@@ -112,7 +112,7 @@ class OpenWithActions(ActionsConfig):
             TYPE_TOGGLE,
             'Configure Open With',
             'Show the Open With Editor',
-            'configuration',
+            'gnome-settings',
             self.on_show_openwith,
             '<Shift><Control>['
         )
@@ -151,7 +151,8 @@ class OpenWithActions(ActionsConfig):
         filename = contexts_kw['file_name']
         command = item.command % filename
         self.svc.boss.cmd('commander', 'execute',
-            commandargs=['bash', '-c', command])
+            commandargs=['bash', '-c', command], title=item.name,
+            icon=gtk.STOCK_OPEN)
 
 
 class OpenWithFeatures(FeaturesConfig):
