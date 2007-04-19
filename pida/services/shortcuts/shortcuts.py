@@ -53,8 +53,8 @@ class ShortcutsView(PidaView):
             [
                 Column('stock_id', use_stock=True),
                 Column('label', sorted=True),
-                Column('doc'),
                 Column('value'),
+                Column('doc'),
             ]
         )
         self.shortcuts_list.set_headers_visible(False)
@@ -84,7 +84,7 @@ class ShortcutsView(PidaView):
         vbox.pack_start(self.shortcuts_list)
         vbox.pack_start(hbox, expand=False)
         vbox.show_all()
-        self.get_toplevel().set_size_request(400, 0)
+        self.get_toplevel().set_size_request(350, 0)
 
     def decorate_service(self, service):
         return ServiceListItem(service)
