@@ -45,6 +45,9 @@ class BugreportView(PidaGladeView):
     
     gladefile = 'bugreport'
 
+    icon_name = 'error'
+    label_text = 'Bug Report'
+
     def on_ok_button__clicked(self, button):
         self.email, self.password = get_local_config()
         if self.email is None:

@@ -17,8 +17,12 @@
             <placeholder name="toolstools">
             </placeholder>
             <separator />
-            <menu name="ToolsDebug" action="ToolsDebug">
+            <placeholder name="toolstools2" />
+            <separator />
+            <placeholder name="tools3">
             <menuitem name="show_bugreport" action="show_bugreport" />
+            </placeholder>
+            <menu name="ToolsDebug" action="ToolsDebug">
             </menu>
         </menu>
         
