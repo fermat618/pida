@@ -33,7 +33,8 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL
+from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
+    TYPE_TOGGLE
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectControllerMananger, ProjectController, \
     ExecutionActionType, project_action
@@ -99,6 +100,32 @@ class ProjectListView(PidaGladeView):
     def on_project_ol__double_click(self, ol, project):
         self.svc.boss.cmd('filemanager', 'browse', new_path=project.source_directory)
 
+class ProjectPropertiesView(PidaGladeView):
+
+    gladefile = 'project-properties'
+
+    def create_ui(self):
+        self.controllers_list.set_columns([
+            Column('name'),
+        ])
+        self.items_list.set_columns([
+            Column('name'),
+            Column('value', editable=True),
+        ])
+        self._project = None
+
+    def set_project(self, project):
+        self._project = project
+        if self._project is not None:
+            for controller in self._project.controllers:
+                self.controllers_list.append(controller)
+
+    def on_controllers_list__selection_changed(self, ol, controller):
+        self.items_list.clear()
+        for item in controller.create_key_items():
+            self.items_list.append(item)
+
+
 class ProjectEventsConfig(EventsConfig):
 
     def create_events(self):
@@ -134,6 +161,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_remove,
         )
 
+        self.create_action(
+            'project_properties',
+            TYPE_TOGGLE,
+            'Project Properties',
+            'Show the project property editor',
+            'settings',
+            self.on_project_properties,
+        )
+
     def on_project_remove(self, action):
             self.svc.remove_current_project()
 
@@ -147,6 +183,9 @@ class ProjectActionsConfig(ActionsConfig):
 
     def on_project_execute(self, action):
         self.svc.get_actions_of_kind(ExecutionActionType)[0]()
+
+    def on_project_properties(self, action):
+        self.svc.show_properties(action.get_active())
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
@@ -183,6 +222,7 @@ class Project(Service):
 
         ###
         self.project_list = ProjectListView(self)
+        self.project_properties_view = ProjectPropertiesView(self)
         self._read_workspace_file()
 
     def _read_workspace_file(self):
@@ -238,7 +278,9 @@ class Project(Service):
         self._project = project
         self.get_action('project_remove').set_sensitive(project is not None)
         self.get_action('project_execute').set_sensitive(project is not None)
+        self.get_action('project_properties').set_sensitive(project is not None)
         if project is not None:
+            self.project_properties_view.set_project(project)
             self.emit('project_switched', project=project)
 
     def load_and_set_project(self, project_file):
@@ -264,6 +306,14 @@ class Project(Service):
             return self._project.get_actions_of_kind(kind)
         else:
             return []
+
+    def show_properties(self, visible):
+        if visible:
+            self.boss.cmd('window', 'add_view', paned='Plugin',
+                view=self.project_properties_view)
+        else:
+            self.boss.cmd('window', 'remove_view',
+                view=self.project_properties_view)
 
 
 

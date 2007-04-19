@@ -12,6 +12,8 @@
         <menuitem action="project_remove" name="project_remove" />
         <separator />
         <menuitem action="project_execute" name="project_execute" />
+        <separator />
+        <menuitem action="project_properties" name="project_properties" />
         </menu>
         
         <menu name="LanguageMenu" action="LanguageMenu">

@@ -135,6 +135,8 @@ class PythonProjectController(ProjectController):
 
     name = 'PYTHON_CONTROLLER'
 
+    keys = ['execute_file', 'execute_args']
+
     @project_action(kind=BuildActionType)
     def build(self):
         self.execute_commandargs(

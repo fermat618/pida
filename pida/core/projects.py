@@ -61,6 +61,9 @@ class Project(object):
             for name, actions in controller.action_kinds.items():
                 self.action_kinds.setdefault(name, []).extend(actions)
 
+    def save(self):
+        self.options.write()
+
     def get_actions(self):
         return self.actions.values()
 
@@ -96,11 +99,33 @@ class BuildActionType(object):
 class TestActionType(object):
     """A controller action for testing"""
 
+class ProjectKeyItem(object):
+
+    def __init__(self, name, project, controller):
+        self._name = name
+        self._project = project
+        self._controller = controller
+
+    def get_name(self):
+        return self._name
+
+    name = property(get_name)
+
+    def get_value(self):
+        return self._controller.get_option(self._name)
+
+    def set_value(self, value):
+        self._controller.set_option(self._name, value)
+        self._project.save()
+
+    value = property(get_value, set_value)
+
+
 class ProjectController(object):
 
     name = ''
 
-    glade_resource = None
+    keys = []
 
     def __init__(self, project, config_section):
         self.project = proxy(project)
@@ -122,6 +147,9 @@ class ProjectController(object):
 
     def get_option(self, name):
         return self.get_options().get(name, None)
+
+    def set_option(self, name, value):
+        self.get_options()[name] = value
 
     def get_project_option(self, name):
         return self.project.options.get(name, None)
@@ -145,6 +173,10 @@ class ProjectController(object):
 
     def execute_commandline(self, command, cwd, env):
         pass
+
+    def create_key_items(self):
+        for name in self.keys:
+            yield ProjectKeyItem(name, self.project, self)
 
 
 # an example controller
