@@ -209,7 +209,7 @@ class Openwith(Service):
         self._view.prefill(self._config)
 
     def show_editor(self):
-        self.boss.cmd('window', 'add_detached_view', paned='Plugin',
+        self.boss.cmd('window', 'add_view', paned='Plugin',
                       view=self._view)
 
     def hide_editor(self):

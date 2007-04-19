@@ -1,5 +1,5 @@
 import gtk
-from moo_stub import BigPaned, PaneLabel
+from moo_stub import BigPaned, PaneLabel, PaneParams
 from pida.utils.gthreads import gcall
 
 PANE_TERMINAL = 'Terminal'
@@ -43,10 +43,17 @@ class PidaPaned(BigPaned):
     def remove_view(self, view):
         self.remove_pane(view.get_toplevel())
 
-    def detach_view(self, view):
-        for paned in self.get_all_paneds():
-            pnum = paned.get_pane_num(view.get_toplevel())
-            if pnum > -1:
-                paned.detach_pane(pnum)
-                break
+    def detach_view(self, view, size=(400,300)):
+        paned, pos = self.find_pane(view.get_toplevel())
+        paned.detach_pane(pos)
+        self._center_on_parent(view, size)
+
+    def _center_on_parent(self, view, size):
+        gdkwindow = view.get_parent_window()
+        px, py, pw, ph, pbd = view.svc.boss.get_window().window.get_geometry()
+        w, h = size
+        cx = (pw - w) / 2
+        cy = (ph - h) / 2
+        gdkwindow.move_resize(cx, cy, w, h)
+        #gdkwindow.resize(w, h)
 

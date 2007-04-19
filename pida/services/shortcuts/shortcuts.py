@@ -84,6 +84,7 @@ class ShortcutsView(PidaView):
         vbox.pack_start(self.shortcuts_list)
         vbox.pack_start(hbox, expand=False)
         vbox.show_all()
+        self.get_toplevel().set_size_request(400, 0)
 
     def decorate_service(self, service):
         return ServiceListItem(service)
@@ -154,12 +155,11 @@ class Shortcuts(Service):
         self._view = ShortcutsView(self)
 
     def show_shortcuts(self):
-        self.boss.cmd('window', 'add_detached_view',
+        self.boss.cmd('window', 'add_view',
             paned='Plugin', view=self._view)
-        self._view.parent_window.resize(600,400)
 
     def hide_shortcuts(self):
-        self.boss.remove_view(self._view)
+        self.boss.cmd('window', 'remove_view', view=self._view)
         
 
 # Required Service attribute for service loading

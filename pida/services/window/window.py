@@ -36,15 +36,15 @@ class WindowCommandsConfig(CommandsConfig):
     def add_view(self, paned, view, present=True):
         self.svc.window.add_view(paned, view, present)
 
-    def add_detached_view(self, paned, view):
+    def add_detached_view(self, paned, view, size=(500,400)):
         self.add_view(paned, view)
-        self.detach_view(view)
+        self.detach_view(view, size)
 
     def remove_view(self, view):
         self.svc.window.remove_view(view)
 
-    def detach_view(self, view):
-        self.svc.window.detach_view(view)
+    def detach_view(self, view, size):
+        self.svc.window.detach_view(view, size)
 
 class WindowActionsConfig(ActionsConfig):
 
