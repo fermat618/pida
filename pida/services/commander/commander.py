@@ -159,12 +159,10 @@ class Commander(Service):
         self._terminals = []
 
     def execute(self, commandargs, env, cwd, title, icon):
-        print commandargs, env, cwd
         t = TerminalView(self, title, icon)
         t.execute(commandargs, env + ['PIDA_TERM=1'], cwd)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
-
 
     def get_options(self):
         options = dict(

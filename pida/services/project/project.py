@@ -387,7 +387,7 @@ class Project(Service):
                 def _callback(act, action):
                     action()
                 act = gtk.Action(controller.config_section,
-                    '%s %s' % (action.im_func.func_name, controller.config_section),
+                    '%s (%s)' % (controller.config_section, action.im_func.func_name),
                     action.im_func.func_doc, '')
                 act.connect('activate', _callback, action)
                 mi = act.create_menu_item()
