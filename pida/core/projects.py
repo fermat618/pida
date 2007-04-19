@@ -61,17 +61,44 @@ class Project(object):
             for name, actions in controller.action_kinds.items():
                 self.action_kinds.setdefault(name, []).extend(actions)
 
+    def add_controller(self, controller_type, section_name = None):
+        # first get a free section name
+        if section_name is None:
+            cnum = 0
+            for controller in self.controllers:
+                if controller.name == controller_type.name:
+                    cnum += 1
+            section_name = '%s.%s' % (controller_type.name, cnum)
+        self.options[section_name] = {}
+        self.options[section_name]['controller'] = controller_type.name
+        controller = controller_type(self, section_name)
+        if not len(self.controllers):
+            self.options[section_name]['default'] = 'True'
+        self.controllers.append(controller)
+        self.save()
+        return controller
+
+    def remove_controller(self, controller):
+        self.controllers.remove(controller)
+        del self.options[controller.config_section]
+        self.save()
+        
+
     def save(self):
         self.options.write()
 
     def get_actions(self):
-        return self.actions.values()
-
-    def get_action(self, name):
-        return self.actions[name]
+        actions = []
+        for controller in self.controllers:
+            actions.extend(controller.get_actions())
+        return actions
 
     def get_actions_of_kind(self, kind):
-        return self.action_kinds[kind]
+        actions = []
+        for controller in self.controllers:
+            actions.extend([(controller, action) for action in
+                controller.get_actions_of_kind(kind)])
+        return actions
 
     def set_option(self, section, name, value):
         self.options[section][name] = value
@@ -127,11 +154,14 @@ class ProjectController(object):
 
     keys = []
 
+    label = ''
+
     def __init__(self, project, config_section):
         self.project = proxy(project)
         self.boss = self.project.boss
         self.config_section = config_section
         self._register_actions()
+        self._default = False
 
     def _register_actions(self):
         self.actions = {}
@@ -177,6 +207,25 @@ class ProjectController(object):
     def create_key_items(self):
         for name in self.keys:
             yield ProjectKeyItem(name, self.project, self)
+
+    def get_markup(self):
+        return ('<b>%s</b>\n<span foreground="#0000c0">%s</span>' %
+            (self.config_section, self.label))
+
+    markup = property(get_markup)
+
+    def set_default(self, value):
+        aval = (value and 'True') or ''
+        self.set_option('default', aval)
+        self.project.save()
+
+    def get_default(self):
+        if self.get_option('default') is None:
+            self.set_option('default', '')
+        return bool(self.get_option('default'))
+
+    default = property(get_default, set_default)
+
 
 
 # an example controller

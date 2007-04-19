@@ -137,6 +137,8 @@ class PythonProjectController(ProjectController):
 
     keys = ['execute_file', 'execute_args']
 
+    label = 'Python Controller'
+
     @project_action(kind=BuildActionType)
     def build(self):
         self.execute_commandargs(
@@ -157,7 +159,7 @@ class PythonProjectController(ProjectController):
     def execute(self):
         execute_file = self.get_option('execute_file')
         execute_args = self.get_option('execute_args')
-        if execute_file is None:
+        if not execute_file:
             self.boss.get_window().error_dlg('Controller has no "execute_file" set')
         else:
             commandargs = [self.get_python_executable(), execute_file]

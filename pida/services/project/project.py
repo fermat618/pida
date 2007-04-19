@@ -70,6 +70,8 @@ class GenericExecutionController(ProjectController):
 
     name = 'GENERIC_EXECUTION'
 
+    label = 'Generic Execution'
+
     @project_action(kind=ExecutionActionType)
     def execute(self):
         self.execute_commandline(
@@ -106,28 +108,61 @@ class ProjectPropertiesView(PidaGladeView):
 
     def create_ui(self):
         self.controllers_list.set_columns([
-            Column('name'),
+            Column('markup', use_markup=True, expand=True, title='Controllers'),
+            Column('default', radio=True, data_type=bool, editable=True)
         ])
         self.items_list.set_columns([
             Column('name'),
-            Column('value', editable=True),
+            Column('value', editable=True, expand=True),
         ])
         self._project = None
 
     def set_project(self, project):
         self._project = project
+        self.controllers_list.clear()
+        self.project_label.set_text('')
         if self._project is not None:
+            self.project_label.set_markup(self._project.markup)
             for controller in self._project.controllers:
                 self.controllers_list.append(controller)
 
     def on_controllers_list__selection_changed(self, ol, controller):
         self.items_list.clear()
-        for item in controller.create_key_items():
-            self.items_list.append(item)
+        if controller is not None:
+            for item in controller.create_key_items():
+                self.items_list.append(item)
+        self.delete_button.set_sensitive(controller is not None)
 
     def set_controllers(self, controllers):
-        self.controllers_combo.prefill([(controller.name, controller) for
+        self.controllers_combo.prefill([(controller.label, controller) for
             controller in controllers])
+
+    def on_add_button__clicked(self, button):
+        name = self.name_entry.get_text()
+        if not name:
+            self.svc.boss.get_window().error_dlg(
+                'Please enter a controller name')
+            return
+        for controller in self._project.controllers:
+            if controller.config_section == name:
+                self.svc.boss.get_window().error_dlg(
+                    'This project already has a controller named %s' % name)
+                return
+        self.name_entry.set_text('')
+        controller_type = self.controllers_combo.read()
+        controller = self._project.add_controller(controller_type, name)
+        self.controllers_list.append(controller, select=True)
+        self.svc.set_current_project(self._project)
+
+    def on_delete_button__clicked(self, button):
+        controller = self.controllers_list.get_selected()
+        if controller is not None:
+            if self.svc.boss.get_window().yesno_dlg(
+            'Are you sure you want to delete controller "%s" from this project?'
+            % controller.config_section):
+                self._project.remove_controller(controller)
+                self.controllers_list.remove(controller)
+                self.svc.set_current_project(self._project)
 
 
 class ProjectEventsConfig(EventsConfig):
@@ -186,7 +221,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.svc.cmd('add_directory', project_directory=path)
 
     def on_project_execute(self, action):
-        self.svc.get_actions_of_kind(ExecutionActionType)[0]()
+        call = self.svc.get_default_action_of_kind(ExecutionActionType)
+        if call is None:
+            calls = self.svc.get_actions_of_kind(ExecutionActionType)
+            if calls:
+                call = calls[0][1]
+        if call is not None:
+            call()
+        else:
+            self.svc.boss.get_window().error_dlg('This project has no execute action')
 
     def on_project_properties(self, action):
         self.svc.show_properties(action.get_active())
@@ -287,6 +330,8 @@ class Project(Service):
         if project is not None:
             self.project_properties_view.set_project(project)
             self.emit('project_switched', project=project)
+            toolitem = self.get_action('project_execute').get_proxies()[0]
+            toolitem.set_menu(self.create_menu_for_kind(ExecutionActionType))
 
     def load_and_set_project(self, project_file):
         project = self._load_project(project_file)
@@ -311,6 +356,34 @@ class Project(Service):
             return self._project.get_actions_of_kind(kind)
         else:
             return []
+
+    def get_default_action_of_kind(self, kind):
+        if self._project is not None:
+            for controller in self._project.controllers:
+                if controller.default:
+                    actions = controller.get_actions_of_kind(kind)
+                    if actions:
+                        return actions[0]
+                    else:
+                        return None
+
+    def create_menu_for_kind(self, kind):
+        if self._project is not None:
+            menu = gtk.Menu()
+            for controller, action in self._project.get_actions_of_kind(kind):
+                def _callback(act, action):
+                    print action
+                    action()
+                act = gtk.Action(controller.config_section,
+                                 controller.config_section,
+                                 controller.label, '')
+                act.connect('activate', _callback, action)
+                mi = act.create_menu_item()
+                menu.add(mi)
+            menu.show_all()
+            return menu
+
+         
 
     def show_properties(self, visible):
         if visible:
