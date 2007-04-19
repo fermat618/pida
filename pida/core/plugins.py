@@ -181,20 +181,8 @@ class StrictNamedSets(NamedSets):
         
         @param names: the sets to initialize.
         """
-        self.data = {}
-        [self.init_set(name) for name in names]
+        self.data = dict((name, set()) for name in set(names))
         
-
-    def init_set(self, name):
-        """
-        Initializes a certain set.
-        
-        pre-condition: key not in self.data
-        
-        @param name: the name of the set
-        """
-        val = self.data[name] = set()
-        return val
 
     @copy_docs(NamedSets)
     def __getitem__(self, name):
@@ -206,7 +194,7 @@ class StrictNamedSets(NamedSets):
 
     @copy_docs(NamedSets)
     def remove(self, key, value):
-        return self.data[key].remove(value)
+        return self.data[key].discard(value)
 
 
 class DynamicNamedSets(NamedSets):
@@ -225,33 +213,21 @@ class DynamicNamedSets(NamedSets):
     
     @copy_docs(NamedSets)
     def remove(self, key, value):
-        try:
-            named_set = self.data[key]
-            value = named_set.remove(value)
-            # remove the set when it's empty.
-            if len(named_set) == 0:
+        key_set = self.data.get(key, None) 
+        if key_set is not None:
+            key_set.discard(value)
+            if not key_set:
                 del self.data[key]
-            return value
-            
-        except KeyError:
-            pass
+        return value
     
     @copy_docs(NamedSets)
     def add(self, key, value):
-        try:
-            vals = self.data[key]
-        except KeyError:
-            vals = self.data[key] = set()
-            
-        vals.add(value)
+        self.data.setdefault(key, set()).add(value)
 
     @copy_docs(NamedSets)
     def __delitem__(self, key):
-        try:
-            del self.data[key]
-        except KeyError:
-            pass
-    
+        self.data.pop(key, None)
+
     @copy_docs(dict)
     def clear(self):
         self.data.clear()
