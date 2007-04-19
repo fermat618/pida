@@ -149,7 +149,9 @@ class OpenWithActions(ActionsConfig):
 
     def on_open_with(self, action, contexts_kw, item):
         filename = contexts_kw['file_name']
-        print item.command, contexts_kw
+        command = item.command % filename
+        self.svc.boss.cmd('commander', 'execute',
+            commandargs=['bash', '-c', command])
 
 
 class OpenWithFeatures(FeaturesConfig):
