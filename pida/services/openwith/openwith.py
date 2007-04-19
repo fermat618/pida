@@ -20,7 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import os
+import os, glob
 
 import gtk
 
@@ -58,9 +58,14 @@ class OpenWithItem(object):
             glob=self.glob,
         )
 
+    def match(self, file_name):
+        return glob.fnmatch.fnmatch(file_name, self.glob)
+
 class OpenWithEditor(PidaGladeView):
 
     gladefile = 'openwith-editor'
+    icon_name = gtk.STOCK_OPEN
+    label_name = 'Open With'
 
     def create_ui(self):
         self.items_ol.set_columns([
@@ -69,6 +74,7 @@ class OpenWithEditor(PidaGladeView):
             Column('glob'),
         ])
         self._current = None
+        self._block_changed = False
 
     def prefill(self, config):
         for section in config:
@@ -77,9 +83,13 @@ class OpenWithEditor(PidaGladeView):
 
     def set_current(self, item):
         self._current = item
+        self._block_changed = True
         self.name_entry.set_text(item.name)
         self.command_entry.set_text(item.command)
         self.glob_entry.set_text(item.glob)
+        self._block_changed = False
+        self.attrs_table.set_sensitive(True)
+        self.delete_button.set_sensitive(True)
 
     def on_new_button__clicked(self, button):
         new = OpenWithItem()
@@ -87,20 +97,28 @@ class OpenWithEditor(PidaGladeView):
 
     def on_save_button__clicked(self, button):
         self.svc.save([i for i in self.items_ol])
+        self.save_button.set_sensitive(False)
 
     def on_items_ol__selection_changed(self, ol, item):
         self.set_current(item)
 
     def on_name_entry__changed(self, entry):
-        self._current.name = entry.get_text()
-        self.items_ol.update(self._current)
+        if not self._block_changed:
+            self._current.name = entry.get_text()
+            self.item_changed()
 
     def on_command_entry__changed(self, entry):
-        self._current.command = entry.get_text()
-        self.items_ol.update(self._current)
+        if not self._block_changed:
+            self._current.command = entry.get_text()
+            self.item_changed()
 
     def on_glob_entry__changed(self, entry):
-        self._current.glob = entry.get_text()
+        if not self._block_changed:
+            self._current.glob = entry.get_text()
+            self.item_changed()
+
+    def item_changed(self):
+        self.save_button.set_sensitive(True)
         self.items_ol.update(self._current)
 
 
@@ -137,9 +155,10 @@ class OpenWithActions(ActionsConfig):
         menuitem.remove_submenu()
         menu = gtk.Menu()
         menuitem.set_submenu(menu)
-        for item in self.svc.get_items():
+        file_name = action.contexts_kw['file_name']
+        for item in self.svc.get_items_for_file(file_name):
             act = gtk.Action(item.name, item.name, item.command, gtk.STOCK_EXECUTE)
-            act.connect('activate', self.on_open_with, action.contexts_kw, item)
+            act.connect('activate', self.on_open_with, file_name, item)
             mi = act.create_menu_item()
             menu.append(mi)
         menu.append(gtk.SeparatorMenuItem())
@@ -147,9 +166,8 @@ class OpenWithActions(ActionsConfig):
         menu.append(act.create_menu_item())
         menu.show_all()
 
-    def on_open_with(self, action, contexts_kw, item):
-        filename = contexts_kw['file_name']
-        command = item.command % filename
+    def on_open_with(self, action, file_name, item):
+        command = item.command % file_name
         self.svc.boss.cmd('commander', 'execute',
             commandargs=['bash', '-c', command], title=item.name,
             icon=gtk.STOCK_OPEN)
@@ -189,6 +207,11 @@ class Openwith(Service):
     def get_items(self):
         for section in self._config:
             yield OpenWithItem(self._config[section])
+
+    def get_items_for_file(self, file_name):
+        for item in self.get_items():
+            if item.match(file_name):
+                yield item
         
 
 # Required Service attribute for service loading
