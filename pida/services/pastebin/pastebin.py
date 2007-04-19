@@ -345,7 +345,7 @@ class Pastebin(Service):
         self._view = PasteHistoryView(self)
 
     def new_paste(self):
-        self.boss.cmd('window', 'add_detached_view', paned='Terminal',
+        self.boss.cmd('window', 'add_view', paned='Plugin',
                       view=self._editor)
         self.get_action('new_paste').set_sensitive(False)
 
