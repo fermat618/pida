@@ -235,23 +235,6 @@ class DynamicNamedSets(NamedSets):
 ##############################################################################
 ## Base classes
 
-class _PluginIterator(object):
-    def __init__(self, registry, real_iter, *args, **kwargs):
-        self.registry = registry
-        self.real_iter = real_iter
-        self.args = args
-        self.kwargs = kwargs
-    
-    def next(self):
-        plugin = self.real_iter.next()
-        return plugin.get_instance(self.registry, *self.args, **self.kwargs)
-    
-    def __iter__(self):
-        return self
-    
-    def __repr__(self):
-        return repr(self.real_iter)
-
 class Plugin(object):
     """A possible implementation of a Plugin. A plugin holds an object.
     When the 'get_instance' method is called, by suplying a registry, the
@@ -565,7 +548,9 @@ class Registry(object):
         return self.register(*self.plugin_factory(*args, **kwargs))
 
     def get_features(self, feature, *args, **kwargs):
-        return _PluginIterator(self, iter(self.features[feature]), *args, **kwargs)
+        for feature in self.features[feature]:
+            yield feature.get_instance(self, *args, **kwargs)
+    
     
     def get_singleton(self, singleton, *args, **kwargs):
         return self.get_plugin_from_singleton(singleton).get_instance(self, *args, **kwargs)
