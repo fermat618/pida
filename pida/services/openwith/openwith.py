@@ -84,20 +84,37 @@ class OpenWithEditor(PidaGladeView):
     def set_current(self, item):
         self._current = item
         self._block_changed = True
-        self.name_entry.set_text(item.name)
-        self.command_entry.set_text(item.command)
-        self.glob_entry.set_text(item.glob)
+        if item is None:
+            self.name_entry.set_text('')
+            self.command_entry.set_text('')
+            self.glob_entry.set_text('')
+            self.attrs_table.set_sensitive(False)
+            self.delete_button.set_sensitive(False)
+        else:
+            self.name_entry.set_text(item.name)
+            self.command_entry.set_text(item.command)
+            self.glob_entry.set_text(item.glob)
+            self.attrs_table.set_sensitive(True)
+            self.delete_button.set_sensitive(True)
         self._block_changed = False
-        self.attrs_table.set_sensitive(True)
-        self.delete_button.set_sensitive(True)
 
     def on_new_button__clicked(self, button):
         new = OpenWithItem()
         self.items_ol.append(new, select=True)
+        self.save_button.set_sensitive(True)
 
     def on_save_button__clicked(self, button):
         self.svc.save([i for i in self.items_ol])
         self.save_button.set_sensitive(False)
+
+    def on_close_button__clicked(self, button):
+        self.svc.get_action('show_openwith').set_active(False)
+
+    def on_delete_button__clicked(self, button):
+        if self.svc.boss.get_window().yesno_dlg(
+                'Are you sure you want to delete %s' % self._current.name):
+            self.items_ol.remove(self._current, select=True)
+            self.save_button.set_sensitive(True)
 
     def on_items_ol__selection_changed(self, ol, item):
         self.set_current(item)
