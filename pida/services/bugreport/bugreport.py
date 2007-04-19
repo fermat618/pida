@@ -58,6 +58,9 @@ class BugreportView(PidaGladeView):
         self._pulsing = True
         gobject.timeout_add(100, self._pulse)
 
+    def on_close_button__clicked(self, button):
+        self.svc.get_action('show_bugreport').set_active(False)
+
     def report(self):
         title = self.title_entry.get_text()
         buf = self.description_text.get_buffer()
@@ -167,6 +170,9 @@ class Bugreport(Service):
     
     def show_report(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+
+    def hide_report(self):
+        self.boss.cmd('window', 'remove_view', view=self._view)
 
 # Required Service attribute for service loading
 Service = Bugreport
