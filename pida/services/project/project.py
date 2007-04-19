@@ -72,12 +72,25 @@ class GenericExecutionController(ProjectController):
 
     label = 'Generic Execution'
 
+    keys = ['command']
+
     @project_action(kind=ExecutionActionType)
     def execute(self):
+        command = self.get_option('command')
+        if not command:
+            self.boss.get_window().error_dlg(
+                'Controller has no command set'
+            )
+            return
+        env = self.get_option('env')
+        if env:
+            env = env.split()
+        else:
+            env = []
         self.execute_commandline(
-            self.get_option('command_line'),
-            self.get_option('env'),
+            command,
             self.get_option('cwd') or self.project.source_directory,
+            env,
         )
 
 PROJECT_LIST_COLUMNS = [

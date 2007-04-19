@@ -202,7 +202,11 @@ class ProjectController(object):
         )
 
     def execute_commandline(self, command, cwd, env):
-        pass
+        self.boss.cmd('commander', 'execute',
+            commandargs=['bash', '-c', command],
+            env=env,
+            cwd=cwd,
+        )
 
     def create_key_items(self):
         for name in self.keys:
