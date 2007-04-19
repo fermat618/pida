@@ -109,55 +109,6 @@ class BugreportActions(ActionsConfig):
         else:
             self.svc.hide_report()
 
-class GuiReport:
-    def __init__(self, opts, do_quit=True):
-        self.opts = opts
-        self.do_quit = do_quit
-    
-    def set_command_sensitive(self, sensitive):
-        self.w.set_response_sensitive(gtk.RESPONSE_OK, sensitive)
-        self.w._reporter.set_sensitive(sensitive)
-        
-    def on_err_response(self, dlg, response):
-        dlg.destroy()
-        
-    def on_report_finished(self, results):
-        success, results = results
-        if not success:
-            title = "Could not report error"
-            msg = ("There was an error "
-                   "comunicating with the server. Please verify your "
-                   "username and password. The error was %s" %
-                    escape(str(results)))
-            dlgfact = rat.hig.error 
-        else:
-            title = 'Successfully reported Bug'
-            msg = ('Bug successfully reported to launchpad at: %s' % results)
-            dlgfact = rat.hig.info
-        dlg = dlgfact(title, msg, parent = self.w, run=False)
-        dlg.show_all()
-        dlg.connect("response", self.on_err_response)
-        if success:
-            self.stop()
-        else:
-            self.set_command_sensitive(True)
-    
-    def on_report_window_response(self, dlg, response):
-        if response == gtk.RESPONSE_OK:
-            self.set_command_sensitive(False)
-            dlg._reporter.report(self.on_report_finished)
-        else:
-            self.stop()
-    
-    def stop(self):
-        self.w.destroy()
-        if self.do_quit:
-            gtk.main_quit()
-
-    def start(self):
-        self.w = w = ReportWindow(self.opts)
-        w.show_all()
-        w.connect('response', self.on_report_window_response)
 
 # Service class
 class Bugreport(Service):
