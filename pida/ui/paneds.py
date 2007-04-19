@@ -20,7 +20,7 @@ class PidaPaned(BigPaned):
         self.set_property('enable-detaching', True)
         for pane in self.get_all_paneds():
             pane.set_pane_size(200)
-            pane.set_sticky_pane(True)
+            #pane.set_sticky_pane(True)
 
     def get_all_pos(self):
         return [gtk.POS_BOTTOM, gtk.POS_LEFT, gtk.POS_RIGHT]
