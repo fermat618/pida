@@ -157,6 +157,12 @@ class FilemanagerView(PidaView):
                 gtk.STOCK_NEW,
                 self.start_term
                 )
+        self._refreshact = gen_action(
+                'Refresh', 'Refresh',
+                'Refresh the view',
+                gtk.STOCK_REFRESH,
+                lambda action: self.update_to_path()
+                )
         
     def add_action_to_toolbar(self, action):
          toolitem = action.create_tool_item()
@@ -267,7 +273,7 @@ class FileManagerOptionsConfig(OptionsConfig):
                 'hide_regex',
                 'Hide regex',
                 OTypeString,
-                '^(\..*|\.*\.py[co])$',
+                '^\.|.*\.py[co]$',
                 'Hides files that match the regex')
 
 class FileManagerActionsConfig(ActionsConfig):
