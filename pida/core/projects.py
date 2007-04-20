@@ -103,22 +103,6 @@ class Project(object):
 
     markup = property(get_markup)
 
-def project_action(kind):
-    def project_action_decorator(f):
-        f.__kind__ = kind
-        f.__action__ = True
-        return f
-    return project_action_decorator
-
-
-class ExecutionActionType(object):
-    """A controller for execution"""
-
-class BuildActionType(object):
-    """A controller action for building"""
-
-class TestActionType(object):
-    """A controller action for testing"""
 
 class ProjectKeyDefinition(object):
 
@@ -126,6 +110,7 @@ class ProjectKeyDefinition(object):
         self.name = name
         self.label = label
         self.required = required
+
 
 class ProjectKeyItem(object):
 
@@ -155,7 +140,10 @@ class ProjectController(object):
 
     label = ''
 
-    attributes = []
+    attributes = [
+        ProjectKeyDefinition('cwd', 'Working Directory', False),
+        ProjectKeyDefinition('env', 'Environment Variables', False),
+    ]
 
     def __init__(self, project, config_section):
         self.project = proxy(project)
@@ -214,10 +202,6 @@ class ProjectController(object):
         return bool(self.get_option('default'))
 
     default = property(get_default, set_default)
-
-
-
-# an example controller
 
 
 

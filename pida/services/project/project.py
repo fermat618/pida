@@ -36,7 +36,7 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectControllerMananger, ProjectController, \
-    ExecutionActionType, project_action, ProjectKeyDefinition
+    ProjectKeyDefinition
 
 from pida.ui.views import PidaGladeView
 
@@ -73,9 +73,8 @@ class GenericExecutionController(ProjectController):
 
     attributes = [
         ProjectKeyDefinition('command', 'Execution Command', True),
-    ]
+    ] + ProjectController.attributes
 
-    @project_action(kind=ExecutionActionType)
     def execute(self):
         command = self.get_option('command')
         if not command:

@@ -37,8 +37,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeString
 from pida.core.features import FeaturesConfig
-from pida.core.projects import ProjectController, project_action,\
-    BuildActionType, ExecutionActionType, TestActionType, ProjectKeyDefinition
+from pida.core.projects import ProjectController,  ProjectKeyDefinition
 from pida.core.interfaces import IProjectController
 
 # ui
@@ -46,7 +45,7 @@ from pida.ui.views import PidaView
 
 # utils
 from pida.utils import pyflakes
-from pida.utils.gthreads import AsyncTask, gcall
+from pida.utils.gthreads import AsyncTask
 
 ### Pyflakes
 
@@ -131,22 +130,27 @@ class Pyflaker(object):
         return self._view
         
 
-class PythonProjectController(ProjectController):
+class BasePythonProjectController(ProjectController):
+
+    attributes = [
+        ProjectKeyDefinition('python_executable', 'Python Executable', False),
+    ] + ProjectController.attributes
+
+    def get_python_executable(self):
+        return self.get_option('python_executable') or 'python'
+
+
+class PythonProjectController(BasePythonProjectController):
 
     name = 'PYTHON_CONTROLLER'
+
+    label = 'Python Controller'
 
     attributes = [
         ProjectKeyDefinition('execute_file', 'File to execute', True),
         ProjectKeyDefinition('execute_args', 'Args to execute', False),
-        ProjectKeyDefinition('python_executable', 'Python Executable', False),
-        ProjectKeyDefinition('cwd', 'Working Directory', False),
-        ProjectKeyDefinition('env', 'Environment Variables', False),
-    ]
+    ] + BasePythonProjectController.attributes
 
-    label = 'Python Controller'
-
-
-    @project_action(kind=ExecutionActionType)
     def execute(self):
         execute_file = self.get_option('execute_file')
         execute_args = self.get_option('execute_args')
@@ -162,11 +166,8 @@ class PythonProjectController(ProjectController):
                 self.get_option('env') or [],
             )
 
-    def get_python_executable(self):
-        return self.get_option('python_executable') or 'python'
 
 class PythonDistutilstoolsController(ProjectController):
-
     """Controller for running a distutils command"""
 
     name = 'DISTUTILS_CONTROLLER'
@@ -176,15 +177,8 @@ class PythonDistutilstoolsController(ProjectController):
     attributes = [
         ProjectKeyDefinition('command', 'Distutils command', True),
         ProjectKeyDefinition('args', 'Args for command', False),
-        ProjectKeyDefinition('python_executable', 'Python Executable', False),
-        ProjectKeyDefinition('cwd', 'Working Directory', False),
-        ProjectKeyDefinition('env', 'Environment Variables', False),
-    ]
+    ] + BasePythonProjectController.attributes
 
-    def get_python_executable(self):
-        return self.get_option('python_executable') or 'python'
-
-    @project_action(kind=ExecutionActionType)
     def execute(self):
         command = self.get_option('command')
         if not command:
