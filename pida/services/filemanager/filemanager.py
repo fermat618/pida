@@ -37,6 +37,8 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
 
+from pida.utils.gthreads import GeneratorTask
+
 from pida.ui.views import PidaView
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
@@ -61,8 +63,6 @@ class FileEntry(object):
 
     def __init__(self, name, path_, manager):
         self._name = name
-        if name.startswith('.'):
-                self._state = "hidden"
         self._manager = manager
         self._path = path_
         self.path = path.join(path_, name)
@@ -81,6 +81,10 @@ class FileEntry(object):
             #TODO: get a real mimetype icon
             return 'text-x-generic'
     
+    @property #TODO: deal with making this small hack more generic
+    def dir_sort(self):
+        return not path.isdir(self.path), self._name
+
 
     @property
     def state(self):
@@ -102,7 +106,8 @@ class FilemanagerView(PidaView):
     _columns = [
         Column("icon", use_stock=True),
         Column("state", use_markup=True),
-        Column("name", use_markup=True)
+        Column("name", use_markup=True),
+        Column("dir_sort", visible=False, sorted=True) # small hack helper
         ]
 
     label_text = 'Files'
@@ -129,6 +134,7 @@ class FilemanagerView(PidaView):
         self.file_list.set_columns(self._columns);
         #XXX: real file
         self.file_list.connect('row-activated', self.act_double_click)
+        self.entries = {}
         self.update_to_path(self.svc.path)
         self.file_list.show()
         self._vbox.pack_start(self.file_list)
@@ -178,6 +184,30 @@ class FilemanagerView(PidaView):
         if activate_callback is not None:
             act.connect('activate', activate_callback)
         return act
+    
+    def add_or_update_file(self, name, basepath, state):
+        if basepath!=self.path:
+            return
+        entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
+        if state != "none":
+            entry._state = state
+
+        self.show_or_hide(entry)
+    
+    def show_or_hide(self, entry):
+        from operator import and_
+        def check(checker):
+            return checker(name=entry._name, path=entry._path)
+        show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
+        if show:
+            if entry in self.file_list:
+                self.file_list.update(entry)
+            else:
+                self.file_list.append(entry)
+        else:
+            if entry in self.file_list:
+                self.file_list.remove(entry)
+
 
     def start_term(self, action):
         self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
@@ -188,18 +218,12 @@ class FilemanagerView(PidaView):
         else:
             self.path = new_path
 
-        files = [FileEntry(name, new_path, self) for name in listdir(new_path)]
-        self.svc.log_warn("show_hidden is %r"%self.svc.opt("show_hidden"))
-        if self.svc.opt("show_hidden") == False:
-            self.svc.log_warn("removing hidden files ? ")
-            for checker in self.svc.features("file_hidden_check"):
-                self.svc.log_warn("checking hidden files with %r"%checker)
-                def _check(entry):
-                    return checker(name=entry._name, path=entry._path)
-                files = filter(_check, files)
-            self.svc.log_warn("done ?")
-        self.file_list.add_list(files, clear=True)
-        self.entries = dict((entry._name, entry) for entry in files)
+        self.file_list.clear()
+        self.entries.clear()
+
+        for lister in self.svc.features("file_lister"):
+            self.svc.log_warn("dealing with file lister %r"%lister)
+            GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
     
     def act_double_click(self, rowitem, fileentry):
@@ -238,12 +262,15 @@ class FilemanagerFeatureConfig(FeaturesConfig):
     def create_features(self):
         self.create_feature("file_manager")
         self.create_feature("file_hidden_check")
+        self.create_feature("file_lister")
 
     def subscribe_foreign_features(self):
         self.subscribe_feature("file_hidden_check", self.svc.check_hidden_regex)
+        self.subscribe_feature("file_lister", self.svc.file_lister)
         
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
+
 
 
 class FileManagerOptionsConfig(OptionsConfig):
@@ -331,6 +358,10 @@ class Filemanager(Service):
             return True
         else:
             return re.match(_re, name) is None
+
+    def file_lister(self, basepath):
+        for name in listdir(basepath):
+            yield name, basepath, "none"
 
     def rename_file(self, old, new, basepath):
         pass
