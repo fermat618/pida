@@ -119,6 +119,10 @@ class ProjectPropertiesView(PidaGladeView):
 
     gladefile = 'project-properties'
 
+    label_text = 'Project Properties'
+
+    icon_name = 'package_utilities'
+
     def create_ui(self):
         self.controllers_list.set_columns([
             Column('markup', use_markup=True, expand=True, title='Controllers'),
