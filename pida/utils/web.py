@@ -18,7 +18,6 @@ def fetch_url(url, content_callback, data={}):
         except Exception, e:
             content = str(e)
             url = None
-        print content, url
         return url, content
 
     task = AsyncTask(_fetcher, content_callback) 
