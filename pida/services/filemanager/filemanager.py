@@ -318,9 +318,23 @@ class FileManagerActionsConfig(ActionsConfig):
             self.on_browse_for_file,
         )
 
+        self.create_action(
+            'show_filebrowser',
+            TYPE_NORMAL,
+            'Show file browser',
+            'Show the file browser view',
+            'file-manager',
+            self.on_show_filebrowser,
+            '<Shift><Control>f'
+        )
+
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('browse', new_path=new_path)
+        self.svc.cmd('present_view')
+
+    def on_show_filebrowser(self, action):
+        self.svc.cmd('present_view')
 
 
 # Service class
