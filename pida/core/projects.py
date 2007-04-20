@@ -120,23 +120,30 @@ class BuildActionType(object):
 class TestActionType(object):
     """A controller action for testing"""
 
+class ProjectKeyDefinition(object):
+
+    def __init__(self, name, label, required=False):
+        self.name = name
+        self.label = label
+        self.required = required
+
 class ProjectKeyItem(object):
 
-    def __init__(self, name, project, controller):
-        self._name = name
+    def __init__(self, definition, project, controller):
+        self.required = definition.required
+        if self.required:
+            self.label = '<b>%s</b>' % definition.label
+        else:
+            self.label = definition.label
+        self.name = definition.name
         self._project = project
         self._controller = controller
 
-    def get_name(self):
-        return self._name
-
-    name = property(get_name)
-
     def get_value(self):
-        return self._controller.get_option(self._name)
+        return self._controller.get_option(self.name)
 
     def set_value(self, value):
-        self._controller.set_option(self._name, value)
+        self._controller.set_option(self.name, value)
         self._project.save()
 
     value = property(get_value, set_value)
@@ -187,8 +194,8 @@ class ProjectController(object):
         )
 
     def create_key_items(self):
-        for name in self.keys:
-            yield ProjectKeyItem(name, self.project, self)
+        for attr in self.attributes:
+            yield ProjectKeyItem(attr, self.project, self)
 
     def get_markup(self):
         return ('<b>%s</b>\n<span foreground="#0000c0">%s</span>' %

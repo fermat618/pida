@@ -38,7 +38,7 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeString
 from pida.core.features import FeaturesConfig
 from pida.core.projects import ProjectController, project_action,\
-    BuildActionType, ExecutionActionType, TestActionType
+    BuildActionType, ExecutionActionType, TestActionType, ProjectKeyDefinition
 from pida.core.interfaces import IProjectController
 
 # ui
@@ -135,7 +135,13 @@ class PythonProjectController(ProjectController):
 
     name = 'PYTHON_CONTROLLER'
 
-    keys = ['execute_file', 'execute_args', 'python_executable', 'cwd', 'env']
+    attributes = [
+        ProjectKeyDefinition('execute_file', 'File to execute', True),
+        ProjectKeyDefinition('execute_args', 'Args to execute', False),
+        ProjectKeyDefinition('python_executable', 'Python Executable', False),
+        ProjectKeyDefinition('cwd', 'Working Directory', False),
+        ProjectKeyDefinition('env', 'Environment Variables', False),
+    ]
 
     label = 'Python Controller'
 
@@ -167,7 +173,13 @@ class PythonDistutilstoolsController(ProjectController):
 
     label = 'Distutils Controller'
 
-    keys = ['command', 'args', 'python_executable', 'cwd', 'env']
+    attributes = [
+        ProjectKeyDefinition('command', 'Distutils command', True),
+        ProjectKeyDefinition('args', 'Args for command', False),
+        ProjectKeyDefinition('python_executable', 'Python Executable', False),
+        ProjectKeyDefinition('cwd', 'Working Directory', False),
+        ProjectKeyDefinition('env', 'Environment Variables', False),
+    ]
 
     def get_python_executable(self):
         return self.get_option('python_executable') or 'python'

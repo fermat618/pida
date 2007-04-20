@@ -27,7 +27,6 @@ import gtk
 from configobj import ConfigObj
 
 from kiwi.ui.objectlist import Column
-
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -37,7 +36,7 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectControllerMananger, ProjectController, \
-    ExecutionActionType, project_action
+    ExecutionActionType, project_action, ProjectKeyDefinition
 
 from pida.ui.views import PidaGladeView
 
@@ -72,7 +71,9 @@ class GenericExecutionController(ProjectController):
 
     label = 'Generic Execution'
 
-    keys = ['command']
+    attributes = [
+        ProjectKeyDefinition('command', 'Execution Command', True),
+    ]
 
     @project_action(kind=ExecutionActionType)
     def execute(self):
@@ -125,7 +126,7 @@ class ProjectPropertiesView(PidaGladeView):
             Column('default', radio=True, data_type=bool, editable=True)
         ])
         self.items_list.set_columns([
-            Column('name'),
+            Column('label', title='Name', expand=True, use_markup=True),
             Column('value', editable=True, expand=True),
         ])
         self._project = None
