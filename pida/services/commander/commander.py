@@ -139,11 +139,20 @@ class TerminalView(PidaView):
 
     def create_ui(self):
         self._term = PidaTerminal(**self.svc.get_options())
+        self._term.connect('child-exited', self.on_exited)
         self.add_main_widget(self._term)
         self._term.show()
 
     def execute(self, commandargs, env, cwd):
         self._term.fork_command(commandargs[0], commandargs, env, cwd)
+
+    def on_exited(self, term):
+        self._term.feed_text('Child exited\r\n', '1;34')
+        self._term.feed_text('Press any key to close.')
+        self._term.connect('commit', self.on_press_any_key)
+
+    def on_press_any_key(self, term, data, datalen):
+        self.svc.boss.cmd('window', 'remove_view', view=self)
 
 
 # Service class

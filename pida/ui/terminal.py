@@ -212,6 +212,17 @@ class PidaTerminal(Terminal):
         """
         self.get_named_match(name).register_action(action)
 
+    def feed_text(self, text, color=None):
+        """
+        Feed text to the terminal, optionally coloured.
+        """
+        if color is not None:
+            text = '\x1b[%sm%s\x1b[0m' % (color, text)
+        self.feed(text)
+
+
+
+
 
 class popen(object):
     def __init__(self, cmdargs, callback, kwargs):
