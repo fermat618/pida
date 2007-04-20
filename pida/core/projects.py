@@ -7,6 +7,13 @@ from configobj import ConfigObj
 
 
 class ProjectControllerMananger(object):
+    """
+    Manager to know about all controller types, and load them for projects.
+
+    Controller types are registered with the manager, and provided to projects
+    as they are loaded. This object knows about the boss, and allows the boss to
+    be given to the projects and controllers.
+    """
 
     def __init__(self, boss=None):
         self.boss = boss
@@ -25,6 +32,12 @@ class ProjectControllerMananger(object):
 
 
 class Project(object):
+    """
+    A PIDA project.
+
+    This is essentially a bag for the options and controllers contained by the
+    project.
+    """
 
     def __init__(self, manager, project_file):
         self.manager = manager
@@ -105,6 +118,12 @@ class Project(object):
 
 
 class ProjectKeyDefinition(object):
+    """
+    Project attribute definition.
+
+    An attribute shoulf have a name, a label and whether it is required by the
+    project's execute action in order to perform its task.
+    """
 
     def __init__(self, name, label, required=False):
         self.name = name
@@ -113,6 +132,12 @@ class ProjectKeyDefinition(object):
 
 
 class ProjectKeyItem(object):
+    """
+    Helper to allow project attributes to be displayed.
+
+    Changing the value attribute will cause the project that the attribute is
+    part of to be updated and saved. This is useful for the kiwi objectlist.
+    """
 
     def __init__(self, definition, project, controller):
         self.required = definition.required
@@ -135,6 +160,16 @@ class ProjectKeyItem(object):
 
 
 class ProjectController(object):
+    """
+    Project Controller.
+
+    A project may have any number of controllers. Each type of controller should
+    override the execute method, which will be called when the controller is
+    executed. The attributes list is a list of options that can be graphically
+    changed by the user. Each attribute should be of type ProjectKeyDefinition.
+    The controller should also define a name (a unique key) and a label (for
+    user interface display).
+    """
 
     name = ''
 
