@@ -135,25 +135,10 @@ class PythonProjectController(ProjectController):
 
     name = 'PYTHON_CONTROLLER'
 
-    keys = ['execute_file', 'execute_args']
+    keys = ['execute_file', 'execute_args', 'python_executable', 'cwd', 'env']
 
     label = 'Python Controller'
 
-    @project_action(kind=BuildActionType)
-    def build(self):
-        self.execute_commandargs(
-            [self.get_python_executable(), 'setup.py', 'build'],
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
-
-    @project_action(kind=TestActionType)
-    def test(self):
-        self.execute_commandargs(
-            [self.get_option('test_command')],
-            self.get_option('env'),
-            self.get_option('cwd') or self.project.source_directory,
-        )
 
     @project_action(kind=ExecutionActionType)
     def execute(self):
@@ -174,11 +159,48 @@ class PythonProjectController(ProjectController):
     def get_python_executable(self):
         return self.get_option('python_executable') or 'python'
 
+class PythonDistutilstoolsController(ProjectController):
+
+    """Controller for running a distutils command"""
+
+    name = 'DISTUTILS_CONTROLLER'
+
+    label = 'Distutils Controller'
+
+    keys = ['command', 'args', 'python_executable', 'cwd', 'env']
+
+    def get_python_executable(self):
+        return self.get_option('python_executable') or 'python'
+
+    @project_action(kind=ExecutionActionType)
+    def execute(self):
+        command = self.get_option('command')
+        if not command:
+            self.boss.get_window().error_dlg('Controller has no "command" set')
+        else:
+            commandargs = [self.get_python_executable(), 'setup.py', command]
+            args = self.get_option('args')
+            if args:
+                args = args.split()
+                commandargs.extend(args)
+            self.execute_commandargs(
+                commandargs,
+                self.get_option('cwd') or self.project.source_directory,
+                self.get_option('env') or [],
+            )
+
+    def get_python_executable(self):
+        return self.get_option('python_executable') or 'python'
+
+
+
 class PythonFeatures(FeaturesConfig):
 
     def subscribe_foreign_features(self):
         self.subscribe_foreign_feature('project', IProjectController,
             PythonProjectController)
+        self.subscribe_foreign_feature('project', IProjectController,
+            PythonDistutilstoolsController)
 
 
 class PythonOptionsConfig(OptionsConfig):

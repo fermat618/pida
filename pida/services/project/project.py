@@ -234,15 +234,16 @@ class ProjectActionsConfig(ActionsConfig):
             self.svc.cmd('add_directory', project_directory=path)
 
     def on_project_execute(self, action):
-        call = self.svc.get_default_action_of_kind(ExecutionActionType)
-        if call is None:
-            calls = self.svc.get_actions_of_kind(ExecutionActionType)
-            if calls:
-                call = calls[0][1]
-        if call is not None:
-            call()
+        controller = self.svc.get_default_controller()
+        if controller is None:
+            controllers = self.svc.get_controllers()
+            if controllers:
+                controller = controllers[0]
+        if controller is not None:
+            controller.execute()
         else:
-            self.svc.boss.get_window().error_dlg('This project has no execute action')
+            self.svc.boss.get_window().error_dlg(
+                'This project has no controllers')
 
     def on_project_properties(self, action):
         self.svc.show_properties(action.get_active())
@@ -344,7 +345,7 @@ class Project(Service):
             self.project_properties_view.set_project(project)
             self.emit('project_switched', project=project)
             toolitem = self.get_action('project_execute').get_proxies()[0]
-            toolitem.set_menu(self.create_menu_for_kind(ExecutionActionType))
+            toolitem.set_menu(self.create_menu())
 
     def load_and_set_project(self, project_file):
         project = self._load_project(project_file)
@@ -364,32 +365,24 @@ class Project(Service):
         self.project_list.project_ol.remove(project, select=True)
         self._save_workspace_file()
 
-    def get_actions_of_kind(self, kind):
+    def get_default_controller(self):
         if self._project is not None:
-            return self._project.get_actions_of_kind(kind)
-        else:
-            return []
-
-    def get_default_action_of_kind(self, kind):
+            return self._project.get_default_controller()
+   
+    def get_controllers(self):
         if self._project is not None:
-            for controller in self._project.controllers:
-                if controller.default:
-                    actions = controller.get_actions_of_kind(kind)
-                    if actions:
-                        return actions[0]
-                    else:
-                        return None
+            return self._project.controllers()
 
-    def create_menu_for_kind(self, kind):
+    def create_menu(self):
         if self._project is not None:
             menu = gtk.Menu()
-            for controller, action in self._project.get_actions_of_kind(kind):
-                def _callback(act, action):
-                    action()
+            for controller in self._project.controllers:
+                def _callback(act, controller):
+                    controller.execute()
                 act = gtk.Action(controller.config_section,
-                    '%s (%s)' % (controller.config_section, action.im_func.func_name),
-                    action.im_func.func_doc, '')
-                act.connect('activate', _callback, action)
+                    controller.config_section,
+                    controller.execute.im_func.func_doc, '')
+                act.connect('activate', _callback, controller)
                 mi = act.create_menu_item()
                 menu.add(mi)
             menu.show_all()

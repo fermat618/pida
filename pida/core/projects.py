@@ -34,7 +34,6 @@ class Project(object):
         self.name = os.path.basename(self.source_directory)
         self._create_options()
         self._create_controllers()
-        self._register_actions()
 
     def _create_controllers(self):
         self.controllers = []
@@ -51,15 +50,6 @@ class Project(object):
 
     def _create_options(self):
         self.options = ConfigObj(self.project_file)
-
-    def _register_actions(self):
-        self.actions = {}
-        self.action_kinds = {}
-        for controller in self.controllers:
-            for name, action in controller.actions.items():
-                self.actions[name] = action
-            for name, actions in controller.action_kinds.items():
-                self.action_kinds.setdefault(name, []).extend(actions)
 
     def add_controller(self, controller_type, section_name = None):
         # first get a free section name
@@ -83,17 +73,21 @@ class Project(object):
         del self.options[controller.config_section]
         self.save()
         
+    def get_default_controller(self):
+        for controller in self.controllers:
+            if controller.default:
+                return controller
 
     def save(self):
         self.options.write()
 
-    def get_actions(self):
+    def _get_actions(self):
         actions = []
         for controller in self.controllers:
             actions.extend(controller.get_actions())
         return actions
 
-    def get_actions_of_kind(self, kind):
+    def _get_actions_of_kind(self, kind):
         actions = []
         for controller in self.controllers:
             actions.extend([(controller, action) for action in
@@ -160,17 +154,10 @@ class ProjectController(object):
         self.project = proxy(project)
         self.boss = self.project.boss
         self.config_section = config_section
-        self._register_actions()
         self._default = False
 
-    def _register_actions(self):
-        self.actions = {}
-        self.action_kinds = {}
-        for name in dir(self):
-            attr = getattr(self, name)
-            if hasattr(attr, '__action__'):
-                self.actions[name] = attr
-                self.action_kinds.setdefault(attr.__kind__, []).append(attr)
+    def execute(self):
+        """Execute this controller, for overriding"""
 
     def get_options(self):
         return self.project.options.get(self.config_section)
@@ -183,15 +170,6 @@ class ProjectController(object):
 
     def get_project_option(self, name):
         return self.project.options.get(name, None)
-
-    def get_actions(self):
-        return self.actions.values()
-
-    def get_action(self, name):
-        return self.actions[name]
-
-    def get_actions_of_kind(self, kind):
-        return self.action_kinds[kind]
 
     def execute_commandargs(self, args, cwd, env):
         #TODO: Bad dependency

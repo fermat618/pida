@@ -67,7 +67,7 @@ class BufferListView(PidaGladeView):
     def on_buffers_ol__selection_changed(self, ol, item):
         self.svc.view_document(item)
 
-    def on_buffers_ol__right_click(self, ol, item, event):
+    def on_buffers_ol__right_click(self, ol, item, event=None):
         self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           event=event,
                           file_name=self.svc.get_current().filename)
