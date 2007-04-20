@@ -186,3 +186,30 @@ class Service(object):
     def log_error(self, message):
         self.boss.log.error('svc: %s: %s' % (self.get_name(), message))
 
+
+    # window proxy
+
+    def get_window(self):
+        return self.boss.get_window()
+    
+    window = property(get_window)
+
+    def save_dlg(self, *args, **kw):
+        return self.window.save_dlg(*args, **kw)
+
+    def open_dlg(self, *args, **kw):
+        return self.window.open_dlg(*args, **kw)
+
+    def info_dlg(self, *args, **kw):
+        return self.window.info_dlg(*args, **kw)
+
+    def error_dlg(self, *args, **kw):
+        return self.window.error_dlg(*args, **kw)
+
+    def yesno_dlg(self, *args, **kw):
+        return self.window.yesno_dlg(*args, **kw)
+
+    def error_list_dlg(self, msg, errs):
+        return self.window.error_list_dlg('%s\n\n* %s' % (msg, '\n\n* '.join(errs)))
+
+
