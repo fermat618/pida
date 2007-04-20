@@ -153,9 +153,9 @@ class ProjectController(object):
 
     name = ''
 
-    keys = []
-
     label = ''
+
+    attributes = []
 
     def __init__(self, project, config_section):
         self.project = proxy(project)
