@@ -198,7 +198,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execute',
             TYPE_MENUTOOL,
-            'Execute Project',
+            'Default Execute Controller',
             'Execute the project',
             gtk.STOCK_EXECUTE,
             self.on_project_execute,
@@ -225,7 +225,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execution_menu',
             TYPE_NORMAL,
-            'Project Execution Configurations',
+            'Execution Controllers',
             'Configurations with which to execute the project',
             gtk.STOCK_EXECUTE,
             self.on_project_execution_menu,
