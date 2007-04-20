@@ -193,9 +193,9 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_add',
             TYPE_NORMAL,
-            'New Project',
-            'Creates a new project',
-            gtk.STOCK_NEW,
+            'Add Project',
+            'Adds a new project',
+            gtk.STOCK_ADD,
             self.on_project_add,
         )
 
