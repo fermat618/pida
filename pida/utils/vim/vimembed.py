@@ -87,10 +87,11 @@ class vim_embed(object):
 
 class VimEmbedWidget(gtk.EventBox):
 
-    def __init__(self, command='gvim', args=[]):
+    def __init__(self, command, script_path, args=[]):
         gtk.EventBox.__init__(self)
         self._servername = self._generate_servername()
         self._command = command
+        self._init_script = script_path
         self.pid = None
         self.args = args
         self.r_cb_plugged = None
@@ -121,10 +122,13 @@ class VimEmbedWidget(gtk.EventBox):
         if not xid:
             return
         if not self.pid:
-            popen = subprocess.Popen([self._command, '--servername',
-                                      self.get_server_name(), '--cmd',
-                                      'let PIDA_EMBEDDED=1'] + args,
-                                      close_fds=True)
+            popen = subprocess.Popen(
+                [self._command,
+                 '--servername', self.get_server_name(),
+                 '--cmd', 'let PIDA_EMBEDDED=1',
+                 '--cmd', 'so %s' % self._init_script
+                 ] + args,
+            close_fds=True)
             self.pid = popen.pid
         self.show_all()
         

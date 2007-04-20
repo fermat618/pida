@@ -104,7 +104,7 @@ class EditorCommandsConfig(CommandsConfig):
 class VimView(PidaView):
 
     def create_ui(self):
-        self._vim = VimEmbedWidget()
+        self._vim = VimEmbedWidget('gvim', self.svc.script_path)
         self.add_main_widget(self._vim)
 
     def run(self):
@@ -152,17 +152,14 @@ class Vim(Service):
     ##### Vim Things
 
     def _create_initscript(self):
-        script_path = os.path.join(self.boss.get_pida_home(), 'pida_vim_init.vim')
-        if not os.path.exists(script_path):
-            f = open(script_path, 'w')
-            f.write(VIMSCRIPT)
-            f.close()
+        self.script_path = os.path.join(self.boss.get_pida_home(), 'pida_vim_init.vim')
+        f = open(self.script_path, 'w')
+        f.write(VIMSCRIPT)
+        f.close()
 
     def init_vim_server(self):
         if self.started == False:
             self._com.stop_fetching_serverlist()
-            self._com.load_script(self.server,
-                os.path.join(self.boss.get_pida_home(), 'pida_vim_init.vim'))
             self.started = True
 
     def get_server_name(self):
@@ -173,11 +170,11 @@ class Vim(Service):
     def pre_start(self):
         """Start the editor"""
         self.started = False
+        self._create_initscript()
         self._cb = VimCallback(self)
         self._com = VimCom(self._cb)
         self._view = VimView(self)
         self.boss.cmd('window', 'add_view', paned='Editor', view=self._view)
-        self._create_initscript()
         self._newdocs = {}
         self._documents = {}
         self._current = None

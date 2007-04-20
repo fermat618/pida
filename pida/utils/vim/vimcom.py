@@ -681,32 +681,35 @@ let i = 1
         let i = i + 1
     endwhile
     return lis
-endfunction
+:endfunction
 :silent function! BreakPoint(l)
     call Async_event(v:servername.":set_breakpoint,".a:l)
-endfunction
+:endfunction
 :silent function! Yank_visual()
     y
     return @"
-endfunction
+:endfunction
 :silent function! Async_event(e)
-    let c = "call server2client('".expand('<client>')."', '".a:e."')"
+    let c = "silent call server2client('".expand('<client>')."', '".a:e."')"
     try
         exec c
     catch /.*/
         echo c
     endtry
-endfunction
+:endfunction
+:silent function! Pida_Started()
+    silent call Async_event(v:servername.":filesave,")
+    echo "PIDA connected"
+:endfunction
 :silent sign define break text=!B
 :silent augroup pida
-:set guioptions-=T
-:set guioptions-=m
+:silent set guioptions-=T
+:silent set guioptions-=m
 :silent au! pida
-:silent au pida BufEnter * call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%').",".bufnr('%'))
-:silent au pida BufWipeout * call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
-:silent au pida VimLeave * call Async_event(v:servername.":shutdown,")
-:silent au pida VimEnter * call Async_event(v:servername.":started,")
-:silent au pida BufWritePost * call Async_event(v:servername.":filesave,")
-:echo "PIDA connected"
+:silent au pida BufEnter * silent call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%').",".bufnr('%'))
+:silent au pida BufWipeout * silent call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
+:silent au pida VimLeave * silent call Async_event(v:servername.":shutdown,")
+:silent au pida VimEnter * silent call Pida_Started()
+:silent au pida BufWritePost * silent call Async_event(v:servername.":filesave,")
 '''
         
