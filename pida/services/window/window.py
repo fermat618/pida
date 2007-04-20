@@ -110,9 +110,6 @@ class Window(Service):
     options_config = WindowOptionsConfig
     actions_config = WindowActionsConfig
 
-    def pre_start(self):
-        self.window = self.boss.get_window()
-
     def start(self):
         # Explicitly add the permanent views
         for service in ['project', 'filemanager', 'buffer']:
