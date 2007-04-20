@@ -331,8 +331,9 @@ class Project(Service):
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
+        project_file = '%s.pidaproject' % os.path.basename(project_directory)
         for name in os.listdir(project_directory):
-            if name.endswith('.pidaproject'):
+            if name == project_file:
                 project = self.load_and_set_project(os.path.join(project_directory, name))
                 self._save_workspace_file()
                 return project
