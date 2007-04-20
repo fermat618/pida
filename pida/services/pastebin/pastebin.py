@@ -184,7 +184,7 @@ class PasteHistoryView(PidaView):
         self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
         self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
         self.__tree_selected = None
-        self.__history_tree.connect('selection-changed', self.cb_paste_clicked)
+        #self.__history_tree.connect('selection-changed', self.cb_paste_clicked)
         self.__history_tree.connect('double-click', self.cb_paste_db_clicked)
         #self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
         #self.__history_tree.connect('right-clicked', self.cb_paste_r_clicked)
@@ -241,13 +241,15 @@ class PasteHistoryView(PidaView):
         '''Callback function called when an item is selected in the TreeView'''
         self.__tree_selected = tree_item.value
 
-    def cb_paste_db_clicked(self,paste,tree_item):
-        '''Callback function called when an item is double clicked, and copy it
-        to the gnome/gtk clipboard'''
-        if self.__tree_selected != None:
+    def cb_paste_db_clicked(self, ol, item):
+        """
+        Callback function called when an item is double clicked, and copy it
+        to the gnome/gtk clipboard
+        """
+        if item is not None:
+            self.svc.boss.cmd('webbrowser', 'browse', url=item.url)
             # self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
             # aa: view the paste
-            self.service.call('view_paste', paste=self.__tree_selected)
 
     def cb_paste_m_clicked(self,paste,tree_item):
         '''Callback function called when an item is middle clicked, and copy it
