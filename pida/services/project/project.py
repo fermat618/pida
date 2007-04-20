@@ -114,6 +114,7 @@ class ProjectListView(PidaGladeView):
 
     def on_project_ol__double_click(self, ol, project):
         self.svc.boss.cmd('filemanager', 'browse', new_path=project.source_directory)
+        self.svc.boss.cmd('filemanager', 'present_view')
 
 class ProjectPropertiesView(PidaGladeView):
 
@@ -236,7 +237,7 @@ class ProjectActionsConfig(ActionsConfig):
         )
 
     def on_project_remove(self, action):
-            self.svc.remove_current_project()
+        self.svc.remove_current_project()
 
     def on_project_add(self, action):
         path = open_directory_dialog(
@@ -380,9 +381,13 @@ class Project(Service):
         self.remove_project(self._project)
 
     def remove_project(self, project):
-        self._projects.remove(project)
-        self.project_list.project_ol.remove(project, select=True)
-        self._save_workspace_file()
+        if self.boss.get_window().yesno_dlg(
+            'Are you sure you want to remove project "%s" from the workspace?' 
+            % project.name
+        ):
+            self._projects.remove(project)
+            self.project_list.project_ol.remove(project, select=True)
+            self._save_workspace_file()
 
     def get_default_controller(self):
         if self._project is not None:

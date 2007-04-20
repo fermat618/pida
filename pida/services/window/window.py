@@ -46,6 +46,9 @@ class WindowCommandsConfig(CommandsConfig):
     def detach_view(self, view, size):
         self.svc.window.detach_view(view, size)
 
+    def present_view(self, view):
+        self.svc.window.present_view(view)
+
 class WindowActionsConfig(ActionsConfig):
 
     def create_actions(self):

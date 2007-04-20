@@ -255,6 +255,10 @@ class FilemanagerCommandsConfig(CommandsConfig):
     def get_view(self):
         return self.svc.get_view()
 
+    def present_view(self):
+        return self.svc.boss.cmd('window', 'present_view',
+            view=self.svc.get_view())
+
 
 class FilemanagerFeatureConfig(FeaturesConfig):
 
