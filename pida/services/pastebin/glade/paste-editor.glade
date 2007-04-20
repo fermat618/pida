@@ -2,7 +2,6 @@
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
 <!--*- mode: xml -*-->
 <glade-interface>
-  <requires lib="kiwiwidgets"/>
   <widget class="GtkWindow" id="paste-editor">
     <property name="default_width">440</property>
     <property name="default_height">250</property>
