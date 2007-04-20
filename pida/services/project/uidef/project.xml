@@ -12,6 +12,9 @@
         <menuitem action="project_remove" name="project_remove" />
         <separator />
         <menuitem action="project_execute" name="project_execute" />
+        <menu action="project_execution_menu" name="project_execution_menu">
+            <menuitem action="project_execute" name="project_execute" />
+        </menu>
         <separator />
         <menuitem action="project_properties" name="project_properties" />
         </menu>

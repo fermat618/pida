@@ -222,6 +222,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_properties,
         )
 
+        self.create_action(
+            'project_execution_menu',
+            TYPE_NORMAL,
+            'Project Execution Configurations',
+            'Configurations with which to execute the project',
+            gtk.STOCK_EXECUTE,
+            self.on_project_execution_menu,
+        )
+
     def on_project_remove(self, action):
             self.svc.remove_current_project()
 
@@ -247,6 +256,11 @@ class ProjectActionsConfig(ActionsConfig):
 
     def on_project_properties(self, action):
         self.svc.show_properties(action.get_active())
+
+    def on_project_execution_menu(self, action):
+        menuitem = action.get_proxies()[0]
+        menuitem.remove_submenu()
+        menuitem.set_submenu(self.svc.create_menu())
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
@@ -341,6 +355,7 @@ class Project(Service):
         self.get_action('project_remove').set_sensitive(project is not None)
         self.get_action('project_execute').set_sensitive(project is not None)
         self.get_action('project_properties').set_sensitive(project is not None)
+        self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
             self.project_properties_view.set_project(project)
             self.emit('project_switched', project=project)
