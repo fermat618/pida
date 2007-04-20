@@ -87,23 +87,6 @@ class PidaWindow(Window):
     def _fix_paneds(self):
         self._paned = PidaPaned()
 
-    def _fix_docks(self):
-        self._dock_man = DockManager()
-        self.left_paned.pack1(self._dock_man.get_dock(DOCK_BUFFER))
-        self.left_paned.pack2(self._dock_man.get_dock(DOCK_PLUGIN))
-        self.right_paned.pack1(self._dock_man.get_dock(DOCK_EDITOR))
-        self.right_paned.pack2(self._dock_man.get_dock(DOCK_TERMINAL))
-        self.right_paned.show_all()
-        self.left_paned.show_all()
-
-    def _fix_books(self):
-        self._book_config = BookConfigurator(0)
-        for n in ['tl', 'tr', 'bl', 'br']:
-            book_name = '%s_book' % n
-            book = getattr(self, book_name)
-            self._book_config.configure_book(book_name, book)
-        self._book_man = BookManager(self._book_config)
-
     # Action group API
     def add_action_group(self, actiongroup):
         self._uim.add_action_group(actiongroup)
