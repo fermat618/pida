@@ -222,7 +222,6 @@ class FilemanagerView(PidaView):
         self.entries.clear()
 
         for lister in self.svc.features("file_lister"):
-            self.svc.log_warn("dealing with file lister %r"%lister)
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
     
