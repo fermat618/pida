@@ -78,6 +78,7 @@ class PidaWindow(Window):
     def _start_ui(self):
         self._menubar = self._uim.get_menubar()
         self._toolbar = self._uim.get_toolbar()
+        self._toolbar.set_style(gtk.TOOLBAR_ICONS)
         self.top_box.pack_start(self._menubar, expand=False)
         self.top_box.pack_start(self._toolbar, expand=False)
         self.top_box.show_all()
