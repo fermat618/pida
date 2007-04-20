@@ -86,6 +86,26 @@ class Mixin(object):
         self._model.set_sort_column_id(unused_sort_col_id, order)
 
 
+class PBC(Column):
+
+    pb = None
+
+    def __init__(self, *args, **kw):
+        self.pb = None
+        Column.__init__(self, use_stock=True, *args, **kw)
+
+    def cell_data_func(self, tree_column, renderer, model, treeiter,
+                               (column, renderer_prop)):
+        "To render the data of a cell renderer pixbuf"
+        row = model[treeiter]
+        data = column.get_attribute(row[COL_MODEL],
+                                    column.attribute, None)
+        if data is not None:
+            if self.pb is None:
+                self.pb = gtk.gdk.pixbuf_new_from_file(data)
+            pixbuf = self.pb
+            renderer.set_property(renderer_prop, pixbuf)
+            print pixbuf
 
 
 
