@@ -207,6 +207,7 @@ class ProjectController(object):
             commandargs=args,
             env=env,
             cwd=cwd,
+            title=self.config_section,
         )
 
     def execute_commandline(self, command, cwd, env):
@@ -214,6 +215,7 @@ class ProjectController(object):
             commandargs=['bash', '-c', command],
             env=env,
             cwd=cwd,
+            title=self.config_section,
         )
 
     def create_key_items(self):
