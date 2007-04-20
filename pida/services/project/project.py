@@ -198,7 +198,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execute',
             TYPE_MENUTOOL,
-            'Default Execute Controller',
+            'Execute Default',
             'Execute the project',
             gtk.STOCK_EXECUTE,
             self.on_project_execute,
@@ -396,7 +396,7 @@ class Project(Service):
                     controller.execute()
                 act = gtk.Action(controller.config_section,
                     controller.config_section,
-                    controller.execute.im_func.func_doc, '')
+                    controller.execute.im_func.func_doc, gtk.STOCK_EXECUTE)
                 act.connect('activate', _callback, controller)
                 mi = act.create_menu_item()
                 menu.add(mi)
