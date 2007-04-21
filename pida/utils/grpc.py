@@ -52,7 +52,6 @@ class Reactor(gobject.GObject):
         #os.unlink(self.socketfile)
 
     def call_local(self, host, port, command, args):
-        print host, port, command, args
         self.emit('received', host, port, command, args)
 
     def call_remote(self, host, port, command, args):

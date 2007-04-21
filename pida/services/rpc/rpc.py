@@ -40,7 +40,7 @@ class PidaDispatcher(LocalServerDispatcher):
         LocalServerDispatcher.__init__(self, 9124)
 
     def remote_open(self, file_name):
-        self.svc.boss.cmd('buffer', 'open', file_name=file_name)
+        self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
 
 # Service class
 class Rpc(Service):
