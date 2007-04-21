@@ -1,0 +1,13 @@
+name = pida-next
+[Run PIDA]
+controller = PYTHON_CONTROLLER
+default = True
+execute_file = pida.py
+[Generate API Documentation]
+controller = GENERIC_EXECUTION
+default = ""
+command = pydoctor -c tools/pida-pydoctor.cfg
+[Run Tests]
+controller = GENERIC_EXECUTION
+default = ""
+command = nosetests tests/
