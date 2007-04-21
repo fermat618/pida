@@ -20,13 +20,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# gobject import
-import gobject
 
-# system imports
-import os
-import socket
-import cPickle
+import os, socket, cPickle
+
+import gobject
 
 from kiwi.utils import gsignal
 
