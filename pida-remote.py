@@ -1,10 +1,8 @@
+#! /usr/bin/env python
 
 import os, sys
 
-sys.path.insert(0, os.getcwd())
-
 from pida.utils.grpc import LocalClientDispatcher
-
 from pida.utils.testing import refresh_gui
 
 class PidaClientDispatcher(LocalClientDispatcher):
