@@ -44,8 +44,12 @@ class Reactor(gobject.GObject):
          
     def start(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind((self.host, self.port))
-        gobject.io_add_watch(self.socket, gobject.IO_IN, self._on_socket_read)
+        try:
+            self.socket.bind((self.host, self.port))
+            gobject.io_add_watch(self.socket, gobject.IO_IN, self._on_socket_read)
+        except socket.error:
+            self.port += 1
+            self.start()
     
     def stop(self):
         pass
