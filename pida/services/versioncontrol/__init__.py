@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*- 
 
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2006 Ali Afshar aafshar@gmail.com
+# Copyright (c) 2007 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +19,12 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-__all__ = ["all_known"]
 
-from cmdbased import Monotone, Bazaar, SubVersion
 
-all_known = [ Monotone, Bazaar, SubVersion ]
+
+
+
+
+
+
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

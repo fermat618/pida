@@ -9,7 +9,7 @@ from bases import VCSBase, DVCSMixin
 from subprocess import Popen, PIPE
 from file import StatedPath as Path
 import re
-from os.path import abspath, dirname
+from os.path import abspath, dirname, normpath
 from os import listdir
 
 def action(fn):
@@ -180,6 +180,10 @@ class Monotone(DCommandBased):
     # monotone cant do paths and non-recursive
     _list_impl_cmd = "automate inventory".split()
 
+    @xaction(run=False, paths=False)
+    def _list_impl(self,**kw):
+        pass
+
     multiple_heads = True
     
     statemap = {
@@ -240,7 +244,7 @@ class Monotone(DCommandBased):
 
     def parse_list_item(self, item):
         state = self.statemap.get(item[:3], "none") 
-        return Path(item[8:].rstrip(), state)
+        return Path(normpath(item[8:].rstrip()), state, self.base_path)
 
 class Bazaar(DCommandBased):
     cmd = "bzr"
@@ -273,18 +277,20 @@ class Bazaar(DCommandBased):
         if newstate is not None:
             return None, newstate
         elif item.startswith("  "):
-            return item.lstrip(), actstate
+            return item.strip(), actstate
         
         print "XXX-item", item, actstate
         return None, actstate
+    
     def parse_list_item(self, item):
         if item.startswith("I"):
-            return Path(item[1:].lstrip(), 'ignored')
+            return Path(item[1:].strip(), 'ignored', self.base_path)
         else:
-            fn = item[1:].lstrip()
+            fn = item[1:].strip()
             return Path(
                 fn, 
-                self._cache.get(fn, 'normal'))
+                self._cache.get(fn, 'normal'),
+                self.base_path)
 
       
 
@@ -313,4 +319,4 @@ class SubVersion(CommandBased):
         match = self.state_line_re.findall(item)[0]
         file = match[3]
         state = match[0]
-        return Path(file, self.state_map[state]) 
+        return Path(file, self.state_map[state], self.base_path) 

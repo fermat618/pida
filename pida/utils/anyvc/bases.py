@@ -32,6 +32,7 @@ class VCSBase(object):
     def __init__(self, path):
         self._cache = None
         self.setup()
+        self.path = path
 
     def parse_list_item(self, item):
         raise NotImplementedError
