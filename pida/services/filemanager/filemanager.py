@@ -54,7 +54,8 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         )
 
 
-
+# TODO: remove the awful property names
+# TODO: use cgi.escape instead of ''.replace
 class FileEntry(object):
     """The model for file entries"""
 
@@ -133,7 +134,8 @@ class FilemanagerView(PidaView):
         self.file_list.set_headers_visible(False)
         self.file_list.set_columns(self._columns);
         #XXX: real file
-        self.file_list.connect('row-activated', self.act_double_click)
+        self.file_list.connect('row-activated', self.on_file_activated)
+        self.file_list.connect('right-click', self.on_file_right_click)
         self.entries = {}
         self.update_to_path(self.svc.path)
         self.file_list.show()
@@ -225,13 +227,17 @@ class FilemanagerView(PidaView):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
     
-    def act_double_click(self, rowitem, fileentry):
+    def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
                  path.join(self.path, fileentry._name))
         if path.isdir(target):
             self.svc.browse(target)
         else:
             self.svc.boss.cmd('buffer', 'open_file', file_name=target)
+
+    def on_file_right_click(self, ol, item, event=None):
+        self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
+                          event=event) 
 
     def act_go_up(self, action):
         self.svc.go_up()
