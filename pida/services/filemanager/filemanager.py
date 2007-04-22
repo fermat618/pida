@@ -237,7 +237,7 @@ class FilemanagerView(PidaView):
 
     def on_file_right_click(self, ol, item, event=None):
         self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
-                          event=event) 
+                          file_name=item.path, event=event) 
 
     def act_go_up(self, action):
         self.svc.go_up()
