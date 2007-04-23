@@ -44,6 +44,10 @@ class PidaOptionsView(PidaGladeView):
 
     gladefile = 'options-editor'
 
+    label_text = 'Preferences'
+
+    icon_name = 'gnome-settings'
+
     def create_ui(self):
         self._services = []
         for svc in self.svc.boss.get_services():
