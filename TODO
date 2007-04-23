@@ -10,7 +10,7 @@ Absolute
     - Python Code Browser
     - Python debugger
     - Scripts
-* Directory context menu
+* Shell to use config from $SHELL environment variable
 
 In progress
 -----------
