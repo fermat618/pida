@@ -62,7 +62,10 @@ class PidaOptionsView(PidaGladeView):
         
     def _create_page(self, svc):
         mainvb = gtk.VBox()
-        label = gtk.Label(svc.get_label())
+        mainvb.set_border_width(6)
+        label = gtk.Label()
+        label.set_markup('<big><b>%s</b></big>' % svc.get_label())
+        label.set_alignment(0, 0.5)
         mainvb.pack_start(label, expand=False)
         optvb = gtk.VBox()
         optsw = gtk.ScrolledWindow()
