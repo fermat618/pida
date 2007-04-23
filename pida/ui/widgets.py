@@ -17,7 +17,7 @@ from kiwi.utils import gsignal
 from kiwi.ui.objectlist import ObjectList, Column
 
 from pida.core.options import OTypeBoolean, OTypeString, OTypeInteger, \
-    OTypeStringList, OTypeFile
+    OTypeStringList, OTypeFile, OTypeFont
 
 
 class CleverProxyColorButton(ProxyColorButton):
