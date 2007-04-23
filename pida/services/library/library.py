@@ -73,12 +73,21 @@ class LibraryView(PidaGladeView):
             task = AsyncTask(self.load_book, self.book_loaded)
             task.start()
 
+    def on_contents_tree__double_click(self, ot, item):
+        self.svc.boss.cmd('webbrowser', 'browse', url=item.path)
+
     def load_book(self):
         item = self.books_list.get_selected()
         return item.load()
         
     def book_loaded(self, bookmarks):
-        print bookmarks
+        self.contents_tree.clear()
+        task = GeneratorTask(bookmarks.get_subs, self.add_bookmark)
+        task.start()
+        self.view_book.set_current_page(1)
+
+    def add_bookmark(self, bookmark, parent):
+        self.contents_tree.append(parent, bookmark)
 
 
 class LibraryActions(ActionsConfig):
@@ -236,6 +245,7 @@ class BookMark(object):
             self.name = node.attributes['name'].value
         except:
             self.name = None
+        self.title = self.name
         try:
             self.path = os.path.join(root_path, node.attributes['link'].value)
         except:
@@ -248,6 +258,22 @@ class BookMark(object):
 
     def _get_child_subs(self, node):
         return [n for n in node.childNodes if n.nodeType == 1]
+
+    def get_subs(self, parent=None):
+        if parent is None:
+            aparent = self
+        else:
+            aparent = parent
+        for sub in aparent.subs:
+            yield sub, parent
+            for csub in self.get_subs(sub):
+                yield csub
+                
+
+
+    def __iter__(self):
+            yield None, sub
+        
 
 
 # Service class

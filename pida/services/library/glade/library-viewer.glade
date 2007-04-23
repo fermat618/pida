@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Mon Apr 23 16:49:58 2007 by ali@rogue-->
+<!--Generated with glade3 3.2.0 on Mon Apr 23 18:48:59 2007 by ali@book-->
 <glade-interface>
   <requires lib="kiwiwidgets"/>
   <widget class="GtkWindow" id="library-viewer">
