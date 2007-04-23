@@ -72,7 +72,6 @@ class Event(object):
 
     def register (self, event_name, callback):
         assert self.has_event(event_name)
-        print 'registering', event_name, callback
         self.__events[event_name].append(callback)
 
     def unregister (self, event_name, callback):
