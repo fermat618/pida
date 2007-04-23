@@ -2,7 +2,7 @@
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
 <!--Generated with glade3 3.2.0 on Mon Apr 23 13:01:24 2007 by ali@rogue-->
 <glade-interface>
-  <requires lib="kiwiwidgets"/>
+
   <widget class="GtkWindow" id="options-editor">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
