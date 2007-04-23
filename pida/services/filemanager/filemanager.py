@@ -224,7 +224,11 @@ class FilemanagerView(PidaView):
     def show_or_hide(self, entry):
         from operator import and_
         def check(checker):
-            return checker(name=entry._name, path=entry._path)
+            return checker(
+                    name=entry._name, 
+                    path=entry._path,
+                    state=entry.state,
+                    )
         show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
         if show:
             if entry in self.file_list:
@@ -420,7 +424,7 @@ class Filemanager(Service):
             dir = "/" #XXX: unportable, what about non-unix
         self.browse(dir)
 
-    def check_hidden_regex(self, name, path):
+    def check_hidden_regex(self, name, path, state):
         _re = self.opt('hide_regex')
         if not re:
             return True
