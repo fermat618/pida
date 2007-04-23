@@ -173,10 +173,14 @@ class BrowserView(PidaView):
         else:
             self.__browser.stop()
 
+
 class WebCommands(CommandsConfig):
 
     def browse(self, url):
         self.svc.browse(url)
+
+    def get_web_browser(self):
+        return BrowserView
 
 # Service class
 class Webbrowser(Service):

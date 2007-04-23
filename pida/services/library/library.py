@@ -74,7 +74,8 @@ class LibraryView(PidaGladeView):
             task.start()
 
     def on_contents_tree__double_click(self, ot, item):
-        self.svc.boss.cmd('webbrowser', 'browse', url=item.path)
+        #self.svc.boss.cmd('webbrowser', 'browse', url=item.path)
+        self.svc.browse_file(item.path)
 
     def load_book(self):
         item = self.books_list.get_selected()
@@ -103,12 +104,27 @@ class LibraryActions(ActionsConfig):
             '<Shift><Control>r',
         )
 
+        self.create_action(
+            'show_browser',
+            TYPE_TOGGLE,
+            'Documentation Browser',
+            'Documentation Browser',
+            '',
+            self.on_show_browser,
+            'NOACCEL',
+        )
+
     def on_show_library(self, action):
         if action.get_active():
             self.svc.show_library()
         else:
             self.svc.hide_library()
 
+    def on_show_browser(self, action):
+        if action.get_active():
+            self.svc.show_browser()
+        else:
+            self.svc.hide_browser()
 
 def fetch_books():
     dirs = ['/usr/share/gtk-doc/html',
@@ -269,8 +285,6 @@ class BookMark(object):
             for csub in self.get_subs(sub):
                 yield csub
                 
-
-
     def __iter__(self):
             yield None, sub
         
@@ -284,6 +298,10 @@ class Library(Service):
 
     def start(self):
         self._view = LibraryView(self)
+        bclass = self.boss.cmd('webbrowser', 'get_web_browser')
+        self._browser = bclass(self)
+        self._browser.label_text = 'Documentation'
+        
         self._has_loaded = False
 
     def show_library(self):
@@ -294,6 +312,22 @@ class Library(Service):
 
     def hide_library(self):
         self.boss.cmd('window', 'hide_view', view=self._view)
+
+    def show_browser(self):
+        self.boss.cmd('window', 'add_view', paned='Terminal',
+                      view=self._browser)
+
+    def hide_browser(self):
+        self.boss.cmd('window', 'remove_view', view=self._browser)
+
+    def ensure_browser_visible(self):
+        if not self.get_action('show_browser').get_active():
+            self.get_action('show_browser').set_active(True)
+        self.boss.cmd('window', 'present_view', view=self._browser)
+
+    def browse_file(self, url):
+        self.ensure_browser_visible()
+        self._browser.fetch(url)
 
 # Required Service attribute for service loading
 Service = Library

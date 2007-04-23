@@ -19,6 +19,7 @@
         <menu name="ViewMenu" action="ViewMenu">
             <placeholder name="tools">
             <menuitem action="show_library" name="show_library" />
+            <menuitem action="show_browser" name="show_browser" />
             </placeholder>
             <separator />
             <placeholder name="panes"/>
