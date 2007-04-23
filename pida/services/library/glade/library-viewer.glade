@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Mon Apr 23 18:48:59 2007 by ali@book-->
+<!--Generated with glade3 3.2.0 on Mon Apr 23 22:46:36 2007 by ali@book-->
 <glade-interface>
-
+  <requires lib="kiwiwidgets"/>
   <widget class="GtkWindow" id="library-viewer">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
@@ -104,6 +104,7 @@
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <property name="border_width">6</property>
+            <property name="layout_style">GTK_BUTTONBOX_END</property>
             <child>
               <placeholder/>
             </child>
