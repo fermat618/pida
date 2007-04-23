@@ -624,10 +624,19 @@ class communication_window(gtk.Window):
     def quit(self, server):
         self.send_ex(server, 'q!')
 
-    def show_sign(self, server, index, filename, line):
-        # vim out by one everywhere!
-        self.send_ex(server, 'sign place %s line=%s name=break file=%s' %
-                             (index + 1, line + 1, filename))
+    def define_sign(self, server, name, icon, linehl, text, texthl):
+        self.send_ex(server, 'sign define %s icon=%s linehl=%s text=%s texthl=%s '%
+                             (name, icon, linehl, text, texthl))
+
+    def undefine_sign(self, server, name):
+        self.send_ex(server, 'sign undefine %s' % name)
+   
+    def show_sign(self, server, index, type, filename, line):
+        self.send_ex(server, 'sign place %s line=%s name=%s file=%s' %
+                             (index + 1, line, type, filename))
+   
+    def hide_sign(self, server, index, filename):
+        self.send_ex(server, 'sign unplace %s' % (index + 1))
    
     def cb_notify(self, *a):
         win, ev =  a

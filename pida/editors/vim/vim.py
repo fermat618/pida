@@ -128,26 +128,18 @@ class VimCallback(object):
             self.svc.init_vim_server()
 
     def vim_bufferchange(self, server, cwd, file_name, bufnum):
-        if server == self.svc.server:
-            if file_name:
-                if os.path.abspath(file_name) != file_name:
-                    file_name = os.path.join(cwd, file_name)
-                self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
+        if file_name:
+            if os.path.abspath(file_name) != file_name:
+                file_name = os.path.join(cwd, file_name)
+            self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
 
     def vim_bufferunload(self, server, file_name):
-        if server == self.svc.server:
-            if file_name:
-                self.svc.remove_file(file_name)
-                self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
+        if file_name:
+            self.svc.remove_file(file_name)
+            self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
     def vim_filesave(self, server, file_name):
-        if server == self.svc.server:
-            self.svc.boss.cmd('buffer', 'current_file_saved')
-
-    def vim_shutdown(self, server, *args):
-        if server == self.svc.server:
-            self.svc.boss.stop(force=True)
-        
+        self.svc.boss.cmd('buffer', 'current_file_saved')
 
 
 # Service class
@@ -295,9 +287,65 @@ class Vim(Service):
     def set_revert_sensitive(sensitive):
         """Set the revert sensitivity"""
 
-    def stop(self):
-        self._com.quit(self.server)
+    def define_sign_type(self, name, icon, linehl, text, texthl):
+        self._com.define_sign(self.server, name, icon, linehl, text, texthl)
 
+    def undefine_sign_type(self, name):
+        self._com.undefine_sign(self.server, name)
+
+    __index = []
+    sign_list = {}
+    def _add_sign(self, type, filename, line):
+#        if line > self.
+#       choose the first free number
+        if self.__index == []:
+            # init: __index[0] = 1
+            index = 1
+            self.__index = [index]
+        else:
+            for i in range(len(self.__index)):
+                # if self.index[i] == -1 => self.index[i] = self.index[i-1]+1
+                if self.__index[i] == -1:
+                    # first value : index[0] = 1
+                    if i == 0:
+                        index = 1
+                    else:
+                        index = self.__index[i-1]+1
+                    self.__index[i] = index
+                    break
+            else:
+                # otherwise append
+                self.__index.append(self.__index[-1]+1)
+                index = self.__index[-1]
+
+        if not filename in self.sign_list:
+            self.sign_list[filename] = {line:(index,type)}
+        else:
+            if not line in self.sign_list[filename]:
+                self.sign_list[filename][line] = (index,type)
+            else:
+                self.sign_list[filename][line].append((index,type))
+        return index
+        
+    def _del_sign(self, filename, line):
+        if filename in self.sign_list:
+            if line in self.sign_list[filename]:
+                tmp = self.sign_list[filename][line][0]
+                self.__index[tmp-1] = -1
+                del(self.sign_list[filename][line])
+                return tmp
+        raise "error: you shouldn't remove inexisting signs !"
+
+    def show_sign(self, type, filename, line):
+        index=self._add_sign(type,filename,line)
+        self._com.show_sign(self.server, index, type, filename, line)
+   
+    def hide_sign(self, filename, line):
+        index=self._del_sign(filename, line)
+        self._com.hide_sign(self.server, index, filename)
+   
+#>>> boss.editor.define_sign("foo","","",">>","Search")
+#>>> boss.editor.show_sign("foo","/tmp/foo",5)
 
 # Required Service attribute for service loading
 Service = Vim
