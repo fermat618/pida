@@ -110,12 +110,27 @@ class CommanderActionsConfig(ActionsConfig):
             '<Shift><Control>T',
         )
 
+        self.create_action(
+            'terminal-for-dir',
+            TYPE_NORMAL,
+            'Shell in directory',
+            'Open a shell prompt in the directory',
+            'terminal',
+            self.on_terminal_for_dir,
+            '',
+        )
+
     def execute_shell(self, action):
         self.svc.cmd('execute_shell')
 
     def on_terminal_for_file(self, action):
         cwd = os.path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('execute_shell', cwd=cwd)
+
+    def on_terminal_for_dir(self, action):
+        cwd = action.contexts_kw['dir_name']
+        self.svc.cmd('execute_shell', cwd=cwd)
+        
 
 
 class CommanderCommandsConfig(CommandsConfig):
@@ -132,6 +147,8 @@ class CommanderFeaturesConfig(FeaturesConfig):
     def subscribe_foreign_features(self):
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
+        self.subscribe_foreign_feature('contexts', 'dir-menu',
+            (self.svc.get_action_group(), 'commander-dir-menu.xml'))
 
 class TerminalView(PidaView):
 

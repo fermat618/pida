@@ -3,7 +3,7 @@
 <placeholder name="1"/>
 <separator/>
 <placeholder name="2">
-<menuitem action="terminal-for-file" name="terminal-for-file"/>
+<menuitem action="terminal-for-dir" name="terminal-for-dir"/>
 </placeholder>
 <separator/>
 <placeholder name="3"/>

@@ -1,10 +1,10 @@
 <ui>
 <popup>
-<placeholder name="1"/>
-<separator/>
-<placeholder name="2">
+<placeholder name="1">
 <menuitem action="browse-for-dir" name="browse-for-dir"/>
 </placeholder>
+<separator/>
+<placeholder name="2"/>
 <separator/>
 <placeholder name="3"/>
 <separator/>
