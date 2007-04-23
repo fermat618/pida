@@ -51,26 +51,31 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
                 self.svc.ignored_file_checker
                 )
 
+class VersioncontrolCommandsConfig(CommandsConfig):
+    
+    def get_workdirmanager(self,path):
+        return self.svc.get_workdir_manager_for_path(path)
 
 # Service class
 class Versioncontrol(Service):
     """The Versioncontrol service"""
 
     features_config = VersioncontrolFeaturesConfig
-
+    commands_config = VersioncontrolCommandsConfig
     
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
-    
-    def list_files(self, path):
-        workdir = None
+   
+    def get_workdir_manager_for_path(self, path):
         for vcm in self.features("workdir-manager"):
             try:
-                workdir = vcm(path)
-                break
+                return vcm(path) #TODO: this shouldnt need an exception
             except ValueError:
-                continue
-        
+                pass
+
+    def list_files(self, path):
+        workdir = self.get_workdir_manager_for_path(path)
+
         if workdir is not None: 
             for item in workdir.list(paths=[path]):
                 abspath = item.abspath
