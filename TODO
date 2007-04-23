@@ -1,0 +1,20 @@
+Absolute
+--------
+
+* Port the remaining services
+    - Appcontroller
+    - Configmanager
+    - Bookmarkmanager
+    - Library
+    - Man
+    - Python Code Browser
+    - Python debugger
+    - Scripts
+* Directory context menu
+
+In progress
+-----------
+
+* Anyvc (Ronny)
+* Grep (Anders)
+
