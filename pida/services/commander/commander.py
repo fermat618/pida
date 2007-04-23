@@ -36,6 +36,12 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
 
+def get_default_system_shell():
+    if 'SHELL' in os.environ:
+        return os.environ['SHELL']
+    else:
+        return 'bash'
+
 class CommanderOptionsConfig(OptionsConfig):
 
     def create_options(self):
@@ -85,6 +91,14 @@ class CommanderOptionsConfig(OptionsConfig):
             OTypeInteger,
             100,
             'The number of lines in the terminal scrollback buffer',
+        )
+
+        self.create_option(
+            'shell_command',
+            'The shell command for shells',
+            OTypeString,
+            get_default_system_shell(),
+            'The command that will be used for shells'
         )
 
 class CommanderActionsConfig(ActionsConfig):
@@ -140,7 +154,7 @@ class CommanderCommandsConfig(CommandsConfig):
         self.svc.execute(commandargs, env, cwd, title, icon)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
-        self.svc.execute(['bash'], env=env, cwd=cwd, title=title, icon=None)
+        self.svc.execute([self.svc.opt('shell_command')], env=env, cwd=cwd, title=title, icon=None)
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
