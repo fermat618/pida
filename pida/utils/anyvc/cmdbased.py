@@ -299,7 +299,7 @@ class SubVersion(CommandBased):
     cmd = "svn"
     detect_subdir = ".svn"
     
-    _list_impl_cmd = ["st", "-v", "--no-ignore"]
+    _list_impl_cmd = ["st", "--no-ignore"]
     
     non_recursive_param = ["-N"]
 
@@ -314,10 +314,7 @@ class SubVersion(CommandBased):
             "C": 'conflict',
             'X': 'external',
             } 
-    state_line_re = re.compile(r"^(.)....\s+(:?\d+\s+(\d+)\s+[\w.]+\s+)?(.*?)$")
-    
     def parse_list_item(self, item):
-        match = self.state_line_re.findall(item)[0]
-        file = match[3]
-        state = match[0]
+        state = item[0]
+        file = item[7:].strip()
         return Path(file, self.state_map[state], self.base_path) 
