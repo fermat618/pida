@@ -4,6 +4,7 @@
         <menu name="FileMenu" action="FileMenu">
             <placeholder name="fm1" />
             <placeholder name="fm2" />
+            <separator />
             <placeholder name="fm3">
                 <menuitem name="quit_pida" action="quit_pida" />
             </placeholder>
