@@ -35,20 +35,56 @@ class OptionsManager(object):
         return option.set(self._client, value)
 
 
-class OTypeString(object):
+class OTypeBase(object):
+
+    @classmethod
+    def _getter(cls, client):
+        return getattr(client, 'get_%s' % cls.gconf_name)
+    
+    @classmethod
+    def _setter(cls, client):
+        return getattr(client, 'set_%s' % cls.gconf_name)
+
+    @classmethod
+    def get(cls, client, key):
+        return cls._getter(client)(key)
+        
+    @classmethod
+    def set(cls, client, key, value):
+        return cls._setter(client)(key, value)
+        
+    
+
+class OTypeString(OTypeBase):
     """A string configuration type"""
 
     gconf_name = 'string'
 
-class OTypeBoolean(object):
+
+class OTypeBoolean(OTypeBase):
     """A Boolean configuration type"""
 
     gconf_name = 'bool'
 
-class OTypeInteger(object):
+
+class OTypeInteger(OTypeBase):
     """An integer configuration type"""
 
     gconf_name = 'int'
+
+
+class OTypeStringList(OTypeBase):
+    """A list of strings configuration type"""
+
+    gconf_name = 'list'
+
+    @classmethod
+    def get(cls, client, key):
+        return cls._getter(client)(key, gconf.VALUE_STRING)
+        
+    @classmethod
+    def set(cls, client, key, value):
+        return cls._setter(client)(key, gconf.VALUE_STRING, value)
     
 
 class OptionItem(object):
@@ -67,10 +103,10 @@ class OptionItem(object):
         return '/apps/pida/%s/%s' % (self.group, self.name)
 
     def get(self, client):
-        return self._getter(client)(self.key)
+        return self.rtype.get(client, self.key)
         
     def set(self, client, value):
-        return self._setter(client)(self.key, value)
+        return self.rtype.set(client, self.key, value)
 
     def get_value(self):
         return manager.get_value(self)
@@ -80,12 +116,6 @@ class OptionItem(object):
 
     value = property(get_value, set_value)
 
-    #TODO move this to the option type
-    def _getter(self, client):
-        return getattr(client, 'get_%s' % self.rtype.gconf_name)
-
-    def _setter(self, client):
-        return getattr(client, 'set_%s' % self.rtype.gconf_name)
 
 manager = OptionsManager()
 
