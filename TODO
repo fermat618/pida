@@ -2,12 +2,7 @@ Absolute
 --------
 
 * Port the remaining services
-    - Appcontroller
-    - Bookmarkmanager
-    - Library
-    - Man
     - Python Code Browser
-    - Python debugger
     - Scripts
 
 In progress
@@ -15,4 +10,7 @@ In progress
 
 * Anyvc (Ronny)
 * Grep (Anders)
+* Debugger (Bernard)
+* Bookmarkmanager (Tito)
+* Man (Tito)
 
