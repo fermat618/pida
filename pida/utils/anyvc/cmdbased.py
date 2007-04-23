@@ -312,6 +312,7 @@ class SubVersion(CommandBased):
             "M": 'modified',
             "D": 'removed',
             "C": 'conflict',
+            'X': 'external',
             } 
     state_line_re = re.compile(r"^(.)....\s+(:?\d+\s+(\d+)\s+[\w.]+\s+)?(.*?)$")
     

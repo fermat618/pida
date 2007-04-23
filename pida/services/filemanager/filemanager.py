@@ -56,14 +56,24 @@ state_text = dict(
         removed='D',
         missing='!',
         max='+',
+        external='>',
         )
-
 
 state_style = dict( # tuples of (color, is_bold, is_italic)
         hidden=('lightgrey', False, True),
-        none=('darkgrey', False, True),
+        ignored=('lightgrey', False, True),
+        #TODO: better handling of normal directories
+        none=('green', False, True), 
+        normal=('black', False, False),
+        error=('red', True, True),
+        empty=('black', False, True),
+        modified=('red', True, False),
+        conflict=('red', True, True),
+        removed=('#c06060', True, True),
+        missing=('#00c0c0', True, False),
         new=('blue', True, False),
-        modified=('red', True, False)
+        max=('#c0c000', False, False),
+        external=('darkyellow', True, False),
         )
 
 
@@ -72,7 +82,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
 class FileEntry(object):
     """The model for file entries"""
 
-    _state = "none"
+    _state = "normal"
     _icon = None
 
     def __init__(self, name, path_, manager):
@@ -206,7 +216,7 @@ class FilemanagerView(PidaView):
         if basepath!=self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
-        if state != "none":
+        if state != "normal":
             entry._state = state
 
         self.show_or_hide(entry)
@@ -419,7 +429,7 @@ class Filemanager(Service):
 
     def file_lister(self, basepath):
         for name in listdir(basepath):
-            yield name, basepath, "none"
+            yield name, basepath, "normal"
 
     def rename_file(self, old, new, basepath):
         pass
