@@ -46,6 +46,10 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
                 "filemanager", "file_lister",
                 self.svc.list_files
                 )
+        self.subscribe_foreign_feature(
+                "filemanager", "file_hidden_check",
+                self.svc.ignored_file_checker
+                )
 
 
 # Service class
@@ -54,6 +58,10 @@ class Versioncontrol(Service):
 
     features_config = VersioncontrolFeaturesConfig
 
+    
+    def ignored_file_checker(self, path, name, state):
+        return not ( state == "hidden" or state == "ignored")
+    
     def list_files(self, path):
         workdir = None
         for vcm in self.features("workdir-manager"):
