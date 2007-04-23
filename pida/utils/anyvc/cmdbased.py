@@ -318,3 +318,26 @@ class SubVersion(CommandBased):
         state = item[0]
         file = item[7:].strip()
         return Path(file, self.state_map[state], self.base_path) 
+
+class Mercurial(DCommandBased):
+    cmd = "hg"
+    detect_subdir = ".hg"
+   
+    non_recursive_param = [] # TODO: figure how to be non-recursive with hg
+    _list_impl_cmd = ["status", "-A"]
+
+    state_map = { 
+            "?": 'none',
+            "A": 'new',
+            " ": 'normal',
+            "C": 'normal', #Clean
+            "!": 'missing',
+            "I": 'ignored',
+            "M": 'modified',
+            "R": 'removed',
+            } 
+
+    def parse_list_item(self, item):
+        state = self.state_map[item[0]]
+        file = item[2:].strip()
+        return Path(file, state, self.base_path)
