@@ -122,6 +122,7 @@ def get_widget_for_type(rtype_instance):
     #    return CleverProxyColorButton()
     elif rtype is OTypeInteger:
         w = ProxySpinButton()
+        w.set_adjustment(gtk.Adjustment(0, 0, 10000, 1))
         return w
     #elif rtype.__name__ is 'intrange':
     #    adjvals = rtype.lower, rtype.upper, rtype.step
