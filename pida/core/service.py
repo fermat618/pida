@@ -44,7 +44,7 @@ class Service(object):
         return self.servicename
 
     def get_label(self):
-        return self.label or self.get_name()
+        return self.label or self.get_name().capitalize()
 
     def pre_start(self):
         """Override to pre start up"""
@@ -56,23 +56,24 @@ class Service(object):
     # Options
 
     def _register_options_config(self, config_cls):
+        instance = config_cls(self)
         self.reg.register_plugin(
-            instance=config_cls(self),
+            instance=instance,
             singletons=(IOptions,)
         )
 
     # Public Options API
-    def _get_options(self):
+    def get_options(self):
         return self.reg.get_singleton(IOptions)
 
     def get_option(self, name):
-        return self._get_options().get_option(name)
+        return self.get_options().get_option(name)
 
     def opt(self, name):
-        return self._get_options().get_value(name)
+        return self.get_options().get_value(name)
 
     def set_opt(self, name, value):
-        return self._get_options().set_value(name, value)
+        return self.get_options().set_value(name, value)
 
     ##########
     # Commands

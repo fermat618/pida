@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 
+import gtk
 
 
 # PIDA Imports
@@ -32,11 +33,77 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaGladeView
+from pida.ui.widgets import get_widget_for_type
 
+from kiwi import ValueUnset
+
+def service_sort_func(s1, s2):
+    return cmp(s1.get_label(), s2.get_label())
 
 class PidaOptionsView(PidaGladeView):
 
     gladefile = 'options-editor'
+
+    def create_ui(self):
+        self._services = []
+        for svc in self.svc.boss.get_services():
+            if len(svc.get_options()):
+                self._services.append(svc)
+        self._services.sort(service_sort_func)
+        self._services_display = []
+        for svc in self._services:
+            self._add_service(svc)
+        self.service_combo.prefill(self._services_display)
+        self.options_book.show_all()
+
+    def _add_service(self, svc):
+        self._services_display.append((svc.get_label(), svc))
+        self.options_book.append_page(self._create_page(svc))
+        
+    def _create_page(self, svc):
+        mainvb = gtk.VBox()
+        label = gtk.Label(svc.get_label())
+        mainvb.pack_start(label, expand=False)
+        optvb = gtk.VBox()
+        optsw = gtk.ScrolledWindow()
+        optsw.add_with_viewport(optvb)
+        mainvb.pack_start(optsw)
+        labelsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        widgetsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        for opt in svc.get_options().iter_options():
+            vb = gtk.VBox(spacing=6) 
+            optvb.pack_start(vb, expand=False)
+            hb = gtk.HBox(spacing=6)
+            vb.pack_start(hb)
+            optlabel = gtk.Label()
+            optlabel.set_text(opt.label)
+            optlabel.set_alignment(1, 0.5)
+            labelsizer.add_widget(optlabel)
+            hb.pack_start(optlabel, expand=False)
+            optwidget = get_widget_for_type(opt.rtype)
+            widgetsizer.add_widget(optwidget)
+            hb.pack_start(optwidget, expand=False)
+            optwidget.update(opt.get_value())
+            optwidget.connect('content-changed', self._on_option_changed, opt)
+            opt.add_notify(self._on_option_changed_elsewhere, optwidget)
+        return mainvb
+
+    def on_service_combo__content_changed(self, cmb):
+        svc = self.service_combo.read()
+        pagenum = self._services.index(svc)
+        self.options_book.set_current_page(pagenum)
+
+    def _on_option_changed(self, widget, option):
+        widgval = widget.read()
+        optval = option.get_value()
+        if widgval == ValueUnset:
+            widgval = ''
+        if widgval != optval:
+            option.set_value(widgval)
+
+    def _on_option_changed_elsewhere(self, client, id, entry, (option, widget)):
+        widget.update(option.get_value())
+            
 
 
 class OptionsActions(ActionsConfig):
@@ -49,7 +116,7 @@ class OptionsActions(ActionsConfig):
             'Edit the PIDA preferences',
             'properties',
             self.on_show_options,
-            '<Shift><Control>#'
+            '<Shift><Control>asciitilde'
         )
 
     def on_show_options(self, action):
@@ -64,7 +131,7 @@ class Optionsmanager(Service):
 
     actions_config = OptionsActions
 
-    def pre_start(self):
+    def start(self):
         self._view = PidaOptionsView(self)
 
     def show_options(self):

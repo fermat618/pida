@@ -26,7 +26,13 @@ class OptionsManager(object):
         if val is None:
             option.set(self._client, option.default)
         if option.callback is not None:
-            self._client.notify_add(option.key, option.callback, option)
+            self.add_notify(option, option.callback)
+
+    def add_notify(self, option, callback, *args):
+        args = tuple([option] + list(args))
+        if len(args) == 1:
+            args = args[0]
+        self._client.notify_add(option.key, callback, args)
 
     def get_value(self, option):
         return option.get(self._client)
@@ -110,6 +116,9 @@ class OptionItem(object):
 
     value = property(get_value, set_value)
 
+    def add_notify(self, callback, *args):
+        manager.add_notify(self, callback, *args)
+
 
 manager = OptionsManager()
 
@@ -151,7 +160,7 @@ class OptionsConfig(BaseConfig):
     def __len__(self):
         return len(self._options)
 
-    def __iter__(self):
+    def iter_options(self):
         return self._options.values()
 
 

@@ -169,7 +169,7 @@ class TerminalView(PidaView):
     icon_name = 'terminal'
 
     def create_ui(self):
-        self._term = PidaTerminal(**self.svc.get_options())
+        self._term = PidaTerminal(**self.svc.get_terminal_options())
         self._term.connect('child-exited', self.on_exited)
         self.add_main_widget(self._term)
         self._term.show()
@@ -204,7 +204,7 @@ class Commander(Service):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
 
-    def get_options(self):
+    def get_terminal_options(self):
         options = dict(
             font_from_string=self.opt('font'),
             background_transparent=self.opt('transparent'),
