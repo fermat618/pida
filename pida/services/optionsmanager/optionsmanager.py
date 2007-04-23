@@ -31,10 +31,47 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.ui.views import PidaGladeView
+
+
+class PidaOptionsView(PidaGladeView):
+
+    gladefile = 'options-editor'
+
+
+class OptionsActions(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'show_options',
+            TYPE_TOGGLE,
+            'Edit Preferences',
+            'Edit the PIDA preferences',
+            'properties',
+            self.on_show_options,
+            '<Shift><Control>#'
+        )
+
+    def on_show_options(self, action):
+        if action.get_active():
+            self.svc.show_options()
+        else:
+            self.svc.hide_options()
 
 # Service class
 class Optionsmanager(Service):
     """Describe your Service Here""" 
+
+    actions_config = OptionsActions
+
+    def pre_start(self):
+        self._view = PidaOptionsView(self)
+
+    def show_options(self):
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+
+    def hide_options(self):
+        self.boss.cmd('window', 'remove_view', view=self._view)
 
 # Required Service attribute for service loading
 Service = Optionsmanager

@@ -1,0 +1,58 @@
+<ui>
+    <menubar>
+
+        <menu name="FileMenu" action="FileMenu">
+        </menu>
+    
+        <menu name="EditMenu" action="EditMenu">
+            <placeholder name="undo" />
+            <separator />
+            <placeholder name="cut" />
+            <separator />
+            <placeholder name="find" />
+            <separator />
+            <placeholder name="prefs">
+            <menuitem action="show_options" name="show_options" />
+            </placeholder>
+        </menu>
+        
+        <menu name="ProjectMenu" action="ProjectMenu">
+        </menu>
+        
+        <menu name="LanguageMenu" action="LanguageMenu">
+        </menu>
+        
+        <menu name="ToolsMenu" action="ToolsMenu">
+        </menu>
+        
+        <menu name="ViewMenu" action="ViewMenu">
+        </menu>
+        
+        <menu name="HelpMenu" action="HelpMenu">
+        </menu>
+    
+    </menubar>
+    
+    <toolbar>
+        <placeholder name="OpenFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="SaveFileToolbar">
+        <separator/>
+        <separator/>
+        </placeholder>
+        <placeholder name="EditToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ProjectToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="VcToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ToolsToolbar">
+        </placeholder>
+
+    </toolbar>
+
+</ui>
