@@ -20,8 +20,18 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+import gzip
+import tempfile
+import threading
+import xml.sax
+import xml.dom.minidom as minidom
 
+xml.sax.handler.feature_external_pes = False
 
+import gtk
+import gobject
+from kiwi.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -31,10 +41,233 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.ui.views import PidaGladeView
+
+from pida.utils.gthreads import GeneratorTask, AsyncTask
+
+class LibraryView(PidaGladeView):
+    
+    _columns = [
+        Column('title', expand=True)
+    ]
+
+    gladefile = 'library-viewer'
+
+    def create_ui(self):
+        self.books_list.set_columns(self._columns)
+        self.contents_tree.set_columns(self._columns)
+        self.books_list.set_headers_visible(False)
+        self.contents_tree.set_headers_visible(False)
+
+    def fetch_books(self):
+        self.books_list.clear()
+        task = GeneratorTask(fetch_books, self.add_book)
+        task.start()
+
+    def add_book(self, item):
+        self.books_list.append(item)
+
+    def on_books_list__double_click(self, ol, item):
+        self.contents_tree.clear()
+        if item is not None:
+            task = AsyncTask(self.load_book, self.book_loaded)
+            task.start()
+
+    def load_book(self):
+        item = self.books_list.get_selected()
+        return item.load()
+        
+    def book_loaded(self, bookmarks):
+        print bookmarks
+
+
+class LibraryActions(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'show_library',
+            TYPE_TOGGLE,
+            'Documentation Library',
+            'Show the documentation library',
+            '',
+            self.on_show_library,
+            '<Shift><Control>r',
+        )
+
+    def on_show_library(self, action):
+        if action.get_active():
+            self.svc.show_library()
+        else:
+            self.svc.hide_library()
+
+
+def fetch_books():
+    dirs = ['/usr/share/gtk-doc/html',
+            '/usr/share/devhelp/books',
+            os.path.expanduser('~/.devhelp/books')]
+    
+    use_gzip = True#self.opts.book_locations__use_gzipped_book_files
+    for dir in dirs:
+        for book in fetch_directory(dir):
+            yield book
+
+def fetch_directory(directory):
+    if os.path.exists(directory):
+        for name in os.listdir(directory):
+            path = os.path.join(directory, name)
+            if os.path.exists(path):
+                load_book = Book(path, True)
+                yield load_book
+
+
+
+
+
+class TitleHandler(xml.sax.handler.ContentHandler):
+
+    def __init__(self):
+        self.title = 'untitled'
+        self.is_finished = False
+
+    def startElement(self, name, attributes):
+        self.title = attributes['title']
+        self.is_finished = True
+
+
+class Book(object):
+
+    def __init__(self, path, include_gz=True):
+        self.directory = path
+        self.key = path
+        self.name = os.path.basename(path)
+        self.bookmarks = None
+        try:
+            self.short_load()
+        except (OSError, IOError):
+            pass
+
+    def has_load(self):
+        return self.bookmarks is not None
+
+    def short_load(self):
+        config_path = None
+        path = self.directory
+        if not os.path.isdir(path):
+            return
+        for name in os.listdir(path):
+            if name.endswith('.devhelp'):
+                config_path = os.path.join(path, name)
+                break
+            elif name.endswith('.devhelp.gz'):
+                gz_path = os.path.join(path, name)
+                f = gzip.open(gz_path, 'rb', 1)
+                gz_data = f.read()
+                f.close()
+                fd, config_path = tempfile.mkstemp()
+                os.write(fd, gz_data)
+                os.close(fd)
+                break
+        self.title = None
+        if config_path:
+            parser = xml.sax.make_parser()
+            parser.setFeature(xml.sax.handler.feature_external_ges, 0)
+            handler = TitleHandler()
+            parser.setContentHandler(handler)
+            f = open(config_path)
+            for line in f:
+                try:
+                    parser.feed(line)
+                except:
+                    raise
+                if handler.is_finished:
+                    break
+            f.close()
+            self.title = handler.title
+        if not self.title:
+            self.title = os.path.basename(path)
+
+    def load(self):
+        config_path = None
+        path = self.directory
+        for name in os.listdir(path):
+            if name.endswith('.devhelp'):
+                config_path = os.path.join(path, name)
+                break
+            elif name.endswith('.devhelp.gz'):
+                gz_path = os.path.join(path, name)
+                f = gzip.open(gz_path, 'rb', 1)
+                gz_data = f.read()
+                f.close()
+                fd, config_path = tempfile.mkstemp()
+                os.write(fd, gz_data)
+                os.close(fd)
+                break
+        if config_path and os.path.exists(config_path):
+            dom = minidom.parse(config_path)
+            main = dom.documentElement
+            book_attrs = dict(main.attributes)
+            for attr in book_attrs:
+                setattr(self, attr, book_attrs[attr].value)
+            self.chapters = dom.getElementsByTagName('chapters')[0]
+            self.root = os.path.join(self.directory, self.link)
+            self.bookmarks = self.get_bookmarks()
+        else:
+            for index in ['index.html']:
+                indexpath = os.path.join(path, index)
+                if os.path.exists(indexpath):
+                    self.root = indexpath
+                    break
+                self.root = indexpath
+
+        self.key = path
+        return self.get_bookmarks()
+
+    def get_bookmarks(self):
+        root = BookMark(self.chapters, self.directory)
+        root.name = self.title
+        root.path = self.root
+        return root
+
+
+class BookMark(object):
+
+    def __init__(self, node, root_path):
+        try:
+            self.name = node.attributes['name'].value
+        except:
+            self.name = None
+        try:
+            self.path = os.path.join(root_path, node.attributes['link'].value)
+        except:
+            self.path = None
+        self.key = self.path
+        self.subs = []
+        for child in self._get_child_subs(node):
+            bm = BookMark(child, root_path)
+            self.subs.append(bm)
+
+    def _get_child_subs(self, node):
+        return [n for n in node.childNodes if n.nodeType == 1]
+
 
 # Service class
 class Library(Service):
     """Describe your Service Here""" 
+
+    actions_config = LibraryActions
+
+    def start(self):
+        self._view = LibraryView(self)
+        self._has_loaded = False
+
+    def show_library(self):
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+        if not self._has_loaded:
+            self._has_loaded = True
+            self._view.fetch_books()
+
+    def hide_library(self):
+        self.boss.cmd('window', 'hide_view', view=self._view)
 
 # Required Service attribute for service loading
 Service = Library
