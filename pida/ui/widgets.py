@@ -17,7 +17,7 @@ from kiwi.utils import gsignal
 from kiwi.ui.objectlist import ObjectList, Column
 
 from pida.core.options import OTypeBoolean, OTypeString, OTypeInteger, \
-    OTypeStringList, OTypeFile, OTypeFont
+    OTypeStringList, OTypeFile, OTypeFont, OTypeStringOption
 
 
 class CleverProxyColorButton(ProxyColorButton):
@@ -124,6 +124,11 @@ def get_widget_for_type(rtype_instance):
         w = ProxySpinButton()
         w.set_adjustment(gtk.Adjustment(0, 0, 10000, 1))
         return w
+    elif isinstance(rtype_instance, OTypeStringOption):
+        w = ProxyComboBox()
+        w.prefill([(v, v) for v in rtype.options])
+        return w
+        
     #elif rtype.__name__ is 'intrange':
     #    adjvals = rtype.lower, rtype.upper, rtype.step
     #    adj = gtk.Adjustment(0, *adjvals)

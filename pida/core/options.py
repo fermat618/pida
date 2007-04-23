@@ -93,7 +93,15 @@ class OTypeFile(OTypeString):
 class OTypeFont(OTypeString):
     
     """Fonts"""
+
+class OTypeStringOption(OTypeString):
     
+    """String from a list of options"""
+
+# Awful
+def otype_string_options_factory(options):
+    return type('', (OTypeStringOption,), {'options': options})
+
 
 class OptionItem(object):
 
