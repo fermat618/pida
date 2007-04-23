@@ -25,6 +25,7 @@ from weakref import proxy
 import gtk
 
 from os import listdir, path
+import cgi
 
 import re
 
@@ -44,13 +45,25 @@ from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
 state_text = dict(
         hidden=' ',
-        none=' ',
+        none='?',
+        new='A',
+        modified='M',
+        ignored=' ',
+        normal=' ',
+        error='E',
+        empty='!',
+        conflict='C',
+        removed='D',
+        missing='!',
+        max='+',
         )
 
 
 state_style = dict( # tuples of (color, is_bold, is_italic)
-        hidden = ('lightgrey', False, True),
-        none = ('black', False, False),
+        hidden=('lightgrey', False, True),
+        none=('darkgrey', False, True),
+        new=('blue', True, False),
+        modified=('red', True, False)
         )
 
 
@@ -63,14 +76,16 @@ class FileEntry(object):
     _icon = None
 
     def __init__(self, name, path_, manager):
+        
         self._name = name
+
         self._manager = manager
         self._path = path_
         self.path = path.join(path_, name)
     
     @property
     def name(self):
-        return self.format(self._name.replace("&","&amp;"))
+        return self.format(cgi.escape(self._name))
 
     @property
     def icon(self):
