@@ -89,6 +89,10 @@ class OTypeStringList(OTypeBase):
 class OTypeFile(OTypeString):
 
     """For files"""
+
+class OTypeFont(OTypeString):
+    
+    """Fonts"""
     
 
 class OptionItem(object):

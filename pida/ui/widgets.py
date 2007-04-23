@@ -116,8 +116,8 @@ def get_widget_for_type(rtype_instance):
     #    w = ProxyFileChooserButton(title='Select Directory')
     #    w.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
     #    return w
-    #elif rtype is types.font:
-    #    return ProxyFontButton()
+    elif rtype is OTypeFont:
+        return ProxyFontButton()
     #elif rtype is types.color:
     #    return CleverProxyColorButton()
     elif rtype is OTypeInteger:
