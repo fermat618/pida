@@ -152,6 +152,10 @@ class ServiceManager(object):
             )
         )
 
+    def stop(self):
+        for svc in self.get_services():
+            svc.stop()
+
 
 
 

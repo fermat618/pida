@@ -21,10 +21,7 @@ class Window(gtk.Window):
         self.show()
 
     def _on_delete_event(self, window, event):
-        if self.yesno_dlg('Are you sure you want to exit?'):
-            self._boss.stop()
-        else:
-            return True
+        return self._boss.stop()
 
     def create_all(self):
         pass

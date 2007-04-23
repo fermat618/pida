@@ -146,7 +146,7 @@ class VimCallback(object):
 
     def vim_shutdown(self, server, *args):
         if server == self.svc.server:
-            self.svc.boss.stop()
+            self.svc.boss.stop(force=True)
         
 
 
@@ -294,6 +294,9 @@ class Vim(Service):
 
     def set_revert_sensitive(sensitive):
         """Set the revert sensitivity"""
+
+    def stop(self):
+        self._com.quit(self.server)
 
 
 # Required Service attribute for service loading

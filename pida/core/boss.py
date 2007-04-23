@@ -22,8 +22,12 @@ class Boss(object):
         self._sm.start_services()
         self._sm.start_editor()
 
-    def stop(self):
-        gtk.main_quit()
+    def stop(self, force=False):
+        if force or self.window.yesno_dlg('Are you sure you want to quit PIDA?'):
+            self._sm.stop()
+            gtk.main_quit()
+        else:
+            return True
 
     def loop_ui(self):
         gtk.main()

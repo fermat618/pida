@@ -2,15 +2,11 @@
     <menubar>
 
         <menu name="FileMenu" action="FileMenu">
-            <placeholder name="fm1">
-            <menuitem name="new_file" action="new_file" />
-            <menuitem name="open_file" action="open_file" />
-            <menuitem name="create_file" action="create_file" />
-            </placeholder>
-            <separator />
+            <placeholder name="fm1" />
             <placeholder name="fm2" />
-            <separator />
-            <placeholder name="fm3" />
+            <placeholder name="fm3">
+                <menuitem name="quit_pida" action="quit_pida" />
+            </placeholder>
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
@@ -35,13 +31,9 @@
     
     <toolbar>
         <placeholder name="OpenFileToolbar">
-            <toolitem name="new_file" action="new_file" />
-            <toolitem name="open_file" action="open_file" />
-            <toolitem name="create_file" action="create_file" />
         </placeholder>
         <separator/>
         <placeholder name="SaveFileToolbar">
-        <toolitem name="close" action="close" />
         <separator/>
         <separator/>
         </placeholder>
