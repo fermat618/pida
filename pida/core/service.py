@@ -13,6 +13,8 @@ from pida.core.features import FeaturesConfig
 class Service(object):
     """Base Service Class"""
 
+    label = None
+
     options_config = OptionsConfig
     events_config = EventsConfig
     commands_config = CommandsConfig
@@ -40,6 +42,9 @@ class Service(object):
 
     def get_name(self):
         return self.servicename
+
+    def get_label(self):
+        return self.label or self.get_name()
 
     def pre_start(self):
         """Override to pre start up"""
