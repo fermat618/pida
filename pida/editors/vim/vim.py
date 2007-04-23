@@ -128,18 +128,26 @@ class VimCallback(object):
             self.svc.init_vim_server()
 
     def vim_bufferchange(self, server, cwd, file_name, bufnum):
-        if file_name:
-            if os.path.abspath(file_name) != file_name:
-                file_name = os.path.join(cwd, file_name)
-            self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
+        if server == self.svc.server:
+            if file_name:
+                if os.path.abspath(file_name) != file_name:
+                    file_name = os.path.join(cwd, file_name)
+                self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
 
     def vim_bufferunload(self, server, file_name):
-        if file_name:
-            self.svc.remove_file(file_name)
-            self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
+        if server == self.svc.server:
+            if file_name:
+                self.svc.remove_file(file_name)
+                self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
     def vim_filesave(self, server, file_name):
-        self.svc.boss.cmd('buffer', 'current_file_saved')
+        if server == self.svc.server:
+            self.svc.boss.cmd('buffer', 'current_file_saved')
+
+    def vim_shutdown(self, server, *args):
+        if server == self.svc.server:
+            self.svc.boss.stop()
+        
 
 
 # Service class
