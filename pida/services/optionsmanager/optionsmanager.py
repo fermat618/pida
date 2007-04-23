@@ -106,6 +106,9 @@ class PidaOptionsView(PidaGladeView):
     def _on_option_changed(self, widget, option):
         widgval = widget.read()
         optval = option.get_value()
+        # various hacks
+        if widgval is None:
+            return
         if widgval == ValueUnset:
             widgval = ''
         if widgval != optval:

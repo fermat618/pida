@@ -30,7 +30,8 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, OTypeInteger
+from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, \
+    OTypeInteger, OTypeFile
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaView
@@ -72,7 +73,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'background_image_file',
             'Background image file',
-            OTypeString,
+            OTypeFile,
             '',
             'The file used for the background image',
         )

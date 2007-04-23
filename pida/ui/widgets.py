@@ -105,7 +105,7 @@ def get_widget_for_type(rtype_instance):
         return ProxyStringList()
     elif rtype is OTypeFile:
         w = ProxyFileChooserButton('Select File')
-        w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        w.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
         return w
     #elif rtype is types.readonlyfile:
     #    w = ProxyFileChooserButton('Select File')
