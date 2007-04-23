@@ -341,3 +341,30 @@ class Mercurial(DCommandBased):
         state = self.state_map[item[0]]
         file = item[2:].strip()
         return Path(file, state, self.base_path)
+
+class Darcs(DCommandBased):
+
+    cmd = 'darcs'
+
+    detect_subdir = '_darcs'
+
+    non_recursive_param = []
+    
+    _list_impl_cmd = ['whatsnew', '--boring', '--summary']
+
+    state_map = {
+        "a": 'none',
+        "A": 'new',
+        "M": 'modified',
+        "C": 'conflict',
+        "R": 'removed'
+    }
+
+    def parse_list_item(self, item):
+        if item.startswith('What') or item.startswith('No') or not item.strip():
+            return None
+        elements = item.split()
+        state = self.state_map[elements[0]]
+        file = normpath(elements[1])
+        return Path(file, state, self.base_path)
+
