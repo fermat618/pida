@@ -3,7 +3,6 @@ Absolute
 
 * Port the remaining services
     - Appcontroller
-    - Configmanager
     - Bookmarkmanager
     - Library
     - Man
@@ -11,7 +10,7 @@ Absolute
     - Python debugger
     - Scripts
 
-'NOKEY' shortcut to indicate this action will never have a shortcut
+quit pida with vim
 
 In progress
 -----------

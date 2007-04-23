@@ -61,7 +61,7 @@ class PidaOptionsView(PidaGladeView):
         self.options_book.append_page(self._create_page(svc))
         
     def _create_page(self, svc):
-        mainvb = gtk.VBox()
+        mainvb = gtk.VBox(spacing=6)
         mainvb.set_border_width(6)
         label = gtk.Label()
         label.set_markup('<big><b>%s</b></big>' % svc.get_label())
