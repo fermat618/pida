@@ -31,7 +31,7 @@ xml.sax.handler.feature_external_pes = False
 
 import gtk
 import gobject
-from kiwi.ui.objectlist import Column
+from kiwi.ui.objectlist import ObjectTree, Column
 
 # PIDA Imports
 from pida.core.service import Service
