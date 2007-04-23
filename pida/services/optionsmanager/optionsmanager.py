@@ -61,7 +61,7 @@ class PidaOptionsView(PidaGladeView):
         self.options_book.append_page(self._create_page(svc))
         
     def _create_page(self, svc):
-        mainvb = gtk.VBox(spacing=6)
+        mainvb = gtk.VBox(spacing=0)
         mainvb.set_border_width(6)
         label = gtk.Label()
         label.set_markup('<big><b>%s</b></big>' % svc.get_label())
@@ -76,13 +76,14 @@ class PidaOptionsView(PidaGladeView):
         labelsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         widgetsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         for opt in svc.get_options().iter_options():
-            vb = gtk.VBox(spacing=6) 
+            vb = gtk.VBox(spacing=2) 
+            vb.set_border_width(6)
             optvb.pack_start(vb, expand=False)
             hb = gtk.HBox(spacing=6)
             vb.pack_start(hb)
             optlabel = gtk.Label()
             optlabel.set_text(opt.label)
-            optlabel.set_alignment(1, 0)
+            optlabel.set_alignment(0, 0.5)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
             optwidget = get_widget_for_type(opt.rtype)
@@ -91,6 +92,10 @@ class PidaOptionsView(PidaGladeView):
             optwidget.update(opt.get_value())
             optwidget.connect('content-changed', self._on_option_changed, opt)
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)
+            doclabel = gtk.Label()
+            doclabel.set_text(opt.doc)
+            doclabel.set_alignment(0, 0)
+            vb.pack_start(doclabel)
         return mainvb
 
     def on_service_combo__content_changed(self, cmb):

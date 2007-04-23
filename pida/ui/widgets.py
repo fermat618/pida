@@ -17,7 +17,7 @@ from kiwi.utils import gsignal
 from kiwi.ui.objectlist import ObjectList, Column
 
 from pida.core.options import OTypeBoolean, OTypeString, OTypeInteger, \
-    OTypeStringList
+    OTypeStringList, OTypeFile
 
 
 class CleverProxyColorButton(ProxyColorButton):
@@ -103,10 +103,10 @@ def get_widget_for_type(rtype_instance):
         return ProxyCheckButton()
     elif rtype is OTypeStringList:
         return ProxyStringList()
-    #elif rtype is types.file:
-    #    w = ProxyFileChooserButton('Select File')
-        #w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
-    #    return w
+    elif rtype is OTypeFile:
+        w = ProxyFileChooserButton('Select File')
+        w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        return w
     #elif rtype is types.readonlyfile:
     #    w = ProxyFileChooserButton('Select File')
     #    w.set_sensitive(False)

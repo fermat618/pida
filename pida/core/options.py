@@ -85,6 +85,10 @@ class OTypeStringList(OTypeBase):
         
     def set(self, client, key, value):
         return self._setter(client)(key, gconf.VALUE_STRING, value)
+
+class OTypeFile(OTypeString):
+
+    """For files"""
     
 
 class OptionItem(object):
