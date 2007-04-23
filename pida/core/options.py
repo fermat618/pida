@@ -37,21 +37,17 @@ class OptionsManager(object):
 
 class OTypeBase(object):
 
-    @classmethod
-    def _getter(cls, client):
-        return getattr(client, 'get_%s' % cls.gconf_name)
+    def _getter(self, client):
+        return getattr(client, 'get_%s' % self.gconf_name)
     
-    @classmethod
-    def _setter(cls, client):
-        return getattr(client, 'set_%s' % cls.gconf_name)
+    def _setter(self, client):
+        return getattr(client, 'set_%s' % self.gconf_name)
 
-    @classmethod
-    def get(cls, client, key):
-        return cls._getter(client)(key)
+    def get(self, client, key):
+        return self._getter(client)(key)
         
-    @classmethod
-    def set(cls, client, key, value):
-        return cls._setter(client)(key, value)
+    def set(self, client, key, value):
+        return self._setter(client)(key, value)
         
     
 
@@ -78,13 +74,11 @@ class OTypeStringList(OTypeBase):
 
     gconf_name = 'list'
 
-    @classmethod
-    def get(cls, client, key):
-        return cls._getter(client)(key, gconf.VALUE_STRING)
+    def get(self, client, key):
+        return self._getter(client)(key, gconf.VALUE_STRING)
         
-    @classmethod
-    def set(cls, client, key, value):
-        return cls._setter(client)(key, gconf.VALUE_STRING, value)
+    def set(self, client, key, value):
+        return self._setter(client)(key, gconf.VALUE_STRING, value)
     
 
 class OptionItem(object):
@@ -93,7 +87,7 @@ class OptionItem(object):
         self.group = group
         self.name = name
         self.label = label
-        self.rtype = rtype
+        self.rtype = rtype()
         self.doc = doc
         self.default = default
         self.key = self._create_key()
