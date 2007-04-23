@@ -35,12 +35,14 @@ from pida.core.environment import get_uidef_path
 
 CONTEXT_TYPES = [
     'file-menu',
+    'dir-menu',
 ]
 
 class ContextFeaturesConfig(FeaturesConfig):
 
     def create_features(self):
-        self.create_feature('file-menu')
+        for context in CONTEXT_TYPES:
+            self.create_feature(context)
 
 class ContextCommandsConfig(CommandsConfig):
 

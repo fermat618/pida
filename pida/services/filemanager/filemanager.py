@@ -251,7 +251,11 @@ class FilemanagerView(PidaView):
             self.svc.boss.cmd('buffer', 'open_file', file_name=target)
 
     def on_file_right_click(self, ol, item, event=None):
-        self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
+        if path.isdir(item.path):
+            self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
+                          dir_name=item.path, event=event) 
+        else:
+            self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           file_name=item.path, event=event) 
 
     def act_go_up(self, action):
@@ -294,6 +298,8 @@ class FilemanagerFeatureConfig(FeaturesConfig):
         
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
+        self.subscribe_foreign_feature('contexts', 'dir-menu',
+            (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
 
 
 
@@ -340,6 +346,15 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'browse-for-dir',
+            TYPE_NORMAL,
+            'Browse the directory',
+            'Browse the directory',
+            'file-manager',
+            self.on_browse_for_dir,
+        )
+
+        self.create_action(
             'show_filebrowser',
             TYPE_NORMAL,
             'Show file browser',
@@ -351,6 +366,11 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
+        self.svc.cmd('browse', new_path=new_path)
+        self.svc.cmd('present_view')
+
+    def on_browse_for_dir(self, action):
+        new_path = action.contexts_kw['dir_name']
         self.svc.cmd('browse', new_path=new_path)
         self.svc.cmd('present_view')
 
