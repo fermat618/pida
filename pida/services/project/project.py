@@ -31,6 +31,7 @@ from kiwi.ui.objectlist import Column
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
+from pida.core.options import OptionsConfig, OTypeStringList
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
@@ -276,6 +277,18 @@ class ProjectFeaturesConfig(FeaturesConfig):
         self.subscribe_foreign_feature('project', IProjectController, GenericExecutionController)
 
 
+class ProjectOptions(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'project_dirs',
+            'Project Directories',
+            OTypeStringList,
+            [],
+            'The current directories in the workspace',
+        )
+
+
 class ProjectCommandsConfig(CommandsConfig):
 
     def add_directory(self, project_directory):
@@ -292,6 +305,7 @@ class Project(Service):
     commands_config = ProjectCommandsConfig
     events_config = ProjectEventsConfig
     actions_config = ProjectActionsConfig
+    options_config = ProjectOptions
 
     def pre_start(self):
         self._projects = []
@@ -304,27 +318,20 @@ class Project(Service):
         self.project_list = ProjectListView(self)
         self.project_properties_view = ProjectPropertiesView(self)
         self.project_properties_view.set_controllers(self.features(IProjectController))
-        self._read_workspace_file()
+        self._read_options()
 
-    def _read_workspace_file(self):
-        self._workspace_file = os.path.join(self.boss.get_pida_home(), 'projects.conf')
-        if os.path.exists(self._workspace_file):
-            f = open(self._workspace_file)
-            for line in f:
-                dirname = line.strip()
-                path = os.path.join(line.strip(),
-                    '%s.pidaproject' % os.path.basename(dirname))
-                if os.path.exists(path):
-                    self._load_project(path)
-                else:
-                    self.log_warn('Project path %s has disappeared' % path)
-            f.close()
+    def _read_options(self):
+        for dirname in self.opt('project_dirs'):
+            path = os.path.join(dirname, '%s.pidaproject' %
+                                      os.path.basename(dirname))
+            if os.path.exists(path):
+                self._load_project(path)
+            else:
+                self.log_warn('Project path %s has disappeared' % path)
 
-    def _save_workspace_file(self):
-        f = open(self._workspace_file, 'w')
-        for project in self._projects:
-            f.write('%s\n' % project.source_directory)
-        f.close()
+    def _save_options(self):
+        self.set_opt('project_dirs',
+            [p.source_directory for p in self._projects])
 
     def get_view(self):
         return self.project_list
@@ -335,14 +342,14 @@ class Project(Service):
         for name in os.listdir(project_directory):
             if name == project_file:
                 project = self.load_and_set_project(os.path.join(project_directory, name))
-                self._save_workspace_file()
+                self._save_options()
                 return project
         if self.boss.get_window().yesno_dlg(
             'The directory does not contain a project file, do you want to '
             'create one?'
         ):
             self.create_project_file(project_directory)
-            self._save_workspace_file()
+            self._save_options()
 
     def create_project_file(self, project_directory):
         project_name = os.path.basename(project_directory)
@@ -388,7 +395,7 @@ class Project(Service):
         ):
             self._projects.remove(project)
             self.project_list.project_ol.remove(project, select=True)
-            self._save_workspace_file()
+            self._save_options()
 
     def get_default_controller(self):
         if self._project is not None:
