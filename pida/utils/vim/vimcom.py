@@ -470,13 +470,15 @@ class communication_window(gtk.Window):
         messageattrs = {}
         for t in [s.split(' ') for s in message.split('\0')]:
             if t and len(t[0]):
-                if t[0].startswith('-'):
+                name = t[0]
+                value = ' '.join(t[1:])
+                if name.startswith('-'):
                     #attributes start with a '-', strip it and set the value
-                    if len(t) > 1:
-                        messageattrs[t[0][1:]] = t[1]
+                    name = name[1:]
+                    messageattrs[name] = value
                 else:
                     # Otherwise set the t attribute
-                    messageattrs['t'] = t[0]
+                    messageattrs['t'] = name
         return messageattrs
 
     def send_message(self, servername, message, asexpr, callback):
@@ -640,6 +642,9 @@ class communication_window(gtk.Window):
 
     def get_cword(self, server, callback):
         self.send_expr(server, 'expand("<cword>")', callback)
+
+    def get_selection(self, server, callback):
+        self.send_expr(server, 'getreg("*")', callback)
    
     def cb_notify(self, *a):
         win, ev =  a
