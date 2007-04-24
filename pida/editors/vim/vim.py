@@ -142,6 +142,10 @@ class EditorCommandsConfig(CommandsConfig):
     def call_with_current_word(self, callback):
         self.svc.call_with_current_word(callback)
 
+    def call_with_selection(self, callback):
+        self.svc.call_with_selection(callback)
+
+
 class VimView(PidaView):
 
     def create_ui(self):
@@ -339,6 +343,9 @@ class Vim(Service):
 
     def call_with_current_word(self, callback):
         return self._com.get_cword(self.server, callback)
+
+    def call_with_selection(self, callback):
+        return self._com.get_selection(self.server, callback)
 
 # Required Service attribute for service loading
 Service = Vim
