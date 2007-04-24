@@ -47,6 +47,7 @@ class EditorActionsConfig(ActionsConfig):
             'Undo',
             'Undo the last editor action',
             gtk.STOCK_UNDO,
+            self.on_undo,
         )
 
         self.create_action(
@@ -55,6 +56,7 @@ class EditorActionsConfig(ActionsConfig):
             'Redo',
             'Redo the last editor action',
             gtk.STOCK_REDO,
+            self.on_redo,
         )
 
         self.create_action(
@@ -62,7 +64,8 @@ class EditorActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Cut',
             'Cut the selection in the editor',
-            gtk.STOCK_CUT
+            gtk.STOCK_CUT,
+            self.on_cut,
         )
 
         self.create_action(
@@ -70,7 +73,8 @@ class EditorActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Copy',
             'Copy the selection in the editor',
-            gtk.STOCK_COPY
+            gtk.STOCK_COPY,
+            self.on_copy,
         )
 
         self.create_action(
@@ -78,7 +82,8 @@ class EditorActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Paste',
             'Paste the clipboard in the editor',
-            gtk.STOCK_PASTE
+            gtk.STOCK_PASTE,
+            self.on_paste,
         )
 
         self.create_action(
@@ -87,8 +92,26 @@ class EditorActionsConfig(ActionsConfig):
             'Save',
             'Save the current document',
             gtk.STOCK_SAVE,
+            self.on_save,
         )
 
+    def on_undo(self, action):
+        self.svc.undo()
+
+    def on_redo(self, action):
+        self.svc.redo()
+
+    def on_cut(self, action):
+        self.svc.cut()
+
+    def on_copy(self, action):
+        self.svc.copy()
+
+    def on_paste(self, action):
+        self.svc.paste()
+
+    def on_save(self, action):
+        self.svc.save()
 
 class EditorCommandsConfig(CommandsConfig):
 
@@ -248,8 +271,9 @@ class Vim(Service):
     def close_all():
         """Close all the documents"""
 
-    def save():
+    def save(self):
         """Save the current document"""
+        self._com.save(self.server)
 
     def save_as(filename):
         """Save the current document as another filename"""
@@ -262,14 +286,23 @@ class Vim(Service):
         self._com.goto_line(self.server, line)
         self.grab_focus()
 
-    def cut():
+    def cut(self):
         """Cut to the clipboard"""
+        self._com.cut(self.server)
 
-    def copy():
+    def copy(self):
         """Copy to the clipboard"""
+        self._com.copy(self.server)
 
-    def paste():
+    def paste(self):
         """Paste from the clipboard"""
+        self._com.paste(self.server)
+
+    def undo(self):
+        self._com.undo(self.server)
+
+    def redo(self):
+        self._com.redo(self.server)
 
     def grab_focus(self):
         """Grab the focus"""
