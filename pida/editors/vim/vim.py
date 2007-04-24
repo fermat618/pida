@@ -226,25 +226,14 @@ class Vim(Service):
 
     def open(self, document):
         """Open a document"""
-        if not self.started:
-            return
         if document is not self._current:
             if document.unique_id in self._documents:
-                if document.unique_id in self._newdocs:
-                    fn = self._newdocs[document.unique_id]
-                else:
-                    fn = document.filename
+                fn = document.filename
                 self._com.change_buffer(self.server, fn)
                 self._com.foreground(self.server)
             else:
-                found = False
-                if not found:
-                    if document.filename is None:
-                        newname = self._com.new_file(self.server)
-                        self._newdocs[document.unique_id] = newname
-                    else:
-                        self._com.open_file(self.server, document.filename)
-                    self._documents[document.unique_id] = document
+                self._com.open_file(self.server, document.filename)
+                self._documents[document.unique_id] = document
             self._current = document
 
 
