@@ -40,6 +40,7 @@ class SplashScreen(gtk.Window):
         vb.pack_start(l)
         vb.show_all()
         self.resize(200, 75)
+        refresh_gui()
 
     def show_splash(self):
         self.show()
