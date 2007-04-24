@@ -90,6 +90,7 @@ class WindowEvents(EventsConfig):
 
     def on_editor_started(self):
         self.svc.window.show()
+        self.svc.boss.hide_splash()
 
 class WindowOptionsConfig(OptionsConfig):
 

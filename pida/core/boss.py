@@ -4,6 +4,7 @@ from pida.core.servicemanager import ServiceManager
 from pida.core.log import build_logger
 
 from pida.ui.window import PidaWindow
+from pida.ui.splash import SplashScreen
 
 class Boss(object):
 
@@ -11,6 +12,7 @@ class Boss(object):
     def __init__(self, env=None):
         self._env = env
         self.log = build_logger('pida')
+        self.show_splash()
         self._sm = ServiceManager(self)
         self._window = PidaWindow(self)
 
@@ -80,4 +82,12 @@ class Boss(object):
     def get_window(self):
         return self._window
     window = property(get_window)
+
+    def show_splash(self):
+        self._splash = SplashScreen()
+        self._splash.show_splash()
+
+    def hide_splash(self):
+        self._splash.hide_splash()
+        
 
