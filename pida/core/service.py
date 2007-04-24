@@ -1,4 +1,6 @@
-
+"""
+PIDA Services
+"""
 
 # PIDA Imports
 from pida.core.interfaces import IOptions, IEvents, ICommands, IActions, IFeatures
@@ -27,6 +29,11 @@ class Service(object):
         self.reg = Registry()
 
     def create_all(self):
+        """
+        Called to create all the services by the
+        {servicemanager.ServiceManager}
+        """
+
         self.log_debug('Creating Service')
         self._register_options_config(self.options_config)
         self._register_events_config(self.events_config)
