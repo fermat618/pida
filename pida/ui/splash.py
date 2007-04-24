@@ -20,7 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import gtk
+import gtk, gobject
 
 from pida.utils.testing import refresh_gui
 
@@ -45,7 +45,9 @@ class SplashScreen(gtk.Window):
 
     def show_splash(self):
         self.show()
-        refresh_gui()
+        gobject.timeout_add(100, gtk.main_quit)
+        gtk.main()
+
 
     def hide_splash(self):
         self.hide_all()
