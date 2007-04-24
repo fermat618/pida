@@ -8,7 +8,9 @@
             <menuitem name="create_file" action="create_file" />
             </placeholder>
             <separator />
-            <placeholder name="fm2" />
+            <placeholder name="fm2">
+            <menuitem name="close" action="close" />
+            </placeholder>
             <separator />
             <placeholder name="fm3" />
         </menu>
