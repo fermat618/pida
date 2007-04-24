@@ -716,7 +716,7 @@ let i = 1
 :silent set guioptions-=m
 :silent au! pida
 :silent au pida BufEnter * silent call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%').",".bufnr('%'))
-:silent au pida BufWipeout * silent call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
+:silent au pida BufDelete * silent call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
 :silent au pida VimLeave * silent call Async_event(v:servername.":shutdown,")
 :silent au pida VimEnter * silent call Pida_Started()
 :silent au pida BufWritePost * silent call Async_event(v:servername.":filesave,")
