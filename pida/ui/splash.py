@@ -31,7 +31,7 @@ class SplashScreen(gtk.Window):
         self.set_decorated(False)
         vb = gtk.VBox()
         self.add(vb)
-        l = gtk.Label('PIDA is loading')
+        l = gtk.Label('PIDA is starting...')
         l.set_alignment(0.5, 1)
         vb.pack_start(l)
         l = gtk.Label()
