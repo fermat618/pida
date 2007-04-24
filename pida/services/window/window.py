@@ -77,6 +77,14 @@ class WindowActionsConfig(ActionsConfig):
         self.svc.set_opt(action.get_name(), val)
         getattr(self.svc, action.get_name())(val)
 
+class WindowEvents(EventsConfig):
+    
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('buffer', 'document-changed',
+            self.on_document_changed)
+
+    def on_document_changed(self, document):
+        self.svc.window.set_title(document.filename)
 
 class WindowOptionsConfig(OptionsConfig):
 
@@ -109,6 +117,7 @@ class Window(Service):
     commands_config = WindowCommandsConfig
     options_config = WindowOptionsConfig
     actions_config = WindowActionsConfig
+    events_config = WindowEvents
 
     def start(self):
         # Explicitly add the permanent views

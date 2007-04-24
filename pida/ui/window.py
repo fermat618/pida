@@ -55,6 +55,7 @@ class PidaWindow(Window):
 
 
     def create_all(self):
+        self.set_title('PIDA Loves You!')
         self._fix_paneds()
         self._create_ui()
         self.resize(800, 600)
