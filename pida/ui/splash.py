@@ -45,7 +45,7 @@ class SplashScreen(gtk.Window):
 
     def show_splash(self):
         self.show()
-        gobject.timeout_add(100, gtk.main_quit)
+        gobject.idle_add(gtk.main_quit)
         gtk.main()
 
 
