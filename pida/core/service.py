@@ -92,12 +92,12 @@ class Service(object):
     def _get_commands(self):
         return self.reg.get_singleton(ICommands)
 
-    def cmd(self, name, *args, **kw):
+    def cmd(self, commandname, *args, **kw):
         if args:
             raise TypeError('You must call command %s in service %s with '
-            'named arguments' % (name, self.get_name()))
+            'named arguments' % (commandname, self.get_name()))
         else:
-            return self._get_commands().call(name, **kw)
+            return self._get_commands().call(commandname, **kw)
 
     ##########
     # Events
