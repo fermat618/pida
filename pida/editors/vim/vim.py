@@ -124,6 +124,19 @@ class EditorCommandsConfig(CommandsConfig):
     def goto_line(self, line):
         self.svc.goto_line(line)
 
+    def define_sign_type(self, name, icon, linehl, text, texthl):
+        self.svc.define_sign_type(name, icon, linehl, text, texthl)
+
+    def undefine_sign_type(self, name):
+        self.svc.undefine_sign_type(name)
+
+    def show_sign(self, type, file_name, line):
+        self.svc.show_sign(type, file_name, line)
+
+    def hide_sign(self, type, file_name, line):
+        self.svc.hide_sign(type, file_name, line)
+
+
 class VimView(PidaView):
 
     def create_ui(self):
@@ -213,7 +226,8 @@ class Vim(Service):
 
     def open(self, document):
         """Open a document"""
-        if not self.started: return
+        if not self.started:
+            return
         if document is not self._current:
             if document.unique_id in self._documents:
                 if document.unique_id in self._newdocs:
@@ -224,13 +238,6 @@ class Vim(Service):
                 self._com.foreground(self.server)
             else:
                 found = False
-                #for server in self.__servers:
-                #    serverdocs = self.__servers[server]
-                #    if document.unique_id in serverdocs:
-                #        self.__cw.change_buffer(server, document.filename)
-                #        self.__cw.foreground(server)
-                #        found = True
-                #        break
                 if not found:
                     if document.filename is None:
                         newname = self._com.new_file(self.server)
@@ -240,13 +247,6 @@ class Vim(Service):
                     self._documents[document.unique_id] = document
             self._current = document
 
-        #if self.single_view is not None:
-        #    self.single_view.raise_page()
-        #    if document.filename is None:
-        #        title = 'New File'
-        #    else:
-        #        title = document.filename
-        #    self.single_view.long_title = title
 
     def open_many(documents):
         """Open a few documents"""
@@ -309,18 +309,6 @@ class Vim(Service):
     def grab_focus(self):
         """Grab the focus"""
         self._view.grab_input_focus()
-
-    def set_undo_sensitive(sensitive):
-        """Set the undo action sensitivity"""
-
-    def set_redo_sensitive(sensitive):
-        """Set the redo action sensitivity"""
-
-    def set_save_sensitive(sensitive):
-        """Set the save action sensitivity"""
-
-    def set_revert_sensitive(sensitive):
-        """Set the revert sensitivity"""
 
     def define_sign_type(self, name, icon, linehl, text, texthl):
         self._com.define_sign(self.server, name, icon, linehl, text, texthl)
