@@ -139,6 +139,9 @@ class EditorCommandsConfig(CommandsConfig):
     def hide_sign(self, type, file_name, line):
         self.svc.hide_sign(type, file_name, line)
 
+    def call_with_current_word(self, callback):
+        self.svc.call_with_current_word(callback)
+
 class VimView(PidaView):
 
     def create_ui(self):
@@ -333,6 +336,9 @@ class Vim(Service):
 
     def get_current_line(self):
         return self._current_line
+
+    def call_with_current_word(self, callback):
+        return self._com.get_cword(self.server, callback)
 
 # Required Service attribute for service loading
 Service = Vim

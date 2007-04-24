@@ -637,6 +637,9 @@ class communication_window(gtk.Window):
    
     def hide_sign(self, server, index, filename):
         self.send_ex(server, 'sign unplace %s' % (index + 1))
+
+    def get_cword(self, server, callback):
+        self.send_expr(server, 'expand("<cword>")', callback)
    
     def cb_notify(self, *a):
         win, ev =  a
