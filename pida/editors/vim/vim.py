@@ -211,7 +211,6 @@ class Vim(Service):
         self._com = VimCom(self._cb)
         self._view = VimView(self)
         self.boss.cmd('window', 'add_view', paned='Editor', view=self._view)
-        self._newdocs = {}
         self._documents = {}
         self._current = None
         self._sign_index = 0
