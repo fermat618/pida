@@ -290,6 +290,9 @@ class FilemanagerEvents(EventsConfig):
 class FilemanagerCommandsConfig(CommandsConfig):
     def browse(self, new_path):
         self.svc.browse(new_path)
+    
+    def get_browsed_path(self):
+        return self.svc.path
 
     def get_view(self):
         return self.svc.get_view()
