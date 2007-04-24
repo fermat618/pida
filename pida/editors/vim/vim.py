@@ -124,11 +124,11 @@ class EditorCommandsConfig(CommandsConfig):
     def goto_line(self, line):
         self.svc.goto_line(line)
 
-    def define_sign_type(self, name, icon, linehl, text, texthl):
-        self.svc.define_sign_type(name, icon, linehl, text, texthl)
+    def define_sign_type(self, type, icon, linehl, text, texthl):
+        self.svc.define_sign_type(type, icon, linehl, text, texthl)
 
-    def undefine_sign_type(self, name):
-        self.svc.undefine_sign_type(name)
+    def undefine_sign_type(self, type):
+        self.svc.undefine_sign_type(type)
 
     def get_current_line_number(self):
         return self.svc.get_current_line()
