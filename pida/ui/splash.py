@@ -44,11 +44,8 @@ class SplashScreen(gtk.Window):
         self.resize(200, 75)
 
     def show_splash(self):
-        for i in range(20):
-            refresh_gui(0)
         self.show()
-        for i in range(20):
-            refresh_gui(0)
+        refresh_gui()
 
     def hide_splash(self):
         self.hide_all()
