@@ -201,6 +201,8 @@ class Vim(Service):
         self._newdocs = {}
         self._documents = {}
         self._current = None
+        self._sign_index = 0
+        self._signs = {}
         self._view.run()
 
     def started():
@@ -326,55 +328,23 @@ class Vim(Service):
     def undefine_sign_type(self, name):
         self._com.undefine_sign(self.server, name)
 
-    __index = []
-    sign_list = {}
     def _add_sign(self, type, filename, line):
-#        if line > self.
-#       choose the first free number
-        if self.__index == []:
-            # init: __index[0] = 1
-            index = 1
-            self.__index = [index]
-        else:
-            for i in range(len(self.__index)):
-                # if self.index[i] == -1 => self.index[i] = self.index[i-1]+1
-                if self.__index[i] == -1:
-                    # first value : index[0] = 1
-                    if i == 0:
-                        index = 1
-                    else:
-                        index = self.__index[i-1]+1
-                    self.__index[i] = index
-                    break
-            else:
-                # otherwise append
-                self.__index.append(self.__index[-1]+1)
-                index = self.__index[-1]
-
-        if not filename in self.sign_list:
-            self.sign_list[filename] = {line:(index,type)}
-        else:
-            if not line in self.sign_list[filename]:
-                self.sign_list[filename][line] = (index,type)
-            else:
-                self.sign_list[filename][line].append((index,type))
-        return index
+        self._sign_index += 1
+        self._signs[(filename, line, type)] = self._sign_index
+        return self._sign_index
         
-    def _del_sign(self, filename, line):
-        if filename in self.sign_list:
-            if line in self.sign_list[filename]:
-                tmp = self.sign_list[filename][line][0]
-                self.__index[tmp-1] = -1
-                del(self.sign_list[filename][line])
-                return tmp
-        raise "error: you shouldn't remove inexisting signs !"
+    def _del_sign(self, type, filename, line):
+        try:
+            return self._signs.pop((filename, line, type))
+        except KeyError:
+            self.window.error_dlg('Tried to remove non-existent sign')
 
     def show_sign(self, type, filename, line):
-        index=self._add_sign(type,filename,line)
+        index = self._add_sign(type, filename, line)
         self._com.show_sign(self.server, index, type, filename, line)
    
-    def hide_sign(self, filename, line):
-        index=self._del_sign(filename, line)
+    def hide_sign(self, type, filename, line):
+        index = self._del_sign(type, filename, line)
         self._com.hide_sign(self.server, index, filename)
    
 #>>> boss.editor.define_sign("foo","","",">>","Search")
