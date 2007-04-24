@@ -45,8 +45,7 @@ class SplashScreen(gtk.Window):
 
     def show_splash(self):
         self.show()
-        gobject.idle_add(gtk.main_quit)
-        gtk.main()
+        refresh_gui()
 
 
     def hide_splash(self):
