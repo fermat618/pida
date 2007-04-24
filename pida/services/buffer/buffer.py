@@ -188,6 +188,7 @@ class Buffer(Service):
         self._documents = {}
         self._current = None
         self._view = BufferListView(self)
+        self.get_action('close').set_sensitive(False)
         #self.boss.add_view('Buffer', self._view, True)
 
     def get_view(self):
@@ -230,6 +231,7 @@ class Buffer(Service):
             self._view.set_document(document)
             self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
+        self.get_action('close').set_sensitive(document is not None)
 
     def file_saved(self):
         self.emit('document-saved', document=self._current)
