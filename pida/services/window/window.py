@@ -89,8 +89,8 @@ class WindowEvents(EventsConfig):
         self.svc.window.set_title(document.filename)
 
     def on_editor_started(self):
-        self.svc.window.show()
         self.svc.boss.hide_splash()
+        self.svc.window.show()
 
 class WindowOptionsConfig(OptionsConfig):
 
