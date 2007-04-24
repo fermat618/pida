@@ -130,6 +130,9 @@ class EditorCommandsConfig(CommandsConfig):
     def undefine_sign_type(self, name):
         self.svc.undefine_sign_type(name)
 
+    def get_current_line_number(self):
+        return self.svc.get_current_line()
+
     def show_sign(self, type, file_name, line):
         self.svc.show_sign(type, file_name, line)
 
@@ -176,6 +179,9 @@ class VimCallback(object):
     def vim_filesave(self, server, file_name):
         self.svc.boss.cmd('buffer', 'current_file_saved')
 
+    def vim_cursor_move(self, server, line_number):
+        self.svc.set_current_line(int(line_number))
+
 
 # Service class
 class Vim(Service):
@@ -218,7 +224,9 @@ class Vim(Service):
         self._current = None
         self._sign_index = 0
         self._signs = {}
+        self._current_line = 1
         self._view.run()
+
 
     def open(self, document):
         """Open a document"""
@@ -320,6 +328,11 @@ class Vim(Service):
         index = self._del_sign(type, filename, line)
         self._com.hide_sign(self.server, index, filename)
    
+    def set_current_line(self, line_number):
+        self._current_line = line_number
+
+    def get_current_line(self):
+        return self._current_line
 
 # Required Service attribute for service loading
 Service = Vim

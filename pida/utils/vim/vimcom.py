@@ -720,5 +720,8 @@ let i = 1
 :silent au pida VimLeave * silent call Async_event(v:servername.":shutdown,")
 :silent au pida VimEnter * silent call Pida_Started()
 :silent au pida BufWritePost * silent call Async_event(v:servername.":filesave,")
+:silent au pida CursorMovedI * silent call Async_event(v:servername.":cursor_move,".line('.'))
+:silent au pida CursorMoved * silent call Async_event(v:servername.":cursor_move,".line('.'))
+
 '''
         
