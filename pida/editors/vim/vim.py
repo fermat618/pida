@@ -136,7 +136,6 @@ class EditorCommandsConfig(CommandsConfig):
     def hide_sign(self, type, file_name, line):
         self.svc.hide_sign(type, file_name, line)
 
-
 class VimView(PidaView):
 
     def create_ui(self):
@@ -197,6 +196,10 @@ class Vim(Service):
         if self.started == False:
             self._com.stop_fetching_serverlist()
             self.started = True
+            self._emit_editor_started()
+
+    def _emit_editor_started(self):
+        self.boss.get_service('editor').emit('started')
 
     def get_server_name(self):
         return self._view.get_server_name()
@@ -216,12 +219,6 @@ class Vim(Service):
         self._sign_index = 0
         self._signs = {}
         self._view.run()
-
-    def started():
-        """Called when the editor has started"""
-
-    def get_current():
-        """Get the current document"""
 
     def open(self, document):
         """Open a document"""
@@ -323,8 +320,6 @@ class Vim(Service):
         index = self._del_sign(type, filename, line)
         self._com.hide_sign(self.server, index, filename)
    
-#>>> boss.editor.define_sign("foo","","",">>","Search")
-#>>> boss.editor.show_sign("foo","/tmp/foo",5)
 
 # Required Service attribute for service loading
 Service = Vim

@@ -82,9 +82,14 @@ class WindowEvents(EventsConfig):
     def subscribe_foreign_events(self):
         self.subscribe_foreign_event('buffer', 'document-changed',
             self.on_document_changed)
+        self.subscribe_foreign_event('editor', 'started',
+            self.on_editor_started)
 
     def on_document_changed(self, document):
         self.svc.window.set_title(document.filename)
+
+    def on_editor_started(self):
+        self.svc.window.show()
 
 class WindowOptionsConfig(OptionsConfig):
 

@@ -18,7 +18,6 @@ class Window(gtk.Window):
         self.add_accel_group(accelerator_group)
         self.connect('delete-event', self._on_delete_event)
         self.create_all()
-        self.show()
 
     def _on_delete_event(self, window, event):
         return self._boss.stop()

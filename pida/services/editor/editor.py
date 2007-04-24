@@ -43,12 +43,19 @@ class EditorOptionsConfig(OptionsConfig):
             'The Editor used',
         )
 
+class EditorEvents(EventsConfig):
+
+    def create_events(self):
+        self.create_event('started')
+
+
 # Service class
 class Editor(Service):
 
     """Describe your Service Here""" 
 
     options_config = EditorOptionsConfig
+    events_config = EditorEvents
 
 # Required Service attribute for service loading
 Service = Editor
