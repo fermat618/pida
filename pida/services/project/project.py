@@ -31,7 +31,7 @@ from kiwi.ui.objectlist import Column
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
-from pida.core.options import OptionsConfig, OTypeStringList
+from pida.core.options import OptionsConfig, OTypeStringList, OTypeString
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
@@ -116,6 +116,9 @@ class ProjectListView(PidaGladeView):
     def on_project_ol__double_click(self, ol, project):
         self.svc.boss.cmd('filemanager', 'browse', new_path=project.source_directory)
         self.svc.boss.cmd('filemanager', 'present_view')
+
+    def set_current_project(self, project):
+        self.project_ol.select(project)
 
 class ProjectPropertiesView(PidaGladeView):
 
@@ -288,6 +291,15 @@ class ProjectOptions(OptionsConfig):
             'The current directories in the workspace',
         )
 
+        self.create_option(
+            'last_project',
+            'Last Project',
+            OTypeString,
+            '',
+            'The last project selected',
+        )
+
+
 
 class ProjectCommandsConfig(CommandsConfig):
 
@@ -324,11 +336,15 @@ class Project(Service):
         self._read_options()
 
     def _read_options(self):
+        last = self.opt('last_project')
         for dirname in self.opt('project_dirs'):
             path = os.path.join(dirname, '%s.pidaproject' %
                                       os.path.basename(dirname))
             if os.path.exists(path):
-                self._load_project(path)
+                project = self._load_project(path)
+                if last:
+                    if project.source_directory == last:
+                        self.project_list.set_current_project(project)
             else:
                 self.log_warn('Project path %s has disappeared' % path)
 
@@ -377,6 +393,8 @@ class Project(Service):
             self.emit('project_switched', project=project)
             toolitem = self.get_action('project_execute').get_proxies()[0]
             toolitem.set_menu(self.create_menu())
+            self.set_opt('last_project', project.source_directory)
+
 
     def get_current_project(self):
         return self._project
