@@ -145,6 +145,9 @@ class EditorCommandsConfig(CommandsConfig):
     def call_with_selection(self, callback):
         self.svc.call_with_selection(callback)
 
+    def grab_focus(self):
+        self.svc.grab_focus()
+
 
 class VimView(PidaView):
 

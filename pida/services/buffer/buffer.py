@@ -67,6 +67,9 @@ class BufferListView(PidaGladeView):
     def on_buffers_ol__selection_changed(self, ol, item):
         self.svc.view_document(item)
 
+    def on_buffers_ol__double_click(self, ol, item):
+        self.svc.boss.editor.cmd('grab_focus')
+
     def on_buffers_ol__right_click(self, ol, item, event=None):
         self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           event=event,
