@@ -28,6 +28,7 @@ from pida.ui.views import PidaGladeView, PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
+from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask
 
@@ -213,7 +214,7 @@ class GrepperView(PidaGladeView):
                 str(e))
             return False
 
-        task = GeneratorTask(self.svc._grep, self.append_to_matches_list)
+        task = GeneratorTask(self.svc.grep, self.append_to_matches_list)
         task.start(location, regex, recursive)
 
 
@@ -226,6 +227,17 @@ class GrepperCommandsConfig(CommandsConfig):
     def present_view(self):
         return self.svc.boss.cmd('window', 'present_view',
                                  view=self.svc.get_view())
+
+class GrepperOptions(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'maximum_results',
+            'Maximum Results',
+            OTypeInteger,
+            500,
+            'The maximum number of results to find (approx).',
+        )
 
 class GrepperEvents(EventsConfig):
 
@@ -243,6 +255,7 @@ class Grepper(Service):
     """
     actions_config = GrepperActionsConfig
     events_config = GrepperEvents
+    options_config = GrepperOptions
 
     BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]|\\x00')
 
@@ -266,10 +279,11 @@ class Grepper(Service):
                              callback=self._view.start_grep_for_word)
         self.ensure_view_visible()
 
-    def _grep(self, top, regex, recursive=False, show_hidden=False):
+    def grep(self, top, regex, recursive=False, show_hidden=False):
         """
-        _grep is a wrapper around _grep_file_list and _grep_file.
+        grep is a wrapper around _grep_file_list and _grep_file.
         """
+        self._result_count = 0
         if os.path.isfile(top):
             file_results = self._grep_file(top, regex)
             for result in file_results:
@@ -284,11 +298,18 @@ class Grepper(Service):
 
     def _grep_file_list(self, file_list, root, regex, show_hidden=False):
         """
-        takes as it's arguments a list of files to grep, the directory containing that list, and a regular expression to search for in them (optionaly whether or not to search hidden files).
+        Grep for a list of files.
 
-        _grep_file_list itterates over that file list, and calls _grep_file on each of them with the supplied arguments
+        takes as it's arguments a list of files to grep, the directory
+        containing that list, and a regular expression to search for in them
+        (optionaly whether or not to search hidden files).
+
+        _grep_file_list itterates over that file list, and calls _grep_file on
+        each of them with the supplied arguments.
         """
         for file in file_list:
+            if self._result_count > self.opt('maximum_results'):
+                break
             if file[0] == "." and not show_hidden:
                 continue
             # never do this, always use os.path.join
@@ -315,6 +336,7 @@ class Grepper(Service):
                 line_matches = regex.findall(line)
 
                 if len(line_matches):
+                    self._result_count += 1
                     yield GrepperItem(filename, linenumber, line, line_matches)
         except IOError:
             pass
