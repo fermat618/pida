@@ -297,7 +297,7 @@ class ProjectOptions(OptionsConfig):
             OTypeFile,
             '',
             ('The last project selected. '
-            '(Don't change this unless you know what you are doing)')
+            '(Do not change this unless you know what you are doing)')
         )
 
 
