@@ -31,24 +31,64 @@ from pida.utils.gthreads import GeneratorTask
 import gtk, gobject, os, re, sre_constants, cgi
 
 class GrepperItem(object):
+    # Doctrings should be <= 80 chars wide
+    # Docstrings should also have a first line as a summary
     """
-    A match item in grepper. Contains the data for the matches path, and linenumber that if falls on, as well as actual line of code that matched, and the matches data.
+    A match item in grepper.
+    
+    Contains the data for the matches path, and linenumber that if falls on, as
+    well as actual line of code that matched, and the matches data.
+    """
+    # These are comment / doscstrings, not part of the docstring
+    # TODO: Highlight match in line
+    # TODO: Format some of the other data.
 
-    In the future I would like to see the matches data used to highlight the matches in the line, as well as formating some of the other data.
-    """
     def __init__(self, path, linenumber=None, line=None, matches=None):
         self._path = path
         self._line = line
         self._matches = matches
         self.linenumber = linenumber
+        self.path = self._escape_text(self._path)
+        self.line = self._format_line()
 
-    @property
-    def path(self):
-        return cgi.escape(self._path)
+    # really dislike this use of the property decorator
+    # it's just personal, but I prefer get_foo, then foo = property(get_foo)
+    # then at least get_foo remains as a method
+    # We don't need properties anyway, we should cache the result, since it
+    # won't change, and objectlist refreshes its view a lot
 
-    @property
-    def line(self):
-        return cgi.escape(self._line)
+    #@property
+    #def path(self):
+    #    return cgi.escape(self._path)
+
+    #@property
+    #def line(self):
+    #    return cgi.escape(self._line)
+
+    def _markup_match(self, text):
+        return ('<span color="#c00000"><b>%s</b></span>' %
+                self._escape_text(text))
+
+    def _escape_text(self, text):
+        return cgi.escape(text)
+
+    # This has to be quite ugly since we need to markup and split and escape as
+    # we go along. Since once we have escaped things, we won't know where they
+    # are
+    #
+    def _format_line(self):
+        line = self._line
+        line_pieces = []
+        for match in self._matches:
+            # split the line into before the match, and after
+            # leaving the after for searching
+            prematch, line = line.split(match, 1)
+            line_pieces.append(self._escape_text(prematch))
+            line_pieces.append(self._markup_match(match))
+        # Append the remainder
+        line_pieces.append(self._escape_text(line))
+        return ''.join(line_pieces)
+            
 
 
 class GrepperActionsConfig(ActionsConfig):
@@ -135,6 +175,7 @@ class GrepperCommandsConfig(CommandsConfig):
         return self.svc.boss.cmd('window', 'present_view', view=self.svc.get_view())
 
 class Grepper(Service):
+    # format this docstring
     """
     Grepper is a graphical grep tool used for search through the contents of files for a given regular expression. 
     """
