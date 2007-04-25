@@ -77,7 +77,8 @@ class GrepperView(PidaGladeView):
     def create_ui(self):
         self.matches_list.set_columns([
             Column('linenumber', editable=False, title="#",),
-            Column('path', expand=True, editable=False, use_markup=True),
+            # Only expand the line column (path with autofit)
+            Column('path', editable=False, use_markup=True),
             Column('line', expand=True, editable=False, use_markup=True),
             ])
         self.matches_list.connect('row-activated', self.on_match_activated)
@@ -182,20 +183,17 @@ class Grepper(Service):
         """
         try:
             f = open(filename, 'r')
+            for linenumber, line in enumerate(f):
+                if self.BINARY_RE.search(line):
+                    break
+
+                line_matches = regex.findall(line)
+
+                if len(line_matches):
+                    # strip() the line to give the view more vertical space
+                    yield GrepperItem(filename, linenumber, line.strip(), line_matches)
         except IOError:
             pass
-        else:
-            try:
-                for linenumber, line in enumerate(f):
-                    if self.BINARY_RE.search(line):
-                        break
-
-                    line_matches = regex.findall(line)
-
-                    if len(line_matches):
-                        yield GrepperItem(filename, linenumber, line, line_matches)
-            finally:
-                f.close()
 
 Service = Grepper
 
