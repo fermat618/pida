@@ -154,6 +154,9 @@ class GrepperView(PidaGladeView):
         # we should set this to the current project I think
         self.path_chooser.set_filename(os.path.expanduser('~/'))
 
+        self.recursive.set_active(True)
+        self.re_check.set_active(True)
+
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
         self.svc.boss.editor.cmd('goto_line',
