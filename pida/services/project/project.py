@@ -297,6 +297,9 @@ class ProjectCommandsConfig(CommandsConfig):
     def get_view(self):
         return self.svc.get_view()
 
+    def get_current(self):
+        return self.svc.get_current()
+
 # Service class
 class Project(Service):
     """The project manager service"""
@@ -374,6 +377,9 @@ class Project(Service):
             self.emit('project_switched', project=project)
             toolitem = self.get_action('project_execute').get_proxies()[0]
             toolitem.set_menu(self.create_menu())
+
+    def get_current_project(self):
+        return self._project
 
     def load_and_set_project(self, project_file):
         project = self._load_project(project_file)
