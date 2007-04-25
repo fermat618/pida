@@ -122,7 +122,7 @@ class GrepperActionsConfig(ActionsConfig):
 
 class GrepperView(PidaGladeView):
     gladefile = 'grepper-window'
-    label_text = 'Grepper'
+    label_text = 'Find in Files'
     icon_name = gtk.STOCK_FIND
 
     def create_ui(self):
