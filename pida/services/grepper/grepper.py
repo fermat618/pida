@@ -55,7 +55,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'show_grepper',
             TYPE_TOGGLE,
-            'Show grepper',
+            'Find in files',
             'Show the grepper view',
             gtk.STOCK_FIND,
             self.on_show_grepper,

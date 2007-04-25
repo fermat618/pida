@@ -5,6 +5,15 @@
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
+            <placeholder name="undo"/>
+            <separator />
+            <placeholder name="cut"/>
+            <separator />
+            <placeholder name="find">
+                <menuitem name="show_grepper" action="show_grepper" />
+            </placeholder>
+            <separator />
+            <placeholder name="prefs" />
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
@@ -20,7 +29,6 @@
             <placeholder name="tools" />
             <separator />
             <placeholder name="perms">
-                <menuitem name="show_grepper" action="show_grepper" />
             </placeholder>
             <separator />
             <placeholder name="panes" />
