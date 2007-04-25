@@ -142,6 +142,8 @@ class GrepperView(PidaGladeView):
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
+        self.svc.boss.editor.cmd('goto_line',
+                                 line=grepper_item.linenumber)
 
     def append_to_matches_list(self, grepper_item):
         # select the first item (slight hack)
@@ -162,6 +164,12 @@ class GrepperView(PidaGladeView):
         pattern = self.pattern_entry.get_text()
         location = self.path_chooser.get_filename()
         recursive = self.recursive.get_active()
+
+        # needs a patched kiwi
+        self.matches_list.grab_focus()
+        # so do this evil hack for now
+        # TODO: remove this when kiwi patch is accepted!
+        self.matches_list._treeview.grab_focus()
 
         # data checking is done here as opposed to in the grep functions
         # because of threading
