@@ -80,6 +80,8 @@ class GrepperItem(object):
         line = self._line
         line_pieces = []
         for match in self._matches:
+            if match not in line:
+                print 'not in', [match, line]
             # split the line into before the match, and after
             # leaving the after for searching
             prematch, line = line.split(match, 1)
@@ -87,7 +89,8 @@ class GrepperItem(object):
             line_pieces.append(self._markup_match(match))
         # Append the remainder
         line_pieces.append(self._escape_text(line))
-        return ''.join(line_pieces)
+        # strip() the line to give the view more vertical space
+        return ''.join(line_pieces).strip()
             
 
 
@@ -235,8 +238,7 @@ class Grepper(Service):
                 line_matches = regex.findall(line)
 
                 if len(line_matches):
-                    # strip() the line to give the view more vertical space
-                    yield GrepperItem(filename, linenumber, line.strip(), line_matches)
+                    yield GrepperItem(filename, linenumber, line, line_matches)
         except IOError:
             pass
 
