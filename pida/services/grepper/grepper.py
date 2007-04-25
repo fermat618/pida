@@ -144,7 +144,9 @@ class GrepperView(PidaGladeView):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
 
     def append_to_matches_list(self, grepper_item):
-        self.matches_list.append(grepper_item)
+        # select the first item (slight hack)
+        select = not len(self.matches_list)
+        self.matches_list.append(grepper_item, select=select)
 
     def on_find_button__clicked(self, button):
         self.start_grep()
