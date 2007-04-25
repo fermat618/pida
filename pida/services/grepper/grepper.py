@@ -125,6 +125,8 @@ class GrepperView(PidaGladeView):
 
 
 class GrepperCommandsConfig(CommandsConfig):
+    
+    # Are either of these commands necessary?
     def get_view(self):
         return self.svc.get_view()
 
