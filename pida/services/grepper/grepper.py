@@ -194,12 +194,16 @@ class GrepperCommandsConfig(CommandsConfig):
         return self.svc.get_view()
 
     def present_view(self):
-        return self.svc.boss.cmd('window', 'present_view', view=self.svc.get_view())
+        return self.svc.boss.cmd('window', 'present_view',
+                                 view=self.svc.get_view())
 
 class Grepper(Service):
     # format this docstring
     """
-    Grepper is a graphical grep tool used for search through the contents of files for a given regular expression. 
+    Search text in files.
+
+    Grepper is a graphical grep tool used for search through the contents of
+    files for a given match or regular expression. 
     """
     actions_config = GrepperActionsConfig
 
@@ -246,7 +250,11 @@ class Grepper(Service):
 
     def _grep_file(self, filename, regex):
         """
-        takes as it's arguments a full path to a file, and a regular expression to search for. It returns a generator that yields a GrepperItem for each cycle, that contains the path, line number and matches data
+        Grep a file.
+
+        Takes as it's arguments a full path to a file, and a regular expression
+        to search for. It returns a generator that yields a GrepperItem for
+        each cycle, that contains the path, line number and matches data.
         """
         try:
             f = open(filename, 'r')
