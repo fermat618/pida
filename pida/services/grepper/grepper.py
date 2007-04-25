@@ -27,6 +27,7 @@ from pida.core.service import Service
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask
 
+# Imports should be properly arranged as in coding-style.txt
 import gtk, gobject, os, re, sre_constants, cgi
 
 class GrepperItem(object):
