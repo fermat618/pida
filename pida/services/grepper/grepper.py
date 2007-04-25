@@ -136,7 +136,9 @@ class GrepperView(PidaGladeView):
             ])
         # Can connect this automatically
         #self.matches_list.connect('row-activated', self.on_match_activated)
-        self.path_entry.insert_text(os.path.expanduser('~/'))
+
+        # we should set this to the current project I think
+        self.path_chooser.set_filename(os.path.expanduser('~/'))
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
@@ -150,16 +152,13 @@ class GrepperView(PidaGladeView):
     def on_pattern_entry__activate(self, entry):
         self.start_grep()
 
-    def on_path_entry__activate(self, entry):
-        self.start_grep()
-
     def _translate_glob(self, glob):
         return fnmatch.translate(glob).rstrip('$')
 
     def start_grep(self):
         self.matches_list.clear()
         pattern = self.pattern_entry.get_text()
-        location = os.path.normpath(self.path_entry.get_text())
+        location = self.path_chooser.get_filename()
         recursive = self.recursive.get_active()
 
         # data checking is done here as opposed to in the grep functions
@@ -180,7 +179,7 @@ class GrepperView(PidaGladeView):
         except sre_constants.error, e:
             # More verbose error dialog
             self.svc.boss.get_window().error_dlg(
-                'Improper Regular Expression "%s"' % pattern,
+                'Improper regular expression "%s"' % pattern,
                 str(e))
             return False
 
