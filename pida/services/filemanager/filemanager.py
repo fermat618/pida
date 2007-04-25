@@ -25,6 +25,9 @@ from weakref import proxy
 import gtk
 
 from os import listdir, path
+
+import os
+
 import cgi
 
 import re
@@ -41,6 +44,7 @@ from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
 from pida.utils.gthreads import GeneratorTask
 
 from pida.ui.views import PidaView
+from pida.ui.objectlist import AttrSortCombo
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
 state_text = dict(
@@ -77,63 +81,59 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         )
 
 
-# TODO: remove the awful property names
-# TODO: use cgi.escape instead of ''.replace
 class FileEntry(object):
     """The model for file entries"""
 
-    _state = "normal"
-    _icon = None
-
-    def __init__(self, name, path_, manager):
+    def __init__(self, name, parent_path, manager):
         
-        self._name = name
-
         self._manager = manager
-        self._path = path_
-        self.path = path.join(path_, name)
-    
-    @property
-    def name(self):
-        return self.format(cgi.escape(self._name))
+        self.state = 'normal'
+        self.name = name
+        self.lower_name = self.name.lower()
+        self.parent_path = parent_path
+        self.path = os.path.join(parent_path, name)
+        self.extension = os.path.splitext(self.name)[-1]
+        self.extension_sort = self.extension, self.lower_name
+        self.is_dir = os.path.isdir(self.path)
+        self.is_dir_sort = not self.is_dir, self.lower_name
+        self.icon_stock_id = self.get_icon_stock_id()
 
-    @property
-    def icon(self):
-        if self._icon is not None:
-            return self._icon
-        elif path.isdir(self.path):
+    def get_markup(self):
+        return self.format(cgi.escape(self.name))
+
+    markup = property(get_markup)
+
+    def get_icon_stock_id(self):
+        if path.isdir(self.path):
             return 'stock_folder'
         else:
             #TODO: get a real mimetype icon
             return 'text-x-generic'
-    
-    @property #TODO: deal with making this small hack more generic
-    def dir_sort(self):
-        return not path.isdir(self.path), self._name
 
-
-    @property
-    def state(self):
-        text = state_text.get(self._state, ' ')
+    def get_state_markup(self):
+        text = state_text.get(self.state, ' ')
         wrap = '<span weight="ultrabold"><tt>%s</tt></span>'
         return wrap%self.format(text)
+
+    state_markup = property(get_state_markup)
         
     def format(self, text):
-        color, b, i= state_style.get(self._state, ('black', False, False))
-
+        color, b, i = state_style.get(self.state, ('black', False, False))
         if b:
-            text = '<b>%s</b>'%text
+            text = '<b>%s</b>' % text
         if i:
-            text = '<i>%s</i>'%text
-        return '<span color="%s">%s</span>'%(color, text)
+            text = '<i>%s</i>' % text
+        return '<span color="%s">%s</span>' % (color, text)
+
 
 class FilemanagerView(PidaView):
     
     _columns = [
-        Column("icon", use_stock=True),
-        Column("state", use_markup=True),
-        Column("name", use_markup=True),
-        Column("dir_sort", visible=False, sorted=True) # small hack helper
+        Column("icon_stock_id", use_stock=True),
+        Column("state_markup", use_markup=True),
+        Column("markup", use_markup=True),
+        # shouldn't need this any more
+        #Column("dir_sort", visible=False, sorted=True) # small hack helper
         ]
 
     label_text = 'Files'
@@ -165,6 +165,18 @@ class FilemanagerView(PidaView):
         self.update_to_path(self.svc.path)
         self.file_list.show()
         self._vbox.pack_start(self.file_list)
+        self._sort_combo = AttrSortCombo(self.file_list,
+            [
+                ('is_dir_sort', 'Directories First'),
+                ('lower_name', 'File Name'),
+                ('name', 'Case Sensitive File Name'),
+                ('path', 'File Path'),
+                ('extension_sort', 'Extension'),
+                ('state', 'Version Control Status'),
+            ],
+            'is_dir_sort')
+        self._sort_combo.show()
+        self._vbox.pack_start(self._sort_combo, expand=False)
        
     def create_toolbar(self):
         self._tips = gtk.Tooltips()
@@ -213,11 +225,11 @@ class FilemanagerView(PidaView):
         return act
     
     def add_or_update_file(self, name, basepath, state):
-        if basepath!=self.path:
+        if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
         if state != "normal":
-            entry._state = state
+            entry.state = state
 
         self.show_or_hide(entry)
     
@@ -225,8 +237,8 @@ class FilemanagerView(PidaView):
         from operator import and_
         def check(checker):
             return checker(
-                    name=entry._name, 
-                    path=entry._path,
+                    name=entry.name, 
+                    path=entry.parent_path,
                     state=entry.state,
                     )
         show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
@@ -258,7 +270,7 @@ class FilemanagerView(PidaView):
     
     def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
-                 path.join(self.path, fileentry._name))
+                 path.join(self.path, fileentry.name))
         if path.isdir(target):
             self.svc.browse(target)
         else:
