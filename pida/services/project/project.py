@@ -31,7 +31,7 @@ from kiwi.ui.objectlist import Column
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
-from pida.core.options import OptionsConfig, OTypeStringList, OTypeString
+from pida.core.options import OptionsConfig, OTypeStringList, OTypeFile
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
@@ -294,9 +294,10 @@ class ProjectOptions(OptionsConfig):
         self.create_option(
             'last_project',
             'Last Project',
-            OTypeString,
+            OTypeFile,
             '',
-            'The last project selected',
+            ('The last project selected. '
+            '(Don't change this unless you know what you are doing)')
         )
 
 
