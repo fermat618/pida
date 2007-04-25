@@ -535,8 +535,11 @@ class communication_window(gtk.Window):
         self.send_message(server, 'cursor(%s, %s)' % (y, x), True, False)
         self.send_esc(server)
 
-    def save_session(self, name):
-        self.send_ex('mks %s' % name)
+    def save_session(self, server, file_name):
+        self.send_ex(server, 'mks %s' % file_name)
+
+    def load_session(self, server, file_name):
+        self.load_script(server, file_name)
 
     def escape_filename(self, name):
         for s in ['\\', '?', '*', ' ', "'", '"', '[', '	', '$', '{', '}']:
