@@ -336,16 +336,19 @@ class Project(Service):
         self.project_properties_view.set_controllers(self.features(IProjectController))
         self._read_options()
 
-    def _read_options(self):
+    def start(self):
         last = self.opt('last_project')
+        for project in self._projects:
+            if last:
+                if project.source_directory == last:
+                    self.project_list.set_current_project(project)
+
+    def _read_options(self):
         for dirname in self.opt('project_dirs'):
             path = os.path.join(dirname, '%s.pidaproject' %
                                       os.path.basename(dirname))
             if os.path.exists(path):
                 project = self._load_project(path)
-                if last:
-                    if project.source_directory == last:
-                        self.project_list.set_current_project(project)
             else:
                 self.log_warn('Project path %s has disappeared' % path)
 

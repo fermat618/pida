@@ -27,6 +27,7 @@ from kiwi.ui.objectlist import Column
 from pida.ui.views import PidaGladeView, PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
+from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask
 
@@ -171,6 +172,9 @@ class GrepperView(PidaGladeView):
     def _translate_glob(self, glob):
         return fnmatch.translate(glob).rstrip('$')
 
+    def set_location(self, location):
+        self.path_chooser.set_filename(location)
+
     def start_grep_for_word(self, word):
         self.pattern_entry.set_text(word)
         self.start_grep()
@@ -223,6 +227,12 @@ class GrepperCommandsConfig(CommandsConfig):
         return self.svc.boss.cmd('window', 'present_view',
                                  view=self.svc.get_view())
 
+class GrepperEvents(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('project', 'project_switched',
+            self.svc.set_current_project)
+
 class Grepper(Service):
     # format this docstring
     """
@@ -232,10 +242,11 @@ class Grepper(Service):
     files for a given match or regular expression. 
     """
     actions_config = GrepperActionsConfig
+    events_config = GrepperEvents
 
     BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]|\\x00')
 
-    def start(self):
+    def pre_start(self):
         self._view = GrepperView(self)
 
     def show_grepper(self):
@@ -307,6 +318,9 @@ class Grepper(Service):
                     yield GrepperItem(filename, linenumber, line, line_matches)
         except IOError:
             pass
+
+    def set_current_project(self, project):
+        self._view.set_location(project.source_directory)
 
 Service = Grepper
 
