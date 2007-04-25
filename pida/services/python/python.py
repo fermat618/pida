@@ -80,7 +80,7 @@ class PyflakeView(PidaView):
         return msg
 
     def _on_errors_double_clicked(self, ol, item):
-        self.svc.boss.cmd('vim', 'goto_line', line=item.lineno)
+        self.svc.boss.editor.cmd('goto_line', line=item.lineno)
 
 class Pyflaker(object):
 
