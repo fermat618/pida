@@ -11,18 +11,21 @@
         </menu>
         
         <menu name="LanguageMenu" action="LanguageMenu">
-        </menu>
-        
-        <menu name="ToolsMenu" action="ToolsMenu">
-        </menu>
-        
-        <menu name="ViewMenu" action="ViewMenu">
             <placeholder name="tools">
             <menuitem action="show_breakpoints" name="show_breakpoints" />
             <menuitem action="show_dbg_profile_manager" name="show_dbg_profile_manager" />
             </placeholder>
             <separator />
             <placeholder name="panes"/>
+        </menu>
+
+        <menu name="DebugMenu" action="DebugMenu">
+        </menu>
+        
+        <menu name="ToolsMenu" action="ToolsMenu">
+        </menu>
+        
+        <menu name="ViewMenu" action="ViewMenu">
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

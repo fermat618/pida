@@ -9,6 +9,7 @@ base_menu_actions = [
     ('EditMenu', None, 'Edit', '<Alt>e', 'Edit Menu', None),
     ('ProjectMenu', None, 'Project', '<Alt>p', 'Project Menu', None),
     ('LanguageMenu', None, 'Language', '<Alt>l', 'Language Menu', None),
+    ('DebugMenu', None, 'Debug', '<Alt>l', 'Debug Menu', None),
     ('ToolsMenu', None, 'Tools', '<Alt>t', 'Tools Menu', None),
     ('ToolsDebug', None, 'Debug Pida', '', 'Debug Pida Menu', None),
     ('ViewMenu', None, 'View', '<Alt>v', 'View Menu', None),
