@@ -113,12 +113,24 @@ class GrepperActionsConfig(ActionsConfig):
             '<Shift><Control>g'
         )
 
+        self.create_action(
+            'grep_current_word',
+            TYPE_NORMAL,
+            'Find current word in files',
+            'Find the current word in files',
+            gtk.STOCK_FIND,
+            self.on_grep_current_word,
+            '<Shift><Control>question'
+        )
+
     def on_show_grepper(self, action):
         if action.get_active():
             self.svc.show_grepper()
         else:
             self.svc.hide_grepper()
 
+    def on_grep_current_word(self, action):
+        self.svc.grep_current_word()
 
 class GrepperView(PidaGladeView):
     gladefile = 'grepper-window'
@@ -158,6 +170,10 @@ class GrepperView(PidaGladeView):
 
     def _translate_glob(self, glob):
         return fnmatch.translate(glob).rstrip('$')
+
+    def start_grep_for_word(self, word):
+        self.pattern_entry.set_text(word)
+        self.start_grep()
 
     def start_grep(self):
         self.matches_list.clear()
@@ -228,6 +244,17 @@ class Grepper(Service):
     def hide_grepper(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
+    def ensure_view_visible(self):
+        act = self.get_action('show_grepper')
+        if not act.get_active():
+            act.set_active(True)
+        self.boss.cmd('window', 'present_view', view=self._view)
+
+    def grep_current_word(self):
+        self.boss.editor.cmd('call_with_current_word',
+                             callback=self._view.start_grep_for_word)
+        self.ensure_view_visible()
+
     def _grep(self, top, regex, recursive=False, show_hidden=False):
         """
         _grep is a wrapper around _grep_file_list and _grep_file.
@@ -253,7 +280,9 @@ class Grepper(Service):
         for file in file_list:
             if file[0] == "." and not show_hidden:
                 continue
-            filename = "%s/%s" % (root, file,)
+            # never do this, always use os.path.join
+            # filename = "%s/%s" % (root, file,)
+            filename = os.path.join(root, file)
             file_results = self._grep_file(filename, regex)
             for result in file_results:
                 yield result
