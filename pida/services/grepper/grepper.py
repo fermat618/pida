@@ -83,10 +83,11 @@ class GrepperView(PidaGladeView):
             Column('path', editable=False, use_markup=True),
             Column('line', expand=True, editable=False, use_markup=True),
             ])
-        self.matches_list.connect('row-activated', self.on_match_activated)
+        # Can connect this automatically
+        #self.matches_list.connect('row-activated', self.on_match_activated)
         self.path_entry.insert_text(os.path.expanduser('~/'))
 
-    def on_match_activated(self, rowitem, grepper_item):
+    def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
 
     def append_to_matches_list(self, grepper_item):
