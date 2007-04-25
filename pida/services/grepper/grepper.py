@@ -75,6 +75,8 @@ class GrepperView(PidaGladeView):
     icon_name = gtk.STOCK_FIND
 
     def create_ui(self):
+        # Instance methods should be instance methods
+        self.grepper_dir = ''
         self.matches_list.set_columns([
             Column('linenumber', editable=False, title="#",),
             # Only expand the line column (path with autofit)
@@ -119,8 +121,6 @@ class GrepperView(PidaGladeView):
 
         task = GeneratorTask(self.svc._grep, self.append_to_matches_list)
         task.start(location, regex, recursive)
-
-    grepper_dir = ""
 
 
 class GrepperCommandsConfig(CommandsConfig):
