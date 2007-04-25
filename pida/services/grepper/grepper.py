@@ -20,6 +20,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+
+from glob import fnmatch
+
 from kiwi.ui.objectlist import Column
 from pida.ui.views import PidaGladeView, PidaView
 from pida.core.commands import CommandsConfig
@@ -80,8 +83,12 @@ class GrepperItem(object):
         line = self._line
         line_pieces = []
         for match in self._matches:
+            # ignore empty string matches
+            if not match:
+                continue
+            # this should never happen
             if match not in line:
-                print 'not in', [match, line]
+                continue
             # split the line into before the match, and after
             # leaving the after for searching
             prematch, line = line.split(match, 1)
@@ -146,6 +153,9 @@ class GrepperView(PidaGladeView):
     def on_path_entry__activate(self, entry):
         self.start_grep()
 
+    def _translate_glob(self, glob):
+        return fnmatch.translate(glob).rstrip('$')
+
     def start_grep(self):
         self.matches_list.clear()
         pattern = self.pattern_entry.get_text()
@@ -154,14 +164,24 @@ class GrepperView(PidaGladeView):
 
         # data checking is done here as opposed to in the grep functions
         # because of threading
+        if not pattern:
+            self.svc.error_dlg('Empty search string')
+            return False
+
         if not os.path.exists(location):
             self.svc.boss.get_window().error_dlg('path does not exist')
             return False
 
+        if not self.re_check.get_active():
+            pattern = self._translate_glob(pattern)
+
         try:
             regex = re.compile(pattern)
         except sre_constants.error, e:
-            self.svc.boss.get_window().error_dlg('improper regex')
+            # More verbose error dialog
+            self.svc.boss.get_window().error_dlg(
+                'Improper Regular Expression "%s"' % pattern,
+                str(e))
             return False
 
         task = GeneratorTask(self.svc._grep, self.append_to_matches_list)

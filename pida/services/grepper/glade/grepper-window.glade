@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Tue Apr 24 13:11:56 2007 by aconbere@GMIIT4-->
+<!--Generated with glade3 3.2.0 on Wed Apr 25 10:47:56 2007 by ali@rogue-->
 <glade-interface>
   <requires lib="kiwiwidgets"/>
   <widget class="GtkWindow" id="grepper-window">
@@ -13,6 +13,8 @@
           <widget class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+            <property name="border_width">6</property>
+            <property name="spacing">6</property>
             <child>
               <widget class="GtkEntry" id="pattern_entry">
                 <property name="visible">True</property>
@@ -21,8 +23,19 @@
                 <property name="is_focus">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </widget>
+            </child>
+            <child>
+              <widget class="GtkCheckButton" id="re_check">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="tooltip" translatable="yes">Is this match a Regular Expression</property>
+                <property name="label" translatable="yes">RE</property>
+                <property name="draw_indicator">True</property>
+              </widget>
               <packing>
-                <property name="padding">10</property>
+                <property name="expand">False</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -33,8 +46,7 @@
                 <property name="tooltip" translatable="yes">path to search on</property>
               </widget>
               <packing>
-                <property name="padding">10</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -48,8 +60,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="padding">10</property>
-                <property name="position">2</property>
+                <property name="position">3</property>
               </packing>
             </child>
             <child>
@@ -59,7 +70,7 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="position">3</property>
+                <property name="position">4</property>
               </packing>
             </child>
             <child>
@@ -72,15 +83,13 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="padding">10</property>
-                <property name="position">4</property>
+                <property name="position">5</property>
               </packing>
             </child>
           </widget>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="padding">6</property>
           </packing>
         </child>
         <child>
