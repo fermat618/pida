@@ -8,9 +8,7 @@
 from bases import VCSBase, DVCSMixin
 from subprocess import Popen, PIPE
 from file import StatedPath as Path
-import re
-from os.path import abspath, dirname, normpath
-from os import listdir
+from os import path 
 
 def action(fn):
     """
@@ -26,9 +24,9 @@ def action(fn):
                             ))
         if getattr(fn, "paths", False):
             paths = kw.pop("paths", [])
-            #XXX: base_path shouldnt end with a path-separator
-            paths = [ abspath(p)[len(self.base_path)+1:] for p in paths ]
-            
+            paths = map(path.normpath,
+                        map(path.abspath, paths))
+             
         else:
             paths = []
         xparams = fn(self, **kw) or []
@@ -61,9 +59,9 @@ class CommandBased(VCSBase):
     Base class for all command based rcs's
     """
     command_map = {}
-
-    def __init__(self, path):
-        self.path = abspath(path)
+    
+    def __init__(self, path_):
+        self.path = path.normpath( path.abspath(path_) )
         self.base_path = self._find_basepath()
     
     def _find_basepath(self):
@@ -75,20 +73,30 @@ class CommandBased(VCSBase):
             if isinstance(dsd,dict):
                 dsd = dsd.keys()
             
-            path = self.path
+            assert isinstance(dsd, list), \
+                "detect_subdir classattribute must be a string, list or dict"
+            
+            act_path = self.path
             detected_path = None
             detected_sd = None
-            op = ""
-            while path != op:
+            op = None
+            while act_path != op:
                 for sd in dsd:
-                    if sd in listdir(path):
-                        detected_path = path
+                    if path.exists( path.join(act_path, sd)):
+                        detected_path = act_path
                         detected_sd = sd
-                op = path
-                path = dirname(path)
+                        # continue cause some vcs's 
+                        # got the subdir in every path
+                op = act_path
+                act_path = path.dirname(act_path)
                 
             if not detected_path:
-                raise ValueError("VC Basepath for vc class %r not found above   "%type(self))
+                raise ValueError(
+                        "VC Basepath for vc class %r"
+                        "not found above %s"%(
+                            type(self), 
+                            self.path)
+                        )
 
             if isinstance(self.detect_subdir, dict):
                 self.cmd = self.detect_subdir[detected_sd]
@@ -113,7 +121,7 @@ class CommandBased(VCSBase):
         for line in self._output_pipe(args):
             print line,
 
-    def _get_command(self,action,args = []):
+    def _get_command(self, action, args = []):
         action = getattr(self, action + "_cmd", action)
         if not isinstance(action, list):
             action = self.command_map.get(action, action)
@@ -244,7 +252,7 @@ class Monotone(DCommandBased):
 
     def parse_list_item(self, item):
         state = self.statemap.get(item[:3], "none") 
-        return Path(normpath(item[8:].rstrip()), state, self.base_path)
+        return Path(path.normpath(item[8:].rstrip()), state, self.base_path)
 
 class Bazaar(DCommandBased):
     cmd = "bzr"
@@ -363,8 +371,8 @@ class Darcs(DCommandBased):
     def parse_list_item(self, item):
         if item.startswith('What') or item.startswith('No') or not item.strip():
             return None
-        elements = item.split()
+        elements = item.split(1)
         state = self.state_map[elements[0]]
-        file = normpath(elements[1])
+        file = path.normpath(elements[1])
         return Path(file, state, self.base_path)
 
