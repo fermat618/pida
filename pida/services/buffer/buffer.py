@@ -196,7 +196,9 @@ class BufferCommandsConfig(CommandsConfig):
 
 # Service class
 class Buffer(Service):
-    """Describe your Service Here""" 
+    """
+    Buffer is a graphical manager for vim buffers.
+    """ 
 
     commands_config = BufferCommandsConfig
     actions_config = BufferActionsConfig
@@ -257,6 +259,9 @@ class Buffer(Service):
 
     def get_current(self):
         return self._current
+
+    def get_documents(self):
+        return self._documents
 
 
 # Required Service attribute for service loading
