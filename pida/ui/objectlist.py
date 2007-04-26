@@ -78,16 +78,15 @@ class AttrSortCombo(gtk.HBox):
     def _get_attribute(self):
         return self._model[self._combo.get_active_iter()][0]
 
-class Mixin(object):
-    def sort_by_attribute(self, attribute, order=gtk.SORT_ASCENDING):
-        """Sort by an attribute in the model."""
-        def _sort_func(model, iter1, iter2):
-            attr1 = getattr(model[iter1][0], attribute, None)
-            attr2 = getattr(model[iter2][0], attribute, None)
-            return cmp(attr1, attr2)
-        unused_sort_col_id = len(self._columns)
-        self._model.set_sort_func(unused_sort_col_id, _sort_func)
-        self._model.set_sort_column_id(unused_sort_col_id, order)
+def sort_by_attribute(self, attribute, order=gtk.SORT_ASCENDING):
+    """Sort by an attribute in the model."""
+    def _sort_func(model, iter1, iter2):
+        attr1 = getattr(model[iter1][0], attribute, None)
+        attr2 = getattr(model[iter2][0], attribute, None)
+        return cmp(attr1, attr2)
+    unused_sort_col_id = len(self._columns)
+    self._model.set_sort_func(unused_sort_col_id, _sort_func)
+    self._model.set_sort_column_id(unused_sort_col_id, order)
 
 
 class PBC(Column):
