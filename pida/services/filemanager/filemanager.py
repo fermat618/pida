@@ -256,8 +256,10 @@ class FilemanagerEvents(EventsConfig):
         self.create_event('browsepath_switched')
         self.create_event('file_renamed')
     
-    def subscribe_events(self):    
+    def subscribe_foreign_events(self):    
         self.subscribe_event('file_renamed', self.svc.rename_file)
+        self.subscribe_foreign_event('project', 'project_switched',
+                                     self.svc.on_project_switched)
 
 class FilemanagerCommandsConfig(CommandsConfig):
     def browse(self, new_path):
@@ -383,6 +385,17 @@ class FileManagerActionsConfig(ActionsConfig):
             'NOACCEL',
         )
 
+        self.create_action(
+            'toolbar_projectroot',
+            TYPE_NORMAL,
+            'Project Root',
+            'Browse the root of the current project',
+            'package_utilities',
+            self.on_toolbar_projectroot,
+            'NOACCEL',
+        )
+
+
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('browse', new_path=new_path)
@@ -405,6 +418,9 @@ class FileManagerActionsConfig(ActionsConfig):
     def on_toolbar_refresh(self, action):
         self.svc.get_view().update_to_path()
 
+    def on_toolbar_projectroot(self, action):
+        self.svc.browse(self.svc.current_project.source_directory)
+
 
 
 # Service class
@@ -420,6 +436,7 @@ class Filemanager(Service):
     def pre_start(self):
         self.path = self.opt('last_browsed')
         self.file_view = FilemanagerView(self)
+        self.on_project_switched(None)
 
     def get_view(self):
         return self.file_view
@@ -452,6 +469,10 @@ class Filemanager(Service):
 
     def rename_file(self, old, new, basepath):
         pass
+
+    def on_project_switched(self, project):
+        self.current_project = project
+        self.get_action('toolbar_projectroot').set_sensitive(project is not None)
 
 
 
