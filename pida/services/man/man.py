@@ -53,7 +53,7 @@ class ManItem(object):
 
 class ManView(PidaView):
 
-    icon_name = 'gtk-library'
+    icon_name = 'gnome-library'
     label_text = 'MAN'
     
     def create_ui(self):
@@ -83,7 +83,7 @@ class ManView(PidaView):
         self.svc.boss.cmd('commander', 'execute',
                 commandargs=commandargs,
                 cwd=directory,
-                icon='gtk-library',
+                icon='gnome-library',
                 title='Man %s(%d)' %
                 (item.pattern, int(item.number)))
         ## show man page in terminal
