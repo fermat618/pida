@@ -182,7 +182,7 @@ class VimCallback(object):
             if os.path.isdir(file_name):
                 self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
                 self.svc.boss.cmd('filemanager', 'present_view')
-                self.svc.close_directory(file_name)
+                self.svc.open_last()
             else:
                 self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
 
@@ -259,8 +259,8 @@ class Vim(Service):
     def open_many(documents):
         """Open a few documents"""
 
-    def close_directory(self, path):
-        self._com.close_buffer(self.server, path)
+    def open_last(self):
+        self._com.change_buffer(self.server, '#')
 
     def close(self, document):
         if document.unique_id in self._documents:
