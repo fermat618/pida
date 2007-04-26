@@ -165,27 +165,93 @@ class CommanderFeaturesConfig(FeaturesConfig):
         self.subscribe_foreign_feature('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'commander-dir-menu.xml'))
 
+
+def create_mini_button(stock_id, tooltip, click_callback):
+    tip = gtk.Tooltips()
+    tip.enable()
+    im = gtk.Image()
+    im.set_from_stock(stock_id, gtk.ICON_SIZE_MENU)
+    but = gtk.Button()
+    but.set_image(im)
+    but.connect('clicked', click_callback)
+    eb = gtk.EventBox()
+    eb.add(but)
+    tip.set_tip(eb, tooltip)
+    return eb
+
+
 class TerminalView(PidaView):
 
     icon_name = 'terminal'
 
     def create_ui(self):
+        self._pid = None
+        self._hb = gtk.HBox()
+        self._hb.show()
+        self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
         self._term.connect('child-exited', self.on_exited)
-        self.add_main_widget(self._term)
+        self._term.connect('window-title-changed', self.on_window_title_changed)
+        self._term.connect('selection-changed', self.on_selection_changed)
         self._term.show()
+        self._create_bar()
+        self._hb.pack_start(self._term)
+        self._hb.pack_start(self._bar, expand=False)
+
+    def _create_bar(self):
+        self._bar = gtk.VBox(spacing=1)
+        self._close_button = create_mini_button(
+            gtk.STOCK_CLOSE, 'Close this terminal', self.on_close_clicked)
+        self._bar.pack_start(self._close_button, expand=False)
+        self._copy_button = create_mini_button(
+            gtk.STOCK_COPY, 'Copy the selection to the clipboard',
+            self.on_copy_clicked)
+        self._copy_button.set_sensitive(False)
+        self._bar.pack_start(self._copy_button, expand=False)
+        self._paste_button = create_mini_button(
+            gtk.STOCK_PASTE, 'Paste the contents of the clipboard',
+            self.on_paste_clicked)
+        self._bar.pack_start(self._paste_button, expand=False)
+        self._title = gtk.Label()
+        self._title.set_alignment(0.5, 1)
+        self._title.set_padding(0, 3)
+        self._title.set_angle(270)
+        self._title.set_size_request(0,0)
+        self._bar.pack_start(self._title)
+        self._bar.show_all()
 
     def execute(self, commandargs, env, cwd):
-        self._term.fork_command(commandargs[0], commandargs, env, cwd)
+        self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
+        title_text = ' '.join(commandargs)
+        self._title.set_text(title_text)
+
+    def close_view(self):
+        self.svc.boss.cmd('window', 'remove_view', view=self)
 
     def on_exited(self, term):
         self._term.feed_text('Child exited\r\n', '1;34')
         self._term.feed_text('Press any key to close.')
         self._term.connect('commit', self.on_press_any_key)
 
-    def on_press_any_key(self, term, data, datalen):
-        self.svc.boss.cmd('window', 'remove_view', view=self)
+    def on_close_clicked(self, button):
+        if self._pid is not None:
+            os.kill(self._pid, 9)
+            self.close_view()
 
+    def on_selection_changed(self, term):
+        self._copy_button.set_sensitive(self._term.get_has_selection())
+
+    def on_copy_clicked(self, button):
+        self._term.copy_clipboard()
+
+    def on_paste_clicked(self, button):
+        self._term.paste_clipboard()
+
+    def on_press_any_key(self, term, data, datalen):
+        self.close_view()
+
+    def on_window_title_changed(self, term):
+        self._label.set_text(term.get_window_title())
 
 # Service class
 class Commander(Service):
