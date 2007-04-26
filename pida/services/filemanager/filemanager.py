@@ -42,7 +42,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
 from pida.core.environment import get_uidef_path
 
-from pida.utils.gthreads import GeneratorTask
+from pida.utils.gthreads import GeneratorTask, AsyncTask
 
 from pida.ui.views import PidaView
 from pida.ui.objectlist import AttrSortCombo
@@ -230,6 +230,8 @@ class FilemanagerView(PidaView):
         for lister in self.svc.features("file_lister"):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
+        self.create_ancest_tree()
+
     def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
                  path.join(self.path, fileentry.name))
@@ -248,6 +250,33 @@ class FilemanagerView(PidaView):
 
     def rename_file(self, old, new, entry):
         print 'renaming', old, 'to' ,new
+
+    def create_ancest_tree(self):
+        task = AsyncTask(self._get_ancestors, self._show_ancestors)
+        task.start(self.path)
+
+    def _on_act_up_ancestor(self, action, directory):
+        self.svc.browse(directory)
+
+    def _show_ancestors(self, ancs):
+        toolitem = self.svc.get_action('toolbar_up').get_proxies()[0]
+        menu = gtk.Menu()
+        for anc in ancs:
+            action = gtk.Action(anc, anc, anc, 'directory')
+            action.connect('activate', self._on_act_up_ancestor, anc)
+            menuitem = action.create_menu_item()
+            menu.add(menuitem)
+        menu.show_all()
+        toolitem.set_menu(menu)
+
+    def _get_ancestors(self, directory):
+        ancs = [directory]
+        while directory != '/':
+            parent = os.path.dirname(directory)
+            ancs.append(parent)
+            directory = parent
+        return ancs
+            
 
 
 class FilemanagerEvents(EventsConfig):
@@ -357,7 +386,7 @@ class FileManagerActionsConfig(ActionsConfig):
 
         self.create_action(
             'toolbar_up',
-            TYPE_NORMAL,
+            TYPE_MENUTOOL,
             'Go Up',
             'Go to the parent directory',
             gtk.STOCK_GO_UP,
@@ -449,6 +478,7 @@ class Filemanager(Service):
             self.path = new_path
             self.set_opt('last_browsed', new_path)
             self.file_view.update_to_path(new_path)
+
 
     def go_up(self):
         dir = path.dirname(self.path)
