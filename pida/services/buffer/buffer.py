@@ -36,6 +36,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaGladeView
+from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document
 
 PROJECT_LIST_COLUMNS = [
@@ -53,6 +54,20 @@ class BufferListView(PidaGladeView):
     def create_ui(self):
         self.buffers_ol.set_columns(PROJECT_LIST_COLUMNS)
         self.buffers_ol.set_headers_visible(False)
+        self._sort_combo = AttrSortCombo(self.buffers_ol,
+            [
+                ('creation_time', 'Time Opened'),
+                ('filename', 'File path'),
+                ('basename', 'File name'),
+                ('mimetype', 'Mime Type'),
+                ('length', 'File Length'),
+                ('modified_time', 'Last Modified'),
+                #('Project', 'project_name')
+            ],
+            'creation_time' 
+        )
+        self._sort_combo.show()
+        self.main_vbox.pack_start(self._sort_combo, expand=False)
 
     def add_document(self, document):
         self.buffers_ol.append(document)

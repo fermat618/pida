@@ -124,6 +124,8 @@ class Document(object):
         self.__project = None
         self.__newfile_index = None
         self.__detect_encoding = detect_encoding
+
+        self.creation_time = time.time()
         
         if filename is None:
             global new_file_index
@@ -225,6 +227,11 @@ class Document(object):
         return self.__stat
 
     stat = property(__get_stat)
+
+    def get_mtime(self):
+        return self.stat.m_time
+
+    modified_time = property(get_mtime)
 
     def __get_mimetype(self):
         return self.__mimetype
