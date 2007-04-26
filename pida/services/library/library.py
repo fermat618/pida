@@ -311,7 +311,7 @@ class Library(Service):
             self._view.fetch_books()
 
     def hide_library(self):
-        self.boss.cmd('window', 'hide_view', view=self._view)
+        self.boss.cmd('window', 'remove_view', view=self._view)
 
     def show_browser(self):
         self.boss.cmd('window', 'add_view', paned='Terminal',
