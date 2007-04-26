@@ -68,7 +68,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         hidden=('lightgrey', False, True),
         ignored=('lightgrey', False, True),
         #TODO: better handling of normal directories
-        none=('green', False, True), 
+        none=('#888888', False, True), 
         normal=('black', False, False),
         error=('red', True, True),
         empty=('black', False, True),
@@ -78,7 +78,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         missing=('#00c0c0', True, False),
         new=('blue', True, False),
         max=('#c0c000', False, False),
-        external=('darkyellow', True, False),
+        external=('#333333', False, True),
         )
 
 
