@@ -363,6 +363,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'Browse the parent directory of this file',
             'file-manager',
             self.on_browse_for_file,
+            'NOACCEL',
         )
 
         self.create_action(
@@ -372,6 +373,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'Browse the directory',
             'file-manager',
             self.on_browse_for_dir,
+            'NOACCEL',
         )
 
         self.create_action(

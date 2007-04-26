@@ -159,6 +159,7 @@ class OpenWithActions(ActionsConfig):
             'Open a file with',
             gtk.STOCK_OPEN,
             self.on_openwith_for_file,
+            'NOACCEL',
         )
 
     def on_show_openwith(self, action):

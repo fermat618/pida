@@ -111,6 +111,7 @@ class BufferActionsConfig(ActionsConfig):
             'Open this file',
             gtk.STOCK_OPEN,
             self.on_open_for_file,
+            'NOACCEL',
         )
 
         self.create_action(
