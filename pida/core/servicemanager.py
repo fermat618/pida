@@ -6,6 +6,9 @@ from pida.core.plugins import Registry
 from pida.core.environment import library, environ
 
 
+def sort_services_func(s1, s2):
+    return cmp(s1.servicename, s2.servicename)
+
 class ServiceLoader(object):
 
     def get_all_services(self, service_dirs):
@@ -18,12 +21,14 @@ class ServiceLoader(object):
                     service_class.servicename = module.servicename
                     service_class.servicefile_path = module.servicefile_path
                     classes.append(service_class)
+        classes.sort(sort_services_func)
         return classes
 
     def load_all_services(self, service_dirs, boss):
         services = []
         for service_class in self.get_all_services(service_dirs):
             services.append(service_class(boss))
+        services.sort(sort_services_func)
         return services
 
     def _find_service_paths(self, service_dir):
@@ -105,7 +110,9 @@ class ServiceManager(object):
         return self._reg.get_singleton(name)
 
     def get_services(self):
-        return self._reg.get_features(IService)
+        services = list(self._reg.get_features(IService))
+        services.sort(sort_services_func)
+        return services
 
     def create_all(self):
         for svc in self.get_services():
