@@ -1,26 +1,62 @@
-import gtk
- 
-def register_named_icon(stock_id, icon_name, factory):
-    source = gtk.IconSource()
-    source.set_icon_name(icon_name)
-    icon_set = gtk.IconSet()
-    icon_set.add_source(source)
-    factory.add(stock_id, icon_set)
- 
-# like gtk.stock_add but every tuple element contains also icon name
-def my_stock_add(items):
-    factory = gtk.IconFactory()
-    factory.add_default()
-    gtk.stock_add([it[:-1] for it in items])
-    for it in items:
-        register_named_icon(it[0], it[-1], factory)
-        # and this:
-        # gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
+import os
 
-stock_ids = gtk.stock_list_ids()
-for name in gtk.icon_theme_get_default().list_icons():
-    if name not in stock_ids:
-        my_stock_add([(name, name.capitalize(), 0, 0, None, name)])
+import gtk, gtk.gdk
+ 
+from kiwi.environ import environ
+
+
+class IconRegister(object):
+
+    def __init__(self):
+        self._factory = gtk.IconFactory()
+        self._factory.add_default()
+        self._register_theme_icons()
+        self._register_file_icons()
+
+    def _register_file_icons(self):
+        for directory in environ.get_resource_paths('pixmaps'):
+            for filename in os.listdir(directory):
+                name, ext = os.path.splitext(filename)
+                if ext in ['.png', '.gif', '.svg', '.jpg']:
+                    path = os.path.join(directory, filename)
+                    self._stock_add(name)
+                    self._register_file_icon(name, path)
+        
+
+    def _register_theme_icons(self):
+        stock_ids = gtk.stock_list_ids()
+        for name in gtk.icon_theme_get_default().list_icons():
+            if name not in stock_ids:
+                self._stock_add(name)
+                self._register_theme_icon(name)
+
+    def _stock_add(self, name, label=None):
+        if label is None:
+            label = name.capitalize()
+        gtk.stock_add([(name, label, 0, 0, None)])
+
+    def _register_theme_icon(self, name):
+        icon_set = gtk.IconSet()
+        self._register_icon_set(icon_set, name)
+
+    def _register_file_icon(self, name, filename):
+        im = gtk.Image()
+        im.set_from_file(filename)
+        pb = im.get_pixbuf()
+        icon_set = gtk.IconSet(pb)
+        self._register_icon_set(icon_set, name)
+        # this is broken for some reason
+        #gtk.icon_theme_add_builtin_icon(name, gtk.ICON_SIZE_SMALL_TOOLBAR, pb)
+
+    def _register_icon_set(self, icon_set, name):
+        source = gtk.IconSource()
+        source.set_icon_name(name)
+        icon_set.add_source(source)
+        self._factory.add(name, icon_set)
+        
+        
+
+
 
  
 #w = gtk.Window()

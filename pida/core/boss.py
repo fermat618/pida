@@ -3,6 +3,7 @@ import gtk
 from pida.core.servicemanager import ServiceManager 
 from pida.core.log import build_logger
 
+from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
 
@@ -20,6 +21,7 @@ class Boss(object):
         self._sm.activate_services()
         editor_name = self.get_service('editor').opt('editor_type')
         self._sm.activate_editor(editor_name)
+        self._icons = IconRegister()
         self._window.start()
         self._sm.start_services()
         self._sm.start_editor()

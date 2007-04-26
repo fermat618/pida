@@ -53,7 +53,7 @@ class ManItem(object):
 
 class ManView(PidaView):
 
-    icon_name = 'gnome-library'
+    icon_name = 'gtk-library'
     label_text = 'MAN'
     
     def create_ui(self):
