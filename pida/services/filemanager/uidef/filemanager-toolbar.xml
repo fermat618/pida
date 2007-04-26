@@ -1,0 +1,7 @@
+<ui>
+    <toolbar>
+        <toolitem action="toolbar_up" name="toolbar_up"/>
+        <toolitem action="toolbar_refresh" name="toolbar_refresh"/>
+        <toolitem action="toolbar_terminal" name="toolbar_terminal"/>
+    </toolbar>
+</ui>

@@ -40,6 +40,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
+from pida.core.environment import get_uidef_path
 
 from pida.utils.gthreads import GeneratorTask
 
@@ -127,7 +128,7 @@ class FileEntry(object):
 
 
 class FilemanagerView(PidaView):
-    
+
     _columns = [
         Column("icon_stock_id", use_stock=True),
         Column("state_markup", use_markup=True),
@@ -177,53 +178,19 @@ class FilemanagerView(PidaView):
             'is_dir_sort')
         self._sort_combo.show()
         self._vbox.pack_start(self._sort_combo, expand=False)
-       
+
     def create_toolbar(self):
-        self._tips = gtk.Tooltips()
-        self._toolbar = gtk.Toolbar()
-        self._toolbar.set_icon_size(gtk.ICON_SIZE_MENU)
+        self._uim = gtk.UIManager()
+        self._uim.insert_action_group(self.svc.get_action_group(), 0)
+        self._uim.add_ui_from_file(get_uidef_path('filemanager-toolbar.xml'))
+        self._uim.ensure_update()
+        self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
-        self._toolbar.show()
+        self._toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self._vbox.pack_start(self._toolbar, expand=False)
-        
-        gen_action = self.generate_action_button
-            
-        self._upact = gen_action(
-                'Up', 'Up',
-                'Browse the parent directory',
-                gtk.STOCK_GO_UP,
-                self.act_go_up
-                )
+        self._toolbar.show_all()
 
 
-        self._newfileact = gen_action(
-                'Cmd', 'Terminal',
-                'Start a terminal here',
-                gtk.STOCK_NEW,
-                self.start_term
-                )
-        self._refreshact = gen_action(
-                'Refresh', 'Refresh',
-                'Refresh the view',
-                gtk.STOCK_REFRESH,
-                lambda action: self.update_to_path()
-                )
-        
-    def add_action_to_toolbar(self, action):
-         toolitem = action.create_tool_item()
-         self._toolbar.add(toolitem)
-         toolitem.set_tooltip(self._tips, action.props.tooltip)
-         return toolitem
-
-    #TODO: move to the actionsconfig
-    def generate_action_button(self, name, verbose_name, tooltip, icon,
-            activate_callback=None):
-        act = gtk.Action(name, verbose_name, tooltip, icon)
-        toolitem = self.add_action_to_toolbar(act)
-        if activate_callback is not None:
-            act.connect('activate', activate_callback)
-        return act
-    
     def add_or_update_file(self, name, basepath, state):
         if basepath != self.path:
             return
@@ -232,7 +199,7 @@ class FilemanagerView(PidaView):
             entry.state = state
 
         self.show_or_hide(entry)
-    
+
     def show_or_hide(self, entry):
         from operator import and_
         def check(checker):
@@ -251,10 +218,6 @@ class FilemanagerView(PidaView):
             if entry in self.file_list:
                 self.file_list.remove(entry)
 
-
-    def start_term(self, action):
-        self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
-
     def update_to_path(self, new_path=None):
         if new_path is None:
             new_path = self.path
@@ -267,7 +230,6 @@ class FilemanagerView(PidaView):
         for lister in self.svc.features("file_lister"):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
-    
     def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
                  path.join(self.path, fileentry.name))
@@ -284,14 +246,12 @@ class FilemanagerView(PidaView):
             self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           file_name=item.path, event=event) 
 
-    def act_go_up(self, action):
-        self.svc.go_up()
-
     def rename_file(self, old, new, entry):
         print 'renaming', old, 'to' ,new
 
+
 class FilemanagerEvents(EventsConfig):
-    
+
     def create_events(self):
         self.create_event('browsepath_switched')
         self.create_event('file_renamed')
@@ -393,6 +353,36 @@ class FileManagerActionsConfig(ActionsConfig):
             '<Shift><Control>f'
         )
 
+        self.create_action(
+            'toolbar_up',
+            TYPE_NORMAL,
+            'Go Up',
+            'Go to the parent directory',
+            gtk.STOCK_GO_UP,
+            self.on_toolbar_up,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'toolbar_terminal',
+            TYPE_NORMAL,
+            'Open Terminal',
+            'Open a terminal in this directory',
+            'terminal',
+            self.on_toolbar_terminal,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'toolbar_refresh',
+            TYPE_NORMAL,
+            'Refresh Directory',
+            'Refresh the current directory',
+            gtk.STOCK_REFRESH,
+            self.on_toolbar_refresh,
+            'NOACCEL',
+        )
+
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('browse', new_path=new_path)
@@ -405,6 +395,16 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_show_filebrowser(self, action):
         self.svc.cmd('present_view')
+
+    def on_toolbar_up(self, action):
+        self.svc.go_up()
+
+    def on_toolbar_terminal(self, action):
+        self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
+
+    def on_toolbar_refresh(self, action):
+        self.svc.get_view().update_to_path()
+
 
 
 # Service class
