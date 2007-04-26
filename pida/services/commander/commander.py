@@ -251,7 +251,7 @@ class TerminalView(PidaView):
         self.close_view()
 
     def on_window_title_changed(self, term):
-        self._label.set_text(term.get_window_title())
+        self._title.set_text(term.get_window_title())
 
 # Service class
 class Commander(Service):

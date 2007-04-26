@@ -21,6 +21,7 @@ stock_ids = gtk.stock_list_ids()
 for name in gtk.icon_theme_get_default().list_icons():
     if name not in stock_ids:
         my_stock_add([(name, name.capitalize(), 0, 0, None, name)])
+
  
 #w = gtk.Window()
 #i = gtk.Image()
