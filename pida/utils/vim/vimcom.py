@@ -547,7 +547,7 @@ class communication_window(gtk.Window):
         return name
 
     def open_file(self, server, name):
-        self.send_ex(server, 'confirm e %s' % self.escape_filename(name))
+        self.send_ex(server, 'e! %s' % self.escape_filename(name))
 
     def new_file(self, server):
         f, path = tempfile.mkstemp()
