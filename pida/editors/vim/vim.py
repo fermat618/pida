@@ -179,7 +179,12 @@ class VimCallback(object):
         if file_name:
             if os.path.abspath(file_name) != file_name:
                 file_name = os.path.join(cwd, file_name)
-            self.svc.boss.get_service('buffer').cmd('open_file', file_name=file_name)
+            if os.path.isdir(file_name):
+                self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
+                self.svc.boss.cmd('filemanager', 'present_view')
+                self.svc.close_directory(file_name)
+            else:
+                self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
 
     def vim_bufferunload(self, server, file_name):
         if file_name:
@@ -253,6 +258,9 @@ class Vim(Service):
 
     def open_many(documents):
         """Open a few documents"""
+
+    def close_directory(self, path):
+        self._com.close_buffer(self.server, path)
 
     def close(self, document):
         if document.unique_id in self._documents:
