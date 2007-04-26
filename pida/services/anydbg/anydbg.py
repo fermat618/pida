@@ -35,6 +35,7 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.environment import get_pixmap_path
 
 from pida.ui.views import PidaView
 
@@ -70,7 +71,8 @@ class AnyDbgStackView(PidaView):
         gcall(self._breakpoint_list.clear)
     
     def add_item(self, frame, fname, line, func, path):
-        self._breakpoint_list.append(AnyDbgItem(frame, fname, line, func, path))
+        pass
+#        self._breakpoint_list.append(AnyDbgItem(frame, fname, line, func, path))
     
     def _on_stackitem_double_click(self, olist, item):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
@@ -82,8 +84,6 @@ class AnyDbgConsoleView(PidaView):
 
     def create_ui(self):
         pass
-
-
 
 
 # --- Profile manager view
@@ -379,10 +379,11 @@ class AnyDbgEventsConfig(EventsConfig):
             self.svc.get_action("toggle_breakpoint").set_sensitive(False)
 
     def on_editor_startup(self):
-        self.svc.boss.editor.cmd('define_sign_type', type="breakpoint", icon="/usr/share/icons/Human/scalable/actions/gtk-stop.svg", 
+        self.svc.boss.editor.cmd('define_sign_type', type="breakpoint", icon=get_pixmap_path("stop.svg"), 
                                                 linehl="", text="X", texthl="Search")
-        self.svc.boss.editor.cmd('define_sign_type', type="step", icon="/usr/share/icons/Human/scalable/actions/gtk-go-forward-ltr.svg", 
+        self.svc.boss.editor.cmd('define_sign_type', type="step", icon=get_pixmap_path("forward.svg"), 
                                                 linehl="lCursor", text=">", texthl="lCursor")
+
 
 # Service class
 class Debugger(Service):
