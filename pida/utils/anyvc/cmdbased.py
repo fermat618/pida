@@ -286,7 +286,7 @@ class Bazaar(DCommandBased):
             "removed:": 'removed',
             "ignored:": 'ignored',
             "modified:": 'modified',
-            "conflicts:": 'S.conflict' }
+            "conflicts:": 'conflict' }
     
     @xaction(run=False)
     def _cache_impl(self, **kw):
