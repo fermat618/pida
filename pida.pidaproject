@@ -12,5 +12,4 @@ controller = GENERIC_EXECUTION
 default = ""
 command = nosetests tests/
 [bookmark]
-path = /home/ali/working/pida/pida/editors/vim,
 
