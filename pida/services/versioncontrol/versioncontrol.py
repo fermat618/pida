@@ -93,7 +93,7 @@ class VersionControlEvents(EventsConfig):
             self.on_document_changed)
 
     def on_document_changed(self, document):
-        self.svc.get_action('differences').set_sensitive(document is not None)
+        self.svc.get_action('diff_document').set_sensitive(document is not None)
 
 class VersioncontrolCommandsConfig(CommandsConfig):
     
