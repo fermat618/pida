@@ -32,9 +32,9 @@ def action(fn):
         xparams = fn(self, **kw) or []
         command = self._get_command(action, xparams + paths) 
         if run:
-           self._run(command)
+            return self._run(command)
         else:
-           return self._output_pipe(command)
+            return self._output_pipe(command)
     action_method.__name__ = action
     action_method.__dict__ = fn.__dict__
     action_method.__doc__ = fn.__doc__
@@ -118,8 +118,9 @@ class CommandBased(VCSBase):
         return iter(self._output_pipe(args))
     
     def _run(self,args=[]):
-        for line in self._output_pipe(args):
-            print line,
+        #for line in self._output_pipe(args):
+        #    print line,
+        return args
 
     def _get_command(self, action, args = []):
         action = getattr(self, action + "_cmd", action)

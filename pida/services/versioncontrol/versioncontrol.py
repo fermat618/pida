@@ -119,8 +119,9 @@ class Versioncontrol(Service):
 
     def diff_file(self, file_name):
         vc = self.get_workdir_manager_for_path(file_name)
-        print vc, dir(vc)
-        print vc.diff()
+        commandargs = vc.diff() + [file_name]
+        cwd = vc.base_path
+        self.boss.cmd('commander', 'execute', commandargs=commandargs, cwd=cwd)
 
 
 
