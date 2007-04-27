@@ -163,7 +163,10 @@ class CommanderCommandsConfig(CommandsConfig):
         self.svc.execute(commandargs, env, cwd, title, icon)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
-        self.svc.execute([self.svc.opt('shell_command')], env=env, cwd=cwd, title=title, icon=None)
+        shell_command = self.svc.opt('shell_command')
+        shell_args = self.svc.opt('shell_command_args')
+        commandargs = [shell_command] + shell_args
+        self.svc.execute(commandargs, env=env, cwd=cwd, title=title, icon=None)
 
 class CommanderFeaturesConfig(FeaturesConfig):
 

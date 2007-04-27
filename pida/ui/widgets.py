@@ -43,10 +43,11 @@ class ProxyStringList(gtk.VBox):
     def __init__(self):
         gtk.VBox.__init__(self, spacing=3)
         self.set_border_width(6)
-        self.set_size_request(0, 200)
+        self.set_size_request(0, 150)
         self._ol = ObjectList([Column('value', expand=True)])
         self._ol.set_headers_visible(False)
         self._ol.connect('selection_changed', self._on_ol_selection)
+        self._ol.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.pack_start(self._ol)
         hb = gtk.HButtonBox()
         self.value_entry = gtk.Entry()
