@@ -1,0 +1,6 @@
+<ui>
+    <toolbar>
+        <toolitem action="bookmark_curdir" name="bookmark_curdir"/>
+        <toolitem action="bookmark_curfile" name="bookmark_curfile"/>
+    </toolbar>
+</ui>
