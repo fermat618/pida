@@ -133,8 +133,7 @@ class FilemanagerView(PidaView):
         Column("icon_stock_id", use_stock=True),
         Column("state_markup", use_markup=True),
         Column("markup", use_markup=True),
-        # shouldn't need this any more
-        #Column("dir_sort", visible=False, sorted=True) # small hack helper
+        Column("lower_name", visible=False, searchable=True),
         ]
 
     label_text = 'Files'
