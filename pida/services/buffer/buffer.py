@@ -39,8 +39,9 @@ from pida.ui.views import PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document
 
-PROJECT_LIST_COLUMNS = [
-    Column('markup', use_markup=True)
+LIST_COLUMNS = [
+    Column('markup', use_markup=True),
+    Column("basename", visible=False, searchable=True),
 ]
 
 class BufferListView(PidaGladeView):
@@ -52,7 +53,7 @@ class BufferListView(PidaGladeView):
     label_text = 'Buffers'
 
     def create_ui(self):
-        self.buffers_ol.set_columns(PROJECT_LIST_COLUMNS)
+        self.buffers_ol.set_columns(LIST_COLUMNS)
         self.buffers_ol.set_headers_visible(False)
         self._sort_combo = AttrSortCombo(self.buffers_ol,
             [
