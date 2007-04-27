@@ -36,6 +36,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
+from pida.ui.buttons import create_mini_button
 
 def get_default_system_shell():
     if 'SHELL' in os.environ:
@@ -176,19 +177,6 @@ class CommanderFeaturesConfig(FeaturesConfig):
         self.subscribe_foreign_feature('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'commander-dir-menu.xml'))
 
-
-def create_mini_button(stock_id, tooltip, click_callback):
-    tip = gtk.Tooltips()
-    tip.enable()
-    im = gtk.Image()
-    im.set_from_stock(stock_id, gtk.ICON_SIZE_MENU)
-    but = gtk.Button()
-    but.set_image(im)
-    but.connect('clicked', click_callback)
-    eb = gtk.EventBox()
-    eb.add(but)
-    tip.set_tip(eb, tooltip)
-    return eb
 
 
 class TerminalView(PidaView):

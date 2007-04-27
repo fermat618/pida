@@ -23,6 +23,8 @@
 
 import os.path
 
+import gtk
+
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -30,6 +32,37 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+
+from pida.ui.views import PidaView
+
+from pida.ui.htmltextview import HtmlTextView
+
+from pida.utils.gthreads import AsyncTask
+
+try:
+    from pygments import highlight
+    from pygments.lexers import DiffLexer
+    from pygments.formatters import HtmlFormatter
+except ImportError:
+    highlight = None
+
+class DiffViewer(PidaView):
+    
+    def create_ui(self):
+        hb = gtk.HBox()
+        sb = gtk.ScrolledWindow()
+        self._html = HtmlTextView()
+        sb.add(self._html)
+        hb.pack_start(sb)
+        self.add_main_widget(hb)
+        hb.show_all()
+
+    def set_diff(self, diff):
+        if highlight is None:
+            data = '<pre>\n%s</pre>\n' % diff
+        else:
+            data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
+        self._html.display_html(data)
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
     
@@ -144,10 +177,17 @@ class Versioncontrol(Service):
         self.diff_file(document.filename)
 
     def diff_file(self, file_name):
+        task = AsyncTask(self._do_diff, self._diff_done)
+        task.start(file_name)
+
+    def _do_diff(self, file_name):
         vc = self.get_workdir_manager_for_path(file_name)
-        commandargs = vc.diff() + [file_name]
-        cwd = vc.base_path
-        self.boss.cmd('commander', 'execute', commandargs=commandargs, cwd=cwd)
+        return vc.diff(file_name)
+
+    def _diff_done(self, diff):
+        view = DiffViewer(self)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
+        view.set_diff(diff)
 
 
 

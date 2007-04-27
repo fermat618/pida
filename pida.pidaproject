@@ -11,4 +11,6 @@ command = pydoctor -c tools/pida-pydoctor.cfg
 controller = GENERIC_EXECUTION
 default = ""
 command = nosetests tests/
+[bookmark]
+path = /home/ali/working/pida/pida/editors/vim,
 

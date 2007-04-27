@@ -130,9 +130,11 @@ class CommandBased(VCSBase):
     def _run(self,args=[]):
         #for line in self._output_pipe(args):
         #    print line,
-        return args
+        #return args
+        return self._output_pipe(args).read()
 
     def _get_command(self, action, args = []):
+        # this has to go
         action = getattr(self, action + "_cmd", action)
         if not isinstance(action, list):
             action = self.command_map.get(action, action)
