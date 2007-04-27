@@ -9,6 +9,7 @@
                 <menu name="more_vc_menu" action="more_vc_menu"> 
                     <menuitem name="commit_document" action="commit_document" />
                     <menuitem name="update_document" action="update_document" />
+                    <menuitem name="add_document" action="add_document" />
                 </menu>
             </placeholder>
             <separator />

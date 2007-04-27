@@ -225,6 +225,33 @@ class VersionControlActions(ActionsConfig):
             self.on_update_for_dir,
         )
 
+        self.create_action(
+            'add_document',
+            TYPE_NORMAL,
+            'Add',
+            'Add the current document',
+            '',
+            self.on_add_document,
+        )
+
+        self.create_action(
+            'add_for_file',
+            TYPE_NORMAL,
+            'Add',
+            'Add the selected file',
+            '',
+            self.on_add_for_file,
+        )
+
+        self.create_action(
+            'add_for_dir',
+            TYPE_NORMAL,
+            'Add',
+            'Add the selected file',
+            '',
+            self.on_add_for_dir,
+        )
+
     def on_diff_document(self, action):
         document = self.svc.boss.cmd('buffer', 'get_current')
         self.svc.diff_document(document)
@@ -262,6 +289,16 @@ class VersionControlActions(ActionsConfig):
 
     def on_update_for_dir(self, action):
         pass
+
+    def on_add_document(self, action):
+        pass
+
+    def on_add_for_file(self, action):
+        pass
+
+    def on_add_for_dir(self, action):
+        pass
+
 
 
 # Service class
