@@ -348,7 +348,7 @@ class Versioncontrol(Service):
 
     def _do_diff(self, file_name):
         vc = self.get_workdir_manager_for_path(file_name)
-        return vc.diff(file_name)
+        return vc.diff(paths=[file_name])
 
     def _diff_done(self, diff):
         view = DiffViewer(self)

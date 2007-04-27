@@ -5,153 +5,100 @@
     :license: BSD
 """
 
-# How I would like to see this
-#
-# Listing is fine
-# For actions we will have the following:
-# get_diff_command(paths)
-# get_commit_command(paths)
-# etc
-
-
-
 from bases import VCSBase, DVCSMixin
 from subprocess import Popen, PIPE
 from file import StatedPath as Path
 from os import path 
 
-def action(fn):
-    """
-    Wrapper decorator for vcs actions - it does most of the work
-    """
-    action = fn.__name__
-
-    def action_method(self, run=getattr(fn, "run", True), **kw):
-        if getattr(self, "no_" + action, False):
-            raise NotImplementedError("action %s not implemented for %r"% (
-                            action, 
-                            self.__class__.__name__
-                            ))
-        if getattr(fn, "paths", False):
-            paths = kw.pop("paths", [])
-            paths = map(path.normpath,
-                        map(path.abspath, paths))
-             
-        else:
-            paths = []
-        xparams = fn(self, **kw) or []
-        command = self._get_command(action, xparams + paths) 
-        if run:
-            return self._run(command)
-        else:
-            return self._output_pipe(command)
-    action_method.__name__ = action
-    action_method.__dict__ = fn.__dict__
-    action_method.__doc__ = fn.__doc__
-    return action_method
-
-def fp_action(fn):
-    """
-    decorator for actions wich need processed filenames
-    """
-    fn.paths = True
-    return action(fn)
-
-def xaction(**kw):
-    def xaction_decorator(fn):
-        for k,v in kw.iteritems():
-            setattr(fn, k, v)
-        return action(fn)
-    return xaction_decorator
-
 class CommandBased(VCSBase):
     """
     Base class for all command based rcs's
     """
-    command_map = {}
     
-    def __init__(self, path_):
-        self.path = path.normpath( path.abspath(path_) )
+    def __init__(self, versioned_path):
+        self.path = path.normpath( path.abspath(versioned_path) )
         self.base_path = self._find_basepath()
     
     def _find_basepath(self):
-
-        if hasattr(self,"detect_subdir"):
-            dsd = self.detect_subdir
+        dsd = self.detect_subdir
              
-            act_path = self.path
-            detected_path = None
-            detected_sd = None
-            op = None
-            while act_path != op:
-                if path.exists( path.join(act_path, self.detect_subdir)):
-                    detected_path = act_path
-                    # continue cause some vcs's 
-                    # got the subdir in every path
-                op = act_path
-                act_path = path.dirname(act_path)
+        act_path = self.path
+        detected_path = None
+        detected_sd = None
+        op = None
+        while act_path != op:
+            if path.exists( path.join(act_path, self.detect_subdir)):
+                detected_path = act_path
+                # continue cause some vcs's 
+                # got the subdir in every path
+            op = act_path
+            act_path = path.dirname(act_path)
                 
-            if not detected_path:
-                raise ValueError(
-                        "VC Basepath for vc class %r"
-                        "not found above %s"%(
-                            type(self), 
-                            self.path)
-                        )
+        if not detected_path:
+            raise ValueError(
+                    'VC Basepath for vc class %r'
+                    'not found above %s'%(
+                        type(self), 
+                        self.path)
+                    )
 
-            return detected_path
+        return detected_path
 
-    def _output_proc(self, args=[]):
+    def _execute_command(self, args, result_type=str, **kw):
         if not args:
-            raise ValueError("need a valid command")
-        return Popen(args, stdout=PIPE, cwd=self.base_path, close_fds=True)
-    
-    def _output_str(self,args=[]):
-        return self._output_proc(args).communicate()[0]
+            raise ValueError('need a valid command')
+        ret = Popen( 
+                [self.cmd] + args, 
+                stdout=PIPE, 
+                cwd=self.base_path, 
+                close_fds=True)
+        if result_type is str:
+            return ret.communicate()[0]
+        elif result_type is iter:
+            return iter(ret.stdout)
+        elif result_type is file:
+            return ret.stdout
 
-    def _output_pipe(self, args=[]):
-        return self._output_proc(args).stdout
-
-    def _output_iter(self, args=[]):
-        return iter(self._output_pipe(args))
-    
-    def _run(self,args=[]):
-        #for line in self._output_pipe(args):
-        #    print line,
-        #return args
-        return self._output_pipe(args).read()
-
-    def _get_command(self, action, args = []):
-        # this has to go
-        action = getattr(self, action + "_cmd", action)
-        if not isinstance(action, list):
-            action = self.command_map.get(action, action)
-        if not isinstance(action, list):
-            action = [action]
-        return [self.cmd] + action + args
-
-    @fp_action
-    def commit(self, message,**kw):
+    def get_commit_args(self, message, paths=(), **kw):
         """
-        commits the workdirs changeset
+        creates a argument list for commiting
 
-        @param message: the commit message - necessary!
+        :param message: the commit message
+        :param paths: the paths to commit
         """
-        return ["-m" , message]
-        
+        return ['commit'] + paths
 
-    @fp_action
-    def diff(self, **kw): pass
-
-    @action
-    def update(self, revision=None, **kw):
+    def get_diff_args(self, paths=(), **kw):
+        return ['diff'] + paths
+    
+    def get_update_args(self, revision=None, **kw):
         if revision:
-            return ["-r", revision]
+            return ['update', '-r', revision]
+        else:
+            return ['update']
 
-    @fp_action
-    def status(self, **kw): pass
+    def get_status_args(self,**kw):
+        return ['status']
 
-    @xaction(run=False, paths=True)
+    def get_list_args(self, **kw):
+        raise NotImplementedError("%s doesnt implement list")
+    
+    def commit(self, **kw):
+        args = self.get_commit_args(**kw)
+        return self._execute_command(args, **kw)
+
+    def diff(self, **kw):
+        args = self.get_diff_args(**kw)
+        return self._execute_command(args, **kw)
+
+    def update(self, **kw):
+        args = self.get_update_args(**kw)
+        return self._execute_command(args, **kw)
+    
+    def status(self, **kw):
+        args = self.get_status_args(**kw)
+        return self._execute_command(args, **kw)
+
     def _list_impl(self, recursive,**kw):
         """
         the default implementation is only cappable of 
@@ -160,38 +107,34 @@ class CommandBased(VCSBase):
         rcs-specific implementations might support 
         non-recursive and path-specific listing
         """
-        if not recursive:
-            return self.non_recursive_param
-    
+        args = self.get_list_args(**kw)
+        return self._execute_command(args, result_type=file, **kw)
+
+class CachedCommandMixin(object):
+    def _cache_impl(self,**kw):
+        args = self.get_cache_args(**kw)
+        return self._execute_command(args, **kw)
 
 class DCommandBased(CommandBased, DVCSMixin):
     """
     base class for all distributed command based rcs's
     """
+    def sync(self, **kw):
+        args = self.get_sync_args(**kw)
+        return self._execute_command(args, **kw)
 
-    @action
-    def sync(self, **kw): pass
-
-    @action
-    def pull(self, **kw): pass
+    def pull(self, **kw):
+        args = self.get_pull_args(**kw)
+        return self._execute_command(args, **kw)
     
-    @action
-    def push(self, **kw): pass
+    def push(self, **kw):
+        args = self.get_push_args(**kw)
+        return self._execute_command(args, **kw)
 
 
 class Monotone(DCommandBased):
     cmd = 'mtn'
     detect_subdir = '_MTN'
-    
-    non_recursive_param = [] #XXX: fix this bug
-    # monotone cant do paths and non-recursive
-    _list_impl_cmd = "automate inventory".split()
-
-    @xaction(run=False, paths=False)
-    def _list_impl(self,**kw):
-        pass
-
-    multiple_heads = True
     
     statemap = {
         '   ': 'normal',   # unchanged
@@ -247,23 +190,29 @@ class Monotone(DCommandBased):
         'RRU': 'error',    # rename source and target and target unknown (invalid)
         'RRI': 'error',    # rename source and target and target ignored (seems invalid, but may be possible?)
         'RRM': 'missing',   # rename source and target and target missing
-        }
+    }
+
+    def get_list_args(self, **kw):
+        return ["automate", "inventory"]
 
     def parse_list_item(self, item):
         state = self.statemap.get(item[:3], "none") 
         return Path(path.normpath(item[8:].rstrip()), state, self.base_path)
 
-class Bazaar(DCommandBased):
+class Bazaar(CachedCommandMixin,
+             DCommandBased):
     cmd = "bzr"
     detect_subdir = ".bzr"
-    no_sync = True
-
-    non_recursive_param = ["--non-recursive"]
-
-    command_map= {
-            '_list_impl': ["ls", "-v"],
-            '_cache_impl': 'st',
-            }
+   
+    def get_list_args(self, recursive=True, paths=(),**kw):
+        ret = ["ls","-v"]
+        if not recursive:
+            ret.append("--non-recursive")
+        ret.extend(paths)
+        return ret
+    
+    def get_cache_args(self, *kw):
+        return ["st"]
 
     statemap  = {
             "unknown:": 'none',
@@ -274,10 +223,6 @@ class Bazaar(DCommandBased):
             "modified:": 'modified',
             "conflicts:": 'conflict' }
     
-    @xaction(run=False)
-    def _cache_impl(self, **kw):
-        pass
-
     def parse_cache_item(self, item, actstate):
         item = item.rstrip()
         newstate = self.statemap.get(item, None)
@@ -306,10 +251,12 @@ class SubVersion(CommandBased):
     cmd = "svn"
     detect_subdir = ".svn"
     
-    _list_impl_cmd = ["st", "--no-ignore"]
+    def get_list_args(self, recursive=True, **kw):
+        ret = ["st", "--no-ignore", "--ignore-externals"]
+        if not recursive:
+            ret.append("--non-recursive")
+        return ret
     
-    non_recursive_param = ["-N"]
-
     state_map = { 
             "?": 'none',
             "A": 'new',
@@ -322,6 +269,9 @@ class SubVersion(CommandBased):
             'X': 'external',
             } 
     def parse_list_item(self, item):
+        #TODO: output for external references broken
+        if item == '\n':
+            return
         state = item[0]
         file = item[7:].strip()
         return Path(file, self.state_map[state], self.base_path) 
@@ -330,8 +280,8 @@ class Mercurial(DCommandBased):
     cmd = "hg"
     detect_subdir = ".hg"
    
-    non_recursive_param = [] # TODO: figure how to be non-recursive with hg
-    _list_impl_cmd = ["status", "-A"]
+    def get_list_args(self, **kw):
+        return ["status", "-A"]
 
     state_map = { 
             "?": 'none',
@@ -355,9 +305,9 @@ class Darcs(DCommandBased):
 
     detect_subdir = '_darcs'
 
-    non_recursive_param = []
     
-    _list_impl_cmd = ['whatsnew', '--boring', '--summary']
+    def get_list_cmd(self, **kw):
+        return ['whatsnew', '--boring', '--summary']
 
     state_map = {
         "a": 'none',
