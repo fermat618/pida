@@ -116,6 +116,14 @@ class Project(object):
 
     markup = property(get_markup)
 
+    def save_section(self, section_name, section):
+        self.options[section_name] = section
+        self.save()
+
+    def get_section(self, section_name):
+        return self.options.get(section_name, None)
+
+
 
 class ProjectKeyDefinition(object):
     """

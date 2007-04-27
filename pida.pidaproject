@@ -11,3 +11,10 @@ command = pydoctor -c tools/pida-pydoctor.cfg
 controller = GENERIC_EXECUTION
 default = ""
 command = nosetests tests/
+[foo]
+foo = 1
+[blah]
+foo = 1, 2, 3
+[bookmarks]
+dir = /home/ali,
+file = /blah/moo.txt, /baz/b.txt
