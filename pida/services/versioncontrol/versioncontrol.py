@@ -50,6 +50,8 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
                 "filemanager", "file_hidden_check",
                 self.svc.ignored_file_checker
                 )
+        self.subscribe_foreign_feature('contexts', 'file-menu',
+            (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
 
 class VersionControlEvents(EventsConfig):
 
@@ -78,9 +80,33 @@ class VersionControlActions(ActionsConfig):
             '<Shift><Control>d',
         )
 
+        self.create_action(
+            'more_vc_for_file_menu',
+            TYPE_NORMAL,
+            'More Version Control',
+            'More Version Control Commands',
+            '',
+            lambda *a: None,
+            'NOACCEL'
+        )
+
+        self.create_action(
+            'diff_for_file',
+            TYPE_NORMAL,
+            'Differences',
+            'Get the version controll diff on this file',
+            '',
+            self.on_diff_for_file,
+            'NOACCEL',
+        )
+
     def on_diff(self, action):
         document = self.svc.boss.cmd('buffer', 'get_current')
         self.svc.diff_document(document)
+
+    def on_diff_for_file(self, action):
+        file_name = action.contexts_kw['file_name']
+        self.svc.diff_file(file_name)
 
 # Service class
 class Versioncontrol(Service):

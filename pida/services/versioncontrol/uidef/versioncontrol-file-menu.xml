@@ -1,0 +1,14 @@
+<ui>
+<popup>
+<placeholder name="1"/>
+<separator/>
+<placeholder name="2">
+</placeholder>
+<separator/>
+<placeholder name="3"/>
+<menuitem name="diff_for_file" action="diff_for_file" />
+<separator/>
+<placeholder name="4"/>
+<separator/>
+</popup>
+</ui>
