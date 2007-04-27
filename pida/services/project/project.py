@@ -313,6 +313,13 @@ class ProjectCommandsConfig(CommandsConfig):
     def get_current_project(self):
         return self.svc.get_current_project()
 
+    def save_to_current_project(self, section_name, section_data):
+        self.svc.get_current_project().save_section(section_name, section_data)
+
+    def get_current_project_data(self, section_name):
+        return self.svc.get_current_project().get_section(section_name)
+
+
 # Service class
 class Project(Service):
     """The project manager service"""
