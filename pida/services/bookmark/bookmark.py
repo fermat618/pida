@@ -22,6 +22,7 @@
 
 import gtk
 import os
+import cgi
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -46,7 +47,7 @@ class BookmarkItem(object):
         self.data = data
 
     def get_markup(self):
-        return '%s' % self.title
+        return self.title
     markup = property(get_markup)
 
     def run(self, service):
@@ -344,7 +345,8 @@ class Bookmark(Service):
         if line == None:
             line = self.boss.editor.cmd('get_current_line_number')
         filename_title = os.path.basename(filename)
-        title = '%s:<span color="#000099">%d</span>' % (filename_title, line)
+        title = '%s:<span color="#000099">%d</span>' % (
+                cgi.escape(filename_title), int(line))
         item = BookmarkItemFile(title=title, data=filename, line=line)
         self.add_item(item)
 
@@ -359,7 +361,7 @@ class Bookmark(Service):
             if not data.has_key(t.group):
                 data[t.group] = []
             if t.group == 'file':
-                data[t.group].append('%s:%d' % (t.data, t.line))
+                data[t.group].append('%s:%d' % (t.data, int(t.line)))
             else:
                 data[t.group].append(t.data)
         return data

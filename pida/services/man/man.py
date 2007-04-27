@@ -24,6 +24,7 @@ import os
 import gtk
 import commands
 import re
+import cgi
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -45,7 +46,7 @@ class ManItem(object):
         self.pattern = pattern
         self.number = number
         self.manpage = manpage
-        self.markup = '%s(<span color="#0000c0">%s</span>) %s' % (self.pattern, self.number, self.manpage)
+        self.markup = '%s(<span color="#0000c0">%d</span>) %s' % (cgi.escape(self.pattern), int(self.number), cgi.escape(self.manpage))
 
 class ManView(PidaView):
 
