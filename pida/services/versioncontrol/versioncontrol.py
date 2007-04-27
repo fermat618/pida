@@ -189,6 +189,41 @@ class VersionControlActions(ActionsConfig):
             self.on_commit_for_directory,
         )
 
+        self.create_action(
+            'update_document',
+            TYPE_NORMAL,
+            'Update',
+            'Update the current document',
+            '',
+            self.on_update_document,
+        )
+
+        self.create_action(
+            'update_project',
+            TYPE_NORMAL,
+            'Update',
+            'Update the current project',
+            '',
+            self.on_update_project,
+        )
+
+        self.create_action(
+            'update_for_file',
+            TYPE_NORMAL,
+            'Update',
+            'Update the selected file',
+            '',
+            self.on_update_for_file,
+        )
+
+        self.create_action(
+            'update_for_dir',
+            TYPE_NORMAL,
+            'Update',
+            'Update the selected file',
+            '',
+            self.on_update_for_dir,
+        )
 
     def on_diff_document(self, action):
         document = self.svc.boss.cmd('buffer', 'get_current')
@@ -215,6 +250,19 @@ class VersionControlActions(ActionsConfig):
 
     def on_commit_for_directory(self, action):
         pass
+
+    def on_update_document(self, action):
+        pass
+
+    def on_update_project(self, action):
+        pass
+
+    def on_update_for_file(self, action):
+        pass
+
+    def on_update_for_dir(self, action):
+        pass
+
 
 # Service class
 class Versioncontrol(Service):

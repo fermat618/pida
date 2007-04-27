@@ -7,7 +7,8 @@
             <placeholder name="fm15">
                 <menuitem name="diff_document" action="diff_document" />
                 <menu name="more_vc_menu" action="more_vc_menu"> 
-                <menuitem name="commit_document" action="commit_document" />
+                    <menuitem name="commit_document" action="commit_document" />
+                    <menuitem name="update_document" action="update_document" />
                 </menu>
             </placeholder>
             <separator />
