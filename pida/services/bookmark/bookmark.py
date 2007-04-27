@@ -215,6 +215,25 @@ class BookmarkActions(ActionsConfig):
             'NOACCEL',
         )
 
+        self.create_action(
+            'bookmark-for-dir',
+            TYPE_NORMAL,
+            'Add to bookmark',
+            'Add selected directory to bookmark',
+            gtk.STOCK_ADD,
+            self.on_bookmark_for_dir,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'bookmark-for-file',
+            TYPE_NORMAL,
+            'Add to bookmark',
+            'Add selected file to bookmark',
+            gtk.STOCK_ADD,
+            self.on_bookmark_for_file,
+            'NOACCEL',
+        )
 
 
     def on_show_bookmark(self, action):
@@ -224,28 +243,28 @@ class BookmarkActions(ActionsConfig):
             self.svc.hide_bookmark()
 
     def on_bookmark_curdir(self, action):
-        path = self.svc.boss.cmd('filemanager', 'get_browsed_path')
-        source_directory = self.svc.boss.cmd('project', 'get_current_project').source_directory
-        title = path
-        if title.startswith(source_directory):
-            title = title[len(source_directory):]
-            if title == '':
-                title = '(project root)'
-        item = BookmarkItemPath(title=title, data=path)
-        self.svc.add_item(item)
+        self.svc.bookmark_dir()
 
     def on_bookmark_curfile(self, action):
-        document = self.svc.boss.cmd('buffer', 'get_current')
-        if document == None:
-            return
-        filename = document.get_filename()
-        line = self.svc.boss.editor.cmd('get_current_line_number')
-        title = '%s:<span color="#000099">%d</span>' % (document.get_markup(), line)
-        item = BookmarkItemFile(title=title, data=filename, line=line)
-        self.svc.add_item(item)
+        self.svc.bookmark_file()
 
     def on_bookmark_delsel(self, action):
         self.svc.remove_current()
+
+    def on_bookmark_for_file(self, action):
+        self.svc.bookmark_file(filename=action.contexts_kw['file_name'])
+
+    def on_bookmark_for_dir(self, action):
+        self.svc.bookmark_dir(path=action.contexts_kw['dir_name'])
+
+class BookmarkFeatures(FeaturesConfig):
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('contexts', 'file-menu',
+            (self.svc.get_action_group(), 'bookmark-file-menu.xml'))
+        self.subscribe_foreign_feature('contexts', 'dir-menu',
+            (self.svc.get_action_group(), 'bookmark-dir-menu.xml'))
+
 
 
 # Service class
@@ -253,6 +272,7 @@ class Bookmark(Service):
     """Manage bookmarks"""
 
     actions_config = BookmarkActions
+    features_config = BookmarkFeatures
 
     def start(self):
         self._view = BookmarkView(self)
@@ -286,6 +306,31 @@ class Bookmark(Service):
         self._view.remove_item(self._current)
         self._current = None
 
+    def bookmark_dir(self, path=None):
+        if path == None:
+            path = self.boss.cmd('filemanager', 'get_browsed_path')
+        source_directory = self.boss.cmd('project', 'get_current_project').source_directory
+        title = path
+        if title.startswith(source_directory):
+            title = title[len(source_directory):]
+            if title == '':
+                title = '(project root)'
+        item = BookmarkItemPath(title=title, data=path)
+        self.add_item(item)
+
+    def bookmark_file(self, filename=None):
+        print 'filename=', filename
+        if filename != None:
+            self.boss.cmd('buffer', 'open_file', file_name=filename)
+
+        document = self.boss.cmd('buffer', 'get_current')
+        if document == None:
+            return
+        filename = document.get_filename()
+        line = self.boss.editor.cmd('get_current_line_number')
+        title = '%s:<span color="#000099">%d</span>' % (document.get_markup(), line)
+        item = BookmarkItemFile(title=title, data=filename, line=line)
+        self.add_item(item)
 
 # Required Service attribute for service loading
 Service = Bookmark
