@@ -20,11 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# TODO use GeneratorTask instead of threading
-
 import os
-import threading
-import gobject
 import gtk
 import commands
 import re
@@ -41,7 +37,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.ui.views import PidaView
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pida.utils.gthreads import GeneratorTask, gcall
 
 class ManItem(object):
 
@@ -54,7 +50,7 @@ class ManItem(object):
 class ManView(PidaView):
 
     icon_name = 'gtk-library'
-    label_text = 'MAN'
+    label_text = 'Man'
     
     def create_ui(self):
         self.__vbox = gtk.VBox()
@@ -99,7 +95,7 @@ class ManActions(ActionsConfig):
         self.create_action(
             'show_man',
             TYPE_TOGGLE,
-            'Man',
+            'Man Viewer',
             'Show the man',
             '',
             self.on_show_man,
@@ -120,7 +116,6 @@ class Man(Service):
 
     def start(self):
         self._view = ManView(self)
-        bclass = self.boss.cmd('webbrowser', 'get_web_browser')
         self._has_loaded = False
         self.counter = 0
         self.task = None
