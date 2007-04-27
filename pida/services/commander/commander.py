@@ -31,7 +31,7 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, \
-    OTypeInteger, OTypeFile, OTypeFont
+    OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaView
@@ -96,10 +96,18 @@ class CommanderOptionsConfig(OptionsConfig):
 
         self.create_option(
             'shell_command',
-            'The shell command for shells',
+            'The shell command',
             OTypeString,
             get_default_system_shell(),
             'The command that will be used for shells'
+        )
+
+        self.create_option(
+            'shell_command_args',
+            'The shell arguments',
+            OTypeStringList,
+            [],
+            'The arguments to pass to the shell command',
         )
 
 class CommanderActionsConfig(ActionsConfig):

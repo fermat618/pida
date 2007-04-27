@@ -40,6 +40,9 @@ from kiwi import ValueUnset
 def service_sort_func(s1, s2):
     return cmp(s1.get_label(), s2.get_label())
 
+def options_sort_func(o, o1):
+    return cmp(o1.name, o2.name)
+
 class PidaOptionsView(PidaGladeView):
 
     gladefile = 'options-editor'
@@ -79,7 +82,9 @@ class PidaOptionsView(PidaGladeView):
         mainvb.pack_start(optsw)
         labelsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         widgetsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
-        for opt in svc.get_options().iter_options():
+        options = list(svc.get_options().iter_options())
+        options.sort()
+        for opt in options:
             vb = gtk.VBox(spacing=2) 
             vb.set_border_width(6)
             optvb.pack_start(vb, expand=False)
@@ -87,7 +92,7 @@ class PidaOptionsView(PidaGladeView):
             vb.pack_start(hb)
             optlabel = gtk.Label()
             optlabel.set_text(opt.label)
-            optlabel.set_alignment(0, 0.5)
+            optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
             optwidget = get_widget_for_type(opt.rtype)
