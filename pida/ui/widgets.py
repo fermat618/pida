@@ -49,38 +49,44 @@ class ProxyStringList(gtk.VBox):
         self._ol.connect('selection_changed', self._on_ol_selection)
         self.pack_start(self._ol)
         hb = gtk.HButtonBox()
-        self.value_entry = ProxyEntry()
-        self.value_entry.connect('content-changed', self._on_value_changed)
+        self.value_entry = gtk.Entry()
+        self.value_entry.connect('changed', self._on_value_changed)
+        self.value_entry.set_sensitive(False)
         self.pack_start(self.value_entry, expand=False)
-        self.add_button = gtk.Button(stock=gtk.STOCK_ADD)
+        self.add_button = gtk.Button(stock=gtk.STOCK_NEW)
         self.add_button.connect('clicked', self._on_add)
         hb.pack_start(self.add_button, expand=False)
         self.rem_button = gtk.Button(stock=gtk.STOCK_REMOVE)
         self.rem_button.connect('clicked', self._on_rem)
+        self.rem_button.set_sensitive(False)
         hb.pack_start(self.rem_button, expand=False)
         self.pack_start(hb, expand=False)
         self._current =  None
+        self._block = False
         
     def _on_add(self, button):
-        self._ol.append(ProxyStringListItem('no value'))
+        item = ProxyStringListItem('New Item')
+        self._ol.append(item, select=True)
         self._emit_changed()
 
     def _on_rem(self, button):
-        self._ol.remove(self._current)
+        self._ol.remove(self._current, select=True)
         self._emit_changed()
 
     def _on_ol_selection(self, ol, item):
-        self.value_entry.set_sensitive(item is not None)
         self.rem_button.set_sensitive(item is not None)
         self._current = item
-        if item is None:
-            self.value_entry.set_text('')
-        else:
+        if item is not None:
             self.value_entry.set_text(item.value)
+            self.value_entry.set_sensitive(True)
+        else:
+            self.value_entry.set_sensitive(False)
+            self.value_entry.set_text('')
 
     def _on_value_changed(self, entry):
         if self._current is not None:
-            self._current.value = entry.read()
+            self._block = True
+            self._current.value = entry.get_text()
             self._ol.update(self._current)
             self._emit_changed()
 
@@ -88,7 +94,9 @@ class ProxyStringList(gtk.VBox):
         self.emit('content-changed')
         
     def update(self, value):
-        self._ol.add_list(self.create_items(value))
+        if not self._block:
+            self._ol.add_list(self.create_items(value))
+        self._block = False
 
     def read(self):
         return [i.value for i in self._ol]
