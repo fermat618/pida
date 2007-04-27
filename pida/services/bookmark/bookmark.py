@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 import gtk
+import os
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -43,17 +44,16 @@ class BookmarkItem(object):
         self.group = group
         self.title = title
         self.data = data
-        self._cache_pixbuf = None
+
+    def get_markup(self):
+        return '%s' % self.title
+    markup = property(get_markup)
 
     def run(self, service):
         pass
 
     def key(self):
         return self.data + self.group + self.title
-
-    def get_markup(self):
-        return '%s' % self.title
-    markup = property(get_markup)
 
 
 class BookmarkItemFile(BookmarkItem):
@@ -166,6 +166,11 @@ class BookmarkView(PidaView):
         elif item.group == 'url':
             self._list_urls.remove(item)
 
+    def clear_all(self):
+        self._list_files.clear()
+        self._list_dirs.clear()
+        #self._list_urls.clear()
+
     def _on_item_selected(self, olist, item):
         self.svc.set_current(item)
 
@@ -265,6 +270,12 @@ class BookmarkFeatures(FeaturesConfig):
         self.subscribe_foreign_feature('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'bookmark-dir-menu.xml'))
 
+class BookmarkEvents(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('project', 'project_switched',
+                                     self.svc.on_project_switched)
+
 
 
 # Service class
@@ -273,12 +284,14 @@ class Bookmark(Service):
 
     actions_config = BookmarkActions
     features_config = BookmarkFeatures
+    events_config = BookmarkEvents
 
     def start(self):
         self._view = BookmarkView(self)
         self._has_loaded = False
         self._items = []
         self._current = None
+        self._project = None
 
     def show_bookmark(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -298,6 +311,7 @@ class Bookmark(Service):
                 return
         self._items.append(item)
         self._view.add_item(item)
+        self.save()
 
     def remove_current(self):
         if self._current == None:
@@ -305,6 +319,7 @@ class Bookmark(Service):
         self._items.remove(self._current)
         self._view.remove_item(self._current)
         self._current = None
+        self.save()
 
     def bookmark_dir(self, path=None):
         if path == None:
@@ -315,22 +330,64 @@ class Bookmark(Service):
             title = title[len(source_directory):]
             if title == '':
                 title = '(project root)'
+            else:
+                title = '.' + title
         item = BookmarkItemPath(title=title, data=path)
         self.add_item(item)
 
-    def bookmark_file(self, filename=None):
-        print 'filename=', filename
-        if filename != None:
-            self.boss.cmd('buffer', 'open_file', file_name=filename)
-
-        document = self.boss.cmd('buffer', 'get_current')
-        if document == None:
-            return
-        filename = document.get_filename()
-        line = self.boss.editor.cmd('get_current_line_number')
-        title = '%s:<span color="#000099">%d</span>' % (document.get_markup(), line)
+    def bookmark_file(self, filename=None, line=None):
+        if filename == None:
+            document = self.boss.cmd('buffer', 'get_current')
+            if document == None:
+                return
+            filename = document.get_filename()
+        if line == None:
+            line = self.boss.editor.cmd('get_current_line_number')
+        filename_title = os.path.basename(filename)
+        title = '%s:<span color="#000099">%d</span>' % (filename_title, line)
         item = BookmarkItemFile(title=title, data=filename, line=line)
         self.add_item(item)
+
+    def on_project_switched(self, project):
+        if project != self._project:
+            self._project = project
+            self.load()
+
+    def _serialize(self):
+        data = {}
+        for t in self._items:
+            if not data.has_key(t.group):
+                data[t.group] = []
+            if t.group == 'file':
+                data[t.group].append('%s:%d' % (t.data, t.line))
+            else:
+                data[t.group].append(t.data)
+        return data
+
+    def _unserialize(self, data):
+        if data == None:
+            return
+        for key in data:
+            items = data[key]
+            for item in items:
+                if key == 'file':
+                    t = item.rsplit(':')
+                    self.bookmark_file(filename=t[0], line=t[1])
+                elif key == 'path':
+                    self.bookmark_dir(path=item)
+
+    def load(self):
+        self._items = []
+        self._view.clear_all()
+        data = self.boss.cmd('project', 'get_current_project_data',
+                section_name='bookmark')
+        self._unserialize(data)
+
+    def save(self):
+        data = self._serialize()
+        self.boss.cmd('project', 'save_to_current_project',
+                section_name='bookmark', section_data=data)
+
 
 # Required Service attribute for service loading
 Service = Bookmark
