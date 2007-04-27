@@ -178,6 +178,7 @@ class VersionControlActions(ActionsConfig):
             'Commit the selected file',
             '',
             self.on_commit_for_file,
+            'NOACCEL'
         )
 
         self.create_action(
@@ -187,6 +188,7 @@ class VersionControlActions(ActionsConfig):
             'Commit the selected directory',
             '',
             self.on_commit_for_directory,
+            'NOACCEL'
         )
 
         self.create_action(
@@ -214,6 +216,7 @@ class VersionControlActions(ActionsConfig):
             'Update the selected file',
             '',
             self.on_update_for_file,
+            'NOACCEL'
         )
 
         self.create_action(
@@ -223,6 +226,7 @@ class VersionControlActions(ActionsConfig):
             'Update the selected file',
             '',
             self.on_update_for_dir,
+            'NOACCEL'
         )
 
         self.create_action(
@@ -241,6 +245,7 @@ class VersionControlActions(ActionsConfig):
             'Add the selected file',
             '',
             self.on_add_for_file,
+            'NOACCEL'
         )
 
         self.create_action(
@@ -250,6 +255,7 @@ class VersionControlActions(ActionsConfig):
             'Add the selected file',
             '',
             self.on_add_for_dir,
+            'NOACCEL'
         )
 
     def on_diff_document(self, action):
