@@ -12,6 +12,7 @@
             <placeholder name="find">
                 <menuitem name="show_grepper" action="show_grepper" />
                 <menuitem name="grep_current_word" action="grep_current_word" />
+                <menuitem name="grep_current_word_file" action="grep_current_word_file" />
             </placeholder>
             <separator />
             <placeholder name="prefs" />

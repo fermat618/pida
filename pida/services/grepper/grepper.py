@@ -118,11 +118,21 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word',
             TYPE_NORMAL,
-            'Find current word in files',
-            'Find the current word in files',
+            'Find word in project',
+            'Find the current word in the current project',
             gtk.STOCK_FIND,
             self.on_grep_current_word,
             '<Shift><Control>question'
+        )
+
+        self.create_action(
+            'grep_current_word_file',
+            TYPE_NORMAL,
+            'Find word in document directory',
+            'Find the current word in current document directory',
+            gtk.STOCK_FIND,
+            self.on_grep_current_word_file,
+            '<Shift><Control><Alt>question'
         )
 
     def on_show_grepper(self, action):
@@ -134,6 +144,15 @@ class GrepperActionsConfig(ActionsConfig):
     def on_grep_current_word(self, action):
         self.svc.grep_current_word()
 
+    def on_grep_current_word_file(self, action):
+        document = self.svc.boss.cmd('buffer', 'get_current')
+        if document is not None:
+            self.svc.set_view_location(document.directory)
+            self.svc.grep_current_word()
+        else:
+            self.svc.error_dlg('There is no current document.')
+        
+    
 class GrepperView(PidaGladeView):
     gladefile = 'grepper-window'
     label_text = 'Find in Files'
@@ -346,7 +365,11 @@ class Grepper(Service):
             pass
 
     def set_current_project(self, project):
-        self._view.set_location(project.source_directory)
+        self.set_view_location(project.source_directory)
+
+    def set_view_location(self, directory):
+        self._view.set_location(directory)
+
 
 Service = Grepper
 
