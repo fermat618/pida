@@ -93,7 +93,7 @@ class PidaWindow(Window):
             uifile = get_uidef_path(filename)
             self._uim.add_ui_from_file(uifile)
         except Exception, e:
-            print 'unable to get %s resource' % filename
+            print 'unable to get %s resource: %s' % (filename, e)
 
     # View API
     def add_view(self, bookname, view, present=False):

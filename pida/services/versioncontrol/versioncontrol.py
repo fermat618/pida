@@ -51,10 +51,36 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
                 self.svc.ignored_file_checker
                 )
 
+class VersionControlEvents(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('buffer', 'document-changed',
+            self.on_document_changed)
+
+    def on_document_changed(self, document):
+        self.svc.get_action('differences').set_sensitive(document is not None)
+
 class VersioncontrolCommandsConfig(CommandsConfig):
     
     def get_workdirmanager(self,path):
         return self.svc.get_workdir_manager_for_path(path)
+
+class VersionControlActions(ActionsConfig):
+
+    def create_actions(self):
+        self.create_action(
+            'differences',
+            TYPE_NORMAL,
+            'Differences',
+            'Version Control differences for the current file',
+            '',
+            self.on_diff,
+            '<Shift><Control>d',
+        )
+
+    def on_diff(self, action):
+        document = self.svc.boss.cmd('buffer', 'get_current')
+        self.svc.diff_document(document)
 
 # Service class
 class Versioncontrol(Service):
@@ -62,6 +88,11 @@ class Versioncontrol(Service):
 
     features_config = VersioncontrolFeaturesConfig
     commands_config = VersioncontrolCommandsConfig
+    actions_config = VersionControlActions
+    events_config = VersionControlEvents
+
+    def start(self):
+        self.get_action('differences').set_sensitive(False)
     
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
@@ -82,6 +113,15 @@ class Versioncontrol(Service):
                 name = os.path.basename (abspath)
                 path = os.path.dirname(abspath)
                 yield name, path, item.state
+
+    def diff_document(self, document):
+        self.diff_file(document.filename)
+
+    def diff_file(self, file_name):
+        vc = self.get_workdir_manager_for_path(file_name)
+        print vc, dir(vc)
+        print vc.diff()
+
 
 
 
