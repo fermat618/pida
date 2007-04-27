@@ -5,11 +5,14 @@
     :license: BSD
 """
 
+#AA Imports in order like PEP8/coding-style, stdlib, external libs, local
 from bases import VCSBase, DVCSMixin
 from subprocess import Popen, PIPE
 from file import StatedPath as Path
+#AA import os and use as os.path (IMO)
 from os import path 
 
+#AA 2 lines between top-level classes/functions PEP8
 class CommandBased(VCSBase):
     """
     Base class for all command based rcs's
@@ -19,6 +22,7 @@ class CommandBased(VCSBase):
         self.path = path.normpath( path.abspath(versioned_path) )
         self.base_path = self._find_basepath()
     
+    #AA do we expect to override this? if so should not be private
     def _find_basepath(self):
         dsd = self.detect_subdir
              
@@ -44,6 +48,7 @@ class CommandBased(VCSBase):
 
         return detected_path
 
+    #AA gets called by subclass, should not be private
     def _execute_command(self, args, result_type=str, **kw):
         if not args:
             raise ValueError('need a valid command')
@@ -99,6 +104,7 @@ class CommandBased(VCSBase):
         args = self.get_status_args(**kw)
         return self._execute_command(args, **kw)
 
+    #AA Do we expect to override this, if so not pprivate
     def _list_impl(self, recursive,**kw):
         """
         the default implementation is only cappable of 
@@ -115,6 +121,7 @@ class CachedCommandMixin(object):
         args = self.get_cache_args(**kw)
         return self._execute_command(args, **kw)
 
+#AA 2 lines
 class DCommandBased(CommandBased, DVCSMixin):
     """
     base class for all distributed command based rcs's
@@ -199,6 +206,7 @@ class Monotone(DCommandBased):
         state = self.statemap.get(item[:3], "none") 
         return Path(path.normpath(item[8:].rstrip()), state, self.base_path)
 
+
 class Bazaar(CachedCommandMixin,
              DCommandBased):
     cmd = "bzr"
@@ -244,8 +252,6 @@ class Bazaar(CachedCommandMixin,
                 self._cache.get(fn, 'normal'),
                 self.base_path)
 
-      
-
 
 class SubVersion(CommandBased):
     cmd = "svn"
@@ -268,6 +274,7 @@ class SubVersion(CommandBased):
             "C": 'conflict',
             'X': 'external',
             } 
+
     def parse_list_item(self, item):
         #TODO: output for external references broken
         if item == '\n':
@@ -275,6 +282,7 @@ class SubVersion(CommandBased):
         state = item[0]
         file = item[7:].strip()
         return Path(file, self.state_map[state], self.base_path) 
+
 
 class Mercurial(DCommandBased):
     cmd = "hg"
@@ -298,6 +306,7 @@ class Mercurial(DCommandBased):
         state = self.state_map[item[0]]
         file = item[2:].strip()
         return Path(file, state, self.base_path)
+
 
 class Darcs(DCommandBased):
 
