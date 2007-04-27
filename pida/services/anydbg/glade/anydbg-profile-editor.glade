@@ -2,7 +2,7 @@
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
 <!--*- mode: xml -*-->
 <glade-interface>
-  <requires lib="kiwiwidgets"/>
+
   <widget class="GtkWindow" id="anydbg-profile-editor">
     <child>
       <widget class="GtkVBox" id="vbox1">
