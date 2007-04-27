@@ -210,7 +210,7 @@ class BookmarkActions(ActionsConfig):
             TYPE_NORMAL,
             'Delete selected item',
             'Delete selected item',
-            gtk.STOCK_CLOSE,
+            gtk.STOCK_DELETE,
             self.on_bookmark_delsel,
             'NOACCEL',
         )
@@ -218,8 +218,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark-for-dir',
             TYPE_NORMAL,
-            'Add to bookmark',
-            'Add selected directory to bookmark',
+            'Add as bookmark',
+            'Add selected directory as bookmark',
             gtk.STOCK_ADD,
             self.on_bookmark_for_dir,
             'NOACCEL',
@@ -228,8 +228,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark-for-file',
             TYPE_NORMAL,
-            'Add to bookmark',
-            'Add selected file to bookmark',
+            'Add as bookmark',
+            'Add selected file as bookmark',
             gtk.STOCK_ADD,
             self.on_bookmark_for_file,
             'NOACCEL',
