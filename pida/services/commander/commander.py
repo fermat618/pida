@@ -235,7 +235,10 @@ class TerminalView(PidaView):
 
     def on_close_clicked(self, button):
         if self._pid is not None:
-            os.kill(self._pid, 9)
+            try:
+                os.kill(self._pid, 9)
+            except OSError:
+                self.svc.log_debug('PID %s has already gone' % self._pid)
             self.close_view()
 
     def on_selection_changed(self, term):
