@@ -78,25 +78,16 @@ class CommandBased(VCSBase):
 
         if hasattr(self,"detect_subdir"):
             dsd = self.detect_subdir
-            if isinstance(dsd, basestring):
-                dsd = [dsd]
-            if isinstance(dsd,dict):
-                dsd = dsd.keys()
-            
-            assert isinstance(dsd, list), \
-                "detect_subdir classattribute must be a string, list or dict"
-            
+             
             act_path = self.path
             detected_path = None
             detected_sd = None
             op = None
             while act_path != op:
-                for sd in dsd:
-                    if path.exists( path.join(act_path, sd)):
-                        detected_path = act_path
-                        detected_sd = sd
-                        # continue cause some vcs's 
-                        # got the subdir in every path
+                if path.exists( path.join(act_path, self.detect_subdir)):
+                    detected_path = act_path
+                    # continue cause some vcs's 
+                    # got the subdir in every path
                 op = act_path
                 act_path = path.dirname(act_path)
                 
@@ -107,9 +98,6 @@ class CommandBased(VCSBase):
                             type(self), 
                             self.path)
                         )
-
-            if isinstance(self.detect_subdir, dict):
-                self.cmd = self.detect_subdir[detected_sd]
 
             return detected_path
 
@@ -192,11 +180,9 @@ class DCommandBased(CommandBased, DVCSMixin):
 
 
 class Monotone(DCommandBased):
+    cmd = 'mtn'
+    detect_subdir = '_MTN'
     
-    detect_subdir = {
-            '_MTN':'mtn', # new style
-            'MT':'monotone', #old style
-            }
     non_recursive_param = [] #XXX: fix this bug
     # monotone cant do paths and non-recursive
     _list_impl_cmd = "automate inventory".split()
