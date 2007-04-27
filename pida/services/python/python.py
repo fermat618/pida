@@ -87,10 +87,16 @@ class Pyflaker(object):
     def __init__(self, svc):
         self.svc = svc
         self._view = PyflakeView(self.svc)
+        self.set_current_document(None)
 
     def set_current_document(self, document):
         self._current = document
-        self.refresh_view()
+        if self._current is not None:
+            self.refresh_view()
+            self._view.get_toplevel().set_sensitive(True)
+        else:
+            self.set_view_items([])
+            self._view.get_toplevel().set_sensitive(False)
 
     def refresh_view(self):
         if self.svc.is_current_python():
@@ -278,8 +284,12 @@ class Python(Service):
 
     def set_current_document(self, document):
         self._current = document
-        self._pyflaker.set_current_document(document)
-        self.execute_action.set_sensitive(self.is_current_python())
+        if self.is_current_python():
+            self._pyflaker.set_current_document(document)
+            self.execute_action.set_sensitive(True)
+        else:
+            self._pyflaker.set_current_document(None)
+            self.execute_action.set_sensitive(False)
 
     def is_current_python(self):
         return self._current.filename.endswith('.py')
