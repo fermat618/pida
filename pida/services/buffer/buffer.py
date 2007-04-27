@@ -195,6 +195,9 @@ class BufferCommandsConfig(CommandsConfig):
     def get_view(self):
         return self.svc.get_view()
 
+    def get_current(self):
+        return self.svc.get_current()
+
 # Service class
 class Buffer(Service):
     """
