@@ -103,18 +103,9 @@ class VersioncontrolCommandsConfig(CommandsConfig):
 class VersionControlActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
-            'differences',
-            TYPE_NORMAL,
-            'Differences',
-            'Version Control differences for the current file',
-            '',
-            self.on_diff,
-            '<Shift><Control>d',
-        )
 
         self.create_action(
-            'more_vc_for_file_menu',
+            'more_vc_menu',
             TYPE_NORMAL,
             'More Version Control',
             'More Version Control Commands',
@@ -124,22 +115,106 @@ class VersionControlActions(ActionsConfig):
         )
 
         self.create_action(
+            'diff_document',
+            TYPE_NORMAL,
+            'Differences',
+            'Version Control differences for the current document',
+            '',
+            self.on_diff_document,
+            '<Shift><Control>d',
+        )
+
+        self.create_action(
+            'diff_project',
+            TYPE_NORMAL,
+            'Differences',
+            'Get the version control differences for the current project',
+            '',
+            self.on_diff_project,
+        )
+
+        self.create_action(
             'diff_for_file',
             TYPE_NORMAL,
             'Differences',
-            'Get the version controll diff on this file',
+            'Get the version control diff on this file',
             '',
             self.on_diff_for_file,
             'NOACCEL',
         )
 
-    def on_diff(self, action):
+        self.create_action(
+            'diff_for_directory',
+            TYPE_NORMAL,
+            'Differences',
+            'Get the version control diff on this directory',
+            '',
+            self.on_diff_for_dir,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'commit_document',
+            TYPE_NORMAL,
+            'Commit',
+            'Commit the current document',
+            '',
+            self.on_commit_document,
+        )
+
+        self.create_action(
+            'commit_project',
+            TYPE_NORMAL,
+            'Commit',
+            'Commit the current project',
+            '',
+            self.on_commit_project,
+        )
+
+        self.create_action(
+            'commit_for_file',
+            TYPE_NORMAL,
+            'Commit',
+            'Commit the selected file',
+            '',
+            self.on_commit_for_file,
+        )
+
+        self.create_action(
+            'commit_for_dir',
+            TYPE_NORMAL,
+            'Commit',
+            'Commit the selected directory',
+            '',
+            self.on_commit_for_directory,
+        )
+
+
+    def on_diff_document(self, action):
         document = self.svc.boss.cmd('buffer', 'get_current')
         self.svc.diff_document(document)
+
+    def on_diff_project(self, action):
+        pass
 
     def on_diff_for_file(self, action):
         file_name = action.contexts_kw['file_name']
         self.svc.diff_file(file_name)
+
+    def on_diff_for_dir(self, action):
+        pass
+
+    def on_commit_document(self, action):
+        pass
+
+    def on_commit_project(self, action):
+        pass
+
+    def on_commit_for_file(self, action):
+        pass
+
+    def on_commit_for_directory(self, action):
+        pass
 
 # Service class
 class Versioncontrol(Service):
@@ -151,7 +226,7 @@ class Versioncontrol(Service):
     events_config = VersionControlEvents
 
     def start(self):
-        self.get_action('differences').set_sensitive(False)
+        self.get_action('diff_document').set_sensitive(False)
     
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")

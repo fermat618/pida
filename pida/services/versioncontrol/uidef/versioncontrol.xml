@@ -5,7 +5,10 @@
             <placeholder name="fm1" />
             <separator />
             <placeholder name="fm15">
-                <menuitem name="differences" action="differences" />
+                <menuitem name="diff_document" action="diff_document" />
+                <menu name="more_vc_menu" action="more_vc_menu"> 
+                <menuitem name="commit_document" action="commit_document" />
+                </menu>
             </placeholder>
             <separator />
             <placeholder name="fm2" />
