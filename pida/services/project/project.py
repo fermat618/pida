@@ -310,8 +310,8 @@ class ProjectCommandsConfig(CommandsConfig):
     def get_view(self):
         return self.svc.get_view()
 
-    def get_current(self):
-        return self.svc.get_current()
+    def get_current_project(self):
+        return self.svc.get_current_project()
 
 # Service class
 class Project(Service):

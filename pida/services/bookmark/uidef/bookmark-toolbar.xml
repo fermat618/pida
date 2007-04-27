@@ -2,5 +2,6 @@
     <toolbar>
         <toolitem action="bookmark_curdir" name="bookmark_curdir"/>
         <toolitem action="bookmark_curfile" name="bookmark_curfile"/>
+        <toolitem action="bookmark_delsel" name="bookmark_delsel"/>
     </toolbar>
 </ui>
