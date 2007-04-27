@@ -20,6 +20,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os, re, sre_constants, cgi
+import gtk, gobject
 
 from glob import fnmatch
 
@@ -32,21 +34,14 @@ from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask
 
-# Imports should be properly arranged as in coding-style.txt
-import gtk, gobject, os, re, sre_constants, cgi
 
 class GrepperItem(object):
-    # Doctrings should be <= 80 chars wide
-    # Docstrings should also have a first line as a summary
     """
     A match item in grepper.
     
     Contains the data for the matches path, and linenumber that if falls on, as
     well as actual line of code that matched, and the matches data.
     """
-    # These are comment / doscstrings, not part of the docstring
-    # TODO: Highlight match in line
-    # TODO: Format some of the other data.
 
     def __init__(self, path, linenumber=None, line=None, matches=None):
         self._path = path
@@ -55,20 +50,6 @@ class GrepperItem(object):
         self.linenumber = linenumber
         self.path = self._escape_text(self._path)
         self.line = self._format_line()
-
-    # really dislike this use of the property decorator
-    # it's just personal, but I prefer get_foo, then foo = property(get_foo)
-    # then at least get_foo remains as a method
-    # We don't need properties anyway, we should cache the result, since it
-    # won't change, and objectlist refreshes its view a lot
-
-    #@property
-    #def path(self):
-    #    return cgi.escape(self._path)
-
-    #@property
-    #def line(self):
-    #    return cgi.escape(self._line)
 
     def _markup_match(self, text):
         return ('<span color="#c00000"><b>%s</b></span>' %
@@ -159,16 +140,12 @@ class GrepperView(PidaGladeView):
     icon_name = gtk.STOCK_FIND
 
     def create_ui(self):
-        # Instance methods should be instance methods
         self.grepper_dir = ''
         self.matches_list.set_columns([
             Column('linenumber', editable=False, title="#",),
-            # Only expand the line column (path with autofit)
             Column('path', editable=False, use_markup=True),
             Column('line', expand=True, editable=False, use_markup=True),
             ])
-        # Can connect this automatically
-        #self.matches_list.connect('row-activated', self.on_match_activated)
 
         # we should set this to the current project I think
         self.path_chooser.set_filename(os.path.expanduser('~/'))
@@ -222,7 +199,7 @@ class GrepperView(PidaGladeView):
             return False
 
         if not os.path.exists(location):
-            self.svc.boss.get_window().error_dlg('path does not exist')
+            self.svc.boss.get_window().error_dlg('Path does not exist')
             return False
 
         if not self.re_check.get_active():
