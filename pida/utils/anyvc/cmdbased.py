@@ -5,6 +5,16 @@
     :license: BSD
 """
 
+# How I would like to see this
+#
+# Listing is fine
+# For actions we will have the following:
+# get_diff_command(paths)
+# get_commit_command(paths)
+# etc
+
+
+
 from bases import VCSBase, DVCSMixin
 from subprocess import Popen, PIPE
 from file import StatedPath as Path
