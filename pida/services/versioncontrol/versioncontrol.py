@@ -48,6 +48,9 @@ except ImportError:
     highlight = None
 
 class DiffViewer(PidaView):
+
+    icon_name = gtk.STOCK_COPY
+    label_text = 'Differences'
     
     def create_ui(self):
         hb = gtk.HBox()
