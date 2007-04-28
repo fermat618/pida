@@ -1,0 +1,19 @@
+<ui>
+<popup>
+<placeholder name="1"/>
+<separator/>
+<placeholder name="2"/>
+<separator/>
+<placeholder name="3">
+    <menuitem name="diff_for_directory" action="diff_for_directory" />
+    <menu name="more_vc_menu" action="more_vc_menu">
+        <menuitem name="update_for_dir" action="update_for_dir" />
+        <menuitem name="add_for_dir" action="add_for_dir" />
+        <menuitem name="commit_for_dir" action="commit_for_dir" />
+    </menu>
+</placeholder>
+<separator/>
+<placeholder name="4"/>
+<separator/>
+</popup>
+</ui>

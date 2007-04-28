@@ -22,6 +22,18 @@
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
+        <placeholder name="p1"/>
+        <separator />
+        <placeholder name="p2"/>
+        <separator />
+        <placeholder name="p3">
+            <menuitem name="diff_project" action="diff_project" />
+            <menuitem name="update_project" action="update_project" />
+            <menuitem name="commit_project" action="commit_project" />
+        </placeholder>
+        <separator />
+        <placeholder name="p4"/>
+        <separator />
         </menu>
         
         <menu name="LanguageMenu" action="LanguageMenu">

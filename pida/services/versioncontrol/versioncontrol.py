@@ -85,6 +85,8 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
                 )
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
+        self.subscribe_foreign_feature('contexts', 'dir-menu',
+            (self.svc.get_action_group(), 'versioncontrol-dir-menu.xml'))
 
 class VersionControlEvents(EventsConfig):
 
