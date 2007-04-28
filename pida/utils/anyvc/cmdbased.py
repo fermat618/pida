@@ -83,6 +83,15 @@ class CommandBased(VCSBase):
         else:
             return ['update']
 
+    def get_add_args(self, paths=(), recursive=False, **kw):
+        return ['add'] + paths
+
+    def get_remove_args(self, paths=(), recursive=False, **kw):
+        return ['remove'] + paths
+
+    def get_revert_args(self, paths=(), recursive=False, **kw):
+        return ['revert'] + paths
+
     def get_status_args(self,**kw):
         return ['status']
 
@@ -103,6 +112,18 @@ class CommandBased(VCSBase):
     
     def status(self, **kw):
         args = self.get_status_args(**kw)
+        return self.execute_command(args, **kw)
+
+    def add(self, **kw):
+        args = self.get_add_args(**kw)
+        return self.execute_command(args, **kw)
+
+    def remove(self, **kw):
+        args = self.get_remove_args(**kw)
+        return self.execute_command(args, **kw)
+    
+    def revert(self, **kw):
+        args = self.get_revert_args(**kw)
         return self.execute_command(args, **kw)
 
     def list_impl(self, recursive,**kw):

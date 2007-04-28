@@ -583,7 +583,7 @@ class Versioncontrol(Service):
 
     def remove_path(self, path):
         self._log.append_action('Removing: %s' % path, gtk.STOCK_REMOVE)
-        task = AsyncTask(self._do_add, self._done_add)
+        task = AsyncTask(self._do_remove, self._done_remove)
         task.start(path)
 
     def _do_remove(self, path):

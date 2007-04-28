@@ -76,7 +76,7 @@ class VCSBase(object):
     def add(self, paths=None, recursive=False):
         raise NotImplementedError
     
-    def drop(self, paths=None, execute=False, recursive=False):
+    def remove(self, paths=None, execute=False, recursive=False):
         raise NotImplementedError
 
 class DVCSMixin(object):
