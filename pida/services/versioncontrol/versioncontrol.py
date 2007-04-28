@@ -37,6 +37,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.ui.views import PidaView, PidaGladeView
 
 from pida.ui.htmltextview import HtmlTextView
+from pida.ui.buttons import create_mini_button
 
 from pida.utils.gthreads import AsyncTask, gcall
 
@@ -54,11 +55,16 @@ class DiffViewer(PidaView):
     
     def create_ui(self):
         hb = gtk.HBox()
+        self.add_main_widget(hb)
         sb = gtk.ScrolledWindow()
         self._html = HtmlTextView()
         sb.add(self._html)
         hb.pack_start(sb)
-        self.add_main_widget(hb)
+        vb = gtk.VBox()
+        hb.pack_start(vb, expand=False)
+        self._close_button = create_mini_button(gtk.STOCK_CLOSE,
+            'Close the diff viewer', self.on_close_button_clicked)
+        vb.pack_start(self._close_button, expand=False)
         hb.show_all()
 
     def set_diff(self, diff):
@@ -67,6 +73,9 @@ class DiffViewer(PidaView):
         else:
             data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
         self._html.display_html(data)
+
+    def on_close_button_clicked(self, button):
+        self.svc.boss.cmd('window', 'remove_view', view=self)
 
 class VersionControlLog(PidaGladeView):
 
