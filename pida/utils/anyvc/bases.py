@@ -40,23 +40,23 @@ class VCSBase(object):
     def parse_cache_item(self, item, last_state):
         raise NotImplementedError
 
-    def _cache_impl(self, paths=False, recursive=False):
+    def cache_impl(self, paths=False, recursive=False):
         return [] # generating a result dataset is only necessary for messed up vcs's 
 
-    def _list_impl(self, paths=False, recursive=False):
+    def list_impl(self, paths=False, recursive=False):
         raise NotImplementedError
     
     def cache(self, paths=None, recursive=False):
         self._cache={}
         state = "none"
-        for i in self._cache_impl(paths = paths, recursive=recursive):
+        for i in self.cache_impl(paths = paths, recursive=recursive):
             path, state = self.parse_cache_item(i, state)
             if path is not None:
                 self._cache[path] = state
     
     def list(self, paths=None, recursive=False):
         self.cache(paths = paths,recursive=recursive)
-        for i in self._list_impl(paths = paths, recursive=recursive):
+        for i in self.list_impl(paths = paths, recursive=recursive):
             parsed = self.parse_list_item(i)
             if parsed is not None:
                 yield parsed

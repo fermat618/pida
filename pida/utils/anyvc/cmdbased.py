@@ -5,25 +5,26 @@
     :license: BSD
 """
 
-#AA Imports in order like PEP8/coding-style, stdlib, external libs, local
-from bases import VCSBase, DVCSMixin
-from subprocess import Popen, PIPE, STDOUT
-from file import StatedPath as Path
-#AA import os and use as os.path (IMO)
-from os import path 
 
-#AA 2 lines between top-level classes/functions PEP8
+from subprocess import Popen, PIPE, STDOUT
+import os.path 
+
+
+from bases import VCSBase, DVCSMixin
+from file import StatedPath as Path
+
+
 class CommandBased(VCSBase):
     """
     Base class for all command based rcs's
     """
-    
+    #TODO: set up the missing actions
+
     def __init__(self, versioned_path):
-        self.path = path.normpath( path.abspath(versioned_path) )
-        self.base_path = self._find_basepath()
+        self.path = os.path.normpath( os.path.abspath(versioned_path) )
+        self.base_path = self.find_basepath()
     
-    #AA do we expect to override this? if so should not be private
-    def _find_basepath(self):
+    def find_basepath(self):
         dsd = self.detect_subdir
              
         act_path = self.path
@@ -31,12 +32,12 @@ class CommandBased(VCSBase):
         detected_sd = None
         op = None
         while act_path != op:
-            if path.exists( path.join(act_path, self.detect_subdir)):
+            if os.path.exists( os.path.join(act_path, self.detect_subdir)):
                 detected_path = act_path
                 # continue cause some vcs's 
                 # got the subdir in every path
             op = act_path
-            act_path = path.dirname(act_path)
+            act_path = os.path.dirname(act_path)
                 
         if not detected_path:
             raise ValueError(
@@ -48,8 +49,7 @@ class CommandBased(VCSBase):
 
         return detected_path
 
-    #AA gets called by subclass, should not be private
-    def _execute_command(self, args, result_type=str, **kw):
+    def execute_command(self, args, result_type=str, **kw):
         if not args:
             raise ValueError('need a valid command')
         ret = Popen( 
@@ -91,22 +91,21 @@ class CommandBased(VCSBase):
     
     def commit(self, **kw):
         args = self.get_commit_args(**kw)
-        return self._execute_command(args, **kw)
+        return self.execute_command(args, **kw)
 
     def diff(self, **kw):
         args = self.get_diff_args(**kw)
-        return self._execute_command(args, **kw)
+        return self.execute_command(args, **kw)
 
     def update(self, **kw):
         args = self.get_update_args(**kw)
-        return self._execute_command(args, **kw)
+        return self.execute_command(args, **kw)
     
     def status(self, **kw):
         args = self.get_status_args(**kw)
-        return self._execute_command(args, **kw)
+        return self.execute_command(args, **kw)
 
-    #AA Do we expect to override this, if so not pprivate
-    def _list_impl(self, recursive,**kw):
+    def list_impl(self, recursive,**kw):
         """
         the default implementation is only cappable of 
         recursive operation on the complete workdir
@@ -115,14 +114,16 @@ class CommandBased(VCSBase):
         non-recursive and path-specific listing
         """
         args = self.get_list_args(**kw)
-        return self._execute_command(args, result_type=file, **kw)
+        return self.execute_command(args, result_type=iter, **kw)
+
 
 class CachedCommandMixin(object):
-    def _cache_impl(self,**kw):
+    
+    def cache_impl(self,**kw):
         args = self.get_cache_args(**kw)
-        return self._execute_command(args, **kw)
+        return self.execute_command(args, result_type=iter, **kw)
 
-#AA 2 lines
+
 class DCommandBased(CommandBased, DVCSMixin):
     """
     base class for all distributed command based rcs's
@@ -141,7 +142,9 @@ class DCommandBased(CommandBased, DVCSMixin):
 
 
 class Monotone(DCommandBased):
+    
     cmd = 'mtn'
+    
     detect_subdir = '_MTN'
     
     statemap = {
@@ -205,12 +208,14 @@ class Monotone(DCommandBased):
 
     def parse_list_item(self, item):
         state = self.statemap.get(item[:3], "none") 
-        return Path(path.normpath(item[8:].rstrip()), state, self.base_path)
+        return Path(os.path.normpath(item[8:].rstrip()), state, self.base_path)
 
 
 class Bazaar(CachedCommandMixin,
              DCommandBased):
+    
     cmd = "bzr"
+    
     detect_subdir = ".bzr"
    
     def get_list_args(self, recursive=True, paths=(),**kw):
@@ -259,6 +264,8 @@ class SubVersion(CommandBased):
     detect_subdir = ".svn"
     
     def get_list_args(self, recursive=True, **kw):
+        #TODO: figure a good way to deal with changes in external
+        # (maybe use the svn python api to do that)
         ret = ["st", "--no-ignore", "--ignore-externals"]
         if not recursive:
             ret.append("--non-recursive")
@@ -277,9 +284,6 @@ class SubVersion(CommandBased):
             } 
 
     def parse_list_item(self, item):
-        #TODO: output for external references broken
-        if item == '\n':
-            return
         state = item[0]
         file = item[7:].strip()
         return Path(file, self.state_map[state], self.base_path) 
@@ -315,7 +319,6 @@ class Darcs(DCommandBased):
 
     detect_subdir = '_darcs'
 
-    
     def get_list_cmd(self, **kw):
         return ['whatsnew', '--boring', '--summary']
 
@@ -332,6 +335,6 @@ class Darcs(DCommandBased):
             return None
         elements = item.split(1)
         state = self.state_map[elements[0]]
-        file = path.normpath(elements[1])
+        file = os.path.normpath(elements[1])
         return Path(file, state, self.base_path)
 
