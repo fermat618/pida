@@ -80,7 +80,7 @@ class VersionControlLog(PidaGladeView):
         self._buffer.create_tag('time', foreground='#0000c0')
         self._buffer.create_tag('argument', weight=700)
         self._buffer.create_tag('title', style=pango.STYLE_ITALIC)
-        self._buffer.create_tag('result')
+        self._buffer.create_tag('result', font='Monospace')
         self.append_time()
         self.append_stock(gtk.STOCK_CONNECT)
         self.append(' Version Control Log Started\n\n', 'argument')
@@ -100,13 +100,13 @@ class VersionControlLog(PidaGladeView):
 
     def append_action(self, action, argument, stock_id):
         self.svc.ensure_log_visible()
+        self.append_time()
         self.append_stock(stock_id)
         self.append_entry('%s: ' % action, 'title')
         self.append_entry('%s\n' % argument, 'argument')
 
     def append_result(self, result):
         self.svc.ensure_log_visible()
-        self.append_time()
         self.append_entry('%s\n\n' % result.strip(), 'result')
 
     def append(self, text, tag):
