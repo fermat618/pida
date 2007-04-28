@@ -111,7 +111,7 @@ class CommandBased(VCSBase):
     def get_add_args(self, paths=(), recursive=False, **kw):
         return ['add'] + self.process_paths(paths)
 
-    def get_remove_args(self, paths=(), recursive=False, execute=False **kw):
+    def get_remove_args(self, paths=(), recursive=False, execute=False, **kw):
         return ['remove'] +  self.process_paths(paths)
 
     def get_revert_args(self, paths=(), recursive=False, **kw):
