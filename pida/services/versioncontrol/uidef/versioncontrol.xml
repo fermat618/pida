@@ -46,6 +46,9 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="tools">
+            <menuitem action="show_vc_log" name="show_vc_log" />
+            </placeholder>
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

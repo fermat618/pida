@@ -22,6 +22,7 @@
 
 
 import os.path
+import time
 
 import gtk
 
@@ -33,11 +34,11 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, PidaGladeView
 
 from pida.ui.htmltextview import HtmlTextView
 
-from pida.utils.gthreads import AsyncTask
+from pida.utils.gthreads import AsyncTask, gcall
 
 try:
     from pygments import highlight
@@ -63,6 +64,46 @@ class DiffViewer(PidaView):
         else:
             data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
         self._html.display_html(data)
+
+class VersionControlLog(PidaGladeView):
+
+    gladefile = 'version-control-log'
+
+    icon_name = gtk.STOCK_CONNECT
+    label_text = 'Version Control Log'
+
+    def create_ui(self):
+        self._buffer = self.log_text.get_buffer()
+        self._buffer.create_tag('time', weight=700)
+        self._buffer.create_tag('title', foreground='#0000c0', weight=700,
+        pixels_below_lines=5)
+        self._buffer.create_tag('result')
+
+    def append_entry(self, text, tag):
+        self.append(text, tag)
+        gcall(self.log_text.scroll_to_iter, self._buffer.get_end_iter(), 0)
+
+    def append_time(self):
+        self.append('%s\n' % time.asctime(), 'time')
+    
+    def append_stock(self, stock_id):
+        anchor = self._buffer.create_child_anchor(self._buffer.get_end_iter())
+        im = gtk.Image()
+        im.set_from_stock(stock_id, gtk.ICON_SIZE_MENU)
+        im.show()
+        self.log_text.add_child_at_anchor(im, anchor)
+
+    def append_action(self, action, stock_id):
+        self.append_stock(stock_id)
+        self.append_entry('%s\n' % action, 'title')
+
+    def append_result(self, result):
+        self.append_time()
+        self.append_entry('%s\n' % result.strip(), 'result')
+
+    def append(self, text, tag):
+        self._buffer.insert_with_tags_by_name(
+            self._buffer.get_end_iter(), text, tag)
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
     
@@ -105,6 +146,16 @@ class VersioncontrolCommandsConfig(CommandsConfig):
 class VersionControlActions(ActionsConfig):
 
     def create_actions(self):
+
+        self.create_action(
+            'show_vc_log',
+            TYPE_TOGGLE,
+            'Version Control Log',
+            'Show the version control log',
+            gtk.STOCK_CONNECT,
+            self.on_show_vc_log,
+            '<Shift><Control>2',
+        )
 
         self.create_action(
             'more_vc_menu',
@@ -330,11 +381,19 @@ class VersionControlActions(ActionsConfig):
             'NOACCEL'
         )
 
+    def on_show_vc_log(self, action):
+        if action.get_active():
+            self.svc.show_log()
+        else:
+            self.svc.hide_log()
+
     def on_diff_document(self, action):
-        self.svc.diff_path(self.svc.current_document.filename)
+        path = self.svc.current_document.filename
+        self.svc.diff_path(path)
 
     def on_diff_project(self, action):
-        self.svc.diff_path(self.svc.current_project.source_directory)
+        path = self.svc.current_project.source_directory
+        self.svc.diff_path(path)
 
     def on_diff_for_file(self, action):
         path = action.contexts_kw['file_name']
@@ -345,58 +404,76 @@ class VersionControlActions(ActionsConfig):
         self.svc.diff_path(path)
 
     def on_commit_document(self, action):
-        pass
+        path = self.svc.current_document.filename
+        self.svc.commit_path(path)
 
     def on_commit_project(self, action):
-        pass
+        path = self.svc.current_project.source_directory
+        self.svc.commit_path(path)
 
     def on_commit_for_file(self, action):
-        pass
+        path = action.contexts_kw['file_name']
+        self.svc.commit_path(path)
 
     def on_commit_for_directory(self, action):
-        pass
+        path = action.contexts_kw['dir_name']
+        self.svc.commit_path(path)
 
     def on_update_document(self, action):
-        pass
+        path = self.svc.current_document.filename
+        self.svc.update_path(path)
 
     def on_update_project(self, action):
-        pass
+        path = self.svc.current_project.source_directory
+        self.svc.update_path(path)
 
     def on_update_for_file(self, action):
-        pass
+        path = action.contexts_kw['file_name']
+        self.svc.update_path(path)
 
     def on_update_for_dir(self, action):
-        pass
+        path = action.contexts_kw['dir_name']
+        self.svc.update_path(path)
 
     def on_add_document(self, action):
-        pass
+        path = self.svc.current_document.filename
+        self.svc.add_path(path)
 
     def on_add_for_file(self, action):
-        pass
+        path = action.contexts_kw['file_name']
+        self.svc.add_path(path)
 
     def on_add_for_dir(self, action):
-        pass
+        path = action.contexts_kw['dir_name']
+        self.svc.add_path(path)
 
     def on_remove_document(self, action):
-        pass
+        path = self.svc.current_document.filename
+        self.svc.remove_path(path)
 
     def on_remove_for_file(self, action):
-        pass
+        path = action.contexts_kw['file_name']
+        self.svc.remove_path(path)
 
     def on_remove_for_dir(self, action):
-        pass
+        path = action.contexts_kw['dir_name']
+        self.svc.remove_path(path)
 
     def on_revert_document(self, action):
-        pass
+        path = self.svc.current_document.filename
+        self.svc.revert_path(path)
 
     def on_revert_project(self, action):
-        pass
+        path = self.svc.current_project.source_directory
+        self.svc.revert_path(path)
 
     def on_revert_for_file(self, action):
-        pass
+        path = action.contexts_kw['file_name']
+        self.svc.revert_path(path)
 
     def on_revert_for_dir(self, action):
-        pass
+        path = action.contexts_kw['dir_name']
+        self.svc.revert_path(path)
 
 
 # Service class
@@ -411,6 +488,9 @@ class Versioncontrol(Service):
     def pre_start(self):
         self.on_document_changed(None)
         self.on_project_changed(None)
+
+    def start(self):
+        self._log = VersionControlLog(self)
     
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
@@ -433,17 +513,82 @@ class Versioncontrol(Service):
                 yield name, path, item.state
 
     def diff_path(self, path):
-        task = AsyncTask(self._do_diff, self._diff_done)
+        task = AsyncTask(self._do_diff, self._done_diff)
         task.start(path)
 
     def _do_diff(self, path):
         vc = self.get_workdir_manager_for_path(path)
         return vc.diff(paths=[path])
 
-    def _diff_done(self, diff):
+    def _done_diff(self, diff):
         view = DiffViewer(self)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
         view.set_diff(diff)
+
+    def update_path(self, path):
+        self._log.append_action('Updating: %s' % path, gtk.STOCK_GO_DOWN)
+        self.ensure_log_visible()
+        task = AsyncTask(self._do_update, self._done_update)
+        task.start(path)
+
+    def _do_update(self, path):
+        vc = self.get_workdir_manager_for_path(path)
+        return vc.update(paths=[path])
+
+    def _done_update(self, update):
+        self._log.append_result(update)
+
+    def commit_path(self, path, message):
+        self._log.append_action('Committing: %s' % path, gtk.STOCK_GO_UP)
+        self.ensure_log_visible()
+        task = AsyncTask(self._do_commit, self._done_commit)
+        task.start(path, message)
+
+    def _do_commit(self, path, message):
+        vc = self.get_workdir_manager_for_path(path)
+        return vc.commit(paths=[path])
+
+    def _done_commit(self, update):
+        self._log.append_result(update)
+
+    def revert_path(self, path):
+        self._log.append_action('Reverting: %s' % path, gtk.STOCK_UNDO)
+        self.ensure_log_visible()
+        task = AsyncTask(self._do_revert, self._done_revert)
+        task.start(path)
+
+    def _do_revert(self, path):
+        vc = self.get_workdir_manager_for_path(path)
+        return vc.revert(paths=[path])
+        
+    def _done_revert(self, result):
+        self._log.append_result(result)
+
+    def add_path(self, path):
+        self._log.append_action('Adding: %s' % path, gtk.STOCK_ADD)
+        self.ensure_log_visible()
+        task = AsyncTask(self._do_add, self._done_add)
+        task.start(path)
+
+    def _do_add(self, path):
+        vc = self.get_workdir_manager_for_path(path)
+        return vc.add(paths=[path])
+
+    def _done_add(self, result):
+        self._log.append_result(result)
+
+    def remove_path(self, path):
+        self._log.append_action('Removing: %s' % path, gtk.STOCK_REMOVE)
+        self.ensure_log_visible()
+        task = AsyncTask(self._do_add, self._done_add)
+        task.start(path)
+
+    def _do_remove(self, path):
+        vc = self.get_workdir_manager_for_path(path)
+        return vc.remove(paths=[path])
+
+    def _done_remove(self, result):
+        self._log.append_result(result)
 
     def on_document_changed(self, document):
         for action in ['diff_document', 'revert_document', 'add_document',
@@ -456,6 +601,19 @@ class Versioncontrol(Service):
         'commit_project']:
             self.get_action(action).set_sensitive(project is not None)
         self.current_project = project
+
+    def show_log(self):
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._log)
+
+    def hide_log(self):
+        self.boss.cmd('window', 'remove_view', view=self._log)
+
+    def ensure_log_visible(self):
+        action = self.get_action('show_vc_log')
+        if not action.get_active():
+            action.set_active(True)
+        else:
+            self.boss.cmd('window', 'present_view', view=self._log)
         
         
 
