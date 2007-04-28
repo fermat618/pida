@@ -5,13 +5,32 @@
     :license: BSD
 """
 
-
 from subprocess import Popen, PIPE, STDOUT
 import os.path 
 
 
 from bases import VCSBase, DVCSMixin
 from file import StatedPath as Path
+
+def relative_to(base_path):
+    """
+    will turn absolute paths to paths relative to the base_path
+
+    :warning:
+        will only work on paths below the base_path
+        other paths will be unchanged
+    """
+    base_path = os.path.normpath(base_path)
+    l = len(base_path)
+    print "REL TO",base_path
+    def process_path(path):
+
+        print "rel from",path,"to",base_path
+        if path.startswith(base_path):
+            return "." + path[l:]
+        else:
+            return path
+    return process_path
 
 
 class CommandBased(VCSBase):
@@ -49,6 +68,12 @@ class CommandBased(VCSBase):
 
         return detected_path
 
+    def process_paths(self, paths):
+        """
+        process paths for vcs's usefull for "relpath-bitches"
+        """
+        return paths
+
     def execute_command(self, args, result_type=str, **kw):
         if not args:
             raise ValueError('need a valid command')
@@ -72,10 +97,10 @@ class CommandBased(VCSBase):
         :param message: the commit message
         :param paths: the paths to commit
         """
-        return ['commit'] + paths
+        return ['commit'] + self.process_paths(paths)
 
     def get_diff_args(self, paths=(), **kw):
-        return ['diff'] + paths
+        return ['diff'] + self.process_paths(paths)
     
     def get_update_args(self, revision=None, **kw):
         if revision:
@@ -84,13 +109,13 @@ class CommandBased(VCSBase):
             return ['update']
 
     def get_add_args(self, paths=(), recursive=False, **kw):
-        return ['add'] + paths
+        return ['add'] + self.process_paths(paths)
 
     def get_remove_args(self, paths=(), recursive=False, **kw):
-        return ['remove'] + paths
+        return ['remove'] +  self.process_paths(paths)
 
     def get_revert_args(self, paths=(), recursive=False, **kw):
-        return ['revert'] + paths
+        return ['revert'] + self.process_paths(paths)
 
     def get_status_args(self,**kw):
         return ['status']
@@ -223,6 +248,9 @@ class Monotone(DCommandBased):
         'RRI': 'error',    # rename source and target and target ignored (seems invalid, but may be possible?)
         'RRM': 'missing',   # rename source and target and target missing
     }
+
+    def process_paths(self, paths):
+        return map(relative_to(self.base_path), paths)
 
     def get_list_args(self, **kw):
         return ["automate", "inventory"]
