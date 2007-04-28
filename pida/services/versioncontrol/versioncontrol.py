@@ -92,10 +92,10 @@ class VersionControlEvents(EventsConfig):
 
     def subscribe_foreign_events(self):
         self.subscribe_foreign_event('buffer', 'document-changed',
-            self.on_document_changed)
+            self.svc.on_document_changed)
+        self.subscribe_foreign_event('project', 'project_switched',
+            self.svc.on_project_changed)
 
-    def on_document_changed(self, document):
-        self.svc.get_action('diff_document').set_sensitive(document is not None)
 
 class VersioncontrolCommandsConfig(CommandsConfig):
     
@@ -331,18 +331,18 @@ class VersionControlActions(ActionsConfig):
         )
 
     def on_diff_document(self, action):
-        document = self.svc.boss.cmd('buffer', 'get_current')
-        self.svc.diff_document(document)
+        self.svc.diff_path(self.svc.current_document.filename)
 
     def on_diff_project(self, action):
-        pass
+        self.svc.diff_path(self.svc.current_project.source_directory)
 
     def on_diff_for_file(self, action):
-        file_name = action.contexts_kw['file_name']
-        self.svc.diff_file(file_name)
+        path = action.contexts_kw['file_name']
+        self.svc.diff_path(path)
 
     def on_diff_for_dir(self, action):
-        pass
+        path = action.contexts_kw['dir_name']
+        self.svc.diff_path(path)
 
     def on_commit_document(self, action):
         pass
@@ -408,8 +408,9 @@ class Versioncontrol(Service):
     actions_config = VersionControlActions
     events_config = VersionControlEvents
 
-    def start(self):
-        self.get_action('diff_document').set_sensitive(False)
+    def pre_start(self):
+        self.on_document_changed(None)
+        self.on_project_changed(None)
     
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
@@ -431,22 +432,32 @@ class Versioncontrol(Service):
                 path = os.path.dirname(abspath)
                 yield name, path, item.state
 
-    def diff_document(self, document):
-        self.diff_file(document.filename)
-
-    def diff_file(self, file_name):
+    def diff_path(self, path):
         task = AsyncTask(self._do_diff, self._diff_done)
-        task.start(file_name)
+        task.start(path)
 
-    def _do_diff(self, file_name):
-        vc = self.get_workdir_manager_for_path(file_name)
-        return vc.diff(paths=[file_name])
+    def _do_diff(self, path):
+        vc = self.get_workdir_manager_for_path(path)
+        return vc.diff(paths=[path])
 
     def _diff_done(self, diff):
         view = DiffViewer(self)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
         view.set_diff(diff)
 
+    def on_document_changed(self, document):
+        for action in ['diff_document', 'revert_document', 'add_document',
+        'remove_document', 'update_document', 'commit_document']:
+            self.get_action(action).set_sensitive(document is not None)
+        self.current_document = document
+
+    def on_project_changed(self, project):
+        for action  in ['diff_project', 'revert_project', 'update_project',
+        'commit_project']:
+            self.get_action(action).set_sensitive(project is not None)
+        self.current_project = project
+        
+        
 
 
 
