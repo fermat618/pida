@@ -24,7 +24,7 @@
 import os.path
 import time
 
-import gtk
+import gtk, pango
 
 # PIDA Imports
 from pida.core.service import Service
@@ -77,14 +77,16 @@ class VersionControlLog(PidaGladeView):
 
     def create_ui(self):
         self._buffer = self.log_text.get_buffer()
-        self._buffer.create_tag('time', weight=700)
-        self._buffer.create_tag('title', foreground='#0000c0', weight=700,
-        pixels_below_lines=5)
+        self._buffer.create_tag('time', foreground='#0000c0')
+        self._buffer.create_tag('argument', weight=700)
+        self._buffer.create_tag('title', style=pango.STYLE_ITALIC)
         self._buffer.create_tag('result')
+        self.append_time()
+        self.append_stock(gtk.STOCK_CONNECT)
+        self.append(' Version Control Log Started\n\n', 'argument')
 
     def append_entry(self, text, tag):
         self.append(text, tag)
-        gcall(self.log_text.scroll_to_iter, self._buffer.get_end_iter(), 0)
 
     def append_time(self):
         self.append('%s\n' % time.asctime(), 'time')
@@ -96,19 +98,21 @@ class VersionControlLog(PidaGladeView):
         im.show()
         self.log_text.add_child_at_anchor(im, anchor)
 
-    def append_action(self, action, stock_id):
+    def append_action(self, action, argument, stock_id):
         self.svc.ensure_log_visible()
         self.append_stock(stock_id)
-        self.append_entry('%s\n' % action, 'title')
+        self.append_entry('%s: ' % action, 'title')
+        self.append_entry('%s\n' % argument, 'argument')
 
     def append_result(self, result):
         self.svc.ensure_log_visible()
         self.append_time()
-        self.append_entry('%s\n' % result.strip(), 'result')
+        self.append_entry('%s\n\n' % result.strip(), 'result')
 
     def append(self, text, tag):
         self._buffer.insert_with_tags_by_name(
             self._buffer.get_end_iter(), text, tag)
+        gcall(self.log_text.scroll_to_iter, self._buffer.get_end_iter(), 0)
 
     def on_close_button__clicked(self, button):
         self.svc.get_action('show_vc_log').set_active(False)
@@ -521,6 +525,7 @@ class Versioncontrol(Service):
                 yield name, path, item.state
 
     def diff_path(self, path):
+        self._log.append_action('Diffing', path, gtk.STOCK_COPY)
         task = AsyncTask(self._do_diff, self._done_diff)
         task.start(path)
 
@@ -534,7 +539,7 @@ class Versioncontrol(Service):
         view.set_diff(diff)
 
     def update_path(self, path):
-        self._log.append_action('Updating: %s' % path, gtk.STOCK_GO_DOWN)
+        self._log.append_action('Updating', path, gtk.STOCK_GO_DOWN)
         task = AsyncTask(self._do_update, self._done_update)
         task.start(path)
 
@@ -546,7 +551,7 @@ class Versioncontrol(Service):
         self._log.append_result(update)
 
     def commit_path(self, path, message):
-        self._log.append_action('Committing: %s' % path, gtk.STOCK_GO_UP)
+        self._log.append_action('Committing', path, gtk.STOCK_GO_UP)
         task = AsyncTask(self._do_commit, self._done_commit)
         task.start(path, message)
 
@@ -558,7 +563,7 @@ class Versioncontrol(Service):
         self._log.append_result(update)
 
     def revert_path(self, path):
-        self._log.append_action('Reverting: %s' % path, gtk.STOCK_UNDO)
+        self._log.append_action('Reverting', path, gtk.STOCK_UNDO)
         task = AsyncTask(self._do_revert, self._done_revert)
         task.start(path)
 
@@ -570,7 +575,7 @@ class Versioncontrol(Service):
         self._log.append_result(result)
 
     def add_path(self, path):
-        self._log.append_action('Adding: %s' % path, gtk.STOCK_ADD)
+        self._log.append_action('Adding', path, gtk.STOCK_ADD)
         task = AsyncTask(self._do_add, self._done_add)
         task.start(path)
 
@@ -582,7 +587,7 @@ class Versioncontrol(Service):
         self._log.append_result(result)
 
     def remove_path(self, path):
-        self._log.append_action('Removing: %s' % path, gtk.STOCK_REMOVE)
+        self._log.append_action('Removing', path, gtk.STOCK_REMOVE)
         task = AsyncTask(self._do_remove, self._done_remove)
         task.start(path)
 
