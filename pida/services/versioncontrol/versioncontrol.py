@@ -94,16 +94,21 @@ class VersionControlLog(PidaGladeView):
         self.log_text.add_child_at_anchor(im, anchor)
 
     def append_action(self, action, stock_id):
+        self.svc.ensure_log_visible()
         self.append_stock(stock_id)
         self.append_entry('%s\n' % action, 'title')
 
     def append_result(self, result):
+        self.svc.ensure_log_visible()
         self.append_time()
         self.append_entry('%s\n' % result.strip(), 'result')
 
     def append(self, text, tag):
         self._buffer.insert_with_tags_by_name(
             self._buffer.get_end_iter(), text, tag)
+
+    def on_close_button__clicked(self, button):
+        self.svc.get_action('show_vc_log').set_active(False)
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
     
@@ -527,7 +532,6 @@ class Versioncontrol(Service):
 
     def update_path(self, path):
         self._log.append_action('Updating: %s' % path, gtk.STOCK_GO_DOWN)
-        self.ensure_log_visible()
         task = AsyncTask(self._do_update, self._done_update)
         task.start(path)
 
@@ -540,7 +544,6 @@ class Versioncontrol(Service):
 
     def commit_path(self, path, message):
         self._log.append_action('Committing: %s' % path, gtk.STOCK_GO_UP)
-        self.ensure_log_visible()
         task = AsyncTask(self._do_commit, self._done_commit)
         task.start(path, message)
 
@@ -553,7 +556,6 @@ class Versioncontrol(Service):
 
     def revert_path(self, path):
         self._log.append_action('Reverting: %s' % path, gtk.STOCK_UNDO)
-        self.ensure_log_visible()
         task = AsyncTask(self._do_revert, self._done_revert)
         task.start(path)
 
@@ -566,7 +568,6 @@ class Versioncontrol(Service):
 
     def add_path(self, path):
         self._log.append_action('Adding: %s' % path, gtk.STOCK_ADD)
-        self.ensure_log_visible()
         task = AsyncTask(self._do_add, self._done_add)
         task.start(path)
 
@@ -579,7 +580,6 @@ class Versioncontrol(Service):
 
     def remove_path(self, path):
         self._log.append_action('Removing: %s' % path, gtk.STOCK_REMOVE)
-        self.ensure_log_visible()
         task = AsyncTask(self._do_add, self._done_add)
         task.start(path)
 
