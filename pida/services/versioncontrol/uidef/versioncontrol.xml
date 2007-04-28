@@ -6,10 +6,12 @@
             <separator />
             <placeholder name="fm15">
                 <menuitem name="diff_document" action="diff_document" />
+                <menuitem name="revert_document" action="revert_document" />
                 <menu name="more_vc_menu" action="more_vc_menu"> 
-                    <menuitem name="commit_document" action="commit_document" />
                     <menuitem name="update_document" action="update_document" />
+                    <menuitem name="commit_document" action="commit_document" />
                     <menuitem name="add_document" action="add_document" />
+                    <menuitem name="remove_document" action="remove_document" />
                 </menu>
             </placeholder>
             <separator />
@@ -28,8 +30,9 @@
         <separator />
         <placeholder name="p3">
             <menuitem name="diff_project" action="diff_project" />
-            <menuitem name="update_project" action="update_project" />
+            <menuitem name="revert_project" action="revert_project" />
             <menuitem name="commit_project" action="commit_project" />
+            <menuitem name="update_project" action="update_project" />
         </placeholder>
         <separator />
         <placeholder name="p4"/>

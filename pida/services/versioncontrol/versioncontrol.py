@@ -111,7 +111,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'More Version Control',
             'More Version Control Commands',
-            '',
+            gtk.STOCK_CONNECT,
             lambda *a: None,
             'NOACCEL'
         )
@@ -121,7 +121,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Differences',
             'Version Control differences for the current document',
-            '',
+            gtk.STOCK_COPY,
             self.on_diff_document,
             '<Shift><Control>d',
         )
@@ -131,7 +131,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Differences',
             'Get the version control differences for the current project',
-            '',
+            gtk.STOCK_COPY,
             self.on_diff_project,
         )
 
@@ -140,7 +140,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Differences',
             'Get the version control diff on this file',
-            '',
+            gtk.STOCK_COPY,
             self.on_diff_for_file,
             'NOACCEL',
         )
@@ -150,7 +150,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Differences',
             'Get the version control diff on this directory',
-            '',
+            gtk.STOCK_COPY,
             self.on_diff_for_dir,
             'NOACCEL',
         )
@@ -160,7 +160,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Commit',
             'Commit the current document',
-            '',
+            gtk.STOCK_GO_UP,
             self.on_commit_document,
         )
 
@@ -169,7 +169,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Commit',
             'Commit the current project',
-            '',
+            gtk.STOCK_GO_UP,
             self.on_commit_project,
         )
 
@@ -178,7 +178,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Commit',
             'Commit the selected file',
-            '',
+            gtk.STOCK_GO_UP,
             self.on_commit_for_file,
             'NOACCEL'
         )
@@ -188,7 +188,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Commit',
             'Commit the selected directory',
-            '',
+            gtk.STOCK_GO_UP,
             self.on_commit_for_directory,
             'NOACCEL'
         )
@@ -198,7 +198,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Update',
             'Update the current document',
-            '',
+            gtk.STOCK_GO_DOWN,
             self.on_update_document,
         )
 
@@ -207,7 +207,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Update',
             'Update the current project',
-            '',
+            gtk.STOCK_GO_DOWN,
             self.on_update_project,
         )
 
@@ -216,7 +216,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Update',
             'Update the selected file',
-            '',
+            gtk.STOCK_GO_DOWN,
             self.on_update_for_file,
             'NOACCEL'
         )
@@ -226,7 +226,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Update',
             'Update the selected file',
-            '',
+            gtk.STOCK_GO_DOWN,
             self.on_update_for_dir,
             'NOACCEL'
         )
@@ -236,7 +236,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Add',
             'Add the current document',
-            '',
+            gtk.STOCK_ADD,
             self.on_add_document,
         )
 
@@ -245,7 +245,7 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Add',
             'Add the selected file',
-            '',
+            gtk.STOCK_ADD,
             self.on_add_for_file,
             'NOACCEL'
         )
@@ -255,8 +255,78 @@ class VersionControlActions(ActionsConfig):
             TYPE_NORMAL,
             'Add',
             'Add the selected file',
-            '',
+            gtk.STOCK_ADD,
             self.on_add_for_dir,
+            'NOACCEL'
+        )
+
+        self.create_action(
+            'remove_document',
+            TYPE_NORMAL,
+            'Remove',
+            'Remove the current document',
+            gtk.STOCK_DELETE,
+            self.on_remove_document,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'remove_for_file',
+            TYPE_NORMAL,
+            'Remove',
+            'Remove the selected file',
+            gtk.STOCK_DELETE,
+            self.on_remove_for_file,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'remove_for_dir',
+            TYPE_NORMAL,
+            'Remove',
+            'Remove the selected directory',
+            gtk.STOCK_DELETE,
+            self.on_remove_for_dir,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'revert_document',
+            TYPE_NORMAL,
+            'Revert',
+            'Revert the current document',
+            gtk.STOCK_UNDO,
+            self.on_revert_document,
+            'NOACCEL'
+        )
+
+        self.create_action(
+            'revert_project',
+            TYPE_NORMAL,
+            'Revert',
+            'Revert the current project',
+            gtk.STOCK_UNDO,
+            self.on_revert_project,
+            'NOACCEL'
+        )
+
+        self.create_action(
+            'revert_for_file',
+            TYPE_NORMAL,
+            'Revert',
+            'Revert the selected file',
+            gtk.STOCK_UNDO,
+            self.on_revert_for_file,
+            'NOACCEL'
+        )
+
+        self.create_action(
+            'revert_for_dir',
+            TYPE_NORMAL,
+            'Revert',
+            'Revert the selected directory',
+            gtk.STOCK_UNDO,
+            self.on_revert_for_dir,
             'NOACCEL'
         )
 
@@ -307,6 +377,26 @@ class VersionControlActions(ActionsConfig):
     def on_add_for_dir(self, action):
         pass
 
+    def on_remove_document(self, action):
+        pass
+
+    def on_remove_for_file(self, action):
+        pass
+
+    def on_remove_for_dir(self, action):
+        pass
+
+    def on_revert_document(self, action):
+        pass
+
+    def on_revert_project(self, action):
+        pass
+
+    def on_revert_for_file(self, action):
+        pass
+
+    def on_revert_for_dir(self, action):
+        pass
 
 
 # Service class
