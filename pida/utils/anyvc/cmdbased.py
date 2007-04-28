@@ -111,7 +111,7 @@ class CommandBased(VCSBase):
     def get_add_args(self, paths=(), recursive=False, **kw):
         return ['add'] + self.process_paths(paths)
 
-    def get_remove_args(self, paths=(), recursive=False, **kw):
+    def get_remove_args(self, paths=(), recursive=False, execute=False **kw):
         return ['remove'] +  self.process_paths(paths)
 
     def get_revert_args(self, paths=(), recursive=False, **kw):
@@ -251,6 +251,9 @@ class Monotone(DCommandBased):
 
     def process_paths(self, paths):
         return map(relative_to(self.base_path), paths)
+
+    def get_remove_args(self, paths, **kw):
+        return ["drop"] + self.process_paths(paths)
 
     def get_list_args(self, **kw):
         return ["automate", "inventory"]
