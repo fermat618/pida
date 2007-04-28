@@ -7,7 +7,7 @@
 
 #AA Imports in order like PEP8/coding-style, stdlib, external libs, local
 from bases import VCSBase, DVCSMixin
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from file import StatedPath as Path
 #AA import os and use as os.path (IMO)
 from os import path 
@@ -55,6 +55,7 @@ class CommandBased(VCSBase):
         ret = Popen( 
                 [self.cmd] + args, 
                 stdout=PIPE, 
+                stderr=STDOUT,
                 cwd=self.base_path, 
                 close_fds=True)
         if result_type is str:
