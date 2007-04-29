@@ -61,6 +61,7 @@ class LibraryView(PidaGladeView):
 
     def fetch_books(self):
         self.books_list.clear()
+        self.contents_tree.clear()
         task = GeneratorTask(fetch_books, self.add_book)
         task.start()
 
@@ -89,6 +90,12 @@ class LibraryView(PidaGladeView):
 
     def add_bookmark(self, bookmark, parent):
         self.contents_tree.append(parent, bookmark)
+
+    def on_refresh_button__clicked(self, button):
+        self.fetch_books()
+
+    def on_close_button__clicked(self, button):
+        self.svc.get_action('show_library').set_active(False)
 
 
 class LibraryActions(ActionsConfig):
@@ -301,7 +308,6 @@ class Library(Service):
         bclass = self.boss.cmd('webbrowser', 'get_web_browser')
         self._browser = bclass(self)
         self._browser.label_text = 'Documentation'
-        
         self._has_loaded = False
 
     def show_library(self):
