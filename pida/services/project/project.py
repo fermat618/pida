@@ -117,6 +117,10 @@ class ProjectListView(PidaGladeView):
         self.svc.boss.cmd('filemanager', 'browse', new_path=project.source_directory)
         self.svc.boss.cmd('filemanager', 'present_view')
 
+    def on_project_ol__right_click(self, ol, project, event):
+        self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
+                          dir_name=project.source_directory, event=event)
+
     def set_current_project(self, project):
         self.project_ol.select(project)
 
