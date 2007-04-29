@@ -38,6 +38,8 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.core.environment import get_pixmap_path
 
 from pida.ui.views import PidaView
+from pida.ui.terminal import PidaTerminal
+from pida.ui.buttons import create_mini_button
 
 from pida.utils.gthreads import GeneratorTask, gcall
        
@@ -77,15 +79,6 @@ class AnyDbgStackView(PidaView):
     def _on_stackitem_double_click(self, olist, item):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
 
-# --- TODO Debug console view
-class AnyDbgConsoleView(PidaView):
-    label_text = 'Debugger\'s console'
-    icon_name = 'accessories-text-editor'
-
-    def create_ui(self):
-        pass
-
-
 # --- Profile manager view
 
 class AnyDbgProfileItem(object):
@@ -104,6 +97,7 @@ class AnyDbgProfileItem(object):
             self.parameters = ""
             self.debugger = None
             self.breakpoint_list = []
+        self.debugger_type = None
 
     def add_breakpoint(self,file,line):
         self.breakpoint_list.append((file,line))
@@ -119,6 +113,12 @@ class AnyDbgProfileItem(object):
             debugger = self.debugger,
             breakpoints = self.breakpoint_list
         )
+
+    def get_debugger(self):
+        dbg = AnyDbg_pydb()
+        dbg.set_executable(self.executable)
+        return dbg
+
 
 class AnyDbgDebuggerProfile(PidaView):
     gladefile = 'anydbg-profile-editor'
@@ -319,7 +319,7 @@ class AnyDbgActionsConfig(ActionsConfig):
             'Continue',
             'Continue debbuging',
             gtk.STOCK_MEDIA_PLAY,
-            self.svc.dbg_continue,
+            self.svc.dbg_run,
             '<F3>',
         )
         self.create_action(
@@ -339,13 +339,12 @@ class AnyDbgActionsConfig(ActionsConfig):
             if profiles:
                 profile = profiles[0]
         if profile is not None:
-            profile.execute()
+            self.svc._dbg = profile.get_debugger()
+            self.svc.dbg_run()
         else:
             self.svc.boss.get_window().error_dlg(
-                'This project has no controllers')
+                'There is no profile available')
         
-        
-
     def on_show_breakpoints(self, action):
         if action.get_active():
             self.svc.show_breakpoints()
@@ -374,7 +373,7 @@ class AnyDbgEventsConfig(EventsConfig):
         if document != None:
             self.svc.set_current_document(document)
             self.svc.get_action("toggle_breakpoint").set_sensitive(True)
-            self.svc.update_breakpoints(document)
+            self.svc.update_breakpoints_editor(document)
         else:
             self.svc.get_action("toggle_breakpoint").set_sensitive(False)
 
@@ -384,6 +383,75 @@ class AnyDbgEventsConfig(EventsConfig):
         self.svc.boss.editor.cmd('define_sign_type', type="step", icon=get_pixmap_path("forward.svg"), 
                                                 linehl="lCursor", text=">", texthl="lCursor")
 
+class AnyDbg_Debugger_Interface:
+    executable = None
+    _console = None
+
+    def _send_command(self,cmd):
+        self._console._term.feed_child(cmd + "\n")
+
+    def set_executable(self,ex):
+        raise NotImplementedError
+    def launch(self):
+        raise NotImplementedError
+    def break_cmd(self):
+        raise NotImplementedError
+    def continue_cmd(self):
+        raise NotImplementedError
+    def add_breakpoint(self,file,line):
+        raise NotImplementedError
+    def del_breakpoint(self,file,line):
+        raise NotImplementedError
+    def register_breakpoint_updater(self,callback):
+        raise NotImplementedError
+    def register_stack_updater(self,callback):
+        raise NotImplementedError
+
+class AnyDbg_pydb(AnyDbg_Debugger_Interface):
+    def set_executable(self,ex):
+        self.executable = ex
+        
+    def init(self,svc):
+        self._console = svc.boss.cmd("commander","execute",
+                                            commandargs=["/usr/bin/pydb"],
+                                            env=['PIDA_TERM=1'], 
+                                            cwd=os.getcwd(), 
+                                            title="test",
+                                            icon=None)
+        # match '(%%PATH%%:%%LINE%%):  <module>'
+        def jump_to_line(event,line):
+            pass
+        self._console._term.match_add_callback("jump_to","^\(.*:.*\):.*$", "", jump_to_line)
+
+        if self.executable != None:
+            self._send_command("file "+self.executable)
+
+    def launch(self,svc):
+        if self._console == None:
+            self.init(svc)
+        self._send_command("run")
+        print "XXX", self._console._term.get_text_range(0, 0, 
+                self._console._term.get_row_count(), 
+                self._console._term.get_column_count(), lambda *a: True), "YYY"
+
+    def break_cmd(self):
+        self._send_command("break")
+
+    def continue_cmd(self):
+        self._send_command("continue")
+
+    def add_breakpoint(self, file, line):
+        self._send_command("break "+file+":"+line)
+
+    def del_breakpoint(self, file, line):
+        self._send_command("clear "+file+":"+line)
+
+class AnyDbg_rpdb2(AnyDbg_Debugger_Interface):
+    pass
+
+class AnyDbg_gdb(AnyDbg_Debugger_Interface):
+    def get_commandargs(self):
+        return ["/usr/bin/pydb"]
 
 # Service class
 class Debugger(Service):
@@ -394,6 +462,8 @@ class Debugger(Service):
 
     def start(self):
         self._current = None
+        self._console = None
+        self._dbg = None
         self._stepcursor_position=0
 
         self._filename = os.path.join(self.boss.get_pida_home(), 'debugger-profiles.ini')
@@ -416,16 +486,44 @@ class Debugger(Service):
 #    def hide_backtrace(self):
 #    def show_variables(self):
 #    def hide_variables(self):
-#    def show_console(self):
-#    def hide_console(self):
+
+    def show_console(self):
+        """
+        Shows the debugger's console
+        if there isn't already a console, create a new one
+        if there is no debugger, popups an error
+        otherwise show the hidden console
+        """
+        if self._console == None:
+            if self._dbg != None:
+                self._dbg.launch(self)
+            else:
+                self.window.error_dlg('Tried to launch a console without a debugger')
+        else:
+            self.boss.cmd('window', 'add_view', paned='Terminal', view=self._console)
+
+    def hide_console(self):
+        """
+        Closes the console's view
+        """
+        self._console.close_view()
 
     def show_breakpoints(self):
+        """
+        Shows the breakpoint's view
+        """
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._breakpoints_view)
 
     def hide_breakpoints(self):
+        """
+        Hides the breakpoint's view
+        """
         self.boss.cmd('window','remove_view', view=self._breakpoints_view)
 
     def toggle_breakpoint(self):
+        """
+        Toggles a breakpoint on current file's line
+        """
         if not self.add_breakpoint(self._current.get_filename(),
                         self.boss.editor.cmd('get_current_line_number')):
             if not self.del_breakpoint(self._current.get_filename(),
@@ -433,6 +531,13 @@ class Debugger(Service):
                 self.window.error_dlg('Tried to remove non-existing breakpoint')
 
     def add_breakpoint(self,file,linenr):
+        """
+        Adds a breakpoint to file's line linenr
+        Updates the profile manager and updates the editor and calls the debugger
+        file: path to the file
+        linenr: line number
+        returns True if breakpoint has been set 
+        """
         if self._add_breakpoint(file,linenr):
             self._current_profile.add_breakpoint(file, linenr)
             self._config[self._current_profile.name] = self._current_profile.as_dict()
@@ -442,6 +547,13 @@ class Debugger(Service):
         return False
 
     def del_breakpoint(self,file,linenr):
+        """
+        Removes a breakpoint from file's line linenr
+        Updates the profile manager and updates the editor and calls the debugger
+        file: path to the file
+        linenr: line number
+        returns True if breakpoint has been deleted
+        """
         if self._del_breakpoint(file,linenr):
             self._current_profile.del_breakpoint(file, linenr)
             self._config[self._current_profile.name] = self._current_profile.as_dict()
@@ -450,6 +562,13 @@ class Debugger(Service):
         return False
 
     def _add_breakpoint(self,file,linenr):
+        """
+        Adds a breakpoint to file's line linenr
+        Updates the editor and calls the debugger
+        file: path to the file
+        linenr: line number
+        returns True if breakpoint has been set 
+        """
         if self._breakpoints_view.add_breakpoint(file,linenr):
 #            self._dbg.add_breakpoint(file,linenr)
             self.boss.editor.cmd('show_sign', type='breakpoint', file_name=file, line=linenr)
@@ -458,6 +577,13 @@ class Debugger(Service):
             return False
 
     def _del_breakpoint(self,file,linenr):
+        """
+        Removes a breakpoint from file's line linenr
+        Updates the editor and calls the debugger
+        file: path to the file
+        linenr: line number
+        returns True if breakpoint has been deleted
+        """
         if self._breakpoints_view.del_breakpoint(file,linenr):
 #            self._dbg.del_breakpoint(file,linenr)
             self.boss.editor.cmd('hide_sign', type='breakpoint', file_name=file, line=linenr)
@@ -466,15 +592,24 @@ class Debugger(Service):
             return False
 
     def show_profile_manager(self):
+        """
+        Displays profile manager view
+        """
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._profile_manager)
 
     def save_profiles(self, items):
+        """
+        Save the profiles
+        """
         self._config.clear()
         for item in items:
             self._config[item.name] = item.as_dict()
             self._config.write()
 
     def list_profiles(self):
+        """
+        List the recorded profiles
+        """
         if len(self._config) == 0:
             yield AnyDbgProfileItem()
         for profile in self._config:
@@ -482,6 +617,10 @@ class Debugger(Service):
             yield item
 
     def select_profile(self, profile):
+        """
+        Selects a profile for debugging
+        """
+        print "SELECT PROFILE"
 #        self._breakpoints_view.clear_items()
 
 #        print "DEBUG: anydbg: select_profile(): profile: ", profile 
@@ -490,25 +629,34 @@ class Debugger(Service):
 
         if profile in self._config:
             self._current_profile = AnyDbgProfileItem(self._config[profile])
+            self._dbg = self._current_profile.get_debugger()
 #            self.emit('debug_profile_switched', profile=profile)
         else:
             self._current_profile = self.list_profiles().next()
         toolitem = self.get_action('choose_dbg_profile').get_proxies()[0]
         toolitem.set_menu(self.create_menu())
-        self.reset_breakpoints()
+        self.reset_breakpoints_view()
 
-    def update_breakpoints(self, document):
+
+    def update_breakpoints_editor(self, document):
+        """
+        Updates the editor with current profile's breakpoints for the current
+        document
+        """
         if self._current_profile.breakpoint_list != []:
             for (file, line) in self._current_profile.breakpoint_list:
                 if document.get_filename() == file:
                     self.boss.editor.cmd('show_sign', type='breakpoint', file_name=file, line=line)
 
-    def reset_breakpoints(self):
+    def reset_breakpoints_view(self):
+        """
+        Resets the breakpoint's view with current profile's breakpoints
+        """
         bplist = dict(self._breakpoints_view.get_breakpoint_list())
         for (file, line) in bplist:
             self._del_breakpoint(file,line)
         for (file, line) in self._current_profile.breakpoint_list:
-#            print "DEBUG: anydbg: reset_breakpoints(): adding new breakpoint:", (file, line)
+#            print "DEBUG: anydbg: reset_breakpoints_view(): adding new breakpoint:", (file, line)
             self._add_breakpoint(file,line)
 
     def hide_profile_manager(self):
@@ -528,8 +676,8 @@ class Debugger(Service):
     def dbg_break(self):
         pass
 
-    def dbg_continue(self):
-        pass
+    def dbg_run(self):
+        self._dbg.launch(self)
 
     def set_current_document(self, document):
         self._current = document
