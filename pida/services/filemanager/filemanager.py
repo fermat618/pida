@@ -281,7 +281,7 @@ class FilemanagerView(PidaView):
 class FilemanagerEvents(EventsConfig):
 
     def create_events(self):
-        self.create_event('browsepath_switched')
+        self.create_event('browsed_path_changed')
         self.create_event('file_renamed')
     
     def subscribe_foreign_events(self):    
@@ -479,6 +479,7 @@ class Filemanager(Service):
             self.path = new_path
             self.set_opt('last_browsed', new_path)
             self.file_view.update_to_path(new_path)
+        self.emit('browsed_path_changed', path=new_path)
 
 
     def go_up(self):
