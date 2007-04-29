@@ -545,9 +545,9 @@ class Versioncontrol(Service):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
         view.set_diff(diff)
 
-    def execute(self, action, path, stock_id):
+    def execute(self, action, path, stock_id, **kw):
         vc = self.get_workdir_manager_for_path(path)
-        commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path])
+        commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path], **kw)
         self._log.append_action(action.capitalize(), path, stock_id)
         self.boss.cmd('commander', 'execute', commandargs=commandargs,
                       cwd=vc.base_path, eof_handler=self._executed)
