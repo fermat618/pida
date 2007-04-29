@@ -160,7 +160,7 @@ class CommanderActionsConfig(ActionsConfig):
 class CommanderCommandsConfig(CommandsConfig):
 
     def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
-                      icon='terminal'):
+                      icon='terminal', eof_handler=None):
         self.svc.execute(commandargs, env, cwd, title, icon)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
@@ -189,7 +189,7 @@ class TerminalView(PidaView):
         self._hb.show()
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
-        self._term.connect('child-exited', self.on_exited)
+        self._term.connect('eof', self.on_exited)
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
         self._term.show()
