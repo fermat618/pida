@@ -65,6 +65,17 @@ class PyflakeView(PidaView):
         self.add_main_widget(self.errors_ol)
         self.errors_ol.connect('double-click', self._on_errors_double_clicked)
         self.errors_ol.show_all()
+        self.sort_combo = AttrSortCombo(
+            self.errors_ol,
+            [
+                ('lineno', 'Line Number'),
+                ('message_string', 'Message'),
+                ('name', 'Type'),
+            ],
+            'lineno',
+        )
+        self.sort_combo.show()
+        self.add_main_widget(self.sort_combo, expand=False)
 
     def clear_items(self):
         self.errors_ol.clear()
@@ -76,9 +87,10 @@ class PyflakeView(PidaView):
 
     def decorate_pyflake_message(self, msg):
         args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-        message_string = msg.message % tuple(args)
+        msg.message_string = msg.message % tuple(args)
+        msg.name = msg.__class__.__name__
         msg.markup = ('<tt>%s </tt><i>%s</i>\n%s' % 
-                      (msg.lineno, msg.__class__.__name__, message_string))
+                      (msg.lineno, msg.name, msg.message_string))
         return msg
 
     def _on_errors_double_clicked(self, ol, item):
