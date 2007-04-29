@@ -177,7 +177,7 @@ class SourceView(PidaGladeView):
             'linenumber'
         )
         self.sort_box.show()
-        self.main_vbox.pack_start(self.sort_box, expand=True)
+        self.main_vbox.pack_start(self.sort_box, expand=False)
 
     def clear_items(self):
         self.source_tree.clear()
