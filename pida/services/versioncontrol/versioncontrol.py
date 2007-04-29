@@ -124,6 +124,46 @@ class VersionControlLog(PidaGladeView):
     def on_close_button__clicked(self, button):
         self.svc.get_action('show_vc_log').set_active(False)
 
+class CommitViewer(PidaGladeView):
+
+    gladefile = 'commit-dialog'
+    
+    icon_name = gtk.STOCK_GO_UP
+    label_text = 'Commit'
+
+    def create_ui(self):
+        self._buffer = self.commit_text.get_buffer()
+        self._history = []
+        self._path = None
+
+    def _update_view(self):
+        self.ok_button.set_sensitive(self._path is not None)
+
+    def commit(self, path):
+        self._path = path
+        self._update_view()
+
+    def get_message(self):
+        return self._buffer.get_text(self._buffer.get_start_iter(),
+                                     self._buffer.get_end_iter())
+
+    def on_ok_button__clicked(self, button):
+        msg = self.get_message().strip()
+        if not msg:
+            self.svc.error_dlg('No Commit Message.')
+        else:
+            self.svc.commit_path(self._path, self.get_message())
+            self.close()
+
+    def on_close_button__clicked(self, button):
+        self.close()
+
+    def close(self):
+        self._path = None
+        self._update_view()
+        self.svc.get_action('show_commit').set_active(False)
+
+
 class VersioncontrolFeaturesConfig(FeaturesConfig):
     
     def create_features(self):
@@ -174,6 +214,16 @@ class VersionControlActions(ActionsConfig):
             gtk.STOCK_CONNECT,
             self.on_show_vc_log,
             '<Shift><Control>2',
+        )
+
+        self.create_action(
+            'show_commit',
+            TYPE_TOGGLE,
+            'Commit Message',
+            'Show the commit message',
+            gtk.STOCK_GO_UP,
+            self.on_show_commit,
+            'NOACCEL'
         )
 
         self.create_action(
@@ -406,6 +456,12 @@ class VersionControlActions(ActionsConfig):
         else:
             self.svc.hide_log()
 
+    def on_show_commit(self, action):
+        if action.get_active():
+            self.svc.show_commit()
+        else:
+            self.svc.hide_commit()
+
     def on_diff_document(self, action):
         path = self.svc.current_document.filename
         self.svc.diff_path(path)
@@ -424,19 +480,19 @@ class VersionControlActions(ActionsConfig):
 
     def on_commit_document(self, action):
         path = self.svc.current_document.filename
-        self.svc.commit_path(path)
+        self.svc.commit_path_dialog(path)
 
     def on_commit_project(self, action):
         path = self.svc.current_project.source_directory
-        self.svc.commit_path(path)
+        self.svc.commit_path_dialog(path)
 
     def on_commit_for_file(self, action):
         path = action.contexts_kw['file_name']
-        self.svc.commit_path(path)
+        self.svc.commit_path_dialog(path)
 
     def on_commit_for_directory(self, action):
         path = action.contexts_kw['dir_name']
-        self.svc.commit_path(path)
+        self.svc.commit_path_dialog(path)
 
     def on_update_document(self, action):
         path = self.svc.current_document.filename
@@ -510,6 +566,7 @@ class Versioncontrol(Service):
 
     def start(self):
         self._log = VersionControlLog(self)
+        self._commit = CommitViewer(self)
     
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
@@ -561,7 +618,11 @@ class Versioncontrol(Service):
         self.execute('update', path, gtk.STOCK_GO_DOWN)
 
     def commit_path(self, path, message=None):
-        self.execute('commit', path, gtk.STOCK_GO_UP)
+        self.execute('commit', path, gtk.STOCK_GO_UP, message=message)
+
+    def commit_path_dialog(self, path):
+        self._commit.commit(path)
+        self.ensure_commit_visible()
 
     def revert_path(self, path):
         self.execute('revert', path, gtk.STOCK_UNDO)
@@ -596,6 +657,19 @@ class Versioncontrol(Service):
             action.set_active(True)
         else:
             self.boss.cmd('window', 'present_view', view=self._log)
+
+    def show_commit(self):
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._commit)
+
+    def hide_commit(self):
+        self.boss.cmd('window', 'remove_view', view=self._commit)
+
+    def ensure_commit_visible(self):
+        action = self.get_action('show_commit')
+        if not action.get_active():
+            action.set_active(True)
+        else:
+            self.boss.cmd('window', 'present_view', view=self._commit)
         
         
 
