@@ -108,14 +108,12 @@ class VersionControlLog(PidaGladeView):
         self.log_text.add_child_at_anchor(im, anchor)
 
     def append_action(self, action, argument, stock_id):
-        self.svc.ensure_log_visible()
         self.append_time()
         self.append_stock(stock_id)
         self.append_entry('%s: ' % action, 'title')
         self.append_entry('%s\n' % argument, 'argument')
 
     def append_result(self, result):
-        self.svc.ensure_log_visible()
         self.append_entry('%s\n\n' % result.strip(), 'result')
 
     def append(self, text, tag):
@@ -547,65 +545,32 @@ class Versioncontrol(Service):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
         view.set_diff(diff)
 
+    def execute(self, action, path, stock_id):
+        vc = self.get_workdir_manager_for_path(path)
+        commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path])
+        self._log.append_action(action.capitalize(), path, stock_id)
+        self.boss.cmd('commander', 'execute', commandargs=commandargs,
+                      cwd=vc.base_path, eof_handler=self._executed)
+
+    def _executed(self, term):
+        self._log.append_result(term.get_all_text())
+        self.boss.cmd('window', 'remove_view', view=term.parent_view)
+        self.ensure_log_visible()
+
     def update_path(self, path):
-        self._log.append_action('Updating', path, gtk.STOCK_GO_DOWN)
-        task = AsyncTask(self._do_update, self._done_update)
-        task.start(path)
+        self.execute('update', path, gtk.STOCK_GO_DOWN)
 
-    def _do_update(self, path):
-        vc = self.get_workdir_manager_for_path(path)
-        return vc.update(paths=[path])
-
-    def _done_update(self, update):
-        self._log.append_result(update)
-
-    def commit_path(self, path, message):
-        self._log.append_action('Committing', path, gtk.STOCK_GO_UP)
-        task = AsyncTask(self._do_commit, self._done_commit)
-        task.start(path, message)
-
-    def _do_commit(self, path, message):
-        vc = self.get_workdir_manager_for_path(path)
-        return vc.commit(paths=[path])
-
-    def _done_commit(self, update):
-        self._log.append_result(update)
+    def commit_path(self, path, message=None):
+        self.execute('commit', path, gtk.STOCK_GO_UP)
 
     def revert_path(self, path):
-        self._log.append_action('Reverting', path, gtk.STOCK_UNDO)
-        task = AsyncTask(self._do_revert, self._done_revert)
-        task.start(path)
-
-    def _do_revert(self, path):
-        vc = self.get_workdir_manager_for_path(path)
-        return vc.revert(paths=[path])
-        
-    def _done_revert(self, result):
-        self._log.append_result(result)
+        self.execute('revert', path, gtk.STOCK_UNDO)
 
     def add_path(self, path):
-        self._log.append_action('Adding', path, gtk.STOCK_ADD)
-        task = AsyncTask(self._do_add, self._done_add)
-        task.start(path)
-
-    def _do_add(self, path):
-        vc = self.get_workdir_manager_for_path(path)
-        return vc.add(paths=[path])
-
-    def _done_add(self, result):
-        self._log.append_result(result)
+        self.execute('add', path, gtk.STOCK_ADD)
 
     def remove_path(self, path):
-        self._log.append_action('Removing', path, gtk.STOCK_REMOVE)
-        task = AsyncTask(self._do_remove, self._done_remove)
-        task.start(path)
-
-    def _do_remove(self, path):
-        vc = self.get_workdir_manager_for_path(path)
-        return vc.remove(paths=[path])
-
-    def _done_remove(self, result):
-        self._log.append_result(result)
+        self.execute('remove', path, gtk.STOCK_REMOVE)
 
     def on_document_changed(self, document):
         for action in ['diff_document', 'revert_document', 'add_document',

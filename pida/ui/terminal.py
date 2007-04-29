@@ -220,6 +220,10 @@ class PidaTerminal(Terminal):
             text = '\x1b[%sm%s\x1b[0m' % (color, text)
         self.feed(text)
 
+    def get_all_text(self):
+        col, row = self.get_cursor_position()
+        return self.get_text_range(0, 0, row, col, lambda *a: True)
+
 
 
 

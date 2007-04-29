@@ -161,13 +161,13 @@ class CommanderCommandsConfig(CommandsConfig):
 
     def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
                       icon='terminal', eof_handler=None):
-        self.svc.execute(commandargs, env, cwd, title, icon)
+        self.svc.execute(commandargs, env, cwd, title, icon, eof_handler)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
         shell_args = self.svc.opt('shell_command_args')
         commandargs = [shell_command] + shell_args
-        self.svc.execute(commandargs, env=env, cwd=cwd, title=title, icon=None)
+        return self.svc.execute(commandargs, env=env, cwd=cwd, title=title, icon=None)
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
@@ -189,7 +189,7 @@ class TerminalView(PidaView):
         self._hb.show()
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
-        self._term.connect('eof', self.on_exited)
+        self._term.parent_view = self
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
         self._term.show()
@@ -219,7 +219,10 @@ class TerminalView(PidaView):
         self._bar.pack_start(self._title)
         self._bar.show_all()
 
-    def execute(self, commandargs, env, cwd):
+    def execute(self, commandargs, env, cwd, eof_handler=None):
+        if eof_handler is None:
+            eof_handler = self.on_exited
+        self._term.connect('child-exited', eof_handler)
         self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
         title_text = ' '.join(commandargs)
         self._title.set_text(title_text)
@@ -267,11 +270,12 @@ class Commander(Service):
     def start(self):
         self._terminals = []
 
-    def execute(self, commandargs, env, cwd, title, icon):
+    def execute(self, commandargs, env, cwd, title, icon, eof_handler=None):
         t = TerminalView(self, title, icon)
-        t.execute(commandargs, env + ['PIDA_TERM=1'], cwd)
+        t.execute(commandargs, env + ['PIDA_TERM=1'], cwd, eof_handler)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
+        return t
 
     def get_terminal_options(self):
         options = dict(
