@@ -97,7 +97,7 @@ class CommandBased(VCSBase):
         :param message: the commit message
         :param paths: the paths to commit
         """
-        return ['commit'] + self.process_paths(paths)
+        return ['commit'] + self.process_paths(paths) + ["-m", message]
 
     def get_diff_args(self, paths=(), **kw):
         return ['diff'] + self.process_paths(paths)
