@@ -165,8 +165,6 @@ class SourceView(PidaGladeView):
             ]
         )
         self.source_tree.set_headers_visible(False)
-        tv = self.source_tree._treeview
-        tv.set_expander_column(tv.get_column(2))
         self.sort_box = AttrSortCombo(
             self.source_tree,
             [
