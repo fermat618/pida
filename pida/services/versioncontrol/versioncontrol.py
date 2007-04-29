@@ -23,6 +23,7 @@
 
 import os.path
 import time
+from cgi import escape
 
 import gtk, pango
 
@@ -133,34 +134,80 @@ class CommitViewer(PidaGladeView):
 
     def create_ui(self):
         self._buffer = self.commit_text.get_buffer()
+        self._history_index = 0
         self._history = []
         self._path = None
 
     def _update_view(self):
         self.ok_button.set_sensitive(self._path is not None)
+        self.prev_button.set_sensitive(self._history_index != 0)
+        self.next_button.set_sensitive(self._history_index !=
+                                       len(self._history))
+        self.new_button.set_sensitive(self._history_index !=
+                                       len(self._history))
 
-    def commit(self, path):
+    def set_path(self, path):
         self._path = path
         self._update_view()
+        self._set_path_label()
 
     def get_message(self):
         return self._buffer.get_text(self._buffer.get_start_iter(),
                                      self._buffer.get_end_iter())
+
+    def _set_path_label(self):
+        if self._path is not None:
+            self.path_label.set_markup('<tt><b>%s</b></tt>' %
+                                       escape(self._path))
+        else:
+            self.path_label.set_text('')
+
+    def _commit(self, msg):
+        self._history.append(msg)
+        self._history_index = len(self._history)
+        self._clear_text()
+        self._update_view()
+        self.svc.commit_path(self._path, msg)
+        self.close()
+
+    def _clear_text(self):
+        self._buffer.set_text('')
+
+    def _show_history(self):
+        if self._history_index == len(self._history):
+            self._clear_text()
+        else:
+            self._buffer.set_text(self._history[self._history_index])
+        self.commit_text.grab_focus()
+        self._update_view()
 
     def on_ok_button__clicked(self, button):
         msg = self.get_message().strip()
         if not msg:
             self.svc.error_dlg('No Commit Message.')
         else:
-            self.svc.commit_path(self._path, self.get_message())
-            self.close()
+            self._commit(msg)
 
     def on_close_button__clicked(self, button):
         self.close()
 
+    def on_prev_button__clicked(self, button):
+        self._history_index -= 1
+        self._show_history()
+
+    def on_next_button__clicked(self, button):
+        self._history_index += 1
+        self._show_history()
+
+    def on_new_button__clicked(self, button):
+        self._history_index = len(self._history)
+        self._show_history()
+
+    def on_diff_button__clicked(self, button):
+        self.svc.diff_path(self._path)
+
     def close(self):
-        self._path = None
-        self._update_view()
+        self.set_path(None)
         self.svc.get_action('show_commit').set_active(False)
 
 
@@ -621,7 +668,7 @@ class Versioncontrol(Service):
         self.execute('commit', path, gtk.STOCK_GO_UP, message=message)
 
     def commit_path_dialog(self, path):
-        self._commit.commit(path)
+        self._commit.set_path(path)
         self.ensure_commit_visible()
 
     def revert_path(self, path):
