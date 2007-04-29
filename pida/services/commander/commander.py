@@ -161,7 +161,7 @@ class CommanderCommandsConfig(CommandsConfig):
 
     def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
                       icon='terminal', eof_handler=None):
-        self.svc.execute(commandargs, env, cwd, title, icon, eof_handler)
+        return self.svc.execute(commandargs, env, cwd, title, icon, eof_handler)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
