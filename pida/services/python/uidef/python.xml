@@ -12,6 +12,7 @@
         
         <menu name="LanguageMenu" action="LanguageMenu">
         <menuitem name="execute_python" action="execute_python" />
+        <menuitem name="show_python_source" action="show_python_source" />
         <menuitem name="show_python_errors" action="show_python_errors" />
         </menu>
         

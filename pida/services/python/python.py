@@ -41,17 +41,19 @@ from pida.core.projects import ProjectController,  ProjectKeyDefinition
 from pida.core.interfaces import IProjectController
 
 # ui
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.objectlist import AttrSortCombo
 
 # utils
 from pida.utils import pyflakes
-from pida.utils.gthreads import AsyncTask
+from pida.utils import pythonparser
+from pida.utils.gthreads import AsyncTask, GeneratorTask
 
 ### Pyflakes
 
 class PyflakeView(PidaView):
     
-    icon_name = 'info'
+    icon_name = 'python-icon'
     label_text = 'Python Errors'
 
     def create_ui(self):
@@ -131,6 +133,82 @@ class Pyflaker(object):
     def set_view_items(self, items):
         self._view.set_items(items)
 
+    def get_view(self):
+        return self._view
+
+
+class SourceView(PidaGladeView):
+
+    gladefile = 'python-source-browser'
+
+    icon_name = 'python-icon'
+    label_text = 'Source'
+
+    def create_ui(self):
+        self.source_tree.set_columns(
+            [
+                Column('linenumber'),
+                Column('ctype_markup', use_markup=True),
+                Column('nodename_markup', use_markup=True),
+            ]
+        )
+        self.source_tree.set_headers_visible(False)
+        tv = self.source_tree._treeview
+        tv.set_expander_column(tv.get_column(2))
+        self.sort_box = AttrSortCombo(
+            self.source_tree,
+            [
+                ('linenumber', 'Line Number'),
+                ('nodename', 'Name'),
+                ('nodetype', 'Type'),
+            ],
+            'linenumber'
+        )
+        self.sort_box.show()
+        self.main_vbox.pack_start(self.sort_box, expand=True)
+
+    def clear_items(self):
+        self.source_tree.clear()
+
+    def add_node(self, node, parent):
+        self.source_tree.append(parent, node)
+        
+
+class PythonBrowser(object):
+    
+    def __init__(self, svc):
+        self.svc = svc
+        self._view = SourceView(self.svc)
+        self.set_current_document(None)
+
+    def set_current_document(self, document):
+        self._current = document
+        if self._current is not None:
+            self.refresh_view()
+            self._view.get_toplevel().set_sensitive(True)
+        else:
+            self._view.clear_items()
+            self._view.get_toplevel().set_sensitive(False)
+
+    def refresh_view(self):
+        self._view.clear_items()
+        if self.svc.is_current_python():
+            task = GeneratorTask(self.check_current, self.add_view_node)
+            task.start()
+
+    def check_current(self):
+        root_node = self.check(self._current)
+        for child, parent in root_node.get_recursive_children():
+            if parent is root_node:
+                parent = None
+            yield (child, parent)
+
+    def check(self, document):
+        code_string = document.string
+        return pythonparser.get_nodes_from_string(code_string)
+
+    def add_view_node(self, node, parent):
+        self._view.add_node(node, parent)
 
     def get_view(self):
         return self._view
@@ -251,10 +329,19 @@ class PythonActionsConfig(ActionsConfig):
         self.create_action(
             'show_python_errors',
             TYPE_TOGGLE,
-            'Python Errors',
+            'Python Error Viewer',
             'Show the python error browser',
-            'info',
+            'error',
             self.on_show_errors,
+        )
+
+        self.create_action(
+            'show_python_source',
+            TYPE_TOGGLE,
+            'Python Source Viewer',
+            'Show the python source browser',
+            'info',
+            self.on_show_source,
         )
 
     def on_python_execute(self, action):
@@ -265,6 +352,13 @@ class PythonActionsConfig(ActionsConfig):
             self.svc.show_errors()
         else:
             self.svc.hide_errors()
+
+    def on_show_source(self, action):
+        if action.get_active():
+            self.svc.show_source()
+        else:
+            self.svc.hide_source()
+
 
 # Service class
 class Python(Service):
@@ -279,6 +373,7 @@ class Python(Service):
         """Start the service"""
         self._current = None
         self._pyflaker = Pyflaker(self)
+        self._pysource = PythonBrowser(self)
         self.execute_action = self.get_action('execute_python')
         self.execute_action.set_sensitive(False)
 
@@ -286,9 +381,11 @@ class Python(Service):
         self._current = document
         if self.is_current_python():
             self._pyflaker.set_current_document(document)
+            self._pysource.set_current_document(document)
             self.execute_action.set_sensitive(True)
         else:
             self._pyflaker.set_current_document(None)
+            self._pysource.set_current_document(None)
             self.execute_action.set_sensitive(False)
 
     def is_current_python(self):
@@ -308,6 +405,14 @@ class Python(Service):
     def hide_errors(self):
         self.boss.cmd('window', 'remove_view',
             view=self._pyflaker.get_view())
+
+    def show_source(self):
+        self.boss.cmd('window', 'add_view',
+            paned='Plugin', view=self._pysource.get_view())
+
+    def hide_source(self):
+        self.boss.cmd('window', 'remove_view',
+            view=self._pysource.get_view())
 
 # Required Service attribute for service loading
 Service = Python
