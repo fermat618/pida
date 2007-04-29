@@ -185,7 +185,7 @@ class FilemanagerView(PidaView):
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
-        self._toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
+        self._toolbar.set_icon_size(gtk.ICON_SIZE_MENU)
         self._vbox.pack_start(self._toolbar, expand=False)
         self._toolbar.show_all()
 
@@ -420,7 +420,7 @@ class FileManagerActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Project Root',
             'Browse the root of the current project',
-            'package_utilities',
+            'user-home',
             self.on_toolbar_projectroot,
             'NOACCEL',
         )
