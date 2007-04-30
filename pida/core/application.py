@@ -87,13 +87,12 @@ def run_pida(env):
 
 def main():
     env = Environment(sys.argv)
-    if env.opts.debug:
+    if env.is_debug():
         os.environ['PIDA_DEBUG'] = '1'
         os.environ['PIDA_LOG_STDERR'] = '1'
     else:
         warnings.filterwarnings("ignore")
-    print env.opts.version
-    if env.opts.version is not None:
+    if env.is_version():
         run_func = run_version
     else:
         run_func = run_pida

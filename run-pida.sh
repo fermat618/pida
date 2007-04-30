@@ -1,1 +1,1 @@
-PYTHONPATH='.' python bin/pida
+PYTHONPATH='.' python bin/pida $*

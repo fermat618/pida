@@ -44,6 +44,12 @@ class Environment(object):
                   'and so the same effect may be achieved by setting them.'))
         self.opts, self.args = op.parse_args(argv)
 
+    def is_version(self):
+        return self.opts.version
+
+    def is_debug(self):
+        return self.opts.debug
+
     def get_base_service_directory(self):
         return os.path.join(
             os.path.dirname(os.path.dirname(__file__)), 'services')
