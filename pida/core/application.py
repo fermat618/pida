@@ -21,19 +21,84 @@
 #SOFTWARE.
 
 
+# system import(s)
+import os
+import sys
+import warnings
+import atexit
 
-import gtk, gtk.gdk
+def die_cli(message):
+    """Die in a command line way."""
+    print message
+    print 'Exiting. (this is fatal)'
+    sys.exit(1)
 
-from pida.core.environment import Environment
-from pida.core.boss import Boss
 
-def main():
-    gtk.gdk.threads_init()
-    b = Boss(Environment())
+# First gtk import, let's check it
+try:
+    import gtk, gtk.gdk
+    if gtk.pygtk_version < (2, 8):
+        die_cli('PIDA requires PyGTK >= 2.8. It only found %s.%s'
+                % gtk.pygtk_version[:2])
+except ImportError:
+    die_cli('PIDA requires Python GTK bindings. They were not found.')
+
+gtk.gdk.threads_init()
+
+try:
+    from kiwi.ui.dialogs import error
+    def die_gui(message):
+        """Die in a GUI way."""
+        error("Fatal error, cannot start PIDA", 
+              message,
+              title="PIDA")
+        die_cli(message)
+
+except ImportError:
+    die_cli('Kiwi needs to be installed to run PIDA')
+
+
+# Python 2.4
+if sys.version_info < (2,4):
+    die_gui('Python 2.4 is required to run PIDA. Only %s.%s was found.' %
+            sys.version_info[:2])
+
+
+# This can test if PIDA is installed
+try:
+    from pida.core.environment import Environment
+    from pida.core.boss import Boss
+    from pida import PIDA_VERSION
+except ImportError:
+    die_gui('The pida package could not be found.')
+
+
+def run_version(env):
+    print 'PIDA, version %s' % PIDA_VERSION
+    return 0
+
+def run_pida(env):
+    b = Boss(env)
     b.start()
     gtk.gdk.threads_enter()
     b.loop_ui()
     gtk.gdk.threads_leave()
+    return 0
+
+def main():
+    env = Environment(sys.argv)
+    if env.opts.debug:
+        os.environ['PIDA_DEBUG'] = '1'
+        os.environ['PIDA_LOG_STDERR'] = '1'
+    else:
+        warnings.filterwarnings("ignore")
+    print env.opts.version
+    if env.opts.version is not None:
+        run_func = run_version
+    else:
+        run_func = run_pida
+    exit_val = run_func(env)
+    sys.exit(exit_val)
 
 
 
