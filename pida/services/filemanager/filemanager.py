@@ -70,10 +70,10 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         #TODO: better handling of normal directories
         none=('#888888', False, True), 
         normal=('black', False, False),
-        error=('red', True, True),
+        error=('darkred', True, True),
         empty=('black', False, True),
-        modified=('red', True, False),
-        conflict=('red', True, True),
+        modified=('darkred', True, False),
+        conflict=('dargred', True, True),
         removed=('#c06060', True, True),
         missing=('#00c0c0', True, False),
         new=('blue', True, False),
