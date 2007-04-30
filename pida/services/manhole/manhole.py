@@ -83,7 +83,7 @@ class Manhole(Service):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
 
     def hide_manhole(self):
-        self.boss.remove_view(self._view)
+        self.boss.cmd('window', 'remove_view', view=self._view)
 
     def get_local_dict(self):
         return dict(boss=self.boss)
