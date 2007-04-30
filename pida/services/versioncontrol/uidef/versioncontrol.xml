@@ -65,6 +65,10 @@
         </placeholder>
         <separator/>
         <placeholder name="ProjectToolbar">
+        <placeholder name="PT1" />
+        <separator />
+        <placeholder name="PT2">
+        </placeholder>
         </placeholder>
         <separator/>
         <placeholder name="VcToolbar">

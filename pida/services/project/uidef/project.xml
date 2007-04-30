@@ -51,8 +51,11 @@
         </placeholder>
         <separator/>
         <placeholder name="ProjectToolbar">
+        <placeholder name="PT1">
         <toolitem action="project_add" name="project_add" />
         <toolitem action="project_execute" name="project_execute" />
+        </placeholder>
+        <placeholder name="PT2" />
         </placeholder>
         <separator/>
         <placeholder name="VcToolbar">
