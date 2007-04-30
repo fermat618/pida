@@ -409,6 +409,7 @@ class Project(Service):
             toolitem = self.get_action('project_execute').get_proxies()[0]
             toolitem.set_menu(self.create_menu())
             self.set_opt('last_project', project.source_directory)
+            self.boss.editor.set_path(project.source_directory)
 
 
     def get_current_project(self):

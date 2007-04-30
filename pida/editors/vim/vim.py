@@ -366,6 +366,9 @@ class Vim(Service):
     def call_with_selection(self, callback):
         return self._com.get_selection(self.server, callback)
 
+    def set_path(self, path):
+        return self._com.set_path(self.server, path)
+
 # Required Service attribute for service loading
 Service = Vim
 

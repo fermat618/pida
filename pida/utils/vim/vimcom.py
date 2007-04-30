@@ -648,6 +648,9 @@ class communication_window(gtk.Window):
 
     def get_selection(self, server, callback):
         self.send_expr(server, 'getreg("*")', callback)
+
+    def set_path(self, server, path):
+        self.send_ex(server, 'cd %s' % path)
    
     def cb_notify(self, *a):
         win, ev =  a
