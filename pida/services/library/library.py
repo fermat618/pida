@@ -308,6 +308,7 @@ class Library(Service):
         bclass = self.boss.cmd('webbrowser', 'get_web_browser')
         self._browser = bclass(self)
         self._browser.label_text = 'Documentation'
+        self._browser.connect_closed(self._on_close_clicked)
         self._has_loaded = False
 
     def show_library(self):
@@ -318,6 +319,9 @@ class Library(Service):
 
     def hide_library(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
+
+    def _on_close_clicked(self, button):
+        self.get_action('show_browser').set_active(False)
 
     def show_browser(self):
         self.boss.cmd('window', 'add_view', paned='Terminal',

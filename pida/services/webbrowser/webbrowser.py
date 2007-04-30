@@ -141,7 +141,6 @@ class BrowserView(PidaView):
         bar.pack_start(self.stop_button, expand=False)
         self.back_button.connect('clicked', self.cb_toolbar_clicked, 'back')
         self.stop_button.connect('clicked', self.cb_toolbar_clicked, 'stop')
-        self.close_button.connect('clicked', self.on_close_clicked)
         #self.stop_button.set_sensitive(False)
         self.add_main_widget(bar, expand=False)
         self.location = gtk.Entry()
@@ -154,6 +153,11 @@ class BrowserView(PidaView):
         self.status_context = self.status_bar.get_context_id('web')
         self.add_main_widget(self.status_bar, expand=False)
         self.get_toplevel().show_all()
+
+    def connect_closed(self, callback=None):
+        if callback is None:
+            callback = self.on_close_clicked
+        self.close_button.connect('clicked', callback)
 
     def cb_url_entered(self, entry):
         url = self.location.get_text()
@@ -191,6 +195,7 @@ class Webbrowser(Service):
 
     def browse(self, url):
         view = BrowserView(self)
+        view.connect_closed()
         view.fetch(url)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
         
