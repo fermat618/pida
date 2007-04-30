@@ -161,12 +161,12 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs, env=dict(os.environ), cwd=os.getcwd(), title='Command',
+    def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
                       icon='terminal', eof_handler=None, use_python_fork=False):
         return self.svc.execute(commandargs, env, cwd, title, icon,
                                 eof_handler, use_python_fork)
 
-    def execute_shell(self, env=dict(os.environ), cwd=os.getcwd(), title='Shell'):
+    def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
         shell_args = self.svc.opt('shell_command_args')
         commandargs = [shell_command] + shell_args
@@ -248,6 +248,8 @@ class TerminalView(PidaView):
 
     def _python_fork(self, commandargs, env, cwd):
         self._term.connect('commit', self.on_commit_python)
+        # TODO: Env broken
+        env = dict(os.environ)
         env['TERM'] = 'xterm'
         (master, slave) = os.openpty()
         self.slave = slave
@@ -265,7 +267,6 @@ class TerminalView(PidaView):
 
     def _vte_fork(self, commandargs, env, cwd):
         self._term.connect('child-exited', self.eof_handler)
-        env = self._vte_env_map_to_list(env)
         self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
 
     def close_view(self):
