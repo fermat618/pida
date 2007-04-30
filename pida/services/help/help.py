@@ -22,6 +22,7 @@
 
 
 import gtk
+from gtk import gdk
 
 # PIDA Imports
 from pida.core.service import Service
@@ -30,6 +31,32 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+
+from pida.core.environment import get_pixmap_path
+
+from pida import PIDA_NAME, PIDA_VERSION, PIDA_AUTHORS, PIDA_COPYRIGHT, \
+                 PIDA_LICENSE, PIDA_WEBSITE, PIDA_SHORT_DESCRIPTION
+
+
+class PidaAboutDialog(gtk.AboutDialog):
+
+    def __init__(self, boss):
+        gtk.AboutDialog.__init__(self)
+        self.set_transient_for(boss.get_window())
+        self.set_name(PIDA_NAME)
+        self.set_version(PIDA_VERSION)
+        self.set_logo(self._create_logo())
+        self.set_copyright(PIDA_COPYRIGHT)
+        self.set_license(PIDA_LICENSE)
+        self.set_wrap_license(True)
+        self.set_authors(PIDA_AUTHORS)
+        self.set_website(PIDA_WEBSITE)
+        self.set_comments(PIDA_SHORT_DESCRIPTION)
+
+    def _create_logo(self):
+        pb = gdk.pixbuf_new_from_file_at_size(
+            get_pixmap_path('pida-icon.svg'), 128, 128)
+        return pb
 
 class HelpActionsConfig(ActionsConfig):
 
@@ -44,7 +71,7 @@ class HelpActionsConfig(ActionsConfig):
         )
 
     def show_about_dialog(self, action):
-        dialog = gtk.AboutDialog()
+        dialog = PidaAboutDialog(self.svc.boss)
         resp = dialog.run()
         dialog.destroy()
 

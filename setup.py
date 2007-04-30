@@ -6,7 +6,8 @@ import os
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
 
-from pida import PIDA_VERSION
+from pida import PIDA_VERSION, PIDA_AUTHOR, PIDA_WEBSITE, \
+                 PIDA_SHORT_DESCRIPTION, PIDA_NAME
 
 
 # Moo Extension
@@ -81,17 +82,17 @@ all_package_data = get_main_data()
 all_packages = list_pida_packages() + list_pida_services(all_package_data)
 
 setup(
-    name='pida',
+    name = PIDA_NAME,
     version = PIDA_VERSION,
     packages = all_packages,
     package_data = all_package_data,
     ext_modules = [moo],
     cmdclass={'build_ext': BuildExt},
     scripts=['bin/pida', 'bin/pida-remote'],
-    author = 'Ali Afshar',
-    author_email = 'aafshar@gmail.com',
-    url = 'http://pida.co.uk/',
-    download_url = 'http://pida.co.uk/download/',
-    description = 'An intergated development environment that reuses tools such as Vim, and all version control systems.',
+    author = PIDA_AUTHOR,
+    author_email = PIDA_AUTHOR,
+    url = PIDA_WEBSITE,
+    download_url = PIDA_WEBSITE + 'download/',
+    description = PIDA_SHORT_DESCRIPTION,
 )
 
