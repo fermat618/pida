@@ -64,12 +64,12 @@ def list_main_data():
 
 all_package_data = list_main_data()
 
-all_packages = list_pida_packages + list_pida_services(all_package_data)
+all_packages = list_pida_packages() + list_pida_services(all_package_data)
 
 setup(
     name='pida',
-    packages = list_pida_packages() + service_packages,
-    package_data = package_data,
+    packages = all_packages,
+    package_data = all_package_data,
     ext_modules = [moo],
     cmdclass={'build_ext': BuildExt},
     scripts=['bin/pida', 'bin/pida-remote']
