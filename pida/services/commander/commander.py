@@ -162,9 +162,10 @@ class CommanderActionsConfig(ActionsConfig):
 class CommanderCommandsConfig(CommandsConfig):
 
     def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
-                      icon='terminal', eof_handler=None, use_python_fork=False):
+                      icon='terminal', eof_handler=None, use_python_fork=False,
+                      parser_func=None):
         return self.svc.execute(commandargs, env, cwd, title, icon,
-                                eof_handler, use_python_fork)
+                                eof_handler, use_python_fork, parser_func)
 
     def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
@@ -225,14 +226,17 @@ class TerminalView(PidaView):
         self._bar.show_all()
 
     def execute(self, commandargs, env, cwd, eof_handler=None,
-                use_python_fork=False):
+                use_python_fork=False, parser_func=None):
         title_text = ' '.join(commandargs)
         self._title.set_text(title_text)
         if eof_handler is None:
             eof_handler = self.on_exited
         self.eof_handler = eof_handler
         if use_python_fork:
-            self._python_fork(commandargs, env, cwd)
+            if parser_func == None:
+                self._python_fork(commandargs, env, cwd)
+            else:
+                self._python_fork_parse(commandargs, env, cwd, parser_func)
         else:
             self._vte_fork(commandargs, env, cwd) 
 
@@ -261,6 +265,44 @@ class TerminalView(PidaView):
         self._pid = p.pid
         t = AsyncTask(self._python_fork_waiter, self._python_fork_complete)
         t.start(p)
+
+    def _python_fork_parse(self, commandargs, env, cwd, parser_func):
+        self._term.connect('commit', self.on_commit_python)
+        env = dict(os.environ)
+        env['TERM'] = 'xterm'
+        self.master, self.slave = os.openpty()
+        self._term.set_pty(self.master)
+        master, slave = os.openpty()
+        p = subprocess.Popen(commandargs, stdout=slave,
+                         stderr=subprocess.STDOUT, stdin=slave,
+                         close_fds=True)
+        gobject.io_add_watch(master, gobject.IO_IN, 
+                                self._on_python_fork_parse_stdout, parser_func)
+        self._term.connect('key-press-event',
+                            self._on_python_fork_parse_key_press_event, master)
+
+    def _on_python_fork_parse_key_press_event(self, term, event, fd):
+        if event.hardware_keycode == 22:
+            os.write(fd, "")
+        elif event.hardware_keycode == 98:
+            os.write(fd, "OA")
+        elif event.hardware_keycode == 104:
+            os.write(fd, "OB")
+        elif event.hardware_keycode == 100:
+            os.write(fd, "OD")
+        elif event.hardware_keycode == 102:
+            os.write(fd, "OC")
+        else:
+            data = event.string
+            os.write(fd, data)
+        return True
+
+    def _on_python_fork_parse_stdout(self, fd, state, parser = None):
+        data = os.read(fd,1024)
+        os.write(self.slave, data)
+        if parser != None:
+            parser(data)
+        return True
 
     def _vte_env_map_to_list(self, env):
         return ['%s=%s' % (k, v) for (k, v) in env.items()]
@@ -317,9 +359,9 @@ class Commander(Service):
         self._terminals = []
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
-                use_python_fork=False):
+                use_python_fork=False, parser_func=None):
         t = TerminalView(self, title, icon)
-        t.execute(commandargs, env, cwd, eof_handler, use_python_fork)
+        t.execute(commandargs, env, cwd, eof_handler, use_python_fork, parser_func)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
         return t
