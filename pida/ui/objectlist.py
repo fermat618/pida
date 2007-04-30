@@ -44,6 +44,7 @@ class AttrSortCombo(gtk.HBox):
         self._order_button.show()
         # Use a real combo to avoid internal dependency
         self._combo = gtk.ComboBox(model=self._model)
+        self._combo.set_size_request(1, 1)
         self._combo.connect('changed', self._on_selection_changed)
         cell = gtk.CellRendererText()
         self._combo.pack_start(cell, True)
