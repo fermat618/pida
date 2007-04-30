@@ -1,4 +1,206 @@
 restindex
+    crumb: Developer
+    page-title: Developer Documentation
+/restindex
+
+==================================
+PIDA Developer Documentation Index
+==================================
+
+restindex
+    crumb: Services
+    page-title: Service Authoring
+/restindex
+
+============================
+PIDA Service Authoring Guide
+============================
+
+PIDA has a very general concept of services (you might call them plugins in
+another application). In general, a service is able to define any PIDA
+function, that is anything PIDA can do, a service can do it too.
+
+PIDA is essentially a bunch of services bound together by a **Boss**. The
+services are discovered from service directories and loaded by a **Service
+Manager** for the Boss.
+
+To learn more about services, please investigate:
+
+`Service Overview`_
+
+.. _`Service Overview`: overview.html
+
+restindex
+    crumb: Overview
+    page-title: Service Overview
+/restindex
+
+================
+Service Overview
+================
+
+.. author: Ali Afshar <aafshar@gmail.com>
+.. contents:: Table of Contents
+
+Outline
+=======
+
+A service is comprised of a directory on the file system. This directory is a
+Python package with data.
+
+The structure of this directory is like so for a service named "myservice"::
+
+    myservice/
+        __init__.py
+        myservice.py
+        service.pida
+        test_myservice.py
+        data/
+        glade/
+        pixmaps/
+        uidef/
+            myservice.xml
+
+Individual Components
+=====================
+
+myservice.py
+------------
+
+This is the file containing the Python code for the service. It is a Python
+module and should contain an attribute ``Service``, which is the Class which
+will be instantiated as the service.
+
+The service class has a number of class attributes which describe its
+behaviour. These behaviours are:
+
+    - Configuration
+    - Commands
+    - Events
+    - Features
+    - Actions
+
+Configuration
+~~~~~~~~~~~~~
+
+This is the global configuration options for the service.
+
+Commands
+~~~~~~~~
+
+Commands are the external interface for the service. They can be called by any
+other service, and this decoupling is cleaner than expecting, and calling an
+actual method on a service. 
+
+Events
+~~~~~~
+
+Events are an asynchronous call back for the service. Any other service can
+subscribe to an event explicitly, and by subscribing is notified when an event
+occurs.
+
+Features
+~~~~~~~~
+
+Features are behaviours that a service expects other services to provide for
+it. If this makes no sense, imagine a situation in which a file-manager
+service expects any service to subscribe to its right-click menu on a file. In
+this way, the actions provided on that right-click menu are decentralized from
+the menu itself, and can be provided anywhere. This is very similar to a
+classical (e.g. Trac) *extension point*.
+
+Actions
+~~~~~~~
+
+Actions are gtk.Actions and are used in the user interface. An action maps
+directly to a single toolbar and menu action, and contains the necessary
+information to create this user interface item from it, including label, stock
+image etc.
+
+__init__.py
+-----------
+
+This file is required so that Python recognises the directory as a legitimate
+Python package.
+
+service.pida
+------------
+
+This empty file is just present to identify the package as a PIDA service.
+
+data/
+-----
+
+This directory should contain any data files for the service that are not
+included in the other resource directories.
+
+
+glade/
+------
+
+This directory contains the glade files for the service's views. Although
+views can be created using Python-only, it is recommended for more detailed
+plugin views that they use glade.
+
+pixmaps/
+--------
+
+This directory should contain any custom pixmaps for the service. These can be
+used in any way.
+
+uidef/
+------
+
+This directory should contain the UI Definition XML files for the service.
+These are gtk.UIManager XML files, and define the menu bar and toolbar items
+for the service. The file myservice.xml is automatically loaded by PIDA, but
+others can exist in this directory and could be used to populate popup menus
+or to be further merged with the standard UI defnition.
+
+
+restindex
+    crumb: Options
+    page-title: Service Options
+/restindex
+
+===============
+Service Options
+===============
+
+Options are currently stored in the GConf database. They are registered at
+activation time of the service. Each service has its own directory in the GConf
+database at /apps/pida/service_name. On registering the options, if they do not
+exist, they are set to the default value.
+
+Service options are defined in the service's OptionsConifg. This class should be
+the options_config attribute of the service class, and should subclass
+pida.options.OptionsConfig.
+
+The OptionsConfig has a method named create_options, which is called on service
+activation. This method should contain the calls to create_option to create the
+options. The signature for create_option is::
+
+create_option(name, label, type, default, documentation)
+
+For example::
+
+    class MyServiceOptions(OptionsConfig):
+
+        def create_options(self):
+            self.create_option(
+                'myoption',
+                'myoption label',
+                OTypeString,
+                'default_value',
+                'A string describing the option',
+            )
+
+
+    class MyService(Service):
+        
+        options_config = MyServiceOptions
+
+restindex
     crumb: Coding Style
     page-title: Coding Style
 /restindex

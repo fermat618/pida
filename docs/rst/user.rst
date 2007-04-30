@@ -1,4 +1,8 @@
 restindex
+    crumb: User
+    page-title: User Documentation
+/restindex
+restindex
     crumb: Requirements
     page-title: Requirements
 /restindex
