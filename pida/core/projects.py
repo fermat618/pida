@@ -216,7 +216,7 @@ class ProjectController(object):
             env=env or self.get_env(),
             cwd=cwd or self.get_cwd(),
             title=self.config_section,
-            icon='execute',
+            icon='gtk-execute',
         )
 
     def execute_commandline(self, command, env=None, cwd=None):
@@ -225,7 +225,7 @@ class ProjectController(object):
             env=env or self.get_env(),
             cwd=cwd or self.get_cwd(),
             title=self.config_section,
-            icon='execute',
+            icon='gtk-execute',
         )
 
     def create_key_items(self):

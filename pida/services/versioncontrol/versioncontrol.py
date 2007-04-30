@@ -111,7 +111,7 @@ class VersionControlLog(PidaGladeView):
     def append_action(self, action, argument, stock_id):
         self.append_time()
         self.append_stock(stock_id)
-        self.append_entry('%s: ' % action, 'title')
+        self.append_entry(' %s: ' % action, 'title')
         self.append_entry('%s\n' % argument, 'argument')
 
     def append_result(self, result):
