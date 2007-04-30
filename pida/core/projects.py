@@ -209,21 +209,23 @@ class ProjectController(object):
     def get_project_option(self, name):
         return self.project.options.get(name, None)
 
-    def execute_commandargs(self, args, cwd, env):
+    def execute_commandargs(self, args, env=None, cwd=None):
         #TODO: Bad dependency
         self.boss.cmd('commander', 'execute',
             commandargs=args,
-            env=env,
-            cwd=cwd,
+            env=env or self.get_env(),
+            cwd=cwd or self.get_cwd(),
             title=self.config_section,
+            icon='execute',
         )
 
-    def execute_commandline(self, command, cwd, env):
+    def execute_commandline(self, command, env=None, cwd=None):
         self.boss.cmd('commander', 'execute',
             commandargs=['bash', '-c', command],
-            env=env,
-            cwd=cwd,
+            env=env or self.get_env(),
+            cwd=cwd or self.get_cwd(),
             title=self.config_section,
+            icon='execute',
         )
 
     def create_key_items(self):
@@ -247,6 +249,22 @@ class ProjectController(object):
         return bool(self.get_option('default'))
 
     default = property(get_default, set_default)
+
+    def get_cwd(self):
+        cwd = self.get_option('cwd')
+        if cwd is None:
+            return self.project.source_directory
+        elif os.path.isabs(cwd):
+            return cwd
+        else:
+            return os.path.join(self.project.source_directory, cwd)
+
+    def get_env(self):
+        env = self.get_option('env')
+        if env is None:
+            return []
+        else:
+            return env.split()
 
 
 

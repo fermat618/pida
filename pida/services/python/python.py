@@ -256,8 +256,6 @@ class PythonProjectController(BasePythonProjectController):
                 commandargs.extend(execute_args.split())
             self.execute_commandargs(
                 commandargs,
-                self.get_option('cwd') or self.project.source_directory,
-                self.get_option('env') or [],
             )
 
 
@@ -285,8 +283,6 @@ class PythonDistutilstoolsController(ProjectController):
                 commandargs.extend(args)
             self.execute_commandargs(
                 commandargs,
-                self.get_option('cwd') or self.project.source_directory,
-                self.get_option('env') or [],
             )
 
     def get_python_executable(self):

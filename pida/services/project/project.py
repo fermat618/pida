@@ -83,15 +83,8 @@ class GenericExecutionController(ProjectController):
                 'Controller has no command set'
             )
             return
-        env = self.get_option('env')
-        if env:
-            env = env.split()
-        else:
-            env = []
         self.execute_commandline(
             command,
-            self.get_option('cwd') or self.project.source_directory,
-            env,
         )
 
 PROJECT_LIST_COLUMNS = [
