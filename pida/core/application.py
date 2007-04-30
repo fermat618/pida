@@ -25,7 +25,6 @@
 import os
 import sys
 import warnings
-import atexit
 
 def die_cli(message):
     """Die in a command line way."""
@@ -36,14 +35,14 @@ def die_cli(message):
 
 # First gtk import, let's check it
 try:
-    import gtk, gtk.gdk
+    import gtk
+    from gtk import gdk
     if gtk.pygtk_version < (2, 8):
         die_cli('PIDA requires PyGTK >= 2.8. It only found %s.%s'
                 % gtk.pygtk_version[:2])
 except ImportError:
     die_cli('PIDA requires Python GTK bindings. They were not found.')
 
-gtk.gdk.threads_init()
 
 try:
     from kiwi.ui.dialogs import error
@@ -76,12 +75,14 @@ def run_version(env):
     print 'PIDA, version %s' % PIDA_VERSION
     return 0
 
+
 def run_pida(env):
+    gdk.threads_init()
     b = Boss(env)
     b.start()
-    gtk.gdk.threads_enter()
+    gdk.threads_enter()
     b.loop_ui()
-    gtk.gdk.threads_leave()
+    gdk.threads_leave()
     return 0
 
 def main():
