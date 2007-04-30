@@ -620,7 +620,7 @@ class Debugger(Service):
         """
         Selects a profile for debugging
         """
-        print "SELECT PROFILE"
+        self.log_debug("SELECT PROFILE")
 #        self._breakpoints_view.clear_items()
 
 #        print "DEBUG: anydbg: select_profile(): profile: ", profile 
