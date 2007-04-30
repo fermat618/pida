@@ -654,7 +654,8 @@ class Versioncontrol(Service):
         commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path], **kw)
         self._log.append_action(action.capitalize(), path, stock_id)
         self.boss.cmd('commander', 'execute', commandargs=commandargs,
-                      cwd=vc.base_path, eof_handler=self._executed)
+                      cwd=vc.base_path, eof_handler=self._executed,
+                      use_python_fork=True)
 
     def _executed(self, term):
         self._log.append_result(term.get_all_text())

@@ -20,9 +20,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import os
+import os, subprocess
 
-import gtk
+import gtk, gobject
 
 # PIDA Imports
 from pida.core.service import Service
@@ -33,6 +33,8 @@ from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, \
     OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+
+from pida.utils.gthreads import AsyncTask
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
@@ -159,11 +161,12 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
-                      icon='terminal', eof_handler=None):
-        return self.svc.execute(commandargs, env, cwd, title, icon, eof_handler)
+    def execute(self, commandargs, env=dict(os.environ), cwd=os.getcwd(), title='Command',
+                      icon='terminal', eof_handler=None, use_python_fork=False):
+        return self.svc.execute(commandargs, env, cwd, title, icon,
+                                eof_handler, use_python_fork)
 
-    def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
+    def execute_shell(self, env=dict(os.environ), cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
         shell_args = self.svc.opt('shell_command_args')
         commandargs = [shell_command] + shell_args
@@ -196,6 +199,8 @@ class TerminalView(PidaView):
         self._create_bar()
         self._hb.pack_start(self._term)
         self._hb.pack_start(self._bar, expand=False)
+        self.master = None
+        self.slave = None
 
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
@@ -219,13 +224,49 @@ class TerminalView(PidaView):
         self._bar.pack_start(self._title)
         self._bar.show_all()
 
-    def execute(self, commandargs, env, cwd, eof_handler=None):
-        if eof_handler is None:
-            eof_handler = self.on_exited
-        self._term.connect('child-exited', eof_handler)
-        self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
+    def execute(self, commandargs, env, cwd, eof_handler=None,
+                use_python_fork=False):
         title_text = ' '.join(commandargs)
         self._title.set_text(title_text)
+        if eof_handler is None:
+            eof_handler = self.on_exited
+        self.eof_handler = eof_handler
+        if use_python_fork:
+            self._python_fork(commandargs, env, cwd)
+        else:
+            self._vte_fork(commandargs, env, cwd) 
+
+    def _python_fork_waiter(self, popen):
+        exit_code = popen.wait()
+        return exit_code
+
+    def _python_fork_complete(self, exit_code):
+        gobject.timeout_add(200, self.eof_handler, self._term)
+
+    def _python_fork_preexec_fn(self):
+        os.setpgrp()
+
+    def _python_fork(self, commandargs, env, cwd):
+        self._term.connect('commit', self.on_commit_python)
+        env['TERM'] = 'xterm'
+        (master, slave) = os.openpty()
+        self.slave = slave
+        self.master = master
+        self._term.set_pty(master)
+        p = subprocess.Popen(commandargs, stdin=slave, stdout=slave,
+                             preexec_fn=self._python_fork_preexec_fn,
+                             stderr=slave, env=env, cwd=cwd, close_fds=True)
+        self._pid = p.pid
+        t = AsyncTask(self._python_fork_waiter, self._python_fork_complete)
+        t.start(p)
+
+    def _vte_env_map_to_list(self, env):
+        return ['%s=%s' % (k, v) for (k, v) in env.items()]
+
+    def _vte_fork(self, commandargs, env, cwd):
+        self._term.connect('child-exited', self.eof_handler)
+        env = self._vte_env_map_to_list(env)
+        self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
 
     def close_view(self):
         self.svc.boss.cmd('window', 'remove_view', view=self)
@@ -255,6 +296,10 @@ class TerminalView(PidaView):
     def on_press_any_key(self, term, data, datalen):
         self.close_view()
 
+    def on_commit_python(self, term, data, datalen):
+        if data == '\x03':
+            os.kill(self._pid, 2)
+
     def on_window_title_changed(self, term):
         self._title.set_text(term.get_window_title())
 
@@ -270,9 +315,10 @@ class Commander(Service):
     def start(self):
         self._terminals = []
 
-    def execute(self, commandargs, env, cwd, title, icon, eof_handler=None):
+    def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
+                use_python_fork=False):
         t = TerminalView(self, title, icon)
-        t.execute(commandargs, env + ['PIDA_TERM=1'], cwd, eof_handler)
+        t.execute(commandargs, env, cwd, eof_handler, use_python_fork)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
         return t
