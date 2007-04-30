@@ -57,9 +57,10 @@ class Project(object):
                 if controller_type is not None:
                     self.controllers.append(controller_type(self, section))
                 else:
-                    print 'no controller type for %s' % controller_name
+                    self.boss.log.debug('no controller type for %s' %
+                                        controller_name)
             else:
-                print 'no controller defined for %s' % section
+                self.boss.log.debug('no controller defined for %s' % section)
 
     def _create_options(self):
         self.options = ConfigObj(self.project_file)
