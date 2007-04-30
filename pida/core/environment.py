@@ -2,7 +2,7 @@ import os
 
 from kiwi.environ import Library, environ
 
-library = Library('pida', root='../..')
+library = Library('pida', root='../')
 
 library.add_global_resource('glade', 'resources/glade')
 library.add_global_resource('uidef', 'resources/uidef')
