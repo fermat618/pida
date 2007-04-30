@@ -50,8 +50,7 @@ try:
     def die_gui(message):
         """Die in a GUI way."""
         error("Fatal error, cannot start PIDA", 
-              message,
-              title="PIDA")
+              message)
         die_cli(message)
 
 except ImportError:
