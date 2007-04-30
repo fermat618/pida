@@ -42,10 +42,10 @@ def build_logger(name, filepath=None):
     handler.setFormatter(format)
     logger.addHandler(handler)
     # optionally to stdout
-    if 'PIDA_LOG_STDERR' in os.environ:
-        handler = logging.StreamHandler()
-        handler.setFormatter(format)
-        logger.addHandler(handler)
+    #if 'PIDA_LOG_STDERR' in os.environ:
+    #    handler = logging.StreamHandler()
+    #    handler.setFormatter(format)
+    #    logger.addHandler(handler)
     if 'PIDA_DEBUG' in os.environ:
         level = logging.DEBUG
     else:
