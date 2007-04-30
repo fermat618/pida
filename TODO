@@ -2,15 +2,10 @@ Absolute
 --------
 
 * Port the remaining services
-    - Python Code Browser
-    - Scripts
+    - Scripts : Do we need these?
 
 In progress
 -----------
 
-* Anyvc (Ronny)
-* Grep (Anders) DONE
 * Debugger (Bernard)
-* Bookmarkmanager (Tito)
-* Man (Tito)
 
