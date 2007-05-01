@@ -198,6 +198,9 @@ class BufferCommandsConfig(CommandsConfig):
     def get_current(self):
         return self.svc.get_current()
 
+    def get_documents(self):
+        return self.svc.get_documents()
+
 # Service class
 class Buffer(Service):
     """
