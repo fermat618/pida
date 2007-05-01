@@ -21,6 +21,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+"""
+Action support for PIDA services.
+"""
+
 # gtk import(s)
 import gtk
 
@@ -38,6 +42,10 @@ TYPE_MENUTOOL,
 
 
 class PidaMenuToolAction(gtk.Action):
+    """
+    Custom gtk.Action subclass for handling toolitems with a dropdown menu
+    attached.
+    """
 
     __gtype_name__ = "PidaMenuToolAction"
 
@@ -57,10 +65,25 @@ _ACTIONS = {
 accelerator_group = gtk.AccelGroup()
 
 class ActionsConfig(BaseConfig):
+    """
+    The base action configurator.
+
+    Services using actions should subclass this, and set their actions_config
+    class attribute to the class. It will be instantiated on service activation
+    with the service instance passed as the parameter to the constructor. The
+    service will be available as the svc attribute in the configurator
+    instance.
+    """
 
     accelerator_group = accelerator_group
 
     def create(self):
+        """
+        Called to initialize this configurator.
+
+        Will initialise attributes, call create_actions, then register the
+        actions and the ui definitions with the Boss.
+        """
         self._actions = gtk.ActionGroup(self.svc.get_name())
         self._keyboard_options = {}
         self.create_actions()
@@ -71,10 +94,46 @@ class ActionsConfig(BaseConfig):
             )
 
     def create_actions(self):
-        """Create your actions here"""
+        """
+        Called to create the actions.
+
+        Create your service actions actions here. Each action should be created
+        with a call to create_action. These actions will be added to the action
+        group for the service, and can be used for any purpose.
+        """
 
     def create_action(self, name, atype, label, tooltip, stock_id,
                       callback=None, accel_string='NOACCEL'):
+        """
+        Create an action for this service.
+
+        :param name:
+            The unique name for the action. This must be unique for the
+            service, so choose names wisely. For example:
+            `show_project_properties`
+        :param atype:
+            This is the type of action, and maps directly to a type of
+            gtk.Action. Types include:
+            - TYPE_NORMAL: A normal gtk.Action
+            - TYPE_TOGGLE: A gtk.ToggleAction
+            - TYPE_RADIO: A gtk.RadioAction
+            - TYPE_MENUTOOL: A custom Action which contains a dropdown menu
+              when rendered as a tool item
+        :param label:
+            The label to display on proxies of the action.
+        :param toolip:
+            The tool tip to display on proxies of the action.
+        :param stock_id:
+            The stock id of the icon to display on proxies of the action.
+        :param callback:
+            The callback function to be called when the action is activated.
+            This function should take the action as a parameter.
+        :param accel_string:
+            The accelerator string set as the default accelerator for this
+            action, or 'NOACCEL' for actions that do not need an accelerator.
+            To be used these actions must be proxied as items in one of the
+            menus or toolbars.
+        """
         aclass = _ACTIONS[atype]
         act = aclass(name=name, label=label, tooltip=tooltip, stock_id=stock_id)
         self._actions.add_action(act)
@@ -104,12 +163,26 @@ class ActionsConfig(BaseConfig):
         return 'keyboard_shortcuts/%s' % self.svc.get_name()
 
     def get_action(self, name):
+        """
+        Get the named action
+        """
         return self._actions.get_action(name)
 
     def get_action_group(self):
+        """
+        Get the action group
+        """
         return self._actions
 
     def get_keyboard_options(self):
+        """
+        Get the keyboard options.
+
+        The keyboard options are a dict which stores the GConf directory
+        containing the values for the keyboard shortcuts for the actions that
+        do not have NOACCEL set. These are persisted on first run, and then
+        loaded from GConf to maintian user preferences.
+        """
         return self._keyboard_options
 
     def _create_accel_path(self, name):
@@ -127,6 +200,10 @@ class ActionsConfig(BaseConfig):
         self._set_action_keypress_from_option(option)
 
     def subscribe_keyboard_shortcuts(self):
+        """
+        Set the keyboard shortcuts for the actions with keyboard shortcuts
+        enabled.
+        """
         for name, opt in self._keyboard_options.items():
             self._set_action_keypress_from_option(opt)
 
