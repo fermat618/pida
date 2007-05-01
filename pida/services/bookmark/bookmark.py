@@ -120,16 +120,19 @@ class BookmarkView(PidaView):
 
     def create_ui_list(self):
         self._books = gtk.Notebook()
+        self._books.set_border_width(6)
         self._list_dirs = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_dirs.connect('row-activated', self._on_item_activated)
         self._list_dirs.connect('selection-changed', self._on_item_selected)
         self._list_dirs.set_headers_visible(False)
+        self._list_dirs.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self._books.append_page(self._list_dirs,
                 tab_label=self.create_tab_label('stock_folder', 'Dirs'))
         self._list_files = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_files.connect('row-activated', self._on_item_activated)
         self._list_files.connect('selection-changed', self._on_item_selected)
         self._list_files.set_headers_visible(False)
+        self._list_files.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self._books.append_page(self._list_files,
                 tab_label=self.create_tab_label('text-x-generic', 'Files'))
         """
