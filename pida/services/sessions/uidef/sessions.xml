@@ -6,6 +6,7 @@
             <separator />
             <placeholder name="fm14">
                 <menuitem name="save_session" action="save_session" />
+                <menuitem name="save_session_as" action="save_session_as" />
                 <menuitem name="load_session" action="load_session" />
             </placeholder>
             <placeholder name="fm15">

@@ -63,10 +63,12 @@ class SessionObject(object):
         self._config = ConfigObj()
         self._config.filename = self._path
 
-    def save(self):
+    def save(self, file_path=None):
         """
         write this session out to a file
         """
+        if file_path:
+            self._config.filename = file_path
         self._config['name'] = self.name
         self._config['files'] = self._files
 #        self._config['project'] = self._project
@@ -106,7 +108,7 @@ class SessionsActionsConfig(ActionsConfig):
             'Load a saved session',
             None,
             self.on_load_session,
-            ''
+            '',
         )
 
         self.create_action(
@@ -119,11 +121,27 @@ class SessionsActionsConfig(ActionsConfig):
             ''
         )
 
+        self.create_action(
+            'save_session_as',
+            TYPE_NORMAL,
+            'Save Session As',
+            'Save your current session with a given filename',
+            None,
+            self.on_save_session_as,
+            ''
+        )
+
+
     def on_load_session(self, action):
         file_name = self.svc.boss.window.open_dlg(folder = self.svc.sessions_dir)
         self.svc.load_session(file_name)
 
     def on_save_session(self, action):
+        if self.svc.current_session:
+            self.svc.save_current_session()
+        return
+
+    def on_save_session_as(self, action):
         if self.svc.current_session:
             name = self.svc.current_session.name + ".session" 
             file_path = self.svc.boss.window.save_dlg(current_name = name, folder = self.svc.sessions_dir) 
@@ -193,23 +211,30 @@ class Sessions(Service):
         self.sessions_dir = os.path.join(self.boss.get_pida_home(), 'sessions')
         if not os.path.exists(self.sessions_dir):
             os.mkdir(self.sessions_dir)
-        self.current_session = None
+        self._set_current_session(None)
+#        self.current_session = None
 
     def load_session(self, file_path):
         """
         load the saved session file from disk
         """
-        self.current_session = SessionObject()
-        self.current_session.load(file_path)
-        self.load_buffers(self.current_session.get_files())
+        session = SessionObject()
+        session.load(file_path)
+        self._set_current_session(session)
+        self.load_buffers(session.get_files())
 
-    def save_current_session(self, file_path):
+    def save_current_session(self, file_path=None):
         if not self.current_session:
             self.current_session = SessionObject()
             self.current_session.new(file_path, files = self._get_current_buffers())
+            self.current_session.save()
         else:
             self.current_session.set_files(self._get_current_buffers())
-        self.current_session.save()
+            self.current_session.save(file_path)
+
+    def _set_current_session(self, session):
+        self.current_session = session
+        self.get_action('save_session').set_sensitive(session is not None)
 
     def _get_current_buffers(self):
         """
