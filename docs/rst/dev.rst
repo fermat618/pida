@@ -1,18 +1,12 @@
-restindex
-    crumb: Developer
-    page-title: Developer Documentation
-/restindex
-
-==================================
-PIDA Developer Documentation Index
-==================================
-
-restindex
-    crumb: Services
-    page-title: Service Authoring
-/restindex
 
 ============================
+PIDA Developer Documentation 
+============================
+
+.. author: Ali Afshar <aafshar@gmail.com>
+
+.. contents:: Table of Contents
+
 PIDA Service Authoring Guide
 ============================
 
@@ -26,24 +20,11 @@ Manager** for the Boss.
 
 To learn more about services, please investigate:
 
-`Service Overview`_
-
-.. _`Service Overview`: overview.html
-
-restindex
-    crumb: Overview
-    page-title: Service Overview
-/restindex
-
-================
 Service Overview
 ================
 
-.. author: Ali Afshar <aafshar@gmail.com>
-.. contents:: Table of Contents
-
 Outline
-=======
+^^^^^^^
 
 A service is comprised of a directory on the file system. This directory is a
 Python package with data.
@@ -62,7 +43,7 @@ The structure of this directory is like so for a service named "myservice"::
             myservice.xml
 
 Individual Components
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 myservice.py
 ------------
@@ -158,12 +139,6 @@ others can exist in this directory and could be used to populate popup menus
 or to be further merged with the standard UI defnition.
 
 
-restindex
-    crumb: Options
-    page-title: Service Options
-/restindex
-
-===============
 Service Options
 ===============
 
@@ -180,7 +155,7 @@ The OptionsConfig has a method named create_options, which is called on service
 activation. This method should contain the calls to create_option to create the
 options. The signature for create_option is::
 
-create_option(name, label, type, default, documentation)
+    create_option(name, label, type, default, documentation)
 
 For example::
 
@@ -200,20 +175,12 @@ For example::
         
         options_config = MyServiceOptions
 
-restindex
-    crumb: Coding Style
-    page-title: Coding Style
-/restindex
+Coding Style
+============
 
-=================
-PIDA Coding Style
-=================
-
-:author: Ali Afshar <aafshar@gmail.com>
-:license: DQMOTGL (Don't Quote Me On This General License)
 
 Introduction
-============
+^^^^^^^^^^^^
 
 First read PEP8_ (the PEP on how to write readable Python code). The PEP gives
 a number of good insights. The PEP gives a few options on things, and I shall
@@ -223,13 +190,13 @@ should listen to the Python people (who are cleverer than me anyway). Also
 read PEP20_ while you are at it.
 
 Indenting
-=========
+^^^^^^^^^
 
 4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
 your settings, somehow tabs creep into emacs-written code.
 
 Line Width
-==========
+^^^^^^^^^^
 
 79 characters, perhaps 78 to be safe. This is negotiable, and there are times
 when 83 character lines are acceptable. You can be the judge. I am not sure
@@ -262,7 +229,7 @@ It all depends on the use at the time, and we should remember to keep it
 readable.
 
 Blank Lines
-===========
+^^^^^^^^^^^
 
 As PEP8_ for 2 lines between top-level classes and functions, with one line
 between methods.
@@ -272,7 +239,7 @@ in my opinion. Real logical blocks should be used to indicate logical blocks!
 If you have to do this, a comment is better than a blank line.
 
 Imports
-=======
+^^^^^^^
 
 Only import the function or class you want to use, for example::
 
@@ -295,7 +262,7 @@ Remember to import in this order:
     3. PIDA application/library specific imports
 
 Whitespace
-==========
+^^^^^^^^^^
 
     Yes::
 
@@ -312,7 +279,7 @@ Whitespace
 PEP8_ has oodles on this.
 
 Docstrings
-==========
+^^^^^^^^^^
 
 I like having the triple quotes as doubles, and for them to be on empty lines,
 like so::
@@ -330,7 +297,7 @@ We use Pydoctor_ with ReStructured text directives for API generation, so I
 guess you should look them up too.
 
 Strings
-=======
+^^^^^^^
 
 Single quoted, unless you need single quotes in them, in which case use double
 quotes::
@@ -339,7 +306,7 @@ quotes::
     my_other_string = "I am a banana's uncle"
 
 Naming
-======
+^^^^^^
 
     - Modules as lowercase single words with no underscores, except test modules
       which should start with `test_`.
@@ -350,7 +317,7 @@ Naming
     - Module-level constants all in UPPERCASE_WITH_UNDERSCORES.
 
 Conditional blocks
-==================
+^^^^^^^^^^^^^^^^^^
 
 This is fine::
 
@@ -369,7 +336,7 @@ But I am not going to argue, needs can force you into a certain style.
 Remember, readability is key.
 
 Magic
-=====
+^^^^^
 
 I hate magic, perhaps because I am dumb. I am really wary of using some of
 Python's shoot-me-in-the-foot techniques because I have to maintain the code,
@@ -390,7 +357,7 @@ mistakes. So:
         I have yet to see a use-case that requires these.
 
 Outroduction
-============
+^^^^^^^^^^^^
 
 I am not a fascist or a little-mided person, so I am not going to force anyone
 to use any of these guideline, (except the no tabs one). So please don't be
@@ -399,3 +366,4 @@ put off from contributing patches or code.
 .. _PEP8: http://www.python.org/dev/peps/pep-0008/
 .. _PEP20: http://www.python.org/dev/peps/pep-0020/
 .. _Pydoctor: http://codespeak.net/~mwh/pydoctor/
+
