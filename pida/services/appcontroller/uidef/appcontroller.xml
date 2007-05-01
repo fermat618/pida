@@ -4,6 +4,8 @@
         <menu name="FileMenu" action="FileMenu">
             <placeholder name="fm1" />
             <separator />
+            <placeholder name="fm14" />
+            <separator />
             <placeholder name="fm15" />
             <separator />
             <placeholder name="fm2" />
