@@ -12,8 +12,9 @@
         
         <menu name="LanguageMenu" action="LanguageMenu">
             <placeholder name="tools">
-            <menuitem action="show_breakpoints" name="show_breakpoints" />
-            <menuitem action="show_dbg_profile_manager" name="show_dbg_profile_manager" />
+            <menuitem action="show_breakpoints_view" name="show_breakpoints_view" />
+            <menuitem action="show_stack_view" name="show_stack_view" />
+            <menuitem action="show_console_view" name="show_console_view" />
             </placeholder>
             <separator />
             <placeholder name="panes"/>
@@ -55,8 +56,8 @@
         <separator/>
         <placeholder name="DebugToolbar">
         <toolitem action="choose_dbg_profile" name="choose_dbg_profile" />
-        <toolitem action="dbg_continue" name="dbg_continue" />
-        <toolitem action="dbg_break" name="dbg_break" />
+        <toolitem action="dbg_start" name="dbg_start" />
+        <toolitem action="dbg_stop" name="dbg_stop" />
         <toolitem action="step_over" name="step_over" />
         <toolitem action="step_in" name="step_in" />
         <separator/>

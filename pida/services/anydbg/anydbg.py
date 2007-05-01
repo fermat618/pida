@@ -36,263 +36,152 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.environment import get_pixmap_path
+from pida.core.interfaces import IProjectController
+from pida.core.projects import ProjectControllerMananger, ProjectController, \
+    ProjectKeyDefinition
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
 from pida.ui.buttons import create_mini_button
 
 from pida.utils.gthreads import GeneratorTask, gcall
-       
-# --- TODO Stack view
-class AnyDbgStackItem(object):
-    def __init__(self, frame, fname, line, func, path):
-        self.frame = frame
-        self.fname = fname
-        self.line = line
-        self.func = func
-        self.path = path
-class AnyDbgStackView(PidaView):
-    label_text = 'Stack'
-    icon_name = 'accessories-text-editor'
+
+class AnyDbg_Debugger:
+    def __init__(self, executable, parameters, service):
+        self._executable = executable
+        self._parameters = parameters
+        self.svc = service
+
+    def set_executable(self, executable):
+        self._executable = executable
+
+    def set_parameters(self, parameters):
+        self._parameters = parameters
+
+    def start(self):
+        raise NotImplementedError
+
+    def stop(self):
+        raise NotImplementedError
+
+    def step_in(self):
+        raise NotImplementedError
+
+    def step_over(self):
+        raise NotImplementedError
+
+    def toggle_breakpoint(self):
+        raise NotImplementedError
+
+class AnyDbg_gdb_interface(AnyDbg_Debugger):
+    def _send_command(self,command):
+        self._console._term.feed_child(cmd + '\n')
     
-    def create_ui(self):
-        self.stack_list = ObjectList(
-            [
-                Column('Frame', sorted=True),
-                Column('Filename'),
-                Column('Line'),
-                Column('Function'),
-                Column('Path')
-            ]
-        )
-        self.stack_list.connect('double-click', self._on_stackitem_double_click)
-        self.add_main_widget(self.stack_list)
-        self.stack_list.show_all()
-    
-    def clear_items(self):
-        gcall(self._breakpoint_list.clear)
-    
-    def add_item(self, frame, fname, line, func, path):
-        pass
-#        self._breakpoint_list.append(AnyDbgItem(frame, fname, line, func, path))
-    
-    def _on_stackitem_double_click(self, olist, item):
-        self.svc.boss.editor.cmd('goto_line', line=item.line)
+    def _parse(self, data):
+        print "| "+data
 
-# --- Profile manager view
+    def _jump_to_line(self, file, line):
+        self.svc.boss.editor.cmd('open', document=file)
+        self.svc.boss.editor.cmd('goto_line', line=line)
 
-class AnyDbgProfileItem(object):
-    def __init__(self, section=None):
-        if section is not None:
-            self.name = section['name']
-            self.executable = section['executable']
-            self.parameters = section['parameters']
-            self.debugger = section['debugger']
-            self.breakpoint_list = []
-            for breakpoint in section['breakpoints']:
-                self.breakpoint_list.append(eval(breakpoint))
-        else:
-            self.name = "Default"
-            self.executable = ""
-            self.parameters = ""
-            self.debugger = None
-            self.breakpoint_list = []
-        self.debugger_type = None
+    def init(self):
+        self._console = svc.boss.cmd('commander','execute',
+                                            commandargs=[self.GDB_EXEC],
+                                            cwd=os.getcwd(), 
+                                            title="pydb",
+                                            icon=None,
+                                            use_python_fork=True,
+                                            parser_func = self.parse)
+        # match '(%%PATH%%:%%LINE%%):  <module>'
+        self._console._term.match_add_callback('jump_to','^\(.*:.*\):.*$', '', _jump_to_line)
 
-    def add_breakpoint(self,file,line):
-        self.breakpoint_list.append((file,line))
-
-    def del_breakpoint(self,file,line):
-        self.breakpoint_list.remove((file,line))
-
-    def as_dict(self):
-        return dict(
-            name = self.name,
-            executable = self.executable,
-            parameters = self.parameters,
-            debugger = self.debugger,
-            breakpoints = self.breakpoint_list
-        )
-
-    def get_debugger(self):
-        dbg = AnyDbg_pydb()
-        dbg.set_executable(self.executable)
-        return dbg
-
-
-class AnyDbgDebuggerProfile(PidaView):
-    gladefile = 'anydbg-profile-editor'
-    label_name = 'Debugger'
-    label_text = 'New debugging profile'
-    icon_name = 'accessories-text-editor'
-
-    def create_ui(self):
-        self.profile_list.set_columns([
-            Column('name'),
-            Column('executable'),
-            Column('parameters'),
-            Column('debugger')
-        ])
-        self._current = None
-        self._block_changed = False
-
-    def prefill(self, config):
-        for section in config:
-            item = AnyDbgProfileItem(config[section])
-            self.profile_list.append(item)
-
-    def set_current(self, item):
-        self._current = item
-        self._block_changed = True
-        if item is None:
-            self.name_entry.set_text('')
-            self.executable_entry.set_text('')
-            self.parameters_entry.set_text('')
-#            self.debugger_combo.unset_?
-            self.attrs_table.set_sensitive(False)
-            self.delete_button.set_sensitive(False)
-        else:
-            self.name_entry.set_text(item.name)
-            self.executable_entry.set_text(item.executable)
-            self.parameters_entry.set_text(item.parameters)
-#            self.debugger_combo.unset_?
-            self.attrs_table.set_sensitive(True)
-            self.delete_button.set_sensitive(True)
-        self._block_changed = False
-
-    def on_new_button__clicked(self, button):
-        new = AnyDbgProfileItem()
-        self.profile_list.append(new, select=True)
-        self.save_button.set_sensitive(True)
-    
-    def on_save_button__clicked(self, button):
-        self.svc.save_profiles([i for i in self.profile_list])
-        self.save_button.set_sensitive(False)
-
-    def on_close_button__clicked(self, button):
-        self.svc.get_action('show_dbg_profile_manager').set_active(False)
+        if self.executable != None:
+            self._send_command('file '+self.executable)
         
-    def on_delete_button__clicked(self, button):
-        if self.svc.boss.get_window().yesno_dlg(
-                'Are you sure you want to delete %s' % self._current.name):
-            self.profile_list.remove(self._current, select=True)
-            self.save_button.set_sensitive(True)
-            
-    def on_profile_list__selection_changed(self, ol, item):
-        self.set_current(item)
-            
-    def on_name_entry__changed(self, entry):
-        if not self._block_changed:
-            self._current.name = entry.get_text()
-            self.item_changed()
-            
-    def on_executable_entry__changed(self, entry):
-        if not self._block_changed:
-            self._current.executable = entry.get_text()
-            self.item_changed()
-            
-    def on_parameters_entry__changed(self, entry):
-        if not self._block_changed:
-            self._current.parameters = entry.get_text()
-            self.item_changed()
+    def start(self):
+        """
+        First time start: launch the debugger
+        Second time start: continue debugging
+        """
+        if self._console == None:
+            self.init()
+            self._send_command('run')
+        else:
+            self._send_command('continue')
 
-    def on_debugger_combo__changed(self, entry):
-        pass
-            
-    def item_changed(self):
-        self.save_button.set_sensitive(True)
-        self.profile_list.update(self._current)
+    def stop(self):
+        """
+        First time stop: pause the debugging
+        Second time stop: end the debugger
+        """
+        if self._console == None:
+            self.window.error_dlg('Tried to stop a non-working debugger')
+        # TODO
 
-# --- Breakpoint list view
+    def step_in(self):
+        self._send_command('step')
 
-class AnyDbgBreakPointItem(object):
-    def __init__(self, file, line):
-        self.file = file
-        self.line = line
+    def step_over(self):
+        self._send_command('next')
 
-class AnyDbgBreakPointsView(PidaView):
-    label_text = 'Debug Breakpoints'
-    icon_name =  'accessories-text-editor'
+    def finish(self):
+        self._send_command('finish')
 
-    def create_ui(self):
-        self._breakpoints = {}
-        self._breakpoint_list = ObjectList(
-            [
-                Column('line', sorted=True),
-                Column('file'),
-            ]
-        )
-        self._breakpoint_list.connect('double-click', self._on_breakpoint_double_click)
-        self.add_main_widget(self._breakpoint_list)
-        self._breakpoint_list.show_all()
-
-    def clear_items(self):
-        gcall(self._breakpoint_list.clear)
-    
     def add_breakpoint(self, file, line):
-        breakpoint = AnyDbgBreakPointItem(file, line)
-        if (file, line) not in self._breakpoints:
-            self._breakpoints[(file,line)] = breakpoint
-            self._breakpoint_list.append(breakpoint)
-            return True
-        else:
-            return False
-    
+        self._send_command('break '+file+':'+line)
+
     def del_breakpoint(self, file, line):
-        if (file, line) in self._breakpoints:
-            self._breakpoint_list.remove(self._breakpoints[(file, line)])
-            del(self._breakpoints[(file, line)])
-            return True
-        else:
-            return False
+        self._send_command('clear '+file+':'+line)
 
-    def get_breakpoint_list(self):
-        return self._breakpoints
-    
-    def _on_breakpoint_double_click(self, olist, item):
-        self.svc.boss.editor.cmd('goto_line', line=item.line)
+class AnyDbg_pydb(AnyDbg_Debugger):
+    GDB_EXEC = "/usr/bin/pydb"
 
-# --- Actions & Events
+class AnyDbg_gdb(AnyDbg_Debugger):
+    GDB_EXEC = "/usr/bin/gdb"
 
+class AnyDbg_bash(AnyDbg_Debugger):
+    GDB_EXEC = "/usr/bin/bashdb"
+
+# Actions
 class AnyDbgActionsConfig(ActionsConfig):
     def create_actions(self):
         # Menu
         self.create_action(
-            'show_breakpoints',
+            'show_breakpoints_view',
             TYPE_TOGGLE,
             'Debugger breakpoints list',
             'Show the breakpoints list',
             'accessories-text-editor',
-            self.on_show_breakpoints,
-            '<Shift><Control>d',
+            self.on_show_breakpoints_view,
+            '<Shift><Control>b',
         )
         self.create_action(
-            'show_dbg_profile_manager',
+            'show_stack_view',
             TYPE_TOGGLE,
-            'Debugger profile manager',
-            'Creates a new profile for debugging',
+            "Debugger's stack view",
+            'Show the stack of current debugger',
             'accessories-text-editor',
-            self.on_show_profile_manager,
-            '<Shift><Control>d',
+            self.on_show_stack_view,
+            '<Shift><Control>s',
+        )
+        self.create_action(
+            'show_console_view',
+            TYPE_TOGGLE,
+            "Debugger's console",
+            'Show the console of the debugger',
+            'accessories-text-editor',
+            self.on_show_console_view,
+            '<Shift><Control>c',
         )
 
         # Toolbar
-        self.create_action(
-            'choose_dbg_profile',
-            TYPE_MENUTOOL,
-            'Choose debug profile',
-            'Choose a profile for debugging current project',
-            'accessories-text-editor',
-            self.on_choose_dbg_profile
-        )
-
         self.create_action(
             'step_over',
             TYPE_NORMAL,
             'Step Over',
             'Step over highlighted statement',
             gtk.STOCK_MEDIA_FORWARD,
-            self.svc.step_over,
+            self.on_step_over,
             '<F6>',
         )
         self.create_action(
@@ -301,25 +190,25 @@ class AnyDbgActionsConfig(ActionsConfig):
             'Step In',
             'Step in highlighted statement',
             gtk.STOCK_MEDIA_NEXT,
-            self.svc.step_in,
+            self.on_step_in,
             '<F5>',
         )
         self.create_action(
-            'dbg_break',
+            'dbg_start',
             TYPE_NORMAL,
             'Break',
-            'Break debbuging',
+            'Stop debbuging',
             gtk.STOCK_MEDIA_PAUSE,
-            self.svc.dbg_break,
+            self.on_stop,
             '<F4>',
         )
         self.create_action(
-            'dbg_continue',
+            'dbg_stop',
             TYPE_NORMAL,
             'Continue',
-            'Continue debbuging',
+            'Start debugger or Continue debbuging',
             gtk.STOCK_MEDIA_PLAY,
-            self.svc.dbg_run,
+            self.on_start,
             '<F3>',
         )
         self.create_action(
@@ -328,130 +217,131 @@ class AnyDbgActionsConfig(ActionsConfig):
             'Toggle breakpoint',
             'Toggle breakpoint on selected line',
             gtk.STOCK_MEDIA_RECORD,
-            self.toggle_breakpoint,
+            self.on_toggle_breakpoint,
             '<F3>',
         )
 
-    def on_choose_dbg_profile(self, action):
-        profile = self.svc.get_current_profile()
-        if profile is None:
-            profiles = [p for p in self.svc.list_profiles()]
-            if profiles:
-                profile = profiles[0]
-        if profile is not None:
-            self.svc._dbg = profile.get_debugger()
-            self.svc.dbg_run()
-        else:
-            self.svc.boss.get_window().error_dlg(
-                'There is no profile available')
-        
-    def on_show_breakpoints(self, action):
-        if action.get_active():
-            self.svc.show_breakpoints()
-        else:
-            self.svc.hide_breakpoints()
+    # Buttonbar
+    def on_step_over(self):
+        self.svc.dbg.step_over()
 
-    def on_show_profile_manager(self, action):
-        if action.get_active():
-            self.svc.show_profile_manager()
-        else:
-            self.svc.hide_profile_manager()
+    def on_step_in(self):
+        self.svc.dbg.step_in()
 
-    def toggle_breakpoint(self, action):
-        self.svc.toggle_breakpoint()
+    def on_start(self):
+        self.svc.dbg.start()
+    def on_stop(self):
+        self.svc.dbg.stop()
+
+    # Menu
+    def on_show_breakpoints_view(self, action):
+        self.svc.boss.cmd('window', 'add_view', paned='Plugin', view=self.svc._breakpoints_view)
+
+    def on_show_stack_view(self, action):
+        self.svc.boss.cmd('window', 'add_view', paned='Plugin', view=self.svc._stack_view)
         
+    def on_show_console_view(self, action):
+        if self.svc.dbg != None:
+            self.boss.cmd('window', 'add_view', paned='Terminal', view=self.svc.dbg._console)
+        else:
+            self.window.error_dlg('No debugger is running')
+
+    #
+    def on_toggle_breakpoint(self, file, line):
+        self.svc.emit('toggle_breakpoint')
+
+# Events
 class AnyDbgEventsConfig(EventsConfig):
+    def create_events(self):
+        self.create_event('launch_debugger')
+
     def subscribe_foreign_events(self):
         self.subscribe_foreign_event('buffer', 'document-changed',
-                                     self.on_document_changed)
-        self.subscribe_foreign_event('buffer', 'document-saved',
                                      self.on_document_changed)
         self.subscribe_foreign_event('editor', 'started',
                                      self.on_editor_startup)
 
     def on_document_changed(self, document):
-        if document != None:
-            self.svc.set_current_document(document)
-            self.svc.get_action("toggle_breakpoint").set_sensitive(True)
-            self.svc.update_breakpoints_editor(document)
-        else:
-            self.svc.get_action("toggle_breakpoint").set_sensitive(False)
+        pass
 
     def on_editor_startup(self):
+        """
+        Set the highlights in vim
+        TODO move this to vim startup file and/or create a highlight preference
+        """
         self.svc.boss.editor.cmd('define_sign_type', type="breakpoint", icon=get_pixmap_path("stop.svg"), 
                                                 linehl="", text="X", texthl="Search")
         self.svc.boss.editor.cmd('define_sign_type', type="step", icon=get_pixmap_path("forward.svg"), 
                                                 linehl="lCursor", text=">", texthl="lCursor")
 
-class AnyDbg_Debugger_Interface:
-    executable = None
-    _console = None
-
-    def _send_command(self,cmd):
-        self._console._term.feed_child(cmd + "\n")
-
-    def set_executable(self,ex):
-        raise NotImplementedError
-    def launch(self):
-        raise NotImplementedError
-    def break_cmd(self):
-        raise NotImplementedError
-    def continue_cmd(self):
-        raise NotImplementedError
-    def add_breakpoint(self,file,line):
-        raise NotImplementedError
-    def del_breakpoint(self,file,line):
-        raise NotImplementedError
-    def register_breakpoint_updater(self,callback):
-        raise NotImplementedError
-    def register_stack_updater(self,callback):
-        raise NotImplementedError
-
-class AnyDbg_pydb(AnyDbg_Debugger_Interface):
-    def set_executable(self,ex):
-        self.executable = ex
+    def on_breakpoint_tog(self, file, line):
+        """
+        Toggles a breakpoint on line of file and store it with the current controller
+        """
+        if not self.svc._controller.store_breakpoint(file, line):
+            self.svc._controller.flush_breakpoint(file, line)
+            return False
+        return True
         
-    def init(self,svc):
-        self._console = svc.boss.cmd("commander","execute",
-                                            commandargs=["/usr/bin/pydb"],
-                                            env=['PIDA_TERM=1'], 
-                                            cwd=os.getcwd(), 
-                                            title="test",
-                                            icon=None)
-        # match '(%%PATH%%:%%LINE%%):  <module>'
-        def jump_to_line(event,line):
-            pass
-        self._console._term.match_add_callback("jump_to","^\(.*:.*\):.*$", "", jump_to_line)
+    def on_stack_push(self, function):
+        """
+        Pushes a function call in the stack
+        """
+        pass
+        
+    def on_stack_pop(self, function):
+        """
+        Pops a function call in the stack
+        """
+        pass
 
-        if self.executable != None:
-            self._send_command("file "+self.executable)
 
-    def launch(self,svc):
-        if self._console == None:
-            self.init(svc)
-        self._send_command("run")
-        print "XXX", self._console._term.get_text_range(0, 0, 
-                self._console._term.get_row_count(), 
-                self._console._term.get_column_count(), lambda *a: True), "YYY"
+# Controller
+class GenericDebuggerController(ProjectController):
 
-    def break_cmd(self):
-        self._send_command("break")
+    name = 'GENERIC_DEBUGGER'
 
-    def continue_cmd(self):
-        self._send_command("continue")
+    label = 'Generic Debugger'
 
-    def add_breakpoint(self, file, line):
-        self._send_command("break "+file+":"+line)
+    attributes = [
+        ProjectKeyDefinition('executable', 'Path to the executable', True),
+        ProjectKeyDefinition('parameters', 'Parameters to give to the executable', True),
+        ProjectKeyDefinition('debugger', 'Choose your debugger', True),
+    ] + ProjectController.attributes
 
-    def del_breakpoint(self, file, line):
-        self._send_command("clear "+file+":"+line)
+    def execute(self):
+        executable = self.get_option('executable')
+        parameters = self.get_option('parameters')
+        debugger = self.get_option('debugger')
+        if not debugger or not executable or not parameters:
+            self.boss.get_window().error_dlg(
+                'Debugger is not fully configured yet.' 
+            )
+        else:
+            self.boss.get_service('debugger').emit('launch_debugger',executable,parameters,debugger,self)
+    
+    def store_breakpoint(self, file, line):
+        bplist = self.get_option('breakpoints')
+        if (file, line) not in bplist:
+            bplist.append((file, line))
+            return True
+        return False
 
-class AnyDbg_rpdb2(AnyDbg_Debugger_Interface):
-    pass
+    def flush_breakpoint(self, file, line):
+        bplist = self.get_option('breakpoints')
+        if (file, line) in bplist:
+            bplist.remove((file, line))
+            return False
+        return True
 
-class AnyDbg_gdb(AnyDbg_Debugger_Interface):
-    def get_commandargs(self):
-        return ["/usr/bin/pydb"]
+    def list_breakpoints(self):
+        return self.get_option('breakpoints')
+        
+class AnyDbgFeaturesConfig(FeaturesConfig):
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('project', IProjectController,
+            GenericDebuggerController)
 
 # Service class
 class Debugger(Service):
@@ -459,250 +349,57 @@ class Debugger(Service):
 
     actions_config = AnyDbgActionsConfig
     events_config = AnyDbgEventsConfig
+    features_config = AnyDbgFeaturesConfig
 
     def start(self):
-        self._current = None
-        self._console = None
-        self._dbg = None
-        self._stepcursor_position=0
-
-        self._filename = os.path.join(self.boss.get_pida_home(), 'debugger-profiles.ini')
-        self._config = ConfigObj(self._filename)
-        self._profile_manager=AnyDbgDebuggerProfile(self)
-        self._profile_manager.prefill(self._config)
-        self._current_profile = None
-
-        self._breakpoints_view = AnyDbgBreakPointsView(self)
-
-        self.get_action("step_in").set_sensitive(False)
-#        self.get_action("step_over").set_sensitive(False)
-        self.get_action("dbg_continue").set_sensitive(False)
-        self.get_action("dbg_break").set_sensitive(False)
-        self.get_action("toggle_breakpoint").set_sensitive(False)
-
-        self.select_profile(None)
-
-#    def show_backtrace(self):
-#    def hide_backtrace(self):
-#    def show_variables(self):
-#    def hide_variables(self):
-
-    def show_console(self):
         """
-        Shows the debugger's console
-        if there isn't already a console, create a new one
-        if there is no debugger, popups an error
-        otherwise show the hidden console
+        Starts the service
         """
-        if self._console == None:
-            if self._dbg != None:
-                self._dbg.launch(self)
-            else:
-                self.window.error_dlg('Tried to launch a console without a debugger')
-        else:
-            self.boss.cmd('window', 'add_view', paned='Terminal', view=self._console)
+        self._anydbg = {}
+        self.dbg = None
+        self.register_debugger('pydb', AnyDbg_pydb) # TODO: dynamic loading
+        self.register_debugger('gdb', AnyDbg_gdb)   # TODO: dynamic loading
+        self.subscribe_event('launch_debugger',self.init_dbg_session)
 
-    def hide_console(self):
-        """
-        Closes the console's view
-        """
-        self._console.close_view()
+        self._breakpoints_view = None
+        self._stack_view = None
 
-    def show_breakpoints(self):
-        """
-        Shows the breakpoint's view
-        """
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._breakpoints_view)
+        # Sets default sensitivity for button bar
+        self.get_action('step_in').set_sensitive(False)
+        self.get_action('step_over').set_sensitive(False)
+        self.get_action('dbg_start').set_sensitive(False)
+        self.get_action('dbg_stop').set_sensitive(False)
+        self.get_action('toggle_breakpoint').set_sensitive(False)
 
-    def hide_breakpoints(self):
+    def init_dbg_session(self, executable, parameters, debugger, controller):
         """
-        Hides the breakpoint's view
+        Initiates the debugging session
         """
-        self.boss.cmd('window','remove_view', view=self._breakpoints_view)
+        self.dbg = self._anydbg[debugger]()
+        self.dbg.set_executable(executable)
+        self.dbg.set_parameters(parameters)
+        self._controller = controller
 
-    def toggle_breakpoint(self):
-        """
-        Toggles a breakpoint on current file's line
-        """
-        if not self.add_breakpoint(self._current.get_filename(),
-                        self.boss.editor.cmd('get_current_line_number')):
-            if not self.del_breakpoint(self._current.get_filename(),
-                            self.boss.editor.cmd('get_current_line_number')):
-                self.window.error_dlg('Tried to remove non-existing breakpoint')
+        self.get_action('dbg_start').set_sensitive(True)
+        self.get_action('dbg_stop').set_sensitive(False)
+        self.get_action('step_in').set_sensitive(False)
+        self.get_action('step_over').set_sensitive(False)
 
-    def add_breakpoint(self,file,linenr):
+    def register_debugger(self, name, classname):
         """
-        Adds a breakpoint to file's line linenr
-        Updates the profile manager and updates the editor and calls the debugger
-        file: path to the file
-        linenr: line number
-        returns True if breakpoint has been set 
+        Registers a new debugger class
         """
-        if self._add_breakpoint(file,linenr):
-            self._current_profile.add_breakpoint(file, linenr)
-            self._config[self._current_profile.name] = self._current_profile.as_dict()
-            self._config.write()
-           
-            return True
-        return False
+        self._anydbg[name] = classname
 
-    def del_breakpoint(self,file,linenr):
+    def set_current_doc(self, document):
         """
-        Removes a breakpoint from file's line linenr
-        Updates the profile manager and updates the editor and calls the debugger
-        file: path to the file
-        linenr: line number
-        returns True if breakpoint has been deleted
+        Sets current document to document
+        Updates the editor if breakpoints exist for current doc
+        @param document to change to
         """
-        if self._del_breakpoint(file,linenr):
-            self._current_profile.del_breakpoint(file, linenr)
-            self._config[self._current_profile.name] = self._current_profile.as_dict()
-            self._config.write()
-            return True
-        return False
-
-    def _add_breakpoint(self,file,linenr):
-        """
-        Adds a breakpoint to file's line linenr
-        Updates the editor and calls the debugger
-        file: path to the file
-        linenr: line number
-        returns True if breakpoint has been set 
-        """
-        if self._breakpoints_view.add_breakpoint(file,linenr):
-#            self._dbg.add_breakpoint(file,linenr)
-            self.boss.editor.cmd('show_sign', type='breakpoint', file_name=file, line=linenr)
-            return True
-        else:
-            return False
-
-    def _del_breakpoint(self,file,linenr):
-        """
-        Removes a breakpoint from file's line linenr
-        Updates the editor and calls the debugger
-        file: path to the file
-        linenr: line number
-        returns True if breakpoint has been deleted
-        """
-        if self._breakpoints_view.del_breakpoint(file,linenr):
-#            self._dbg.del_breakpoint(file,linenr)
-            self.boss.editor.cmd('hide_sign', type='breakpoint', file_name=file, line=linenr)
-            return True
-        else:
-            return False
-
-    def show_profile_manager(self):
-        """
-        Displays profile manager view
-        """
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._profile_manager)
-
-    def save_profiles(self, items):
-        """
-        Save the profiles
-        """
-        self._config.clear()
-        for item in items:
-            self._config[item.name] = item.as_dict()
-            self._config.write()
-
-    def list_profiles(self):
-        """
-        List the recorded profiles
-        """
-        if len(self._config) == 0:
-            yield AnyDbgProfileItem()
-        for profile in self._config:
-            item = AnyDbgProfileItem(self._config[profile])
-            yield item
-
-    def select_profile(self, profile):
-        """
-        Selects a profile for debugging
-        """
-        self.log_debug("SELECT PROFILE")
-#        self._breakpoints_view.clear_items()
-
-#        print "DEBUG: anydbg: select_profile(): profile: ", profile 
-#        if self._current_profile != None:
-#            print "DEBUG: anydbg: select_profile(): current profile: ", self._current_profile.as_dict()
-
-        if profile in self._config:
-            self._current_profile = AnyDbgProfileItem(self._config[profile])
-            self._dbg = self._current_profile.get_debugger()
-#            self.emit('debug_profile_switched', profile=profile)
-        else:
-            self._current_profile = self.list_profiles().next()
-        toolitem = self.get_action('choose_dbg_profile').get_proxies()[0]
-        toolitem.set_menu(self.create_menu())
-        self.reset_breakpoints_view()
-
-
-    def update_breakpoints_editor(self, document):
-        """
-        Updates the editor with current profile's breakpoints for the current
-        document
-        """
-        if self._current_profile.breakpoint_list != []:
-            for (file, line) in self._current_profile.breakpoint_list:
-                if document.get_filename() == file:
-                    self.boss.editor.cmd('show_sign', type='breakpoint', file_name=file, line=line)
-
-    def reset_breakpoints_view(self):
-        """
-        Resets the breakpoint's view with current profile's breakpoints
-        """
-        bplist = dict(self._breakpoints_view.get_breakpoint_list())
-        for (file, line) in bplist:
-            self._del_breakpoint(file,line)
-        for (file, line) in self._current_profile.breakpoint_list:
-#            print "DEBUG: anydbg: reset_breakpoints_view(): adding new breakpoint:", (file, line)
-            self._add_breakpoint(file,line)
-
-    def hide_profile_manager(self):
-        self.boss.cmd('window', 'remove_view', view=self._profile_manager)
-        
-    def step_over(self,action):
-        if self._stepcursor_position != 0:
-            self.boss.editor.cmd('hide_sign', type='step', file_name=self._current.get_filename(), line=self._stepcursor_position)
-        self._stepcursor_position = self._stepcursor_position+1
-        self.boss.editor.cmd('show_sign', type='step', file_name=self._current.get_filename(), line=self._stepcursor_position)
-
-    def step_in(self):
-        self.boss.editor.cmd('hide_sign', type='step', file_name=self._current.get_filename(), line=self._stepcursor_position)
-        self._stepcursor_position = self._stepcursor_position+1
-        self.boss.editor.cmd('show_sign', type='step', file_name=self._current.get_filename(), line=self._stepcursor_position)
-
-    def dbg_break(self):
-        pass
-
-    def dbg_run(self):
-        self._dbg.launch(self)
-
-    def set_current_document(self, document):
-        self._current = document
-
-    def get_current_profile(self):
-        return self._current_profile
-
-    def create_menu(self):
-        if self._current_profile is not None:
-            menu = gtk.Menu()
-            for profile in self.list_profiles():
-                def _callback(act, profile):
-                    self.select_profile(profile.name)
-                act = gtk.Action(profile.name,
-                    profile.name,
-                    profile.executable, gtk.STOCK_EXECUTE)
-                act.connect('activate', _callback, profile)
-                mi = act.create_menu_item()
-                menu.add(mi)
-            menu.show_all()
-            return menu
+        self.current_document = document
 
 # Required Service attribute for service loading
 Service = Debugger
-
-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
