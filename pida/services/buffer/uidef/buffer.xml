@@ -8,6 +8,8 @@
             <menuitem name="create_file" action="create_file" />
             </placeholder>
             <separator />
+            <placeholder name="fm14" />
+            <separator />
             <placeholder name="fm15" />
             <separator />
             <placeholder name="fm2">
