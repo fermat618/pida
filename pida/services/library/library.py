@@ -53,6 +53,9 @@ class LibraryView(PidaGladeView):
 
     gladefile = 'library-viewer'
 
+    icon_name = 'gtk-library'
+    label_text = 'Documentation'
+
     def create_ui(self):
         self.books_list.set_columns(self._columns)
         self.contents_tree.set_columns(self._columns)

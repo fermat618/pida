@@ -43,6 +43,8 @@ from pida.utils.feedparser import parse
 class TracView(PidaGladeView):
 
     gladefile = 'trac-browser'
+    icon_name = 'internet'
+    label_text = 'Trac'
 
     def create_ui(self):
         self.tickets_list.set_columns(

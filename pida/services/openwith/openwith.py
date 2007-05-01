@@ -65,7 +65,7 @@ class OpenWithEditor(PidaGladeView):
 
     gladefile = 'openwith-editor'
     icon_name = gtk.STOCK_OPEN
-    label_name = 'Open With'
+    label_text = 'Open With'
 
     def create_ui(self):
         self.items_ol.set_columns([
