@@ -158,6 +158,7 @@ class FilemanagerView(PidaView):
         self.file_list = ObjectList()
         self.file_list.set_headers_visible(False)
         self.file_list.set_columns(self._columns);
+        self.file_list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         #XXX: real file
         self.file_list.connect('row-activated', self.on_file_activated)
         self.file_list.connect('right-click', self.on_file_right_click)
