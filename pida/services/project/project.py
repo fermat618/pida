@@ -183,6 +183,9 @@ class ProjectPropertiesView(PidaGladeView):
                 self.controllers_list.remove(controller)
                 self.svc.set_current_project(self._project)
 
+    def on_close_button__clicked(self, button):
+        self.svc.get_action('project_properties').set_active(False)
+
 
 class ProjectEventsConfig(EventsConfig):
 
