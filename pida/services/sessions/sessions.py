@@ -33,7 +33,11 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, \
+    TYPE_TOGGLE
+from pida.core.options import OptionsConfig
+from pida.core.options import OTypeString, OTypeBoolean, \
+    OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
 
 from pida.ui.views import PidaGladeView
 
@@ -129,7 +133,25 @@ class SessionsActionsConfig(ActionsConfig):
         self.svc.save_current_session(file_path)
         return
 
-class SessionsPropertyView(PidaGladeView):
+class SessionsOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'load_last_session',
+            'load last session on startup',
+            OTypeBoolean,
+            True,
+            '',
+        )
+
+        self.create_option(
+            'clear_old_buffers',
+            'clear old buffers when loading session',
+            OTypeBoolean,
+            False,
+            '',
+        )
+
 
     gladefile = 'sessions-properties'
     label_text = 'Sessions Properties'
@@ -165,11 +187,12 @@ class Sessions(Service):
 
 
     actions_config = SessionsActionsConfig
+    options_config = SessionsOptionsConfig
 
     def pre_start(self):
         self.sessions_dir = os.path.join(self.boss.get_pida_home(), 'sessions')
         if not os.path.exists(self.sessions_dir):
-            os.mkdir(sessions_dir)
+            os.mkdir(self.sessions_dir)
         self.current_session = None
 
     def load_session(self, file_path):
@@ -183,7 +206,7 @@ class Sessions(Service):
     def save_current_session(self, file_path):
         if not self.current_session:
             self.current_session = SessionObject()
-            self.current_session.new(file_path, files = self._get_current_bufferes())
+            self.current_session.new(file_path, files = self._get_current_buffers())
         else:
             self.current_session.set_files(self._get_current_buffers())
         self.current_session.save()
