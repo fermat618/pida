@@ -1,3 +1,5 @@
+// vim: set filetype=asciidoc :
+
 = PIDA Developer Documentation
 Ali Afshar <aafshar@gmail.com>
 
