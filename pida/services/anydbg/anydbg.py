@@ -532,6 +532,7 @@ class GenericDebuggerController(ProjectController):
 
     _breakpoints = {}
 
+#set_option('breakpoints', [1,2,3,4])
     __bpoints = [] # TODO: save it with the controller
     def store_breakpoint(self, ident, file, line):
         self._breakpoints[ident] = (file, line)
@@ -620,11 +621,12 @@ class Debugger(Service):
         Updates the editor with current's document breakpoints
         """
         self._current = document
-        for (file, line) in self._controller.list_breakpoints():
-            if document.get_filename() == file:
-                self.boss.editor.cmd('show_sign', type='breakpoint', 
-                                                  filename=file,
-                                                  line=line)
+        if self._controller is not None:
+            for (file, line) in self._controller.list_breakpoints():
+                if document.get_filename() == file:
+                    self.boss.editor.cmd('show_sign', type='breakpoint', 
+                                                      filename=file,
+                                                      line=line)
 
     def register_debugger(self, name, classname):
         """
