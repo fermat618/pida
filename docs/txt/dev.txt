@@ -20,8 +20,9 @@ To learn more about services, please investigate:
 A service is comprised of a directory on the file system. This directory is a
 Python package with data.
 
-The structure of this directory is like so for a service named "myservice"::
+The structure of this directory is like so for a service named "myservice":
 
+----------------------------
     myservice/
         __init__.py
         myservice.py
@@ -32,6 +33,7 @@ The structure of this directory is like so for a service named "myservice"::
         pixmaps/
         uidef/
             myservice.xml
+---------------------------
 
 ==== Individual Components
 
@@ -152,7 +154,7 @@ class MyService(Service):
 
 === Introduction
 
-First read PEP8_ (the PEP on how to write readable Python code). The PEP gives
+First read <<PEP8>> (the PEP on how to write readable Python code). The PEP gives
 a number of good insights. The PEP gives a few options on things, and I shall
 try to clarify what I prefer here. Where this document differs from PEP8_, you
 should use what is presented here, unless you are a zealot in which case you
@@ -346,7 +348,7 @@ I am not a fascist or a little-mided person, so I am not going to force anyone
 to use any of these guideline, (except the no tabs one). So please don't be
 put off from contributing patches or code.
 
-.. _PEP8: http://www.python.org/dev/peps/pep-0008/
-.. _PEP20: http://www.python.org/dev/peps/pep-0020/
++ [[[PEP8]]] http://www.python.org/dev/peps/pep-0008/[Python Enhancement Proposal 8]
++ [[[PEP20]]] http://www.python.org/dev/peps/pep-0020/[Python Enhancement Proposal 20]
 .. _Pydoctor: http://codespeak.net/~mwh/pydoctor/
 
