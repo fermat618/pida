@@ -576,6 +576,7 @@ class Debugger(Service):
         Starts the service
         """
         self._anydbg = {}
+        self._controller = None
         self.dbg = None
         self.register_debugger('pydb', AnyDbg_pydb) # TODO: dynamic loading
         self.register_debugger('gdb', AnyDbg_gdb)   # TODO: dynamic loading
