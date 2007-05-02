@@ -98,6 +98,7 @@ class FileEntry(object):
         self.is_dir = os.path.isdir(self.path)
         self.is_dir_sort = not self.is_dir, self.lower_name
         self.icon_stock_id = self.get_icon_stock_id()
+        self.visible = False
 
     def get_markup(self):
         return self.format(cgi.escape(self.name))
@@ -210,13 +211,15 @@ class FilemanagerView(PidaView):
                     )
         show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
         if show:
-            if entry in self.file_list:
+            if entry.visible:
                 self.file_list.update(entry)
             else:
                 self.file_list.append(entry)
+                entry.visible = True
         else:
-            if entry in self.file_list:
+            if entry.visible:
                 self.file_list.remove(entry)
+                entry.visible = False
 
     def update_to_path(self, new_path=None):
         if new_path is None:
