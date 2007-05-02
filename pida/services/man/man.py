@@ -54,7 +54,8 @@ class ManView(PidaView):
     label_text = 'Man'
     
     def create_ui(self):
-        self.__vbox = gtk.VBox()
+        self.__vbox = gtk.VBox(spacing=3)
+        self.__vbox.set_border_width(6)
         self.__entry = gtk.Entry()
         self.__entry.connect('changed', self.cb_entry_changed)
         self.__list = ObjectList(
