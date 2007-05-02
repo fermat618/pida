@@ -1,13 +1,7 @@
+= PIDA Developer Documentation
+Ali Afshar <aafshar@gmail.com>
 
-PIDA Developer Documentation
-============================
-
-.. author: Ali Afshar <aafshar@gmail.com>
-
-.. contents:: Table of Contents
-
-PIDA Service Authoring Guide
-----------------------------
+== PIDA Service Authoring Guide
 
 PIDA has a very general concept of services (you might call them plugins in
 another application). In general, a service is able to define any PIDA
@@ -19,11 +13,9 @@ Manager** for the Boss.
 
 To learn more about services, please investigate:
 
-Service Overview
-~~~~~~~~~~~~~~~~
+=== Service Overview
 
-Outline
-^^^^^^^
+==== Outline
 
 A service is comprised of a directory on the file system. This directory is a
 Python package with data.
@@ -41,11 +33,9 @@ The structure of this directory is like so for a service named "myservice"::
         uidef/
             myservice.xml
 
-Individual Components
-^^^^^^^^^^^^^^^^^^^^^
+==== Individual Components
 
-myservice.py
-------------
+===== myservice.py
 
 This is the file containing the Python code for the service. It is a Python
 module and should contain an attribute ``Service``, which is the Class which
@@ -60,28 +50,20 @@ behaviour. These behaviours are:
     - Features
     - Actions
 
-Configuration
-~~~~~~~~~~~~~
-
+.Configuration
 This is the global configuration options for the service.
 
-Commands
-~~~~~~~~
-
+.Commands
 Commands are the external interface for the service. They can be called by any
 other service, and this decoupling is cleaner than expecting, and calling an
-actual method on a service. 
+actual method on a service.
 
-Events
-~~~~~~
-
+.Events
 Events are an asynchronous call back for the service. Any other service can
 subscribe to an event explicitly, and by subscribing is notified when an event
 occurs.
 
-Features
-~~~~~~~~
-
+.Features
 Features are behaviours that a service expects other services to provide for
 it. If this makes no sense, imagine a situation in which a file-manager
 service expects any service to subscribe to its right-click menu on a file. In
@@ -89,48 +71,36 @@ this way, the actions provided on that right-click menu are decentralized from
 the menu itself, and can be provided anywhere. This is very similar to a
 classical (e.g. Trac) *extension point*.
 
-Actions
-~~~~~~~
-
+.Actions
 Actions are gtk.Actions and are used in the user interface. An action maps
 directly to a single toolbar and menu action, and contains the necessary
 information to create this user interface item from it, including label, stock
 image etc.
 
-__init__.py
------------
+===== Other files and directories
 
+.__init__.py
 This file is required so that Python recognises the directory as a legitimate
 Python package.
 
-service.pida
-------------
-
+.service.pida
 This empty file is just present to identify the package as a PIDA service.
 
-data/
------
-
+.data/
 This directory should contain any data files for the service that are not
 included in the other resource directories.
 
 
-glade/
-------
-
+.glade/
 This directory contains the glade files for the service's views. Although
 views can be created using Python-only, it is recommended for more detailed
 plugin views that they use glade.
 
-pixmaps/
---------
-
+.pixmaps/
 This directory should contain any custom pixmaps for the service. These can be
 used in any way.
 
-uidef/
-------
-
+.uidef/
 This directory should contain the UI Definition XML files for the service.
 These are gtk.UIManager XML files, and define the menu bar and toolbar items
 for the service. The file myservice.xml is automatically loaded by PIDA, but
@@ -138,8 +108,7 @@ others can exist in this directory and could be used to populate popup menus
 or to be further merged with the standard UI defnition.
 
 
-Service Options
-===============
+==== Service Options
 
 Options are currently stored in the GConf database. They are registered at
 activation time of the service. Each service has its own directory in the GConf
@@ -152,34 +121,36 @@ pida.options.OptionsConfig.
 
 The OptionsConfig has a method named create_options, which is called on service
 activation. This method should contain the calls to create_option to create the
-options. The signature for create_option is::
+options. The signature for create_option is:
 
-    create_option(name, label, type, default, documentation)
+--------------------------------------------------------
+create_option(name, label, type, default, documentation)
+--------------------------------------------------------
 
-For example::
+For example:
 
-    class MyServiceOptions(OptionsConfig):
+------------------------------------------------
+class MyServiceOptions(OptionsConfig):
 
-        def create_options(self):
-            self.create_option(
-                'myoption',
-                'myoption label',
-                OTypeString,
-                'default_value',
-                'A string describing the option',
-            )
-
-
-    class MyService(Service):
-        
-        options_config = MyServiceOptions
-
-Coding Style
-============
+    def create_options(self):
+        self.create_option(
+            'myoption',
+            'myoption label',
+            OTypeString,
+            'default_value',
+            'A string describing the option',
+        )
 
 
-Introduction
-^^^^^^^^^^^^
+class MyService(Service):
+
+    options_config = MyServiceOptions
+-----------------------------------------------
+
+== Coding Style
+
+
+=== Introduction
 
 First read PEP8_ (the PEP on how to write readable Python code). The PEP gives
 a number of good insights. The PEP gives a few options on things, and I shall
@@ -188,14 +159,12 @@ should use what is presented here, unless you are a zealot in which case you
 should listen to the Python people (who are cleverer than me anyway). Also
 read PEP20_ while you are at it.
 
-Indenting
-^^^^^^^^^
+=== Indenting
 
 4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
 your settings, somehow tabs creep into emacs-written code.
 
-Line Width
-^^^^^^^^^^
+=== Line Width
 
 79 characters, perhaps 78 to be safe. This is negotiable, and there are times
 when 83 character lines are acceptable. You can be the judge. I am not sure
@@ -205,30 +174,35 @@ hard-line than the PEP.
 You can split lines however you wish. I personally use 3 different forms of
 splitting depending on the purpose.
 
-Long lists, dicts, or many paramteres to a function::
+Long lists, dicts, or many paramteres to a function:
 
-    service_base_classes =  [
-        OptionsMixin,
-        commands_mixin,
-        events_mixin,
-        bindings_mixin,
-    ]
+-----------------------------
+service_base_classes =  [
+    OptionsMixin,
+    commands_mixin,
+    events_mixin,
+    bindings_mixin,
+]
+-----------------------------
 
-Single extra bit::
+Single extra bit:
 
-    def really_long_method_or_function_name(first_parameter, second_paramater,
-        third_parameter)
+--------------------------------------------------------------------------------
+def really_long_method_or_function_name(first_parameter, second_paramater,
+    third_parameter)
+--------------------------------------------------------------------------------
 
-Or::
+Or:
 
-    def really_long_method_or_function_name(first_parameter, second_paramater,
-                                            third_parameter)
+--------------------------------------------------------------------------------
+def really_long_method_or_function_name(first_parameter, second_paramater,
+                                        third_parameter)
+--------------------------------------------------------------------------------
 
 It all depends on the use at the time, and we should remember to keep it
 readable.
 
-Blank Lines
-^^^^^^^^^^^
+=== Blank Lines
 
 As PEP8_ for 2 lines between top-level classes and functions, with one line
 between methods.
@@ -237,22 +211,27 @@ Extra blank line "to indicate logical blocks" should be avoided at all costs
 in my opinion. Real logical blocks should be used to indicate logical blocks!
 If you have to do this, a comment is better than a blank line.
 
-Imports
-^^^^^^^
+=== Imports
 
-Only import the function or class you want to use, for example::
+Only import the function or class you want to use, for example:
 
-    from pida.ui.views import PidaView, BaseView
+----------------------------------------------------------
+from pida.ui.views import PidaView, BaseView
+----------------------------------------------------------
 
-There are a few common exceptions like::
+There are a few common exceptions like:
 
-    import gtk
+----------------------------
+import gtk
+----------------------------
 
 Multiple top-level imports are fine too if you like, but best grouped by where
-they are comming from::
+they are comming from:
 
-    import os, sys
-    import gtk, gobject, pango
+--------------------------------
+import os, sys
+import gtk, gobject, pango
+--------------------------------
 
 Remember to import in this order:
 
@@ -260,33 +239,37 @@ Remember to import in this order:
     2. related third party imports
     3. PIDA application/library specific imports
 
-Whitespace
-^^^^^^^^^^
+=== Whitespace
 
-    Yes::
+Yes:
 
-        def foo(blah, baz):
+--------------------------------
+def foo(blah, baz):
+--------------------------------
 
-    No::
-        
-        def foo ( blah , baz ):
+No:
 
-        def foo(blah,baz)
+--------------------------------
+def foo ( blah , baz ):
+
+def foo(blah,baz):
+--------------------------------
 
 (that space after a comma is basic punctuation)
 
 PEP8_ has oodles on this.
 
-Docstrings
-^^^^^^^^^^
+=== Docstrings
 
 I like having the triple quotes as doubles, and for them to be on empty lines,
-like so::
+like so:
 
-    def foo():
-        """
-        This is the single-line docstring
-        """
+-------------------------------------------
+def foo():
+    """
+    This is the single-line docstring
+    """
+-------------------------------------------
 
 Docstrings are plain nice, so please try to use them for all functions. I am
 guilty of being lazy, so I can't blame anyone. Also we use API generation
@@ -295,17 +278,17 @@ which uses these doc strings, so it all helps.
 We use Pydoctor_ with ReStructured text directives for API generation, so I
 guess you should look them up too.
 
-Strings
-^^^^^^^
+=== Strings
 
 Single quoted, unless you need single quotes in them, in which case use double
-quotes::
+quotes:
 
-    my_string = 'I am a banana'
-    my_other_string = "I am a banana's uncle"
+------------------------------------------
+my_string = 'I am a banana'
+my_other_string = "I am a banana's uncle"
+------------------------------------------
 
-Naming
-^^^^^^
+=== Naming
 
     - Modules as lowercase single words with no underscores, except test modules
       which should start with `test_`.
@@ -315,48 +298,49 @@ Naming
       You can subclass a class.)
     - Module-level constants all in UPPERCASE_WITH_UNDERSCORES.
 
-Conditional blocks
-^^^^^^^^^^^^^^^^^^
+=== Conditional blocks
 
-This is fine::
+This is fine:
 
-    if blah:
-        baz = 1
-    else:
-        baz = 2
+-----------------------
+if blah:
+    baz = 1
+else:
+    baz = 2
+-----------------------
 
-And better than::
+And better than:
 
+-----------------------
     baz = 2
     if blah:
         baz = 1
+-----------------------
 
 But I am not going to argue, needs can force you into a certain style.
 Remember, readability is key.
 
-Magic
-^^^^^
+=== Magic
 
 I hate magic, perhaps because I am dumb. I am really wary of using some of
 Python's shoot-me-in-the-foot techniques because I have to maintain the code,
 so. I have made these mistakes myself, and have (hopefully learned from the
 mistakes. So:
 
-    Meta classes
+    Meta classes::
         Never! I have yet to see a use-case for metaclasses which did not
         relate to perverting some other library or external class. I am happy
         to be enlightened.
 
-    Decorators
+    Decorators::
         Make perfect sense in some cases, but have the danger of being over
         used, so please think carefully whether you are using them to decorate
         behaviour, or just using them for the sake of it.
 
-    Inner classes
+    Inner classes::
         I have yet to see a use-case that requires these.
 
-Outroduction
-^^^^^^^^^^^^
+=== Outroduction
 
 I am not a fascist or a little-mided person, so I am not going to force anyone
 to use any of these guideline, (except the no tabs one). So please don't be
