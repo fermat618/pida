@@ -63,6 +63,7 @@ class ManView(PidaView):
                ]
         )
         self.__list.connect('double-click', self._on_man_double_click)
+        self.__list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__vbox.pack_start(self.__entry, expand=False)
         self.__vbox.pack_start(self.__list)
         self.add_main_widget(self.__vbox)
