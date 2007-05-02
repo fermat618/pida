@@ -1,9 +1,13 @@
-// vim: set filetype=asciidoc :
-
 = PIDA Developer Documentation
 Ali Afshar <aafshar@gmail.com>
 
-== PIDA Service Authoring Guide
+= Front Matter
+
+== Introduction
+
+This book contains all matters on PIDA development.
+
+= PIDA Service Authoring Guide
 
 PIDA has a very general concept of services (you might call them plugins in
 another application). In general, a service is able to define any PIDA
@@ -93,7 +97,6 @@ This empty file is just present to identify the package as a PIDA service.
 .data/
 This directory should contain any data files for the service that are not
 included in the other resource directories.
-
 
 .glade/
 This directory contains the glade files for the service's views. Although
@@ -208,7 +211,7 @@ readable.
 
 === Blank Lines
 
-As PEP8_ for 2 lines between top-level classes and functions, with one line
+As <<PEP8>> for 2 lines between top-level classes and functions, with one line
 between methods.
 
 Extra blank line "to indicate logical blocks" should be avoided at all costs
@@ -261,7 +264,7 @@ def foo(blah,baz):
 
 (that space after a comma is basic punctuation)
 
-PEP8_ has oodles on this.
+<<PEP8>> has oodles on this.
 
 === Docstrings
 
@@ -352,5 +355,6 @@ put off from contributing patches or code.
 
 + [[[PEP8]]] http://www.python.org/dev/peps/pep-0008/[Python Enhancement Proposal 8]
 + [[[PEP20]]] http://www.python.org/dev/peps/pep-0020/[Python Enhancement Proposal 20]
-.. _Pydoctor: http://codespeak.net/~mwh/pydoctor/
++ [[[Pydoctor]]] http://codespeak.net/~mwh/pydoctor/[Pydoctor Web Site]
 
+// vim: set filetype=asciidoc :
