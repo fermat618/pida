@@ -270,16 +270,16 @@ class TerminalView(PidaView):
         self._term.connect('commit', self.on_commit_python)
         env = dict(os.environ)
         env['TERM'] = 'xterm'
-        self.master, self.slave = os.openpty()
-        self._term.set_pty(self.master)
-        master, slave = os.openpty()
+        master, self.slave = os.openpty()
+        self._term.set_pty(master)
+        self.master, slave = os.openpty()
         p = subprocess.Popen(commandargs, stdout=slave,
                          stderr=subprocess.STDOUT, stdin=slave,
                          close_fds=True)
-        gobject.io_add_watch(master, gobject.IO_IN, 
+        gobject.io_add_watch(self.master, gobject.IO_IN, 
                                 self._on_python_fork_parse_stdout, parser_func)
         self._term.connect('key-press-event',
-                            self._on_python_fork_parse_key_press_event, master)
+                            self._on_python_fork_parse_key_press_event, self.master)
 
     def _on_python_fork_parse_key_press_event(self, term, event, fd):
         if event.hardware_keycode == 22:
