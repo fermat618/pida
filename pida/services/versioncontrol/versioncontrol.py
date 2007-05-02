@@ -629,7 +629,7 @@ class Versioncontrol(Service):
         workdir = self.get_workdir_manager_for_path(path)
 
         if workdir is not None: 
-            for item in workdir.list(paths=[path]):
+            for item in workdir.list(paths=[path], recursive=False):
                 abspath = item.abspath
                 name = os.path.basename (abspath)
                 path = os.path.dirname(abspath)
