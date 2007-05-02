@@ -133,8 +133,9 @@ class SessionsActionsConfig(ActionsConfig):
 
 
     def on_load_session(self, action):
-        file_name = self.svc.boss.window.open_dlg(folder = self.svc.sessions_dir)
-        self.svc.load_session(file_name)
+        file_path = self.svc.boss.window.open_dlg(folder = self.svc.sessions_dir)
+        if file_path:
+            self.svc.load_session(file_path)
 
     def on_save_session(self, action):
         if self.svc.current_session:
@@ -144,11 +145,13 @@ class SessionsActionsConfig(ActionsConfig):
     def on_save_session_as(self, action):
         if self.svc.current_session:
             name = self.svc.current_session.name + ".session" 
-            file_path = self.svc.boss.window.save_dlg(current_name = name, folder = self.svc.sessions_dir) 
+            file_path = self.svc.boss.window.save_dlg(current_name = name,
+                folder = self.svc.sessions_dir) 
         else:
             file_path = self.svc.boss.window.save_dlg(folder = self.svc.sessions_dir)
 
-        self.svc.save_current_session(file_path)
+        if file_path:
+            self.svc.save_current_session(file_path)
         return
 
 class SessionsOptionsConfig(OptionsConfig):
@@ -208,7 +211,8 @@ class Sessions(Service):
     options_config = SessionsOptionsConfig
 
     def pre_start(self):
-        self.sessions_dir = os.path.join(self.boss.get_pida_home(), 'sessions')
+        self.sessions_dir = os.path.join(self.boss.get_pida_home(),
+            'sessions')
         if not os.path.exists(self.sessions_dir):
             os.mkdir(self.sessions_dir)
         self._set_current_session(None)
@@ -226,7 +230,8 @@ class Sessions(Service):
     def save_current_session(self, file_path=None):
         if not self.current_session:
             self.current_session = SessionObject()
-            self.current_session.new(file_path, files = self._get_current_buffers())
+            self.current_session.new(file_path,
+                files = self._get_current_buffers())
             self.current_session.save()
         else:
             self.current_session.set_files(self._get_current_buffers())
