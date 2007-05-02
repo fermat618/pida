@@ -1,4 +1,2 @@
 #! /bin/sh
-a2x -f chunked -d docs/html/ docs/txt/dev.txt
-mv docs/html/dev.chunked/* docs/html/dev
-rm -rf docs/html/dev.chunked
+a2x -f xhtml -d docs/html/ docs/txt/dev.txt
