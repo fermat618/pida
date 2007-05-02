@@ -317,6 +317,10 @@ Additionally, an `icon_name` and/or a `label_text` attribute can be passed to
 the view constructor, and these will be displayed as the view's label and icon
 when it is added to the PIDA main view.
 
+=== Links
+
++ [[[PyGTK]]] http://pygtk.org[PyGTK Website]
+
 == Coding Style
 
 
