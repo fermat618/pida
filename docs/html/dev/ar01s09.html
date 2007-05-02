@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Line Width</title><link rel="stylesheet" href="./docbook-xsl.css" type="text/css" /><meta name="generator" content="DocBook XSL Stylesheets V1.68.1" /><link rel="start" href="index.html" title="PIDA Developer Documentation" /><link rel="up" href="index.html" title="PIDA Developer Documentation" /><link rel="prev" href="ar01s08.html" title="Indenting" /><link rel="next" href="ar01s10.html" title="Blank Lines" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><td width="20%" align="left"><a accesskey="p" href="ar01s08.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="ar01s10.html">Next</a></td></tr></table><hr /></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2520875"></a>Line Width</h2></div></div></div><p>79 characters, perhaps 78 to be safe. This is negotiable, and there are times
+when 83 character lines are acceptable. You can be the judge. I am not sure
+many people use 80-character terminals these days, so we can be a bit less
+hard-line than the PEP.</p><p>You can split lines however you wish. I personally use 3 different forms of
+splitting depending on the purpose.</p><p>Long lists, dicts, or many paramteres to a function:</p><pre class="screen">service_base_classes =  [
+    OptionsMixin,
+    commands_mixin,
+    events_mixin,
+    bindings_mixin,
+]</pre><p>Single extra bit:</p><pre class="screen">def really_long_method_or_function_name(first_parameter, second_paramater,
+    third_parameter)</pre><p>Or:</p><pre class="screen">def really_long_method_or_function_name(first_parameter, second_paramater,
+                                        third_parameter)</pre><p>It all depends on the use at the time, and we should remember to keep it
+readable.</p></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s08.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="ar01s10.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top"> </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> </td></tr></table></div></body></html>
