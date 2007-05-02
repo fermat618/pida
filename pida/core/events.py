@@ -75,7 +75,8 @@ class Event(object):
         self.__events[event_name].append(callback)
 
     def unregister (self, event_name, callback):
-        self.__events.remove (callback)
+        assert self.has_event(event_name)
+        self.__events[event_name].remove(callback)
 
     def emit(self, event_name, **kw):
         for callback in self.__events.get(event_name):
