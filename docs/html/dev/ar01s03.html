@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Coding Style</title><link rel="stylesheet" href="./docbook-xsl.css" type="text/css" /><meta name="generator" content="DocBook XSL Stylesheets V1.68.1" /><link rel="start" href="index.html" title="PIDA Developer Documentation" /><link rel="up" href="index.html" title="PIDA Developer Documentation" /><link rel="prev" href="ar01s02.html" title="PIDA Service Authoring Guide" /></head><body><div class="navheader"><table width="100%" summary="Navigation header"><tr><td width="20%" align="left"><a accesskey="p" href="ar01s02.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> </td></tr></table><hr /></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2473416"></a>Coding Style</h2></div></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2473422"></a>Introduction</h3></div></div></div><p>First read <a href="ar01s03.html#PEP8">[PEP8]</a> (the PEP on how to write readable Python code). The PEP gives
+a number of good insights. The PEP gives a few options on things, and I shall
+try to clarify what I prefer here. Where this document differs from PEP8_, you
+should use what is presented here, unless you are a zealot in which case you
+should listen to the Python people (who are cleverer than me anyway). Also
+read PEP20_ while you are at it.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2473438"></a>Indenting</h3></div></div></div><p>4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
+your settings, somehow tabs creep into emacs-written code.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2473859"></a>Line Width</h3></div></div></div><p>79 characters, perhaps 78 to be safe. This is negotiable, and there are times
+when 83 character lines are acceptable. You can be the judge. I am not sure
+many people use 80-character terminals these days, so we can be a bit less
+hard-line than the PEP.</p><p>You can split lines however you wish. I personally use 3 different forms of
+splitting depending on the purpose.</p><p>Long lists, dicts, or many paramteres to a function:</p><pre class="screen">service_base_classes =  [
+    OptionsMixin,
+    commands_mixin,
+    events_mixin,
+    bindings_mixin,
+]</pre><p>Single extra bit:</p><pre class="screen">def really_long_method_or_function_name(first_parameter, second_paramater,
+    third_parameter)</pre><p>Or:</p><pre class="screen">def really_long_method_or_function_name(first_parameter, second_paramater,
+                                        third_parameter)</pre><p>It all depends on the use at the time, and we should remember to keep it
+readable.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2473929"></a>Blank Lines</h3></div></div></div><p>As <a href="ar01s03.html#PEP8">[PEP8]</a> for 2 lines between top-level classes and functions, with one line
+between methods.</p><p>Extra blank line "to indicate logical blocks" should be avoided at all costs
+in my opinion. Real logical blocks should be used to indicate logical blocks!
+If you have to do this, a comment is better than a blank line.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2473956"></a>Imports</h3></div></div></div><p>Only import the function or class you want to use, for example:</p><pre class="screen">from pida.ui.views import PidaView, BaseView</pre><p>There are a few common exceptions like:</p><pre class="screen">import gtk</pre><p>Multiple top-level imports are fine too if you like, but best grouped by where
+they are comming from:</p><pre class="screen">import os, sys
+import gtk, gobject, pango</pre><p>Remember to import in this order:</p><div class="orderedlist"><ol type="1"><li>
+standard library imports
+</li><li>
+related third party imports
+</li><li>
+PIDA application/library specific imports
+</li></ol></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474033"></a>Whitespace</h3></div></div></div><p>Yes:</p><pre class="screen">def foo(blah, baz):</pre><p>No:</p><pre class="screen">def foo ( blah , baz ):
+
+def foo(blah,baz):</pre><p>(that space after a comma is basic punctuation)</p><p><a href="ar01s03.html#PEP8">[PEP8]</a> has oodles on this.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474073"></a>Docstrings</h3></div></div></div><p>I like having the triple quotes as doubles, and for them to be on empty lines,
+like so:</p><pre class="screen">def foo():
+    """
+    This is the single-line docstring
+    """</pre><p>Docstrings are plain nice, so please try to use them for all functions. I am
+guilty of being lazy, so I can't blame anyone. Also we use API generation
+which uses these doc strings, so it all helps.</p><p>We use Pydoctor_ with ReStructured text directives for API generation, so I
+guess you should look them up too.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474110"></a>Strings</h3></div></div></div><p>Single quoted, unless you need single quotes in them, in which case use double
+quotes:</p><pre class="screen">my_string = 'I am a banana'
+my_other_string = "I am a banana's uncle"</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474131"></a>Naming</h3></div></div></div><div class="itemizedlist"><ul type="disc"><li>
+Modules as lowercase single words with no underscores, except test modules
+      which should start with <code class="literal">test_</code>.
+</li><li>
+Functions as lower_case_with_underscores.
+</li><li>
+Classes is CamelCase. (Note: I hate camel case, but it is useful, even
+      in Python to know the difference between a class and a function. Why?
+      You can subclass a class.)
+</li><li>
+Module-level constants all in UPPERCASE_WITH_UNDERSCORES.
+</li></ul></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520730"></a>Conditional blocks</h3></div></div></div><p>This is fine:</p><pre class="screen">if blah:
+    baz = 1
+else:
+    baz = 2</pre><p>And better than:</p><pre class="screen">    baz = 2
+    if blah:
+        baz = 1</pre><p>But I am not going to argue, needs can force you into a certain style.
+Remember, readability is key.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520764"></a>Magic</h3></div></div></div><p>I hate magic, perhaps because I am dumb. I am really wary of using some of
+Python's shoot-me-in-the-foot techniques because I have to maintain the code,
+so. I have made these mistakes myself, and have (hopefully learned from the
+mistakes. So:</p><div class="variablelist"><dl><dt><span class="term">
+Meta classes
+</span></dt><dd>
+        Never! I have yet to see a use-case for metaclasses which did not
+        relate to perverting some other library or external class. I am happy
+        to be enlightened.
+</dd><dt><span class="term">
+Decorators
+</span></dt><dd>
+        Make perfect sense in some cases, but have the danger of being over
+        used, so please think carefully whether you are using them to decorate
+        behaviour, or just using them for the sake of it.
+</dd><dt><span class="term">
+Inner classes
+</span></dt><dd>
+        I have yet to see a use-case that requires these.
+</dd></dl></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520836"></a>Outroduction</h3></div></div></div><p>I am not a fascist or a little-mided person, so I am not going to force anyone
+to use any of these guideline, (except the no tabs one). So please don't be
+put off from contributing patches or code.</p></div><div class="bibliography"><div class="titlepage"><div><div><h3 class="title"><a id="id2520851"></a>Bibliography</h3></div></div></div><div class="bibliomixed"><p class="bibliomixed">
+<span class="bibliomisc">
+<a id="PEP8"></a>[PEP8] <a href="http://www.python.org/dev/peps/pep-0008/" target="_top">Python Enhancement Proposal 8</a>
+</span>
+</p></div><div class="bibliomixed"><p class="bibliomixed">
+<span class="bibliomisc">
+<a id="PEP20"></a>[PEP20] <a href="http://www.python.org/dev/peps/pep-0020/" target="_top">Python Enhancement Proposal 20</a>
+</span>
+</p></div><div class="bibliomixed"><p class="bibliomixed">
+<span class="bibliomisc">
+<a id="Pydoctor"></a>[Pydoctor] <a href="http://codespeak.net/~mwh/pydoctor/" target="_top">Pydoctor Web Site</a>
+</span>
+</p></div></div></div><div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s02.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> </td></tr><tr><td width="40%" align="left" valign="top"> </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> </td></tr></table></div></body></html>
