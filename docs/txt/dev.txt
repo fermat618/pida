@@ -1,11 +1,11 @@
 = PIDA Developer Documentation
 Ali Afshar <aafshar@gmail.com>
 
-== Preface
+= Preface
 
 This book contains all matters on PIDA development.
 
-== PIDA Service Authoring Guide
+= PIDA Service Authoring Guide
 
 PIDA has a very general concept of services (you might call them plugins in
 another application). In general, a service is able to define any PIDA
@@ -17,7 +17,7 @@ Manager** for the Boss.
 
 To learn more about services, please investigate:
 
-=== Service Overview
+== Service Overview
 
 A service is comprised of a directory on the file system. This directory is a
 Python package with data.
@@ -37,9 +37,9 @@ The structure of this directory is like so for a service named "myservice":
             myservice.xml
 ---------------------------
 
-=== Individual Components
+== Individual Components
 
-==== myservice.py
+=== myservice.py
 
 This is the file containing the Python code for the service. It is a Python
 module and should contain an attribute ``Service``, which is the Class which
@@ -81,7 +81,7 @@ directly to a single toolbar and menu action, and contains the necessary
 information to create this user interface item from it, including label, stock
 image etc.
 
-==== Other files and directories
+=== Other files and directories
 
 .__init__.py
 This file is required so that Python recognises the directory as a legitimate
@@ -111,7 +111,7 @@ others can exist in this directory and could be used to populate popup menus
 or to be further merged with the standard UI defnition.
 
 
-=== Service Options
+== Service Options
 
 Options are currently stored in the GConf database. They are registered at
 activation time of the service. Each service has its own directory in the GConf
@@ -150,19 +150,19 @@ class MyService(Service):
     options_config = MyServiceOptions
 -----------------------------------------------
 
-=== Service Commands
+== Service Commands
 
 Commands are the external interface for a service. This interface is
 specifically provided to other services for use of service activities.
 
-==== Defining Commands
+=== Defining Commands
 
 Commands are defined as methods on the `commands_config` attribute of the
 Service class. This attribute should reference a subclass of
 `pida.core.commands.CommandsConfig` class. Any method defined on that class will
 be available as a command on the service.
 
-==== Calling service commands
+=== Calling service commands
 
 Commands are called on a service using the `cmd` method of a service. Calling
 commands on other services must be performed through the Boss' `cmd` method
@@ -180,7 +180,7 @@ self.boss.cmd(
 <1> The target service name
 <2> The target service command
 
-==== Using arguments on service commands
+=== Using arguments on service commands
 
 All arguments to service commands must be passed as keyword arguments. Because
 of this, they can be passed in any order after the servicename, and commandname
@@ -196,17 +196,17 @@ self.boss.cmd(
 )
 -------------------------------------------
 
-=== Service Views
+== Service Views
 
 Service views are almost anything that appears visually in PIDA (apart from the
 main toolbar and menubar). All of these views belong to a service.
 
-==== Creating Views
+=== Creating Views
 
 Views may be designed in Glade3, or in pure <<PyGTK>>. Each method of view
 creation has its advantages and disadvantages, and these are discussed below.
 
-==== Glade3 Views
+=== Glade3 Views
 
 Views created with Glade3 have the following advantages:
 
@@ -256,7 +256,7 @@ def on_close_button__clicked(self, button):
     print '%s was clicked!' % button
 -----------------------------------------------------
 
-==== Pure PyGTK Views
+=== Pure PyGTK Views
 
 These views should subclass `pida.ui.views.PidaView` and should create the
 necessary widgets by overriding the create_ui method. The widgets can be added
@@ -317,14 +317,14 @@ Additionally, an `icon_name` and/or a `label_text` attribute can be passed to
 the view constructor, and these will be displayed as the view's label and icon
 when it is added to the PIDA main view.
 
-=== Links
+== Links
 
 + [[[PyGTK]]] http://pygtk.org[PyGTK Website]
 
-== Coding Style
+= Coding Style
 
 
-=== Introduction
+== Introduction
 
 First read <<PEP8>> (the PEP on how to write readable Python code). The PEP gives
 a number of good insights. The PEP gives a few options on things, and I shall
@@ -333,12 +333,12 @@ should use what is presented here, unless you are a zealot in which case you
 should listen to the Python people (who are cleverer than me anyway). Also
 read PEP20_ while you are at it.
 
-=== Indenting
+== Indenting
 
 4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
 your settings, somehow tabs creep into emacs-written code.
 
-=== Line Width
+== Line Width
 
 79 characters, perhaps 78 to be safe. This is negotiable, and there are times
 when 83 character lines are acceptable. You can be the judge. I am not sure
@@ -376,7 +376,7 @@ def really_long_method_or_function_name(first_parameter, second_paramater,
 It all depends on the use at the time, and we should remember to keep it
 readable.
 
-=== Blank Lines
+== Blank Lines
 
 As <<PEP8>> for 2 lines between top-level classes and functions, with one line
 between methods.
@@ -385,7 +385,7 @@ Extra blank line "to indicate logical blocks" should be avoided at all costs
 in my opinion. Real logical blocks should be used to indicate logical blocks!
 If you have to do this, a comment is better than a blank line.
 
-=== Imports
+== Imports
 
 Only import the function or class you want to use, for example:
 
@@ -413,7 +413,7 @@ Remember to import in this order:
     2. related third party imports
     3. PIDA application/library specific imports
 
-=== Whitespace
+== Whitespace
 
 Yes:
 
@@ -433,7 +433,7 @@ def foo(blah,baz):
 
 <<PEP8>> has oodles on this.
 
-=== Docstrings
+== Docstrings
 
 I like having the triple quotes as doubles, and for them to be on empty lines,
 like so:
@@ -452,7 +452,7 @@ which uses these doc strings, so it all helps.
 We use Pydoctor_ with ReStructured text directives for API generation, so I
 guess you should look them up too.
 
-=== Strings
+== Strings
 
 Single quoted, unless you need single quotes in them, in which case use double
 quotes:
@@ -462,7 +462,7 @@ my_string = 'I am a banana'
 my_other_string = "I am a banana's uncle"
 ------------------------------------------
 
-=== Naming
+== Naming
 
     - Modules as lowercase single words with no underscores, except test modules
       which should start with `test_`.
@@ -472,7 +472,7 @@ my_other_string = "I am a banana's uncle"
       You can subclass a class.)
     - Module-level constants all in UPPERCASE_WITH_UNDERSCORES.
 
-=== Conditional blocks
+== Conditional blocks
 
 This is fine:
 
@@ -494,7 +494,7 @@ And better than:
 But I am not going to argue, needs can force you into a certain style.
 Remember, readability is key.
 
-=== Magic
+== Magic
 
 I hate magic, perhaps because I am dumb. I am really wary of using some of
 Python's shoot-me-in-the-foot techniques because I have to maintain the code,
@@ -514,13 +514,13 @@ mistakes. So:
     Inner classes::
         I have yet to see a use-case that requires these.
 
-=== Outroduction
+== Outroduction
 
 I am not a fascist or a little-mided person, so I am not going to force anyone
 to use any of these guideline, (except the no tabs one). So please don't be
 put off from contributing patches or code.
 
-=== Bibliography
+== Bibliography
 
 + [[[PEP8]]] http://www.python.org/dev/peps/pep-0008/[Python Enhancement Proposal 8]
 + [[[PEP20]]] http://www.python.org/dev/peps/pep-0020/[Python Enhancement Proposal 20]

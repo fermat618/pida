@@ -89,8 +89,8 @@ parameters.</p><p>For example, execute a shell from a service starting in an exp
     'execute_shell',
     cwd = '/',
 )</pre></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2473415"></a>Service Views</h3></div></div></div><p>Service views are almost anything that appears visually in PIDA (apart from the
-main toolbar and menubar). All of these views belong to a service.</p><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2473429"></a>Creating Views</h4></div></div></div><p>Views may be designed in ???, or in pure <a href="ar01s02.html#PyGTK">[PyGTK]</a>. Each method of view
-creation has its advantages and disadvantages, and these are discussed below.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2473850"></a>Glade3 Views</h4></div></div></div><p>Views created with Glade3 have the following advantages:</p><div class="itemizedlist"><ul type="disc"><li>
+main toolbar and menubar). All of these views belong to a service.</p><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2473429"></a>Creating Views</h4></div></div></div><p>Views may be designed in Glade3, or in pure <a href="ar01s02.html#PyGTK">[PyGTK]</a>. Each method of view
+creation has its advantages and disadvantages, and these are discussed below.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2473846"></a>Glade3 Views</h4></div></div></div><p>Views created with Glade3 have the following advantages:</p><div class="itemizedlist"><ul type="disc"><li>
 Better maintainability
 </li><li>
 Automatic signal callback connection
@@ -114,13 +114,13 @@ the correct method on the glade view. These methods are named as
 view called <code class="literal">close_button</code>, and you wish to connect to it's <code class="literal">clicked</code> signal,
 you would provide the following method in order to automatically connect the
 signal for the widget:</p><pre class="screen">def on_close_button__clicked(self, button):
-    print '%s was clicked!' % button</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2474026"></a>Pure PyGTK Views</h4></div></div></div><p>These views should subclass <code class="literal">pida.ui.views.PidaView</code> and should create the
+    print '%s was clicked!' % button</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2474020"></a>Pure PyGTK Views</h4></div></div></div><p>These views should subclass <code class="literal">pida.ui.views.PidaView</code> and should create the
 necessary widgets by overriding the create_ui method. The widgets can be added
 to the view by using the <code class="literal">view.add_main_widget(widget, expand=True, fill=True)</code>.
 The widgets will be added to the top-level VBox in the view.</p><p>There is no signal autoconnection, and widgets behave exactly as if they had
-been created with PyGTK in any other circumstance.</p></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474064"></a>Instantiating views</h3></div></div></div><p>The service can instantiate its views at any time. They should pass the instance
+been created with PyGTK in any other circumstance.</p></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474058"></a>Instantiating views</h3></div></div></div><p>The service can instantiate its views at any time. They should pass the instance
 of the service as the first parameter to the View constructor. The service will
-then be stored as the <code class="literal">svc</code> attribute on the view.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474086"></a>Adding Views to PIDA</h3></div></div></div><p>Views are displayed at runtime by calling the <span class="emphasis"><em>window</em></span> service's command
+then be stored as the <code class="literal">svc</code> attribute on the view.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2474080"></a>Adding Views to PIDA</h3></div></div></div><p>Views are displayed at runtime by calling the <span class="emphasis"><em>window</em></span> service's command
 <span class="emphasis"><em>add_view</em></span>. The required paned must be passed as well as the view itself.</p><p>The paned attribute to the command should be one of:</p><div class="itemizedlist"><ul type="disc"><li>
 <code class="literal">Buffer</code>
 </li><li>
@@ -143,12 +143,12 @@ Multiple view (eg terminal emulators, diffs, and web browsers), or those
 follows:</p><pre class="screen"># Override the start method as a hook to when the service starts
 def start(self):
     view = MyServiceView(self)
-    self.boss.cmd('window', 'add_view', paned='Terminal', view=view)</pre><p>Numerous other examples are available in almost every service in <code class="literal">pida.services</code>.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520780"></a>View icons and label</h3></div></div></div><p>View icons (the image displayed on the paned button) are referred to by their
+    self.boss.cmd('window', 'add_view', paned='Terminal', view=view)</pre><p>Numerous other examples are available in almost every service in <code class="literal">pida.services</code>.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520774"></a>View icons and label</h3></div></div></div><p>View icons (the image displayed on the paned button) are referred to by their
 stock ID, and set as a class attribute on the view <code class="literal">icon_name</code>. Similarly, the
 text associating the icon is set as a class attribute on the view called
 'label_text`.</p><p>Additionally, an <code class="literal">icon_name</code> and/or a <code class="literal">label_text</code> attribute can be passed to
 the view constructor, and these will be displayed as the view's label and icon
-when it is added to the PIDA main view.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520823"></a>Links</h3></div></div></div><div class="bibliomixed"><p class="bibliomixed">
+when it is added to the PIDA main view.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2520817"></a>Links</h3></div></div></div><div class="bibliomixed"><p class="bibliomixed">
 <span class="bibliomisc">
 <a id="PyGTK"></a>[PyGTK] <a href="http://pygtk.org" target="_top">PyGTK Website</a>
 </span>
