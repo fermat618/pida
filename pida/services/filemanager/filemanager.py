@@ -191,25 +191,16 @@ class FilemanagerView(PidaView):
         self._toolbar.show_all()
 
 
-    def add_or_update_file(self, name, basepath, state=None):
+    def add_or_update_file(self, name, basepath, state):
         if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
-        
-        oldstate = entry.state
-        
-        if state is not None:
+        if state != "normal":
             entry.state = state
-        newstate = entry.state
-        self.show_or_hide(entry, oldstate, newstate)
-    
-    def remove_file(self, filename):
-        if path == self.path:
-            entry = self.entries.pop(filename, None)
-            if entry is not None and entry in self.file_list:
-                self.file_list.remove(entry)
 
-    def show_or_hide(self, entry, oldstate, newstate):
+        self.show_or_hide(entry)
+
+    def show_or_hide(self, entry):
         from operator import and_
         def check(checker):
             return checker(
@@ -220,47 +211,26 @@ class FilemanagerView(PidaView):
         show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
         if show:
             if entry in self.file_list:
-                if oldstate != newstate:
-                    self.file_list.update(entry)
-                
+                self.file_list.update(entry)
             else:
                 self.file_list.append(entry)
         else:
             if entry in self.file_list:
                 self.file_list.remove(entry)
 
-    def update_to_path(self, new_path):
-        self.path = new_path
+    def update_to_path(self, new_path=None):
+        if new_path is None:
+            new_path = self.path
+        else:
+            self.path = new_path
 
         self.file_list.clear()
         self.entries.clear()
-        
-        self.update_states()
 
-        self.create_ancest_tree()
-    
-    def refresh(self):
-        self.update_states()
-
-    def _update_removed(self, items):
-        # unused, planed in case of missing gamin
-        items = set(items)
-
-        if self.entries and items is not None:
-            for key, entry in self.entries.iteritems():
-                if entry in self.file_list and key not in items:
-                    self.file_list.remove(entry)
-                # we dont refresh the objectlist here, 
-                # so the display wont change
-                # until necessary
-        self.update_states()
-        
-    def update_states(self):
-        if self.entries:
-            for item in self.entries.itervalues():
-                item.state = "normal"
         for lister in self.svc.features("file_lister"):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
+
+        self.create_ancest_tree()
 
     def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
@@ -324,15 +294,6 @@ class FilemanagerCommandsConfig(CommandsConfig):
     def browse(self, new_path):
         self.svc.browse(new_path)
     
-    def refresh(self):
-        self.get_view().refresh()
-
-    def remove_file(self, path, filename):
-        self.get_view().remove_file( path, filename)
-    
-    def update_singe_file(self, name, basepath, newstate):
-        self.get_view().add_or_update_file(name, basepath, newstate)
-
     def get_browsed_path(self):
         return self.svc.path
 
@@ -486,7 +447,7 @@ class FileManagerActionsConfig(ActionsConfig):
         self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
 
     def on_toolbar_refresh(self, action):
-        self.svc.get_view().refresh()
+        self.svc.get_view().update_to_path()
 
     def on_toolbar_projectroot(self, action):
         self.svc.browse(self.svc.current_project.source_directory)
@@ -537,7 +498,7 @@ class Filemanager(Service):
 
     def file_lister(self, basepath):
         for name in listdir(basepath):
-            yield name, basepath
+            yield name, basepath, "normal"
 
     def rename_file(self, old, new, basepath):
         pass
