@@ -306,7 +306,7 @@ def start(self):
 
 Numerous other examples are available in almost every service in `pida.services`.
 
-=== View icons and label
+=== View icons and labels
 
 View icons (the image displayed on the paned button) are referred to by their
 stock ID, and set as a class attribute on the view `icon_name`. Similarly, the
