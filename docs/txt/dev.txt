@@ -317,6 +317,13 @@ Additionally, an `icon_name` and/or a `label_text` attribute can be passed to
 the view constructor, and these will be displayed as the view's label and icon
 when it is added to the PIDA main view.
 
+== Using custom pixmaps in services ==
+
+Any pixmap placed in the pixmaps directory in the service (`myservice/pixmaps`)
+will automatically be added as a stock image and can be used by the service
+using its name (without extension) for View icons or for gtk.Buttons or
+gtk.Images or any other widget which take a stock_id as an argument.
+
 == Links
 
 + [[[PyGTK]]] http://pygtk.org[PyGTK Website]
