@@ -1,7 +1,7 @@
 = PIDA Developer Documentation
 Ali Afshar <aafshar@gmail.com>
 
-= Preface
+== Preface
 
 This book contains all matters on PIDA development.
 
