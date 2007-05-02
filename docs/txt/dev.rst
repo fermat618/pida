@@ -1,6 +1,5 @@
 
-============================
-PIDA Developer Documentation 
+PIDA Developer Documentation
 ============================
 
 .. author: Ali Afshar <aafshar@gmail.com>
@@ -8,7 +7,7 @@ PIDA Developer Documentation
 .. contents:: Table of Contents
 
 PIDA Service Authoring Guide
-============================
+----------------------------
 
 PIDA has a very general concept of services (you might call them plugins in
 another application). In general, a service is able to define any PIDA
@@ -21,7 +20,7 @@ Manager** for the Boss.
 To learn more about services, please investigate:
 
 Service Overview
-================
+~~~~~~~~~~~~~~~~
 
 Outline
 ^^^^^^^
