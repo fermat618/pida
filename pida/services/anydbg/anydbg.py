@@ -145,7 +145,7 @@ class AnyDbgBreakPointsView(PidaView):
         self.add_main_widget(self._breakpoint_list)
         self._breakpoint_list.show_all()
 
-        if self.svc._controller:
+        if self.svc._controller: ### TODO find a way to store it when no controller has been chosen
             for file in self.svc._controller.list_prestored_breakpoints():
                 line = self.svc._controller.list_prestored_breakpoints()[file]
 #                print "TOG1", file, line
@@ -173,8 +173,8 @@ class AnyDbgBreakPointsView(PidaView):
             self._breakpoint_list.append(breakpoint)
             return True
         elif (file, line) in self._breakpoints:
-            if self._breakpoints[(file, line)].status == 'disabled':
-                self._breakpoints[(file, line)].status == 'enabled'
+            if self._breakpoints[(file, line)].status is 'disabled':
+                self._breakpoints[(file, line)].status is 'enabled'
         else:
             return False
     
@@ -263,9 +263,10 @@ class AnyDbg_gdb_interface(AnyDbg_Debugger):
             self.svc.boss.editor.cmd('goto_line', line=m.group(2))
 
     def init(self):
+        print self.svc._controller.get_cwd()
         self._console = self.svc.boss.cmd('commander','execute',
-                                            commandargs=[self.GDB_EXEC],
-                                            cwd=os.getcwd(), 
+                                            commandargs=[self.GDB_EXEC, "--cd="+self.svc._controller.get_cwd()],
+                                            cwd=self.svc._controller.get_cwd(), 
                                             title="pydb",
                                             icon=None,
                                             use_python_fork=True,
@@ -274,7 +275,7 @@ class AnyDbg_gdb_interface(AnyDbg_Debugger):
         self._console._term.match_add_callback('jump_to','^\(.*:.*\):.*$', 
                                                 '^\((.*):(.*)\):.*$', self._jump_to_line)
 
-        if self._executable != None:
+        if self._executable is not None:
             self._send_command('file '+self._executable)
     
     def end(self):
@@ -441,7 +442,7 @@ class AnyDbgActionsConfig(ActionsConfig):
         self.svc.boss.cmd('window', 'add_view', paned='Plugin', view=self.svc._stack_view)
         
     def on_show_console_view(self, action):
-        if self.svc.dbg != None:
+        if self.svc.dbg is not None:
             self.svc.boss.cmd('window', 'add_view', paned='Terminal', view=self.svc.dbg._console)
         else:
             self.svc.window.error_dlg('No debugger is running')
@@ -475,12 +476,14 @@ class AnyDbgEventsConfig(EventsConfig):
 
     def on_step(self, file, line, function):
         self.svc.boss.cmd('buffer', 'open_file', file_name=file)
-        if self.svc._current != None and self.svc._current.get_filename() == file:
+
+        if self.svc._current is not None and file == self.svc._current.get_filename():
             if self.svc._step is not None:
                 (oldfile, oldline) = self.svc._step
-                self.svc.boss.editor.cmd('hide_sign', type='step', 
-                                                        file_name=oldfile,
-                                                        line=oldline)
+                if oldfile == self.svc._current.get_filename():
+                    self.svc.boss.editor.cmd('hide_sign', type='step', 
+                                                            file_name=oldfile,
+                                                            line=oldline)
             self.svc.boss.editor.cmd('goto_line', line=line)
             self.svc.boss.editor.cmd('show_sign', type='step', 
                                                     file_name=file,
@@ -498,18 +501,20 @@ class AnyDbgEventsConfig(EventsConfig):
         Toggles a breakpoint on line of file
         Store the breakpoint and mark it as unverified
         """
-        if self.svc.dbg != None:
+        if self.svc.dbg is None:
             self.svc.dbg.toggle_breakpoint(file, line)
         else:
-            self.svc._controller.prestore_breakpoint(file, line)
+            if self.svc._controller is None: ### TODO find a way to store it when no controller has been chosen
+                self.svc._controller.prestore_breakpoint(file, line)
 
     def on_add_breakpoint(self, ident, file, line):
         """
         Add a breakpoint on line of file
         Store it with the current controller
         """
-        self.svc._controller.store_breakpoint(ident, file, line)
-        if self.svc._current != None and self.svc._current.get_filename() == file:
+        if self.svc._controller != None: ### TODO find a way to store it when no controller has been chosen
+            self.svc._controller.store_breakpoint(ident, file, line)
+        if self.svc._current is not None and file is self.svc._current.get_filename():
             self.svc.boss.editor.cmd('show_sign', type='breakpoint', 
                                                     file_name=file,
                                                     line=line)
@@ -519,8 +524,9 @@ class AnyDbgEventsConfig(EventsConfig):
         Deletes a breakpoint on line of file 
         Store it with the current controller
         """
-        self.svc._controller.flush_breakpoint(ident, file, line)
-        if self.svc._current != None and self.svc._current.get_filename() == file:
+        if self.svc._controller != None: ### TODO find a way to store it when no controller has been chosen
+            self.svc._controller.flush_breakpoint(ident, file, line)
+        if self.svc._current is not None and file == self.svc._current.get_filename():
             self.svc.boss.editor.cmd('hide_sign', type='breakpoint', 
                                                     file_name=file, 
                                                     line=linenr)
@@ -548,7 +554,7 @@ class AnyDbgEventsConfig(EventsConfig):
                                                 linehl="lCursor", text=">", texthl="lCursor")
 
     def on_document_changed(self, document):
-        if document != None:
+        if document is not None:
             self.svc.get_action('toggle_breakpoint').set_sensitive(True)
             self.svc.update_editor(document)
         else:
@@ -565,7 +571,7 @@ class GenericDebuggerController(ProjectController):
         ProjectKeyDefinition('executable', 'Path to the executable', True),
         ProjectKeyDefinition('parameters', 'Parameters to give to the executable', True),
         ProjectKeyDefinition('debugger', 'Choose your debugger', True),
-    ]# + ProjectController.attributes
+    ] + ProjectController.attributes
 
     def execute(self):
         executable = self.get_option('executable')
@@ -591,9 +597,9 @@ class GenericDebuggerController(ProjectController):
     _breakpoints = {}
 
     def init_breakpoint(self):
-        if self.get_option('breakpoint') == None:
+        if self.get_option('breakpoint') is None:
             self.set_option('breakpoint', dict())
-        if self.get_option('prebreakpoint') == None:
+        if self.get_option('prebreakpoint') is None:
             self.set_option('prebreakpoint', dict())
 
     def store_breakpoint(self, ident, file, line):
@@ -618,14 +624,14 @@ class GenericDebuggerController(ProjectController):
     def list_prestored_breakpoints(self):
         l = self.get_option('prebreakpoint')
 #        print "lp", l
-        if l == None:
+        if l is None:
             return {}
         return l
 
     def list_breakpoints(self):
         l = self.get_option('breakpoint')
 #        print "lb", l
-        if l == None:
+        if l is None:
             return {}
         return l
         
@@ -672,7 +678,7 @@ class Debugger(Service):
         self.dbg = self._anydbg[debugger](executable, parameters, self)
         self._controller = controller
 
-        if self._stack_view == None:
+        if self._stack_view is None:
             self._stack_view = AnyDbgStackView(self)
 #        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._stack_view)
 
@@ -719,9 +725,9 @@ class Debugger(Service):
         if self.dbg is not None and self._step is not None:
             (file, line) = self._step
             if file is document.get_filename():
-                self.svc.boss.editor.cmd('show_sign', type='step', 
-                                                        file_name=file,
-                                                        line=line)
+                self.boss.editor.cmd('show_sign', type='step', 
+                                                    file_name=file,
+                                                    line=line)
 
     def register_debugger(self, name, classname):
         """
