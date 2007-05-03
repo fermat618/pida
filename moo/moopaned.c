@@ -2562,6 +2562,7 @@ gboolean    moo_paned_remove_pane       (MooPaned   *paned,
 {
     Pane *pane;
     GtkWidget *label;
+    int index;
 
     g_return_val_if_fail (MOO_IS_PANED (paned), FALSE);
     g_return_val_if_fail (GTK_IS_WIDGET (pane_widget), FALSE);
@@ -2572,7 +2573,20 @@ gboolean    moo_paned_remove_pane       (MooPaned   *paned,
     g_return_val_if_fail (g_slist_find (paned->priv->panes, pane) != NULL, FALSE);
 
     if (paned->priv->current_pane == pane)
-        moo_paned_hide_pane (paned);
+    {
+        index = pane_index (paned, pane);
+        if (index > 0)
+            index = index - 1;
+        else if (moo_paned_n_panes (paned) > 1)
+            index = 1;
+        else
+            index = -1;
+
+        if (index >= 0)
+            moo_paned_open_pane (paned, index);
+        else
+            moo_paned_hide_pane (paned);
+    }
 
     if (pane->params->detached)
     {
@@ -3654,6 +3668,7 @@ create_pane_window (MooPaned       *paned,
     int height = -1;
     GtkWidget *frame;
     GtkWindow *window;
+    const char *title;
 
     if (pane->window)
         return;
@@ -3662,9 +3677,12 @@ create_pane_window (MooPaned       *paned,
     window = GTK_WINDOW (pane->window);
 
     if (pane->label->window_title)
-        gtk_window_set_title (window, pane->label->window_title);
-    else if (pane->label->label)
-        gtk_window_set_title (window, pane->label->label);
+        title = pane->label->window_title;
+    else
+        title = pane->label->label;
+
+    if (title)
+        gtk_window_set_title (window, title);
 
     if (pane->label->icon_pixbuf)
         gtk_window_set_icon (window, pane->label->icon_pixbuf);
