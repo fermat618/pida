@@ -54,6 +54,7 @@ def list_pida_packages():
     return packages
 
 
+
 def list_pida_services(package_data):
     packages = listpackages('pida/services') + listpackages('pida/editors')
     for package in packages:
@@ -63,7 +64,7 @@ def list_pida_services(package_data):
             'pixmaps/*',
             'uidef/*',
 			'data/*',
-			'locale/*'
+			'locale/fr_FR/LC_MESSAGES/*',
         ]
     return packages
 
@@ -75,7 +76,7 @@ def get_main_data():
             'resources/glade/*',
             'resources/pixmaps/*',
             'resources/uidef/*',
-			'resources/locale/*'
+			'resources/locale/fr_FR/LC_MESSAGES/*'
         ]
     }
 
