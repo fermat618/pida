@@ -30,7 +30,7 @@ more usable format.
 """
 from math import floor
 
-import sre
+import re
 
 import gtk
 
@@ -52,7 +52,7 @@ class TerminalMatch(object):
     def __init__(self, name, match_re, match_groups_re, callback):
         self.name = name
         self.match_re = match_re
-        self.match_groups_re = sre.compile(match_groups_re)
+        self.match_groups_re = re.compile(match_groups_re)
         self.callback = callback
 
     def __call__(self, *args, **kw):
