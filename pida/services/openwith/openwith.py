@@ -74,9 +74,9 @@ class OpenWithEditor(PidaGladeView):
 
     def create_ui(self):
         self.items_ol.set_columns([
-            Column('name'),
-            Column('command'),
-            Column('glob'),
+            Column('name', title=_('Name')),
+            Column('command', title=_('Command')),
+            Column('glob', title=_('Glob')),
         ])
         self._current = None
         self._block_changed = False
