@@ -1,7 +1,7 @@
 # (c) 2005 Divmod, Inc.  See LICENSE file for details
 
 import __builtin__
-from pyflakes import messages
+import messages
 
 class Binding(object):
     def __init__(self, name, source):

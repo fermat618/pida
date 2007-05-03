@@ -12,4 +12,6 @@ controller = GENERIC_EXECUTION
 default = ""
 command = nosetests tests/
 [bookmark]
+[checklist]
+1178093063.66.654 = False:1:__edit_this__
 
