@@ -7,6 +7,11 @@ from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 class Boss(object):
 
 
@@ -27,7 +32,7 @@ class Boss(object):
         self._sm.start_editor()
 
     def stop(self, force=False):
-        if force or self.window.yesno_dlg('Are you sure you want to quit PIDA?'):
+        if force or self.window.yesno_dlg(_('Are you sure you want to quit PIDA ?')):
             self._sm.stop()
             gtk.main_quit()
         else:

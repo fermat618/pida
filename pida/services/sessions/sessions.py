@@ -41,6 +41,11 @@ from pida.core.options import OTypeString, OTypeBoolean, \
 
 from pida.ui.views import PidaGladeView
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('sessions')
+_ = locale.gettext
+
 
 class SessionObject(object):
     """
@@ -104,8 +109,8 @@ class SessionsActionsConfig(ActionsConfig):
         self.create_action(
             'load_session',
             TYPE_NORMAL,
-            'Load Session',
-            'Load a saved session',
+            _('Load Session'),
+            _('Load a saved session'),
             None,
             self.on_load_session,
             '',
@@ -114,8 +119,8 @@ class SessionsActionsConfig(ActionsConfig):
         self.create_action(
             'save_session',
             TYPE_NORMAL,
-            'Save Session',
-            'Save your current session',
+            _('Save Session'),
+            _('Save your current session'),
             None,
             self.on_save_session,
             ''
@@ -124,8 +129,8 @@ class SessionsActionsConfig(ActionsConfig):
         self.create_action(
             'save_session_as',
             TYPE_NORMAL,
-            'Save Session As',
-            'Save your current session with a given filename',
+            _('Save Session As'),
+            _('Save your current session with a given filename'),
             None,
             self.on_save_session_as,
             ''
@@ -159,7 +164,7 @@ class SessionsOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
             'load_last_session',
-            'load last session on startup',
+            _('Load last session on startup'),
             OTypeBoolean,
             True,
             '',
@@ -167,7 +172,7 @@ class SessionsOptionsConfig(OptionsConfig):
 
         self.create_option(
             'clear_old_buffers',
-            'clear old buffers when loading session',
+            _('Clear old buffers when loading session'),
             OTypeBoolean,
             False,
             '',
@@ -175,7 +180,7 @@ class SessionsOptionsConfig(OptionsConfig):
 
 
     gladefile = 'sessions-properties'
-    label_text = 'Sessions Properties'
+    label_text = _('Sessions Properties')
     icon_name = 'package_utilities'
 
     def create_ui(self):

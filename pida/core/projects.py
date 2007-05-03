@@ -5,6 +5,11 @@ from weakref import proxy
 
 from configobj import ConfigObj
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 class ProjectControllerMananger(object):
     """
@@ -57,10 +62,10 @@ class Project(object):
                 if controller_type is not None:
                     self.controllers.append(controller_type(self, section))
                 else:
-                    self.boss.log.debug('no controller type for %s' %
+                    self.boss.log.debug(_('no controller type for %s') %
                                         controller_name)
             else:
-                self.boss.log.debug('no controller defined for %s' % section)
+                self.boss.log.debug(_('no controller defined for %s') % section)
 
     def _create_options(self):
         self.options = ConfigObj(self.project_file)
@@ -185,8 +190,8 @@ class ProjectController(object):
     label = ''
 
     attributes = [
-        ProjectKeyDefinition('cwd', 'Working Directory', False),
-        ProjectKeyDefinition('env', 'Environment Variables', False),
+        ProjectKeyDefinition('cwd', _('Working Directory'), False),
+        ProjectKeyDefinition('env', _('Environment Variables'), False),
     ]
 
     def __init__(self, project, config_section):

@@ -24,6 +24,12 @@ import gtk, gobject
 
 from pida.utils.testing import refresh_gui
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
+
 class SplashScreen(gtk.Window):
 
     def __init__(self):
@@ -31,12 +37,12 @@ class SplashScreen(gtk.Window):
         self.set_decorated(False)
         vb = gtk.VBox()
         self.add(vb)
-        l = gtk.Label('PIDA is starting...')
+        l = gtk.Label(_('PIDA is starting...'))
         l.set_alignment(0.5, 1)
         l.show()
         vb.pack_start(l)
         l = gtk.Label()
-        l.set_markup('and it <b>loves</b> you!')
+        l.set_markup(_('and it <b>loves</b> you!'))
         l.set_alignment(0.5, 0)
         l.show()
         vb.pack_start(l)

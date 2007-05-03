@@ -26,10 +26,15 @@ import os
 import sys
 import warnings
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 def die_cli(message):
     """Die in a command line way."""
     print message
-    print 'Exiting. (this is fatal)'
+    print _('Exiting. (this is fatal)')
     sys.exit(1)
 
 
@@ -38,28 +43,28 @@ try:
     import gtk
     from gtk import gdk
     if gtk.pygtk_version < (2, 8):
-        die_cli('PIDA requires PyGTK >= 2.8. It only found %s.%s'
-                % gtk.pygtk_version[:2])
+        die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
+                % {major:gtk.pygtk_version[:2][0], minor:gtk.pygtk_version[:2][1]})
 except ImportError:
-    die_cli('PIDA requires Python GTK bindings. They were not found.')
+    die_cli(_('PIDA requires Python GTK bindings. They were not found.'))
 
 
 try:
     from kiwi.ui.dialogs import error
     def die_gui(message):
         """Die in a GUI way."""
-        error("Fatal error, cannot start PIDA", 
+        error(_('Fatal error, cannot start PIDA'), 
               message)
         die_cli(message)
 
 except ImportError:
-    die_cli('Kiwi needs to be installed to run PIDA')
+    die_cli(_('Kiwi needs to be installed to run PIDA'))
 
 
 # Python 2.4
 if sys.version_info < (2,4):
-    die_gui('Python 2.4 is required to run PIDA. Only %s.%s was found.' %
-            sys.version_info[:2])
+    die_gui(_('Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
+        {major:sys.version_info[:2][0], minor:sys.version_info[:2][1]})
 
 
 # This can test if PIDA is installed
@@ -68,11 +73,11 @@ try:
     from pida.core.boss import Boss
     from pida import PIDA_VERSION
 except ImportError:
-    die_gui('The pida package could not be found.')
+    die_gui(_('The pida package could not be found.'))
 
 
 def run_version(env):
-    print 'PIDA, version %s' % PIDA_VERSION
+    print _('PIDA, version %s') % PIDA_VERSION
     return 0
 
 

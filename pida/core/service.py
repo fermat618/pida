@@ -11,6 +11,11 @@ from pida.core.actions import ActionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.features import FeaturesConfig
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 class Service(object):
     """Base Service Class"""
@@ -101,8 +106,9 @@ class Service(object):
 
     def cmd(self, commandname, *args, **kw):
         if args:
-            raise TypeError('You must call command %s in service %s with '
-            'named arguments' % (commandname, self.get_name()))
+            raise TypeError(
+                    _('You must call command %(cmd)s in service %(svc)s with named arguments')
+                    % {cmd:commandname, svc:self.get_name()})
         else:
             return self._get_commands().call(commandname, **kw)
 

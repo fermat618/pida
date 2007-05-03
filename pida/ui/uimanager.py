@@ -3,17 +3,22 @@ import gtk
 
 from pida.core.environment import get_uidef_path
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 base_menu_actions = [
-    ('FileMenu', None, 'File', '<Alt>f', 'File Menu', None),
-    ('EditMenu', None, 'Edit', '<Alt>e', 'Edit Menu', None),
-    ('ProjectMenu', None, 'Project', '<Alt>p', 'Project Menu', None),
-    ('LanguageMenu', None, 'Language', '<Alt>l', 'Language Menu', None),
-    ('DebugMenu', None, 'Debug', '<Alt>l', 'Debug Menu', None),
-    ('ToolsMenu', None, 'Tools', '<Alt>t', 'Tools Menu', None),
-    ('ToolsDebug', None, 'Debug Pida', '', 'Debug Pida Menu', None),
-    ('ViewMenu', None, 'View', '<Alt>v', 'View Menu', None),
-    ('HelpMenu', None, 'Help', '<Alt>h', 'Help Menu', None),
+    ('FileMenu', None, _('File'), '<Alt>f', _('File Menu'), None),
+    ('EditMenu', None, _('Edit'), '<Alt>e', _('Edit Menu'), None),
+    ('ProjectMenu', None, _('Project'), '<Alt>p', _('Project Menu'), None),
+    ('LanguageMenu', None, _('Language'), '<Alt>l', _('Language Menu'), None),
+    ('DebugMenu', None, _('Debug'), '<Alt>l', _('Debug Menu'), None),
+    ('ToolsMenu', None, _('Tools'), '<Alt>t', _('Tools Menu'), None),
+    ('ToolsDebug', None, _('Debug Pida'), '', _('Debug Pida Menu'), None),
+    ('ViewMenu', None, _('View'), '<Alt>v', _('View Menu'), None),
+    ('HelpMenu', None, _('Help'), '<Alt>h', _('Help Menu'), None),
 ]
 
 

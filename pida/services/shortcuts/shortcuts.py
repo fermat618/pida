@@ -34,6 +34,11 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.ui.views import PidaView
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('shortcuts')
+_ = locale.gettext
+
 class ServiceListItem(object):
     
     def __init__(self, svc):
@@ -46,7 +51,7 @@ class ServiceListItem(object):
 class ShortcutsView(PidaView):
 
     icon_name = 'key_bindings'
-    label_text = 'Shortcuts'
+    label_text = _('Shortcuts')
 
     def create_ui(self):
         self.shortcuts_list = ObjectTree(
@@ -74,7 +79,7 @@ class ShortcutsView(PidaView):
                     self.shortcuts_list.append(sli, opt)
         self.shortcuts_list.show_all()
         hbox = gtk.HBox(spacing=6)
-        l = gtk.Label('Capture Shortcut')
+        l = gtk.Label(_('Capture Shortcut'))
         hbox.pack_start(l, expand=False)
         self._capture_entry = gtk.Entry()
         hbox.pack_start(self._capture_entry)
@@ -132,8 +137,8 @@ class ShortcutsActionsConfig(ActionsConfig):
         self.create_action(
             'show_shortcuts',
             TYPE_TOGGLE,
-            'Edit Shortcuts',
-            'Show the PIDA keyboard shortcut editor',
+            _('Edit Shortcuts'),
+            _('Show the PIDA keyboard shortcut editor'),
             'key_bindings',
             self.on_show_shortcuts,
             '<Shift><Control>K',

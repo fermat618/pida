@@ -36,6 +36,11 @@ from pida.ui.views import PidaGladeView, PidaView
 
 from pida.utils.web import fetch_url
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pastebin')
+_ = locale.gettext
+
 
 class Bin(object):
 
@@ -102,7 +107,7 @@ class Rafb(Bin):
             desc=title,
             lang=syntax,
             cvt_tabs=4,
-            submit='Paste'
+            submit=_('Paste')
         )
 
     @classmethod
@@ -143,7 +148,8 @@ class Twisted(Bin):
 class PastebinEditorView(PidaGladeView):
 
     gladefile = 'paste-editor'
-    label_text = 'Paste Editor'
+    locale = locale
+    label_text = _('Paste Editor')
     icon_name = gtk.STOCK_PASTE
 
     def create_ui(self):
@@ -171,7 +177,7 @@ class PastebinEditorView(PidaGladeView):
 
 class PasteHistoryView(PidaView):
 
-    label_text = 'Paste History'
+    label_text = _('Paste History')
     icon_name = gtk.STOCK_PASTE
 
     #glade_file_name = 'paste-history.glade'
@@ -226,7 +232,7 @@ class PasteHistoryView(PidaView):
             self.service.boss.call_command('pastemanager','view_paste',
                 paste=self.__tree_selected)
         else:
-            print "ERROR: No paste selected"
+            print _("ERROR: No paste selected")
 
     def remove_current_paste(self):
         '''Callback function bound to the toolbar button delete that removes the
@@ -235,7 +241,7 @@ class PasteHistoryView(PidaView):
             self.service.boss.call_command('pastemanager','delete_paste',
                 paste=self.__tree_selected)
         else:
-            print "ERROR: No paste selected"
+            print _("ERROR: No paste selected")
 
     def cb_paste_clicked(self,paste,tree_item):
         '''Callback function called when an item is selected in the TreeView'''
@@ -299,8 +305,8 @@ class PastebinActionsConfig(ActionsConfig):
         self.create_action(
             'new_paste',
             TYPE_NORMAL,
-            'Upload Text Snippet',
-            'Upload a text snippet to a pastebin',
+            _('Upload Text Snippet'),
+            _('Upload a text snippet to a pastebin'),
             gtk.STOCK_PASTE,
             self.on_new_paste,
         )
@@ -308,8 +314,8 @@ class PastebinActionsConfig(ActionsConfig):
         self.create_action(
             'show_pastes',
             TYPE_TOGGLE,
-            'Paste History',
-            'Show the paste history viewer',
+            _('Paste History'),
+            _('Show the paste history viewer'),
             gtk.STOCK_PASTE,
             self.on_show_pastes,
             '<Shift><Control>0',

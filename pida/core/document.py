@@ -33,6 +33,11 @@ import codecs
 
 import actions
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 class document_handler(object):
     
@@ -57,10 +62,10 @@ def relpath(target, basepath=os.curdir):
     """
 
     if not os.path.exists(target):
-        raise OSError, 'Target does not exist: '+target
+        raise OSError, _('Target does not exist: ')+target
 
     if not os.path.isdir(basepath):
-        raise OSError, 'Base is not a directory or does not exist: '+basepath
+        raise OSError, _('Base is not a directory or does not exist: ')+basepath
 
     base_list = (os.path.abspath(basepath)).split(os.sep)
     target_list = (os.path.abspath(target)).split(os.sep)
@@ -68,8 +73,8 @@ def relpath(target, basepath=os.curdir):
     # On the windows platform the target may be on a completely different
     # drive from the base.
     if os.name in ['nt', 'dos', 'os2'] and base_list[0] != target_list[0]:
-        msg = 'Target is on a different drive to base. Target: %s, base: %s'
-        msg %= (target_list[0].upper(), base_list[0].upper())
+        msg = _('Target is on a different drive to base. Target: %(target)s, base: %(base)s')
+        msg %= {target:target_list[0].upper(), base:base_list[0].upper()}
         raise OSError(msg)
 
     # Starting from the filepath root, work out how much of the filepath is
@@ -183,7 +188,7 @@ class Document(object):
             self.__string = None
             raise
             # Also warn the log about it
-            self.log.warn('failed to open file %s', self.filename)
+            self.log.warn(_('failed to open file %s'), self.filename)
             
         
     def __load_stat(self):

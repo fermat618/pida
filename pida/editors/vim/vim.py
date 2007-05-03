@@ -38,14 +38,19 @@ from pida.ui.views import PidaView
 from pida.utils.vim.vimembed import VimEmbedWidget
 from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 class EditorActionsConfig(ActionsConfig):
 
     def create_actions(self):
         self.create_action(
             'undo',
             TYPE_NORMAL,
-            'Undo',
-            'Undo the last editor action',
+            _('Undo'),
+            _('Undo the last editor action'),
             gtk.STOCK_UNDO,
             self.on_undo,
         )
@@ -53,8 +58,8 @@ class EditorActionsConfig(ActionsConfig):
         self.create_action(
             'redo',
             TYPE_NORMAL,
-            'Redo',
-            'Redo the last editor action',
+            _('Redo'),
+            _('Redo the last editor action'),
             gtk.STOCK_REDO,
             self.on_redo,
         )
@@ -62,8 +67,8 @@ class EditorActionsConfig(ActionsConfig):
         self.create_action(
             'cut',
             TYPE_NORMAL,
-            'Cut',
-            'Cut the selection in the editor',
+            _('Cut'),
+            _('Cut the selection in the editor'),
             gtk.STOCK_CUT,
             self.on_cut,
         )
@@ -71,8 +76,8 @@ class EditorActionsConfig(ActionsConfig):
         self.create_action(
             'copy',
             TYPE_NORMAL,
-            'Copy',
-            'Copy the selection in the editor',
+            _('Copy'),
+            _('Copy the selection in the editor'),
             gtk.STOCK_COPY,
             self.on_copy,
         )
@@ -80,8 +85,8 @@ class EditorActionsConfig(ActionsConfig):
         self.create_action(
             'paste',
             TYPE_NORMAL,
-            'Paste',
-            'Paste the clipboard in the editor',
+            _('Paste'),
+            _('Paste the clipboard in the editor'),
             gtk.STOCK_PASTE,
             self.on_paste,
         )
@@ -89,8 +94,8 @@ class EditorActionsConfig(ActionsConfig):
         self.create_action(
             'save',
             TYPE_NORMAL,
-            'Save',
-            'Save the current document',
+            _('Save'),
+            _('Save the current document'),
             gtk.STOCK_SAVE,
             self.on_save,
         )
@@ -344,7 +349,7 @@ class Vim(Service):
         try:
             return self._signs.pop((filename, line, type))
         except KeyError:
-            self.window.error_dlg('Tried to remove non-existent sign')
+            self.window.error_dlg(_('Tried to remove non-existent sign'))
 
     def show_sign(self, type, filename, line):
         index = self._add_sign(type, filename, line)

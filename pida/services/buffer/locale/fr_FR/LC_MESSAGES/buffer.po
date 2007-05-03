@@ -1,0 +1,78 @@
+# PIDA
+# Copyright (C) 2005-2007 The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-03 10:41+0200\n"
+"PO-Revision-Date: 2007-05-02 18:40+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: buffer.py:60
+msgid "Buffers"
+msgstr "Buffers"
+
+#: buffer.py:67
+msgid "Time Opened"
+msgstr "Temps d'ouverture"
+
+#: buffer.py:68
+msgid "File path"
+msgstr "Chemin du fichier"
+
+#: buffer.py:69
+msgid "File name"
+msgstr "Nom du fichier"
+
+#: buffer.py:70
+msgid "Mime Type"
+msgstr "Type mime"
+
+#: buffer.py:71
+msgid "File Length"
+msgstr "Taille du fichier"
+
+#: buffer.py:72
+msgid "Last Modified"
+msgstr "Dernière modification"
+
+#: buffer.py:108 buffer.py:118
+msgid "Open File"
+msgstr "Ouvrir un fichier"
+
+#: buffer.py:109
+msgid "Open a file with a graphical file browser"
+msgstr "Ouvrir un fichier avec l'explorateur de fichier"
+
+#: buffer.py:119
+msgid "Open this file"
+msgstr "Ouvrir ce fichier"
+
+#: buffer.py:128
+msgid "New File"
+msgstr "Nouveau fichier"
+
+#: buffer.py:129
+msgid "Create a temporary new file"
+msgstr "Créer un fichier temporaire"
+
+#: buffer.py:138
+msgid "Create File"
+msgstr "Créer un fichier"
+
+#: buffer.py:139
+msgid "Create a new file"
+msgstr "Créer un nouveau fichier"
+
+#: buffer.py:148
+msgid "Close Document"
+msgstr "Fermer le document"
+
+#: buffer.py:149
+msgid "Close the current document"
+msgstr "Fermer le document courant"

@@ -62,7 +62,8 @@ def list_pida_services(package_data):
             'glade/*',
             'pixmaps/*',
             'uidef/*',
-            'data/*'
+			'data/*',
+			'locale/*'
         ]
     return packages
 
@@ -73,7 +74,8 @@ def get_main_data():
         [
             'resources/glade/*',
             'resources/pixmaps/*',
-            'resources/uidef/*'
+            'resources/uidef/*',
+			'resources/locale/*'
         ]
     }
 

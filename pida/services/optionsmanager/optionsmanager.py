@@ -37,6 +37,11 @@ from pida.ui.widgets import get_widget_for_type
 
 from kiwi import ValueUnset
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('optionsmanager')
+_ = locale.gettext
+
 def service_sort_func(s1, s2):
     return cmp(s1.get_label(), s2.get_label())
 
@@ -46,7 +51,7 @@ def options_sort_func(o, o1):
 class PidaOptionsView(PidaGladeView):
 
     gladefile = 'options-editor'
-
+    locale = locale
     label_text = 'Preferences'
 
     icon_name = 'gnome-settings'
@@ -137,8 +142,8 @@ class OptionsActions(ActionsConfig):
         self.create_action(
             'show_options',
             TYPE_TOGGLE,
-            'Edit Preferences',
-            'Edit the PIDA preferences',
+            _('Edit Preferences'),
+            _('Edit the PIDA preferences'),
             'properties',
             self.on_show_options,
             '<Shift><Control>asciitilde'

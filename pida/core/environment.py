@@ -3,6 +3,11 @@ from optparse import OptionParser
 
 from kiwi.environ import Library, environ
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 library = Library('pida', root='../')
 
 library.add_global_resource('glade', 'resources/glade')
@@ -36,12 +41,9 @@ class Environment(object):
     def get_options(self, argv):
         op = OptionParser()
         op.add_option('-v', '--version', action='store_true',
-            help='Print version information and exit.')
+            help=_('Print version information and exit.'))
         op.add_option('-D', '--debug', action='store_true',
-            help=('Run PIDA with added debug information. '
-                  'This merely sets the environment variables: '
-                  'PIDA_DEBUG=1 and PIDA_LOG_STDERR=1, '
-                  'and so the same effect may be achieved by setting them.'))
+            help=_('Run PIDA with added debug information.'))
         self.opts, self.args = op.parse_args(argv)
 
     def is_version(self):
@@ -58,3 +60,4 @@ class Environment(object):
         return os.path.join(
             os.path.dirname(os.path.dirname(__file__)), 'editors')
 
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

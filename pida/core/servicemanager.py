@@ -5,6 +5,11 @@ from pida.core.plugins import Registry
 
 from pida.core.environment import library, environ
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 def sort_services_func(s1, s2):
     return cmp(s1.servicename, s2.servicename)
@@ -145,7 +150,7 @@ class ServiceManager(object):
             if editor.servicename == name:
                 self.editor = editor(self._boss)
                 return self.editor
-        raise AttributeError('No editor found')
+        raise AttributeError(_('No editor found'))
 
     def register_editor(self, service):
         self._reg.register_plugin(

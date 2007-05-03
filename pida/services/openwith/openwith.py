@@ -38,6 +38,10 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.ui.views import PidaGladeView
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('openwith')
+_ = locale.gettext
 
 class OpenWithItem(object):
 
@@ -47,7 +51,7 @@ class OpenWithItem(object):
             self.command = section['command']
             self.glob = section['glob']
         else:
-            self.name = 'unnamed'
+            self.name = _('unnamed')
             self.command = ''
             self.glob = '*'
 
@@ -64,8 +68,9 @@ class OpenWithItem(object):
 class OpenWithEditor(PidaGladeView):
 
     gladefile = 'openwith-editor'
+    locale = locale
     icon_name = gtk.STOCK_OPEN
-    label_text = 'Open With'
+    label_text = _('Open With')
 
     def create_ui(self):
         self.items_ol.set_columns([
@@ -112,7 +117,7 @@ class OpenWithEditor(PidaGladeView):
 
     def on_delete_button__clicked(self, button):
         if self.svc.boss.get_window().yesno_dlg(
-                'Are you sure you want to delete %s' % self._current.name):
+                _('Are you sure you want to delete %s') % self._current.name):
             self.items_ol.remove(self._current, select=True)
             self.save_button.set_sensitive(True)
 
@@ -145,8 +150,8 @@ class OpenWithActions(ActionsConfig):
         self.create_action(
             'show_openwith',
             TYPE_TOGGLE,
-            'Configure Open With',
-            'Show the Open With Editor',
+            _('Configure Open With'),
+            _('Show the Open With Editor'),
             'gnome-settings',
             self.on_show_openwith,
             '<Shift><Control>['
@@ -155,8 +160,8 @@ class OpenWithActions(ActionsConfig):
         self.create_action(
             'openwith-for-file',
             TYPE_NORMAL,
-            'Open With',
-            'Open a file with',
+            _('Open With'),
+            _('Open a file with'),
             gtk.STOCK_OPEN,
             self.on_openwith_for_file,
             'NOACCEL',

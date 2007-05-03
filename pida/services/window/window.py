@@ -30,6 +30,11 @@ from pida.core.options import OptionsConfig, OTypeBoolean
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('window')
+_ = locale.gettext
+
 
 class WindowCommandsConfig(CommandsConfig):
 
@@ -55,8 +60,8 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'show_toolbar',
             TYPE_TOGGLE,
-            'Show Toolbar',
-            'Toggle the visible state of the toolbar',
+            _('Show Toolbar'),
+            _('Toggle the visible state of the toolbar'),
             'face-glasses',
             self.on_show_ui,
             '<Shift><Control>l',
@@ -65,8 +70,8 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'show_menubar',
             TYPE_TOGGLE,
-            'Show Menubar',
-            'Toggle the visible state of the menubar',
+            _('Show Menubar'),
+            _('Toggle the visible state of the menubar'),
             'face-glasses',
             self.on_show_ui,
             '<Shift><Control>u',
@@ -97,19 +102,19 @@ class WindowOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
             'show_toolbar',
-            'Show the toolbar',
+            _('Show the toolbar'),
             OTypeBoolean,
             True,
-            'Whether the main toolbar will be shown',
+            _('Whether the main toolbar will be shown'),
             self.on_show_ui,
         )
 
         self.create_option(
             'show_menubar',
-            'Show the menubar',
+            _('Show the menubar'),
             OTypeBoolean,
             True,
-            'Whether the main menubar will be shown',
+            _('Whether the main menubar will be shown'),
             self.on_show_ui,
         )
 

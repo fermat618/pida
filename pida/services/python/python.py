@@ -49,12 +49,17 @@ from pida.utils import pyflakes
 from pida.utils import pythonparser
 from pida.utils.gthreads import AsyncTask, GeneratorTask
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('python')
+_ = locale.gettext
+
 ### Pyflakes
 
 class PyflakeView(PidaView):
     
     icon_name = 'python-icon'
-    label_text = 'Python Errors'
+    label_text = _('Python Errors')
 
     def create_ui(self):
         self.errors_ol = ObjectList(
@@ -68,9 +73,9 @@ class PyflakeView(PidaView):
         self.sort_combo = AttrSortCombo(
             self.errors_ol,
             [
-                ('lineno', 'Line Number'),
-                ('message_string', 'Message'),
-                ('name', 'Type'),
+                ('lineno', _('Line Number')),
+                ('message_string', _('Message')),
+                ('name', _('Type')),
             ],
             'lineno',
         )
@@ -152,9 +157,9 @@ class Pyflaker(object):
 class SourceView(PidaGladeView):
 
     gladefile = 'python-source-browser'
-
+    locale = locale
     icon_name = 'python-icon'
-    label_text = 'Source'
+    label_text = _('Source')
 
     def create_ui(self):
         self.source_tree.set_columns(
@@ -168,9 +173,9 @@ class SourceView(PidaGladeView):
         self.sort_box = AttrSortCombo(
             self.source_tree,
             [
-                ('linenumber', 'Line Number'),
-                ('nodename', 'Name'),
-                ('nodetype', 'Type'),
+                ('linenumber', _('Line Number')),
+                ('nodename', _('Name')),
+                ('nodetype', _('Type')),
             ],
             'linenumber'
         )
@@ -227,7 +232,7 @@ class PythonBrowser(object):
 class BasePythonProjectController(ProjectController):
 
     attributes = [
-        ProjectKeyDefinition('python_executable', 'Python Executable', False),
+        ProjectKeyDefinition('python_executable', _('Python Executable'), False),
     ] + ProjectController.attributes
 
     def get_python_executable(self):
@@ -238,18 +243,18 @@ class PythonProjectController(BasePythonProjectController):
 
     name = 'PYTHON_CONTROLLER'
 
-    label = 'Python Controller'
+    label = _('Python Controller')
 
     attributes = [
-        ProjectKeyDefinition('execute_file', 'File to execute', True),
-        ProjectKeyDefinition('execute_args', 'Args to execute', False),
+        ProjectKeyDefinition('execute_file', _('File to execute'), True),
+        ProjectKeyDefinition('execute_args', _('Args to execute'), False),
     ] + BasePythonProjectController.attributes
 
     def execute(self):
         execute_file = self.get_option('execute_file')
         execute_args = self.get_option('execute_args')
         if not execute_file:
-            self.boss.get_window().error_dlg('Controller has no "execute_file" set')
+            self.boss.get_window().error_dlg(_('Controller has no "execute_file" set'))
         else:
             commandargs = [self.get_python_executable(), execute_file]
             if execute_args is not None:
@@ -264,17 +269,17 @@ class PythonDistutilstoolsController(ProjectController):
 
     name = 'DISTUTILS_CONTROLLER'
 
-    label = 'Distutils Controller'
+    label = _('Distutils Controller')
 
     attributes = [
-        ProjectKeyDefinition('command', 'Distutils command', True),
-        ProjectKeyDefinition('args', 'Args for command', False),
+        ProjectKeyDefinition('command', _('Distutils command'), True),
+        ProjectKeyDefinition('args', _('Args for command'), False),
     ] + BasePythonProjectController.attributes
 
     def execute(self):
         command = self.get_option('command')
         if not command:
-            self.boss.get_window().error_dlg('Controller has no "command" set')
+            self.boss.get_window().error_dlg(_('Controller has no "command" set'))
         else:
             commandargs = [self.get_python_executable(), 'setup.py', command]
             args = self.get_option('args')
@@ -304,10 +309,10 @@ class PythonOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
             'python_for_executing',
-            'Python Executable for executing',
+            _('Python Executable for executing'),
             OTypeString,
             'python',
-            'The Python executable when executing a module',
+            _('The Python executable when executing a module'),
         )
 
 
@@ -326,8 +331,8 @@ class PythonActionsConfig(ActionsConfig):
         self.create_action(
             'execute_python',
             TYPE_NORMAL,
-            'Execute Python Module',
-            'Execute the current Python module in a shell',
+            _('Execute Python Module'),
+            _('Execute the current Python module in a shell'),
             gtk.STOCK_EXECUTE,
             self.on_python_execute,
         )
@@ -335,8 +340,8 @@ class PythonActionsConfig(ActionsConfig):
         self.create_action(
             'show_python_errors',
             TYPE_TOGGLE,
-            'Python Error Viewer',
-            'Show the python error browser',
+            _('Python Error Viewer'),
+            _('Show the python error browser'),
             'error',
             self.on_show_errors,
         )
@@ -344,8 +349,8 @@ class PythonActionsConfig(ActionsConfig):
         self.create_action(
             'show_python_source',
             TYPE_TOGGLE,
-            'Python Source Viewer',
-            'Show the python source browser',
+            _('Python Source Viewer'),
+            _('Show the python source browser'),
             'info',
             self.on_show_source,
         )

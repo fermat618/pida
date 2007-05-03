@@ -38,6 +38,11 @@ from pida import PIDA_NAME, PIDA_VERSION, PIDA_AUTHORS, PIDA_COPYRIGHT, \
                  PIDA_LICENSE, PIDA_WEBSITE, PIDA_SHORT_DESCRIPTION
 
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('help')
+_ = locale.gettext
+
 class PidaAboutDialog(gtk.AboutDialog):
 
     def __init__(self, boss):
@@ -64,8 +69,8 @@ class HelpActionsConfig(ActionsConfig):
         self.create_action(
             'help_about',
             TYPE_NORMAL,
-            'About',
-            'About PIDA',
+            _('About'),
+            _('About PIDA'),
             gtk.STOCK_HELP,
             self.show_about_dialog
         )

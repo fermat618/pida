@@ -40,6 +40,11 @@ from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
 from pida.ui.buttons import create_mini_button
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('commander')
+_ = locale.gettext
+
 def get_default_system_shell():
     if 'SHELL' in os.environ:
         return os.environ['SHELL']
@@ -51,66 +56,66 @@ class CommanderOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
             'font',
-            'Terminal Font',
+            _('Terminal Font'),
             OTypeFont,
             'Monospace 10',
-            'The font used in terminals',
+            _('The font used in terminals'),
         )
 
         self.create_option(
             'transparent',
-            'Terminal Transparency',
+            _('Terminal Transparency'),
             OTypeBoolean,
             False,
-            'Whether terminals will be transparent',
+            _('Whether terminals will be transparent'),
         )
 
         self.create_option(
             'use_background_image',
-            'Use a background image',
+            _('Use a background image'),
             OTypeBoolean,
             False,
-            'Whether a background image will be displayed',
+            _('Whether a background image will be displayed'),
         )
 
         self.create_option(
             'background_image_file',
-            'Background image file',
+            _('Background image file'),
             OTypeFile,
             '',
-            'The file used for the background image',
+            _('The file used for the background image'),
         )
 
         self.create_option(
             'cursor_blinks',
-            'Cursor Blinks',
+            _('Cursor Blinks'),
             OTypeBoolean,
             False,
-            'Whether the cursor will blink'
+            _('Whether the cursor will blink')
         )
 
         self.create_option(
             'scrollback_lines',
-            'Scrollback line numer',
+            _('Scrollback line numer'),
             OTypeInteger,
             100,
-            'The number of lines in the terminal scrollback buffer',
+            _('The number of lines in the terminal scrollback buffer'),
         )
 
         self.create_option(
             'shell_command',
-            'The shell command',
+            _('The shell command'),
             OTypeString,
             get_default_system_shell(),
-            'The command that will be used for shells'
+            _('The command that will be used for shells')
         )
 
         self.create_option(
             'shell_command_args',
-            'The shell arguments',
+            _('The shell arguments'),
             OTypeStringList,
             [],
-            'The arguments to pass to the shell command',
+            _('The arguments to pass to the shell command'),
         )
 
 class CommanderActionsConfig(ActionsConfig):
@@ -119,8 +124,8 @@ class CommanderActionsConfig(ActionsConfig):
         self.create_action(
             'shell',
             TYPE_NORMAL,
-            'Run Shell',
-            'Open a shell prompt',
+            _('Run Shell'),
+            _('Open a shell prompt'),
             'terminal',
             self.execute_shell,
             '<Shift><Control>T',
@@ -129,8 +134,8 @@ class CommanderActionsConfig(ActionsConfig):
         self.create_action(
             'terminal-for-file',
             TYPE_NORMAL,
-            'Shell in file directory',
-            'Open a shell prompt in the parent directory of this file',
+            _('Shell in file directory'),
+            _('Open a shell prompt in the parent directory of this file'),
             'terminal',
             self.on_terminal_for_file,
             'NOACCEL',
@@ -139,8 +144,8 @@ class CommanderActionsConfig(ActionsConfig):
         self.create_action(
             'terminal-for-dir',
             TYPE_NORMAL,
-            'Shell in directory',
-            'Open a shell prompt in the directory',
+            _('Shell in directory'),
+            _('Open a shell prompt in the directory'),
             'terminal',
             self.on_terminal_for_dir,
             'NOACCEL',
@@ -161,7 +166,7 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs, env=[], cwd=os.getcwd(), title='Command',
+    def execute(self, commandargs, env=[], cwd=os.getcwd(), title=_('Command'),
                       icon='terminal', eof_handler=None, use_python_fork=False,
                       parser_func=None):
         return self.svc.execute(commandargs, env, cwd, title, icon,
@@ -206,15 +211,15 @@ class TerminalView(PidaView):
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
         self._close_button = create_mini_button(
-            gtk.STOCK_CLOSE, 'Close this terminal', self.on_close_clicked)
+            gtk.STOCK_CLOSE, _('Close this terminal'), self.on_close_clicked)
         self._bar.pack_start(self._close_button, expand=False)
         self._copy_button = create_mini_button(
-            gtk.STOCK_COPY, 'Copy the selection to the clipboard',
+            gtk.STOCK_COPY, _('Copy the selection to the clipboard'),
             self.on_copy_clicked)
         self._copy_button.set_sensitive(False)
         self._bar.pack_start(self._copy_button, expand=False)
         self._paste_button = create_mini_button(
-            gtk.STOCK_PASTE, 'Paste the contents of the clipboard',
+            gtk.STOCK_PASTE, _('Paste the contents of the clipboard'),
             self.on_paste_clicked)
         self._bar.pack_start(self._paste_button, expand=False)
         self._title = gtk.Label()
@@ -315,8 +320,8 @@ class TerminalView(PidaView):
         self.svc.boss.cmd('window', 'remove_view', view=self)
 
     def on_exited(self, term):
-        self._term.feed_text('Child exited\r\n', '1;34')
-        self._term.feed_text('Press any key to close.')
+        self._term.feed_text(_('Child exited')+'\r\n', '1;34')
+        self._term.feed_text(_('Press any key to close.'))
         self._term.connect('commit', self.on_press_any_key)
 
     def on_close_clicked(self, button):

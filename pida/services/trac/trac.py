@@ -40,11 +40,17 @@ from pida.ui.htmltextview import HtmlTextView
 from pida.utils.web import fetch_url
 from pida.utils.feedparser import parse
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('trac')
+_ = locale.gettext
+
 class TracView(PidaGladeView):
 
     gladefile = 'trac-browser'
+    locale = locale
     icon_name = 'internet'
-    label_text = 'Trac'
+    label_text = _('Trac')
 
     def create_ui(self):
         self.tickets_list.set_columns(
@@ -115,8 +121,8 @@ class TracActions(ActionsConfig):
         self.create_action(
             'show_trac',
             TYPE_TOGGLE,
-            'Trac Viewer',
-            'Show the Trac Viewer',
+            _('Trac Viewer'),
+            _('Show the Trac Viewer'),
             gtk.STOCK_INFO,
             self.on_show_trac,
             '<Shift><Control>j',

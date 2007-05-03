@@ -8,6 +8,11 @@ from pida.ui.paneds import PidaPaned
 from pida.core.environment import get_uidef_path, get_pixmap_path
 from pida.core.actions import accelerator_group
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 class Window(gtk.Window):
 
@@ -54,7 +59,7 @@ class PidaWindow(Window):
 
 
     def create_all(self):
-        self.set_title('PIDA Loves You!')
+        self.set_title(_('PIDA Loves You!'))
         self._fix_paneds()
         self._create_ui()
         self.resize(800, 600)

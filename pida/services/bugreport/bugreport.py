@@ -41,12 +41,18 @@ from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
                                           report
 from pida.utils.gthreads import AsyncTask, gcall
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('bugreport')
+_ = locale.gettext
+
 class BugreportView(PidaGladeView):
     
     gladefile = 'bugreport'
+    locale = locale
 
     icon_name = 'error'
-    label_text = 'Bug Report'
+    label_text = _('Bug Report')
 
     def on_ok_button__clicked(self, button):
         self.email, self.password = get_local_config()
@@ -69,9 +75,9 @@ class BugreportView(PidaGladeView):
 
     def report_complete(self, success, data):
         if success:
-            self.progress_bar.set_text('Bug Reported:\n%s' % data)
+            self.progress_bar.set_text(_('Bug Reported:\n%s') % data)
         else:
-            self.progress_bar.set_text('Bug Report Failed:\n%s' % data)
+            self.progress_bar.set_text(_('Bug Report Failed:\n%s') % data)
         self._pulsing = False
 
     def _pulse(self):
@@ -96,8 +102,8 @@ class BugreportActions(ActionsConfig):
         self.create_action(
             'show_bugreport',
             TYPE_TOGGLE,
-            'Bug report',
-            'Make a bug report',
+            _('Bug report'),
+            _('Make a bug report'),
             'error',
             self.on_report,
             '<Shift><Control>b'

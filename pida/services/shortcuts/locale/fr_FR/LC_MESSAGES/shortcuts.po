@@ -1,0 +1,31 @@
+# PIDA
+# Copyright (C) 2005-2007 The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-02 18:40+0200\n"
+"PO-Revision-Date: 2007-05-02 18:40+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../shortcuts.py:54
+msgid "Shortcuts"
+msgstr "Raccourcis claviers"
+
+#: ../../../shortcuts.py:82
+msgid "Capture Shortcut"
+msgstr "Capturer le raccourci"
+
+#: ../../../shortcuts.py:140
+msgid "Edit Shortcuts"
+msgstr "Editer les raccourcis claviers"
+
+#: ../../../shortcuts.py:141
+msgid "Show the PIDA keyboard shortcut editor"
+msgstr "Afficher l'éditeur de raccourcis clavier"

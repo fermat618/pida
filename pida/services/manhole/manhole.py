@@ -35,14 +35,19 @@ from pida.ui.views import PidaView
 
 from pida.utils.pyconsole import Console
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('manhole')
+_ = locale.gettext
+
 class ManholeActionsConfig(ActionsConfig):
 
     def create_actions(self):
         self.create_action(
             'show_manhole',
             TYPE_TOGGLE,
-            'PIDA Internal Shell',
-            'Open the PIDA Internal Shell',
+            _('PIDA Internal Shell'),
+            _('Open the PIDA Internal Shell'),
             'face-monkey',
             self.on_show_manhole,
             '<Shift><Control>M',
@@ -58,11 +63,11 @@ class ManholeView(PidaView):
 
     icon_name = 'face-monkey'
 
-    label_text = 'Debug PIDA'
+    label_text = _('Debug PIDA')
 
     def create_ui(self):
         console = Console(locals=self.svc.get_local_dict(),
-                          banner="PIDA Shell. Keep breathing.",
+                          banner=_("PIDA Shell. Keep breathing."),
                           use_rlcompleter=False)
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)

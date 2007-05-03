@@ -9,6 +9,11 @@ BOOK_EDITOR = 'Editor'
 BOOK_BUFFER = 'Buffer'
 BOOK_PLUGIN = 'Plugin'
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 class BaseBookConfig(object):
     
     def __init__(self, orientation):
@@ -21,10 +26,10 @@ class BaseBookConfig(object):
         return gtk.POS_TOP
 
     def get_notebook_name(self):
-        raise NotImplementedError('Must at least define a notebook name')
+        raise NotImplementedError(_('Must at least define a notebook name'))
 
     def get_name(self):
-        raise NotImplementedError('Must at leaste define a Name')
+        raise NotImplementedError(_('Must at leaste define a Name'))
 
     def create_tab_label(self, icon, text):
         if None in [icon, text]:
@@ -127,7 +132,7 @@ class BookConfigurator(object):
             return self._configs[name]
         except KeyError:
             print self._configs
-            raise KeyError('No Notebook attests to having that name %s' % name)
+            raise KeyError(_('No Notebook attests to having that name %s') % name)
 
     def configure_book(self, name, book):
         conf = self._widget_names[name]
@@ -173,7 +178,7 @@ class BookManager(object):
             book.set_tab_detachable(view.get_toplevel(), True)
             self._focus_page(bookname)
         else:
-            raise ValueError('This view is already in the manager')
+            raise ValueError(_('This view is already in the manager'))
 
     def remove_view(self, view):
         book_name = self._get_book_for_view(view)
@@ -218,7 +223,7 @@ class BookManager(object):
         for name, views in self._views.items():
             if view.get_unique_id() in views:
                 return name
-        raise ValueError('View is not in any Notebook')
+        raise ValueError(_('View is not in any Notebook'))
 
     def _get_view_uids(self):
         uids = []

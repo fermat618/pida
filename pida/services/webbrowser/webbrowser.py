@@ -41,6 +41,11 @@ from pida.utils.web import fetch_url
 
 from pida.ui.views import PidaView
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('webbrowser')
+_ = locale.gettext
+
 def get_url_mark(url):
     if '#' in url:
         url, mark = url.rsplit('#', 1)
@@ -128,7 +133,7 @@ class HtmlWidget(gtk.ScrolledWindow):
 
 class BrowserView(PidaView):
     ICON_NAME = 'gtk-library' 
-    SHORT_TITLE = 'Browser'
+    SHORT_TITLE = _('Browser')
 
     HAS_TITLE = False
 

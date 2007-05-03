@@ -32,15 +32,20 @@ from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig, otype_string_options_factory
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('editor')
+_ = locale.gettext
+
 class EditorOptionsConfig(OptionsConfig):
 
     def create_options(self):
         self.create_option(
             'editor_type',
-            'Editor Type',
+            _('Editor Type'),
             otype_string_options_factory(['vim']),
             'vim',
-            'The Editor used',
+            _('The Editor used'),
         )
 
 class EditorEvents(EventsConfig):

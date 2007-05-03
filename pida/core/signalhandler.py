@@ -1,6 +1,11 @@
 
 import signal
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 class PosixSignalHandler(object):
 
     def __init__(self, boss):
@@ -8,6 +13,6 @@ class PosixSignalHandler(object):
         signal.signal(signal.SIGTERM, self.handle_SIGTERM)
 
     def handle_SIGTERM(self, signum):
-        self.boss.log.error('PIDA stopped by SIGTERM') 
+        self.boss.log.error(_('PIDA stopped by SIGTERM')) 
         self.boss.stop()
 

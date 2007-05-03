@@ -1,0 +1,187 @@
+# PIDA
+# Copyright (C) 2005-2007 The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-03 10:41+0200\n"
+"PO-Revision-Date: 2007-05-02 18:40+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: glade/commit-dialog.glade.h:1
+#, fuzzy
+msgid "Please enter a commit message for:"
+msgstr "Afficher le message de commit"
+
+#: glade/commit-dialog.glade.h:2
+msgid "_Diff"
+msgstr ""
+
+#: glade/commit-dialog.glade.h:3
+msgid "gtk-cancel"
+msgstr ""
+
+#: glade/commit-dialog.glade.h:4
+msgid "gtk-go-back"
+msgstr ""
+
+#: glade/commit-dialog.glade.h:5
+msgid "gtk-go-forward"
+msgstr ""
+
+#: glade/commit-dialog.glade.h:6
+msgid "gtk-new"
+msgstr ""
+
+#: glade/commit-dialog.glade.h:7
+msgid "gtk-ok"
+msgstr ""
+
+#: versioncontrol.py:60 versioncontrol.py:294 versioncontrol.py:304
+#: versioncontrol.py:313 versioncontrol.py:323
+msgid "Differences"
+msgstr "Différences"
+
+#: versioncontrol.py:91 versioncontrol.py:264
+msgid "Version Control Log"
+msgstr "Log du contrôle de version"
+
+#: versioncontrol.py:101
+msgid ""
+" Version Control Log Started\n"
+"\n"
+msgstr ""
+" Log du contrôle de version démarré\n"
+"\n"
+
+#: versioncontrol.py:138 versioncontrol.py:333 versioncontrol.py:342
+#: versioncontrol.py:351 versioncontrol.py:361
+msgid "Commit"
+msgstr "Commiter"
+
+#: versioncontrol.py:192
+msgid "No Commit Message."
+msgstr "Aucun message de commit."
+
+#: versioncontrol.py:265
+msgid "Show the version control log"
+msgstr "Afficher le log du contrôle de version"
+
+#: versioncontrol.py:274
+msgid "Commit Message"
+msgstr "Message de commit"
+
+#: versioncontrol.py:275
+msgid "Show the commit message"
+msgstr "Afficher le message de commit"
+
+#: versioncontrol.py:284
+msgid "More Version Control"
+msgstr "Avancé"
+
+#: versioncontrol.py:285
+msgid "More Version Control Commands"
+msgstr "Plus de commandes du contrôle de version"
+
+#: versioncontrol.py:295
+msgid "Version Control differences for the current document"
+msgstr "Afficher les différences du document courant"
+
+#: versioncontrol.py:305
+msgid "Get the version control differences for the current project"
+msgstr "Récupérer les différences du projet courant"
+
+#: versioncontrol.py:314
+msgid "Get the version control diff on this file"
+msgstr "Récupérer les différences sur ce fichier"
+
+#: versioncontrol.py:324
+msgid "Get the version control diff on this directory"
+msgstr "Récupérer les différences sur ce répertoire"
+
+#: versioncontrol.py:334
+msgid "Commit the current document"
+msgstr "Commiter le document courant"
+
+#: versioncontrol.py:343
+msgid "Commit the current project"
+msgstr "Commiter le projet courant"
+
+#: versioncontrol.py:352
+msgid "Commit the selected file"
+msgstr "Commiter le fichier sélectionné"
+
+#: versioncontrol.py:362
+msgid "Commit the selected directory"
+msgstr "Commiter le répertoire sélectionné"
+
+#: versioncontrol.py:371 versioncontrol.py:380 versioncontrol.py:389
+#: versioncontrol.py:399
+msgid "Update"
+msgstr "Mettre à jour"
+
+#: versioncontrol.py:372
+msgid "Update the current document"
+msgstr "Mettre à jour le document courant"
+
+#: versioncontrol.py:381
+msgid "Update the current project"
+msgstr "Mettre à jour le projet courant"
+
+#: versioncontrol.py:390 versioncontrol.py:400
+msgid "Update the selected file"
+msgstr "Mettre à jour le fichier sélectionné"
+
+#: versioncontrol.py:409 versioncontrol.py:418 versioncontrol.py:428
+msgid "Add"
+msgstr "Ajouter"
+
+#: versioncontrol.py:410
+msgid "Add the current document"
+msgstr "Ajouter le document courant"
+
+#: versioncontrol.py:419 versioncontrol.py:429
+msgid "Add the selected file"
+msgstr "Ajouter le fichier sélectionné"
+
+#: versioncontrol.py:438 versioncontrol.py:448 versioncontrol.py:458
+msgid "Remove"
+msgstr "Supprimer"
+
+#: versioncontrol.py:439
+msgid "Remove the current document"
+msgstr "Supprimer le document courant"
+
+#: versioncontrol.py:449
+msgid "Remove the selected file"
+msgstr "Supprimer le fichier sélectionné"
+
+#: versioncontrol.py:459
+msgid "Remove the selected directory"
+msgstr "Supprimer le répertoire sélectionné"
+
+#: versioncontrol.py:468 versioncontrol.py:478 versioncontrol.py:488
+#: versioncontrol.py:498
+msgid "Revert"
+msgstr "Annuler les modifications"
+
+#: versioncontrol.py:469
+msgid "Revert the current document"
+msgstr "Revenir à la dernière version connue"
+
+#: versioncontrol.py:479
+msgid "Revert the current project"
+msgstr "Annuler les modifications du projet courant"
+
+#: versioncontrol.py:489
+msgid "Revert the selected file"
+msgstr "Annuler les modifications du fichier sélectionné"
+
+#: versioncontrol.py:499
+msgid "Revert the selected directory"
+msgstr "Annuler les modifications du repértoire sélectionné"

@@ -1,0 +1,51 @@
+# PIDA
+# Copyright (C) 2005-2007 The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-02 18:40+0200\n"
+"PO-Revision-Date: 2007-05-02 18:40+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../sessions.py:112
+msgid "Load Session"
+msgstr "Charger la session"
+
+#: ../../../sessions.py:113
+msgid "Load a saved session"
+msgstr "Charger une session sauvergardée"
+
+#: ../../../sessions.py:122
+msgid "Save Session"
+msgstr "Sauvegarder la session"
+
+#: ../../../sessions.py:123
+msgid "Save your current session"
+msgstr "Sauvegarder la session courante"
+
+#: ../../../sessions.py:132
+msgid "Save Session As"
+msgstr "Sauvegarder la session sous"
+
+#: ../../../sessions.py:133
+msgid "Save your current session with a given filename"
+msgstr "Sauvergarder la session courante dans un fichier personnalisé"
+
+#: ../../../sessions.py:164
+msgid "Load last session on startup"
+msgstr "Charger la dernière session au démarrage"
+
+#: ../../../sessions.py:172
+msgid "Clear old buffers when loading session"
+msgstr "Effacer les anciens buffers au chargement d'une session"
+
+#: ../../../sessions.py:180
+msgid "Sessions Properties"
+msgstr "Propriétés des sessions"

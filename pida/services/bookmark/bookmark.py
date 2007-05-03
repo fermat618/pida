@@ -39,6 +39,11 @@ from pida.ui.views import PidaView
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('bookmark')
+_ = locale.gettext
+
 class BookmarkItem(object):
 
     def __init__(self, group='none', title='no title', data=None):
@@ -97,7 +102,7 @@ class BookmarkItemUrl(BookmarkItem):
 class BookmarkView(PidaView):
 
     icon_name = 'gtk-library'
-    label_text = 'Bookmarks'
+    label_text = _('Bookmarks')
 
     def create_ui(self):
         self._vbox = gtk.VBox()
@@ -127,14 +132,14 @@ class BookmarkView(PidaView):
         self._list_dirs.set_headers_visible(False)
         self._list_dirs.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self._books.append_page(self._list_dirs,
-                tab_label=self.create_tab_label('stock_folder', 'Dirs'))
+                tab_label=self.create_tab_label('stock_folder', _('Dirs')))
         self._list_files = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_files.connect('row-activated', self._on_item_activated)
         self._list_files.connect('selection-changed', self._on_item_selected)
         self._list_files.set_headers_visible(False)
         self._list_files.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self._books.append_page(self._list_files,
-                tab_label=self.create_tab_label('text-x-generic', 'Files'))
+                tab_label=self.create_tab_label('text-x-generic', _('Files')))
         """
         self._list_url = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_url.set_headers_visible(False)
@@ -187,8 +192,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'show_bookmark',
             TYPE_TOGGLE,
-            'Bookmark Viewer',
-            'Show bookmarks',
+            _('Bookmark Viewer'),
+            _('Show bookmarks'),
             '',
             self.on_show_bookmark,
             '<Shift><Control>1',
@@ -197,8 +202,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark_curfile',
             TYPE_NORMAL,
-            'Bookmark current file',
-            'Bookmark current file',
+            _('Bookmark current file'),
+            _('Bookmark current file'),
             'text-x-generic',
             self.on_bookmark_curfile,
             'NOACCEL',
@@ -207,8 +212,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark_curdir',
             TYPE_NORMAL,
-            'Bookmark current directory',
-            'Bookmark current directory',
+            _('Bookmark current directory'),
+            _('Bookmark current directory'),
             'stock_folder',
             self.on_bookmark_curdir,
             'NOACCEL',
@@ -217,8 +222,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark_delsel',
             TYPE_NORMAL,
-            'Delete selected item',
-            'Delete selected item',
+            _('Delete selected item'),
+            _('Delete selected item'),
             gtk.STOCK_DELETE,
             self.on_bookmark_delsel,
             'NOACCEL',
@@ -227,8 +232,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark-for-dir',
             TYPE_NORMAL,
-            'Add as bookmark',
-            'Add selected directory as bookmark',
+            _('Add as bookmark'),
+            _('Add selected directory as bookmark'),
             gtk.STOCK_ADD,
             self.on_bookmark_for_dir,
             'NOACCEL',
@@ -237,8 +242,8 @@ class BookmarkActions(ActionsConfig):
         self.create_action(
             'bookmark-for-file',
             TYPE_NORMAL,
-            'Add as bookmark',
-            'Add selected file as bookmark',
+            _('Add as bookmark'),
+            _('Add selected file as bookmark'),
             gtk.STOCK_ADD,
             self.on_bookmark_for_file,
             'NOACCEL',
@@ -333,7 +338,7 @@ class Bookmark(Service):
         if title.startswith(source_directory):
             title = title[len(source_directory):]
             if title == '':
-                title = '(project root)'
+                title = _('(project root)')
             else:
                 title = '.' + title
         item = BookmarkItemPath(title=title, data=path)

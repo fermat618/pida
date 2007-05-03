@@ -35,6 +35,11 @@ from pida.core.environment import get_uidef_path
 from pida.ui.views import PidaView
 from pida.utils.unique import create_unique_id
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('checklist')
+_ = locale.gettext
+
 class ChecklistItem(object):
 
     def __init__(self, title, severity=1, done=False, key=None):
@@ -50,7 +55,7 @@ class ChecklistItem(object):
 class ChecklistView(PidaView):
 
     icon_name = 'gtk-todo'
-    label_text = 'Check list'
+    label_text = _('Check list')
 
     def create_ui(self):
         self._vbox = gtk.VBox()
@@ -74,9 +79,9 @@ class ChecklistView(PidaView):
 
     def create_ui_list(self):
         self._list = ObjectList([
-                Column('done', title='Done', data_type=bool, editable=True),
-                Column('title', title='Title', data_type=str, editable=True)
-                #Column('severity', title='Severity', data_type=int, editable=True)
+                Column('done', title=_('Done'), data_type=bool, editable=True),
+                Column('title', title=_('Title'), data_type=str, editable=True)
+                #Column('severity', title=_('Severity'), data_type=int, editable=True)
                 ])
         self._list.connect('cell-edited', self._on_item_edit)
         self._list.connect('selection-changed', self._on_item_selected)
@@ -123,8 +128,8 @@ class ChecklistActions(ActionsConfig):
         self.create_action(
             'show_checklist',
             TYPE_TOGGLE,
-            'Checklist Viewer',
-            'Show checklists',
+            _('Checklist Viewer'),
+            _('Show checklists'),
             '',
             self.on_show_checklist,
             '<Shift><Control>1',
@@ -133,8 +138,8 @@ class ChecklistActions(ActionsConfig):
         self.create_action(
             'checklist_add',
             TYPE_NORMAL,
-            'Add something in checklist',
-            'Add something in checklist',
+            _('Add something in checklist'),
+            _('Add something in checklist'),
             gtk.STOCK_ADD,
             self.on_checklist_add,
             'NOACCEL',
@@ -143,8 +148,8 @@ class ChecklistActions(ActionsConfig):
         self.create_action(
             'checklist_del',
             TYPE_NORMAL,
-            'Delete selected item',
-            'Delete selected item',
+            _('Delete selected item'),
+            _('Delete selected item'),
             gtk.STOCK_DELETE,
             self.on_checklist_del,
             'NOACCEL',
@@ -159,7 +164,7 @@ class ChecklistActions(ActionsConfig):
             self.svc.hide_checklist()
 
     def on_checklist_add(self, action):
-        self.svc.add_item(ChecklistItem(title='__edit_this__'))
+        self.svc.add_item(ChecklistItem(title=_('__edit_this__')))
 
     def on_checklist_del(self, action):
         self.svc.remove_current()

@@ -45,6 +45,11 @@ from pida.ui.views import PidaGladeView
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('library')
+_ = locale.gettext
+
 class LibraryView(PidaGladeView):
     
     _columns = [
@@ -52,9 +57,9 @@ class LibraryView(PidaGladeView):
     ]
 
     gladefile = 'library-viewer'
-
+    locale = locale
     icon_name = 'gtk-library'
-    label_text = 'Documentation'
+    label_text = _('Documentation')
 
     def create_ui(self):
         self.books_list.set_columns(self._columns)
@@ -107,8 +112,8 @@ class LibraryActions(ActionsConfig):
         self.create_action(
             'show_library',
             TYPE_TOGGLE,
-            'Documentation Library',
-            'Show the documentation library',
+            _('Documentation Library'),
+            _('Show the documentation library'),
             '',
             self.on_show_library,
             '<Shift><Control>r',
@@ -117,8 +122,8 @@ class LibraryActions(ActionsConfig):
         self.create_action(
             'show_browser',
             TYPE_TOGGLE,
-            'Documentation Browser',
-            'Documentation Browser',
+            _('Documentation Browser'),
+            _('Documentation Browser'),
             '',
             self.on_show_browser,
             'NOACCEL',
@@ -161,7 +166,7 @@ def fetch_directory(directory):
 class TitleHandler(xml.sax.handler.ContentHandler):
 
     def __init__(self):
-        self.title = 'untitled'
+        self.title = _('untitled')
         self.is_finished = False
 
     def startElement(self, name, attributes):
@@ -310,7 +315,7 @@ class Library(Service):
         self._view = LibraryView(self)
         bclass = self.boss.cmd('webbrowser', 'get_web_browser')
         self._browser = bclass(self)
-        self._browser.label_text = 'Documentation'
+        self._browser.label_text = _('Documentation')
         self._browser.connect_closed(self._on_close_clicked)
         self._has_loaded = False
 

@@ -11,11 +11,16 @@ from pida.utils.unique import create_unique_id
 
 from pida.ui.docks import BEH_NORMAL
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 class PidaViewWidget(PropertyObject, gtk.VBox):
 
     __gtype_name__ = 'PidaViewWidget'
 
-    gproperty('title-text', str, default='Untitled Pida View')
+    gproperty('title-text', str, default=_('Untitled Pida View'))
 
     gsignal('close-clicked')
     gsignal('detach-clicked')
@@ -77,7 +82,7 @@ class PidaViewWidget(PropertyObject, gtk.VBox):
 class PidaViewMixin(object):
 
     icon_name = gtk.STOCK_INFO
-    label_text = 'Pida View'
+    label_text = _('Pida View')
     dock_behaviour = BEH_NORMAL
 
 
@@ -102,6 +107,8 @@ class PidaViewMixin(object):
 class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 
     def __init__(self, service, title=None, icon=None, *args, **kw):
+        if hasattr(self, 'locale') and self.locale is not None:
+            self.locale.bindglade()
         self.svc = service
         GladeSlaveDelegate.__init__(self, *args, **kw)
         self._uid = create_unique_id()

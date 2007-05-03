@@ -1,0 +1,128 @@
+# PIDA
+# Copyright (C) 2005-2007 The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-02 12:41+0200\n"
+"PO-Revision-Date: 2007-05-02 12:41+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"Language-Team: None <none@none.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: filemanager.py:145
+msgid "Files"
+msgstr "Fichiers"
+
+#: filemanager.py:177
+msgid "Directories First"
+msgstr "Répertoire en premier"
+
+#: filemanager.py:178
+msgid "File Name"
+msgstr "Nom de fichier"
+
+#: filemanager.py:179
+msgid "Case Sensitive File Name"
+msgstr "Nom de fichier sensible à la casse"
+
+#: filemanager.py:180
+msgid "File Path"
+msgstr "Chemin du fichier"
+
+#: filemanager.py:181
+msgid "Extension"
+msgstr "Extension"
+
+#: filemanager.py:182
+msgid "Version Control Status"
+msgstr "Status de version"
+
+#: filemanager.py:336
+msgid "Show hidden files"
+msgstr "Afficher les fichiers cachés"
+
+#: filemanager.py:339
+msgid "Shows hidden files"
+msgstr "Afficher les fichiers cachés"
+
+#: filemanager.py:343
+msgid "Remember last Path"
+msgstr "Se souvenir du dernier chemin"
+
+#: filemanager.py:346
+msgid "Remembers the last browsed path"
+msgstr "Sauvegarder le dernier chemin parcouru"
+
+#: filemanager.py:350
+msgid "Last browsed Path"
+msgstr "Dernier chemin parcouru"
+
+#: filemanager.py:353
+msgid "The last browsed path"
+msgstr "Le dernier chemin parcouru"
+
+#: filemanager.py:357
+msgid "Hide regex"
+msgstr "Cacher les fichiers"
+
+#: filemanager.py:360
+msgid "Cacher les fichiers qui match l'expression régulière"
+msgstr ""
+
+#: filemanager.py:368
+msgid "Browse the file directory"
+msgstr "Parcourir le répertoire du fichier"
+
+#: filemanager.py:369
+msgid "Browse the parent directory of this file"
+msgstr "Parcourir le répertoire parent de ce fichier"
+
+#: filemanager.py:378 filemanager.py:379
+msgid "Browse the directory"
+msgstr "Parcourir le répertoire"
+
+#: filemanager.py:388
+msgid "Show file browser"
+msgstr "Afficher l'explorateur de fichier"
+
+#: filemanager.py:389
+msgid "Show the file browser view"
+msgstr "Afficher l'explorateur de fichier"
+
+#: filemanager.py:398
+msgid "Go Up"
+msgstr "Parent"
+
+#: filemanager.py:399
+msgid "Go to the parent directory"
+msgstr "Aller au répertoire parent"
+
+#: filemanager.py:408
+msgid "Open Terminal"
+msgstr "Ouvrir une console"
+
+#: filemanager.py:409
+msgid "Open a terminal in this directory"
+msgstr "Ouvrir une console dans ce répertoire"
+
+#: filemanager.py:418
+msgid "Refresh Directory"
+msgstr "Actualiser le répertoire"
+
+#: filemanager.py:419
+msgid "Refresh the current directory"
+msgstr "Actualiser le répertoire courant"
+
+#: filemanager.py:428
+msgid "Project Root"
+msgstr "Racine du projet"
+
+#: filemanager.py:429
+msgid "Browse the root of the current project"
+msgstr "Parcourir la racine du projet"

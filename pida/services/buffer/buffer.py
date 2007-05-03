@@ -39,6 +39,13 @@ from pida.ui.views import PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('buffer')
+_ = locale.gettext
+
+
+
 LIST_COLUMNS = [
     Column('markup', use_markup=True),
     Column("basename", visible=False, searchable=True),
@@ -47,23 +54,23 @@ LIST_COLUMNS = [
 class BufferListView(PidaGladeView):
 
     gladefile = 'buffer_list'
-
+    locale = locale
     icon_name = 'package_office'
 
-    label_text = 'Buffers'
+    label_text = _('Buffers')
 
     def create_ui(self):
         self.buffers_ol.set_columns(LIST_COLUMNS)
         self.buffers_ol.set_headers_visible(False)
         self._sort_combo = AttrSortCombo(self.buffers_ol,
             [
-                ('creation_time', 'Time Opened'),
-                ('filename', 'File path'),
-                ('basename', 'File name'),
-                ('mimetype', 'Mime Type'),
-                ('length', 'File Length'),
-                ('modified_time', 'Last Modified'),
-                #('Project', 'project_name')
+                ('creation_time', _('Time Opened')),
+                ('filename', _('File path')),
+                ('basename', _('File name')),
+                ('mimetype', _('Mime Type')),
+                ('length', _('File Length')),
+                ('modified_time', _('Last Modified')),
+                #('Project', _('Project_name'))
             ],
             'creation_time' 
         )
@@ -98,8 +105,8 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'open_file',
             TYPE_NORMAL,
-            'Open File',
-            'Open a file with a graphical file browser',
+            _('Open File'),
+            _('Open a file with a graphical file browser'),
             gtk.STOCK_OPEN,
             self.on_open_file,
             '<Shift><Control>O',
@@ -108,8 +115,8 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'open-for-file',
             TYPE_NORMAL,
-            'Open File',
-            'Open this file',
+            _('Open File'),
+            _('Open this file'),
             gtk.STOCK_OPEN,
             self.on_open_for_file,
             'NOACCEL',
@@ -118,8 +125,8 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'new_file',
             TYPE_NORMAL,
-            'New File',
-            'Create a temporary new file',
+            _('New File'),
+            _('Create a temporary new file'),
             gtk.STOCK_NEW,
             self.on_new_file,
             '<Shift><Control>N',
@@ -128,8 +135,8 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'create_file',
             TYPE_NORMAL,
-            'Create File',
-            'Create a new file',
+            _('Create File'),
+            _('Create a new file'),
             gtk.STOCK_ADD,
             self.on_add_file,
             '<Shift><Control>A',
@@ -138,8 +145,8 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'close',
             TYPE_NORMAL,
-            'Close Document',
-            'Close the current document',
+            _('Close Document'),
+            _('Close the current document'),
             gtk.STOCK_CLOSE,
             self.on_close,
             '<Shift><Control>W',

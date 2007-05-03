@@ -38,6 +38,11 @@ from kiwi.utils import gsignal, type_register
 
 from vte import Terminal
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 class TerminalMatch(object):
     """
@@ -172,7 +177,7 @@ class PidaTerminal(Terminal):
         for match in self._matches.values():
             if match.name == name:
                 return match
-        raise KeyError('No match named "%s" was found' % name)
+        raise KeyError(_('No match named "%s" was found') % name)
 
     def match_add_match(self, match):
         """
@@ -276,8 +281,8 @@ if __name__ == '__main__':
         print event, val
     t.match_add_callback('python-line', 'line [0-9]+', 'line ([0-9]+)', mc)
     t.match_add_menu('file', r'/[/A-Za-z0-9_\-]+', '')
-    a = gtk.Action('open', 'Open', 'Open this file', gtk.STOCK_OPEN)
-    b = gtk.Action('save', 'Save', 'Save This File', gtk.STOCK_SAVE)
+    a = gtk.Action('open', _('Open'), _('Open this file'), gtk.STOCK_OPEN)
+    b = gtk.Action('save', _('Save'), _('Save This File'), gtk.STOCK_SAVE)
     def act(action):
         print action.match_args
     t.set_background_image_file('/usr/share/xfce4/backdrops/flower.png')

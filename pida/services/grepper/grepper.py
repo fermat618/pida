@@ -34,6 +34,10 @@ from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('grepper')
+_ = locale.gettext
 
 class GrepperItem(object):
     """
@@ -89,8 +93,8 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'show_grepper',
             TYPE_TOGGLE,
-            'Find in files',
-            'Show the grepper view',
+            _('Find in files'),
+            _('Show the grepper view'),
             gtk.STOCK_FIND,
             self.on_show_grepper,
             '<Shift><Control>g'
@@ -99,8 +103,8 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word',
             TYPE_NORMAL,
-            'Find word in project',
-            'Find the current word in the current project',
+            _('Find word in project'),
+            _('Find the current word in the current project'),
             gtk.STOCK_FIND,
             self.on_grep_current_word,
             '<Shift><Control>question'
@@ -109,8 +113,8 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word_file',
             TYPE_NORMAL,
-            'Find word in document directory',
-            'Find the current word in current document directory',
+            _('Find word in document directory'),
+            _('Find the current word in current document directory'),
             gtk.STOCK_FIND,
             self.on_grep_current_word_file,
             '<Shift><Control><Alt>question'
@@ -131,12 +135,13 @@ class GrepperActionsConfig(ActionsConfig):
             self.svc.set_view_location(document.directory)
             self.svc.grep_current_word()
         else:
-            self.svc.error_dlg('There is no current document.')
+            self.svc.error_dlg(_('There is no current document.'))
         
     
 class GrepperView(PidaGladeView):
     gladefile = 'grepper-window'
-    label_text = 'Find in Files'
+    locale = locale
+    label_text = _('Find in Files')
     icon_name = gtk.STOCK_FIND
 
     def create_ui(self):
@@ -195,11 +200,11 @@ class GrepperView(PidaGladeView):
         # data checking is done here as opposed to in the grep functions
         # because of threading
         if not pattern:
-            self.svc.error_dlg('Empty search string')
+            self.svc.error_dlg(_('Empty search string'))
             return False
 
         if not os.path.exists(location):
-            self.svc.boss.get_window().error_dlg('Path does not exist')
+            self.svc.boss.get_window().error_dlg(_('Path does not exist'))
             return False
 
         if not self.re_check.get_active():
@@ -210,7 +215,7 @@ class GrepperView(PidaGladeView):
         except sre_constants.error, e:
             # More verbose error dialog
             self.svc.boss.get_window().error_dlg(
-                'Improper regular expression "%s"' % pattern,
+                _('Improper regular expression "%s"') % pattern,
                 str(e))
             return False
 
@@ -233,10 +238,10 @@ class GrepperOptions(OptionsConfig):
     def create_options(self):
         self.create_option(
             'maximum_results',
-            'Maximum Results',
+            _('Maximum Results'),
             OTypeInteger,
             500,
-            'The maximum number of results to find (approx).',
+            _('The maximum number of results to find (approx).'),
         )
 
 class GrepperEvents(EventsConfig):

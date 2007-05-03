@@ -1,0 +1,56 @@
+# PIDA
+# Copyright (C) 2005-2007 The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-03 10:10+0200\n"
+"PO-Revision-Date: 2007-05-02 18:40+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: bugreport.py:55
+msgid "Bug Report"
+msgstr "Rapport de bug"
+
+#: bugreport.py:78
+#, python-format
+msgid ""
+"Bug Reported:\n"
+"%s"
+msgstr ""
+"Rapport de bug:\n"
+"%s%s"
+
+#: bugreport.py:80
+#, python-format
+msgid ""
+"Bug Report Failed:\n"
+"%s"
+msgstr ""
+"Rapport de bug échoué:\n"
+"%s"
+
+#: bugreport.py:105
+msgid "Bug report"
+msgstr "Rapport de bug"
+
+#: bugreport.py:106
+msgid "Make a bug report"
+msgstr "Rédiger un rapport de bug"
+
+#: glade/bugreport.glade.h:1
+msgid "<b>Report PIDA Bug</b>"
+msgstr "<b>Rapport de bug PIDA</b>"
+
+#: glade/bugreport.glade.h:2
+msgid "Description:"
+msgstr "Description:"
+
+#: glade/bugreport.glade.h:3
+msgid "Title:"
+msgstr "Titre:"

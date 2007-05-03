@@ -31,6 +31,11 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('appcontroller')
+_ = locale.gettext
+
 
 class AppcontrollerActions(ActionsConfig):
 
@@ -38,8 +43,8 @@ class AppcontrollerActions(ActionsConfig):
         self.create_action(
             'quit_pida',
             TYPE_NORMAL,
-            'Quit PIDA',
-            'Exit the application',
+            _('Quit PIDA'),
+            _('Exit the application'),
             gtk.STOCK_QUIT,
             self.on_quit_pida,
             '<Control><Alt>q'

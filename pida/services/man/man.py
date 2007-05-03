@@ -40,6 +40,11 @@ from pida.ui.views import PidaView
 
 from pida.utils.gthreads import GeneratorTask, gcall
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('man')
+_ = locale.gettext
+
 class ManItem(object):
 
     def __init__(self, pattern, number, manpage):
@@ -83,8 +88,8 @@ class ManView(PidaView):
                 commandargs=commandargs,
                 cwd=directory,
                 icon='gnome-library',
-                title='Man %s(%d)' %
-                (item.pattern, int(item.number)))
+                title=_('Man %(pattern)s(%(number)d)') %
+                {pattern:item.pattern, number:int(item.number)})
         ## show man page in terminal
         pass
 
@@ -98,8 +103,8 @@ class ManActions(ActionsConfig):
         self.create_action(
             'show_man',
             TYPE_TOGGLE,
-            'Man Viewer',
-            'Show the man',
+            _('Man Viewer'),
+            _('Show the man'),
             '',
             self.on_show_man,
             '<Shift><Control>m',

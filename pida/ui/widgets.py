@@ -19,6 +19,11 @@ from kiwi.ui.objectlist import ObjectList, Column
 from pida.core.options import OTypeBoolean, OTypeString, OTypeInteger, \
     OTypeStringList, OTypeFile, OTypeFont, OTypeStringOption
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('pida')
+_ = locale.gettext
+
 
 class CleverProxyColorButton(ProxyColorButton):
 
@@ -113,7 +118,7 @@ def get_widget_for_type(rtype_instance):
     elif rtype is OTypeStringList:
         return ProxyStringList()
     elif rtype is OTypeFile:
-        w = ProxyFileChooserButton('Select File')
+        w = ProxyFileChooserButton(_('Select File'))
         w.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
         return w
     #elif rtype is types.readonlyfile:

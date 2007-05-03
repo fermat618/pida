@@ -41,6 +41,11 @@ from pida.core.projects import ProjectControllerMananger, ProjectController, \
 
 from pida.ui.views import PidaGladeView
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('project')
+_ = locale.gettext
+
 
 def open_directory_dialog(parent, title, folder=''):
     filechooser = gtk.FileChooserDialog(title,
@@ -70,17 +75,17 @@ class GenericExecutionController(ProjectController):
 
     name = 'GENERIC_EXECUTION'
 
-    label = 'Generic Execution'
+    label = _('Generic Execution')
 
     attributes = [
-        ProjectKeyDefinition('command', 'Execution Command', True),
+        ProjectKeyDefinition('command', _('Execution Command'), True),
     ] + ProjectController.attributes
 
     def execute(self):
         command = self.get_option('command')
         if not command:
             self.boss.get_window().error_dlg(
-                'Controller has no command set'
+                _('Controller has no command set')
             )
             return
         self.execute_commandline(
@@ -94,8 +99,8 @@ PROJECT_LIST_COLUMNS = [
 class ProjectListView(PidaGladeView):
 
     gladefile = 'project_list'
-
-    label_text = 'Projects'
+    locale = locale
+    label_text = _('Projects')
 
     icon_name = 'package_utilities'
 
@@ -120,19 +125,19 @@ class ProjectListView(PidaGladeView):
 class ProjectPropertiesView(PidaGladeView):
 
     gladefile = 'project-properties'
-
-    label_text = 'Project Properties'
+    locale = locale
+    label_text = _('Project Properties')
 
     icon_name = 'package_utilities'
 
     def create_ui(self):
         self.controllers_list.set_columns([
-            Column('markup', use_markup=True, expand=True, title='Controllers'),
-            Column('default', radio=True, data_type=bool, editable=True)
+            Column('markup', use_markup=True, expand=True, title=_('Controllers')),
+            Column('default', radio=True, data_type=bool, editable=True, title=_('Defaut'))
         ])
         self.items_list.set_columns([
-            Column('label', title='Name', expand=True, use_markup=True),
-            Column('value', editable=True, expand=True),
+            Column('label', title=_('Name'), expand=True, use_markup=True),
+            Column('value', title=_('Value'), editable=True, expand=True),
         ])
         self._project = None
 
@@ -160,12 +165,12 @@ class ProjectPropertiesView(PidaGladeView):
         name = self.name_entry.get_text()
         if not name:
             self.svc.boss.get_window().error_dlg(
-                'Please enter a controller name')
+                _('Please enter a controller name'))
             return
         for controller in self._project.controllers:
             if controller.config_section == name:
                 self.svc.boss.get_window().error_dlg(
-                    'This project already has a controller named %s' % name)
+                    _('This project already has a controller named %s') % name)
                 return
         self.name_entry.set_text('')
         controller_type = self.controllers_combo.read()
@@ -177,7 +182,7 @@ class ProjectPropertiesView(PidaGladeView):
         controller = self.controllers_list.get_selected()
         if controller is not None:
             if self.svc.boss.get_window().yesno_dlg(
-            'Are you sure you want to delete controller "%s" from this project?'
+            _('Are you sure you want to delete controller "%s" from this project?')
             % controller.config_section):
                 self._project.remove_controller(controller)
                 self.controllers_list.remove(controller)
@@ -198,8 +203,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_add',
             TYPE_NORMAL,
-            'Add Project',
-            'Adds a new project',
+            _('Add Project'),
+            _('Adds a new project'),
             gtk.STOCK_ADD,
             self.on_project_add,
         )
@@ -207,8 +212,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execute',
             TYPE_MENUTOOL,
-            'Execute Default',
-            'Execute the project',
+            _('Execute Default'),
+            _('Execute the project'),
             gtk.STOCK_EXECUTE,
             self.on_project_execute,
         )
@@ -216,8 +221,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_remove',
             TYPE_NORMAL,
-            'Remove from workspace',
-            'Remove the current project from the workspace',
+            _('Remove from workspace'),
+            _('Remove the current project from the workspace'),
             gtk.STOCK_DELETE,
             self.on_project_remove,
         )
@@ -225,8 +230,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_properties',
             TYPE_TOGGLE,
-            'Project Properties',
-            'Show the project property editor',
+            _('Project Properties'),
+            _('Show the project property editor'),
             'settings',
             self.on_project_properties,
         )
@@ -234,8 +239,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execution_menu',
             TYPE_NORMAL,
-            'Execution Controllers',
-            'Configurations with which to execute the project',
+            _('Execution Controllers'),
+            _('Configurations with which to execute the project'),
             gtk.STOCK_EXECUTE,
             self.on_project_execution_menu,
         )
@@ -246,7 +251,7 @@ class ProjectActionsConfig(ActionsConfig):
     def on_project_add(self, action):
         path = open_directory_dialog(
             self.svc.boss.get_window(),
-            'Select a directory to add'
+            _('Select a directory to add')
         )
         if path:
             self.svc.cmd('add_directory', project_directory=path)
@@ -261,7 +266,7 @@ class ProjectActionsConfig(ActionsConfig):
             controller.execute()
         else:
             self.svc.boss.get_window().error_dlg(
-                'This project has no controllers')
+                _('This project has no controllers'))
 
     def on_project_properties(self, action):
         self.svc.show_properties(action.get_active())
@@ -285,19 +290,19 @@ class ProjectOptions(OptionsConfig):
     def create_options(self):
         self.create_option(
             'project_dirs',
-            'Project Directories',
+            _('Project Directories'),
             OTypeStringList,
             [],
-            'The current directories in the workspace',
+            _('The current directories in the workspace'),
         )
 
         self.create_option(
             'last_project',
-            'Last Project',
+            _('Last Project'),
             OTypeFile,
             '',
-            ('The last project selected. '
-            '(Do not change this unless you know what you are doing)')
+            (_('The last project selected. ') +
+            _('(Do not change this unless you know what you are doing)'))
         )
 
 
@@ -357,7 +362,7 @@ class Project(Service):
             if os.path.exists(path):
                 project = self._load_project(path)
             else:
-                self.log_warn('Project path %s has disappeared' % path)
+                self.log_warn(_('Project path %s has disappeared') % path)
 
     def _save_options(self):
         self.set_opt('project_dirs',
@@ -375,8 +380,8 @@ class Project(Service):
                 self._save_options()
                 return project
         if self.boss.get_window().yesno_dlg(
-            'The directory does not contain a project file, do you want to '
-            'create one?'
+            _('The directory does not contain a project file, ') +
+            _('do you want to create one?')
         ):
             self.create_project_file(project_directory)
             self._save_options()
@@ -426,7 +431,7 @@ class Project(Service):
 
     def remove_project(self, project):
         if self.boss.get_window().yesno_dlg(
-            'Are you sure you want to remove project "%s" from the workspace?' 
+            _('Are you sure you want to remove project "%s" from the workspace?')
             % project.name
         ):
             self._projects.remove(project)

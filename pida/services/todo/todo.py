@@ -35,6 +35,11 @@ from pida.ui.views import PidaView
 
 from pida.utils.gthreads import GeneratorTask, gcall
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('todo')
+_ = locale.gettext
+
 class TodoItem(object):
 
     def __init__(self, todo, line, marker):
@@ -44,7 +49,7 @@ class TodoItem(object):
 
 class TodoView(PidaView):
 
-    label_text = 'TODO'
+    label_text = _('TODO')
     icon_name =  'accessories-text-editor'
 
     def create_ui(self):
@@ -78,8 +83,8 @@ class TodoActionsConfig(ActionsConfig):
         self.create_action(
             'show_todo',
             TYPE_TOGGLE,
-            'Todo Viewer',
-            'Show the Todo Viewer',
+            _('Todo Viewer'),
+            _('Show the Todo Viewer'),
             'accessories-text-editor',
             self.on_show_todo,
             '<Shift><Control>d',

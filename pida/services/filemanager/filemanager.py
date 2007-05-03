@@ -48,6 +48,12 @@ from pida.ui.views import PidaView
 from pida.ui.objectlist import AttrSortCombo
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('filemanager')
+_ = locale.gettext
+
+
 state_text = dict(
         hidden=' ',
         none='?',
@@ -137,7 +143,7 @@ class FilemanagerView(PidaView):
         Column("lower_name", visible=False, searchable=True),
         ]
 
-    label_text = 'Files'
+    label_text = _('Files')
     icon_name = 'file-manager'
 
     def create_ui(self):
@@ -169,12 +175,12 @@ class FilemanagerView(PidaView):
         self._vbox.pack_start(self.file_list)
         self._sort_combo = AttrSortCombo(self.file_list,
             [
-                ('is_dir_sort', 'Directories First'),
-                ('lower_name', 'File Name'),
-                ('name', 'Case Sensitive File Name'),
-                ('path', 'File Path'),
-                ('extension_sort', 'Extension'),
-                ('state', 'Version Control Status'),
+                ('is_dir_sort', _('Directories First')),
+                ('lower_name', _('File Name')),
+                ('name', _('Case Sensitive File Name')),
+                ('path', _('File Path')),
+                ('extension_sort', _('Extension')),
+                ('state', _('Version Control Status')),
             ],
             'is_dir_sort')
         self._sort_combo.show()
@@ -330,31 +336,31 @@ class FileManagerOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
                 'show_hidden',
-                'Show hidden files',
+                _('Show hidden files'),
                 OTypeBoolean,
                 True,
-                'Shows hidden files')
+                _('Shows hidden files'))
         
         self.create_option(
                 'last_browsed_remember',
-                'Remember last Path',
+                _('Remember last Path'),
                 OTypeBoolean,
                 True,
-                'Remembers the last browsed path')
+                _('Remembers the last browsed path'))
         
         self.create_option(
                 'last_browsed',
-                'Last browsed Path',
+                _('Last browsed Path'),
                 OTypeString,
                 path.expanduser('~'),
-                'The last browsed path')
+                _('The last browsed path'))
         
         self.create_option(
                 'hide_regex',
-                'Hide regex',
+                _('Hide regex'),
                 OTypeString,
                 '^\.|.*\.py[co]$',
-                'Hides files that match the regex')
+                _('Hides files that match the regex'))
 
 class FileManagerActionsConfig(ActionsConfig):
 
@@ -362,8 +368,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'browse-for-file',
             TYPE_NORMAL,
-            'Browse the file directory',
-            'Browse the parent directory of this file',
+            _('Browse the file directory'),
+            _('Browse the parent directory of this file'),
             'file-manager',
             self.on_browse_for_file,
             'NOACCEL',
@@ -372,8 +378,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'browse-for-dir',
             TYPE_NORMAL,
-            'Browse the directory',
-            'Browse the directory',
+            _('Browse the directory'),
+            _('Browse the directory'),
             'file-manager',
             self.on_browse_for_dir,
             'NOACCEL',
@@ -382,8 +388,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'show_filebrowser',
             TYPE_NORMAL,
-            'Show file browser',
-            'Show the file browser view',
+            _('Show file browser'),
+            _('Show the file browser view'),
             'file-manager',
             self.on_show_filebrowser,
             '<Shift><Control>f'
@@ -392,8 +398,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'toolbar_up',
             TYPE_MENUTOOL,
-            'Go Up',
-            'Go to the parent directory',
+            _('Go Up'),
+            _('Go to the parent directory'),
             gtk.STOCK_GO_UP,
             self.on_toolbar_up,
             'NOACCEL',
@@ -402,8 +408,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'toolbar_terminal',
             TYPE_NORMAL,
-            'Open Terminal',
-            'Open a terminal in this directory',
+            _('Open Terminal'),
+            _('Open a terminal in this directory'),
             'terminal',
             self.on_toolbar_terminal,
             'NOACCEL',
@@ -412,8 +418,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'toolbar_refresh',
             TYPE_NORMAL,
-            'Refresh Directory',
-            'Refresh the current directory',
+            _('Refresh Directory'),
+            _('Refresh the current directory'),
             gtk.STOCK_REFRESH,
             self.on_toolbar_refresh,
             'NOACCEL',
@@ -422,8 +428,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'toolbar_projectroot',
             TYPE_NORMAL,
-            'Project Root',
-            'Browse the root of the current project',
+            _('Project Root'),
+            _('Browse the root of the current project'),
             'user-home',
             self.on_toolbar_projectroot,
             'NOACCEL',
