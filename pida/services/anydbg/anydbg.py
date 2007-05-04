@@ -32,8 +32,10 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
+from pida.core.options import OptionsConfig
+from pida.core.options import OTypeStringList, OTypeFile
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
-from pida.core.environment import get_pixmap_path
+from pida.core.environment import get_pixmap_path, get_uidef_path
 from pida.core.interfaces import IProjectController
 from pida.core.projects import ProjectController, \
     ProjectKeyDefinition
@@ -43,82 +45,7 @@ from pida.ui.buttons import create_mini_button
 
 from pida.utils.gthreads import GeneratorTask, gcall
 
-# --- Function stack view
-
-class AnyDbgStackItem(object):
-    def __init__(self, frame, function, file, line):
-        self.frame = frame
-        self.function = function
-        self.file = file
-        self.line = line
-        self.parent = None
-
-class AnyDbgStackView(PidaView):
-    label_text = 'Debug Function Stack'
-    icon_name =  'accessories-text-editor'
-
-    def create_ui(self):
-        self.__last = None
-        self.__call = False
-        self.__return = False
-        self.__cnt = 0
-        self._stack_list = ObjectList(
-            [
-                Column('frame'), 
-                Column('line'),
-                Column('function'),
-                Column('file'),
-            ]
-        )
-        self._stack_list.connect('double-click', self._on_frame_double_click)
-        self.add_main_widget(self._stack_list)
-        self._stack_list.show_all()
-
-        self.svc.subscribe_event('function_call', self.on_function_call)
-        self.svc.subscribe_event('function_return', self.on_function_return)
-        self.svc.subscribe_event('step', self.on_step)
-
-    def on_function_call(self):
-        self.__call = True
-
-    def on_function_return(self):
-        self.__return = True
-
-    def on_step(self, file, line, function):
-        if self.__return is True:
-            self.pop_function()
-            self.__return = False
-
-        if self.__call is True:
-            self.push_function(function, file, line)
-            self.__call = False
-
-        if self.__call is False and self.__return is False:
-            if self.__last is None:
-                self.push_function(function, file, line)
-            else:
-                self.pop_function()
-                self.push_function(function, file, line)
-
-        return True
-
-    def clear_items(self):
-        gcall(self._breakpoint_list.clear)
-    
-    def push_function(self, function, file, line):
-        func = AnyDbgStackItem(self.__cnt, function, file, line)
-        func.parent = self.__last
-        self._stack_list.insert(0, func)
-        self.__last = func
-    
-    def pop_function(self):
-        if self.__last is not None:
-            self._stack_list.remove(self.__last)
-            self.__last = self.__last.parent
-
-    def _on_frame_double_click(self, olist, item):
-        self.svc.boss.editor.cmd('goto_line', line=item.line)
-        self.svc.boss.cmd('buffer', 'open_file', file_name=item.file)
+from pida.utils.anydbg import AnyDbg
 
 # --- Breakpoint list view
 
@@ -193,11 +120,114 @@ class AnyDbgBreakPointsView(PidaView):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
         self.svc.boss.cmd('buffer', 'open_file', file_name=item.file)
 
+
+# --- Function stack view
+
+class AnyDbgStackItem(object):
+    def __init__(self, frame, function, file, line):
+        self.frame = frame
+        self.function = function
+        self.file = file
+        self.line = line
+        self.parent = None
+
+class AnyDbgStackView(PidaView):
+    label_text = 'Debug Function Stack'
+    icon_name =  'accessories-text-editor'
+
+    def create_ui(self):
+        self.__last = None
+        self.__call = False
+        self.__return = False
+        self.__cnt = 0
+
+        # Toolbar
+        self.create_toolbar()
+
+        # Tree
+        self._stack_list = ObjectList(
+            [
+                Column('frame'), 
+                Column('line'),
+                Column('function'),
+                Column('file'),
+            ]
+        )
+        self._stack_list.connect('double-click', self._on_frame_double_click)
+
+        # Arrange the UI
+        self._vbox = gtk.VBox()
+        self._vbox.pack_start(self._toolbar, expand=False)
+        self._vbox.pack_start(self._stack_list, expand=True)
+        self.add_main_widget(self._vbox)
+        self._vbox.show_all()
+
+        self.svc.subscribe_event('function_call', self.on_function_call)
+        self.svc.subscribe_event('function_return', self.on_function_return)
+        self.svc.subscribe_event('step', self.on_step)
+
+    def create_toolbar(self):
+        self._uim = gtk.UIManager()
+        self._uim.insert_action_group(self.svc.get_action_group(), 0)
+        self._uim.add_ui_from_file(get_uidef_path('stackview-toolbar.xml'))
+        self._uim.ensure_update()
+        self._toolbar = self._uim.get_toplevels('toolbar')[0]
+        self._toolbar.set_style(gtk.TOOLBAR_ICONS)
+        self._toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
+        self._toolbar.show_all()
+
+    def on_function_call(self):
+        self.__call = True
+
+    def on_function_return(self):
+        self.__return = True
+
+    def on_step(self, file, line, function):
+        if self.__return is True:
+            self.pop_function()
+            self.__return = False
+
+        if self.__call is True:
+            self.push_function(function, file, line)
+            self.__call = False
+
+        if self.__call is False and self.__return is False:
+            if self.__last is None:
+                self.push_function(function, file, line)
+            else:
+                self.pop_function()
+                self.push_function(function, file, line)
+
+        return True
+
+    def clear_items(self):
+        gcall(self._breakpoint_list.clear)
+    
+    def push_function(self, function, file, line):
+        self.__cnt = self.__cnt + 1
+        func = AnyDbgStackItem(self.__cnt, function, file, line)
+        func.parent = self.__last
+        self._stack_list.insert(0, func)
+        self.__last = func
+    
+    def pop_function(self):
+        if self.__last is not None:
+            self._stack_list.remove(self.__last)
+            self.__last = self.__last.parent
+        self.__cnt = self.__cnt - 1
+
+    def _on_frame_double_click(self, olist, item):
+        self.svc.boss.editor.cmd('goto_line', line=item.line)
+        self.svc.boss.cmd('buffer', 'open_file', file_name=item.file)
+
+# --- AnyDbg debugger classes
+
 class AnyDbg_Debugger:
-    def __init__(self, executable, parameters, service):
+    def __init__(self, executable, parameters, service, param):
         self._executable = executable
         self._parameters = parameters
         self.svc = service
+        self._dbg_param = param
 
     def start(self):
         raise NotImplementedError
@@ -213,132 +243,6 @@ class AnyDbg_Debugger:
 
     def toggle_breakpoint(self, file, line):
         raise NotImplementedError
-
-class AnyDbg_gdb_interface(AnyDbg_Debugger):
-    _console = None
-    _breakpoints = []
-
-    _parser_patterns = {
-        # line: Restarting <EXEC> with arguments: <ARGS>
-        'Restarting (.*) with arguments:(.*)' : 
-            lambda self, m: self.svc.emit('start_debugging', 
-                                                    executable=m.group(1), 
-                                                    arguments=m.group(2)),
-        # line: *** Blank or comment
-        '\*\*\* Blank or comment' : None,
-        # line: Breakpoint <N> set in file <FILE>, line <LINE>.
-        'Breakpoint (\d+) set in file (.*), line (\d+).' :
-            lambda self, m: self.svc.emit('add_breakpoint', 
-                                        ident=m.group(1), 
-                                        file=m.group(2),
-                                        line=m.group(3)),
-        # line: Deleted breakpoint <N>
-        'Deleted breakpoint (\d+)' :
-            lambda self, m: self.svc.emit('del_breakpoint', ident=m.group(1)),
-        # line: (<PATH>:<LINE>):  <FUNCTION>
-        '\((.*):(\d+)\): (.*)' :
-            lambda self, m: self.svc.emit('step', file=m.group(1), 
-                                                  line=m.group(2), 
-                                                  function=m.group(3)),
-        '--Call--' : 
-            lambda self, m: self.svc.emit('function_call'),
-        '--Return--' : 
-            lambda self, m: self.svc.emit('function_return')
-    }
-                
-    def _parse(self, data):
-        for pattern in self._parser_patterns:
-            m = re.search(pattern, data)
-            if m is not None:
-                if self._parser_patterns[pattern] is not None:
-                    self._parser_patterns[pattern](self,m)
-
-    def _send_command(self,command):
-        os.write(self._console.master, command + '\n')
-
-    def _jump_to_line(self, event, data, foo=None):
-        m = re.search('^\((.*):(.*)\):.*$', data)
-        if m is not None:
-            self.svc.boss.cmd('buffer', 'open_file', file_name=m.group(1))
-            self.svc.boss.editor.cmd('goto_line', line=m.group(2))
-
-    def init(self):
-        print self.svc._controller.get_cwd()
-        self._console = self.svc.boss.cmd('commander','execute',
-                                            commandargs=[self.GDB_EXEC, "--cd="+self.svc._controller.get_cwd()],
-                                            cwd=self.svc._controller.get_cwd(), 
-                                            title="pydb",
-                                            icon=None,
-                                            use_python_fork=True,
-                                            parser_func = self._parse)
-        # match '(%%PATH%%:%%LINE%%):  <module>'
-        self._console._term.match_add_callback('jump_to','^\(.*:.*\):.*$', 
-                                                '^\((.*):(.*)\):.*$', self._jump_to_line)
-
-        if self._executable is not None:
-            self._send_command('file '+self._executable)
-    
-    def end(self):
-        self._console.close_view()
-        self._console = None
-        self.svc.end_dbg_session()
-
-    def start(self):
-        """
-        First time start: launch the debugger
-        Second time start: continue debugging
-        """
-        if self._console == None:
-            self.init()
-            self._send_command('run')
-        else:
-            self._send_command('continue')
-
-    __stop_state = False
-    def stop(self):
-        """
-        First time stop: reinit the debugger
-        Second time stop: end the debugger
-        """
-        if self._console == None:
-            self.window.error_dlg('Tried to stop a non-working debugger')
-        if self.__stop_state is False:
-            self._send_command('run')
-            self.__stop_state = True
-        else:
-            self.end()
-
-    def step_in(self):
-        self._send_command('step')
-
-    def step_over(self):
-        self._send_command('next')
-
-    def finish(self):
-        self._send_command('finish')
-
-    def toggle_breakpoint(self, file, line):
-        if (file, line) not in self._breakpoints:
-            self._breakpoints.append((file, line))
-            self.add_breakpoint(file, line)
-        else:
-            self._breakpoints.remove((file, line))
-            self.del_breakpoint(file, line)
-    
-    def add_breakpoint(self, file, line):
-        self._send_command('break '+file+':'+str(line))
-
-    def del_breakpoint(self, file, line):
-        self._send_command('clear '+file+':'+str(line))
-
-class AnyDbg_pydb(AnyDbg_gdb_interface):
-    GDB_EXEC = "/usr/bin/pydb"
-
-class AnyDbg_gdb(AnyDbg_gdb_interface):
-    GDB_EXEC = "/usr/bin/gdb"
-
-class AnyDbg_bash(AnyDbg_gdb_interface):
-    GDB_EXEC = "/usr/bin/bashdb"
 
 # Actions
 class AnyDbgActionsConfig(ActionsConfig):
@@ -478,17 +382,18 @@ class AnyDbgEventsConfig(EventsConfig):
         self.svc.boss.cmd('buffer', 'open_file', file_name=file)
 
         if self.svc._current is not None and file == self.svc._current.get_filename():
-            if self.svc._step is not None:
-                (oldfile, oldline) = self.svc._step
+            for (oldfile, oldline) in self.svc._step:
                 if oldfile == self.svc._current.get_filename():
                     self.svc.boss.editor.cmd('hide_sign', type='step', 
                                                             file_name=oldfile,
                                                             line=oldline)
+                    self.svc._step.remove((oldfile, oldline))
+
             self.svc.boss.editor.cmd('goto_line', line=line)
             self.svc.boss.editor.cmd('show_sign', type='step', 
                                                     file_name=file,
                                                     line=line)
-            self.svc._step = (file, line)
+            self.svc._step.append((file, line))
 
     def on_launch_debugger(self, executable, parameters, debugger, controller):
         if self.svc.dbg is not None:
@@ -501,10 +406,10 @@ class AnyDbgEventsConfig(EventsConfig):
         Toggles a breakpoint on line of file
         Store the breakpoint and mark it as unverified
         """
-        if self.svc.dbg is None:
+        if self.svc.dbg is not None:
             self.svc.dbg.toggle_breakpoint(file, line)
         else:
-            if self.svc._controller is None: ### TODO find a way to store it when no controller has been chosen
+            if self.svc._controller is not None: ### TODO #55 find a way to store it when no controller has been chosen
                 self.svc._controller.prestore_breakpoint(file, line)
 
     def on_add_breakpoint(self, ident, file, line):
@@ -512,7 +417,7 @@ class AnyDbgEventsConfig(EventsConfig):
         Add a breakpoint on line of file
         Store it with the current controller
         """
-        if self.svc._controller != None: ### TODO find a way to store it when no controller has been chosen
+        if self.svc._controller is not None: ### TODO #55 find a way to store it when no controller has been chosen
             self.svc._controller.store_breakpoint(ident, file, line)
         if self.svc._current is not None and file is self.svc._current.get_filename():
             self.svc.boss.editor.cmd('show_sign', type='breakpoint', 
@@ -524,7 +429,7 @@ class AnyDbgEventsConfig(EventsConfig):
         Deletes a breakpoint on line of file 
         Store it with the current controller
         """
-        if self.svc._controller != None: ### TODO find a way to store it when no controller has been chosen
+        if self.svc._controller is not None: ### TODO #55 find a way to store it when no controller has been chosen
             self.svc._controller.flush_breakpoint(ident, file, line)
         if self.svc._current is not None and file == self.svc._current.get_filename():
             self.svc.boss.editor.cmd('hide_sign', type='breakpoint', 
@@ -555,14 +460,13 @@ class AnyDbgEventsConfig(EventsConfig):
 
     def on_document_changed(self, document):
         if document is not None:
-            self.svc.get_action('toggle_breakpoint').set_sensitive(True)
+#            self.svc.get_action('toggle_breakpoint').set_sensitive(True) ### TODO #55
             self.svc.update_editor(document)
         else:
             self.svc.get_action('toggle_breakpoint').set_sensitive(False)
 
 # Controller
 class GenericDebuggerController(ProjectController):
-
     name = 'GENERIC_DEBUGGER'
 
     label = 'Generic Debugger'
@@ -636,10 +540,38 @@ class GenericDebuggerController(ProjectController):
         return l
         
 class AnyDbgFeaturesConfig(FeaturesConfig):
-
     def subscribe_foreign_features(self):
         self.subscribe_foreign_feature('project', IProjectController,
             GenericDebuggerController)
+
+class AnyDbgOptionsConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'breakpoint_pixmap',
+            "Breakpoint's pixmap",
+            OTypeFile,
+            get_pixmap_path("stop.svg"),
+            'Path to a pixmap for the breakpoints to be displayed at \
+beginning of line',
+        )
+        self.create_option(
+            'cursor_pixmap',
+            "Debugging cursor's pixmap",
+            OTypeFile,
+            get_pixmap_path("forward.svg"),
+            'Path to a pixmap for the cursor to be displayed at \
+beginning of line where debugger is halted')
+
+        self.create_option(
+            'gdb_executable_path',
+            'Pathes to GDB-compatible debuggers :',
+            OTypeStringList,
+            ['/usr/bin/pydb',
+             '/usr/bin/bashdb',
+             '/usr/bin/gdb'],
+            ("Add or remove the path to any debugger whose console has the \
+same interface as gdb's.")
+        )
 
 # Service class
 class Debugger(Service):
@@ -648,18 +580,21 @@ class Debugger(Service):
     actions_config = AnyDbgActionsConfig
     events_config = AnyDbgEventsConfig
     features_config = AnyDbgFeaturesConfig
+    options_config = AnyDbgOptionsConfig
 
     def start(self):
         """
         Starts the service
         """
         self._anydbg = {}
+        self._anydbg_param = {}
         self._controller = None
         self._current = None
-        self._step = None
+        self._step = []
         self.dbg = None
-        self.register_debugger('pydb', AnyDbg_pydb) # TODO: dynamic loading
-        self.register_debugger('gdb', AnyDbg_gdb)   # TODO: dynamic loading
+        for path in self.opt('gdb_executable_path'):
+            self.register_debugger(path.split('/')[-1], AnyDbg('gdb'), path=path)
+            self.register_debugger(path.split('/')[-1], AnyDbg('gdb'), path=path)
 
         self._breakpoints_view = AnyDbgBreakPointsView(self)
         self._stack_view = None
@@ -675,12 +610,16 @@ class Debugger(Service):
         """
         Initiates the debugging session
         """
-        self.dbg = self._anydbg[debugger](executable, parameters, self)
+        self.dbg = self._anydbg[debugger](executable, 
+                                            parameters, 
+                                            self,
+                                            self._anydbg_param['pydb'])
         self._controller = controller
 
         if self._stack_view is None:
             self._stack_view = AnyDbgStackView(self)
-#        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._stack_view)
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._stack_view)
+        self.get_action('toggle_breakpoint').set_sensitive(True) ### TODO remove when #55 is solved
 
         self.get_action('dbg_start').set_sensitive(True)
         self.get_action('dbg_stop').set_sensitive(False)
@@ -711,6 +650,17 @@ class Debugger(Service):
         self.get_action('step_in').set_sensitive(False)
         self.get_action('step_over').set_sensitive(False)
 
+        self.get_action('toggle_breakpoint').set_sensitive(False) ### TODO remove when #55 is solved
+
+        # removing old cursor
+        for (oldfile, oldline) in self._step:
+            if oldfile == self._current.get_filename():
+                self.boss.editor.cmd('hide_sign', type='step', 
+                                                        file_name=oldfile,
+                                                        line=oldline)
+                self._step.remove((oldfile, oldline))
+
+
     def update_editor(self, document):
         """
         Updates the editor with current's document breakpoints
@@ -722,18 +672,19 @@ class Debugger(Service):
                 self.boss.editor.cmd('show_sign', type='breakpoint', 
                                                     file_name=document.get_filename(),
                                                     line=line)
-        if self.dbg is not None and self._step is not None:
-            (file, line) = self._step
+        if self.dbg is not None and self._step != []:
+            (file, line) = self._step[-1]
             if file is document.get_filename():
                 self.boss.editor.cmd('show_sign', type='step', 
                                                     file_name=file,
                                                     line=line)
 
-    def register_debugger(self, name, classname):
+    def register_debugger(self, name, classname, **kargs):
         """
         Registers a new debugger class
         """
         self._anydbg[name] = classname
+        self._anydbg_param[name] = kargs
 
 # Required Service attribute for service loading
 Service = Debugger

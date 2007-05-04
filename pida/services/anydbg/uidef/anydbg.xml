@@ -54,15 +54,6 @@
         <placeholder name="ToolsToolbar">
         </placeholder>
         <separator/>
-        <placeholder name="DebugToolbar">
-        <toolitem action="dbg_start" name="dbg_start" />
-        <toolitem action="dbg_stop" name="dbg_stop" />
-        <toolitem action="step_over" name="step_over" />
-        <toolitem action="step_in" name="step_in" />
-        <separator/>
-        <toolitem action="toggle_breakpoint" name="toggle_breakpoint" />
-        </placeholder>
-
     </toolbar>
 
 </ui>
