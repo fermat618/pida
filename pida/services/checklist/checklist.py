@@ -254,8 +254,8 @@ class Checklist(Service):
     def remove_current(self):
         if self._current == None:
             return
+        del self._items[self._current.key]
         self._view.remove_item(self._current)
-        self._items.remove(self._current)
         self._current = None
         self.save()
 
