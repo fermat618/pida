@@ -56,7 +56,7 @@ class ChecklistStatus(enum):
 
 class ChecklistItem(object):
 
-    def __init__(self, title, priority=ChecklistStatus.MINOR, done=False, key=None):
+    def __init__(self, title, priority=ChecklistStatus.NORMAL, done=False, key=None):
         self.title = title
         self.priority = priority
         self.done = done
