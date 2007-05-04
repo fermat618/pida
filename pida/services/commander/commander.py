@@ -152,7 +152,8 @@ class CommanderActionsConfig(ActionsConfig):
         )
 
     def execute_shell(self, action):
-        self.svc.cmd('execute_shell')
+        self.svc.cmd('execute_shell',
+                     cwd=self.svc.get_current_project_directory())
 
     def on_terminal_for_file(self, action):
         cwd = os.path.dirname(action.contexts_kw['file_name'])
@@ -161,7 +162,6 @@ class CommanderActionsConfig(ActionsConfig):
     def on_terminal_for_dir(self, action):
         cwd = action.contexts_kw['dir_name']
         self.svc.cmd('execute_shell', cwd=cwd)
-        
 
 
 class CommanderCommandsConfig(CommandsConfig):
@@ -185,6 +185,13 @@ class CommanderFeaturesConfig(FeaturesConfig):
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
         self.subscribe_foreign_feature('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'commander-dir-menu.xml'))
+
+class CommanderEvents(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('project', 'project_switched',
+                                     self.svc.set_current_project)
+
 
 
 
@@ -359,9 +366,11 @@ class Commander(Service):
     actions_config = CommanderActionsConfig
     options_config = CommanderOptionsConfig
     features_config = CommanderFeaturesConfig
+    events_config = CommanderEvents
 
     def start(self):
         self._terminals = []
+        self.current_project = None
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
@@ -382,6 +391,15 @@ class Commander(Service):
             imagefile = self.opt('background_image_file')
             options['background_image_file'] = imagefile
         return options
+
+    def set_current_project(self, project):
+        self.current_project = project
+
+    def get_current_project_directory(self):
+        if self.current_project is not None:
+            return self.current_project.source_directory
+        else:
+            return os.getcwd()
 
 
 
