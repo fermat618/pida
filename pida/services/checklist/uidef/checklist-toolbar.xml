@@ -1,6 +1,8 @@
 <ui>
     <toolbar>
-        <toolitem action="checklist_add" name="checklist_add"/>
-        <toolitem action="checklist_del" name="checklist_del"/>
+		<!--
+		<toolitem action="checklist_add" name="checklist_add"/>
+		-->
+		<toolitem action="checklist_del" name="checklist_del"/>
     </toolbar>
 </ui>

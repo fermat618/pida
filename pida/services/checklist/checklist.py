@@ -22,7 +22,9 @@
 
 import gtk
 
-from kiwi.ui.objectlist import ObjectList, Column, SequentialColumn
+from pida.ui.objectlist import AttrSortCombo
+from kiwi.ui.objectlist import ObjectList, Column
+from kiwi.python import enum
 
 # PIDA Imports
 from pida.core.service import Service
@@ -40,11 +42,23 @@ from pida.core.locale import Locale
 locale = Locale('checklist')
 _ = locale.gettext
 
+#Critical, Major, Minor, Warning, Normal
+class ChecklistStatus(enum):
+    (LOW,
+     NORMAL,
+     HIGH) = range(3)
+
+    def __new__(cls, value, name):
+        self = enum.__new__(cls, value, name)
+        self.value = value
+        return self
+
+
 class ChecklistItem(object):
 
-    def __init__(self, title, severity=1, done=False, key=None):
+    def __init__(self, title, priority=ChecklistStatus.MINOR, done=False, key=None):
         self.title = title
-        self.severity = severity
+        self.priority = priority
         self.done = done
         if key is not None:
             self.key = key
@@ -60,8 +74,8 @@ class ChecklistView(PidaView):
     def create_ui(self):
         self._vbox = gtk.VBox()
         self.create_toolbar()
-        self.create_ui_list()
         self.create_newitem()
+        self.create_list()
         self.add_main_widget(self._vbox)
         self._vbox.show_all()
 
@@ -77,21 +91,42 @@ class ChecklistView(PidaView):
         b.show_all()
         return b
 
-    def create_ui_list(self):
+    def create_list(self):
         self._list = ObjectList([
                 Column('done', title=_('Done'), data_type=bool, editable=True),
-                Column('title', title=_('Title'), data_type=str, editable=True)
-                #Column('severity', title=_('Severity'), data_type=int, editable=True)
+                Column('title', title=_('Title'), data_type=str,
+                    editable=True, expand=True),
+                Column('priority', title=_('Priority'),
+                    data_type=ChecklistStatus, editable=True)
                 ])
         self._list.connect('cell-edited', self._on_item_edit)
         self._list.connect('selection-changed', self._on_item_selected)
         self._list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self._vbox.add(self._list)
+
+        self._sort_combo = AttrSortCombo(self._list,
+            [
+                ('done', _('Done')),
+                ('title', _('Title')),
+                ('priority', _('Priority')),
+            ],
+            'title')
+
+        self._vbox.pack_start(self._sort_combo, expand=False)
         self._list.show_all()
+        self._sort_combo.show_all()
 
     def create_newitem(self):
         self._hbox = gtk.HBox()
         self._newitem_title = gtk.Entry()
+        self._newitem_title.connect('changed', self._on_newitem_changed)
+        self._newitem_ok = gtk.Button(stock=gtk.STOCK_ADD)
+        self._newitem_ok.connect('clicked', self._on_item_add)
+        self._newitem_ok.set_sensitive(False)
+        self._hbox.pack_start(self._newitem_title, expand=True)
+        self._hbox.pack_start(self._newitem_ok, expand=False)
+        self._vbox.pack_start(self._hbox, expand=False)
+        self._hbox.show_all()
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
@@ -102,25 +137,38 @@ class ChecklistView(PidaView):
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
         self._toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self._vbox.pack_start(self._toolbar, expand=False)
+        self.svc.get_action('checklist_del').set_sensitive(False)
         self._toolbar.show_all()
 
     def add_item(self, item):
         self._list.append(item, select=True)
+        self.svc.save()
 
     def update_item(self, item):
         self._list.update(item)
+        self.svc.save()
 
     def remove_item(self, item):
         self._list.remove(item)
+        self.svc.save()
 
     def clear(self):
         self._list.clear()
 
     def _on_item_selected(self, olist, item):
+        self.svc.get_action('checklist_del').set_sensitive(item is not None)
         self.svc.set_current(item)
 
     def _on_item_edit(self, olist, item, value):
         self.svc.save()
+
+    def _on_item_add(self, w):
+        title = self._newitem_title.get_text()
+        self.svc.add_item(ChecklistItem(title=title))
+        self._newitem_title.set_text('')
+
+    def _on_newitem_changed(self, w):
+        self._newitem_ok.set_sensitive(self._newitem_title.get_text() != '')
 
 class ChecklistActions(ActionsConfig):
 
@@ -207,6 +255,7 @@ class Checklist(Service):
         if self._current == None:
             return
         self._view.remove_item(self._current)
+        self._items.remove(self._current)
         self._current = None
         self.save()
 
@@ -230,7 +279,7 @@ class Checklist(Service):
         data = {}
         for key in self._items:
             item = self._items[key]
-            data[key] = '%s:%d:%s' % (item.done, item.severity, item.title)
+            data[key] = '%s:%d:%s' % (item.done, item.priority.value, item.title)
         return data
 
     def _unserialize(self, data):
@@ -244,7 +293,7 @@ class Checklist(Service):
                 done = True
             self.add_item(ChecklistItem(
                 title=str(t[2]),
-                severity=int(t[1]),
+                priority=ChecklistStatus.get(int(t[1])),
                 done=done,
                 key=key))
 
