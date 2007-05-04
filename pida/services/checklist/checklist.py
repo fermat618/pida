@@ -72,7 +72,8 @@ class ChecklistView(PidaView):
     label_text = _('Check list')
 
     def create_ui(self):
-        self._vbox = gtk.VBox()
+        self._vbox = gtk.VBox(spacing=3)
+        self._vbox.set_border_width(3)
         self.create_toolbar()
         self.create_newitem()
         self.create_list()
@@ -117,7 +118,7 @@ class ChecklistView(PidaView):
         self._sort_combo.show_all()
 
     def create_newitem(self):
-        self._hbox = gtk.HBox()
+        self._hbox = gtk.HBox(spacing=3)
         self._newitem_title = gtk.Entry()
         self._newitem_title.connect('changed', self._on_newitem_changed)
         self._newitem_ok = gtk.Button(stock=gtk.STOCK_ADD)
