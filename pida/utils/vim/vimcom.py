@@ -511,6 +511,16 @@ class communication_window(gtk.Window):
         self.send_keys(server, ':%s' % message)
         self.send_ret(server)
 
+    def send_ex_via_tempfile(self, server, message):
+        """For really long ugly messages"""
+        tf, tp = tempfile.mkstemp()
+        os.write(tf, '%s\n' % message)
+        os.close(tf)
+        self.load_script(server, tp)
+        # delay removing the temporary file to make sure it is loaded
+        gobject.timeout_add(6000, os.unlink, tp)
+
+
     def get_option(self, server, option, callbackfunc):
         self.send_expr(server, '&%s' % option, callbackfunc)
 
@@ -629,9 +639,14 @@ class communication_window(gtk.Window):
     def quit(self, server):
         self.send_ex(server, 'q!')
 
-    def define_sign(self, server, name, icon, linehl, text, texthl):
-        self.send_ex(server, 'sign define %s icon=%s linehl=%s text=%s texthl=%s '%
+    def define_sign(self, server, name, icon, linehl, text, texthl,
+                    direct=False):
+        cmd = ('sign define %s icon=%s linehl=%s text=%s texthl=%s '%
                              (name, icon, linehl, text, texthl))
+        if direct:
+            self.send_ex(server, cmd)
+        else:
+            self.send_ex_via_tempfile(server, cmd)
 
     def undefine_sign(self, server, name):
         self.send_ex(server, 'sign undefine %s' % name)
