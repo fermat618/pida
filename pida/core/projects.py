@@ -92,7 +92,8 @@ class Project(object):
         del self.options[controller.config_section]
         default = self.get_default_controller()
         if default is None:
-            self.controllers[0].default = True
+            if len(self.controllers):
+                self.controllers[0].default = True
         self.save()
 
     def get_default_controller(self):
