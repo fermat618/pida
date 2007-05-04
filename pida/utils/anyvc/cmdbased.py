@@ -385,7 +385,7 @@ class Darcs(DCommandBased):
     def parse_list_item(self, item):
         if item.startswith('What') or item.startswith('No') or not item.strip():
             return None
-        elements = item.split(1)
+        elements = item.split(None, 2)[:2] #TODO: handle filenames with spaces
         state = self.state_map[elements[0]]
         file = os.path.normpath(elements[1])
         return Path(file, state, self.base_path)
