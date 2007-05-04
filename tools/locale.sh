@@ -7,6 +7,7 @@ function usage()
 	echo "  - Build all locales : tools/locale.sh build"
 	echo "  - Create po for a service : tools/locale.sh create service fr_FR"
 	echo "  - Update po for a service : tools/locale.sh update service fr_FR"
+	echo "  - Update po for pida : tools/locale.sh update pida fr_FR"
 }
 
 function locale_build()
