@@ -45,7 +45,7 @@ function locale_create()
 	find glade -iname '*.glade' -exec intltool-extract --type=gettext/glade {} \;
 
 	echo "Extract messages"
-	xgettext -k_ -kN_ -o $file *.py glade/*.glade.h
+	xgettext -k_ -kN_ -o $file `ls *.py glade/*.glade.h 2>/dev/null`
 
 	echo "Update some info"
 	sed -e 's/CHARSET/utf-8/' $file > $file.bak
@@ -56,10 +56,12 @@ function locale_create()
 	rm $file.bak 2>/dev/null
 	rm glade/*.glade.h 2>/dev/null
 
-	cd ../../..
 	echo "Done."
 	echo ""
+	echo `grep 'msgstr ""' $file | wc -l` "messages need to be translated (approx)"
 	echo "Now edit file pida/services/$1/$file"
+
+	cd ../../..
 }
 
 function locale_update()
@@ -83,22 +85,56 @@ function locale_update()
 	find glade -iname '*.glade' -exec intltool-extract --type=gettext/glade {} \;
 
 	echo "Extract messages"
-	xgettext --omit-header --foreign-user -k_ -kN_ -o $file.new *.py glade/*.glade.h
+	xgettext --omit-header --foreign-user -k_ -kN_ -o $file.new `ls *.py glade/*.glade.h 2>/dev/null`
 
-	echo "Update some info"
-	sed -e 's/CHARSET/utf-8/' $file.new > $file.bak
-	
 	echo "Merging messages"
-	msgmerge -U $file $file.bak
+	msgmerge -U $file $file.new
 
 	rm $file.new 2>/dev/null
-	rm $file.bak 2>/dev/null
 	rm glade/*.glade.h 2>/dev/null
 
-	cd ../../..
 	echo "Done."
 	echo ""
+	echo `grep 'msgstr ""' $file | wc -l` "messages need to be translated (approx)"
 	echo "Now edit file pida/services/$1/$file"
+
+	cd ../../..
+}
+
+function locale_update_pida()
+{
+	cd pida
+
+	dir="resources/locale/$1/LC_MESSAGES"
+	file="$dir/pida.po"
+
+	if [ ! -f "$file" ]; then
+		cd ..
+		echo "Pida po file don't exist ?!"
+		exit
+	fi
+
+	echo "Generate temporary .h for glade files"
+	find resources/glade -iname '*.glade' -exec intltool-extract --type=gettext/glade {} \;
+
+	echo "Find py files"
+	files=`find . -iname '*py' | grep -v -E '\/.svn\/|\/services\/|\/utils\/feedparser.py'`
+
+	echo "Extract messages"
+	xgettext --omit-header --foreign-user -k_ -kN_ -o $file.new $files resources/glade/*.glade.h
+
+	echo "Merging messages"
+	msgmerge -U $file $file.new
+
+	rm $file.new 2>/dev/null
+	rm resources/glade/*.glade.h 2>/dev/null
+
+	echo "Done."
+	echo ""
+	echo `grep 'msgstr ""' $file | wc -l` "messages need to be translated (approx)"
+	echo "Now edit file pida/$file"
+
+	cd ..
 }
 
 case "$1" in 
@@ -117,7 +153,11 @@ case "$1" in
 			exit
 		fi
 
-		locale_update $2 $3
+		if [ "$2" == "pida" ]; then
+			locale_update_pida $3
+		else
+			locale_update $2 $3
+		fi
 		;;
 
 	"create")
