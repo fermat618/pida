@@ -184,8 +184,8 @@ class ProjectPropertiesView(PidaGladeView):
             if self.svc.boss.get_window().yesno_dlg(
             _('Are you sure you want to delete controller "%s" from this project?')
             % controller.config_section):
-                self._project.remove_controller(controller)
                 self.controllers_list.remove(controller)
+                self._project.remove_controller(controller)
                 self.svc.set_current_project(self._project)
 
     def on_close_button__clicked(self, button):

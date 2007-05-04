@@ -90,8 +90,11 @@ class Project(object):
     def remove_controller(self, controller):
         self.controllers.remove(controller)
         del self.options[controller.config_section]
+        default = self.get_default_controller()
+        if default is None:
+            self.controllers[0].default = True
         self.save()
-        
+
     def get_default_controller(self):
         for controller in self.controllers:
             if controller.default:
@@ -210,7 +213,10 @@ class ProjectController(object):
         return self.get_options().get(name, None)
 
     def set_option(self, name, value):
-        self.get_options()[name] = value
+        if self.get_options() is not None:
+            self.get_options()[name] = value
+        else:
+            self.boss.log.debug('Deleted controller attempting to set value')
 
     def get_project_option(self, name):
         return self.project.options.get(name, None)
