@@ -2,7 +2,8 @@ name = pida-next
 [Run PIDA]
 controller = PYTHON_CONTROLLER
 default = True
-execute_file = run-pida.py
+execute_file = bin/pida
+cwd = ""
 [Generate API Documentation]
 controller = GENERIC_EXECUTION
 default = ""
