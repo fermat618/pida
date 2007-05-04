@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>PIDA Service Authoring Guide</title><link rel="stylesheet" href="./docbook-xsl.css" type="text/css" /><meta name="generator" content="DocBook XSL Stylesheets V1.68.1" /></head><body><div class="article" lang="en" xml:lang="en"><div class="titlepage"><div><div><h1 class="title"><a id="id2456407"></a>PIDA Service Authoring Guide</h1></div><div><div class="author"><h3 class="author"><span class="firstname">Ali</span> <span class="surname">Afshar</span></h3><div class="affiliation"><div class="address"><p><code class="email">&lt;<a href="mailto:aafshar@gmail.com">aafshar@gmail.com</a>&gt;</code></p></div></div></div></div></div><hr /></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#id2495013">Service Overview</a></span></dt><dt><span class="section"><a href="#id2495043">Individual Components</a></span></dt><dd><dl><dt><span class="section"><a href="#id2495048">myservice.py</a></span></dt><dt><span class="section"><a href="#id2456595">Other files and directories</a></span></dt></dl></dd><dt><span class="section"><a href="#id2456674">Service Options</a></span></dt><dt><span class="section"><a href="#id2456735">Service Commands</a></span></dt><dd><dl><dt><span class="section"><a href="#id2456819">Defining Commands</a></span></dt><dt><span class="section"><a href="#id2456848">Calling service commands</a></span></dt><dt><span class="section"><a href="#id2457025">Using arguments on service commands</a></span></dt></dl></dd><dt><span class="section"><a href="#id2457055">Service Views</a></span></dt><dd><dl><dt><span class="section"><a href="#id2457069">Creating Views</a></span></dt><dt><span class="section"><a href="#id2457090">Glade3 Views</a></span></dt><dt><span class="section"><a href="#id2457616">Pure PyGTK Views</a></span></dt><dt><span class="section"><a href="#id2457653">Instantiating views</a></span></dt><dt><span class="section"><a href="#id2457675">Adding Views to PIDA</a></span></dt><dt><span class="section"><a href="#id2504434">View icons and labels</a></span></dt></dl></dd><dt><span class="section"><a href="#id2504478">Using custom pixmaps in services</a></span></dt><dt><span class="section"><a href="#id2504503">Links</a></span></dt></dl></div><p>PIDA has a very general concept of services (you might call them plugins in
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>PIDA Service Authoring Guide</title><link rel="stylesheet" href="./docbook-xsl.css" type="text/css" /><meta name="generator" content="DocBook XSL Stylesheets V1.68.1" /></head><body><div class="article" lang="en" xml:lang="en"><div class="titlepage"><div><div><h1 class="title"><a id="id2456407"></a>PIDA Service Authoring Guide</h1></div><div><div class="author"><h3 class="author"><span class="firstname">Ali</span> <span class="surname">Afshar</span></h3><div class="affiliation"><div class="address"><p><code class="email">&lt;<a href="mailto:aafshar@gmail.com">aafshar@gmail.com</a>&gt;</code></p></div></div></div></div></div><hr /></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#id2495013">Service Overview</a></span></dt><dt><span class="section"><a href="#id2495043">Individual Components</a></span></dt><dd><dl><dt><span class="section"><a href="#id2495048">myservice.py</a></span></dt><dt><span class="section"><a href="#id2456595">Other files and directories</a></span></dt></dl></dd><dt><span class="section"><a href="#id2456674">Service Options</a></span></dt><dt><span class="section"><a href="#id2456735">Service Commands</a></span></dt><dd><dl><dt><span class="section"><a href="#id2456819">Defining Commands</a></span></dt><dt><span class="section"><a href="#id2456848">Calling service commands</a></span></dt><dt><span class="section"><a href="#id2457025">Using arguments on service commands</a></span></dt><dt><span class="section"><a href="#id2457054">Service Events</a></span></dt><dt><span class="section"><a href="#id2457070">Events definition</a></span></dt><dt><span class="section"><a href="#id2457603">Events emition</a></span></dt><dt><span class="section"><a href="#id2457666">Service Features</a></span></dt><dt><span class="section"><a href="#id2457673">Creating Views</a></span></dt><dt><span class="section"><a href="#id2457694">Glade3 Views</a></span></dt><dt><span class="section"><a href="#id2504480">Pure PyGTK Views</a></span></dt><dt><span class="section"><a href="#id2504517">Instantiating views</a></span></dt><dt><span class="section"><a href="#id2504539">Adding Views to PIDA</a></span></dt><dt><span class="section"><a href="#id2504689">View icons and labels</a></span></dt></dl></dd><dt><span class="section"><a href="#id2504733">Using custom pixmaps in services</a></span></dt><dt><span class="section"><a href="#id2504758">Links</a></span></dt></dl></div><p>PIDA has a very general concept of services (you might call them plugins in
 another application). In general, a service is able to define any PIDA
 function, that is anything PIDA can do, a service can do it too.</p><p>PIDA is essentially a bunch of services bound together by a <span class="strong"><strong>*Boss</strong></span>*. The
 services are discovered from service directories and loaded by a <span class="strong"><strong>*Service
@@ -88,9 +88,64 @@ parameters.</p><p>For example, execute a shell from a service starting in an exp
     'commander',
     'execute_shell',
     cwd = '/',
-)</pre></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2457055"></a>Service Views</h2></div></div></div><p>Service views are almost anything that appears visually in PIDA (apart from the
-main toolbar and menubar). All of these views belong to a service.</p><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457069"></a>Creating Views</h3></div></div></div><p>Views may be designed in Glade3, or in pure <a href="#PyGTK">[PyGTK]</a>. Each method of view
-creation has its advantages and disadvantages, and these are discussed below.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457090"></a>Glade3 Views</h3></div></div></div><p>Views created with Glade3 have the following advantages:</p><div class="itemizedlist"><ul type="disc"><li>
+)</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457054"></a>Service Events</h3></div></div></div><p>The events are asynchronous call back for the service. So any other service can
+subscribe its call back to an event, and it will get called back once the event
+occurs.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457070"></a>Events definition</h3></div></div></div><p>To create a new event, like earlier, you just need to create a new class
+that you can call <span class="emphasis"><em>MyServiceEvents</em></span>, and you bind it to your <span class="emphasis"><em>MyService</em></span>
+class doing <span class="emphasis"><em>events_config = MyServiceEvents</em></span>.</p><pre class="screen">class MyServiceEvents(EventsConfig):
+    def create_events(self):
+        [...]
+    def subscribe_foreign_events(self):
+        [...]
+
+class MyService(Service):
+    events_config = MyServiceEvents</pre><p>So in that example code, you can notice the two methods you need to implement
+to manage your own events. You have to define in create_events all the events
+your service is about to use, and in subscribe_foreign_events all the events
+from other services your service needs.</p><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2457462"></a>Create your own new events</h4></div></div></div><p>So, once you have your <span class="emphasis"><em>EventsConfig</em></span> ready, you need to implement the
+create_events method so you can have your own new events. Three steps
+are needed to create an event :</p><pre class="literallayout">(1) You call self.create_event() on the event name
+(2) You subscribe a new callback to the event you just made
+(3) You implement the new event's callback so it acts when it is emitted.</pre><pre class="screen">    def create_events(self):
+        self.create_event('myevent')                     # (1)
+        self.subscribe_event('myevent', self.on_myevent) # (2)
+        self.create_event('my_foreign_event')
+
+    def on_myevent(self,param=None):                     # (3)
+        print 'myevent receipt'
+        if param != None:
+            print 'with param:', param</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h4 class="title"><a id="id2457506"></a>Subscribe to other services' events</h4></div></div></div><p>We have seen how we can bind callbacks to events you created in
+your own service. But you often need to interact with other services
+as well. To do so, you need to implement the subscribe_foreign_events()
+method the following way :</p><pre class="screen">    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('editor', 'started',
+                                     self.on_editor_startup)</pre><p>for each event you want to bind a call back, you need to call the
+subscribe_foreign_event() method. In the example above, when the editor
+service launches the started event, self.on_editor_startup() gets called.</p><pre class="screen">self.subscribe_foreign_event('SERVICE_NAME', 'EVENT_NAME', CALLBACK_FUNCTION)</pre><p>where <span class="strong"><strong>SERVICE_NAME</strong></span> is the destination service, <span class="strong"><strong>EVENT_NAME</strong></span> the event to bind to,
+<span class="strong"><strong>CALLBACK_FUNCTION</strong></span> the function to be called when the event is emitted.</p><p>Now suppose you want to give other services' programmers an event of your own
+service. To do so, you need to call create_event() in create_events() with the
+name of your event (ie see <span class="emphasis"><em>my_foreign_event</em></span> above).</p><p>Then in the foreign service, in the subscribe_foreign_events() method you just
+need to subscribe to the event:</p><pre class="screen">    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('myservice', 'my_foreign_event',
+                                     self.on_myservice_foreign_event)</pre><p>and finally define your callback.</p></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457603"></a>Events emition</h3></div></div></div><p>Now you have defined and bound all your events in your service and all
+you need is to emit them when you need them to be executed. Well, it's
+fairly simple, just call the emit() method :</p><pre class="screen">    [...]
+    self.emit('myevent')
+    self.emit('myevent', param='hello world')
+    self.emit('my_foreign_event')
+    [...]
+    self.get_service('myservice').emit('myevent')
+    self.get_service('myservice').emit('myevent', param='hello from some other place')
+    self.get_service('myservice').emit('my_foreign_event')
+    [...]</pre><p>As you can see in the examples above, emit can be used in different contexts
+and with or without parameters. As a rule, every event defined can be called
+using the emit() method either from your own service (ie in <span class="emphasis"><em>MyService</em></span>) or
+from someone else's service (then you use get_service().emit()).</p><p>If your callback function needs parameters, you need to give the options to
+the emit method. You can also use, as in the above example, non-mandatory
+parameters.
+== Service Views</p><p>Service views are almost anything that appears visually in PIDA (apart from the
+main toolbar and menubar). All of these views belong to a service.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457666"></a>Service Features</h3></div></div></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457673"></a>Creating Views</h3></div></div></div><p>Views may be designed in Glade3, or in pure <a href="#PyGTK">[PyGTK]</a>. Each method of view
+creation has its advantages and disadvantages, and these are discussed below.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457694"></a>Glade3 Views</h3></div></div></div><p>Views created with Glade3 have the following advantages:</p><div class="itemizedlist"><ul type="disc"><li>
 Better maintainability
 </li><li>
 Automatic signal callback connection
@@ -114,13 +169,13 @@ the correct method on the glade view. These methods are named as
 view called <code class="literal">close_button</code>, and you wish to connect to it's <code class="literal">clicked</code> signal,
 you would provide the following method in order to automatically connect the
 signal for the widget:</p><pre class="screen">def on_close_button__clicked(self, button):
-    print '%s was clicked!' % button</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457616"></a>Pure PyGTK Views</h3></div></div></div><p>These views should subclass <code class="literal">pida.ui.views.PidaView</code> and should create the
+    print '%s was clicked!' % button</pre></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2504480"></a>Pure PyGTK Views</h3></div></div></div><p>These views should subclass <code class="literal">pida.ui.views.PidaView</code> and should create the
 necessary widgets by overriding the create_ui method. The widgets can be added
 to the view by using the <code class="literal">view.add_main_widget(widget, expand=True, fill=True)</code>.
 The widgets will be added to the top-level VBox in the view.</p><p>There is no signal autoconnection, and widgets behave exactly as if they had
-been created with PyGTK in any other circumstance.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457653"></a>Instantiating views</h3></div></div></div><p>The service can instantiate its views at any time. They should pass the instance
+been created with PyGTK in any other circumstance.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2504517"></a>Instantiating views</h3></div></div></div><p>The service can instantiate its views at any time. They should pass the instance
 of the service as the first parameter to the View constructor. The service will
-then be stored as the <code class="literal">svc</code> attribute on the view.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2457675"></a>Adding Views to PIDA</h3></div></div></div><p>Views are displayed at runtime by calling the <span class="emphasis"><em>window</em></span> service's command
+then be stored as the <code class="literal">svc</code> attribute on the view.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2504539"></a>Adding Views to PIDA</h3></div></div></div><p>Views are displayed at runtime by calling the <span class="emphasis"><em>window</em></span> service's command
 <span class="emphasis"><em>add_view</em></span>. The required paned must be passed as well as the view itself.</p><p>The paned attribute to the command should be one of:</p><div class="itemizedlist"><ul type="disc"><li>
 <code class="literal">Buffer</code>
 </li><li>
@@ -143,15 +198,15 @@ Multiple view (eg terminal emulators, diffs, and web browsers), or those
 follows:</p><pre class="screen"># Override the start method as a hook to when the service starts
 def start(self):
     view = MyServiceView(self)
-    self.boss.cmd('window', 'add_view', paned='Terminal', view=view)</pre><p>Numerous other examples are available in almost every service in <code class="literal">pida.services</code>.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2504434"></a>View icons and labels</h3></div></div></div><p>View icons (the image displayed on the paned button) are referred to by their
+    self.boss.cmd('window', 'add_view', paned='Terminal', view=view)</pre><p>Numerous other examples are available in almost every service in <code class="literal">pida.services</code>.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2504689"></a>View icons and labels</h3></div></div></div><p>View icons (the image displayed on the paned button) are referred to by their
 stock ID, and set as a class attribute on the view <code class="literal">icon_name</code>. Similarly, the
 text associating the icon is set as a class attribute on the view called
 'label_text`.</p><p>Additionally, an <code class="literal">icon_name</code> and/or a <code class="literal">label_text</code> attribute can be passed to
 the view constructor, and these will be displayed as the view's label and icon
-when it is added to the PIDA main view.</p></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2504478"></a>Using custom pixmaps in services</h2></div></div></div><p>Any pixmap placed in the pixmaps directory in the service (<code class="literal">myservice/pixmaps</code>)
+when it is added to the PIDA main view.</p></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2504733"></a>Using custom pixmaps in services</h2></div></div></div><p>Any pixmap placed in the pixmaps directory in the service (<code class="literal">myservice/pixmaps</code>)
 will automatically be added as a stock image and can be used by the service
 using its name (without extension) for View icons or for gtk.Buttons or
-gtk.Images or any other widget which take a stock_id as an argument.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2504503"></a>Links</h2></div></div></div><div class="bibliomixed"><p class="bibliomixed">
+gtk.Images or any other widget which take a stock_id as an argument.</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2504758"></a>Links</h2></div></div></div><div class="bibliomixed"><p class="bibliomixed">
 <span class="bibliomisc">
 <a id="PyGTK"></a>[PyGTK] <a href="http://pygtk.org" target="_top">PyGTK Website</a>
 </span>
