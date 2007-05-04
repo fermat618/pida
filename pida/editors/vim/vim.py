@@ -346,18 +346,18 @@ class Vim(Service):
         return self._sign_index
         
     def _del_sign(self, type, filename, line):
-        try:
             return self._signs.pop((filename, line, type))
-        except KeyError:
-            self.window.error_dlg(_('Tried to remove non-existent sign'))
 
     def show_sign(self, type, filename, line):
         index = self._add_sign(type, filename, line)
         self._com.show_sign(self.server, index, type, filename, line)
    
     def hide_sign(self, type, filename, line):
-        index = self._del_sign(type, filename, line)
-        self._com.hide_sign(self.server, index, filename)
+        try:
+            index = self._del_sign(type, filename, line)
+            self._com.hide_sign(self.server, index, filename)
+        except KeyError:
+            self.window.error_dlg(_('Tried to remove non-existent sign'))
    
     def set_current_line(self, line_number):
         self._current_line = line_number
