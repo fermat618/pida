@@ -121,7 +121,7 @@ class CommandBased(VCSBase):
         return ['status']
 
     def get_list_args(self, **kw):
-        raise NotImplementedError("%s doesnt implement list")
+        raise NotImplementedError("%s doesnt implement list"%self.__class__.__name__)
     
     def commit(self, **kw):
         args = self.get_commit_args(**kw)
@@ -371,7 +371,7 @@ class Darcs(DCommandBased):
 
     detect_subdir = '_darcs'
 
-    def get_list_cmd(self, **kw):
+    def get_list_args(self, **kw):
         return ['whatsnew', '--boring', '--summary']
 
     state_map = {
