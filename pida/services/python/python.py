@@ -400,8 +400,10 @@ class Python(Service):
             self.execute_action.set_sensitive(False)
 
     def is_current_python(self):
-        if self._current is None:
+        if self._current is not None:
             return self._current.filename.endswith('.py')
+        else:
+            return False
 
     def execute_current_document(self):
         python_ex = self.opt('python_for_executing')
