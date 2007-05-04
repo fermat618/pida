@@ -214,7 +214,7 @@ class ProjectActionsConfig(ActionsConfig):
             TYPE_MENUTOOL,
             _('Execute Default'),
             _('Execute the project'),
-            gtk.STOCK_EXECUTE,
+            'package_utilities',
             self.on_project_execute,
         )
 
