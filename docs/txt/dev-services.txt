@@ -188,11 +188,6 @@ self.boss.cmd(
 )
 -------------------------------------------
 
-== Service Views
-
-Service views are almost anything that appears visually in PIDA (apart from the
-main toolbar and menubar). All of these views belong to a service.
-
 === Service Events
 
 The events are asynchronous call back for the service. So any other service can
@@ -308,6 +303,11 @@ from someone else's service (then you use get_service().emit()).
 If your callback function needs parameters, you need to give the options to
 the emit method. You can also use, as in the above example, non-mandatory 
 parameters.
+== Service Views
+
+Service views are almost anything that appears visually in PIDA (apart from the
+main toolbar and menubar). All of these views belong to a service.
+
 
 === Service Features
 
