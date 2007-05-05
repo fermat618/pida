@@ -23,34 +23,15 @@
 import os
 import re
 
-# --- AnyDbg debugger classes
-
-class AnyDbg_Debugger:
-    def __init__(self, executable, parameters, service, param):
-        self._executable = executable
-        self._parameters = parameters
-        self.svc = service
-        self._dbg_param = param
-
-    def start(self):
-        raise NotImplementedError
-
-    def stop(self):
-        raise NotImplementedError
-
-    def step_in(self):
-        raise NotImplementedError
-
-    def step_over(self):
-        raise NotImplementedError
-
-    def toggle_breakpoint(self, file, line):
-        raise NotImplementedError
+from pida.utils.anydbg.anydbg_debugger import AnyDbg_Debugger
 
 class AnyDbg_gdb(AnyDbg_Debugger):
+    """
+    Class to interface with a gdb-compatible debugger.
+    """
     _console = None
     _breakpoints = []
-
+    
     _parser_patterns = {
         # line: Restarting <EXEC> with arguments: <ARGS>
         'Restarting (.*) with arguments:(.*)' : 
@@ -80,6 +61,10 @@ class AnyDbg_gdb(AnyDbg_Debugger):
     }
                 
     def _parse(self, data):
+        """
+        Debugger's parsing method
+        @param data line of output
+        """
         for pattern in self._parser_patterns:
             m = re.search(pattern, data)
             if m is not None:
@@ -87,15 +72,25 @@ class AnyDbg_gdb(AnyDbg_Debugger):
                     self._parser_patterns[pattern](self,m)
 
     def _send_command(self,command):
+        """
+        Method to send a command
+        @param command gdb command to be sent
+        """
         os.write(self._console.master, command + '\n')
 
     def _jump_to_line(self, event, data, foo=None):
+        """
+        Jump to buffer and line given in data
+        """
         m = re.search('^\((.*):(.*)\):.*$', data)
         if m is not None:
             self.svc.boss.cmd('buffer', 'open_file', file_name=m.group(1))
             self.svc.boss.editor.cmd('goto_line', line=m.group(2))
 
     def init(self):
+        """
+        Initiate the debugger
+        """
         gdb_path = self._dbg_param['path']
         self._console = self.svc.boss.cmd('commander','execute',
                                             commandargs=[gdb_path, 
@@ -113,15 +108,14 @@ class AnyDbg_gdb(AnyDbg_Debugger):
             self._send_command('file '+self._executable)
     
     def end(self):
+        """
+        Ends the debugger
+        """
         self._console.close_view()
         self._console = None
         self.svc.end_dbg_session()
 
     def start(self):
-        """
-        First time start: launch the debugger
-        Second time start: continue debugging
-        """
         if self._console == None:
             self.init()
             self._send_command('run')
@@ -130,10 +124,6 @@ class AnyDbg_gdb(AnyDbg_Debugger):
 
     __stop_state = False
     def stop(self):
-        """
-        First time stop: reinit the debugger
-        Second time stop: end the debugger
-        """
         if self._console == None:
             self.window.error_dlg('Tried to stop a non-working debugger')
         if self.__stop_state is False:

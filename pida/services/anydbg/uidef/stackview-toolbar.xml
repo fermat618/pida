@@ -5,6 +5,7 @@
         <toolitem action="dbg_stop" name="dbg_stop" />
         <toolitem action="step_over" name="step_over" />
         <toolitem action="step_in" name="step_in" />
+        <toolitem action="return" name="return" />
         <separator/>
         <toolitem action="toggle_breakpoint" name="toggle_breakpoint" />
         </placeholder>

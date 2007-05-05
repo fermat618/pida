@@ -14,7 +14,6 @@
             <placeholder name="tools">
             <menuitem action="show_breakpoints_view" name="show_breakpoints_view" />
             <menuitem action="show_stack_view" name="show_stack_view" />
-            <menuitem action="show_console_view" name="show_console_view" />
             </placeholder>
             <separator />
             <placeholder name="panes"/>

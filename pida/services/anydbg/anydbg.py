@@ -60,6 +60,7 @@ class AnyDbgBreakPointsView(PidaView):
     icon_name =  'accessories-text-editor'
 
     def create_ui(self):
+        self._prebreakpoints = {}
         self._breakpoints = {}
         self._breakpoint_list = ObjectList(
             [
@@ -72,15 +73,9 @@ class AnyDbgBreakPointsView(PidaView):
         self.add_main_widget(self._breakpoint_list)
         self._breakpoint_list.show_all()
 
-        if self.svc._controller: ### TODO find a way to store it when no controller has been chosen
-            for file in self.svc._controller.list_prestored_breakpoints():
-                line = self.svc._controller.list_prestored_breakpoints()[file]
-#                print "TOG1", file, line
-                self.add_breakpoint(None, file, line)
-
+        if self.svc._controller:
             for file in self.svc._controller.list_breakpoints():
                 line = self.svc._controller.list_breakpoints()[file]
-#                print "TOG1", file, line
                 self.add_breakpoint(None, file, line)
 
         self.svc.subscribe_event('add_breakpoint', self.add_breakpoint)
@@ -88,27 +83,42 @@ class AnyDbgBreakPointsView(PidaView):
 
     def clear_items(self):
         gcall(self._breakpoint_list.clear)
-    
-    def add_breakpoint(self, ident, file, line):
-        if self.svc.dbg is None:
-            breakpoint = AnyDbgBreakPointItem(file, line, 'disabled')
-        else:
-            breakpoint = AnyDbgBreakPointItem(file, line)
 
-        if (file, line) not in self._breakpoints:
-            self._breakpoints[(file,line)] = breakpoint
+    def toggle_breakpoint(self, file, line):
+        #print "AnyDbgBreakPointsView.toggle_breakpoint(", file, line, ")"
+        breakpoint = AnyDbgBreakPointItem(file, line, 'disabled')
+
+        #print "LP", self._prebreakpoints
+        if (file, line) not in self._prebreakpoints:
+            self._prebreakpoints[(file,line)] = breakpoint
+            self._breakpoint_list.append(breakpoint)
+        else:
+            oldbp = self._prebreakpoints.pop((file,line))
+            self._breakpoint_list.remove(oldbp)
+        #print "LP", self._prebreakpoints
+
+    def add_breakpoint(self, ident, file, line):
+        #print "AnyDbgBreakPointsView.add_breakpoint(", ident, file, line, ")"
+
+        if (file, int(line)) in self._prebreakpoints:
+            breakpoint = self._prebreakpoints.pop((file, int(line)))
+            breakpoint.status = 'enabled'
+            self._breakpoint_list.remove(breakpoint)
+        else:
+            breakpoint = AnyDbgBreakPointItem(file, int(line))
+
+        if ident not in self._breakpoints:
+            self._breakpoints[ident] = breakpoint
             self._breakpoint_list.append(breakpoint)
             return True
-        elif (file, line) in self._breakpoints:
-            if self._breakpoints[(file, line)].status is 'disabled':
-                self._breakpoints[(file, line)].status is 'enabled'
         else:
             return False
     
-    def del_breakpoint(self, ident, file, line):
-        if (file, line) in self._breakpoints:
-            self._breakpoint_list.remove(self._breakpoints[(file, line)])
-            del(self._breakpoints[(file, line)])
+    def del_breakpoint(self, ident):
+        #print "AnyDbgBreakPointsView.del_breakpoint(", ident, ")"
+        if ident in self._breakpoints:
+            self._breakpoint_list.remove(self._breakpoints[ident])
+            del(self._breakpoints[ident])
             return True
         else:
             return False
@@ -220,30 +230,6 @@ class AnyDbgStackView(PidaView):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
         self.svc.boss.cmd('buffer', 'open_file', file_name=item.file)
 
-# --- AnyDbg debugger classes
-
-class AnyDbg_Debugger:
-    def __init__(self, executable, parameters, service, param):
-        self._executable = executable
-        self._parameters = parameters
-        self.svc = service
-        self._dbg_param = param
-
-    def start(self):
-        raise NotImplementedError
-
-    def stop(self):
-        raise NotImplementedError
-
-    def step_in(self):
-        raise NotImplementedError
-
-    def step_over(self):
-        raise NotImplementedError
-
-    def toggle_breakpoint(self, file, line):
-        raise NotImplementedError
-
 # Actions
 class AnyDbgActionsConfig(ActionsConfig):
     def create_actions(self):
@@ -275,14 +261,14 @@ class AnyDbgActionsConfig(ActionsConfig):
             self.on_show_console_view,
             '<Shift><Control>c',
         )
-
+    
         # Toolbar
         self.create_action(
             'dbg_start',
             TYPE_NORMAL,
             'Continue',
             'Start debugger or Continue debbuging',
-            gtk.STOCK_MEDIA_PLAY,
+            'gdb-go',
             self.on_start,
             '<F3>',
         )
@@ -291,7 +277,7 @@ class AnyDbgActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Break',
             'Stop debbuging',
-            gtk.STOCK_MEDIA_PAUSE,
+            'gdb-break',
             self.on_stop,
             '<F4>',
         )
@@ -300,7 +286,7 @@ class AnyDbgActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Step Over',
             'Step over highlighted statement',
-            gtk.STOCK_MEDIA_FORWARD,
+            'gdb-next',
             self.on_step_over,
             '<F6>',
         )
@@ -309,16 +295,25 @@ class AnyDbgActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             'Step In',
             'Step in highlighted statement',
-            gtk.STOCK_MEDIA_NEXT,
+            'gdb-step',
             self.on_step_in,
             '<F5>',
+        )
+        self.create_action(
+            'return',
+            TYPE_NORMAL,
+            'Finish function',
+            'Step until end of current function',
+            'gdb-return',
+            self.on_return,
+            '<F7>',
         )
         self.create_action(
             'toggle_breakpoint',
             TYPE_NORMAL,
             'Toggle breakpoint',
             'Toggle breakpoint on selected line',
-            gtk.STOCK_MEDIA_RECORD,
+            'gdb-toggle-bp',
             self.on_toggle_breakpoint,
             '<F3>',
         )
@@ -335,6 +330,9 @@ class AnyDbgActionsConfig(ActionsConfig):
 
     def on_stop(self, action):
         self.svc.dbg.stop()
+
+    def on_return(self, action):
+        self.svc.dbg.finish()
 
     # Menu
     def on_show_breakpoints_view(self, action):
@@ -353,6 +351,7 @@ class AnyDbgActionsConfig(ActionsConfig):
 
     #
     def on_toggle_breakpoint(self, action):
+        #print "TOG", self.svc._current.get_filename(), self.svc.boss.editor.cmd('get_current_line_number')
         self.svc.emit('toggle_breakpoint', file=self.svc._current.get_filename(),
                         line=self.svc.boss.editor.cmd('get_current_line_number'))
 
@@ -406,31 +405,34 @@ class AnyDbgEventsConfig(EventsConfig):
         Toggles a breakpoint on line of file
         Store the breakpoint and mark it as unverified
         """
+        #print "AnyDbgEventsConfig.on_toggle_breakpoint(", file, line, ")"
         if self.svc.dbg is not None:
             self.svc.dbg.toggle_breakpoint(file, line)
         else:
-            if self.svc._controller is not None: ### TODO #55 find a way to store it when no controller has been chosen
-                self.svc._controller.prestore_breakpoint(file, line)
+            self.svc.prestore_breakpoint(file, line)
+            self.svc._breakpoints_view.toggle_breakpoint(file, line)
 
     def on_add_breakpoint(self, ident, file, line):
         """
         Add a breakpoint on line of file
         Store it with the current controller
         """
-        if self.svc._controller is not None: ### TODO #55 find a way to store it when no controller has been chosen
+        #print "AnyDbgEventsConfig.on_add_breakpoint(", ident, file, line, ")"
+        if self.svc._controller is not None:
             self.svc._controller.store_breakpoint(ident, file, line)
         if self.svc._current is not None and file is self.svc._current.get_filename():
             self.svc.boss.editor.cmd('show_sign', type='breakpoint', 
                                                     file_name=file,
                                                     line=line)
 
-    def on_del_breakpoint(self, ident, file, line):
+    def on_del_breakpoint(self, ident):
         """
         Deletes a breakpoint on line of file 
         Store it with the current controller
         """
-        if self.svc._controller is not None: ### TODO #55 find a way to store it when no controller has been chosen
-            self.svc._controller.flush_breakpoint(ident, file, line)
+        #print "AnyDbgEventsConfig.on_del_breakpoint(", ident, ")"
+        if self.svc._controller is not None:
+            self.svc._controller.flush_breakpoint(ident)
         if self.svc._current is not None and file == self.svc._current.get_filename():
             self.svc.boss.editor.cmd('hide_sign', type='breakpoint', 
                                                     file_name=file, 
@@ -439,6 +441,7 @@ class AnyDbgEventsConfig(EventsConfig):
     def on_start_debugging(self, executable, arguments):
         self.svc.get_action('step_in').set_sensitive(True)
         self.svc.get_action('step_over').set_sensitive(True)
+        self.svc.get_action('return').set_sensitive(True)
         self.svc.get_action('dbg_start').set_sensitive(True)
         self.svc.get_action('dbg_stop').set_sensitive(True)
 
@@ -451,7 +454,6 @@ class AnyDbgEventsConfig(EventsConfig):
     def on_editor_startup(self):
         """
         Set the highlights in vim
-        TODO move this to vim startup file and/or create a highlight preference
         """
         self.svc.boss.editor.cmd('define_sign_type', type="breakpoint", icon=get_pixmap_path("stop.svg"), 
                                                 linehl="", text="X", texthl="Search")
@@ -460,7 +462,7 @@ class AnyDbgEventsConfig(EventsConfig):
 
     def on_document_changed(self, document):
         if document is not None:
-#            self.svc.get_action('toggle_breakpoint').set_sensitive(True) ### TODO #55
+            self.svc.get_action('toggle_breakpoint').set_sensitive(True) ### TODO ticket #55: put it back when resolved
             self.svc.update_editor(document)
         else:
             self.svc.get_action('toggle_breakpoint').set_sensitive(False)
@@ -471,17 +473,22 @@ class GenericDebuggerController(ProjectController):
 
     label = 'Generic Debugger'
 
+    debugger = None
+
+    # parameters of the debugger
+
     attributes = [
         ProjectKeyDefinition('executable', 'Path to the executable', True),
         ProjectKeyDefinition('parameters', 'Parameters to give to the executable', True),
-        ProjectKeyDefinition('debugger', 'Choose your debugger', True),
     ] + ProjectController.attributes
 
     def execute(self):
+        """
+        Execute debugger
+        """
         executable = self.get_option('executable')
         parameters = self.get_option('parameters')
-        debugger = self.get_option('debugger')
-        if not debugger or not executable:
+        if not self.debugger or not executable:
             self.boss.get_window().error_dlg(
                 'Debug controller is not fully configured.' 
             )
@@ -489,60 +496,59 @@ class GenericDebuggerController(ProjectController):
             self.boss.get_service('anydbg').emit('launch_debugger',
                                                  executable=executable,
                                                  parameters=parameters,
-                                                 debugger=debugger,
+                                                 debugger=self.debugger,
                                                  controller=self)
 
-    def prestore_breakpoint(self, file, line):
-        if file not in self.get_option('prebreakpoint'):
-            self.get_option('prebreakpoint')[file] = line
-            return True
-        return False
+    # breakpoint recording management
 
     _breakpoints = {}
 
     def init_breakpoint(self):
+        """
+        init breakpoint storage
+        """
         if self.get_option('breakpoint') is None:
             self.set_option('breakpoint', dict())
-        if self.get_option('prebreakpoint') is None:
-            self.set_option('prebreakpoint', dict())
 
     def store_breakpoint(self, ident, file, line):
+        """
+        Store breakpoint
+        """
+        #print "Generic_debugger.store_breakpoint(", ident, file, line, ")"
         self._breakpoints[ident] = (file, line)
-#        print 'store B: ', self.get_option('breakpoint')
         if file not in self.get_option('breakpoint') \
             or line not in self.get_option('breakpoint')[file]:
                 self.get_option('breakpoint')[file] = line
-#        print 'store A: ', self.get_option('breakpoint')
         self.project.options.write()
+        l = self.get_option('breakpoint')
+        #print "Generic_debugger.list_breakpoint:", l
 
     def flush_breakpoint(self, ident):
-#        print 'flush B:', self.get_option('breakpoint')
+        """
+        Remove breakpoint from recorded list
+        """
+        #print "Generic_debugger.flush_breakpoint(", ident, ")"
         if ident in self._breakpoints:
             (file, line) = self._breakpoints[ident]
             if file in self.get_option('breakpoint'):
                 if line in self.get_option('breakpoint'):
                     self.get_option('breakpoint')[file].remove(line)
-#        print 'flush A:', self.get_option('breakpoint')
         self.project.options.write()
-
-    def list_prestored_breakpoints(self):
-        l = self.get_option('prebreakpoint')
-#        print "lp", l
-        if l is None:
-            return {}
-        return l
+        l = self.get_option('breakpoint')
+        #print "Generic_debugger.list_breakpoint:", l
 
     def list_breakpoints(self):
         l = self.get_option('breakpoint')
-#        print "lb", l
+        #print "Generic_debugger.list_breakpoint:", l
         if l is None:
             return {}
         return l
         
 class AnyDbgFeaturesConfig(FeaturesConfig):
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('project', IProjectController,
-            GenericDebuggerController)
+        for path in self.svc.opt('gdb_executable_path'):
+            ctler = self.svc.register_debugger(path.split('/')[-1], AnyDbg('gdb'), path=path)
+            self.subscribe_foreign_feature('project', IProjectController, ctler)
 
 class AnyDbgOptionsConfig(OptionsConfig):
     def create_options(self):
@@ -582,19 +588,21 @@ class Debugger(Service):
     features_config = AnyDbgFeaturesConfig
     options_config = AnyDbgOptionsConfig
 
+    _anydbg = {}
+    _anydbg_param = {}
+
     def start(self):
         """
         Starts the service
         """
-        self._anydbg = {}
-        self._anydbg_param = {}
+
         self._controller = None
         self._current = None
         self._step = []
+
+        self.__prestored_bp = {}
+
         self.dbg = None
-        for path in self.opt('gdb_executable_path'):
-            self.register_debugger(path.split('/')[-1], AnyDbg('gdb'), path=path)
-            self.register_debugger(path.split('/')[-1], AnyDbg('gdb'), path=path)
 
         self._breakpoints_view = AnyDbgBreakPointsView(self)
         self._stack_view = None
@@ -602,6 +610,7 @@ class Debugger(Service):
         # Sets default sensitivity for button bar
         self.get_action('step_in').set_sensitive(False)
         self.get_action('step_over').set_sensitive(False)
+        self.get_action('return').set_sensitive(False)
         self.get_action('dbg_start').set_sensitive(False)
         self.get_action('dbg_stop').set_sensitive(False)
         self.get_action('toggle_breakpoint').set_sensitive(False)
@@ -613,31 +622,32 @@ class Debugger(Service):
         self.dbg = self._anydbg[debugger](executable, 
                                             parameters, 
                                             self,
-                                            self._anydbg_param['pydb'])
+                                            self._anydbg_param[debugger])
         self._controller = controller
 
         if self._stack_view is None:
             self._stack_view = AnyDbgStackView(self)
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._stack_view)
-        self.get_action('toggle_breakpoint').set_sensitive(True) ### TODO remove when #55 is solved
+#        self.get_action('toggle_breakpoint').set_sensitive(True) ### TODO remove when ticket #55 is solved
 
         self.get_action('dbg_start').set_sensitive(True)
         self.get_action('dbg_stop').set_sensitive(False)
+        self.get_action('return').set_sensitive(False)
         self.get_action('step_in').set_sensitive(False)
         self.get_action('step_over').set_sensitive(False)
 
         self._controller.init_breakpoint()
         self.dbg.start()
 
-        for file in self._controller.list_prestored_breakpoints():
-            line = self._controller.list_prestored_breakpoints()[file]
-#            print "TOG", file, line
+        for (file, line) in self.prestore_breakpoint_list():
+            #print "TOG", file, line
             self.emit('toggle_breakpoint', file=file, line=line)
+        self.prestore_breakpoint_flush()
 
         for file in self._controller.list_breakpoints():
-            line = self._controller.list_breakpoints()[file]
-#            print "TOG", file, line
-            self.emit('toggle_breakpoint', file=file, line=line)
+            for line in self._controller.list_breakpoints()[file]:
+                #print "TOG", file, line
+                self.emit('toggle_breakpoint', file=file, line=line)
 
     def end_dbg_session(self):
         """
@@ -649,17 +659,35 @@ class Debugger(Service):
         self.get_action('dbg_stop').set_sensitive(False)
         self.get_action('step_in').set_sensitive(False)
         self.get_action('step_over').set_sensitive(False)
+        self.get_action('return').set_sensitive(False)
 
-        self.get_action('toggle_breakpoint').set_sensitive(False) ### TODO remove when #55 is solved
+#        self.get_action('toggle_breakpoint').set_sensitive(False) ### TODO remove when ticket #55 is solved
 
         # removing old cursor
         for (oldfile, oldline) in self._step:
-            if oldfile == self._current.get_filename():
-                self.boss.editor.cmd('hide_sign', type='step', 
-                                                        file_name=oldfile,
-                                                        line=oldline)
-                self._step.remove((oldfile, oldline))
+            self.boss.editor.cmd('hide_sign', type='step', 
+                                                    file_name=oldfile,
+                                                    line=oldline)
+            self._step.remove((oldfile, oldline))
 
+    def prestore_breakpoint(self, file, line):
+        #print "Debugger.prestore_breakpoint(", file, line, ")"
+        if file not in self.__prestored_bp:
+            self.__prestored_bp[file] = [line]
+        else:
+            if line in self.__prestored_bp[file]:
+                self.__prestored_bp[file].remove(line)
+            else:
+                self.__prestored_bp[file].append(line)
+
+    def prestore_breakpoint_list(self):
+        #print "Debugger.prestore_breakpoint_list(", self.__prestored_bp
+        for file in self.__prestored_bp:
+            for line in self.__prestored_bp[file]:
+                yield (file, line)
+
+    def prestore_breakpoint_flush(self):
+        self.__prestored_bp = {}
 
     def update_editor(self, document):
         """
@@ -685,6 +713,15 @@ class Debugger(Service):
         """
         self._anydbg[name] = classname
         self._anydbg_param[name] = kargs
+
+        members = dict(vars(GenericDebuggerController))
+        members['name'] = name.capitalize()+'_DEBUGGER'
+        members['label'] = name + ' debugger'
+        members['debugger'] = name
+
+        return type(name+'_DbgController', 
+                    (GenericDebuggerController,),
+                    members)
 
 # Required Service attribute for service loading
 Service = Debugger
