@@ -88,8 +88,10 @@ class ManView(PidaView):
                 commandargs=commandargs,
                 cwd=directory,
                 icon='gnome-library',
-                title=_('Man %(pattern)s(%(number)d)') %
-                {pattern:item.pattern, number:int(item.number)})
+                title=_('Man %(pattern)s(%(number)d)') % dict(
+                    pattern=item.pattern,
+                    number=int(item.number)
+                ))
         ## show man page in terminal
         pass
 
