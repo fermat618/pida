@@ -85,20 +85,16 @@ class AnyDbgBreakPointsView(PidaView):
         gcall(self._breakpoint_list.clear)
 
     def toggle_breakpoint(self, file, line):
-        #print "AnyDbgBreakPointsView.toggle_breakpoint(", file, line, ")"
         breakpoint = AnyDbgBreakPointItem(file, line, 'disabled')
 
-        #print "LP", self._prebreakpoints
         if (file, line) not in self._prebreakpoints:
             self._prebreakpoints[(file,line)] = breakpoint
             self._breakpoint_list.append(breakpoint)
         else:
             oldbp = self._prebreakpoints.pop((file,line))
             self._breakpoint_list.remove(oldbp)
-        #print "LP", self._prebreakpoints
 
     def add_breakpoint(self, ident, file, line):
-        #print "AnyDbgBreakPointsView.add_breakpoint(", ident, file, line, ")"
 
         if (file, int(line)) in self._prebreakpoints:
             breakpoint = self._prebreakpoints.pop((file, int(line)))
@@ -115,7 +111,6 @@ class AnyDbgBreakPointsView(PidaView):
             return False
     
     def del_breakpoint(self, ident):
-        #print "AnyDbgBreakPointsView.del_breakpoint(", ident, ")"
         if ident in self._breakpoints:
             self._breakpoint_list.remove(self._breakpoints[ident])
             del(self._breakpoints[ident])
@@ -351,7 +346,6 @@ class AnyDbgActionsConfig(ActionsConfig):
 
     #
     def on_toggle_breakpoint(self, action):
-        #print "TOG", self.svc._current.get_filename(), self.svc.boss.editor.cmd('get_current_line_number')
         self.svc.emit('toggle_breakpoint', file=self.svc._current.get_filename(),
                         line=self.svc.boss.editor.cmd('get_current_line_number'))
 
@@ -405,7 +399,6 @@ class AnyDbgEventsConfig(EventsConfig):
         Toggles a breakpoint on line of file
         Store the breakpoint and mark it as unverified
         """
-        #print "AnyDbgEventsConfig.on_toggle_breakpoint(", file, line, ")"
         if self.svc.dbg is not None:
             self.svc.dbg.toggle_breakpoint(file, line)
         else:
@@ -417,7 +410,6 @@ class AnyDbgEventsConfig(EventsConfig):
         Add a breakpoint on line of file
         Store it with the current controller
         """
-        #print "AnyDbgEventsConfig.on_add_breakpoint(", ident, file, line, ")"
         if self.svc._controller is not None:
             self.svc._controller.store_breakpoint(ident, file, line)
         if self.svc._current is not None and file is self.svc._current.get_filename():
@@ -430,7 +422,6 @@ class AnyDbgEventsConfig(EventsConfig):
         Deletes a breakpoint on line of file 
         Store it with the current controller
         """
-        #print "AnyDbgEventsConfig.on_del_breakpoint(", ident, ")"
         if self.svc._controller is not None:
             self.svc._controller.flush_breakpoint(ident)
         if self.svc._current is not None and file == self.svc._current.get_filename():
@@ -462,7 +453,7 @@ class AnyDbgEventsConfig(EventsConfig):
 
     def on_document_changed(self, document):
         if document is not None:
-            self.svc.get_action('toggle_breakpoint').set_sensitive(True) ### TODO ticket #55: put it back when resolved
+            self.svc.get_action('toggle_breakpoint').set_sensitive(True)
             self.svc.update_editor(document)
         else:
             self.svc.get_action('toggle_breakpoint').set_sensitive(False)
@@ -514,20 +505,17 @@ class GenericDebuggerController(ProjectController):
         """
         Store breakpoint
         """
-        #print "Generic_debugger.store_breakpoint(", ident, file, line, ")"
         self._breakpoints[ident] = (file, line)
         if file not in self.get_option('breakpoint') \
             or line not in self.get_option('breakpoint')[file]:
                 self.get_option('breakpoint')[file] = line
         self.project.options.write()
         l = self.get_option('breakpoint')
-        #print "Generic_debugger.list_breakpoint:", l
 
     def flush_breakpoint(self, ident):
         """
         Remove breakpoint from recorded list
         """
-        #print "Generic_debugger.flush_breakpoint(", ident, ")"
         if ident in self._breakpoints:
             (file, line) = self._breakpoints[ident]
             if file in self.get_option('breakpoint'):
@@ -535,11 +523,9 @@ class GenericDebuggerController(ProjectController):
                     self.get_option('breakpoint')[file].remove(line)
         self.project.options.write()
         l = self.get_option('breakpoint')
-        #print "Generic_debugger.list_breakpoint:", l
 
     def list_breakpoints(self):
         l = self.get_option('breakpoint')
-        #print "Generic_debugger.list_breakpoint:", l
         if l is None:
             return {}
         return l
@@ -628,7 +614,6 @@ class Debugger(Service):
         if self._stack_view is None:
             self._stack_view = AnyDbgStackView(self)
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._stack_view)
-#        self.get_action('toggle_breakpoint').set_sensitive(True) ### TODO remove when ticket #55 is solved
 
         self.get_action('dbg_start').set_sensitive(True)
         self.get_action('dbg_stop').set_sensitive(False)
@@ -640,13 +625,11 @@ class Debugger(Service):
         self.dbg.start()
 
         for (file, line) in self.prestore_breakpoint_list():
-            #print "TOG", file, line
             self.emit('toggle_breakpoint', file=file, line=line)
         self.prestore_breakpoint_flush()
 
         for file in self._controller.list_breakpoints():
             for line in self._controller.list_breakpoints()[file]:
-                #print "TOG", file, line
                 self.emit('toggle_breakpoint', file=file, line=line)
 
     def end_dbg_session(self):
@@ -661,8 +644,6 @@ class Debugger(Service):
         self.get_action('step_over').set_sensitive(False)
         self.get_action('return').set_sensitive(False)
 
-#        self.get_action('toggle_breakpoint').set_sensitive(False) ### TODO remove when ticket #55 is solved
-
         # removing old cursor
         for (oldfile, oldline) in self._step:
             self.boss.editor.cmd('hide_sign', type='step', 
@@ -671,7 +652,6 @@ class Debugger(Service):
             self._step.remove((oldfile, oldline))
 
     def prestore_breakpoint(self, file, line):
-        #print "Debugger.prestore_breakpoint(", file, line, ")"
         if file not in self.__prestored_bp:
             self.__prestored_bp[file] = [line]
         else:
@@ -681,7 +661,6 @@ class Debugger(Service):
                 self.__prestored_bp[file].append(line)
 
     def prestore_breakpoint_list(self):
-        #print "Debugger.prestore_breakpoint_list(", self.__prestored_bp
         for file in self.__prestored_bp:
             for line in self.__prestored_bp[file]:
                 yield (file, line)
@@ -715,7 +694,7 @@ class Debugger(Service):
         self._anydbg_param[name] = kargs
 
         members = dict(vars(GenericDebuggerController))
-        members['name'] = name.capitalize()+'_DEBUGGER'
+        members['name'] = name.upper()+'_DEBUGGER'
         members['label'] = name + ' debugger'
         members['debugger'] = name
 
