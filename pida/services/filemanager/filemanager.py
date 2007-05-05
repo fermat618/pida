@@ -198,11 +198,15 @@ class FilemanagerView(PidaView):
         self._toolbar.show_all()
 
 
-    def add_or_update_file(self, name, basepath, state):
+    def add_or_update_file(self, name, basepath, state=None):
         if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
-        entry.state = state
+        if state is not None:
+            entry.state = state
+            # the only theoretical problem is a race condition betwen what
+            # listers think about state
+            # fortunately its not a practical problem
 
         self.show_or_hide(entry)
 
@@ -529,7 +533,7 @@ class Filemanager(Service):
 
     def file_lister(self, basepath):
         for name in listdir(basepath):
-            yield name, basepath, "normal"
+            yield name, basepath
 
     def rename_file(self, old, new, basepath):
         pass
