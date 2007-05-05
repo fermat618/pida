@@ -24,7 +24,7 @@ import os
 import gtk
 import gobject
 
-from configobj import ConfigObj
+from pida.utils.configobj import ConfigObj
 from tempfile import mkstemp
 
 # PIDA Imports

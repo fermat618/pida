@@ -3,7 +3,7 @@
 import os
 from weakref import proxy
 
-from configobj import ConfigObj
+from pida.utils.configobj import ConfigObj
 
 # locale
 from pida.core.locale import Locale

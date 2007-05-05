@@ -24,7 +24,7 @@ import os, glob
 
 import gtk
 
-from configobj import ConfigObj
+from pida.utils.configobj import ConfigObj
 
 from kiwi.ui.objectlist import Column
 
