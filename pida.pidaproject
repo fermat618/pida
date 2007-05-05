@@ -12,11 +12,13 @@ command = pydoctor -c tools/pida-pydoctor.cfg
 controller = GENERIC_EXECUTION
 default = ""
 command = nosetests tests/
-[Debug PIDA]
-controller = GENERIC_DEBUGGER
+[Debug PIDA with gdb]
+controller = GDB_DEBUGGER
 default = ""
-debugger = pydb
+executable = /usr/bin/python
+parameters = bin/pida
+env = PYTHONPATH=.
+[Debug PIDA]
+controller = PYDB_DEBUGGER
+default = ""
 executable = bin/pida
-parameters = ""
-[[breakpoint]]
-[[prebreakpoint]]
