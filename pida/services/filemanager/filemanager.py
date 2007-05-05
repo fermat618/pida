@@ -202,8 +202,6 @@ class FilemanagerView(PidaView):
         if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
-        # Bug!
-        #if state != "normal":
         entry.state = state
 
         self.show_or_hide(entry)
@@ -247,7 +245,10 @@ class FilemanagerView(PidaView):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
     def update_removed_file(self, filename):
-        self.file_list.remove(self.entries[filename])
+        entry = self.entries.get(filename, None)
+        if entry:
+            self.file_list.remove(entry)
+            del self.entries[filename]
         
 
     def on_file_activated(self, rowitem, fileentry):

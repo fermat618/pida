@@ -69,7 +69,6 @@ class Filewatcher(Service):
         self.set_directory(path)
 
     def set_directory(self, dir):
-        print dir
         if not self.gamin:
             self.dir = dir
             return
