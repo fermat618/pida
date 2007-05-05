@@ -84,6 +84,11 @@ def create_python_file(root_path, name, content,
 class ServiceCreator(object):
 
     service_template = '''
+# locale
+from pida.core.locale import Locale
+locale = Locale('%(lowername)s')
+_ = locale.gettext
+
 # Service class
 class %(name)s(Service):
     """Describe your Service Here""" 
@@ -100,6 +105,7 @@ Service = %(name)s
             'from pida.core.commands import CommandsConfig',
             'from pida.core.events import EventsConfig',
             'from pida.core.actions import ActionsConfig',
+            'from pida.core.options import OptionsConfig',
             'from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE',
         ]
     )
@@ -111,7 +117,8 @@ Service = %(name)s
         self._opts = opts
 
     def _create_service_text(self):
-        return self.service_template % dict(name=self._name.capitalize())
+        return self.service_template % dict(name=self._name.capitalize(),
+                                            lowername=self._name)
 
     def _create_service_dir(self):
         if not os.path.isdir(self._root_path):
@@ -133,7 +140,7 @@ Service = %(name)s
         f.close()
 
     def _create_resource_dirs(self):
-        for res in ['glade', 'data', 'uidef', 'pixmaps']:
+        for res in ['glade', 'data', 'uidef', 'pixmaps', 'locale']:
             respath = os.path.join(self._path, res)
             os.mkdir(respath)
 
