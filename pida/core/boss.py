@@ -33,8 +33,8 @@ class Boss(object):
 
     def stop(self, force=False):
         if force or self.window.yesno_dlg(_('Are you sure you want to quit PIDA ?')):
-            self._sm.stop()
             gtk.main_quit()
+            self._sm.stop()
         else:
             return True
 

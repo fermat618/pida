@@ -24,7 +24,10 @@
 # system import(s)
 import os
 import sys
+import signal
 import warnings
+
+from pida.core.signalhandler import PosixSignalHandler
 
 # locale
 from pida.core.locale import Locale
@@ -44,7 +47,7 @@ try:
     from gtk import gdk
     if gtk.pygtk_version < (2, 8):
         die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
-                % {major:gtk.pygtk_version[:2][0], minor:gtk.pygtk_version[:2][1]})
+                % {'major':gtk.pygtk_version[:2][0], 'minor':gtk.pygtk_version[:2][1]})
 except ImportError:
     die_cli(_('PIDA requires Python GTK bindings. They were not found.'))
 
@@ -64,7 +67,7 @@ except ImportError:
 # Python 2.4
 if sys.version_info < (2,4):
     die_gui(_('Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
-        {major:sys.version_info[:2][0], minor:sys.version_info[:2][1]})
+        {'major':sys.version_info[:2][0], 'minor':sys.version_info[:2][1]})
 
 
 # This can test if PIDA is installed
@@ -84,11 +87,17 @@ def run_version(env):
 def run_pida(env):
     gdk.threads_init()
     b = Boss(env)
+    PosixSignalHandler(b)
     b.start()
     gdk.threads_enter()
     b.loop_ui()
     gdk.threads_leave()
     return 0
+
+def force_quit(signum, frame):
+    os.kill(os.getpid(), 9)
+
+# Set the signal handler and a 5-second alarm
 
 def main():
     env = Environment(sys.argv)
@@ -102,6 +111,8 @@ def main():
     else:
         run_func = run_pida
     exit_val = run_func(env)
+    signal.signal(signal.SIGALRM, force_quit)
+    signal.alarm(3)
     sys.exit(exit_val)
 
 

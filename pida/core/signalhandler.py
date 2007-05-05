@@ -12,7 +12,7 @@ class PosixSignalHandler(object):
         self.boss = boss
         signal.signal(signal.SIGTERM, self.handle_SIGTERM)
 
-    def handle_SIGTERM(self, signum):
+    def handle_SIGTERM(self, signum, frame):
         self.boss.log.error(_('PIDA stopped by SIGTERM')) 
-        self.boss.stop()
+        self.boss.stop(force=True)
 
