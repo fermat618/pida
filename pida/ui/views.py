@@ -81,8 +81,6 @@ class PidaViewMixin(object):
 
     icon_name = gtk.STOCK_INFO
     label_text = _('Pida View')
-    dock_behaviour = BEH_NORMAL
-
 
     def create_ui(self):
         """Create the user interface here"""
