@@ -161,7 +161,7 @@ class GrepperView(PidaGladeView):
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
         self.svc.boss.editor.cmd('goto_line',
-                                 line=grepper_item.linenumber)
+                                 line=grepper_item.linenumber + 1)
         self.svc.boss.editor.cmd('grab_focus')
 
     def append_to_matches_list(self, grepper_item):
