@@ -33,6 +33,7 @@ from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, gcall
+from pida.utils.testing import refresh_gui
 
 # locale
 from pida.core.locale import Locale
@@ -87,7 +88,6 @@ class GrepperItem(object):
         return ''.join(line_pieces).strip()
             
 
-
 class GrepperActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
@@ -121,7 +121,7 @@ class GrepperActionsConfig(ActionsConfig):
         )
 
     def on_show_grepper(self, action):
-        self.svc.show_grepper(path)
+        self.svc.show_grepper_in_project_source_directory()
 
     def on_grep_current_word(self, action):
         self.svc.grep_current_word()
@@ -156,6 +156,7 @@ class GrepperView(PidaGladeView):
 
         self.task = GeneratorTask(self.svc.grep, self.append_to_matches_list,
                                   self.grep_complete)
+        self.running = False
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
@@ -169,7 +170,11 @@ class GrepperView(PidaGladeView):
         self.matches_list.append(grepper_item, select=select)
 
     def on_find_button__clicked(self, button):
-        self.start_grep()
+        if self.running:
+            self.stop()
+            self.grep_complete()
+        else:
+            self.start_grep()
 
     def on_pattern_entry__activate(self, entry):
         self.start_grep()
@@ -179,13 +184,16 @@ class GrepperView(PidaGladeView):
 
     def set_location(self, location):
         self.path_chooser.set_filename(location)
+        # setting the location takes a *long* time
+        refresh_gui()
 
     def start_grep_for_word(self, word):
-        # Have to do this in idle time, because dir widget takes time 
-        def _start_grep_for_word(word):
+        if not word:
+            self.svc.error_dlg(_('Empty search string'))
+            self.close()
+        else:
             self.pattern_entry.set_text(word)
             self.start_grep()
-        gcall(_start_grep_for_word, word)
 
     def start_grep(self):
         self.matches_list.clear()
@@ -221,13 +229,27 @@ class GrepperView(PidaGladeView):
                 str(e))
             return False
 
+        self.grep_started()
         self.task.start(location, regex, recursive)
 
+    def on_close_button__clicked(self, button):
+        self.stop()
+        self.close()
+
+    def close(self):
+        self.svc.boss.cmd('window', 'remove_view', view=self)
+
+    def grep_started(self):
+        self.running = True
+        self.find_button.set_label(gtk.STOCK_STOP)
+
     def grep_complete(self):
-        pass
+        self.running = False
+        self.find_button.set_label(gtk.STOCK_FIND)
 
     def stop(self):
         self.task.stop()
+        self.grep_complete()
 
 
 class GrepperCommandsConfig(CommandsConfig):
