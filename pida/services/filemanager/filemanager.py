@@ -202,8 +202,9 @@ class FilemanagerView(PidaView):
         if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
-        if state != "normal":
-            entry.state = state
+        # Bug!
+        #if state != "normal":
+        entry.state = state
 
         self.show_or_hide(entry)
 
@@ -240,6 +241,14 @@ class FilemanagerView(PidaView):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
         self.create_ancest_tree()
+
+    def update_without_clearing(self):
+        for lister in self.svc.features("file_lister"):
+            GeneratorTask(lister, self.add_or_update_file).start(self.path)
+
+    def update_removed_file(self, filename):
+        self.file_list.remove(self.entries[filename])
+        
 
     def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
@@ -312,6 +321,15 @@ class FilemanagerCommandsConfig(CommandsConfig):
     def present_view(self):
         return self.svc.boss.cmd('window', 'present_view',
             view=self.svc.get_view())
+
+    def update_file(self, filename, dirname):
+        if dirname == self.svc.get_view().path: 
+            self.svc.get_view().update_without_clearing()
+
+    def update_removed_file(self, filename, dirname):
+        if dirname == self.svc.get_view().path: 
+            self.svc.get_view().update_removed_file(filename)
+        
 
 
 class FilemanagerFeatureConfig(FeaturesConfig):
@@ -475,7 +493,10 @@ class Filemanager(Service):
 
     def pre_start(self):
         self.path = self.opt('last_browsed')
+
+    def start(self):
         self.file_view = FilemanagerView(self)
+        self.emit('browsed_path_changed', path=self.path)
         self.on_project_switched(None)
 
     def get_view(self):

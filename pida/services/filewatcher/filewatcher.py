@@ -69,6 +69,7 @@ class Filewatcher(Service):
         self.set_directory(path)
 
     def set_directory(self, dir):
+        print dir
         if not self.gamin:
             self.dir = dir
             return
@@ -84,8 +85,15 @@ class Filewatcher(Service):
     def _callback(self, name, event):
         if event == gamin.GAMAcknowledge:
             return
-        self.boss.cmd('filemanager', 'update_single_file', name=name,
-                basepath=self.dir, state='normal')
+        if event == gamin.GAMChanged or event == gamin.GAMCreated:
+            command = 'update_file'
+        elif event == gamin.GAMDeleted:
+            command = 'update_removed_file'
+        else:
+            command = None
+        if command:
+            self.boss.cmd('filemanager', command, filename=name,
+                dirname=self.dir)
 
     def _period_check(self):
         if not self.gamin:
