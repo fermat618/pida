@@ -241,11 +241,18 @@ class GrepperView(PidaGladeView):
 
     def grep_started(self):
         self.running = True
+        self.progress_bar.show()
+        gobject.timeout_add(100, self.pulse)
         self.find_button.set_label(gtk.STOCK_STOP)
 
     def grep_complete(self):
         self.running = False
         self.find_button.set_label(gtk.STOCK_FIND)
+        self.progress_bar.hide()
+
+    def pulse(self):
+        self.progress_bar.pulse()
+        return self.running
 
     def stop(self):
         self.task.stop()
