@@ -25,7 +25,7 @@ import re
 
 import gtk
 
-from kiwi.ui.objectlist import ObjectList, Column
+from kiwi.ui.objectlist import ObjectTree, ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -130,10 +130,20 @@ class AnyDbgBreakPointsView(PidaView):
 
 class AnyDbgStackItem(object):
     def __init__(self, frame, function, file, line):
+        self.thread = ""
         self.frame = frame
         self.function = function
         self.file = file
         self.line = line
+        self.parent = None
+
+class AnyDbgStackThreadItem(object):
+    def __init__(self,thread):
+        self.thread = thread
+        self.frame = ""
+        self.function = ""
+        self.file = ""
+        self.line = ""
         self.parent = None
 
 class AnyDbgStackView(PidaView):
@@ -150,8 +160,9 @@ class AnyDbgStackView(PidaView):
         self.create_toolbar()
 
         # Tree
-        self._stack_list = ObjectList(
+        self._stack_list = ObjectTree(
             [
+                Column('thread'), 
                 Column('frame'), 
                 Column('line'),
                 Column('function'),
@@ -170,6 +181,10 @@ class AnyDbgStackView(PidaView):
         self.svc.subscribe_event('function_call', self.on_function_call)
         self.svc.subscribe_event('function_return', self.on_function_return)
         self.svc.subscribe_event('step', self.on_step)
+        self.svc.subscribe_event('thread', self.on_thread_stmt)
+
+        self._thread = { None:None }
+        self.__current_thread = None
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
@@ -180,6 +195,14 @@ class AnyDbgStackView(PidaView):
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
         self._toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self._toolbar.show_all()
+
+    def on_thread_stmt(self, thread):
+        self.__current_thread = thread
+
+        thread_item = AnyDbgStackThreadItem(thread)
+        if thread not in self._thread:
+            self._thread[thread] = thread_item
+            self._stack_list.prepend(None, thread_item)
 
     def on_function_call(self):
         self.__call = True
@@ -193,26 +216,26 @@ class AnyDbgStackView(PidaView):
             self.__return = False
 
         if self.__call is True:
-            self.push_function(function, file, line)
+            self.push_function(function, file, line, self.__current_thread)
             self.__call = False
 
         if self.__call is False and self.__return is False:
             if self.__last is None:
-                self.push_function(function, file, line)
+                self.push_function(function, file, line, self.__current_thread)
             else:
                 self.pop_function()
-                self.push_function(function, file, line)
+                self.push_function(function, file, line, self.__current_thread)
 
         return True
 
     def clear_items(self):
         gcall(self._breakpoint_list.clear)
-    
-    def push_function(self, function, file, line):
+
+    def push_function(self, function, file, line, thread=None):
         self.__cnt = self.__cnt + 1
         func = AnyDbgStackItem(self.__cnt, function, file, line)
         func.parent = self.__last
-        self._stack_list.insert(0, func)
+        self._stack_list.prepend(self._thread[thread],func)
         self.__last = func
     
     def pop_function(self):
@@ -359,6 +382,7 @@ class AnyDbgEventsConfig(EventsConfig):
         # Debugger events
         self.create_event('start_debugging')
         self.create_event('step')
+        self.create_event('thread')
         self.create_event('function_call')
         self.create_event('function_return')
         self.create_event('add_breakpoint')

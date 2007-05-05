@@ -33,6 +33,9 @@ class AnyDbg_gdb(AnyDbg_Debugger):
     _breakpoints = []
     
     _parser_patterns = {
+#        # line: Current thread is <THREAD>
+#        'Current thread is (.*)' :
+#            lambda self, m: self.svc.emit('thread', thread=m.group(1)),
         # line: Restarting <EXEC> with arguments: <ARGS>
         'Restarting (.*) with arguments:(.*)' : 
             lambda self, m: self.svc.emit('start_debugging', 
@@ -92,9 +95,10 @@ class AnyDbg_gdb(AnyDbg_Debugger):
         Initiate the debugger
         """
         gdb_path = self._dbg_param['path']
+        commandargs = [gdb_path, "--cd="+self.svc._controller.get_cwd()]
+
         self._console = self.svc.boss.cmd('commander','execute',
-                                            commandargs=[gdb_path, 
-                                "--cd="+self.svc._controller.get_cwd()],
+                                            commandargs=commandargs,
                                             cwd=self.svc._controller.get_cwd(), 
                                             title='gdb',
                                             icon=None,
