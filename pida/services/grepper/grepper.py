@@ -92,7 +92,7 @@ class GrepperActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_grepper',
-            TYPE_TOGGLE,
+            TYPE_NORMAL,
             _('Find in files'),
             _('Show the grepper view'),
             gtk.STOCK_FIND,
@@ -121,10 +121,7 @@ class GrepperActionsConfig(ActionsConfig):
         )
 
     def on_show_grepper(self, action):
-        if action.get_active():
-            self.svc.show_grepper()
-        else:
-            self.svc.hide_grepper()
+        self.svc.show_grepper(path)
 
     def on_grep_current_word(self, action):
         self.svc.grep_current_word()
@@ -132,8 +129,7 @@ class GrepperActionsConfig(ActionsConfig):
     def on_grep_current_word_file(self, action):
         document = self.svc.boss.cmd('buffer', 'get_current')
         if document is not None:
-            self.svc.set_view_location(document.directory)
-            self.svc.grep_current_word()
+            self.svc.grep_current_word(document.directory)
         else:
             self.svc.error_dlg(_('There is no current document.'))
         
@@ -158,7 +154,8 @@ class GrepperView(PidaGladeView):
         self.recursive.set_active(True)
         self.re_check.set_active(True)
 
-        self.task = None
+        self.task = GeneratorTask(self.svc.grep, self.append_to_matches_list,
+                                  self.grep_complete)
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
@@ -184,13 +181,14 @@ class GrepperView(PidaGladeView):
         self.path_chooser.set_filename(location)
 
     def start_grep_for_word(self, word):
-        self.pattern_entry.set_text(word)
-        self.start_grep()
+        # Have to do this in idle time, because dir widget takes time 
+        def _start_grep_for_word(word):
+            self.pattern_entry.set_text(word)
+            self.start_grep()
+        gcall(_start_grep_for_word, word)
 
     def start_grep(self):
-        if self.task is not None:
-            self.task.stop()
-        gcall(self.matches_list.clear)
+        self.matches_list.clear()
         pattern = self.pattern_entry.get_text()
         location = self.path_chooser.get_filename()
         recursive = self.recursive.get_active()
@@ -223,12 +221,13 @@ class GrepperView(PidaGladeView):
                 str(e))
             return False
 
-        self.task = GeneratorTask(self.svc.grep, self.append_to_matches_list,
-                                  self.grep_complete)
         self.task.start(location, regex, recursive)
 
     def grep_complete(self):
-        self.task = None
+        pass
+
+    def stop(self):
+        self.task.stop()
 
 
 class GrepperCommandsConfig(CommandsConfig):
@@ -273,24 +272,30 @@ class Grepper(Service):
     BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]|\\x00')
 
     def pre_start(self):
-        self._view = GrepperView(self)
+        self.current_project_source_directory = None
+        self._views = []
 
-    def show_grepper(self):
-        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
+    def show_grepper_in_project_source_directory(self):
+        if self.current_project_source_directory is None:
+            path = os.getcwd()
+        else:
+            path = self.current_project_source_directory
+        return self.show_grepper(path)
 
-    def hide_grepper(self):
-        self.boss.cmd('window', 'remove_view', view=self._view)
+    def show_grepper(self, path):
+        view = GrepperView(self)
+        view.set_location(path)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
+        self._views.append(view)
+        return view
 
-    def ensure_view_visible(self):
-        act = self.get_action('show_grepper')
-        if not act.get_active():
-            act.set_active(True)
-        self.boss.cmd('window', 'present_view', view=self._view)
-
-    def grep_current_word(self):
+    def grep_current_word(self, path=None):
+        if path is None:
+            view = self.show_grepper_in_project_source_directory()
+        else:
+            view = self.show_grepper(path)
         self.boss.editor.cmd('call_with_current_word',
-                             callback=self._view.start_grep_for_word)
-        self.ensure_view_visible()
+                             callback=view.start_grep_for_word)
 
     def grep(self, top, regex, recursive=False, show_hidden=False):
         """
@@ -355,10 +360,15 @@ class Grepper(Service):
             pass
 
     def set_current_project(self, project):
-        self.set_view_location(project.source_directory)
+        self.current_project_source_directory = project.source_directory
+        #self.set_view_location(project.source_directory)
 
     def set_view_location(self, directory):
         self._view.set_location(directory)
+
+    def stop(self):
+        for view in self._views:
+            view.stop()
 
 
 Service = Grepper
