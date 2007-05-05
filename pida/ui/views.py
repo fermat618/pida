@@ -9,8 +9,6 @@ from pida.core.environment import get_pixmap_path
 
 from pida.utils.unique import create_unique_id
 
-from pida.ui.docks import BEH_NORMAL
-
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
