@@ -337,6 +337,10 @@ class Grepper(Service):
                 yield result
         elif recursive:
             for root, dirs, files in os.walk(top):
+                # Remove hidden directories
+                if os.path.basename(root).startswith('.') and not show_hidden:
+                    del dirs[:]
+                    continue
                 for matches in self._grep_file_list(files, root, regex):
                     yield matches
         else:
@@ -357,7 +361,7 @@ class Grepper(Service):
         for file in file_list:
             if self._result_count > self.opt('maximum_results'):
                 break
-            if file[0] == "." and not show_hidden:
+            if file.startswith(".") and not show_hidden:
                 continue
             # never do this, always use os.path.join
             # filename = "%s/%s" % (root, file,)
