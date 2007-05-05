@@ -39,7 +39,6 @@ class Service(object):
         {servicemanager.ServiceManager}
         """
 
-        self.log_debug('Creating Service')
         self._register_options_config(self.options_config)
         self._register_events_config(self.events_config)
         self._register_commands_config(self.commands_config)
@@ -47,7 +46,6 @@ class Service(object):
         self._register_actions_config(self.actions_config)
 
     def subscribe_all(self):
-        self.log_debug('Subscribing Service')
         self._subscribe_foreign_events()
         self._subscribe_foreign_features()
         self._subscribe_keyboard_shortcuts()

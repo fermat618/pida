@@ -121,10 +121,12 @@ class ServiceManager(object):
 
     def create_all(self):
         for svc in self.get_services():
+            svc.log_debug('Creating Service')
             svc.create_all()
 
     def subscribe_all(self):
         for svc in self.get_services():
+            svc.log_debug('Subscribing Service')
             svc.subscribe_all()
 
     def pre_start_all(self):
