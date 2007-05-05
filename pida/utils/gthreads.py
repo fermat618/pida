@@ -21,7 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import threading
+import threading, thread
 import gobject
 
 class AsyncTask(object):
@@ -103,10 +103,21 @@ class GeneratorTask(AsyncTask):
         import gtk
         gtk.main()
     """
-    def _work_callback(self, counter, *args, **kwargs):
-        for ret in self.work_callback(*args, **kwargs):
-            gobject.idle_add(self._loop_callback, (counter, ret))
+    def __init__(self, work_callback, loop_callback, complete_callback=None):
+        AsyncTask.__init__(self, work_callback, loop_callback)
+        self._complete_callback = complete_callback
 
+    def _work_callback(self, counter, *args, **kwargs):
+        self._stopped = False
+        for ret in self.work_callback(*args, **kwargs):
+            if self._stopped:
+                thread.exit()
+            gobject.idle_add(self._loop_callback, (counter, ret))
+        if self._complete_callback is not None:
+            gobject.idle_add(self._complete_callback)
+
+    def stop(self):
+        self._stopped = True
 
 def locked(lockname):
     '''

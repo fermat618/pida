@@ -32,7 +32,7 @@ from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask
+from pida.utils.gthreads import GeneratorTask, gcall
 
 # locale
 from pida.core.locale import Locale
@@ -148,7 +148,7 @@ class GrepperView(PidaGladeView):
         self.grepper_dir = ''
         self.matches_list.set_columns([
             Column('linenumber', editable=False, title="#",),
-            Column('path', editable=False, use_markup=True),
+            Column('path', editable=False, use_markup=True, sorted=True),
             Column('line', expand=True, editable=False, use_markup=True),
             ])
 
@@ -157,6 +157,8 @@ class GrepperView(PidaGladeView):
 
         self.recursive.set_active(True)
         self.re_check.set_active(True)
+
+        self.task = None
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
@@ -186,7 +188,9 @@ class GrepperView(PidaGladeView):
         self.start_grep()
 
     def start_grep(self):
-        self.matches_list.clear()
+        if self.task is not None:
+            self.task.stop()
+        gcall(self.matches_list.clear)
         pattern = self.pattern_entry.get_text()
         location = self.path_chooser.get_filename()
         recursive = self.recursive.get_active()
@@ -219,8 +223,12 @@ class GrepperView(PidaGladeView):
                 str(e))
             return False
 
-        task = GeneratorTask(self.svc.grep, self.append_to_matches_list)
-        task.start(location, regex, recursive)
+        self.task = GeneratorTask(self.svc.grep, self.append_to_matches_list,
+                                  self.grep_complete)
+        self.task.start(location, regex, recursive)
+
+    def grep_complete(self):
+        self.task = None
 
 
 class GrepperCommandsConfig(CommandsConfig):
