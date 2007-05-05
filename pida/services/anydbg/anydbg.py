@@ -270,15 +270,6 @@ class AnyDbgActionsConfig(ActionsConfig):
             self.on_show_stack_view,
             '<Shift><Control>s',
         )
-        self.create_action(
-            'show_console_view',
-            TYPE_TOGGLE,
-            "Debugger's console",
-            'Show the console of the debugger',
-            'accessories-text-editor',
-            self.on_show_console_view,
-            '<Shift><Control>c',
-        )
     
         # Toolbar
         self.create_action(
@@ -361,12 +352,6 @@ class AnyDbgActionsConfig(ActionsConfig):
             self.svc._stack_view = AnyDbgStackView(self.svc)
         self.svc.boss.cmd('window', 'add_view', paned='Plugin', view=self.svc._stack_view)
         
-    def on_show_console_view(self, action):
-        if self.svc.dbg is not None:
-            self.svc.boss.cmd('window', 'add_view', paned='Terminal', view=self.svc.dbg._console)
-        else:
-            self.svc.window.error_dlg('No debugger is running')
-
     #
     def on_toggle_breakpoint(self, action):
         self.svc.emit('toggle_breakpoint', file=self.svc._current.get_filename(),
@@ -586,7 +571,7 @@ beginning of line where debugger is halted')
              '/usr/bin/bashdb',
              '/usr/bin/gdb'],
             ("Add or remove the path to any debugger whose console has the \
-same interface as gdb's.")
+same interface as gdb, NOT. pydb v1.2 actually... sorry.")
         )
 
 # Service class
@@ -637,7 +622,7 @@ class Debugger(Service):
 
         if self._stack_view is None:
             self._stack_view = AnyDbgStackView(self)
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._stack_view)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._stack_view)
 
         self.get_action('dbg_start').set_sensitive(True)
         self.get_action('dbg_stop').set_sensitive(False)

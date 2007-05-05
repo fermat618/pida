@@ -22,7 +22,7 @@
 #SOFTWARE.
 __all__ = ["AnyDbg"]
 
-from gdb_interface import AnyDbg_gdb 
+from gdb_interface import AnyDbg_gdb
 
 __all_dbg__ = { 'gdb' : AnyDbg_gdb }
 AnyDbg = lambda dbg : __all_dbg__[dbg]

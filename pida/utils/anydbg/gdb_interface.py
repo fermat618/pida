@@ -104,9 +104,6 @@ class AnyDbg_gdb(AnyDbg_Debugger):
                                             icon=None,
                                             use_python_fork=True,
                                             parser_func=self._parse)
-        # match '(%%PATH%%:%%LINE%%):  <module>'
-        self._console._term.match_add_callback('jump_to','^\(.*:.*\):.*$', 
-                                                '^\((.*):(.*)\):.*$', self._jump_to_line)
 
         if self._executable is not None:
             self._send_command('file '+self._executable)
@@ -158,3 +155,4 @@ class AnyDbg_gdb(AnyDbg_Debugger):
 
     def del_breakpoint(self, file, line):
         self._send_command('clear '+file+':'+str(line))
+
