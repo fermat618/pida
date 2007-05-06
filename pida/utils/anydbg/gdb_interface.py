@@ -95,7 +95,8 @@ class AnyDbg_gdb(AnyDbg_Debugger):
         Initiate the debugger
         """
         gdb_path = self._dbg_param['path']
-        commandargs = [gdb_path, "--cd="+self.svc._controller.get_cwd()]
+        commandargs = [gdb_path, "--cd="+self.svc._controller.get_cwd(),
+                        self._executable,self._parameters]
 
         self._console = self.svc.boss.cmd('commander','execute',
                                             commandargs=commandargs,
@@ -107,7 +108,8 @@ class AnyDbg_gdb(AnyDbg_Debugger):
         self._console._close_button.get_child().connect('clicked', self.on_close_clicked)
 
         if self._executable is not None:
-            self._send_command('file '+self._executable)
+            self.svc.emit('start_debugging', executable=self._executable, 
+                                             arguments=self._parameters)
     
     def on_close_clicked(self, but):
         self.svc.end_dbg_session()
@@ -122,7 +124,6 @@ class AnyDbg_gdb(AnyDbg_Debugger):
     def start(self):
         if self._console == None:
             self.init()
-            self._send_command('run')
         else:
             self._send_command('continue')
 
@@ -131,7 +132,8 @@ class AnyDbg_gdb(AnyDbg_Debugger):
         if self._console == None:
             self.window.error_dlg('Tried to stop a non-working debugger')
         if self.__stop_state is False:
-            self._send_command('run')
+            self._send_command('restart')
+            self._send_command('file bin/pida')
             self.__stop_state = True
         else:
             self.end()
