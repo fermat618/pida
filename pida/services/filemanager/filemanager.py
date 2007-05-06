@@ -198,15 +198,11 @@ class FilemanagerView(PidaView):
         self._toolbar.show_all()
 
 
-    def add_or_update_file(self, name, basepath, state=None):
+    def add_or_update_file(self, name, basepath, state):
         if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
-        if state is not None:
-            entry.state = state
-            # the only theoretical problem is a race condition betwen what
-            # listers think about state
-            # fortunately its not a practical problem
+        entry.state = state
 
         self.show_or_hide(entry)
 
@@ -244,9 +240,15 @@ class FilemanagerView(PidaView):
 
         self.create_ancest_tree()
 
-    def update_without_clearing(self):
+    def update_single_file(self, name, basepath):
+        def _update_file(oname, obasepath, state):
+            if oname == name and basepath == obasepath:
+                if name not in self.entries:
+                    self.entries[oname] = FileEntry(oname, obasepath, self)
+                self.entries[oname].state = state
+                self.show_or_hide(self.entries[oname])
         for lister in self.svc.features("file_lister"):
-            GeneratorTask(lister, self.add_or_update_file).start(self.path)
+            GeneratorTask(lister, _update_file).start(self.path)
 
     def update_removed_file(self, filename):
         entry = self.entries.get(filename, None)
@@ -329,7 +331,7 @@ class FilemanagerCommandsConfig(CommandsConfig):
 
     def update_file(self, filename, dirname):
         if dirname == self.svc.get_view().path: 
-            self.svc.get_view().update_without_clearing()
+            self.svc.get_view().update_single_file(filename, dirname)
 
     def update_removed_file(self, filename, dirname):
         if dirname == self.svc.get_view().path: 
@@ -533,7 +535,7 @@ class Filemanager(Service):
 
     def file_lister(self, basepath):
         for name in listdir(basepath):
-            yield name, basepath
+            yield name, basepath, 'normal'
 
     def rename_file(self, old, new, basepath):
         pass
