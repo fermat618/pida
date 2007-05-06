@@ -444,7 +444,7 @@ class Project(Service):
    
     def get_controllers(self):
         if self._project is not None:
-            return self._project.controllers()
+            return self._project.controllers
 
     def create_menu(self):
         if self._project is not None:
