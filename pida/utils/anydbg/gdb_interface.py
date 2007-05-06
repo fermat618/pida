@@ -104,17 +104,20 @@ class AnyDbg_gdb(AnyDbg_Debugger):
                                             icon=None,
                                             use_python_fork=True,
                                             parser_func=self._parse)
+        self._console._close_button.get_child().connect('clicked', self.on_close_clicked)
 
         if self._executable is not None:
             self._send_command('file '+self._executable)
     
+    def on_close_clicked(self, but):
+        self.svc.end_dbg_session()
+
     def end(self):
         """
         Ends the debugger
         """
-        self._console.close_view()
-        self._console = None
-        self.svc.end_dbg_session()
+        self._console.on_close_clicked(None)
+        self.on_close_clicked(None)
 
     def start(self):
         if self._console == None:
