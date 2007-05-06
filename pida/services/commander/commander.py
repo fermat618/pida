@@ -288,6 +288,7 @@ class TerminalView(PidaView):
         p = subprocess.Popen(commandargs, stdout=slave,
                          stderr=subprocess.STDOUT, stdin=slave,
                          close_fds=True)
+        self._pid = p.pid
         gobject.io_add_watch(self.master, gobject.IO_IN, 
                                 self._on_python_fork_parse_stdout, parser_func)
         self._term.connect('key-press-event',
