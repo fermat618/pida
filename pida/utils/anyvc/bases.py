@@ -46,7 +46,7 @@ class VCSBase(object):
     def list_impl(self, paths=False, recursive=False):
         raise NotImplementedError
     
-    def cache(self, paths=None, recursive=False):
+    def cache(self, paths=(), recursive=False):
         self._cache={}
         state = "none"
         for i in self.cache_impl(paths = paths, recursive=recursive):
@@ -54,14 +54,14 @@ class VCSBase(object):
             if path is not None:
                 self._cache[path] = state
     
-    def list(self, paths=None, recursive=False):
+    def list(self, paths=(), recursive=False):
         self.cache(paths = paths,recursive=recursive)
         for i in self.list_impl(paths = paths, recursive=recursive):
             parsed = self.parse_list_item(i)
             if parsed is not None:
                 yield parsed
 
-    def diff(self, paths=None):
+    def diff(self, paths=()):
         raise NotImplementedError
     
     def update(self, revision=None):

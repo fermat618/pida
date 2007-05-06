@@ -259,25 +259,26 @@ class Monotone(DCommandBased):
         return ["automate", "inventory"]
 
     def parse_list_item(self, item):
-        state = self.statemap.get(item[:3], "none") 
+        state = self.statemap.get(item[:3], "none")
         return Path(os.path.normpath(item[8:].rstrip()), state, self.base_path)
 
 
-class Bazaar(CachedCommandMixin,
-             DCommandBased):
-    
+class Bazaar(DCommandBased, CachedCommandMixin):
+
     cmd = "bzr"
-    
+
     detect_subdir = ".bzr"
-   
+
     def get_list_args(self, recursive=True, paths=(),**kw):
+        print "XXX",repr(paths)
         ret = ["ls","-v"]
         if not recursive:
             ret.append("--non-recursive")
-        ret.extend(paths)
+        ret.extend(list(paths))
         return ret
     
-    def get_cache_args(self, *kw):
+    def get_cache_args(self, paths=(), **kw):
+        print "CACHE",repr(locals())
         return ["st"]
 
     statemap  = {
@@ -314,16 +315,16 @@ class Bazaar(CachedCommandMixin,
 class SubVersion(CommandBased):
     cmd = "svn"
     detect_subdir = ".svn"
-    
+
     def get_list_args(self, recursive=True, **kw):
         #TODO: figure a good way to deal with changes in external
         # (maybe use the svn python api to do that)
-        ret = ["st", "--no-ignore", "--ignore-externals"]
+        ret = ["st", "--no-ignore", "--ignore-externals", "--verbose"]
         if not recursive:
             ret.append("--non-recursive")
         return ret
-    
-    state_map = { 
+
+    state_map = {
             "?": 'none',
             "A": 'new',
             " ": 'normal',
@@ -333,22 +334,23 @@ class SubVersion(CommandBased):
             "D": 'removed',
             "C": 'conflict',
             'X': 'external',
-            } 
+            }
 
     def parse_list_item(self, item):
         state = item[0]
-        file = item[7:].strip()
-        return Path(file, self.state_map[state], self.base_path) 
+        file = item.split()[-1]
+        #TODO: handle paths with whitespace if ppl fall in that one
+        return Path(file, self.state_map[state], self.base_path)
 
 
 class Mercurial(DCommandBased):
     cmd = "hg"
     detect_subdir = ".hg"
-   
+
     def get_list_args(self, **kw):
         return ["status", "-A"]
 
-    state_map = { 
+    state_map = {
             "?": 'none',
             "A": 'new',
             " ": 'normal',
@@ -357,7 +359,7 @@ class Mercurial(DCommandBased):
             "I": 'ignored',
             "M": 'modified',
             "R": 'removed',
-            } 
+            }
 
     def parse_list_item(self, item):
         state = self.state_map[item[0]]
