@@ -30,8 +30,11 @@
 #include "mooutils-misc.h"
 #include "moocompat.h"
 #include "mooutils-gobject.h"
+#include "mooi18n.h"
 
 #else
+
+#define _(s) s
 
 #include "stock-moo.h"
 
@@ -487,22 +490,6 @@ moo_pane_class_init (MooPaneClass *klass)
 }
 
 
-// static void
-// update_buttons (MooPane *pane)
-// {
-//     if (pane->parent)
-//     {
-//         gboolean enable_detaching, sticky;
-//         g_object_get (pane->parent, "enable-detaching", &enable_detaching,
-//                       "sticky-pane", &sticky, NULL);
-//         g_object_set (pane->detach_button, "visible", enable_detaching && pane->detachable, NULL);
-//         g_object_set (pane->close_button, "visible", pane->removable != 0, NULL);
-//         g_object_set (pane->sticky_button, "active", sticky, NULL);
-//         g_object_set (pane->keep_on_top_button, "active", pane->params->keep_on_top != 0, NULL);
-//     }
-// }
-
-
 static void
 close_button_clicked (MooPane *pane)
 {
@@ -603,7 +590,7 @@ create_frame_widget (MooPane        *pane,
         GtkWidget *hide_button;
 
         pane->close_button = create_button (pane, toolbar,
-                                            "Remove pane", FALSE, 3,
+                                            _("Remove pane"), FALSE, 3,
                                             MOO_STOCK_CLOSE);
         g_object_set_data (G_OBJECT (pane->close_button), "moo-pane", pane);
         g_signal_connect_swapped (pane->close_button, "clicked",
@@ -611,15 +598,15 @@ create_frame_widget (MooPane        *pane,
                                   pane);
 
         hide_button = create_button (pane, toolbar,
-                                     "Hide pane", FALSE, 0,
+                                     _("Hide pane"), FALSE, 0,
                                      MOO_STOCK_HIDE);
 
         pane->sticky_button = create_button (pane, toolbar,
-                                             "Sticky", TRUE, 0,
+                                             _("Sticky"), TRUE, 0,
                                              MOO_STOCK_STICKY);
 
         pane->detach_button = create_button (pane, toolbar,
-                                             "Detach pane", FALSE, 0,
+                                             _("Detach pane"), FALSE, 0,
                                              MOO_STOCK_DETACH);
 
         g_signal_connect_swapped (hide_button, "clicked",
@@ -632,11 +619,11 @@ create_frame_widget (MooPane        *pane,
         GtkWidget *attach_button;
 
         attach_button = create_button (pane, toolbar,
-                                       "Attach", FALSE, 0,
+                                       _("Attach"), FALSE, 0,
                                        MOO_STOCK_ATTACH);
 
         pane->keep_on_top_button = create_button (pane, toolbar,
-                                                  "Keep on top", TRUE, 0,
+                                                  _("Keep on top"), TRUE, 0,
                                                   MOO_STOCK_KEEP_ON_TOP);
 
         g_object_set_data (G_OBJECT (attach_button), "moo-pane", pane);
