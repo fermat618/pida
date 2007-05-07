@@ -15,6 +15,7 @@ from moo.dsutils import pkc_get_include_dirs, pkc_get_libraries, pkc_get_library
 moo = Extension(
     'moo_stub', 
     [
+        'moo/moopane.c',
         'moo/moopaned.c',
         'moo/moobigpaned.c',
         'moo/moomarshals.c',

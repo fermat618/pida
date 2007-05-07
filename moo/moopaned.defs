@@ -17,6 +17,13 @@
   )
 )
 
+(define-object Pane
+  (in-module "Moo")
+  (parent "GtkObject")
+  (c-name "MooPane")
+  (gtype-id "MOO_TYPE_PANE")
+)
+
 (define-boxed PaneLabel
   (in-module "Moo")
   (c-name "MooPaneLabel")
@@ -61,13 +68,12 @@
 (define-method find_pane
   (of-object "MooBigPaned")
   (c-name "moo_big_paned_find_pane")
-  (return-type "gboolean")
+  (return-type "MooPane*")
   (parameters
     '("GtkWidget*" "pane_widget")
     '("MooPaned**" "child_paned")
-    '("int*" "pane_index")
   )
-  (docstring "find_pane(pane_widget) -> (paned, index) or None.")
+  (docstring "find_pane(pane_widget) -> (pane, paned) or None.")
 )
 
 (define-method set_pane_order
@@ -124,16 +130,16 @@
 (define-method insert_pane
   (of-object "MooBigPaned")
   (c-name "moo_big_paned_insert_pane")
-  (return-type "int")
+  (return-type "MooPane*")
   (parameters
     '("GtkWidget*" "pane_widget")
     '("MooPaneLabel*" "pane_label")
     '("MooPanePosition" "position")
     '("int" "index_")
   )
-  (docstring "insert_pane(pane_widget, pane_label, position, index) -> int.\n"
+  (docstring "insert_pane(pane_widget, pane_label, position, index) -> Pane.\n"
              "\n"
-             "Returns index of newly inserted pane in its parent Paned widget.")
+             "Returns newly created pane object.")
 )
 
 (define-method remove_pane
@@ -211,30 +217,6 @@
   (docstring "detach_pane(pane_widget) -> None.")
 )
 
-(define-method get_pane_params
-  (of-object "MooBigPaned")
-  (c-name "moo_big_paned_get_pane_params")
-  (return-type "MooPaneParams*")
-  (parameters
-    '("MooPanePosition" "position")
-    '("guint" "index_")
-  )
-  (docstring "get_pane_params(position, index) -> PaneParams.")
-)
-
-(define-method set_pane_params
-  (of-object "MooBigPaned")
-  (c-name "moo_big_paned_set_pane_params")
-  (return-type "none")
-  (parameters
-    '("MooPanePosition" "position")
-    '("guint" "index_")
-    '("MooPaneParams*" "params")
-  )
-  (docstring "set_pane_params(position, index, params) -> None.")
-)
-
-
 
 ;; From ./moo/mooutils/moopaned.h
 
@@ -250,7 +232,7 @@
 (define-method insert_pane
   (of-object "MooPaned")
   (c-name "moo_paned_insert_pane")
-  (return-type "int")
+  (return-type "MooPane*")
   (parameters
     '("GtkWidget*" "pane_widget")
     '("MooPaneLabel*" "pane_label")
@@ -273,16 +255,16 @@
   (return-type "guint")
 )
 
-(define-method get_panes
+(define-method list_panes
   (of-object "MooPaned")
-  (c-name "moo_paned_get_panes")
+  (c-name "moo_paned_list_panes")
   (return-type "GSList*")
 )
 
 (define-method get_nth_pane
   (of-object "MooPaned")
   (c-name "moo_paned_get_nth_pane")
-  (return-type "GtkWidget*")
+  (return-type "MooPane*")
   (parameters
     '("guint" "n")
   )
@@ -294,15 +276,6 @@
   (return-type "int")
   (parameters
     '("GtkWidget*" "widget")
-  )
-)
-
-(define-method get_label
-  (of-object "MooPaned")
-  (c-name "moo_paned_get_label")
-  (return-type "MooPaneLabel*")
-  (parameters
-    '("GtkWidget*" "pane_widget")
   )
 )
 
@@ -339,7 +312,7 @@
 (define-method get_open_pane
   (of-object "MooPaned")
   (c-name "moo_paned_get_open_pane")
-  (return-type "int")
+  (return-type "MooPane*")
 )
 
 (define-method is_open
@@ -353,7 +326,7 @@
   (c-name "moo_paned_open_pane")
   (return-type "none")
   (parameters
-    '("guint" "index_")
+    '("MooPane*" "pane")
   )
 )
 
@@ -362,7 +335,7 @@
   (c-name "moo_paned_present_pane")
   (return-type "none")
   (parameters
-    '("guint" "index_")
+    '("MooPane*" "pane")
   )
 )
 
@@ -377,7 +350,7 @@
   (c-name "moo_paned_detach_pane")
   (return-type "none")
   (parameters
-    '("guint" "index_")
+    '("MooPane*" "pane")
   )
 )
 
@@ -386,26 +359,7 @@
   (c-name "moo_paned_attach_pane")
   (return-type "none")
   (parameters
-    '("guint" "index_")
-  )
-)
-
-(define-method get_pane_params
-  (of-object "MooPaned")
-  (c-name "moo_paned_get_pane_params")
-  (return-type "MooPaneParams*")
-  (parameters
-    '("guint" "index_")
-  )
-)
-
-(define-method set_pane_params
-  (of-object "MooPaned")
-  (c-name "moo_paned_set_pane_params")
-  (return-type "none")
-  (parameters
-    '("guint" "index_")
-    '("MooPaneParams*" "params")
+    '("MooPane*" "pane")
   )
 )
 
@@ -432,9 +386,8 @@
   (is-constructor-of "MooPaneLabel")
   (return-type "MooPaneLabel*")
   (parameters
-    '("const-char*" "icon_stock_id" (null-ok) (default "NULL"))
+    '("const-char*" "icon_name" (null-ok) (default "NULL"))
     '("GdkPixbuf*" "icon_pixbuf" (null-ok) (default "NULL"))
-    '("GtkWidget*" "icon_widget" (null-ok) (default "NULL"))
     '("const-char*" "label_text" (null-ok) (default "NULL"))
     '("const-char*" "window_title" (null-ok) (default "NULL"))
   )
@@ -449,5 +402,103 @@
 (define-method free
   (of-object "MooPaneLabel")
   (c-name "moo_pane_label_free")
+  (return-type "none")
+)
+
+;; From /home/muntyan/projects/moo/moo/mooutils/moopane.h
+
+(define-method set_label
+  (of-object "MooPane")
+  (c-name "moo_pane_set_label")
+  (return-type "none")
+  (parameters
+    '("MooPaneLabel*" "label")
+  )
+)
+
+(define-method get_label
+  (of-object "MooPane")
+  (c-name "moo_pane_get_label")
+  (return-type "MooPaneLabel*")
+)
+
+(define-method set_params
+  (of-object "MooPane")
+  (c-name "moo_pane_set_params")
+  (return-type "none")
+  (parameters
+    '("MooPaneParams*" "params")
+  )
+)
+
+(define-method get_params
+  (of-object "MooPane")
+  (c-name "moo_pane_get_params")
+  (return-type "MooPaneParams*")
+)
+
+(define-method set_detachable
+  (of-object "MooPane")
+  (c-name "moo_pane_set_detachable")
+  (return-type "none")
+  (parameters
+    '("gboolean" "detachable")
+  )
+)
+
+(define-method get_detachable
+  (of-object "MooPane")
+  (c-name "moo_pane_get_detachable")
+  (return-type "gboolean")
+)
+
+(define-method set_removable
+  (of-object "MooPane")
+  (c-name "moo_pane_set_removable")
+  (return-type "none")
+  (parameters
+    '("gboolean" "removable")
+  )
+)
+
+(define-method get_removable
+  (of-object "MooPane")
+  (c-name "moo_pane_get_removable")
+  (return-type "gboolean")
+)
+
+(define-method get_child
+  (of-object "MooPane")
+  (c-name "moo_pane_get_child")
+  (return-type "GtkWidget*")
+)
+
+(define-method get_index
+  (of-object "MooPane")
+  (c-name "moo_pane_get_index")
+  (return-type "int")
+)
+
+(define-method open
+  (of-object "MooPane")
+  (c-name "moo_pane_open")
+  (return-type "none")
+)
+
+(define-method present
+  (of-object "MooPane")
+  (c-name "moo_pane_present")
+  (return-type "none")
+)
+
+(define-method attach
+  (of-object "MooPane")
+  (c-name "moo_pane_attach")
+  (return-type "none")
+)
+
+(define-method detach
+  (of-object "MooPane")
+  (c-name "moo_pane_detach")
   (return-type "none")
 )

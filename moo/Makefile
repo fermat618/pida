@@ -1,10 +1,10 @@
-HEADERS = moopaned.h moobigpaned.h moomarshals.h stock-moo.h
-OBJECTS = moopaned.o moobigpaned.o test.o moomarshals.o
-PICS = close.png sticky.png detach.png attach.png keepontop.png
+HEADERS = moopaned.h moopane.h moobigpaned.h moomarshals.h stock-moo.h
+OBJECTS = moopaned.o moopane.o moobigpaned.o test.o moomarshals.o
+PICS = close.png sticky.png hide.png detach.png attach.png keepontop.png
 
-CFLAGS = `pkg-config --cflags gtk+-2.0` -W -Wall -DMooPaned=_PidaMooPaned \
--DMooPanedClass=_PidaMooPanedClass -DMooBigPaned=_PidaMooBigPaned \
--DMooBigPanedClass=_PidaMooBigPanedClass
+CFLAGS = `pkg-config --cflags gtk+-2.0` -W -Wall -DMooPane=_PidaMooPane \
+-DMooPaneClass=_PidaMooPaneClass -DMooPaned=_PidaMooPaned -DMooPanedClass=_PidaMooPanedClass \
+-DMooBigPaned=_PidaMooBigPaned -DMooBigPanedClass=_PidaMooBigPanedClass
 LIBS = `pkg-config --libs gtk+-2.0`
 PYGTK_DEFS_DIR=`pkg-config --variable=defsdir pygtk-2.0`
 
@@ -21,6 +21,7 @@ moomarshals.h: moomarshals.list
 
 stock-moo.h: $(PICS)
 	gdk-pixbuf-csource --static --build-list	\
+		MOO_HIDE_ICON hide.png			\
 		MOO_CLOSE_ICON close.png		\
 		MOO_STICKY_ICON sticky.png		\
 		MOO_DETACH_ICON detach.png		\
@@ -42,8 +43,8 @@ dist:
 	rm -fr paned.tar.bz2 paned/ && \
 	mkdir paned && \
 	cp moo-stub.c moo.override moo.defs moopaned.override moopaned.defs \
-		moopaned.h moobigpaned.h $(PICS) \
-		moopaned.c moobigpaned.c test.c \
+		moopane.h moopaned.h moobigpaned.h $(PICS) \
+		moopane.c moopaned.c moobigpaned.c test.c \
 		moomarshals.list Makefile paned/ && \
 	tar cjf paned.tar.bz2 paned/ && \
 	rm -fr paned/

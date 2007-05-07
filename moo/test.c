@@ -13,12 +13,12 @@ static void add_panes (GtkWidget *paned, MooPanePosition pane_position)
     buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
     gtk_text_buffer_insert_at_cursor (buffer, "Hi there. Hi there. "
             "Hi there. Hi there. Hi there. Hi there. Hi there. ", -1);
-    label = moo_pane_label_new (GTK_STOCK_OK, NULL, NULL, "TextView", "TextView");
+    label = moo_pane_label_new (GTK_STOCK_OK, NULL, "TextView", "TextView");
     moo_big_paned_insert_pane (MOO_BIG_PANED (paned), textview, label,
                                pane_position, -1);
     moo_pane_label_free (label);
 
-    label = moo_pane_label_new (GTK_STOCK_CANCEL, NULL, NULL, "A label", "A label");
+    label = moo_pane_label_new (GTK_STOCK_CANCEL, NULL, "A label", "A label");
     moo_big_paned_insert_pane (MOO_BIG_PANED (paned),
                                gtk_label_new ("foolala"),
                                label, pane_position, -1);

@@ -43,26 +43,9 @@ static gboolean moo_big_paned_expose        (GtkWidget      *widget,
                                              GdkEventExpose *event,
                                              MooBigPaned    *paned);
 
-static void     child_open_pane             (GtkWidget      *child,
-                                             guint           index,
-                                             MooBigPaned    *paned);
-static void     child_hide_pane             (GtkWidget      *child,
-                                             MooBigPaned    *paned);
-static void     child_attach_pane           (GtkWidget      *child,
-                                             guint           index,
-                                             MooBigPaned    *paned);
-static void     child_detach_pane           (GtkWidget      *child,
-                                             guint           index,
-                                             MooBigPaned    *paned);
-static void     child_pane_params_changed   (GtkWidget      *child,
-                                             guint           index,
-                                             MooBigPaned    *paned);
 static void     child_set_pane_size         (GtkWidget      *child,
                                              int             size,
                                              MooBigPaned    *paned);
-static void     emit_pane_params_changed    (MooBigPaned    *paned,
-                                             MooPanePosition pos,
-                                             guint           index);
 
 static gboolean check_children_order        (MooBigPaned    *paned);
 
@@ -89,11 +72,6 @@ enum {
 };
 
 enum {
-    OPEN_PANE,
-    HIDE_PANE,
-    ATTACH_PANE,
-    DETACH_PANE,
-    PANE_PARAMS_CHANGED,
     SET_PANE_SIZE,
     NUM_SIGNALS
 };
@@ -140,56 +118,6 @@ static void moo_big_paned_class_init (MooBigPanedClass *klass)
                                              GDK_HAND2,
                                              G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
 
-    signals[OPEN_PANE] =
-            g_signal_new ("open-pane",
-                          G_OBJECT_CLASS_TYPE (klass),
-                          G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MooBigPanedClass, open_pane),
-                          NULL, NULL,
-                          _moo_marshal_VOID__ENUM_UINT,
-                          G_TYPE_NONE, 2,
-                          MOO_TYPE_PANE_POSITION, G_TYPE_UINT);
-
-    signals[HIDE_PANE] =
-            g_signal_new ("hide-pane",
-                          G_OBJECT_CLASS_TYPE (klass),
-                          G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MooBigPanedClass, hide_pane),
-                          NULL, NULL,
-                          _moo_marshal_VOID__ENUM,
-                          G_TYPE_NONE, 1,
-                          MOO_TYPE_PANE_POSITION);
-
-    signals[ATTACH_PANE] =
-            g_signal_new ("attach-pane",
-                          G_OBJECT_CLASS_TYPE (klass),
-                          G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MooBigPanedClass, attach_pane),
-                          NULL, NULL,
-                          _moo_marshal_VOID__ENUM_UINT,
-                          G_TYPE_NONE, 2,
-                          MOO_TYPE_PANE_POSITION, G_TYPE_UINT);
-
-    signals[DETACH_PANE] =
-            g_signal_new ("detach-pane",
-                          G_OBJECT_CLASS_TYPE (klass),
-                          G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MooBigPanedClass, detach_pane),
-                          NULL, NULL,
-                          _moo_marshal_VOID__ENUM_UINT,
-                          G_TYPE_NONE, 2,
-                          MOO_TYPE_PANE_POSITION, G_TYPE_UINT);
-
-    signals[PANE_PARAMS_CHANGED] =
-            g_signal_new ("pane-params-changed",
-                          G_OBJECT_CLASS_TYPE (klass),
-                          G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MooBigPanedClass, pane_params_changed),
-                          NULL, NULL,
-                          _moo_marshal_VOID__ENUM_UINT,
-                          G_TYPE_NONE, 2,
-                          MOO_TYPE_PANE_POSITION, G_TYPE_UINT);
-
     signals[SET_PANE_SIZE] =
             g_signal_new ("set-pane-size",
                           G_OBJECT_CLASS_TYPE (klass),
@@ -224,21 +152,6 @@ moo_big_paned_init (MooBigPaned *paned)
         MOO_OBJECT_REF_SINK (child);
         gtk_widget_show (child);
 
-        g_signal_connect (child, "hide-pane",
-                          G_CALLBACK (child_hide_pane),
-                          paned);
-        g_signal_connect (child, "open-pane",
-                          G_CALLBACK (child_open_pane),
-                          paned);
-        g_signal_connect (child, "attach-pane",
-                          G_CALLBACK (child_attach_pane),
-                          paned);
-        g_signal_connect (child, "detach-pane",
-                          G_CALLBACK (child_detach_pane),
-                          paned);
-        g_signal_connect_after (child, "pane-params-changed",
-                                G_CALLBACK (child_pane_params_changed),
-                                paned);
         g_signal_connect_after (child, "set-pane-size",
                                 G_CALLBACK (child_set_pane_size),
                                 paned);
@@ -376,71 +289,6 @@ moo_big_paned_new (void)
 
 
 static void
-child_open_pane (GtkWidget      *child,
-                 guint           index,
-                 MooBigPaned    *paned)
-{
-    MooPanePosition pos;
-
-    g_object_get (child, "pane-position", &pos, NULL);
-    g_return_if_fail (paned->paned[pos] == child);
-
-    g_signal_emit (paned, signals[OPEN_PANE], 0, pos, index);
-}
-
-static void
-child_hide_pane (GtkWidget      *child,
-                 MooBigPaned    *paned)
-{
-    MooPanePosition pos;
-
-    g_object_get (child, "pane-position", &pos, NULL);
-    g_return_if_fail (paned->paned[pos] == child);
-
-    g_signal_emit (paned, signals[HIDE_PANE], 0, pos);
-}
-
-static void
-child_attach_pane (GtkWidget      *child,
-                   guint           index,
-                   MooBigPaned    *paned)
-{
-    MooPanePosition pos;
-
-    g_object_get (child, "pane-position", &pos, NULL);
-    g_return_if_fail (paned->paned[pos] == child);
-
-    g_signal_emit (paned, signals[ATTACH_PANE], 0, pos, index);
-}
-
-static void
-child_detach_pane (GtkWidget      *child,
-                   guint           index,
-                   MooBigPaned    *paned)
-{
-    MooPanePosition pos;
-
-    g_object_get (child, "pane-position", &pos, NULL);
-    g_return_if_fail (paned->paned[pos] == child);
-
-    g_signal_emit (paned, signals[DETACH_PANE], 0, pos, index);
-}
-
-static void
-child_pane_params_changed (GtkWidget      *child,
-                           guint           index,
-                           MooBigPaned    *paned)
-{
-    MooPanePosition pos;
-
-    g_object_get (child, "pane-position", &pos, NULL);
-    g_return_if_fail (paned->paned[pos] == child);
-
-    emit_pane_params_changed (paned, pos, index);
-}
-
-
-static void
 child_set_pane_size (GtkWidget      *child,
                      int             size,
                      MooBigPaned    *paned)
@@ -454,24 +302,16 @@ child_set_pane_size (GtkWidget      *child,
 }
 
 
-static void
-emit_pane_params_changed (MooBigPaned    *paned,
-                          MooPanePosition pos,
-                          guint           index)
+MooPane *
+moo_big_paned_insert_pane (MooBigPaned        *paned,
+                           GtkWidget          *pane_widget,
+                           MooPaneLabel       *pane_label,
+                           MooPanePosition     position,
+                           int                 index_)
 {
-    g_signal_emit (paned, signals[PANE_PARAMS_CHANGED], 0, pos, index);
-}
-
-
-int         moo_big_paned_insert_pane       (MooBigPaned        *paned,
-                                             GtkWidget          *pane_widget,
-                                             MooPaneLabel       *pane_label,
-                                             MooPanePosition     position,
-                                             int                 index_)
-{
-    g_return_val_if_fail (MOO_IS_BIG_PANED (paned), -1);
-    g_return_val_if_fail (GTK_IS_WIDGET (pane_widget), -1);
-    g_return_val_if_fail (position < 4, -1);
+    g_return_val_if_fail (MOO_IS_BIG_PANED (paned), NULL);
+    g_return_val_if_fail (GTK_IS_WIDGET (pane_widget), NULL);
+    g_return_val_if_fail (position < 4, NULL);
 
     return moo_paned_insert_pane (MOO_PANED (paned->paned[position]),
                                   pane_widget, pane_label, index_);
@@ -509,7 +349,7 @@ moo_big_paned_remove_pane (MooBigPaned *paned,
     g_return_val_if_fail (MOO_IS_BIG_PANED (paned), FALSE);
     g_return_val_if_fail (GTK_IS_WIDGET (widget), FALSE);
 
-    if (!moo_big_paned_find_pane (paned, widget, &child, NULL))
+    if (!moo_big_paned_find_pane (paned, widget, &child))
         return FALSE;
 
     return moo_paned_remove_pane (child, widget);
@@ -521,16 +361,16 @@ void                                                        \
 moo_big_paned_##name (MooBigPaned *paned,                   \
                       GtkWidget   *widget)                  \
 {                                                           \
-    int idx;                                                \
+    MooPane *pane;                                          \
     MooPaned *child = NULL;                                 \
                                                             \
     g_return_if_fail (MOO_IS_BIG_PANED (paned));            \
     g_return_if_fail (GTK_IS_WIDGET (widget));              \
                                                             \
-    moo_big_paned_find_pane (paned, widget, &child, &idx);  \
-    g_return_if_fail (child != NULL);                       \
+    pane = moo_big_paned_find_pane (paned, widget, &child); \
+    g_return_if_fail (pane != NULL);                        \
                                                             \
-    moo_paned_##name (child, idx);                          \
+    moo_paned_##name (child, pane);                         \
 }
 
 PROXY_FUNC (open_pane)
@@ -549,26 +389,10 @@ moo_big_paned_hide_pane (MooBigPaned *paned,
     g_return_if_fail (MOO_IS_BIG_PANED (paned));
     g_return_if_fail (GTK_IS_WIDGET (widget));
 
-    moo_big_paned_find_pane (paned, widget, &child, NULL);
+    moo_big_paned_find_pane (paned, widget, &child);
     g_return_if_fail (child != NULL);
 
     moo_paned_hide_pane (child);
-}
-
-
-GtkWidget*
-moo_big_paned_get_button (MooBigPaned   *paned,
-                          GtkWidget     *widget)
-{
-    MooPaned *child = NULL;
-
-    g_return_val_if_fail (MOO_IS_BIG_PANED (paned), NULL);
-    g_return_val_if_fail (GTK_IS_WIDGET (widget), NULL);
-
-    moo_big_paned_find_pane (paned, widget, &child, NULL);
-    g_return_val_if_fail (child != NULL, NULL);
-
-    return moo_paned_get_button (child, widget);
 }
 
 
@@ -582,32 +406,33 @@ moo_big_paned_get_paned (MooBigPaned    *paned,
 }
 
 
-gboolean
+MooPane *
 moo_big_paned_find_pane (MooBigPaned    *paned,
                          GtkWidget      *widget,
-                         MooPaned      **child_paned,
-                         int            *pane_index)
+                         MooPaned      **child_paned)
 {
-    int i, idx;
+    int i;
+    MooPane *pane;
 
     g_return_val_if_fail (MOO_IS_BIG_PANED (paned), FALSE);
     g_return_val_if_fail (GTK_IS_WIDGET (widget), FALSE);
 
+    if (child_paned)
+        *child_paned = NULL;
+
     for (i = 0; i < 4; ++i)
     {
-        idx = moo_paned_get_pane_num (MOO_PANED (paned->paned[i]), widget);
+        pane = moo_paned_get_pane (MOO_PANED (paned->paned[i]), widget);
 
-        if (idx >= 0)
+        if (pane)
         {
-            if (pane_index)
-                *pane_index = idx;
             if (child_paned)
                 *child_paned = MOO_PANED (paned->paned[i]);
-            return TRUE;
+            return pane;
         }
     }
 
-    return FALSE;
+    return NULL;
 }
 
 
@@ -681,41 +506,14 @@ static void     moo_big_paned_get_property  (GObject        *object,
 }
 
 
-GtkWidget*
+GtkWidget *
 moo_big_paned_get_pane (MooBigPaned    *paned,
                         MooPanePosition position,
                         int             index_)
 {
     g_return_val_if_fail (MOO_IS_BIG_PANED (paned), NULL);
     g_return_val_if_fail (position < 4, NULL);
-    return moo_paned_get_nth_pane (MOO_PANED (paned->paned[position]), index_);
-}
-
-
-MooPaneParams*
-moo_big_paned_get_pane_params (MooBigPaned    *paned,
-                               MooPanePosition position,
-                               guint           index_)
-{
-    g_return_val_if_fail (MOO_IS_BIG_PANED (paned), NULL);
-    g_return_val_if_fail (position < 4, NULL);
-    return moo_paned_get_pane_params (MOO_PANED (paned->paned[position]),
-                                      index_);
-}
-
-
-void
-moo_big_paned_set_pane_params (MooBigPaned    *paned,
-                               MooPanePosition position,
-                               guint           index_,
-                               MooPaneParams  *params)
-{
-    g_return_if_fail (MOO_IS_BIG_PANED (paned));
-    g_return_if_fail (params != NULL);
-    g_return_if_fail (position < 4);
-
-    moo_paned_set_pane_params (MOO_PANED (paned->paned[position]),
-                               index_, params);
+    return moo_pane_get_child (moo_paned_get_nth_pane (MOO_PANED (paned->paned[position]), index_));
 }
 
 
@@ -789,9 +587,9 @@ handle_drag_end (MooPaned    *child,
                  GtkWidget   *pane_widget,
                  MooBigPaned *paned)
 {
-    int pos, x, y, index;
+    int pos, x, y;
     MooPanePosition old_pos;
-    MooPaneLabel *label;
+    MooPane *pane;
 
     g_return_if_fail (GTK_WIDGET_REALIZED (paned->outer));
 
@@ -822,22 +620,15 @@ handle_drag_end (MooPaned    *child,
     if ((int) old_pos == pos)
         return;
 
-    label = moo_paned_get_label (child, pane_widget);
-    g_object_ref (pane_widget);
+    pane = moo_paned_get_pane (child, pane_widget);
+    g_object_ref (pane);
 
     moo_paned_remove_pane (child, pane_widget);
-    g_return_if_fail (pane_widget->parent == NULL);
+    _moo_paned_insert_pane (MOO_PANED (paned->paned[pos]), pane, -1);
+    moo_pane_open (pane);
+    _moo_pane_params_changed (pane);
 
-    moo_paned_insert_pane (MOO_PANED (paned->paned[pos]), pane_widget, label, -1);
-    moo_paned_open_pane (MOO_PANED (paned->paned[pos]),
-                         moo_paned_n_panes (MOO_PANED (paned->paned[pos])) - 1);
-
-    index = moo_paned_get_pane_num (MOO_PANED (paned->paned[pos]), pane_widget);
-    g_return_if_fail (index >= 0);
-    emit_pane_params_changed (paned, pos, index);
-
-    moo_pane_label_free (label);
-    g_object_unref (pane_widget);
+    g_object_unref (pane);
 }
 
 

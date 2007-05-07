@@ -49,22 +49,6 @@ struct _MooBigPaned
 struct _MooBigPanedClass
 {
     GtkFrameClass parent_class;
-
-    /* these just proxy corresponding Paned signals */
-    void (*open_pane)           (MooBigPaned    *paned,
-                                 MooPanePosition position,
-                                 guint           index);
-    void (*hide_pane)           (MooBigPaned    *paned,
-                                 MooPanePosition position);
-    void (*attach_pane)         (MooBigPaned    *paned,
-                                 MooPanePosition position,
-                                 guint           index);
-    void (*detach_pane)         (MooBigPaned    *paned,
-                                 MooPanePosition position,
-                                 guint           index);
-    void (*pane_params_changed) (MooBigPaned    *paned,
-                                 MooPanePosition position,
-                                 guint           index);
     void (*set_pane_size)       (MooBigPaned    *paned,
                                  MooPanePosition position,
                                  int             size);
@@ -78,17 +62,16 @@ GtkWidget      *moo_big_paned_new               (void);
 void            moo_big_paned_set_pane_order    (MooBigPaned    *paned,
                                                  int            *order);
 
-gboolean        moo_big_paned_find_pane         (MooBigPaned    *paned,
+MooPane        *moo_big_paned_find_pane         (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget,
-                                                 MooPaned      **child_paned,
-                                                 int            *pane_index);
+                                                 MooPaned      **child_paned);
 
 void            moo_big_paned_add_child         (MooBigPaned    *paned,
                                                  GtkWidget      *widget);
 void            moo_big_paned_remove_child      (MooBigPaned    *paned);
 GtkWidget      *moo_big_paned_get_child         (MooBigPaned    *paned);
 
-int             moo_big_paned_insert_pane       (MooBigPaned    *paned,
+MooPane        *moo_big_paned_insert_pane       (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget,
                                                  MooPaneLabel   *pane_label,
                                                  MooPanePosition position,
@@ -99,8 +82,6 @@ gboolean        moo_big_paned_remove_pane       (MooBigPaned    *paned,
 GtkWidget      *moo_big_paned_get_pane          (MooBigPaned    *paned,
                                                  MooPanePosition position,
                                                  int             index_);
-GtkWidget      *moo_big_paned_get_button        (MooBigPaned    *paned,
-                                                 GtkWidget      *pane_widget);
 
 MooPaned       *moo_big_paned_get_paned         (MooBigPaned    *paned,
                                                  MooPanePosition position);
@@ -115,14 +96,6 @@ void            moo_big_paned_attach_pane       (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget);
 void            moo_big_paned_detach_pane       (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget);
-
-MooPaneParams  *moo_big_paned_get_pane_params   (MooBigPaned    *paned,
-                                                 MooPanePosition position,
-                                                 guint           index_);
-void            moo_big_paned_set_pane_params   (MooBigPaned    *paned,
-                                                 MooPanePosition position,
-                                                 guint           index_,
-                                                 MooPaneParams  *params);
 
 
 G_END_DECLS

@@ -9,6 +9,7 @@ headers
 %%
 modulename moo_stub
 %%
+import gtk.Object as PyGtkObject_Type
 import gtk.Widget as PyGtkWidget_Type
 import gtk.Frame as PyGtkFrame_Type
 import gtk.Bin as PyGtkBin_Type
