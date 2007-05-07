@@ -34,7 +34,7 @@ class PidaPaned(BigPaned):
             self.add_child(view.get_toplevel())
         else:
             POS = POS_MAP[name]
-            lab = PaneLabel(view.icon_name, None, None, view.label_text)
+            lab = PaneLabel(view.icon_name, None, view.label_text)
             self.insert_pane(view.get_toplevel(), lab, POS, POS)
             if present:
                 gcall(self.present_pane, view.get_toplevel())
