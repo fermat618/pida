@@ -175,6 +175,9 @@ class PastebinEditorView(PidaGladeView):
                 self.paste_syntax.read(),
         )
 
+    def can_be_closed(self):
+        self.svc.cancel_paste()
+
 class PasteHistoryView(PidaView):
 
     label_text = _('Paste History')
@@ -297,6 +300,8 @@ class PasteHistoryView(PidaView):
         self.__pulse_bar.pulse()
         return self._pulsing
 
+    def can_be_closed(self):
+        self.svc.get_action('show_pastes').set_active(False)
 
 
 class PastebinActionsConfig(ActionsConfig):
