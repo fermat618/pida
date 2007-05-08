@@ -127,7 +127,7 @@ class VersionControlLog(PidaGladeView):
             self._buffer.get_end_iter(), text, tag)
         gcall(self.log_text.scroll_to_iter, self._buffer.get_end_iter(), 0)
 
-    def on_close_button__clicked(self, button):
+    def can_be_closed(self):
         self.svc.get_action('show_vc_log').set_active(False)
 
 class CommitViewer(PidaGladeView):
