@@ -180,6 +180,9 @@ class BrowserView(PidaView):
         else:
             self.__browser.stop()
 
+    def can_be_closed(self):
+        self.svc.boss.cmd('window', 'remove_view', view=self)
+
 
 class WebCommands(CommandsConfig):
 

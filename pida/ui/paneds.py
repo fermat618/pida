@@ -52,8 +52,8 @@ class PidaPaned(BigPaned):
         self._center_on_parent(view, size)
 
     def present_view(self, view):
-        paned, pos = self.find_pane(view.get_toplevel())
-        paned.present_pane(pos)
+        pane, pos = self.find_pane(view.get_toplevel())
+        pane.present()
 
     def _center_on_parent(self, view, size):
         gdkwindow = view.get_parent_window()
