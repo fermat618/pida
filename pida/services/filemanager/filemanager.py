@@ -256,15 +256,13 @@ class FilemanagerView(PidaView):
             self.file_list.remove(entry)
 
     def on_file_activated(self, rowitem, fileentry):
-        target = path.normpath(
-                 path.join(self.path, fileentry.name))
-        if path.isdir(target):
-            self.svc.browse(target)
+        if fileentry.is_dir:
+            self.svc.browse(fileentry.path)
         else:
-            self.svc.boss.cmd('buffer', 'open_file', file_name=target)
+            self.svc.boss.cmd('buffer', 'open_file', file_name=fileentry.path)
 
     def on_file_right_click(self, ol, item, event=None):
-        if path.isdir(item.path):
+        if item.is_dir:
             self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
                           dir_name=item.path, event=event) 
         else:
