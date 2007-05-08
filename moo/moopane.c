@@ -529,6 +529,20 @@ sticky_button_toggled (GtkToggleButton *button,
 }
 
 
+static void
+update_sticky_button (MooPane *pane)
+{
+    if (pane->parent)
+    {
+        gboolean sticky, active;
+        g_object_get (pane->parent, "sticky-pane", &sticky, NULL);
+        g_object_get (pane->sticky_button, "active", &active, NULL);
+        if (active != sticky)
+            g_object_set (pane->sticky_button, "active", sticky, NULL);
+    }
+}
+
+
 static GtkWidget *
 create_button (MooPane    *pane,
                GtkWidget  *toolbar,
@@ -776,9 +790,7 @@ paned_enable_detaching_notify (MooPane *pane)
 static void
 paned_sticky_pane_notify (MooPane *pane)
 {
-    gboolean sticky;
-    g_object_get (pane->parent, "sticky-pane", &sticky, NULL);
-    g_object_set (pane->sticky_button, "active", sticky, NULL);
+    update_sticky_button (pane);
 }
 
 
@@ -790,6 +802,7 @@ create_widgets (MooPane         *pane,
     GtkWidget *label;
 
     pane->frame = create_frame_widget (pane, position, TRUE);
+    update_sticky_button (pane);
 
     gtk_widget_set_parent_window (pane->frame, pane_window);
     gtk_widget_set_parent (pane->frame, GTK_WIDGET (pane->parent));
