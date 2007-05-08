@@ -131,6 +131,10 @@ class ShortcutsView(PidaView):
             self._current.value = accelerator
         return True
 
+    def can_be_closed(self):
+        self.svc.get_action('show_shortcuts').set_active(False)
+
+
 class ShortcutsActionsConfig(ActionsConfig):
 
     def create_actions(self):
