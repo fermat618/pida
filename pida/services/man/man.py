@@ -30,11 +30,8 @@ from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.features import FeaturesConfig
-from pida.core.commands import CommandsConfig
-from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import TYPE_TOGGLE
 
 from pida.ui.views import PidaView
 
@@ -51,7 +48,8 @@ class ManItem(object):
         self.pattern = pattern
         self.number = number
         self.manpage = manpage
-        self.markup = '%s(<span color="#0000c0">%d</span>) %s' % (cgi.escape(self.pattern), int(self.number), cgi.escape(self.manpage))
+        self.markup = '%s(<span color="#0000c0">%d</span>) %s' % (
+            cgi.escape(self.pattern), int(self.number), cgi.escape(self.manpage))
 
 class ManView(PidaView):
 
@@ -61,16 +59,19 @@ class ManView(PidaView):
     def create_ui(self):
         self.__vbox = gtk.VBox(spacing=3)
         self.__vbox.set_border_width(6)
+        self.__hbox = gtk.HBox()
         self.__entry = gtk.Entry()
         self.__entry.connect('changed', self.cb_entry_changed)
-        self.__list = ObjectList(
-               [
+        self.__check = gtk.CheckButton(label='-k')
+        self.__check.connect('toggled', self.cb_entry_changed)
+        self.__list = ObjectList([
                    Column('markup', title='Man page', sorted=True, use_markup=True),
-               ]
-        )
+               ])
         self.__list.connect('double-click', self._on_man_double_click)
         self.__list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.__vbox.pack_start(self.__entry, expand=False)
+        self.__hbox.pack_start(self.__entry)
+        self.__hbox.pack_start(self.__check)
+        self.__vbox.pack_start(self.__hbox, expand=False)
         self.__vbox.pack_start(self.__list)
         self.add_main_widget(self.__vbox)
         self.__vbox.show_all()
@@ -82,7 +83,7 @@ class ManView(PidaView):
         self.__list.append(item)
 
     def _on_man_double_click(self, olist, item):
-        commandargs = ['/usr/bin/man', item.number, item.pattern]
+        commandargs = ['/usr/bin/env', 'man', item.number, item.pattern]
         directory = os.path.dirname(commandargs[0])
         self.svc.boss.cmd('commander', 'execute',
                 commandargs=commandargs,
@@ -92,11 +93,12 @@ class ManView(PidaView):
                     pattern=item.pattern,
                     number=int(item.number)
                 ))
-        ## show man page in terminal
-        pass
 
     def cb_entry_changed(self, w):
-        gcall(self.svc.cmd_find, pattern=w.get_text())
+        options = '-f'
+        if self.__check.get_active():
+            options = '-k'
+        gcall(self.svc.cmd_find, options=options, pattern=self.__entry.get_text())
 
     def can_be_closed(self):
         self.svc.get_action('show_man').set_active(False)
@@ -146,17 +148,17 @@ class Man(Service):
             return
         self._view.add_item(item)
 
-    def cmd_find(self, pattern):
+    def cmd_find(self, options, pattern):
         if ( len(pattern) > 1 ):
             self.counter = self.counter + 1
             self._view.clear_items()
             self.task = GeneratorTask(self._cmd_find, self._cmd_find_add_item)
-            self.task.start(self.counter, pattern)
+            self.task.start(self.counter, options, pattern)
 
-    def _cmd_find(self, counter, pattern):
+    def _cmd_find(self, counter, options, pattern):
         if ( self.counter != counter ):
             return
-        cmd = 'man -f "%s"' % pattern
+        cmd = '/usr/bin/env man %s "%s"' % (options, pattern)
         ret = commands.getoutput(cmd)
         results = ret.split('\n')
         for result in results:
