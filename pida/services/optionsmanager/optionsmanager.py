@@ -67,6 +67,7 @@ class PidaOptionsView(PidaGladeView):
             self._add_service(svc)
         self.service_combo.prefill(self._services_display)
         self.options_book.show_all()
+        self._blocked = []
 
     def _add_service(self, svc):
         self._services_display.append((svc.get_label(), svc))
@@ -129,7 +130,10 @@ class PidaOptionsView(PidaGladeView):
             option.set_value(widgval)
 
     def _on_option_changed_elsewhere(self, client, id, entry, (option, widget)):
-        widget.update(option.get_value())
+        widgval = widget.read()
+        optval = option.get_value()
+        if optval != widgval:
+            widget.update(option.get_value())
 
     def can_be_closed(self):
         self.svc.get_action('show_options').set_active(False)
