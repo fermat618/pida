@@ -97,7 +97,26 @@ class BufferListView(PidaGladeView):
         self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           event=event,
                           file_name=self.svc.get_current().filename)
-        
+
+    def get_current_buffer_index(self):
+        return self.buffers_ol.index(self.buffers_ol.get_selected())
+
+    def select_buffer_by_index(self, index):
+        self.buffers_ol.select(self.buffers_ol[index])
+
+    def next_buffer(self):
+        index = self.get_current_buffer_index()
+        newindex = index + 1
+        if newindex == len(self.buffers_ol):
+            newindex = 0
+        self.select_buffer_by_index(newindex)
+
+    def prev_buffer(self):
+        index = self.get_current_buffer_index()
+        newindex = index - 1
+        if newindex == -1:
+            newindex = len(self.buffers_ol) - 1
+        self.select_buffer_by_index(newindex)
 
 class BufferActionsConfig(ActionsConfig):
 
@@ -152,6 +171,26 @@ class BufferActionsConfig(ActionsConfig):
             '<Shift><Control>W',
         )
 
+        self.create_action(
+            'switch_next_buffer',
+            TYPE_NORMAL,
+            _('Next Buffer'),
+            _('Switch to the next buffer'),
+            gtk.STOCK_GO_DOWN,
+            self.on_next_buffer,
+            '<Alt>Down',
+        )
+
+        self.create_action(
+            'switch_prev_buffer',
+            TYPE_NORMAL,
+            _('Previous Buffer'),
+            _('Switch to the previous buffer'),
+            gtk.STOCK_GO_DOWN,
+            self.on_prev_buffer,
+            '<Alt>Up',
+        )
+
     def on_open_file(self, action):
         file_name = self.svc.boss.window.open_dlg()
         if file_name:
@@ -175,6 +214,13 @@ class BufferActionsConfig(ActionsConfig):
     def on_open_for_file(self, action):
         file_name = action.contexts_kw['file_name']
         self.svc.open_file(file_name)
+
+    def on_next_buffer(self, action):
+        self.svc.get_view().next_buffer()
+
+    def on_prev_buffer(self, action):
+        self.svc.get_view().prev_buffer()
+
 
 class BufferFeaturesConfig(FeaturesConfig):
 

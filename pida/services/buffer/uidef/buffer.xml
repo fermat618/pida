@@ -32,6 +32,14 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="tools" />
+            <separator />
+            <placeholder name="panes">
+            <separator />
+            <menuitem name="switch_next_buffer" action="switch_next_buffer" />
+            <menuitem name="switch_prev_buffer" action="switch_prev_buffer" />
+            <separator />
+            </placeholder>
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">
