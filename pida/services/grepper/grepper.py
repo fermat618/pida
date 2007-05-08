@@ -236,6 +236,10 @@ class GrepperView(PidaGladeView):
         self.stop()
         self.close()
 
+    def can_be_closed(self):
+        self.stop()
+        return True
+
     def close(self):
         self.svc.boss.cmd('window', 'remove_view', view=self)
 
