@@ -161,7 +161,7 @@ class SessionsActionsConfig(ActionsConfig):
 
 class SessionsOptionsConfig(OptionsConfig):
 
-    def create_options(aaself):
+    def create_options(self):
         self.create_option(
             'load_last_session',
             _('Load last session on startup'),
