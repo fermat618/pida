@@ -102,6 +102,9 @@ class LibraryView(PidaGladeView):
     def on_refresh_button__clicked(self, button):
         self.fetch_books()
 
+    def can_be_closed(self):
+        self.svc.get_action('show_library').set_active(False)
+
     def on_close_button__clicked(self, button):
         self.svc.get_action('show_library').set_active(False)
 
