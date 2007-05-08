@@ -20,6 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+from textwrap import wrap
 
 import gtk
 
@@ -63,11 +64,12 @@ class PidaOptionsView(PidaGladeView):
                 self._services.append(svc)
         self._services.sort(service_sort_func)
         self._services_display = []
+        self._tips = gtk.Tooltips()
         for svc in self._services:
             self._add_service(svc)
         self.service_combo.prefill(self._services_display)
         self.options_book.show_all()
-        self._blocked = []
+
 
     def _add_service(self, svc):
         self._services_display.append((svc.get_label(), svc))
@@ -91,13 +93,15 @@ class PidaOptionsView(PidaGladeView):
         options = list(svc.get_options().iter_options())
         options.sort()
         for opt in options:
-            vb = gtk.VBox(spacing=2) 
+            vb = gtk.VBox(spacing=2)
             vb.set_border_width(6)
-            optvb.pack_start(vb, expand=False)
+            eb = gtk.EventBox()
+            eb.add(vb)
+            optvb.pack_start(eb, expand=False)
             hb = gtk.HBox(spacing=6)
             vb.pack_start(hb)
             optlabel = gtk.Label()
-            optlabel.set_text(opt.label)
+            optlabel.set_text('\n'.join(wrap(opt.label, 20)))
             optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
@@ -107,10 +111,7 @@ class PidaOptionsView(PidaGladeView):
             optwidget.update(opt.get_value())
             optwidget.connect('content-changed', self._on_option_changed, opt)
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)
-            doclabel = gtk.Label()
-            doclabel.set_text(opt.doc)
-            doclabel.set_alignment(0, 0)
-            vb.pack_start(doclabel)
+            self._tips.set_tip(eb, opt.doc)
         return mainvb
 
     def on_service_combo__content_changed(self, cmb):
