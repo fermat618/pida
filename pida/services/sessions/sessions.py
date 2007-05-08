@@ -161,13 +161,13 @@ class SessionsActionsConfig(ActionsConfig):
 
 class SessionsOptionsConfig(OptionsConfig):
 
-    def create_options(self):
+    def create_options(aaself):
         self.create_option(
             'load_last_session',
             _('Load last session on startup'),
             OTypeBoolean,
             True,
-            '',
+            _('Load last session on startup'),
         )
 
         self.create_option(
@@ -175,7 +175,7 @@ class SessionsOptionsConfig(OptionsConfig):
             _('Clear old buffers when loading session'),
             OTypeBoolean,
             False,
-            '',
+            _('Clear old buffers when loading session'),
         )
 
 
