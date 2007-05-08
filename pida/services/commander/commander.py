@@ -118,6 +118,14 @@ class CommanderOptionsConfig(OptionsConfig):
             _('The arguments to pass to the shell command'),
         )
 
+        self.create_option(
+            'scrollbar_visible',
+            _('Show a scrollbar'),
+            OTypeBoolean,
+            True,
+            _('Whether a scrollbar should be shown'),
+        )
+
 class CommanderActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -209,11 +217,19 @@ class TerminalView(PidaView):
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
         self._term.show()
+        self._create_scrollbar()
         self._create_bar()
         self._hb.pack_start(self._term)
+        if self.svc.opt('scrollbar_visible'):
+            self._hb.pack_start(self._scrollbar, expand=False)
         self._hb.pack_start(self._bar, expand=False)
         self.master = None
         self.slave = None
+
+    def _create_scrollbar(self):
+        self._scrollbar = gtk.VScrollbar()
+        self._scrollbar.set_adjustment(self._term.get_adjustment())
+        self._scrollbar.show()
 
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
