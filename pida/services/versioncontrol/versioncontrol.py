@@ -71,11 +71,6 @@ class DiffViewer(PidaView):
         self._html.set_right_margin(6)
         sb.add(self._html)
         hb.pack_start(sb)
-        vb = gtk.VBox()
-        hb.pack_start(vb, expand=False)
-        self._close_button = create_mini_button(gtk.STOCK_CLOSE,
-            'Close the diff viewer', self.on_close_button_clicked)
-        vb.pack_start(self._close_button, expand=False)
         hb.show_all()
 
     def set_diff(self, diff):
@@ -85,8 +80,8 @@ class DiffViewer(PidaView):
             data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
         self._html.display_html(data)
 
-    def on_close_button_clicked(self, button):
-        self.svc.boss.cmd('window', 'remove_view', view=self)
+    def can_be_closed(self):
+        return True
 
 class VersionControlLog(PidaGladeView):
 
