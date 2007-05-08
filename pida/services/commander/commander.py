@@ -120,7 +120,7 @@ class CommanderOptionsConfig(OptionsConfig):
 
         self.create_option(
             'scrollbar_visible',
-            _('Show a scrollbar'),
+            _('Show terminal scrollbar'),
             OTypeBoolean,
             True,
             _('Whether a scrollbar should be shown'),
