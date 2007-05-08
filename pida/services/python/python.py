@@ -101,6 +101,10 @@ class PyflakeView(PidaView):
     def _on_errors_double_clicked(self, ol, item):
         self.svc.boss.editor.cmd('goto_line', line=item.lineno)
 
+    def can_be_closed(self):
+        self.svc.get_action('show_python_errors').set_active(False)
+
+
 class Pyflaker(object):
 
     def __init__(self, svc):
@@ -187,10 +191,13 @@ class SourceView(PidaGladeView):
 
     def add_node(self, node, parent):
         self.source_tree.append(parent, node)
-        
+
+    def can_be_closed(self):
+        self.svc.get_action('show_python_source').set_active(False)
+
 
 class PythonBrowser(object):
-    
+
     def __init__(self, svc):
         self.svc = svc
         self._view = SourceView(self.svc)
@@ -227,7 +234,7 @@ class PythonBrowser(object):
 
     def get_view(self):
         return self._view
-        
+
 
 class BasePythonProjectController(ProjectController):
 
