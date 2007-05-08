@@ -98,6 +98,9 @@ class ManView(PidaView):
     def cb_entry_changed(self, w):
         gcall(self.svc.cmd_find, pattern=w.get_text())
 
+    def can_be_closed(self):
+        self.svc.get_action('show_man').set_active(False)
+
 
 class ManActions(ActionsConfig):
 
