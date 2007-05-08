@@ -143,6 +143,8 @@ class OpenWithEditor(PidaGladeView):
         self.save_button.set_sensitive(True)
         self.items_ol.update(self._current)
 
+    def can_be_closed(self):
+        self.svc.get_action('show_openwith').set_active(False)
 
 class OpenWithActions(ActionsConfig):
 
