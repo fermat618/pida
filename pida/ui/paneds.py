@@ -55,6 +55,28 @@ class PidaPaned(BigPaned):
         pane, pos = self.find_pane(view.get_toplevel())
         pane.present()
 
+    def get_open_pane(self, name):
+        POS = POS_MAP[name]
+        paned = self.get_paned(POS)
+        pane = paned.get_open_pane()
+        return paned, pane, pane.get_index()
+
+    def switch_next_pane(self, name):
+        paned, pane, num = self.get_open_pane(name)
+        newnum = num + 1
+        if newnum == paned.n_panes():
+            newnum = 0
+        newpane = paned.get_nth_pane(newnum)
+        newpane.present()
+
+    def switch_prev_pane(self, name):
+        paned, pane, num = self.get_open_pane(name)
+        newnum = num - 1
+        if newnum <= 0:
+            newnum = paned.n_panes() - 1
+        newpane = paned.get_nth_pane(newnum)
+        newpane.present()
+
     def _center_on_parent(self, view, size):
         gdkwindow = view.get_parent_window()
         px, py, pw, ph, pbd = view.svc.boss.get_window().window.get_geometry()
