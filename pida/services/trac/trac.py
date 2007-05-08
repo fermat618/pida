@@ -81,6 +81,8 @@ class TracView(PidaGladeView):
         for item in parse_report(data):
             self.tickets_list.append(item)
 
+    def can_be_closed(self):
+        self.svc.get_action('show_trac').set_active(False)
 
 
 class ReportItem(object):
