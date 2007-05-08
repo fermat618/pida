@@ -333,12 +333,19 @@ class TerminalView(PidaView):
         self._term.connect('commit', self.on_press_any_key)
 
     def on_close_clicked(self, button):
+        self.kill()
+        self.close_view()
+
+    def can_be_closed(self):
+        self.kill()
+        return True
+
+    def kill(self):
         if self._pid is not None:
             try:
                 os.kill(self._pid, 9)
             except OSError:
                 self.svc.log_debug('PID %s has already gone' % self._pid)
-            self.close_view()
 
     def on_selection_changed(self, term):
         self._copy_button.set_sensitive(self._term.get_has_selection())
