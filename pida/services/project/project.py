@@ -191,6 +191,9 @@ class ProjectPropertiesView(PidaGladeView):
     def on_close_button__clicked(self, button):
         self.svc.get_action('project_properties').set_active(False)
 
+    def can_be_closed(self):
+        self.svc.get_action('project_properties').set_active(False)
+
 
 class ProjectEventsConfig(EventsConfig):
 
