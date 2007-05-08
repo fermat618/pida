@@ -98,7 +98,13 @@ class PidaViewMixin(object):
         return self.get_toplevel().get_parent_window()
 
     parent_window = property(get_parent_window)
-        
+
+    def on_remove_attempt(self, pane):
+        return not self.can_remove()
+
+    def can_remove(self):
+        return False
+
 
 class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 

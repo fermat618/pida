@@ -38,8 +38,8 @@ _ = locale.gettext
 
 class WindowCommandsConfig(CommandsConfig):
 
-    def add_view(self, paned, view, present=True):
-        self.svc.window.add_view(paned, view, present)
+    def add_view(self, paned, view, removable=True, present=True):
+        self.svc.window.add_view(paned, view, removable, present)
 
     def add_detached_view(self, paned, view, size=(500,400)):
         self.add_view(paned, view)
@@ -134,7 +134,7 @@ class Window(Service):
         # Explicitly add the permanent views
         for service in ['project', 'filemanager', 'buffer']:
             view = self.boss.cmd(service, 'get_view')
-            self.cmd('add_view', paned='Buffer', view=view, present=False)
+            self.cmd('add_view', paned='Buffer', view=view, removable=False, present=False)
         self._fix_visibilities()
 
     def _fix_visibilities(self):

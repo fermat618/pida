@@ -29,13 +29,16 @@ class PidaPaned(BigPaned):
         for pos in self.get_all_pos():
             yield self.get_paned(pos)
 
-    def add_view(self, name, view, present=False):
+    def add_view(self, name, view, removable=True, present=True):
         if name == PANE_EDITOR:
             self.add_child(view.get_toplevel())
         else:
             POS = POS_MAP[name]
             lab = PaneLabel(view.icon_name, None, view.label_text)
-            self.insert_pane(view.get_toplevel(), lab, POS, POS)
+            pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
+            if not removable:
+                pane.set_property('removable', False)
+            pane.connect('remove', view.on_remove_attempt)
             if present:
                 gcall(self.present_pane, view.get_toplevel())
             self.show_all()
