@@ -217,9 +217,6 @@ class TerminalView(PidaView):
 
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
-        self._close_button = create_mini_button(
-            gtk.STOCK_CLOSE, _('Close this terminal'), self.on_close_clicked)
-        self._bar.pack_start(self._close_button, expand=False)
         self._copy_button = create_mini_button(
             gtk.STOCK_COPY, _('Copy the selection to the clipboard'),
             self.on_copy_clicked)
@@ -331,10 +328,6 @@ class TerminalView(PidaView):
         self._term.feed_text(_('Child exited')+'\r\n', '1;34')
         self._term.feed_text(_('Press any key to close.'))
         self._term.connect('commit', self.on_press_any_key)
-
-    def on_close_clicked(self, button):
-        self.kill()
-        self.close_view()
 
     def can_be_closed(self):
         self.kill()
