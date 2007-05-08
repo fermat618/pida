@@ -171,6 +171,10 @@ class ChecklistView(PidaView):
     def _on_newitem_changed(self, w):
         self._newitem_ok.set_sensitive(self._newitem_title.get_text() != '')
 
+    def can_be_closed(self):
+        self.svc.get_action('show_checklist').set_active(False)
+
+
 class ChecklistActions(ActionsConfig):
 
     def create_actions(self):
