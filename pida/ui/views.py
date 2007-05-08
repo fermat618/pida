@@ -100,9 +100,9 @@ class PidaViewMixin(object):
     parent_window = property(get_parent_window)
 
     def on_remove_attempt(self, pane):
-        return not self.can_remove()
+        return not self.can_be_closed()
 
-    def can_remove(self):
+    def can_be_closed(self):
         return False
 
 

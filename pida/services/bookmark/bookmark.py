@@ -180,6 +180,9 @@ class BookmarkView(PidaView):
         self._list_dirs.clear()
         #self._list_urls.clear()
 
+    def can_be_closed(self):
+        self.svc.get_action('show_bookmark').set_active(False)
+
     def _on_item_selected(self, olist, item):
         self.svc.set_current(item)
 
