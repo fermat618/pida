@@ -251,11 +251,12 @@ class FilemanagerView(PidaView):
             GeneratorTask(lister, _update_file).start(self.path)
 
     def update_removed_file(self, filename):
+        print filename
         entry = self.entries.get(filename, None)
         if entry:
-            self.file_list.remove(entry)
             del self.entries[filename]
-        
+            if entry in self.file_list:
+                self.file_list.remove(entry)
 
     def on_file_activated(self, rowitem, fileentry):
         target = path.normpath(
