@@ -96,6 +96,10 @@ class BugreportView(PidaGladeView):
         pass_dlg.connect('response', pass_response)
         pass_dlg.run()
 
+    def can_be_closed(self):
+        self.svc.get_action('show_bugreport').set_active(False)
+
+
 class BugreportActions(ActionsConfig):
     
     def create_actions(self):
