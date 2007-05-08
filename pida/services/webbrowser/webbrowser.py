@@ -141,16 +141,13 @@ class BrowserView(PidaView):
         bar = gtk.HBox()
         self.back_button = gtk.ToolButton(stock_id=gtk.STOCK_GO_BACK)
         self.stop_button = gtk.ToolButton(stock_id=gtk.STOCK_STOP)
-        self.close_button = gtk.ToolButton(stock_id=gtk.STOCK_CLOSE)
         bar.pack_start(self.back_button, expand=False)
         bar.pack_start(self.stop_button, expand=False)
         self.back_button.connect('clicked', self.cb_toolbar_clicked, 'back')
         self.stop_button.connect('clicked', self.cb_toolbar_clicked, 'stop')
-        #self.stop_button.set_sensitive(False)
         self.add_main_widget(bar, expand=False)
         self.location = gtk.Entry()
         bar.pack_start(self.location)
-        bar.pack_start(self.close_button, expand=False)
         self.location.connect('activate', self.cb_url_entered)
         self.__browser = HtmlWidget(self)
         self.add_main_widget(self.__browser)
@@ -158,18 +155,14 @@ class BrowserView(PidaView):
         self.status_context = self.status_bar.get_context_id('web')
         self.add_main_widget(self.status_bar, expand=False)
         self.get_toplevel().show_all()
+        self._close_callback=None
 
-    def connect_closed(self, callback=None):
-        if callback is None:
-            callback = self.on_close_clicked
-        self.close_button.connect('clicked', callback)
+    def connect_closed(self, callback):
+        self._close_callback = callback
 
     def cb_url_entered(self, entry):
         url = self.location.get_text()
         self.fetch(url)
-
-    def on_close_clicked(self, button):
-        self.svc.boss.cmd('window', 'remove_view', view=self)
 
     def fetch(self, url):
         self.__browser.load_url(url)
@@ -181,7 +174,10 @@ class BrowserView(PidaView):
             self.__browser.stop()
 
     def can_be_closed(self):
-        self.svc.boss.cmd('window', 'remove_view', view=self)
+        if self._close_callback is not None:
+            self._close_callback(self)
+        else:
+            self.svc.boss.cmd('window', 'remove_view', view=self)
 
 
 class WebCommands(CommandsConfig):
@@ -203,12 +199,9 @@ class Webbrowser(Service):
 
     def browse(self, url):
         view = BrowserView(self)
-        view.connect_closed()
         view.fetch(url)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
-        
-        
-    
+
 # Required Service attribute for service loading
 Service = Webbrowser
 
