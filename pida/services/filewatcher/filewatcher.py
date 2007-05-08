@@ -85,8 +85,11 @@ class Filewatcher(Service):
         if event == gamin.GAMAcknowledge:
             return
         if event == gamin.GAMChanged or event == gamin.GAMCreated:
+            # XXX HIDDEN FILES EVIL
+            if name.startswith('.'):
+                command = None
             # XXX DARCS EVIL
-            if name == ('darcs_testing_for_nfs' or
+            elif name == ('darcs_testing_for_nfs' or
                 (name.startswith('darcs') and len(name) == 11)):
                 command = None
             else:
