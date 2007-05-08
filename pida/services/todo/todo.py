@@ -72,7 +72,10 @@ class TodoView(PidaView):
 
     def _on_todo_double_click(self, olist, item):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
-        
+
+    def can_be_closed(self):
+        self.svc.get_action('show_todo').set_active(False)
+
 
 #XXX Banana
 
