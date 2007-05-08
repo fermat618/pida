@@ -176,7 +176,7 @@ class Rfc(Service):
         self._has_loaded = False
         self.counter = 0
         self.task = None
-        gcall(self.refresh_index)
+        self.download_index()
 
     def show_rfc(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -240,7 +240,7 @@ class Rfc(Service):
 
         self._view.show_progressbar(False)
         self.get_action('rfc_downloadindex').set_sensitive(True)
-        yield
+        yield None
 
     def browse(self, id):
         self.boss.cmd('webbrowser', 'browse', url=(self.url_rfctmpl + id))
