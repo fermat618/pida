@@ -47,6 +47,7 @@ def die_cli(message, exception=None):
 try:
     import gtk
     from gtk import gdk
+    gdk.threads_init()
     if gtk.pygtk_version < (2, 8):
         die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
                 % {'major':gtk.pygtk_version[:2][0], 'minor':gtk.pygtk_version[:2][1]})
@@ -87,7 +88,6 @@ def run_version(env):
 
 
 def run_pida(env):
-    gdk.threads_init()
     b = Boss(env)
     PosixSignalHandler(b)
     b.start()
