@@ -75,6 +75,9 @@ class ManholeView(PidaView):
         sw.show_all()
         self.add_main_widget(sw)
 
+    def can_be_closed(self):
+        self.svc.get_action('show_manhole').set_active(False)
+
 # Service class
 class Manhole(Service):
     """Describe your Service Here""" 
