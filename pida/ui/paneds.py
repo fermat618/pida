@@ -59,10 +59,13 @@ class PidaPaned(BigPaned):
         POS = POS_MAP[name]
         paned = self.get_paned(POS)
         pane = paned.get_open_pane()
-        return paned, pane, pane.get_index()
+        return paned, pane
 
     def switch_next_pane(self, name):
-        paned, pane, num = self.get_open_pane(name)
+        paned, pane = self.get_open_pane(name)
+        if pane is None:
+            return
+        num = pane.get_index()
         newnum = num + 1
         if newnum == paned.n_panes():
             newnum = 0
@@ -70,9 +73,12 @@ class PidaPaned(BigPaned):
         newpane.present()
 
     def switch_prev_pane(self, name):
-        paned, pane, num = self.get_open_pane(name)
+        paned, pane = self.get_open_pane(name)
+        if pane is None:
+            return
+        num = pane.get_index()
         newnum = num - 1
-        if newnum <= 0:
+        if newnum == -1:
             newnum = paned.n_panes() - 1
         newpane = paned.get_nth_pane(newnum)
         newpane.present()

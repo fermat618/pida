@@ -114,6 +114,12 @@ class PidaWindow(Window):
     def present_view(self, view):
         self._paned.present_view(view)
 
+    def switch_next_view(self, bookname):
+        self._paned.switch_next_pane(bookname)
+
+    def switch_prev_view(self, bookname):
+        self._paned.switch_prev_pane(bookname)
+
     # UI hiding API
     def set_toolbar_visibility(self, visibility):
         if visibility:

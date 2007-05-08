@@ -20,6 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import gtk
 
 # PIDA Imports
 from pida.core.service import Service
@@ -76,6 +77,32 @@ class WindowActionsConfig(ActionsConfig):
             self.on_show_ui,
             '<Shift><Control>u',
         )
+
+        self.create_action(
+            'switch_next_term',
+            TYPE_NORMAL,
+            _('Next terminal'),
+            _('Switch to the next terminal'),
+            gtk.STOCK_GO_FORWARD,
+            self.on_switch_next_term,
+            '<Alt>Right',
+        )
+
+        self.create_action(
+            'switch_prev_term',
+            TYPE_NORMAL,
+            _('Previous terminal'),
+            _('Switch to the previous terminal'),
+            gtk.STOCK_GO_BACK,
+            self.on_switch_prev_term,
+            '<Alt>Left',
+        )
+
+    def on_switch_next_term(self, action):
+        self.svc.window.switch_next_view('Terminal')
+
+    def on_switch_prev_term(self, action):
+        self.svc.window.switch_prev_view('Terminal')
 
     def on_show_ui(self, action):
         val = action.get_active()
