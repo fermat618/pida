@@ -232,10 +232,6 @@ class GrepperView(PidaGladeView):
         self.grep_started()
         self.task.start(location, regex, recursive)
 
-    def on_close_button__clicked(self, button):
-        self.stop()
-        self.close()
-
     def can_be_closed(self):
         self.stop()
         return True
