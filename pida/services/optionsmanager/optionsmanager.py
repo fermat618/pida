@@ -133,7 +133,9 @@ class PidaOptionsView(PidaGladeView):
 
     def on_close_button__clicked(self, button):
         self.svc.get_action('show_options').set_active(False)
-            
+
+    def can_be_closed(self):
+        self.svc.get_action('show_options').set_active(False)
 
 
 class OptionsActions(ActionsConfig):
