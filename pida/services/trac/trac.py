@@ -49,7 +49,7 @@ class TracView(PidaGladeView):
 
     gladefile = 'trac-browser'
     locale = locale
-    icon_name = 'internet'
+    icon_name = 'trac_logo'
     label_text = _('Trac')
 
     def create_ui(self):
