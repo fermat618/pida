@@ -131,9 +131,6 @@ class PidaOptionsView(PidaGladeView):
     def _on_option_changed_elsewhere(self, client, id, entry, (option, widget)):
         widget.update(option.get_value())
 
-    def on_close_button__clicked(self, button):
-        self.svc.get_action('show_options').set_active(False)
-
     def can_be_closed(self):
         self.svc.get_action('show_options').set_active(False)
 
