@@ -78,6 +78,7 @@ class TracView(PidaGladeView):
         self.item_text.display_html(item.description.strip())
 
     def report_received(self, url, data):
+        self.tickets_list.clear()
         for item in parse_report(data):
             self.tickets_list.append(item)
 
