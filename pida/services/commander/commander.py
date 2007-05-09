@@ -423,7 +423,6 @@ class Commander(Service):
             scrollback_lines=self.opt('scrollback_lines'),
             allow_bold = self.opt('allow_bold'),
             audible_bell = self.opt('audible_bell'),
-            visible_bell = self.opt('visible_bell'),
         )
         if self.opt('use_background_image'):
             imagefile = self.opt('background_image_file')
