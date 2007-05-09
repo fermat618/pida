@@ -46,6 +46,7 @@ class RfcItem(object):
 
     def __init__(self, number='0000', data=''):
         self.number = number
+        self.data = data
         list = re.split('\(([^\(]*)\)', data)
         self.description = list[0]
 
@@ -59,9 +60,21 @@ class RfcView(PidaView):
         self._vbox.set_border_width(6)
         self.add_main_widget(self._vbox)
         self.create_toolbar()
+        self.create_searchbar()
         self.create_list()
         self.create_progressbar()
         self._vbox.show_all()
+
+    def create_searchbar(self):
+        h = gtk.HBox()
+        self._search_description = gtk.Entry()
+        self._search_description.connect('changed', self._on_search_changed)
+        l = gtk.Label()
+        l.set_text(_('Filter : '))
+        h.pack_start(l)
+        h.pack_start(self._search_description)
+        self._vbox.pack_start(h, expand=False)
+        self._search_description.show_all()
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
@@ -104,7 +117,7 @@ class RfcView(PidaView):
         else:
             self._progressbar.hide()
 
-    def append_items(self, items):
+    def set_items(self, items):
         self._list.add_list(items, True)
 
     def can_be_closed(self):
@@ -112,6 +125,9 @@ class RfcView(PidaView):
 
     def _on_list_double_click(self, ot, item):
         self.svc.browse(id=item.number)
+
+    def _on_search_changed(self, w):
+        self.svc.filter(self._search_description.get_text())
 
 
 class RfcActions(ActionsConfig):
@@ -174,8 +190,10 @@ class Rfc(Service):
         self._filename = os.path.join(Environment.pida_home, 'rfc-index.txt')
         self._view = RfcView(self)
         self._has_loaded = False
+        self.list = []
         self.counter = 0
         self.task = None
+        self._filter_id = 0
         gcall(self.refresh_index)
 
     def show_rfc(self):
@@ -199,7 +217,7 @@ class Rfc(Service):
         except IOError:
             return
         data = ''
-        list = []
+        self.list = []
         zap = True
         for line in fp:
             line = line.rstrip('\n')
@@ -209,15 +227,28 @@ class Rfc(Service):
                 if zap == False:
                     if data != '' and t[1].strip(' ') != 'Not Issued.':
                         #if t[1].find('Status: UNKNOWN') == -1:
-                        list.append(RfcItem(number=t[0], data=t[1]))
+                        self.list.append(RfcItem(number=t[0], data=t[1]))
                     data = ''
                 elif t[0] == '0001':
                     zap = False
                 elif zap == True:
                     data = ''
         fp.close()
-        self._view.append_items(list)
+        self._view.set_items(self.list)
 
+    def filter(self, pattern):
+        self._filter_id += 1
+        gcall(self._filter, pattern, self._filter_id)
+
+    def _filter(self, pattern, id):
+        if pattern == '':
+            if self._filter_id == id:
+                self._view.set_items(self.list)
+        else:
+            r = re.compile(pattern, re.IGNORECASE)
+            list = [item for item in self.list if r.search(item.data)]
+            if self._filter_id == id:
+                self._view.set_items(list)
 
     def _download_index(self):
         self.get_action('rfc_downloadindex').set_sensitive(False)
