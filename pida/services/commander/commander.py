@@ -103,6 +103,32 @@ class CommanderOptionsConfig(OptionsConfig):
         )
 
         self.create_option(
+            'scrollbar_visible',
+            _('Show terminal scrollbar'),
+            OTypeBoolean,
+            True,
+            _('Whether a scrollbar should be shown'),
+        )
+
+        self.create_option(
+            'allow_bold',
+            _('Allow bold in the terminal'),
+            OTypeBoolean,
+            True,
+            _('Whether bold text is allowed in the terminal'),
+        )
+
+        self.create_option(
+            'audible_bell',
+            _('Emit audible bell in terminal'),
+            OTypeBoolean,
+            False,
+            _('Whether an audible bell will be emitted in the terminal'),
+        )
+
+
+
+        self.create_option(
             'shell_command',
             _('The shell command'),
             OTypeString,
@@ -116,14 +142,6 @@ class CommanderOptionsConfig(OptionsConfig):
             OTypeStringList,
             [],
             _('The arguments to pass to the shell command'),
-        )
-
-        self.create_option(
-            'scrollbar_visible',
-            _('Show terminal scrollbar'),
-            OTypeBoolean,
-            True,
-            _('Whether a scrollbar should be shown'),
         )
 
 class CommanderActionsConfig(ActionsConfig):
@@ -403,6 +421,9 @@ class Commander(Service):
             background_transparent=self.opt('transparent'),
             cursor_blinks=self.opt('cursor_blinks'),
             scrollback_lines=self.opt('scrollback_lines'),
+            allow_bold = self.opt('allow_bold'),
+            audible_bell = self.opt('audible_bell'),
+            visible_bell = self.opt('visible_bell'),
         )
         if self.opt('use_background_image'):
             imagefile = self.opt('background_image_file')
