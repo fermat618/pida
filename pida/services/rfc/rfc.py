@@ -194,8 +194,9 @@ class Rfc(Service):
         self.task.start()
 
     def refresh_index(self):
-        fp = open(self._filename)
-        if fp is None:
+        try:
+            fp = open(self._filename)
+        except IOError:
             return
         data = ''
         list = []
