@@ -52,7 +52,8 @@ class Boss(object):
             return []
         else:
             return [
-                self._env.get_base_service_directory()
+                self._env.get_base_service_directory(),
+                self._env.get_local_service_directory(),
             ]
 
     def get_editor_dirs(self):

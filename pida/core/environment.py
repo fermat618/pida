@@ -56,6 +56,12 @@ class Environment(object):
         return os.path.join(
             os.path.dirname(os.path.dirname(__file__)), 'services')
 
+    def get_local_service_directory(self):
+        path = os.path.join(self.pida_home, 'services')
+        if not os.path.exists(path):
+            os.mkdir(path)
+        return path
+
     def get_base_editor_directory(self):
         return os.path.join(
             os.path.dirname(os.path.dirname(__file__)), 'editors')
