@@ -176,7 +176,7 @@ class Rfc(Service):
         self._has_loaded = False
         self.counter = 0
         self.task = None
-        self.download_index()
+        gcall(self.refresh_index)
 
     def show_rfc(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -195,6 +195,8 @@ class Rfc(Service):
 
     def refresh_index(self):
         fp = open(self._filename)
+        if fp is None:
+            return
         data = ''
         list = []
         zap = True
