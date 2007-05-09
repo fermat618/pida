@@ -64,8 +64,9 @@ class PidaPaned(BigPaned):
     def switch_next_pane(self, name):
         paned, pane = self.get_open_pane(name)
         if pane is None:
-            return
-        num = pane.get_index()
+            num = -1
+        else:
+            num = pane.get_index()
         newnum = num + 1
         if newnum == paned.n_panes():
             newnum = 0
@@ -75,8 +76,9 @@ class PidaPaned(BigPaned):
     def switch_prev_pane(self, name):
         paned, pane = self.get_open_pane(name)
         if pane is None:
-            return
-        num = pane.get_index()
+            num = paned.n_panes()
+        else:
+            num = pane.get_index()
         newnum = num - 1
         if newnum == -1:
             newnum = paned.n_panes() - 1
