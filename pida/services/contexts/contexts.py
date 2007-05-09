@@ -36,6 +36,7 @@ from pida.core.environment import get_uidef_path
 CONTEXT_TYPES = [
     'file-menu',
     'dir-menu',
+    'url-menu',
 ]
 
 class ContextFeaturesConfig(FeaturesConfig):

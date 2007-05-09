@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 import urlparse
+import pida.utils.pywebbrowser as webbrowser
 
 import gtk
 
@@ -188,19 +189,73 @@ class WebCommands(CommandsConfig):
     def get_web_browser(self):
         return BrowserView
 
+class WebFeatures(FeaturesConfig):
+
+    def subscribe_foreign_features(self):
+        self.subscribe_foreign_feature('contexts', 'url-menu',
+            (self.svc.get_action_group(), 'webbrowser-url-menu.xml'))
+
+class WebActions(ActionsConfig):
+    
+    def create_actions(self):
+        self.create_action(
+            'open_url_for_url',
+            TYPE_NORMAL,
+            _('Open URL'),
+            _('Open a url in the builtin browser'),
+            gtk.STOCK_OPEN,
+            self.on_open_url_for_url,
+        )
+
+        self.create_action(
+            'copy_clipboard_for_url',
+            TYPE_NORMAL,
+            _('Copy URL to clipboard'),
+            _('Copy this URL to the clipboard'),
+            gtk.STOCK_COPY,
+            self.on_copy_url_for_url,
+        )
+
+        self.create_action(
+            'open_url_external_for_url',
+            TYPE_NORMAL,
+            _('Open URL in external web browser'),
+            _('Open the selected URL in an external web browser'),
+            'internet',
+            self.on_open_url_external_for_url,
+        )
+
+    def on_open_url_for_url(self, action):
+        url = action.contexts_kw['url']
+        self.svc.browse(url)
+
+    def on_copy_url_for_url(self, action):
+        url = action.contexts_kw['url']
+        for clipboard_type in ['PRIMARY', 'CLIPBOARD']:
+            gtk.Clipboard(selection=clipboard_type).set_text(url)
+
+    def on_open_url_external_for_url(self, action):
+        url = action.contexts_kw['url']
+        webbrowser.open(url)
+
 # Service class
 class Webbrowser(Service):
     """Describe your Service Here""" 
 
     commands_config = WebCommands
+    features_config = WebFeatures
+    actions_config = WebActions
 
     def pre_start(self):
         self._views = []
 
     def browse(self, url):
-        view = BrowserView(self)
-        view.fetch(url)
-        self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
+        if gtkhtml is None:
+            webbrowser.open(url)
+        else:
+            view = BrowserView(self)
+            view.fetch(url)
+            self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
 
 # Required Service attribute for service loading
 Service = Webbrowser

@@ -1,0 +1,15 @@
+<ui>
+<popup>
+<placeholder name="1"/>
+    <menuitem action="open_url_for_url" name="open_url_for_url" />
+    <menuitem action="open_url_external_for_url" name="open_url_external_for_url" />
+<separator/>
+    <menuitem action="copy_clipboard_for_url" name="copy_clipboard_for_url" />
+<placeholder name="2"/>
+<separator/>
+<placeholder name="3"/>
+<separator/>
+<placeholder name="4"/>
+<separator/>
+</popup>
+</ui>

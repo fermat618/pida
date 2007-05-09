@@ -196,7 +196,7 @@ class PasteHistoryView(PidaView):
         #self.__history_tree.connect('selection-changed', self.cb_paste_clicked)
         self.__history_tree.connect('double-click', self.cb_paste_db_clicked)
         #self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
-        #self.__history_tree.connect('right-clicked', self.cb_paste_r_clicked)
+        self.__history_tree.connect('right-click', self.on_paste_rclick)
         self.__pulse_bar = gtk.ProgressBar()
         self.add_main_widget(self.__pulse_bar, expand=False)
         self.__pulse_bar.show_all()
@@ -287,6 +287,10 @@ class PasteHistoryView(PidaView):
                 menu.append(mi)
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
+
+    def on_paste_rclick(self, ol, item, event):
+        self.svc.boss.cmd('contexts', 'popup_menu', context='url-menu',
+                          url=item.url, event=event)
 
     def start_pulse(self):
         '''Starts the pulse'''
