@@ -146,6 +146,7 @@ class ServiceManager(object):
         self.editor.pre_start()
 
     def start_editor(self):
+        self.register_editor(self.editor)
         self.editor.start()
 
     def load_editor(self, name):
@@ -153,7 +154,6 @@ class ServiceManager(object):
         for editor in self._loader.get_all_services(dirs):
             if editor.servicename == name:
                 self.editor = editor(self._boss)
-                self.register_editor(self.editor)
                 return self.editor
         raise AttributeError(_('No editor found'))
 
