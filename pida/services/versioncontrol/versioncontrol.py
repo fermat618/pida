@@ -75,7 +75,7 @@ class DiffViewer(PidaView):
 
     def set_diff(self, diff):
         if highlight is None:
-            data = '<pre>\n%s</pre>\n' % diff
+            data = '<pre>\n%s</pre>\n' % escape(diff)
         else:
             data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
         self._html.display_html(data)
