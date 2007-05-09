@@ -203,6 +203,7 @@ class ProjectController(object):
         self.boss = self.project.boss
         self.config_section = config_section
         self._default = False
+        self._os_env = self._copy_os_env()
 
     def execute(self):
         """Execute this controller, for overriding"""
@@ -273,11 +274,20 @@ class ProjectController(object):
             return os.path.join(self.project.source_directory, cwd)
 
     def get_env(self):
-        env = self.get_option('env')
-        if env is None:
-            return []
+        env = []
+        env.extend(self._os_env)
+        opt_env = self.get_option('env')
+        if opt_env is None:
+            return env
         else:
-            return env.split()
+            env.extend(opt_env.split())
+            return env
+
+    def _copy_os_env(self):
+        env = []
+        for k, v in os.environ.items():
+            env.append('%s=%s' % (k, v))
+        return env
 
 
 
