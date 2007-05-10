@@ -1,6 +1,7 @@
 """Project features for PIDA"""
 
 import os
+from string import Template
 from weakref import proxy
 
 from pida.utils.configobj import ConfigObj
@@ -226,7 +227,7 @@ class ProjectController(object):
     def execute_commandargs(self, args, env=None, cwd=None):
         #TODO: Bad dependency
         self.boss.cmd('commander', 'execute',
-            commandargs=args,
+            commandargs=[self._interpolate_command(arg) for arg in args],
             env=env or self.get_env(),
             cwd=cwd or self.get_cwd(),
             title=self.config_section,
@@ -235,12 +236,27 @@ class ProjectController(object):
 
     def execute_commandline(self, command, env=None, cwd=None):
         self.boss.cmd('commander', 'execute',
-            commandargs=['bash', '-c', command],
+            commandargs=['bash', '-c', self._interpolate_command(command)],
             env=env or self.get_env(),
             cwd=cwd or self.get_cwd(),
             title=self.config_section,
             icon='gtk-execute',
         )
+
+    def _interpolate_command(self, command):
+        current_document = self.boss.cmd('buffer', 'get_current')
+        if current_document is not None:
+            current_document_filename = current_document.filename
+            current_document_directory = current_document.directory
+        else:
+            current_document_filename = None
+            current_document_directory = None
+        vars = dict(
+            source_directory = self.project.source_directory,
+            current_document_filename = current_document_filename,
+            current_document_directory = current_document_directory
+        )
+        return Template(command).substitute(vars)
 
     def create_key_items(self):
         for attr in self.attributes:
