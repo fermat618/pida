@@ -72,6 +72,7 @@ class GtagsView(PidaView):
         self._hbox.pack_start(self._vbox)
         self.create_searchbar()
         self.create_list()
+        self.create_progressbar()
         self.create_toolbar()
         self._hbox.show_all()
 
@@ -116,9 +117,26 @@ class GtagsView(PidaView):
                         use_markup=True)
                 ]
         )
+        self._list.connect('double-click', self._on_list_double_click)
         self._vbox.pack_start(self._list)
         self._list.show_all()
 
+    def create_progressbar(self):
+        self._progressbar = gtk.ProgressBar()
+        self._vbox.pack_start(self._progressbar, expand=False)
+        self._progressbar.set_no_show_all(True)
+        self._progressbar.hide()
+
+    def update_progressbar(self, current, max):
+        if max > 1:
+            self._progressbar.set_fraction(float(current) / float(max))
+
+    def show_progressbar(self, show):
+        self._progressbar.set_no_show_all(False)
+        if show:
+            self._progressbar.show()
+        else:
+            self._progressbar.hide()
     def add_item(self, item):
         self._list.append(item)
         self._count += 1
@@ -144,6 +162,9 @@ class GtagsView(PidaView):
 
     def _on_refresh_button_clicked(self, w):
         self.svc.build_db()
+
+    def _on_list_double_click(self, o, w):
+        pass
 
 class GtagsActions(ActionsConfig):
 
@@ -214,11 +235,11 @@ class Gtags(Service):
         if self._project is None:
             return False
         if self.have_database():
-            commandargs = ['gtags']
+            commandargs = ['global', '-v', '-u']
         else:
-            commandargs = ['global -u']
-        self._refresh_button.set_sensitive(False)
-        self.svc.boss.cmd('commander', 'execute',
+            commandargs = ['gtags', '-v']
+        self._view._refresh_button.set_sensitive(False)
+        self.boss.cmd('commander', 'execute',
                 commandargs=commandargs,
                 cwd=self._project.source_directory,
                 title=_('Gtags build...'),
@@ -226,7 +247,7 @@ class Gtags(Service):
 
     def build_db_finished(self, w):
         self._view.activate(self.have_database())
-        self._refresh_button.set_sensitive(True)
+        self._view._refresh_button.set_sensitive(True)
 
     def on_project_switched(self, project):
         if project != self._project:
@@ -246,33 +267,46 @@ class Gtags(Service):
             return
 
         self._view.clear_items()
+        if pattern == '':
+            return
+
         self._ticket += 1
 
         self.task = GeneratorTask(self._tag_search, self._view.add_item, None)
         self.task.start(pattern, self._ticket)
 
     def _tag_search(self, pattern, ticket):
+        self._view.show_progressbar(True)
         candidates = self._global_complete(pattern)
-        if len(candidates) > 500:
+        if len(candidates) > 200:
             return
 
         if self._ticket != ticket:
             return
 
+        max = len(candidates)
+        counter = 0
         for candidate in candidates:
             if candidate == '':
                 continue
+
+            counter += 1
+            self._view.update_progressbar(counter, max)
 
             res = self._global_definition(candidate)
             for entry in res:
                 if entry == '':
                     continue
-                data = entry.split(':',2)
+                match = re.search('([^\ ]*)[\ ]+([0-9]+) ([^\ ]+) (.*)', entry)
+                if match is None:
+                    continue
+                data = match.groups()
                 if self._ticket != ticket:
                     return
 
-                yield GtagsItem(file=data[0], line=data[1],
-                    dataline=data[2], symbol=candidate, search=pattern)
+                yield GtagsItem(file=data[2], line=data[1],
+                    dataline=data[3], symbol=candidate, search=pattern)
+        self._view.show_progressbar(False)
 
     def _global_complete(self, pattern):
         commandsargs = [ 'global', '-c', pattern ]
@@ -284,7 +318,7 @@ class Gtags(Service):
         return data.split('\n')
 
     def __global_complete(self, pattern):
-        commandsargs = [ 'global', '-c', pattern ]
+        commandsargs = [ 'global', '-c', '-e', pattern ]
         p = subprocess.Popen(commandsargs,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 cwd=self._project.source_directory)
@@ -293,7 +327,7 @@ class Gtags(Service):
         return data.split('\n')
 
     def _global_definition(self, symbol):
-        commandsargs = [ 'global', '--result=grep', symbol ]
+        commandsargs = [ 'global', '-x', '-e', symbol ]
         p = subprocess.Popen(commandsargs,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 cwd=self._project.source_directory)
@@ -303,7 +337,7 @@ class Gtags(Service):
 
 
     def _global_reference(self, symbol):
-        commandsargs = [ 'global', '--result=grep', '-r', symbol ]
+        commandsargs = [ 'global', '-x', '-r', '-e', symbol ]
         p = subprocess.Popen(commandsargs,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 cwd=self._project.source_directory)
