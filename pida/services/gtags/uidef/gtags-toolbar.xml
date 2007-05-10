@@ -1,0 +1,5 @@
+<ui>
+    <toolbar>
+        <toolitem action="gtags_rebuild" name="gtags_rebuild"/>
+    </toolbar>
+</ui>

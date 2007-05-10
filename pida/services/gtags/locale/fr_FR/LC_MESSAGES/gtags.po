@@ -1,0 +1,62 @@
+# PIDA.
+# Copyright (C) The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+# Mathieu Virbel <tito@bankiz.org>, 2007.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-10 18:32+0200\n"
+"PO-Revision-Date: 2007-05-10 18:32+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: gtags.py:85
+msgid "Pattern : "
+msgstr "Recherche : "
+
+#: gtags.py:102
+msgid "Build TAGS database"
+msgstr "Construire la base de données GTAGS"
+
+#: gtags.py:111
+msgid "Symbol"
+msgstr "Symbole"
+
+#: gtags.py:113
+msgid "Location"
+msgstr "Emplacement"
+
+#: gtags.py:115
+msgid "Data"
+msgstr "Données"
+
+#: gtags.py:126
+#, python-format
+msgid "%d match"
+msgstr "%d résultat"
+
+#: gtags.py:128
+#, python-format
+msgid "%d matchs"
+msgstr "%d résultats"
+
+#: gtags.py:154
+msgid "Gtags Viewer"
+msgstr "Visualiseur Gtags"
+
+#: gtags.py:155
+msgid "Show the gtags"
+msgstr "Afficher les Gtags"
+
+#: gtags.py:164 gtags.py:165
+msgid "Complete current word"
+msgstr "Trouver les occurences du mots courants"
+
+#: gtags.py:224
+msgid "Gtags build..."
+msgstr "Constructions des Gtags..."
