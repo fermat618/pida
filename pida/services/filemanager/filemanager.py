@@ -343,6 +343,9 @@ class FilemanagerCommandsConfig(CommandsConfig):
     def update_removed_file(self, filename, dirname):
         if dirname == self.svc.get_view().path: 
             self.svc.get_view().update_removed_file(filename)
+
+    def refresh(self):
+        self.svc.get_view().update_to_path()
         
 
 
