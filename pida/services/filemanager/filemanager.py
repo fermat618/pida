@@ -92,7 +92,6 @@ class FileEntry(object):
     """The model for file entries"""
 
     def __init__(self, name, parent_path, manager):
-        
         self._manager = manager
         self.state = 'normal'
         self.name = name
@@ -265,10 +264,13 @@ class FilemanagerView(PidaView):
             self.file_list.remove(entry)
 
     def on_file_activated(self, rowitem, fileentry):
-        if fileentry.is_dir:
-            self.svc.browse(fileentry.path)
+        if os.path.exists(fileentry.path):
+            if fileentry.is_dir:
+                self.svc.browse(fileentry.path)
+            else:
+                self.svc.boss.cmd('buffer', 'open_file', file_name=fileentry.path)
         else:
-            self.svc.boss.cmd('buffer', 'open_file', file_name=fileentry.path)
+            self.update_removed_file(fileentry.name)
 
     def on_file_right_click(self, ol, item, event=None):
         if item.is_dir:
