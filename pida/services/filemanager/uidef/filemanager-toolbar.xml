@@ -6,8 +6,6 @@
         <toolitem action="toolbar_refresh" name="toolbar_refresh"/>
         <toolitem action="toolbar_terminal" name="toolbar_terminal"/>
         <separator />
-        <toolitem action="toolbar_copy" name="toolbar_copy"/>
-        <toolitem action="toolbar_paste" name="toolbar_paste"/>
         <toolitem action="toolbar_delete" name="toolbar_delete"/>
     </toolbar>
 </ui>
