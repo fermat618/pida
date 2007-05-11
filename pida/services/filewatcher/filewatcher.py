@@ -51,6 +51,7 @@ class Filewatcher(Service):
         self.dir = None
         self.started = False
         self.gamin = None
+        self.cache = []
         if have_gamin:
             self.gamin = gamin.WatchMonitor()
             self.gamin.no_exists()
@@ -84,6 +85,13 @@ class Filewatcher(Service):
     def _callback(self, name, event):
         if event == gamin.GAMAcknowledge:
             return
+
+        # don't send many time the same event
+        if [name, event] in self.cache:
+            return
+        self.cache.append([name, event])
+
+
         if event == gamin.GAMChanged or event == gamin.GAMCreated:
             command = 'update_file'
         elif event == gamin.GAMDeleted or event == gamin.GAMMoved:
@@ -97,6 +105,7 @@ class Filewatcher(Service):
     def _period_check(self):
         if not self.gamin:
             return False
+        self.cache = []
         self.gamin.handle_events()
         return True
 
