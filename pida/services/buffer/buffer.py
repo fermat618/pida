@@ -186,7 +186,7 @@ class BufferActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             _('Previous Buffer'),
             _('Switch to the previous buffer'),
-            gtk.STOCK_GO_DOWN,
+            gtk.STOCK_GO_UP,
             self.on_prev_buffer,
             '<Alt>Up',
         )
@@ -270,10 +270,14 @@ class Buffer(Service):
         self._current = None
         self._view = BufferListView(self)
         self.get_action('close').set_sensitive(False)
-        #self.boss.add_view('Buffer', self._view, True)
+        self._refresh_buffer_action_sensitivities()
 
     def get_view(self):
         return self._view
+
+    def _refresh_buffer_action_sensitivities(self):
+        for action_name in ['switch_next_buffer', 'switch_prev_buffer']:
+            self.get_action(action_name).set_sensitive(len(self._documents) > 0)
 
     def open_file(self, file_name):
         doc = self._get_document_for_filename(file_name)
@@ -301,10 +305,12 @@ class Buffer(Service):
     def _add_document(self, document):
         self._documents[document.unique_id] = document
         self._view.add_document(document)
+        self._refresh_buffer_action_sensitivities()
 
     def _remove_document(self, document):
         del self._documents[document.unique_id]
         self._view.remove_document(document)
+        self._refresh_buffer_action_sensitivities()
 
     def view_document(self, document):
         if document is not None and self._current is not document:
