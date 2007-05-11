@@ -86,7 +86,7 @@ class Filewatcher(Service):
             return
         if event == gamin.GAMChanged or event == gamin.GAMCreated:
             command = 'update_file'
-        elif event == gamin.GAMDeleted:
+        elif event == gamin.GAMDeleted or event == gamin.GAMMoved:
             command = 'update_removed_file'
         else:
             command = None
