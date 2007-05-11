@@ -21,6 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
 import threading, thread
 import subprocess
 import gobject
@@ -146,6 +147,14 @@ class GeneratorSubprocessTask(GeneratorTask):
         )
         for line in self._process.stdout:
             yield line.strip()
+
+    def stop(self):
+        GeneratorTask.stop(self)
+        try:
+            os.kill(self._process.pid, 9)
+        except OSError:
+            pass
+
 
 
 def locked(lockname):
