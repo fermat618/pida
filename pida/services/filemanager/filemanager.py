@@ -27,6 +27,7 @@ import gtk
 from os import listdir, path
 
 import os
+import shutil
 
 import cgi
 
@@ -123,7 +124,7 @@ class FileEntry(object):
         return wrap%self.format(text)
 
     state_markup = property(get_state_markup)
-        
+
     def format(self, text):
         color, b, i = state_style.get(self.state, ('black', False, False))
         if b:
@@ -149,16 +150,10 @@ class FilemanagerView(PidaView):
         self._vbox = gtk.VBox()
         self._vbox.show()
         self.create_toolbar()
-        self.create_ancestors()
         self.create_file_list()
-        self.create_statusbar()
+        self._clipboard_file = None
+        self._fix_paste_sensitivity()
         self.add_main_widget(self._vbox)
-
-    def create_statusbar(self):
-        pass
-
-    def create_ancestors(self):
-        pass
 
     def create_file_list(self):
         self.file_list = ObjectList()
@@ -166,6 +161,7 @@ class FilemanagerView(PidaView):
         self.file_list.set_columns(self._columns);
         self.file_list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         #XXX: real file
+        self.file_list.connect('selection-changed', self.on_selection_changed)
         self.file_list.connect('row-activated', self.on_file_activated)
         self.file_list.connect('right-click', self.on_file_right_click)
         self.entries = {}
@@ -184,6 +180,7 @@ class FilemanagerView(PidaView):
             'is_dir_sort')
         self._sort_combo.show()
         self._vbox.pack_start(self._sort_combo, expand=False)
+        self.on_selection_changed(self.file_list, None)
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
@@ -195,7 +192,6 @@ class FilemanagerView(PidaView):
         self._toolbar.set_icon_size(gtk.ICON_SIZE_MENU)
         self._vbox.pack_start(self._toolbar, expand=False)
         self._toolbar.show_all()
-
 
     def add_or_update_file(self, name, basepath, state):
         if basepath != self.path:
@@ -280,6 +276,10 @@ class FilemanagerView(PidaView):
             self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           file_name=item.path, event=event) 
 
+    def on_selection_changed(self, ol, item):
+        for act_name in ['toolbar_copy', 'toolbar_delete']:
+            self.svc.get_action(act_name).set_sensitive(item is not None)
+
     def rename_file(self, old, new, entry):
         print 'renaming', old, 'to' ,new
 
@@ -308,7 +308,55 @@ class FilemanagerView(PidaView):
             ancs.append(parent)
             directory = parent
         return ancs
-            
+
+    def get_selected_filename(self):
+        fileentry = self.file_list.get_selected()
+        if fileentry is not None:
+            return fileentry.path
+
+    def copy_clipboard(self):
+        current = self.get_selected_filename()
+        if os.path.exists(current):
+            self._clipboard_file = current
+        else:
+            self._clipboard_file = None
+        self._fix_paste_sensitivity()
+
+    def _fix_paste_sensitivity(self):
+        self.svc.get_action('toolbar_paste').set_sensitive(self._clipboard_file
+                                                           is not None)
+
+    def paste_clipboard(self):
+        task = AsyncTask(self._paste_clipboard, lambda: None)
+        task.start()
+
+    def _paste_clipboard(self):
+        newname = os.path.join(self.path, os.path.basename(self._clipboard_file))
+        if newname == self._clipboard_file:
+            self.svc.error_dlg(_('Cannot copy files to themselves.'))
+            return
+        if not os.path.exists(self._clipboard_file):
+            self.svc.error_dlg(_('Source file has vanished.'))
+        if os.path.exists(newname):
+            self.svc.error_dlg(_('Destination already exists.'))
+            return
+        if os.path.isdir(self._clipboard_file):
+            shutil.copytree(self._clipboard_file, newname)
+        else:
+            shutil.copy2(self._clipboard_file, newname)
+
+    def remove_path(self, path):
+        task = AsyncTask(self._remove_path, lambda: None)
+        task.start(path)
+
+    def _remove_path(self, path):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+        if path == self._clipboard_file:
+            self._clipboard_file = None
+            self._fix_paste_sensitivity()
 
 
 class FilemanagerEvents(EventsConfig):
@@ -470,6 +518,36 @@ class FileManagerActionsConfig(ActionsConfig):
             'NOACCEL',
         )
 
+        self.create_action(
+            'toolbar_copy',
+            TYPE_NORMAL,
+            _('Copy File'),
+            _('Copy selected file to the clipboard'),
+            gtk.STOCK_COPY,
+            self.on_toolbar_copy,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'toolbar_paste',
+            TYPE_NORMAL,
+            _('Paste File'),
+            _('Paste selected file from the clipboard'),
+            gtk.STOCK_PASTE,
+            self.on_toolbar_paste,
+            'NOACCEL',
+        )
+
+        self.create_action(
+            'toolbar_delete',
+            TYPE_NORMAL,
+            _('Delete File'),
+            _('Delete the selected file'),
+            gtk.STOCK_DELETE,
+            self.on_toolbar_delete,
+            'NOACCEL',
+        )
+
 
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
@@ -495,6 +573,21 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_toolbar_projectroot(self, action):
         self.svc.browse(self.svc.current_project.source_directory)
+
+    def on_toolbar_copy(self, action):
+        self.svc.get_view().copy_clipboard()
+
+    def on_toolbar_paste(self, action):
+        self.svc.get_view().paste_clipboard()
+
+    def on_toolbar_delete(self, action):
+        current = self.svc.get_view().get_selected_filename()
+        if current is not None:
+            if self.svc.yesno_dlg(
+                _('Are you sure you want to delete the selected file: %s?'
+                % current)
+            ):
+                self.svc.get_view().remove_path(current)
 
 
 
