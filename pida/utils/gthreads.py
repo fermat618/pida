@@ -151,7 +151,8 @@ class GeneratorSubprocessTask(GeneratorTask):
     def stop(self):
         GeneratorTask.stop(self)
         try:
-            os.kill(self._process.pid, 9)
+            if hasattr(self, '_process'):
+                os.kill(self._process.pid, 9)
         except OSError:
             pass
 
