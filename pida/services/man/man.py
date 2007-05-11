@@ -35,7 +35,7 @@ from pida.core.actions import TYPE_TOGGLE
 
 from pida.ui.views import PidaView
 
-from pida.utils.gthreads import GeneratorTask, gcall
+from pida.utils.gthreads import GeneratorSubprocessTask
 
 # locale
 from pida.core.locale import Locale
@@ -44,19 +44,25 @@ _ = locale.gettext
 
 class ManItem(object):
 
-    def __init__(self, pattern, number, manpage):
+    def __init__(self, pattern, number, description, search):
         self.pattern = pattern
         self.number = number
-        self.manpage = manpage
-        self.markup = '%s(<span color="#0000c0">%d</span>) %s' % (
-            cgi.escape(self.pattern), int(self.number), cgi.escape(self.manpage))
+        self.description = self._color_match(cgi.escape(description), search)
+        patternmark = self._color_match(cgi.escape(pattern), search)
+        self.markup = '%s(<span color="#0000cc">%d</span>)' % (
+            patternmark, int(self.number))
+
+    def _color_match(self, data, match):
+        return data.replace(match, '<span color="#c00000"><b>%s</b></span>' % match)
+
 
 class ManView(PidaView):
 
     icon_name = 'gtk-library'
     label_text = 'Man'
-    
+
     def create_ui(self):
+        self._count = 0
         self.__vbox = gtk.VBox(spacing=3)
         self.__vbox.set_border_width(6)
         self.__hbox = gtk.HBox()
@@ -65,21 +71,26 @@ class ManView(PidaView):
         self.__check = gtk.CheckButton(label='-k')
         self.__check.connect('toggled', self.cb_entry_changed)
         self.__list = ObjectList([
-                   Column('markup', title='Man page', sorted=True, use_markup=True),
+                   Column('markup', title=_('Man page'), sorted=True,
+                       use_markup=True),
+                   Column('description', title=_('Description'),
+                       use_markup=True),
                ])
         self.__list.connect('double-click', self._on_man_double_click)
         self.__list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__hbox.pack_start(self.__entry)
-        self.__hbox.pack_start(self.__check)
+        self.__hbox.pack_start(self.__check, expand=False)
         self.__vbox.pack_start(self.__hbox, expand=False)
         self.__vbox.pack_start(self.__list)
         self.add_main_widget(self.__vbox)
         self.__vbox.show_all()
 
     def clear_items(self):
-        gcall(self.__list.clear)
+        self._count = 0
+        self.__list.clear()
 
     def add_item(self, item):
+        self._count += 1
         self.__list.append(item)
 
     def _on_man_double_click(self, olist, item):
@@ -89,7 +100,7 @@ class ManView(PidaView):
                 commandargs=commandargs,
                 cwd=directory,
                 icon='gnome-library',
-                title=_('Man %(pattern)s(%(number)d)') % dict(
+                title='%(pattern)s(%(number)d)' % dict(
                     pattern=item.pattern,
                     number=int(item.number)
                 ))
@@ -98,7 +109,7 @@ class ManView(PidaView):
         options = '-f'
         if self.__check.get_active():
             options = '-k'
-        gcall(self.svc.cmd_find, options=options, pattern=self.__entry.get_text())
+        self.svc.cmd_find(options=options, pattern=self.__entry.get_text())
 
     def can_be_closed(self):
         self.svc.get_action('show_man').set_active(False)
@@ -132,45 +143,49 @@ class Man(Service):
     def start(self):
         self._view = ManView(self)
         self._has_loaded = False
-        self.counter = 0
         self.task = None
 
     def show_man(self):
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
         if not self._has_loaded:
             self._has_loaded = True
 
     def hide_man(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
-    def _cmd_find_add_item(self, counter, item):
-        if ( self.counter != counter ):
-            return
-        self._view.add_item(item)
-
     def cmd_find(self, options, pattern):
-        if ( len(pattern) > 1 ):
-            self.counter = self.counter + 1
-            self._view.clear_items()
-            self.task = GeneratorTask(self._cmd_find, self._cmd_find_add_item)
-            self.task.start(self.counter, options, pattern)
 
-    def _cmd_find(self, counter, options, pattern):
-        if ( self.counter != counter ):
+        # stop and clear task
+        if self.task:
+            self.task.stop()
+        self._view.clear_items()
+
+        # don't make empty search
+        if len(pattern) <= 0:
             return
+
+        # prepare command
         cmd = '/usr/bin/env man %s "%s"' % (options, pattern)
-        ret = commands.getoutput(cmd)
-        results = ret.split('\n')
-        for result in results:
-            if ( self.counter != counter ):
-                return
-            reman = re.compile('[(]([\d]+)[)]')
+        reman = re.compile('[(]([\d]+)[)]')
+
+        # match and add each line
+        def _line(result):
             list = reman.findall(result)
             if not len(list):
-                continue
+                return
             name = result.split('(')[0].strip()
             res = result.split('- ',1)
-            yield counter, ManItem(name, list[0], res[1])
+
+            # avoid too much result
+            if self._view._count > 100:
+                self.task.stop()
+
+            # add in list
+            self._view.add_item(ManItem(name, list[0], res[1], pattern))
+
+        # launch man subprocess
+        self.task = GeneratorSubprocessTask(_line)
+        self.task.start(cmd, shell=True)
 
 
 # Required Service attribute for service loading
