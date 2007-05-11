@@ -279,6 +279,8 @@ class Gtags(Service):
         self._view.show_progressbar(True)
         candidates = self._global_complete(pattern)
         if len(candidates) > 200:
+            if self._ticket == ticket:
+                self._view.show_progressbar(False)
             return
 
         if self._ticket != ticket:
