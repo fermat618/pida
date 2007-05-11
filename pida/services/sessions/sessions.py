@@ -85,9 +85,15 @@ class SessionObject(object):
         """
         self._path = session_path
         self._config = ConfigObj(self._path)
-        self.name = self._config['name']
-        self._files = self._config['files']
-#        self._project = self._config['project']
+
+        if self._config.has_key('name') and self._config.has_key('files'):
+            self.name = self._config.get('name')
+            self._files = self._config.get('files')
+#            self._project = self._config['project']
+        else:
+            # something has gone horribly wrong
+            # return false and log it in the service
+            raise IOError('Failed to read config file')
 
     def _parse_session_path(self, path):
         base_name = os.path.basename(path).split(".")
@@ -102,6 +108,9 @@ class SessionObject(object):
 
     def set_files(self, files):
         self._files = files
+
+    def get_path(self):
+        return self._path
 
 
 class SessionsActionsConfig(ActionsConfig):
@@ -178,7 +187,6 @@ class SessionsOptionsConfig(OptionsConfig):
             _('Clear old buffers when loading session'),
         )
 
-
     gladefile = 'sessions-properties'
     label_text = _('Sessions Properties')
     icon_name = 'package_utilities'
@@ -187,6 +195,11 @@ class SessionsOptionsConfig(OptionsConfig):
         pass
 
 
+class SessionsEventsConfig(EventsConfig):
+
+    def subscribe_foreign_events(self):    
+        self.subscribe_foreign_event('buffer', 'document-changed', self.svc.save_last_session)
+        self.subscribe_foreign_event('editor', 'started', self.svc.load_last_session)
 
 class Sessions(Service):
     """
@@ -206,41 +219,71 @@ class Sessions(Service):
     current_buffers = buffer.get_documents()
     files = [buffer.filename for buffer in current_buffers]
     """
-    # TODO - Make Sessions align with Pida style guide
-    # TODO - Create the Pida Prefrences Gui
     # TODO - Save the last session on close
     # TODO - Allow restoring of last session on startup
 
 
     actions_config = SessionsActionsConfig
     options_config = SessionsOptionsConfig
+    events_config = SessionsEventsConfig
+    last_session_file = 'last.session'
 
     def pre_start(self):
         self.sessions_dir = os.path.join(self.boss.get_pida_home(),
             'sessions')
+        self.last_session_path = os.path.join(self.sessions_dir,
+                self.last_session_file)
         if not os.path.exists(self.sessions_dir):
             os.mkdir(self.sessions_dir)
-        self._set_current_session(None)
-#        self.current_session = None
 
-    def load_session(self, file_path):
+        self.last_session = SessionObject()
+
+        if not os.path.exists(self.last_session_path):
+            self.last_session.new(self.last_session_path, [])
+            self.last_session.save()
+        else:
+            self.last_session.load(self.last_session_path)
+
+        self._set_current_session(None)
+
+    def load_last_session(self):
+        if self.opt('load_last_session'):
+            self.load_session(self.last_session_path)
+
+    def load_session(self, file_path, set_current=None):
         """
         load the saved session file from disk
         """
         session = SessionObject()
-        session.load(file_path)
-        self._set_current_session(session)
-        self.load_buffers(session.get_files())
+        try:
+            session.load(file_path)
+            if set_current:
+                self._set_current_session(session)
+            self.load_buffers(session.get_files())
+        except IOError:
+            # when we catch this exception we should really make an attempt
+            # at repairing whatever session file it was failing on.
+            self.log_warn(_('Session file:%s failed to load') % file_path)
+            return
+
+    def save_last_session(self, document):
+        self.last_session.set_files(self._get_current_buffers())
+        self.last_session.save()
 
     def save_current_session(self, file_path=None):
-        if not self.current_session:
-            self.current_session = SessionObject()
-            self.current_session.new(file_path,
-                files = self._get_current_buffers())
-            self.current_session.save()
-        else:
+        """
+        If no file_path is given save_current_session assumes you will be
+        saving to the default last_session path which is /sessions/last.session
+        """
+
+        if self.current_session:
             self.current_session.set_files(self._get_current_buffers())
             self.current_session.save(file_path)
+        else:
+            self.current_session = SessionObject()
+            self.current_session.new(file_path,
+                    files = self._get_current_buffers())
+            self.current_session.save()
 
     def _set_current_session(self, session):
         self.current_session = session
