@@ -23,7 +23,6 @@
 import os
 import gtk
 import re
-import subprocess
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -37,7 +36,7 @@ from pida.ui.buttons import create_mini_button
 
 from pida.ui.views import PidaView
 
-from pida.utils.gthreads import GeneratorTask, gcall
+from pida.utils.gthreads import GeneratorTask, GeneratorSubprocessTask
 
 # locale
 from pida.core.locale import Locale
@@ -54,11 +53,14 @@ class GtagsItem(object):
         self.search = search
 
         self.symbol = self._color_match(symbol, search)
-        self.dataline = self._color_match(dataline, symbol)
+        self.dataline = self._color(dataline, symbol)
         self.filename = '%s:<span color="#000099">%s</span>' % (self.file, self.line)
 
     def _color_match(self, data, match):
         return data.replace(match, '<span color="#c00000"><b>%s</b></span>' % match)
+
+    def _color(self, data, match):
+        return data.replace(match, '<span color="#c00000">%s</span>' % match)
 
 class GtagsView(PidaView):
 
@@ -217,6 +219,7 @@ class Gtags(Service):
         self._has_loaded = False
         self._project = None
         self._ticket = 0
+        self.task = self._task = None
 
     def show_gtags(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
@@ -270,82 +273,23 @@ class Gtags(Service):
         if pattern == '':
             return
 
-        self._ticket += 1
+        if self._task:
+            self._task.stop()
 
-        self.task = GeneratorTask(self._tag_search, self._view.add_item, None)
-        self.task.start(pattern, self._ticket)
+        def _line(line):
+            match = re.search('([^\ ]*)[\ ]+([0-9]+) ([^\ ]+) (.*)', line)
+            if match is None:
+                return
+            data = match.groups()
+            self._view.add_item(GtagsItem(file=data[2],
+                line=data[1], dataline=data[3],
+                symbol=data[0], search=pattern))
+            if self._view._count > 200:
+                self._task.stop()
 
-    def _tag_search(self, pattern, ticket):
-        self._view.show_progressbar(True)
-        candidates = self._global_complete(pattern)
-        if len(candidates) > 200:
-            if self._ticket == ticket:
-                self._view.show_progressbar(False)
-            return
-
-        if self._ticket != ticket:
-            return
-
-        max = len(candidates)
-        counter = 0
-        for candidate in candidates:
-            if candidate == '':
-                continue
-
-            counter += 1
-            self._view.update_progressbar(counter, max)
-
-            res = self._global_definition(candidate)
-            for entry in res:
-                if entry == '':
-                    continue
-                match = re.search('([^\ ]*)[\ ]+([0-9]+) ([^\ ]+) (.*)', entry)
-                if match is None:
-                    continue
-                data = match.groups()
-                if self._ticket != ticket:
-                    return
-
-                yield GtagsItem(file=data[2], line=data[1],
-                    dataline=data[3], symbol=candidate, search=pattern)
-        self._view.show_progressbar(False)
-
-    def _global_complete(self, pattern):
-        commandsargs = [ 'global', '-c', pattern ]
-        p = subprocess.Popen(commandsargs,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                cwd=self._project.source_directory)
-        data = p.communicate(None)[0]
-
-        return data.split('\n')
-
-    def __global_complete(self, pattern):
-        commandsargs = [ 'global', '-c', '-e', pattern ]
-        p = subprocess.Popen(commandsargs,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                cwd=self._project.source_directory)
-        data = p.communicate(None)[0]
-
-        return data.split('\n')
-
-    def _global_definition(self, symbol):
-        commandsargs = [ 'global', '-x', '-e', symbol ]
-        p = subprocess.Popen(commandsargs,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                cwd=self._project.source_directory)
-        data = p.communicate(None)[0]
-
-        return data.split('\n')
-
-
-    def _global_reference(self, symbol):
-        commandsargs = [ 'global', '-x', '-r', '-e', symbol ]
-        p = subprocess.Popen(commandsargs,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                cwd=self._project.source_directory)
-        data = p.communicate(None)[0]
-
-        return data.split('\n')
+        cmd = 'for foo in `global -c %s`; do global -x -e $foo; done' % pattern
+        self._task = GeneratorSubprocessTask(_line)
+        self._task.start(cmd, cwd=self._project.source_directory, shell=True)
 
 
 # Required Service attribute for service loading
