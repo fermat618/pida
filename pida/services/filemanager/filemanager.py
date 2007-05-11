@@ -240,6 +240,8 @@ class FilemanagerView(PidaView):
 
         self.create_ancest_tree()
 
+    # This is painful, and will always break
+    # So use the following method instead
     def update_single_file(self, name, basepath):
         def _update_file(oname, obasepath, state):
             if oname == name and basepath == obasepath:
@@ -249,6 +251,13 @@ class FilemanagerView(PidaView):
                 self.show_or_hide(self.entries[oname])
         for lister in self.svc.features("file_lister"):
             GeneratorTask(lister, _update_file).start(self.path)
+
+    def update_single_file(self, name, basepath):
+        if basepath != self.path:
+            return
+        if name not in self.entries:
+            self.entries[name] = FileEntry(name, basepath, self)
+            self.show_or_hide(self.entries[name])
 
     def update_removed_file(self, filename):
         entry = self.entries.pop(filename, None)
