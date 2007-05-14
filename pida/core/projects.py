@@ -134,6 +134,9 @@ class Project(object):
     def get_section(self, section_name):
         return self.options.get(section_name, None)
 
+    def get_name(self):
+        return self.name
+
 
 
 class ProjectKeyDefinition(object):
