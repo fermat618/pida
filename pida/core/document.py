@@ -234,9 +234,14 @@ class Document(object):
     stat = property(__get_stat)
 
     def get_mtime(self):
-        return self.stat.m_time
+        return self.stat[stat.ST_MTIME]
 
     modified_time = property(get_mtime)
+
+    def get_size(self):
+        return self.stat[stat.ST_SIZE]
+
+    size = property(get_size)
 
     def __get_mimetype(self):
         return self.__mimetype
