@@ -72,11 +72,13 @@ class PidaWindow(Window):
         self.main_box = gtk.VBox()
         self.top_box = gtk.VBox()
         self.bottom_box = gtk.VBox()
+        self._statusbar = gtk.Toolbar()
         self.main_box.pack_start(self.top_box, expand=False)
         self.main_box.pack_start(self._paned)
         self.main_box.pack_start(self.bottom_box, expand=False)
+        self.main_box.pack_start(self._statusbar, expand=False)
         self.add(self.main_box)
-        
+
     def _start_ui(self):
         self._menubar = self._uim.get_menubar()
         self._toolbar = self._uim.get_toolbar()
@@ -85,6 +87,7 @@ class PidaWindow(Window):
         self.top_box.pack_start(self._toolbar, expand=False)
         self.top_box.show_all()
         self.main_box.show_all()
+        self._statusbar.show_all()
 
     def _fix_paneds(self):
         self._paned = PidaPaned()
@@ -120,6 +123,9 @@ class PidaWindow(Window):
     def switch_prev_view(self, bookname):
         self._paned.switch_prev_pane(bookname)
 
+    def get_statusbar(self):
+        return self._statusbar
+
     # UI hiding API
     def set_toolbar_visibility(self, visibility):
         if visibility:
@@ -132,4 +138,10 @@ class PidaWindow(Window):
             self._menubar.show_all()
         else:
             self._menubar.hide_all()
+
+    def set_statusbar_visibility(self, visibility):
+        if visibility:
+            self._statusbar.show_all()
+        else:
+            self._statusbar.hide_all()
 
