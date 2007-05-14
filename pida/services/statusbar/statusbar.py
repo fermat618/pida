@@ -141,14 +141,14 @@ class Statusbar(Service):
         path = self.boss.cmd('filemanager', 'get_browsed_path')
         self.set_label('path', path)
 
-    def add_status(self, name, widget, text='-', expand=False):
+    def add_status(self, name, widget, text='', expand=False):
         widget.set_text(text)
         separator = gtk.VSeparator()
 
         # add in ui
         if len(self._places) > 0:
             self._statusbar.pack_start(separator, expand=False)
-        self._statusbar.pack_start(widget, expand=expand)
+        self._statusbar.pack_start(widget, expand=expand, padding=6)
         if self.opt('show_statusbar'):
             self._statusbar.show_all()
 
