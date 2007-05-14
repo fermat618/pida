@@ -185,7 +185,7 @@ class GrepperView(PidaGladeView):
     def set_location(self, location):
         self.path_chooser.set_filename(location)
         # setting the location takes a *long* time
-        refresh_gui()
+        self._hacky_extra_location = location
 
     def start_grep_for_word(self, word):
         if not word:
@@ -199,6 +199,8 @@ class GrepperView(PidaGladeView):
         self.matches_list.clear()
         pattern = self.pattern_entry.get_text()
         location = self.path_chooser.get_filename()
+        if location is None:
+            location = self._hacky_extra_location
         recursive = self.recursive.get_active()
 
         # needs a patched kiwi
