@@ -118,7 +118,6 @@ class Statusbar(Service):
         self.show_statusbar(self.opt('show_statusbar'))
 
     def create_ui(self):
-        self._statusbar.insert(gtk.SeparatorToolItem(), -1)
         w = TabLabel('package_utilities','')
         self.add_status('project', widget=w, text='No project')
         w = TabLabel('file-manager','')
@@ -126,13 +125,13 @@ class Statusbar(Service):
         w = TabLabel('package_office','')
         self.add_status('document', widget=w, text='No document', expand=True)
         w = gtk.Label()
-        w.set_padding(3, 0)
+        w.set_padding(5, 0)
         self.add_status('document_mtime', widget=w)
         w = gtk.Label()
-        w.set_padding(3, 0)
+        w.set_padding(5, 0)
         self.add_status('document_encoding', widget=w)
         w = gtk.Label()
-        w.set_padding(3, 0)
+        w.set_padding(5, 0)
         self.add_status('document_size', widget=w)
 
     def set_default_values(self):
@@ -143,26 +142,22 @@ class Statusbar(Service):
         self.set_label('path', path)
 
     def add_status(self, name, widget, text='-', expand=False):
-        toolitem = gtk.ToolItem()
-        toolitem.add(widget)
-        toolitem.set_expand(expand)
         widget.set_text(text)
-        separator = gtk.SeparatorToolItem()
+        separator = gtk.VSeparator()
 
         # add in ui
-        self._statusbar.insert(toolitem, -1)
-        self._statusbar.insert(separator, -1)
+        if len(self._places) > 0:
+            self._statusbar.pack_start(separator, expand=False)
+        self._statusbar.pack_start(widget, expand=expand)
         if self.opt('show_statusbar'):
             self._statusbar.show_all()
 
         # save in cache
         self._places[name] = {
                 'widget':widget,
-                'toolitem':gtk.ToolItem(),
             }
         self._places['_separator_'+name] = {
                 'widget':separator,
-                'toolitem':separator,
             }
 
 
@@ -175,8 +170,8 @@ class Statusbar(Service):
             return
         status = self._places[name]
         separator = self._places['_separator_'+name]
-        self._statusbar.remove(status['toolitem'])
-        self._statusbar.remove(separator['toolitem'])
+        self._statusbar.remove(status['widget'])
+        self._statusbar.remove(separator['widget'])
         del self._places[name]
         del self._places['_separator_'+name]
 

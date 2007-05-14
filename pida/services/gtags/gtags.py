@@ -166,7 +166,8 @@ class GtagsView(PidaView):
         self.svc.build_db()
 
     def _on_list_double_click(self, o, w):
-        pass
+        self.svc.boss.cmd('buffer', 'open_file', file_name=w.file)
+        self.svc.boss.editor.goto_line(w.line)
 
 class GtagsActions(ActionsConfig):
 
@@ -178,7 +179,7 @@ class GtagsActions(ActionsConfig):
             _('Show the gtags'),
             '',
             self.on_show_gtags,
-            '',
+            '<Shift><Control>y',
         )
 
         self.create_action(

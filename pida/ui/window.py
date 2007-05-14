@@ -80,7 +80,7 @@ class PidaWindow(Window):
         self.add(self.main_box)
 
     def _create_statusbar(self):
-        self._statusbar = gtk.Toolbar()
+        self._statusbar = gtk.HBox()
         self._status_holder = gtk.Statusbar()
         # OMG
         frame = self._status_holder.get_children()[0]
