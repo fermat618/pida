@@ -72,12 +72,20 @@ class PidaWindow(Window):
         self.main_box = gtk.VBox()
         self.top_box = gtk.VBox()
         self.bottom_box = gtk.VBox()
-        self._statusbar = gtk.Toolbar()
+        self._create_statusbar()
         self.main_box.pack_start(self.top_box, expand=False)
         self.main_box.pack_start(self._paned)
         self.main_box.pack_start(self.bottom_box, expand=False)
-        self.main_box.pack_start(self._statusbar, expand=False)
+        self.main_box.pack_start(self._status_holder, expand=False)
         self.add(self.main_box)
+
+    def _create_statusbar(self):
+        self._statusbar = gtk.Toolbar()
+        self._status_holder = gtk.Statusbar()
+        # OMG
+        frame = self._status_holder.get_children()[0]
+        frame.remove(frame.get_children()[0])
+        frame.add(self._statusbar)
 
     def _start_ui(self):
         self._menubar = self._uim.get_menubar()
