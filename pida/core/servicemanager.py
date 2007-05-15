@@ -43,7 +43,7 @@ class ServiceLoader(object):
         return services
 
     def load_one_service(self, service_path, boss):
-        service_class = get_one_service(service_path)
+        service_class = self.get_one_service(service_path)
         if service_class is not None:
             return self._instantiate_service(service_class, boss)
 
@@ -155,7 +155,7 @@ class ServiceManager(object):
 
     def _register_plugin(self, plugin):
         self._reg.register_plugin(
-            instance=service,
+            instance=plugin,
             singletons=(
                 plugin.servicename,
             ),
