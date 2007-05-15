@@ -1,0 +1,6 @@
+<ui>
+    <toolbar>
+        <toolitem action="rfc_refreshindex" name="rfc_refreshindex"/>
+        <toolitem action="rfc_downloadindex" name="rfc_downloadindex"/>
+    </toolbar>
+</ui>
