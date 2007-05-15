@@ -1,6 +1,6 @@
 import os, imp
 
-from pida.core.interfaces import IService, IEditor
+from pida.core.interfaces import IService, IEditor, IPlugin
 from pida.core.plugins import Registry
 
 from pida.core.environment import library, environ
@@ -38,11 +38,16 @@ class ServiceLoader(object):
     def load_all_services(self, service_dirs, boss):
         services = []
         for service_class in self.get_all_services(service_dirs):
-            services.append(self.load_one_service(service_class, boss))
+            services.append(self._instantiate_service(service_class, boss))
         services.sort(sort_services_func)
         return services
 
-    def load_one_service(self, service_class, boss):
+    def load_one_service(self, service_path, boss):
+        service_class = get_one_service(service_path)
+        if service_class is not None:
+            return self._instantiate_service(service_class, boss)
+
+    def _instantiate_service(self, service_class, boss):
         return service_class(boss)
 
     def _find_service_paths(self, service_dir):
@@ -97,18 +102,47 @@ class ServiceManager(object):
         self._loader = ServiceLoader()
         self._reg = Registry()
 
-    def activate_services(self):
-        self.load_services()
-        self.create_services()
-        self.subscribe_services()
-        self.pre_start_services()
+    def get_service(self, name):
+        return self._reg.get_singleton(name)
 
-    def load_services(self):
+    def get_services(self):
+        services = list(self._reg.get_features(IService))
+        services.sort(sort_services_func)
+        return services
+
+    def get_plugins(self):
+        plugins = list(self._reg.get_features(IPlugin))
+        plugins.sort(sort_services_func)
+        return plugins
+
+    def get_services_not_plugins(self):
+        services = self.get_services()
+        plugins = self.get_plugins()
+        return [s for s in services if s not in plugins]
+
+    def activate_services(self):
+        self._register_services()
+        self._create_services()
+        self._subscribe_services()
+        self._pre_start_services()
+
+    def start_plugin(self, plugin_path):
+        plugin = self._loader.load_one_service(plugin_path, self._boss)
+        if plugin is not None:
+            self._register_plugin(plugin)
+            plugin.create_all()
+            plugin.subscribe_all()
+            plugin.pre_start()
+            plugin.start()
+        else:
+            self._boss.log.error('Unable to load plugin from %s' % plugin_path)
+
+    def _register_services(self):
         for svc in self._loader.load_all_services(
                 self._boss.get_service_dirs(), self._boss):
-            self.register_service(svc)
+            self._register_service(svc)
 
-    def register_service(self, service):
+    def _register_service(self, service):
         self._reg.register_plugin(
             instance=service,
             singletons=(
@@ -119,25 +153,29 @@ class ServiceManager(object):
             )
         )
 
-    def get_service(self, name):
-        return self._reg.get_singleton(name)
+    def _register_plugin(self, plugin):
+        self._reg.register_plugin(
+            instance=service,
+            singletons=(
+                plugin.servicename,
+            ),
+            features=(
+                IService,
+                IPlugin,
+            )
+        )
 
-    def get_services(self):
-        services = list(self._reg.get_features(IService))
-        services.sort(sort_services_func)
-        return services
-
-    def create_services(self):
+    def _create_services(self):
         for svc in self.get_services():
             svc.log_debug('Creating Service')
             svc.create_all()
 
-    def subscribe_services(self):
+    def _subscribe_services(self):
         for svc in self.get_services():
             svc.log_debug('Subscribing Service')
             svc.subscribe_all()
 
-    def pre_start_services(self):
+    def _pre_start_services(self):
         for svc in self.get_services():
             svc.log_debug('Pre Starting Service')
             svc.pre_start()

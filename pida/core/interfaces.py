@@ -45,6 +45,9 @@ class IService(Interface):
     def get_name():
         """Get the name for the service"""
 
+class IPlugin(Interface):
+    """A plugin"""
+
 
 class IEditor(Interface):
 
