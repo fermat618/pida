@@ -66,4 +66,10 @@ class Environment(object):
         return os.path.join(
             os.path.dirname(os.path.dirname(__file__)), 'editors')
 
+    def get_plugins_directory(self):
+        path = os.path.join(self.pida_home, 'plugins')
+        if not os.path.exists(path):
+            os.mkdir(path)
+        return path
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
