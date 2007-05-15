@@ -20,21 +20,30 @@ class ServiceLoader(object):
         classes = []
         for service_path in self._find_all_service_paths(service_dirs):
             module = self._load_service_module(service_path)
-            if module is not None:
-                service_class = self._load_service_class(module)
-                if service_class is not None:
-                    service_class.servicename = module.servicename
-                    service_class.servicefile_path = module.servicefile_path
-                    classes.append(service_class)
+            service_class = self.get_one_service(service_path)
+            if service_class is not None:
+                classes.append(service_class)
         classes.sort(sort_services_func)
         return classes
+
+    def get_one_service(self, service_path):
+        module = self._load_service_module(service_path)
+        if module is not None:
+            service_class = self._load_service_class(module)
+            if service_class is not None:
+                service_class.servicename = module.servicename
+                service_class.servicefile_path = module.servicefile_path
+                return service_class
 
     def load_all_services(self, service_dirs, boss):
         services = []
         for service_class in self.get_all_services(service_dirs):
-            services.append(service_class(boss))
+            services.append(self.load_one_service(service_class, boss))
         services.sort(sort_services_func)
         return services
+
+    def load_one_service(self, service_class, boss):
+        return service_class(boss)
 
     def _find_service_paths(self, service_dir):
         for f in os.listdir(service_dir):
@@ -93,7 +102,6 @@ class ServiceManager(object):
         self.create_all()
         self.subscribe_all()
         self.pre_start_all()
-
 
     def load_services(self):
         for svc in self._loader.load_all_services(
