@@ -97,11 +97,11 @@ class ServiceManager(object):
         self._loader = ServiceLoader()
         self._reg = Registry()
 
-    def activate_services(self): 
-        self.load_services() 
-        self.create_all()
-        self.subscribe_all()
-        self.pre_start_all()
+    def activate_services(self):
+        self.load_services()
+        self.create_services()
+        self.subscribe_services()
+        self.pre_start_services()
 
     def load_services(self):
         for svc in self._loader.load_all_services(
@@ -127,17 +127,17 @@ class ServiceManager(object):
         services.sort(sort_services_func)
         return services
 
-    def create_all(self):
+    def create_services(self):
         for svc in self.get_services():
             svc.log_debug('Creating Service')
             svc.create_all()
 
-    def subscribe_all(self):
+    def subscribe_services(self):
         for svc in self.get_services():
             svc.log_debug('Subscribing Service')
             svc.subscribe_all()
 
-    def pre_start_all(self):
+    def pre_start_services(self):
         for svc in self.get_services():
             svc.log_debug('Pre Starting Service')
             svc.pre_start()
