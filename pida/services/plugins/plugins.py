@@ -355,7 +355,7 @@ class Plugins(Service):
 
         for item in l_installed:
             # read config
-            plugin_item = self.svc.read_plugin_informations(
+            plugin_item = self.read_plugin_informations(
                     servicefile=item.servicefile_path)
             self._view.add_installed(plugin_item)
 
