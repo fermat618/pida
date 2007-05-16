@@ -447,15 +447,16 @@ class Plugins(Service):
 
         def upload_do(login, password, filename):
             try:
-                f = open(filename, 'r')
-                data = f.read()
-                f.close()
-                proxy = xmlrpclib.ServerProxy(self.rpc_url)
-                code = proxy.plugins.push(login, password,
-                        base64.b64encode(data))
-                print _('Community response : '), code
-            except xmlrpclib.Fault, fault:
-                print _('Error while posting plugin : '), fault
+                try:
+                    f = open(filename, 'r')
+                    data = f.read()
+                    f.close()
+                    proxy = xmlrpclib.ServerProxy(self.rpc_url)
+                    code = proxy.plugins.push(login, password,
+                            base64.b64encode(data))
+                    print _('Community response : '), code
+                except xmlrpclib.Fault, fault:
+                    print _('Error while posting plugin : '), fault
             finally:
                 os.unlink(filename)
                 self._view.stop_publish_pulse()
