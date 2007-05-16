@@ -26,18 +26,18 @@ import cgi
 import gobject
 import tarfile
 import os
+import base64
 
 from kiwi.ui.objectlist import Column
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaGladeView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask, gcall
-from pida.core.servicemanager import ServiceManager, ServiceLoader
+from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pida.core.servicemanager import ServiceLoader
 
-from pida.core.plugins import SingletonError
 from pida.utils.web import fetch_url
 from pida.utils.configobj import ConfigObj
 
@@ -51,11 +51,32 @@ def get_value(tab, key):
         return ''
     return tab[key]
 
+def walktree(top = ".", depthfirst = True, skipped_directory = []):
+    """Walk the directory tree, starting from top. Credit to Noah Spurrier and Doug Fort."""
+    import os, stat
+    names = os.listdir(top)
+    if not depthfirst:
+        yield top, names
+    for name in names:
+        try:
+            st = os.lstat(os.path.join(top, name))
+        except os.error:
+            continue
+        if stat.S_ISDIR(st.st_mode):
+            if name in skipped_directory:
+                continue
+            for (newtop, children) in walktree (os.path.join(top, name),
+                    depthfirst, skipped_directory):
+                yield newtop, children
+    if depthfirst:
+        names = [name for name in names if name not in skipped_directory]
+        yield top, names
+
 class PluginsItem(object):
 
     def __init__(self, infos):
         self.plugin = get_value(infos, 'plugin')
-        self.require_version = get_value(infos, 'require_version')
+        self.require_pida = get_value(infos, 'require_pida')
         self.name = get_value(infos, 'name')
         self.author = get_value(infos, 'author')
         self.version = get_value(infos, 'version')
@@ -63,6 +84,60 @@ class PluginsItem(object):
         self.category = get_value(infos, 'category')
         self.url = get_value(infos, 'url')
         self.depends = get_value(infos, 'depends')
+        self.directory = None
+
+class PluginsEditItem(object):
+
+    def __init__(self, key, name, value):
+        self.key = key
+        self.name = name
+        self.value = value
+
+class PluginsEditView(PidaGladeView):
+
+    gladefile = 'plugins-edit'
+    locale = locale
+    label_text = _('Edit a plugin')
+    icon_name = gtk.STOCK_EXECUTE
+
+    def create_ui(self):
+        self.attr_list.set_columns([
+            Column('name', title=_('Name'), data_type=str),
+            Column('value', title=_('Value'), data_type=str, editable=True,
+                expand=True),
+            ])
+
+    def set_item(self, item):
+        self.item = item
+        if item is None:
+            self.attr_list.clear()
+            return
+        list = []
+        list.append(PluginsEditItem('plugin',
+            _('Name'), item.plugin))
+        list.append(PluginsEditItem('name',
+            _('Plugin long name'), item.name))
+        list.append(PluginsEditItem('author',
+            _('Author'), item.author))
+        list.append(PluginsEditItem('version',
+            _('Version'), item.version))
+        list.append(PluginsEditItem('depends',
+            _('Depends'), item.depends))
+        list.append(PluginsEditItem('require_pida',
+            _('Require PIDA version'), item.require_pida))
+        list.append(PluginsEditItem('category', _('Category'),
+            item.category))
+        list.append(PluginsEditItem('description', _('Description'),
+            item.description))
+        self.attr_list.add_list(list, clear=True)
+
+    def on_attr_list__cell_edited(self, w, item, value):
+        setattr(self.item, getattr(item, 'key'), getattr(item, 'value'))
+        self.svc._view.update_publish_infos()
+        self.svc.write_informations(self.item)
+
+    def on_close_button__clicked(self, w):
+        self.svc.hide_plugins_edit()
 
 
 class PluginsView(PidaGladeView):
@@ -74,6 +149,7 @@ class PluginsView(PidaGladeView):
 
     def create_ui(self):
         self._current = None
+        self.item = None
         self.plugins_dir = ''
         self.first_start = True
         self.installed_list.set_columns([
@@ -86,8 +162,6 @@ class PluginsView(PidaGladeView):
                 expand=True),
             Column('version', title=_('Version'), data_type=str),
             ])
-        self.available_install_button.set_sensitive(False)
-        self.installed_delete_button.set_sensitive(False)
 
     def can_be_closed(self):
         self.svc.get_action('show_plugins').set_active(False)
@@ -126,7 +200,7 @@ class PluginsView(PidaGladeView):
             return
 
         # fill fields
-        markup = self._get_item_markup(item)
+        markup = self.svc._get_item_markup(item)
         self.available_title.set_markup(markup)
         self.available_description.get_buffer().set_text(item.description)
         self.available_install_button.set_sensitive(True)
@@ -141,34 +215,48 @@ class PluginsView(PidaGladeView):
             return
 
         # fill fields
-        markup = self._get_item_markup(item)
+        markup = self.svc._get_item_markup(item)
         self.installed_title.set_markup(markup)
         self.installed_description.get_buffer().set_text(item.description)
         self.installed_delete_button.set_sensitive(True)
 
-    def _get_item_markup(self, item):
-        markup = '<b>%s</b>' % cgi.escape(item.name)
-        if item.require_version != '':
-            markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
-                    cgi.escape(item.require_version))
-        if item.version != '':
-            markup += '\n<b>%s</b> : %s' % (_('Version'),
-                    cgi.escape(item.version))
-        if item.author != '':
-            markup += '\n<b>%s</b> : %s' % (_('Author'),
-                    cgi.escape(item.author))
-        if item.category != '':
-            markup += '\n<b>%s</b> : %s' % (_('Category'),
-                    cgi.escape(item.category))
-        if item.depends != '':
-            markup += '\n<b>%s</b> : %s' % (_('Depends'),
-                    cgi.escape(item.depends))
-        return markup
+    def on_publish_directory__selection_changed(self, w):
+        directory = self.publish_directory.get_filename()
+        if self.svc.is_plugin_directory(directory):
+            self.item = self.svc.read_plugin_informations(directory)
+            self.item.directory = directory
+            self.publish_button.set_sensitive(True)
+            self.publish_edit_button.set_sensitive(True)
+            self.svc._viewedit.set_item(self.item)
+            self.update_publish_infos()
+        else:
+            self.item = None
+            self.publish_button.set_sensitive(False)
+            self.publish_edit_button.set_sensitive(False)
+            self.svc._viewedit.set_item(None)
+            self.update_publish_infos()
 
     def on_available_install_button__clicked(self, w):
         if not self._current:
             return
         self.svc.download(self._current)
+
+    def on_publish_button__clicked(self, w):
+        directory = self.publish_directory.get_filename()
+        login = self.publish_login.get_text()
+        password = self.publish_password.get_text()
+        self.svc.upload(directory, login, password)
+
+    def on_publish_edit_button__clicked(self, w):
+        self.svc.show_plugins_edit()
+
+    def update_publish_infos(self):
+        if self.item is None:
+            self.publish_infos.set_text('')
+            self.publish_description.get_buffer().set_text('')
+            return
+        self.publish_infos.set_markup(self.svc._get_item_markup(self.item))
+        self.publish_description.get_buffer().set_text(self.item.description)
 
     def start_pulse(self, title):
         self._pulsing = True
@@ -185,6 +273,24 @@ class PluginsView(PidaGladeView):
     def _pulse(self):
         self.available_progress.pulse()
         return self._pulsing
+
+    def start_publish_pulse(self, title):
+        self._publish_pulsing = True
+        self.publish_progress.set_text(title)
+        self.publish_progress.show_all()
+        self.publish_button.set_sensitive(False)
+        self.publish_edit_button.set_sensitive(False)
+        gobject.timeout_add(100, self._publish_pulse)
+
+    def stop_publish_pulse(self):
+        self.publish_progress.hide()
+        self.publish_button.set_sensitive(True)
+        self.publish_edit_button.set_sensitive(True)
+        self._publish_pulsing = False
+
+    def _publish_pulse(self):
+        self.publish_progress.pulse()
+        return self._publish_pulsing
 
 
 class PluginsActionsConfig(ActionsConfig):
@@ -223,6 +329,7 @@ class Plugins(Service):
 
     def pre_start(self):
         self._view = PluginsView(self)
+        self._viewedit = PluginsEditView(self)
         self.task = None
         self.plugin_path = self.boss._env.get_plugins_directory()
 
@@ -235,6 +342,12 @@ class Plugins(Service):
     def hide_plugins(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
+    def show_plugins_edit(self):
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._viewedit)
+
+    def hide_plugins_edit(self):
+        self.boss.cmd('window', 'remove_view', view=self._viewedit)
+
     def update_installed_plugins(self, start=False):
         service_loader = ServiceLoader()
         self._view.clear_installed()
@@ -242,8 +355,8 @@ class Plugins(Service):
 
         for item in l_installed:
             # read config
-            config = ConfigObj(item.servicefile_path)
-            plugin_item = PluginsItem(config['plugin'])
+            plugin_item = self.svc.read_plugin_informations(
+                    servicefile=item.servicefile_path)
             self._view.add_installed(plugin_item)
 
             # start mode
@@ -301,11 +414,99 @@ class Plugins(Service):
         plugin_path = os.path.join(self.plugin_path, item.plugin)
         self.boss._sm.start_plugin(plugin_path)
 
+    def upload(self, directory, login, password):
+        # first, check for a service.pida file
+        if not self.is_plugin_directory(directory):
+            return
+
+        # extract plugin name
+        plugin = os.path.basename(directory)
+
+        # get filelist
+        self._view.start_publish_pulse('Listing files')
+        skipped_directory = [ '.svn', 'CVS' ]
+        list = []
+        for top, names in walktree(top=directory,
+                skipped_directory=skipped_directory):
+            list.append(top)
+            for name in names:
+                list.append(os.path.join(top, name))
+
+        # remove some unattended files
+        skipped_extentions = [ 'swp', 'pyc' ]
+        list = [ name for name in list if name.split('.')[-1] not in skipped_extentions ]
+
+        # make tarfile
+        self._view.start_publish_pulse('Building package')
+        filename = os.tmpnam()
+        tar = tarfile.open(filename, 'w:gz')
+        for name in list:
+            arcname = os.path.join(plugin, name[len(directory):])
+            tar.add(name, arcname=arcname, recursive=False)
+        tar.close()
+
+        def upload_do(login, password, filename):
+            try:
+                f = open(filename, 'r')
+                data = f.read()
+                f.close()
+                proxy = xmlrpclib.ServerProxy(self.rpc_url)
+                code = proxy.plugins.push(login, password,
+                        base64.b64encode(data))
+                print _('Community response : '), code
+            except xmlrpclib.Fault, fault:
+                print _('Error while posting plugin : '), fault
+            finally:
+                os.unlink(filename)
+                self._view.stop_publish_pulse()
+
+        self._view.start_publish_pulse('Upload to community website')
+        task = AsyncTask(upload_do)
+        task.start(login, password, filename)
+
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
         if not action.get_active():
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
+
+    def is_plugin_directory(self, directory):
+        return os.path.exists(os.path.join(directory, 'service.pida'))
+
+    def read_plugin_informations(self, directory=None, servicefile=None):
+        if servicefile is None:
+            servicefile = os.path.join(directory, 'service.pida')
+        config = ConfigObj(servicefile)
+        return PluginsItem(config['plugin'])
+
+    def write_informations(self, item):
+        if not item.directory:
+            return
+        config = ConfigObj(os.path.join(item.directory, 'service.pida'))
+        section = config['plugin']
+        for key in [ 'plugin', 'name', 'author', 'version', 'require_pida',
+                'depends', 'category', 'description' ]:
+            section[key] = getattr(item, key)
+        config.write()
+
+    def _get_item_markup(self, item):
+        markup = '<b>%s</b>' % cgi.escape(item.name)
+        if item.version != '':
+            markup += '\n<b>%s</b> : %s' % (_('Version'),
+                    cgi.escape(item.version))
+        if item.author != '':
+            markup += '\n<b>%s</b> : %s' % (_('Author'),
+                    cgi.escape(item.author))
+        if item.category != '':
+            markup += '\n<b>%s</b> : %s' % (_('Category'),
+                    cgi.escape(item.category))
+        if item.depends != '':
+            markup += '\n<b>%s</b> : %s' % (_('Depends'),
+                    cgi.escape(item.depends))
+        if item.require_pida != '':
+            markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
+                    cgi.escape(item.require_pida))
+        return markup
 
 
 Service = Plugins
