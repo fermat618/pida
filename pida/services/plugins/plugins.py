@@ -27,6 +27,7 @@ import gobject
 import tarfile
 import os
 import base64
+import shutil
 
 from kiwi.ui.objectlist import Column
 from pida.ui.views import PidaGladeView
@@ -74,7 +75,7 @@ def walktree(top = ".", depthfirst = True, skipped_directory = []):
 
 class PluginsItem(object):
 
-    def __init__(self, infos):
+    def __init__(self, infos, directory=None):
         self.plugin = get_value(infos, 'plugin')
         self.require_pida = get_value(infos, 'require_pida')
         self.name = get_value(infos, 'name')
@@ -84,7 +85,7 @@ class PluginsItem(object):
         self.category = get_value(infos, 'category')
         self.url = get_value(infos, 'url')
         self.depends = get_value(infos, 'depends')
-        self.directory = None
+        self.directory = directory
 
 class PluginsEditItem(object):
 
@@ -150,6 +151,7 @@ class PluginsView(PidaGladeView):
     def create_ui(self):
         self._current = None
         self.item = None
+        self.installed_item = None
         self.plugins_dir = ''
         self.first_start = True
         self.installed_list.set_columns([
@@ -206,6 +208,7 @@ class PluginsView(PidaGladeView):
         self.available_install_button.set_sensitive(True)
 
     def on_installed_list__selection_changed(self, ot, item):
+        self.installed_item = item
 
         # no item, clear fields
         if item is None:
@@ -246,6 +249,16 @@ class PluginsView(PidaGladeView):
         login = self.publish_login.get_text()
         password = self.publish_password.get_text()
         self.svc.upload(directory, login, password)
+
+    def on_installed_delete_button__clicked(self, w):
+        if not self.installed_item:
+            return
+        if not self.installed_item.directory:
+            return
+        if not os.path.exists(self.installed_item.directory):
+            return
+        shutil.rmtree(self.installed_item.directory, True)
+        self.svc.update_installed_plugins()
 
     def on_publish_edit_button__clicked(self, w):
         self.svc.show_plugins_edit()
@@ -448,9 +461,9 @@ class Plugins(Service):
         def upload_do(login, password, filename):
             try:
                 try:
-                    f = open(filename, 'r')
-                    data = f.read()
-                    f.close()
+                    file = open(filename, 'rb')
+                    data = file.read()
+                    file.close()
                     proxy = xmlrpclib.ServerProxy(self.rpc_url)
                     code = proxy.plugins.push(login, password,
                             base64.b64encode(data))
@@ -478,7 +491,8 @@ class Plugins(Service):
         if servicefile is None:
             servicefile = os.path.join(directory, 'service.pida')
         config = ConfigObj(servicefile)
-        return PluginsItem(config['plugin'])
+        return PluginsItem(config['plugin'],
+                directory=os.path.dirname(servicefile))
 
     def write_informations(self, item):
         if not item.directory:
