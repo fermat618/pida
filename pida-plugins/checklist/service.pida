@@ -1,0 +1,10 @@
+[plugin]
+plugin = 'checklist'
+name = 'Todo manager'
+version = 0.1
+author = 'Mathieu Virbel <tito@bankiz.org>'
+require_pida = '0.5'
+depends = 'gtk'
+description = 'Manage a personnal todo list per project'
+website =
+category = 'user'
