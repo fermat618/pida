@@ -38,6 +38,7 @@ from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader
+from pida.core.options import OptionItem, manager, OTypeStringList
 
 from pida.utils.web import fetch_url
 from pida.utils.configobj import ConfigObj
@@ -75,7 +76,7 @@ def walktree(top = ".", depthfirst = True, skipped_directory = []):
 
 class PluginsItem(object):
 
-    def __init__(self, infos, directory=None):
+    def __init__(self, infos, directory=None, enabled=False):
         self.plugin = get_value(infos, 'plugin')
         self.require_pida = get_value(infos, 'require_pida')
         self.name = get_value(infos, 'name')
@@ -86,6 +87,7 @@ class PluginsItem(object):
         self.url = get_value(infos, 'url')
         self.depends = get_value(infos, 'depends')
         self.directory = directory
+        self.enabled = enabled
 
 class PluginsEditItem(object):
 
@@ -157,7 +159,8 @@ class PluginsView(PidaGladeView):
         self.installed_list.set_columns([
             Column('name', title=_('Plugin'), sorted=True, data_type=str,
                 expand=True),
-            Column('version', title=_('Version'), data_type=str),
+            Column('enabled', title=_('Enabled'), data_type=bool,
+                editable=True)
             ])
         self.available_list.set_columns([
             Column('name', title=_('Plugin'), sorted=True, data_type=str,
@@ -243,6 +246,17 @@ class PluginsView(PidaGladeView):
         if not self._current:
             return
         self.svc.download(self._current)
+
+    def on_installed_list__cell_edited(self, w, item, value):
+        if value != 'enabled':
+            return
+        if not item.directory:
+            return
+        if item.enabled:
+            self.svc.boss.start_plugin(item.directory)
+        else:
+            self.svc.boss.stop_plugin(item.plugin)
+        self.svc.save_running_plugin()
 
     def on_publish_button__clicked(self, w):
         directory = self.publish_directory.get_filename()
@@ -345,12 +359,16 @@ class Plugins(Service):
         self._viewedit = PluginsEditView(self)
         self.task = None
         self.plugin_path = self.boss._env.get_plugins_directory()
+        self._start_list = OptionItem('plugins', 'start_list', _('Start plugin list'),
+                OTypeStringList, [], _('List of plugin to start'), None)
+        manager.register_option(self._start_list)
 
     def start(self):
         self.update_installed_plugins(start=True)
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+        self.update_installed_plugins()
 
     def hide_plugins(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
@@ -365,17 +383,23 @@ class Plugins(Service):
         service_loader = ServiceLoader()
         self._view.clear_installed()
         l_installed = service_loader.get_all_services([self.plugin_path])
+        if start:
+            start_list = manager.get_value(self._start_list)
 
         for item in l_installed:
             # read config
             plugin_item = self.read_plugin_informations(
                     servicefile=item.servicefile_path)
-            self._view.add_installed(plugin_item)
 
             # start mode
             if start:
+                if item.servicename not in start_list:
+                    continue
                 plugin_path = os.path.dirname(item.servicefile_path)
-                self.boss._sm.start_plugin(plugin_path)
+                self.boss.start_plugin(plugin_path)
+                plugin_item.enabled = True
+
+            self._view.add_installed(plugin_item)
 
     def fetch_available_plugins(self):
         if self.task:
@@ -425,7 +449,7 @@ class Plugins(Service):
 
         # start service
         plugin_path = os.path.join(self.plugin_path, item.plugin)
-        self.boss._sm.start_plugin(plugin_path)
+        self.boss.start_plugin(plugin_path)
 
     def upload(self, directory, login, password):
         # first, check for a service.pida file
@@ -503,6 +527,10 @@ class Plugins(Service):
                 'depends', 'category', 'description' ]:
             section[key] = getattr(item, key)
         config.write()
+
+    def save_running_plugin(self):
+        list = [plugin.servicename for plugin in self.boss.get_plugins()]
+        manager.set_value(self._start_list, list)
 
     def _get_item_markup(self, item):
         markup = '<b>%s</b>' % cgi.escape(item.name)
