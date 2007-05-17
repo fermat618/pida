@@ -107,10 +107,17 @@ class PidaWindow(Window):
     def add_uidef(self, filename):
         try:
             uifile = get_uidef_path(filename)
-            self._uim.add_ui_from_file(uifile)
+            return self._uim.add_ui_from_file(uifile)
         except Exception, e:
             self._boss.log.debug('unable to get %s resource: %s' %
                                 (filename, e))
+
+    def remove_action_group(self, actiongroup):
+        self._uim.remove_action_group(actiongroup)
+        
+    def remove_uidef(self, ui_merge_id):
+        if ui_merge_id is not None:
+            self._uim.remove_ui(ui_merge_id)
 
     # View API
     def add_view(self, bookname, view, removable=True, present=False):

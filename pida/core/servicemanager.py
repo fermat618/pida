@@ -101,6 +101,7 @@ class ServiceManager(object):
         self._boss = boss
         self._loader = ServiceLoader()
         self._reg = Registry()
+        self._plugin_objects = {}
 
     def get_service(self, name):
         return self._reg.get_singleton(name)
@@ -137,6 +138,20 @@ class ServiceManager(object):
         else:
             self._boss.log.error('Unable to load plugin from %s' % plugin_path)
 
+    def stop_plugin(self, plugin_name):
+        plugin = self.get_service(plugin_name)
+        if plugin is not None:
+            # Check plugin is a plugin not a service
+            if plugin in self.get_plugins():
+                plugin.log_debug('Stopping')
+                plugin.stop_components()
+                plugin.stop()
+                self._reg.unregister(self._plugin_objects[plugin_name])
+            else:
+                self._boss.log.error('ServiceManager: Cannot stop services')
+        else:
+            self._boss.log.error('ServiceManager: Cannot find plugin %s' % plugin_name)
+
     def _register_services(self):
         for svc in self._loader.load_all_services(
                 self._boss.get_service_dirs(), self._boss):
@@ -154,7 +169,7 @@ class ServiceManager(object):
         )
 
     def _register_plugin(self, plugin):
-        self._reg.register_plugin(
+        plugin_object = self._reg.register_plugin(
             instance=plugin,
             singletons=(
                 plugin.servicename,
@@ -164,6 +179,7 @@ class ServiceManager(object):
                 IPlugin,
             )
         )
+        self._plugin_objects[plugin.servicename] = plugin_object
 
     def _create_services(self):
         for svc in self.get_services():

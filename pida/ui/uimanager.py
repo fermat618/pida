@@ -44,6 +44,11 @@ class PidaUIManager(object):
         self._ags[group.get_name()] = group
         self.ensure_update()
 
+    def remove_action_group(self, group):
+        self._uim.remove_action_group(group)
+        del self._ags[group.get_name()]
+        self.ensure_update()
+
     def get_toolbar(self):
         return self._uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
 
@@ -51,11 +56,17 @@ class PidaUIManager(object):
         return self._uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
 
     def add_ui_from_file(self, path):
-        self._uim.add_ui_from_file(path)
+        merge_id = self._uim.add_ui_from_file(path)
         self.ensure_update()
+        return merge_id
 
     def add_ui_from_string(self, string):
-        self._uim.add_ui_from_string(string) 
+        merge_id = self._uim.add_ui_from_string(string) 
+        self.ensure_update()
+        return merge_id
+
+    def remove_ui(self, ui_merge_id):
+        self._uim.remove_ui(ui_merge_id)
         self.ensure_update()
         
     def ensure_update(self):

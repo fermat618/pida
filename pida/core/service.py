@@ -65,6 +65,12 @@ class Service(object):
     def stop(self):
         """Override to stop service"""
 
+    def stop_components(self):
+        # Will remove everything
+        self._unsubscribe_foreign_events()
+        self._unsubscribe_foreign_features()
+        self._unregister_actions_config()
+
     ##########
     # Options
 
@@ -123,6 +129,9 @@ class Service(object):
     def _subscribe_foreign_events(self):
         self._get_events().subscribe_foreign_events()
 
+    def _unsubscribe_foreign_events(self):
+        self._get_events().unsubscribe_foreign_events()
+
     # Public Events API
     def _get_events(self):
         return self.reg.get_singleton(IEvents)
@@ -133,8 +142,15 @@ class Service(object):
     def subscribe_foreign_event(self, servicename, name, callback):
         self.boss.subscribe_event(servicename, name, callback)
 
+    def unsubscribe_foreign_event(self, servicename, name, callback):
+        self.boss.unsubscribe_event(servicename, name, callback)
+
     def subscribe_event(self, name, callback):
         self._get_events().subscribe_event(name, callback)
+
+    def unsubscribe_event(self, name, callback):
+        self._get_events().unsubscribe_event(name, callback)
+        
 
     def emit(self, name, **kw):
         self._get_events().emit(name, **kw)
@@ -151,6 +167,9 @@ class Service(object):
     def _subscribe_foreign_features(self):
         self._get_features().subscribe_foreign_features()
 
+    def _unsubscribe_foreign_features(self):
+        self._get_features().unsubscribe_foreign_features()
+
     def _get_features(self):
         return self.reg.get_singleton(IFeatures)
 
@@ -160,10 +179,16 @@ class Service(object):
         return self._get_features().list_features()
 
     def subscribe_feature(self, feature, instance):
-        self._get_features().subscribe_feature(feature, instance)
+        return self._get_features().subscribe_feature(feature, instance)
+
+    def unsubscribe_feature(self, feature_object):
+        self._get_features().unsubscribe_feature(feature_object)
 
     def subscribe_foreign_feature(self, servicename, feature, instance):
-        self.boss.subscribe_feature(servicename, feature, instance)
+        return self.boss.subscribe_feature(servicename, feature, instance)
+
+    def unsubscribe_foreign_feature(self, servicename, feature_object):
+        self.boss.unsubscribe_feature(servicename, feature_object)
 
     def features(self, name):
         return self._get_features().get_feature_providers(name)
@@ -176,6 +201,9 @@ class Service(object):
             instance = config_cls(self),
             singletons=(IActions,)
         )
+
+    def _unregister_actions_config(self):
+        self._get_actions().remove_actions()
 
     def _subscribe_keyboard_shortcuts(self):
         self._get_actions().subscribe_keyboard_shortcuts()

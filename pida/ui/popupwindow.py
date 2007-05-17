@@ -53,6 +53,8 @@ class PopupEntryWindow(PopupWindow):
         self._preview_text = gtk.TextView()
         self._preview_text.set_left_margin(6)
         self._preview_text.set_right_margin(6)
+        self._preview_text.set_cursor_visible(False)
+        self._preview_text.set_editable(False)
         #self._preview_text.set_app_paintable(True)
         #self._preview_text.connect('expose-event', self._on_preview_text_expose_event)
         #w = gtk.Window()
@@ -139,8 +141,7 @@ class MockSnippet(object):
         #from string import Template
         #self._t = Template('<$tag class="$class">\n</$tag>')
         from jinja import from_string
-        self._t = from_string("""<{{ tag }}{% if class %} class="{{ class
-        }}"{% endif %}>\n</{{ tag }}>""")
+        self._t = from_string("""<{{ tag }}{% if class %} class="{{ class }}"{% endif %}>\n</{{ tag }}>""")
 
         #self._defaults = {'class': '', 'extra': ''}
         self._t = from_string(

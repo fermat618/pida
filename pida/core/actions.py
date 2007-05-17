@@ -88,7 +88,7 @@ class ActionsConfig(BaseConfig):
         self._keyboard_options = {}
         self.create_actions()
         if self.svc.boss is not None:
-            self.svc.boss.add_action_group_and_ui(
+            self.ui_merge_id = self.svc.boss.add_action_group_and_ui(
                 self._actions,
                 '%s.xml' % self.svc.get_name()
             )
@@ -101,6 +101,9 @@ class ActionsConfig(BaseConfig):
         with a call to create_action. These actions will be added to the action
         group for the service, and can be used for any purpose.
         """
+
+    def remove_actions(self):
+        self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
 
     def create_action(self, name, atype, label, tooltip, stock_id,
                       callback=None, accel_string='NOACCEL'):

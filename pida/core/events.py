@@ -113,6 +113,7 @@ class EventsConfig(BaseConfig):
 
     def create(self):
         self._events = Event()
+        self._foreign_events = {}
         self.create_events()
 
     def create_events(self):
@@ -125,10 +126,18 @@ class EventsConfig(BaseConfig):
         """Subscribe to events here"""
 
     def subscribe_foreign_event(self, servicename, event, callback):
+        self._foreign_events[(servicename, event)] = callback
         self.svc.subscribe_foreign_event(servicename, event, callback)
+
+    def unsubscribe_foreign_events(self):
+        for (servicename, eventname), callback in self._foreign_events.items():
+            self.svc.unsubscribe_foreign_event(servicename, eventname, callback)
 
     def subscribe_event(self, event, callback):
         self._events.register(event, callback)
+
+    def unsubscribe_event(self, event, callback):
+        self._events.unregister(event, callback)
 
     def get(self, event):
         return self._events.get(event)

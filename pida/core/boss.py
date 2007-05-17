@@ -69,17 +69,38 @@ class Boss(object):
 
     editor = property(get_editor)
 
+    def get_plugins(self):
+        return self._sm.get_plugins()
+
+    def start_plugin(self, plugin_path):
+        return self._sm.start_plugin(plugin_path)
+
+    def stop_plugin(self, plugin_name):
+        return self._sm.stop_plugin(plugin_name)
+
     def subscribe_event(self, servicename, event, callback):
         svc = self.get_service(servicename)
         svc.subscribe_event(event, callback)
 
+    def unsubscribe_event(self, servicename, event, callback):
+        svc = self.get_service(servicename)
+        svc.unsubscribe_event(event, callback)
+
     def subscribe_feature(self, servicename, feature, instance):
         svc = self.get_service(servicename)
-        svc.subscribe_feature(feature, instance)
+        return svc.subscribe_feature(feature, instance)
+
+    def unsubscribe_feature(self, servicename, feature_object):
+        svc = self.get_service(servicename)
+        svc.unsubscribe_feature(feature_object)
 
     def add_action_group_and_ui(self, actiongroup, uidef):
         self._window.add_action_group(actiongroup)
-        self._window.add_uidef(uidef)
+        return self._window.add_uidef(uidef)
+
+    def remove_action_group_and_ui(self, actiongroup, ui_merge_id):
+        self._window.remove_uidef(ui_merge_id)
+        self._window.remove_action_group(actiongroup)
 
     def cmd(self, servicename, commandname, **kw):
         return self.get_service(servicename).cmd(commandname, **kw)

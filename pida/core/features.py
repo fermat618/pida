@@ -29,6 +29,7 @@ class FeaturesConfig(BaseConfig):
     def create(self):
         self._features = Registry()
         self._featurenames = []
+        self._foreign_feature_objects = {}
         self.create_features()
 
     def create_features(self):
@@ -43,14 +44,22 @@ class FeaturesConfig(BaseConfig):
     def subscribe_foreign_features(self):
         """Subscribe to features here"""
 
+    def unsubscribe_foreign_features(self):
+        for (servicename, featurename), feature_object in self._foreign_feature_objects.items():
+            self.svc.unsubscribe_foreign_feature(servicename, feature_object)
+
     def subscribe_foreign_feature(self, servicename, featurename, instance):
-        self.svc.subscribe_foreign_feature(servicename, featurename, instance)
+        feature_object = self.svc.subscribe_foreign_feature(servicename, featurename, instance)
+        self._foreign_feature_objects[(servicename, featurename)] = feature_object
 
     def subscribe_feature(self, featurename, instance):
-        self._features.register_plugin(
+        return self._features.register_plugin(
             instance=instance,
             features=(featurename,)
         )
+
+    def unsubscribe_feature(self, feature_object):
+        self._features.unregister(feature_object)
 
     def get_feature_providers(self, featurename):
         return self._features.get_features(featurename)
