@@ -271,6 +271,11 @@ class PluginsView(PidaGladeView):
             return
         if not os.path.exists(self.installed_item.directory):
             return
+        if not self.svc.boss.get_window().yesno_dlg(
+            _('Are you sure to delete "%s" plugin ?' % self.installed_item.name)):
+            return
+        if self.installed_item.plugin in self.svc.boss.get_plugins():
+            self.svc.boss.stop_plugin(self.installed_item.plugin)
         shutil.rmtree(self.installed_item.directory, True)
         self.svc.update_installed_plugins()
 
@@ -385,11 +390,16 @@ class Plugins(Service):
         l_installed = service_loader.get_all_services([self.plugin_path])
         if start:
             start_list = manager.get_value(self._start_list)
+        running_list = [plugin.servicename for plugin in
+                self.boss.get_plugins()]
 
         for item in l_installed:
             # read config
             plugin_item = self.read_plugin_informations(
                     servicefile=item.servicefile_path)
+
+            if plugin_item.plugin in running_list:
+                plugin_item.enabled = True
 
             # start mode
             if start:
