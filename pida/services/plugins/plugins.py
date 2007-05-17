@@ -183,11 +183,11 @@ class PluginsView(PidaGladeView):
     def on_available_refresh_button__clicked(self, w):
         self.svc.fetch_available_plugins()
 
-    def on_notebook__switch_page(self, notebook, pointer, index):
+    def after_notebook__switch_page(self, notebook, pointer, index):
         if index == 1:
             if self.first_start:
                 self.first_start = False
-                self.svc.fetch_available_plugins()
+                gcall(self.svc.fetch_available_plugins)
         else:
             self.svc.update_installed_plugins()
 
