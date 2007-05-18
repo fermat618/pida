@@ -159,6 +159,9 @@ class Trac(Service):
             action.set_active(True)
         self.boss.cmd('window', 'presnet_view', view=self._view)
 
+    def stop(self):
+        if self.get_action('show_trac').get_active():
+            self.hide_trac()
 
 
 # Required Service attribute for service loading
