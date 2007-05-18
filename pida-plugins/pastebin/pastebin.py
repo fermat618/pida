@@ -404,7 +404,7 @@ class Pastebin(Service):
         ]
 
     def stop(self):
-        if self.get_action('new_paste').get_active():
+        if not self.get_action('new_paste').get_sensitive():
             self._close_paste_editor()
         if self.get_action('show_pastes').get_active():
             self.hide_pastes()
