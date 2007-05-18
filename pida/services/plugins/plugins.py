@@ -274,7 +274,9 @@ class PluginsView(PidaGladeView):
         if not self.svc.boss.get_window().yesno_dlg(
             _('Are you sure to delete "%s" plugin ?' % self.installed_item.name)):
             return
-        if self.installed_item.plugin in self.svc.boss.get_plugins():
+        running_list = [plugin.servicename for plugin in
+                self.svc.boss.get_plugins()]
+        if self.installed_item.plugin in running_list:
             self.svc.boss.stop_plugin(self.installed_item.plugin)
         shutil.rmtree(self.installed_item.directory, True)
         self.svc.update_installed_plugins()
