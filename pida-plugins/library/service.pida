@@ -1,0 +1,9 @@
+[plugin]
+plugin = library
+name = Documentations
+author = Ali Aafshar <aafshar@gmail.com>
+version = 0.2
+require_pida = 0.5
+depends = "os, gzip, tempfile, threading, xml.sax, xml.com.minidom"
+category = documentation
+description = Browse local docbook

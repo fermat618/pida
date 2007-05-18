@@ -347,6 +347,13 @@ class Library(Service):
         self.ensure_browser_visible()
         self._browser.fetch(url)
 
+    def stop(self):
+        if self.get_action('show_library').get_active():
+            self.hide_library()
+        if self.get_action('show_browser').get_active():
+            self.hide_browser()
+
+
 # Required Service attribute for service loading
 Service = Library
 
