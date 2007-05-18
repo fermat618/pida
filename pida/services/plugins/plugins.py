@@ -265,21 +265,7 @@ class PluginsView(PidaGladeView):
         self.svc.upload(directory, login, password)
 
     def on_installed_delete_button__clicked(self, w):
-        if not self.installed_item:
-            return
-        if not self.installed_item.directory:
-            return
-        if not os.path.exists(self.installed_item.directory):
-            return
-        if not self.svc.boss.get_window().yesno_dlg(
-            _('Are you sure to delete "%s" plugin ?' % self.installed_item.name)):
-            return
-        running_list = [plugin.servicename for plugin in
-                self.svc.boss.get_plugins()]
-        if self.installed_item.plugin in running_list:
-            self.svc.boss.stop_plugin(self.installed_item.plugin)
-        shutil.rmtree(self.installed_item.directory, True)
-        self.svc.update_installed_plugins()
+        self.svc.delete(self.installed_item)
 
     def on_publish_edit_button__clicked(self, w):
         self.svc.show_plugins_edit()
@@ -369,9 +355,10 @@ class Plugins(Service):
         self._start_list = OptionItem('plugins', 'start_list', _('Start plugin list'),
                 OTypeStringList, [], _('List of plugin to start'), None)
         manager.register_option(self._start_list)
+        self.update_installed_plugins(start=True)
 
     def start(self):
-        self.update_installed_plugins(start=True)
+        self.update_installed_plugins()
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -410,8 +397,8 @@ class Plugins(Service):
                 plugin_path = os.path.dirname(item.servicefile_path)
                 self.boss.start_plugin(plugin_path)
                 plugin_item.enabled = True
-
-            self._view.add_installed(plugin_item)
+            else:
+                self._view.add_installed(plugin_item)
 
     def fetch_available_plugins(self):
         if self.task:
@@ -450,10 +437,19 @@ class Plugins(Service):
 
     def install(self, item, content):
         # write plugin
+        plugin_path = os.path.join(self.plugin_path, item.plugin)
         filename = os.path.join(self.plugin_path, os.path.basename(item.url))
         file = open(filename, 'wb')
         file.write(content)
         file.close()
+
+        # check if we need to stop and remove him
+        service_loader = ServiceLoader()
+        l_installed = [service.servicename for service in
+                service_loader.get_all_services([self.plugin_path])]
+        item.directory = plugin_path
+        if item.plugin in l_installed:
+            self.delete(item, force=True)
 
         # extract him
         tar = tarfile.open(filename, 'r:gz')
@@ -463,8 +459,25 @@ class Plugins(Service):
         os.unlink(filename)
 
         # start service
-        plugin_path = os.path.join(self.plugin_path, item.plugin)
         self.boss.start_plugin(plugin_path)
+
+    def delete(self, item, force=False):
+        if not item:
+            return
+        if not item.directory:
+            return
+        if not os.path.exists(item.directory):
+            return
+        if not force:
+            if not self.boss.get_window().yesno_dlg(
+                _('Are you sure to delete "%s" plugin ?' % item.name)):
+                return
+        running_list = [plugin.servicename for plugin in
+                self.boss.get_plugins()]
+        if item.plugin in running_list:
+            self.boss.stop_plugin(item.plugin)
+        shutil.rmtree(item.directory, True)
+        self.update_installed_plugins()
 
     def upload(self, directory, login, password):
         # first, check for a service.pida file
