@@ -279,6 +279,12 @@ class Rfc(Service):
     def browse(self, id):
         self.boss.cmd('webbrowser', 'browse', url=(self.url_rfctmpl + id))
 
+    def stop(self):
+        if self.task != None:
+            self.task.stop()
+        if self.get_action('show_rfc').get_active():
+            self.hide_rfc()
+
 
 
 # Required Service attribute for service loading
