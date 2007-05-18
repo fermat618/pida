@@ -151,7 +151,11 @@ class Todo(Service):
         if self._current is not None:
             task = GeneratorTask(self.check_current, self.add_todo_item)
             task.start()
-            
+
+    def stop(self):
+        if self.get_action('show_todo').get_active():
+            self.hide_todo()
+
 
 # Required Service attribute for service loading
 Service = Todo
