@@ -428,10 +428,13 @@ class Plugins(Service):
 
     def _fetch_available_plugins(self):
         self._view.start_pulse(_('Download available plugins'))
-        proxy = xmlrpclib.ServerProxy(self.rpc_url)
-        list = proxy.plugins.list()
-        for item in list:
-            yield item
+        try:
+            proxy = xmlrpclib.ServerProxy(self.rpc_url)
+            list = proxy.plugins.list()
+            for item in list:
+                yield item
+        except:
+            pass
 
     def download(self, item):
         if not item.url or item.url == '':
@@ -488,11 +491,11 @@ class Plugins(Service):
         filename = os.tmpnam()
         tar = tarfile.open(filename, 'w:gz')
         for name in list:
-            arcname = os.path.join(plugin, name[len(directory):])
+            arcname = plugin + name[len(directory):]
             tar.add(name, arcname=arcname, recursive=False)
         tar.close()
 
-        def upload_do(login, password, filename):
+        def upload_do(login, password, plugin, filename):
             try:
                 try:
                     file = open(filename, 'rb')
@@ -500,17 +503,19 @@ class Plugins(Service):
                     file.close()
                     proxy = xmlrpclib.ServerProxy(self.rpc_url)
                     code = proxy.plugins.push(login, password,
-                            base64.b64encode(data))
+                            plugin, base64.b64encode(data))
                     print _('Community response : '), code
                 except xmlrpclib.Fault, fault:
                     print _('Error while posting plugin : '), fault
+                except:
+                    pass
             finally:
                 os.unlink(filename)
                 self._view.stop_publish_pulse()
 
         self._view.start_publish_pulse('Upload to community website')
         task = AsyncTask(upload_do)
-        task.start(login, password, filename)
+        task.start(login, password, plugin, filename)
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
