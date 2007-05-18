@@ -2,7 +2,7 @@
 plugin = python
 name = Python
 author = Ali Aafshar <aafshar@gmail.com>
-version = 0.2
+version = 0.2.1
 require_pida = 0.5
 depends = "sys,compiler,gtk,fastparser"
 category = code
