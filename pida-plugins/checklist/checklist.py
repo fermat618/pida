@@ -314,6 +314,10 @@ class Checklist(Service):
         self.boss.cmd('project', 'save_to_current_project',
                 section_name='checklist', section_data=data)
 
+    def stop(self):
+        if self.get_action('show_checklist').get_active():
+            self.hide_checklist()
+
 
 # Required Service attribute for service loading
 Service = Checklist
