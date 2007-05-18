@@ -292,6 +292,12 @@ class Gtags(Service):
         self._task = GeneratorSubprocessTask(_line)
         self._task.start(cmd, cwd=self._project.source_directory, shell=True)
 
+    def stop(self):
+        if self._task:
+            self._task.stop()
+        if self.get_action('show_gtags').get_active():
+            self.hide_gtags()
+
 
 # Required Service attribute for service loading
 Service = Gtags
