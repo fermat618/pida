@@ -187,6 +187,12 @@ class Man(Service):
         self.task = GeneratorSubprocessTask(_line)
         self.task.start(cmd, shell=True)
 
+    def stop(self):
+        if self.task:
+            self.task.stop()
+        if self.get_action('show_man').get_active():
+            self.hide_man()
+
 
 # Required Service attribute for service loading
 Service = Man
