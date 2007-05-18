@@ -435,6 +435,12 @@ class Python(Service):
         self.boss.cmd('window', 'remove_view',
             view=self._pysource.get_view())
 
+    def stop(self):
+        if self.get_action('show_source').get_active():
+            self.hide_source()
+        if self.get_action('show_errors').get_active():
+            self.hide_errors()
+
 # Required Service attribute for service loading
 Service = Python
 
