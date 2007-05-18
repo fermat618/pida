@@ -431,8 +431,8 @@ class Plugins(Service):
         try:
             proxy = xmlrpclib.ServerProxy(self.rpc_url)
             list = proxy.plugins.list()
-            for item in list:
-                yield item
+            for k in list:
+                yield list[k]
         except:
             pass
 

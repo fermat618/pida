@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Wed May 16 19:36:48 2007 by tito@lio-->
+<!--Generated with glade3 3.2.0 on Fri May 18 11:56:53 2007 by tito@pcmathieu-->
 <glade-interface>
   <widget class="GtkWindow" id="plugins-manager">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -318,6 +318,7 @@ and upload it on community website :
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                    <property name="visibility">False</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -429,7 +430,7 @@ and upload it on community website :
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="border_width">15</property>
+                <property name="border_width">10</property>
                 <child>
                   <widget class="GtkHBox" id="hbox3">
                     <property name="visible">True</property>
@@ -460,13 +461,11 @@ and upload it on community website :
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="padding">10</property>
                 <property name="position">4</property>
               </packing>
             </child>
             <child>
               <widget class="GtkProgressBar" id="publish_progress">
-                <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="text" translatable="yes"></property>
               </widget>
