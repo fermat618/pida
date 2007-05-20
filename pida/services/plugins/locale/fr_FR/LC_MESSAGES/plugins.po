@@ -1,0 +1,156 @@
+# PIDA.
+# Copyright (C) The PIDA Team
+# This file is distributed under the same license as the PIDA package.
+# Mathieu Virbel <tito@bankiz.org>, 2007.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-20 23:18+0200\n"
+"PO-Revision-Date: 2007-05-20 23:18+0200\n"
+"Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: glade/plugins-manager.glade.h:1
+msgid ""
+"<b>Publish your plugin</b>\n"
+"\n"
+"You can create a package plugin, \n"
+"and upload it on community website : \n"
+"<i>http://pida.co.uk/community/</i>"
+msgstr "<b>Publier votre plugin>/b>\n"
+"\n"
+"Vous pouvez créer votre paquet, \n"
+"et le mettre à disposition sur le \n"
+"site web communautaire : \n"
+"<i>http://pida.co.uk/community</i>"
+
+#: glade/plugins-manager.glade.h:6
+msgid "Available plugins"
+msgstr "Plugins disponibles"
+
+#: glade/plugins-manager.glade.h:7 plugins.py:436
+msgid "Download available plugins"
+msgstr "Télécharger les plugins disponibles"
+
+#: glade/plugins-manager.glade.h:8
+msgid "Install/Upgrade"
+msgstr "Installer"
+
+#: glade/plugins-manager.glade.h:9
+msgid "Installed plugins"
+msgstr "Plugins installés"
+
+#: glade/plugins-manager.glade.h:10
+msgid "Login"
+msgstr "Identifiant"
+
+#: glade/plugins-manager.glade.h:11
+msgid "Make package and upload"
+msgstr "Construire le paquet et le publier"
+
+#: glade/plugins-manager.glade.h:12 plugins.py:210 plugins.py:226
+msgid "No plugin selected"
+msgstr "Aucun plugin sélectionné"
+
+#: glade/plugins-manager.glade.h:13
+msgid "Password"
+msgstr "Mot de passe"
+
+#: glade/plugins-manager.glade.h:14
+msgid "Plugin directory"
+msgstr "Répertoire du plugin"
+
+#: glade/plugins-manager.glade.h:15
+msgid "Publish"
+msgstr "Publier"
+
+#: plugins.py:111
+msgid "Edit a plugin"
+msgstr "Editer le plugin"
+
+#: plugins.py:116 plugins.py:128
+msgid "Name"
+msgstr "Nom"
+
+#: plugins.py:117
+msgid "Value"
+msgstr "Valeur"
+
+#: plugins.py:130
+msgid "Plugin long name"
+msgstr "Nom (long) du plugin"
+
+#: plugins.py:132 plugins.py:596
+msgid "Author"
+msgstr "Auteur"
+
+#: plugins.py:134 plugins.py:176 plugins.py:593
+msgid "Version"
+msgstr "Version"
+
+#: plugins.py:136 plugins.py:602
+msgid "Depends"
+msgstr "Dépendances"
+
+#: plugins.py:138
+msgid "Require PIDA version"
+msgstr "Version requise de PIDA"
+
+#: plugins.py:139 plugins.py:599
+msgid "Category"
+msgstr "Catégorie"
+
+#: plugins.py:141
+msgid "Description"
+msgstr "Description"
+
+#: plugins.py:158 plugins.py:329
+msgid "Plugins manager"
+msgstr "Gestionnaire de plugins"
+
+#: plugins.py:168 plugins.py:174
+msgid "Plugin"
+msgstr "Plugin"
+
+#: plugins.py:170
+msgid "Enabled"
+msgstr "Activer"
+
+#: plugins.py:330
+msgid "Show the plugins manager"
+msgstr "Afficher le gestionnaire de plugin"
+
+#: plugins.py:363
+msgid "Start plugin list"
+msgstr "Liste des plugins à démarrer"
+
+#: plugins.py:364
+msgid "List of plugin to start"
+msgstr "Liste des plugins à démarrer"
+
+#: plugins.py:456
+#, python-format
+msgid "Download %s"
+msgstr "Télécharger %s"
+
+#: plugins.py:498
+#, python-format
+msgid "Are you sure to delete \"%s\" plugin ?"
+msgstr "Etes-vous sûr de vouloir supprimer le plugin \"%s\" ?"
+
+#: plugins.py:547
+msgid "Community response : "
+msgstr "Réponse du site web : "
+
+#: plugins.py:549
+msgid "Error while posting plugin : "
+msgstr "Error à la publication : "
+
+#: plugins.py:605
+msgid "Require PIDA"
+msgstr "Version de PIDA"
