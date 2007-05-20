@@ -76,7 +76,8 @@ def walktree(top = ".", depthfirst = True, skipped_directory = []):
 
 class PluginsItem(object):
 
-    def __init__(self, infos, directory=None, enabled=False):
+    def __init__(self, infos, directory=None, enabled=False, isnew=False):
+        self.isnew = isnew
         self.plugin = get_value(infos, 'plugin')
         self.require_pida = get_value(infos, 'require_pida')
         self.name = get_value(infos, 'name')
@@ -88,6 +89,13 @@ class PluginsItem(object):
         self.depends = get_value(infos, 'depends')
         self.directory = directory
         self.enabled = enabled
+
+    def get_markup(self):
+        if self.isnew:
+            return '<span color="red"><b>!N</b></span> %s' % self.name
+        return self.name
+
+    markup = property(get_markup)
 
 class PluginsEditItem(object):
 
@@ -163,8 +171,8 @@ class PluginsView(PidaGladeView):
                 editable=True)
             ])
         self.available_list.set_columns([
-            Column('name', title=_('Plugin'), sorted=True, data_type=str,
-                expand=True),
+            Column('markup', title=_('Plugin'), sorted=True, data_type=str,
+                expand=True, use_markup=True),
             Column('version', title=_('Version'), data_type=str),
             ])
 
@@ -404,8 +412,8 @@ class Plugins(Service):
         if self.task:
             self.task.stop()
 
-        def add_in_list(list):
-            self._view.add_available(PluginsItem(list))
+        def add_in_list(list, isnew):
+            self._view.add_available(PluginsItem(list, isnew=isnew))
 
         def stop_pulse():
             self._view.stop_pulse()
@@ -416,12 +424,29 @@ class Plugins(Service):
         self.task.start()
 
     def _fetch_available_plugins(self):
+        # get installed items
+        service_loader = ServiceLoader()
+        l_installed = service_loader.get_all_services([self.plugin_path])
+        installed_list = []
+        for item in l_installed:
+            plugin_item = self.read_plugin_informations(
+                    servicefile=item.servicefile_path)
+            installed_list.append(plugin_item)
+
         self._view.start_pulse(_('Download available plugins'))
         try:
             proxy = xmlrpclib.ServerProxy(self.rpc_url)
             list = proxy.plugins.list()
             for k in list:
-                yield list[k]
+                item = list[k]
+                inst = None
+                isnew = False
+                for plugin in installed_list:
+                    if plugin.plugin == item['plugin']:
+                        inst = plugin
+                if inst is not None:
+                    isnew = (inst.version != item['version'])
+                yield item, isnew
         except:
             pass
 
