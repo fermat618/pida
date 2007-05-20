@@ -20,51 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-
-
-
-# PIDA Imports
-from pida.core.service import Service
-from pida.core.features import FeaturesConfig
-from pida.core.commands import CommandsConfig
-from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, otype_string_options_factory
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-
-# locale
-from pida.core.locale import Locale
-locale = Locale('editor')
-_ = locale.gettext
-
-class EditorOptionsConfig(OptionsConfig):
-
-    def create_options(self):
-        self.create_option(
-            'editor_type',
-            _('Editor Type'),
-            otype_string_options_factory(['vim', 'emacs']),
-            'vim',
-            _('The Editor used'),
-        )
-
-class EditorEvents(EventsConfig):
-
-    def create_events(self):
-        self.create_event('started')
-
-
-# Service class
-class Editor(Service):
-
-    """Describe your Service Here""" 
-
-    options_config = EditorOptionsConfig
-    events_config = EditorEvents
-
-# Required Service attribute for service loading
-Service = Editor
-
+"""The Emacs editor for Pida."""
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
