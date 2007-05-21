@@ -62,10 +62,8 @@ class SourceCodeNode(object):
         )
 
 
-try:
-    from bike.parsing import fastparser
-except ImportError:
-    fastparser = None
+from bike.parsing import fastparser
+
 
 def is_bike_installed():
     return fastparser is not None
