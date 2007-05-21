@@ -210,7 +210,7 @@ class FilemanagerView(PidaView):
                     state=entry.state,
                     )
 
-        if self.svc.get_option('show_hidden').get_value():
+        if self.svc.opt('show_hidden'):
             show = True
         else:
             show = reduce(and_, map(check, 
@@ -628,7 +628,7 @@ class Filemanager(Service):
         self.on_project_switched(None)
 
         self.get_action('toolbar_toggle_hidden').set_active(
-                self.get_option('show_hidden').get_value())
+                self.opt('show_hidden'))
 
     def get_view(self):
         return self.file_view
