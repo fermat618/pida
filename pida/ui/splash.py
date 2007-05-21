@@ -48,6 +48,7 @@ class SplashScreen(gtk.Window):
         vb.pack_start(l)
         vb.show()
         self.resize(200, 75)
+        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 
     def show_splash(self):
         self.show()
