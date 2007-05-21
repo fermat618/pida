@@ -153,11 +153,11 @@ class Pydb(Debugger):
         self._send_cmd('return')
 
     def add_breakpoint(self, file, line):
-        print 'pydb.add_breakpoint', file, line
+#        print 'pydb.add_breakpoint', file, line
         self._send_cmd('break '+file+':'+str(line))
 
     def del_breakpoint(self, file, line):
-        print 'pydb.del_breakpoint', file, line
+#        print 'pydb.del_breakpoint', file, line
         self._send_cmd('clear '+file+':'+str(line))
 
 # Required Service attribute for service loading
