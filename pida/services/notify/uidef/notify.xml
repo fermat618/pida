@@ -5,14 +5,6 @@
         </menu>
     
         <menu name="EditMenu" action="EditMenu">
-            <placeholder name="undo"/>
-            <separator />
-            <placeholder name="cut"/>
-            <separator />
-            <placeholder name="find">
-            </placeholder>
-            <separator />
-            <placeholder name="prefs" />
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
@@ -28,6 +20,7 @@
             <placeholder name="tools" />
             <separator />
             <placeholder name="perms">
+				<menuitem action="show_notify" name="show_notify"/>
             </placeholder>
             <separator />
             <placeholder name="panes" />

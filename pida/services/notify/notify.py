@@ -25,44 +25,59 @@
 # http://trac.gajim.org/browser/trunk/src/tooltips.py
 #
 
-
-import os, re, sre_constants, cgi
+import cgi
 import gtk, gobject
-
-from glob import fnmatch
+import datetime
+import locale
 
 from kiwi.ui.objectlist import Column, ObjectList
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
-from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeInteger
+from pida.core.options import OptionsConfig, OTypeInteger, OTypeBoolean, otype_string_options_factory
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask, gcall
-from pida.utils.testing import refresh_gui
 
 # locale
 from pida.core.locale import Locale
-locale = Locale('notify')
-_ = locale.gettext
+_locale = Locale('notify')
+_ = _locale.gettext
 
 
 class NotifyItem(object):
 
-    def __init__(self, data, title, icon):
-        self.data = data
-        self.title = title
-        self.icon = icon
+    def __init__(self, data, title, stock, timeout, callback):
+        self.data = cgi.escape(data)
+        self.title = cgi.escape(title)
+        self.stock = stock
+        self.timeout = timeout
+        self.time = datetime.datetime.today().strftime(
+                locale.nl_langinfo(locale.D_T_FMT))
+        self.callback = callback
+
+    def get_markup(self):
+        if self.title != '':
+            return '<b>%s</b>\n%s' % (self.title, self.data)
+        return self.data
+    markup = property(get_markup)
+
+    def cb_clicked(self, w, ev):
+        if self.callback is not None:
+            self.callback(self, w, ev)
 
 
 class NotifyView(PidaView):
+
+    label_text = _('Notifications')
+    icon_name = gtk.STOCK_INDEX
 
     def create_ui(self):
         self.__vbox = gtk.VBox(spacing=3)
         self.__vbox.set_border_width(6)
         self.notify_list = ObjectList([
-                Column('data', title=_('Notification'), expand=True),
+                Column('stock', use_stock=True),
+                Column('markup', use_markup=True, expand=True),
             ])
+        self.notify_list.set_headers_visible(False)
         self.__vbox.pack_start(self.notify_list)
         self.add_main_widget(self.__vbox)
         self.__vbox.show_all()
@@ -72,15 +87,29 @@ class NotifyView(PidaView):
 
 class NotifyPopupView(object):
 
-    def __init__(self):
+    def __init__(self, svc):
+        self.svc = svc
         self.win = gtk.Window(gtk.WINDOW_POPUP)
         self.win.set_border_width(3)
         self.win.set_resizable(False)
         self.win.set_name('gtk-tooltips')
         self.win.connect_after('expose_event', self.expose)
+        self.win.connect('size-request', self.on_size_request)
+        self.win.set_events(gtk.gdk.POINTER_MOTION_MASK)
+        self.win.set_transient_for(self.svc.boss.get_window())
         self.vbox = gtk.VBox()
         self.win.add(self.vbox)
         self.counter = 0
+
+    def set_gravity(self, gravity):
+        if gravity == _('North East'):
+            self.win.set_gravity(gtk.gdk.GRAVITY_NORTH_EAST)
+        if gravity == _('North West'):
+            self.win.set_gravity(gtk.gdk.GRAVITY_NORTH_WEST)
+        if gravity == _('South East'):
+            self.win.set_gravity(gtk.gdk.GRAVITY_SOUTH_EAST)
+        if gravity == _('South West'):
+            self.win.set_gravity(gtk.gdk.GRAVITY_SOUTH_WEST)
 
     def expose(self, widget, event):
         style = self.win.get_style()
@@ -95,48 +124,102 @@ class NotifyPopupView(object):
                 None, self.win, 'tooltip', size[0] - 1, 0, 1, -1)
         return True
 
-    def populate(self, data, title=None, icon=None):
-
-        hbox = gtk.HBox()
-
-        # create icon
-        if icon is not None:
-            image = gtk.image_new_from_stock(icon, gtk.ICON_SIZE_MENU)
-        else:
-            image = gtk.image_new_from_stock(gtk.STOCK_INFO, gtk.ICON_SIZE_MENU)
-        hbox.pack_start(image)
-
-        # create markup
-        if title is not None:
-            markup = '<b>%s</b>\n%s' % (title, data)
-        else:
-            markup = data
-        label = gtk.Label()
-        label.set_padding(4, 5)
-        label.set_markup(markup)
-        hbox.pack_start(label)
-
-        self.vbox.pack_start(hbox)
-        self.win.show_all()
-        gobject.timeout_add(2000, self._remove_notify, hbox)
+    def on_size_request(self, widget, requisition):
+        width, height = self.win.get_size()
+        gravity = self.win.get_gravity()
+        x = 0
+        y = 0
+        if gravity == gtk.gdk.GRAVITY_NORTH_EAST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
+                    x = gtk.gdk.screen_width() - width
+        if gravity == gtk.gdk.GRAVITY_SOUTH_WEST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
+                    y = gtk.gdk.screen_height() - height
+        self.win.move(x, y)
 
     def add_item(self, item):
-        self.counter += 1
-        self.populate(item.data, item.title, item.icon)
 
-    def _remove_notify(self, label):
-        self.vbox.remove(label)
+        hbox = gtk.HBox()
+        hbox.set_events(hbox.get_events() | gtk.gdk.BUTTON_PRESS_MASK)
+        hbox.connect('button-press-event', item.cb_clicked)
+
+        # create stock
+        image = gtk.image_new_from_stock(item.stock, gtk.ICON_SIZE_MENU)
+        image.set_padding(4, 5)
+        hbox.pack_start(image, expand=False)
+
+        # create markup
+        label = gtk.Label()
+        label.set_padding(10, 5)
+        label.set_markup(item.markup)
+        hbox.pack_start(label)
+
+        # add item in vbox, and show popup
+        self.vbox.pack_start(hbox)
+        self.win.show_all()
+
+        # don't remenber to hide him later
+        self.counter += 1
+        gobject.timeout_add(item.timeout, self._remove_item, hbox)
+
+    def _remove_item(self, widget):
+        self.vbox.remove(widget)
         self.counter -= 1
+
+        # hide window if we don't have elements
         if self.counter == 0:
             self.win.hide()
 
-class NotifyActions(ActionsConfig):
+class NotifyOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'show_notify',
+            _('Show notifications'),
+            OTypeBoolean,
+            True,
+            _('Show notifications popup'),
+            self.on_show_notify
+        )
+
+        self.create_option(
+            'timeout',
+            _('Timeout'),
+            OTypeInteger,
+            4000,
+            _('Timeout before hiding a notification'),
+            self.on_change_timeout
+        )
+
+        self.create_option(
+            'gravity',
+            _('Gravity'),
+            otype_string_options_factory([
+                _('North East'),
+                _('North West'),
+                _('South East'),
+                _('South West'),
+                ]),
+            _('South East'),
+            _('Position of notifications popup'),
+            self.on_gravity_change
+           )
+
+    def on_show_notify(self, client, id, entry, option):
+        self.svc._show_notify = option.get_value()
+
+    def on_change_timeout(self, client, id, entry, option):
+        self.svc._timeout = option.get_value()
+
+    def on_gravity_change(self, client, id, entry, option):
+        self.svc._popup.set_gravity(option.get_value())
+
+
+class NotifyActionsConfig(ActionsConfig):
 
     def create_actions(self):
         self.create_action(
             'show_notify',
             TYPE_TOGGLE,
-            _('Notifications'),
+            _('Show notifications'),
             _('Show the notifications'),
             '',
             self.on_show_notify,
@@ -149,18 +232,26 @@ class NotifyActions(ActionsConfig):
         else:
             self.svc.hide_notify()
 
+class NotifyCommandsConfig(CommandsConfig):
+    def notify(self, data, **kw):
+        self.svc.notify(data=data, **kw)
+
 
 class Notify(Service):
     """
     Notify user from something append
     """
 
-    actions_config = NotifyActions
+    actions_config = NotifyActionsConfig
+    commands_config = NotifyCommandsConfig
+    options_config = NotifyOptionsConfig
 
     def start(self):
         self._view = NotifyView(self)
-        self._popup = NotifyPopupView()
+        self._popup = NotifyPopupView(self)
         self._has_loaded = False
+        self._show_notify = self.get_option('show_notify').get_value()
+        self._timeout = self.get_option('timeout').get_value()
 
     def show_notify(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -171,11 +262,16 @@ class Notify(Service):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
     def add_notify(self, item):
-        self._popup.add_item(item)
         self._view.add_item(item)
+        if self._show_notify:
+            self._popup.add_item(item)
 
-    def notify(self, data, title=None, icon='default'):
-        self.add_notify(NotifyItem(data=data, title=title, icon=icon))
+    def notify(self, data, title='', stock=gtk.STOCK_DIALOG_INFO,
+            timeout=-1, callback=None):
+        if timeout == -1:
+            timeout = self._timeout
+        self.add_notify(NotifyItem(data=data, title=title, stock=stock,
+            timeout=timeout, callback=callback))
 
     def stop(self):
         if self.get_action('show_notify').get_active():
