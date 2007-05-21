@@ -28,29 +28,30 @@ from pida.utils.debugger.debugger import Debugger, \
                                             GenericDebuggerController, \
                                             DebuggerOptionsConfig
 
-class PydbDebuggerOptionsConfig(DebuggerOptionsConfig):
-    name = 'pydb'
+class GdbDebuggerOptionsConfig(DebuggerOptionsConfig):
+    name = 'gdb'
 
-class PydbDebuggerController(GenericDebuggerController):
-    name = 'PYDB_DEBUGGER'
-    label = 'Debug with pydb'
-    svcname = 'debugger_pydb'
+class GdbDebuggerController(GenericDebuggerController):
+    name = 'GDB_DEBUGGER'
+    label = 'Debug with gdb'
+    svcname = 'debugger_gdb'
 
 # Service class
-class Pydb(Debugger):
-    """Debug a project with pydb service""" 
+class Gdb(Debugger):
+    """Debug a project with gdb service""" 
 
-    options_config = PydbDebuggerOptionsConfig
-    controller_config = PydbDebuggerController
+    options_config = GdbDebuggerOptionsConfig
+    controller_config = GdbDebuggerController
 
-    DEFAULT_DEBUGGER_PATH_OPTION = '/usr/bin/pydb'
+    DEFAULT_DEBUGGER_PATH_OPTION = '/usr/bin/gdb'
 
     _parser_patterns = { # {{{
 #        # line: Current thread is <THREAD>
 #        'Current thread is (.*)' :
 #            lambda self, m: self.emit('thread', thread=m.group(1)),
-        # line: Restarting <EXEC> with arguments: <ARGS>
-        'Restarting (.*) with arguments:(.*)' : 
+
+        # line: Starting program: <EXEC> <ARGS>
+        'Starting program: (.*) (.*)' :
             lambda self, m: self.emit('start_debugging', 
                                                     executable=m.group(1), 
                                                     arguments=m.group(2)),
@@ -103,14 +104,16 @@ class Pydb(Debugger):
         """
         Initiates the debugging session
         """
-        gdb_path = self.get_option('pydb_executable_path').value
+        gdb_path = self.get_option('gdb_executable_path').value
         commandargs = [gdb_path, "--cd="+self._controller.get_cwd(),
-                                            self._executable,self._parameters]
+                                            "--args",
+                                            self._executable, 
+                                            self._parameters]
 
         self._console = self.boss.cmd('commander','execute',
                                             commandargs=commandargs,
                                             cwd=self._controller.get_cwd(), 
-                                            title='pydb',
+                                            title='gdb',
                                             icon=None,
                                             use_python_fork=True,
                                             parser_func=self._parse)
@@ -159,6 +162,6 @@ class Pydb(Debugger):
         self._send_cmd('clear '+file+':'+str(line))
 
 # Required Service attribute for service loading
-Service = Pydb
+Service = Gdb
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

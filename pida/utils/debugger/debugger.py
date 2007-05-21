@@ -308,12 +308,15 @@ class GenericDebuggerController(ProjectController):
             self.boss.get_window().error_dlg(
                 'Debug controller is not fully configured.')
         else:
-
-            if self.svc._init():
-                self.svc.emit('debugger_started')
-            else:
+            if self.svc._is_running:
                 self.boss.get_window().error_dlg(
-                    'Debug session failed to launch.')
+                    'Debugger already running.')
+            else:
+                if self.svc._init():
+                    self.svc.emit('debugger_started')
+                else:
+                    self.boss.get_window().error_dlg(
+                        'Debug session failed to launch.')
 
     # breakpoint recording management
     _breakpoints = {}
@@ -355,7 +358,7 @@ class GenericDebuggerController(ProjectController):
 
     def list_breakpoints(self):
         l = self.get_option('breakpoint')
-##        print 'controller.list_breakpoints', l
+#        print 'controller.list_breakpoints', l
         if l is None:
             return {}
         return l
