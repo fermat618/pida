@@ -404,6 +404,7 @@ class Debugger(Service):
         """
         self._step = []
         self._current = None
+        self._controller = None
         self._is_running = False
 
         # initiate the views
