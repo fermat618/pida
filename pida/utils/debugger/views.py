@@ -96,7 +96,7 @@ class DebuggerBreakPointsView(PidaView):
             self._breakpoint_list.remove(oldbp)
 
     def add_breakpoint(self, ident, file, line):
-        print 'view.add_breakpoint', ident, file, line
+#        print 'view.add_breakpoint', ident, file, line
 
         if (file, int(line)) in self._prebreakpoints:
             breakpoint = self._prebreakpoints.pop((file, int(line)))
@@ -113,7 +113,7 @@ class DebuggerBreakPointsView(PidaView):
             return False
     
     def del_breakpoint(self, ident):
-        print 'view.del_breakpoint', ident
+#        print 'view.del_breakpoint', ident
 
         if ident in self._breakpoints:
             self._breakpoint_list.remove(self._breakpoints[ident])
@@ -123,7 +123,7 @@ class DebuggerBreakPointsView(PidaView):
             return False
 
     def get_breakpoint_list(self):
-        print 'view.get_breakpoint_list'
+#        print 'view.get_breakpoint_list'
         return self._breakpoints
     
     def _on_breakpoint_double_click(self, olist, item):
