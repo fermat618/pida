@@ -213,7 +213,8 @@ class FilemanagerView(PidaView):
         if self.svc.get_option('show_hidden').get_value():
             show = True
         else:
-            show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
+            show = reduce(and_, map(check, 
+                self.svc.features('file_hidden_check')))
 
         if show:
             if entry.visible:
@@ -235,7 +236,7 @@ class FilemanagerView(PidaView):
         self.file_list.clear()
         self.entries.clear()
 
-        for lister in self.svc.features("file_lister"):
+        for lister in self.svc.features('file_lister'):
             GeneratorTask(lister, self.add_or_update_file).start(self.path)
 
         self.create_ancest_tree()
@@ -249,7 +250,7 @@ class FilemanagerView(PidaView):
                     self.entries[oname] = FileEntry(oname, obasepath, self)
                 self.entries[oname].state = state
                 self.show_or_hide(self.entries[oname])
-        for lister in self.svc.features("file_lister"):
+        for lister in self.svc.features('file_lister'):
             GeneratorTask(lister, _update_file).start(self.path)
 
     def update_single_file(self, name, basepath):
@@ -369,16 +370,17 @@ class FilemanagerEvents(EventsConfig):
     def create_events(self):
         self.create_event('browsed_path_changed')
         self.create_event('file_renamed')
-    
-    def subscribe_foreign_events(self):    
+
+    def subscribe_foreign_events(self):
         self.subscribe_event('file_renamed', self.svc.rename_file)
         self.subscribe_foreign_event('project', 'project_switched',
                                      self.svc.on_project_switched)
 
+
 class FilemanagerCommandsConfig(CommandsConfig):
     def browse(self, new_path):
         self.svc.browse(new_path)
-    
+
     def get_browsed_path(self):
         return self.svc.path
 
@@ -390,29 +392,28 @@ class FilemanagerCommandsConfig(CommandsConfig):
             view=self.svc.get_view())
 
     def update_file(self, filename, dirname):
-        if dirname == self.svc.get_view().path: 
+        if dirname == self.svc.get_view().path:
             self.svc.get_view().update_single_file(filename, dirname)
 
     def update_removed_file(self, filename, dirname):
-        if dirname == self.svc.get_view().path: 
+        if dirname == self.svc.get_view().path:
             self.svc.get_view().update_removed_file(filename)
 
     def refresh(self):
         self.svc.get_view().update_to_path()
-        
 
 
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create_features(self):
-        self.create_feature("file_manager")
-        self.create_feature("file_hidden_check")
-        self.create_feature("file_lister")
+        self.create_feature('file_manager')
+        self.create_feature('file_hidden_check')
+        self.create_feature('file_lister')
 
     def subscribe_foreign_features(self):
-        self.subscribe_feature("file_hidden_check", self.svc.check_hidden_regex)
-        self.subscribe_feature("file_lister", self.svc.file_lister)
-        
+        self.subscribe_feature('file_hidden_check', self.svc.check_hidden_regex)
+        self.subscribe_feature('file_lister', self.svc.file_lister)
+
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
         self.subscribe_foreign_feature('contexts', 'dir-menu',
@@ -555,8 +556,8 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'toolbar_toggle_hidden',
             TYPE_TOGGLE,
-            _('Show Hidden files'),
-            _('Toggle the dislay of hidden files'),
+            _('Show Hidden Files'),
+            _('Toggle the display of hidden files'),
             gtk.STOCK_SELECT_ALL,
             self.on_toggle_hidden,
             'NOACCEL',
