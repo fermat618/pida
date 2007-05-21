@@ -14,13 +14,29 @@ _ = locale.gettext
 def sort_services_func(s1, s2):
     return cmp(s1.servicename, s2.servicename)
 
+class ServiceLoadingError(Exception):
+    """An error loading a service"""
+
+class ServiceModuleError(ServiceLoadingError):
+    """No Service class in service module"""
+
+class ServiceDependencyError(ServiceLoadingError):
+    """Service does not have the necessary dependencies to start"""
+
 class ServiceLoader(object):
+
+    def __init__(self, boss=None):
+        self.boss = boss
 
     def get_all_services(self, service_dirs):
         classes = []
         for service_path in self._find_all_service_paths(service_dirs):
-            module = self._load_service_module(service_path)
-            service_class = self.get_one_service(service_path)
+            try:
+                service_class = self.get_one_service(service_path)
+            except ServiceLoadingError, e:
+                self.boss.log.error('Service error: %s: %s' %
+                                   (e.__class__.__name__, e))
+                service_class = None
             if service_class is not None:
                 classes.append(service_class)
         classes.sort(sort_services_func)
@@ -47,6 +63,10 @@ class ServiceLoader(object):
         if service_class is not None:
             return self._instantiate_service(service_class, boss)
 
+    def get_all_service_files(self, service_dirs):
+        for service_path in self._find_all_service_paths(service_dirs):
+            yield os.path.basename(service_path), self._get_servicefile_path(service_path)
+
     def _instantiate_service(self, service_class, boss):
         return service_class(boss)
 
@@ -72,9 +92,12 @@ class ServiceLoader(object):
         name = os.path.basename(service_path)
         try:
             fp, pathname, description = imp.find_module(name, [service_path])
-        except ImportError:
-            return None
-        module = imp.load_module(name, fp, pathname, description)
+        except Exception, e:
+            raise ServiceLoadingError('%s: %s' % (name, e))
+        try:
+            module = imp.load_module(name, fp, pathname, description)
+        except ImportError, e:
+            raise ServiceDependencyError('%s: %s' % (name, e))
         module.servicename = name
         module.servicefile_path = self._get_servicefile_path(service_path)
         self._register_service_env(name, service_path)
@@ -84,7 +107,7 @@ class ServiceLoader(object):
         try:
             service = module.Service
         except AttributeError, e:
-            return None
+            raise ServiceModuleError('Service has no Service class')
         service.servicemodule = module
         return service
 
@@ -99,7 +122,7 @@ class ServiceManager(object):
 
     def __init__(self, boss):
         self._boss = boss
-        self._loader = ServiceLoader()
+        self._loader = ServiceLoader(self._boss)
         self._reg = Registry()
         self._plugin_objects = {}
 

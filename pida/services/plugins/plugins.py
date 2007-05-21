@@ -37,7 +37,7 @@ from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, OTypeInteger
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
-from pida.core.servicemanager import ServiceLoader
+from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 from pida.core.options import OptionItem, manager, OTypeStringList
 
 from pida.utils.web import fetch_url
@@ -261,7 +261,8 @@ class PluginsView(PidaGladeView):
         if not item.directory:
             return
         if item.enabled:
-            self.svc.boss.start_plugin(item.directory)
+            success = self.svc.start_plugin(item.directory)
+            item.enabled = success
         else:
             self.svc.boss.stop_plugin(item.plugin)
         self.svc.save_running_plugin()
@@ -356,6 +357,7 @@ class Plugins(Service):
     rpc_url = 'http://pida.co.uk/community/RPC2'
 
     def pre_start(self):
+        self._loader = ServiceLoader(self.boss)
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
@@ -372,6 +374,15 @@ class Plugins(Service):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         self.update_installed_plugins()
 
+    def start_plugin(self, plugin_path):
+        try:
+            self.boss.start_plugin(plugin_path)
+            return True
+        except ServiceLoadingError, e:
+            self.error_dlg(_('Could not start plugin'),
+                             '%s\n%s' % (plugin_path, e))
+            return False
+
     def hide_plugins(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
@@ -382,29 +393,33 @@ class Plugins(Service):
         self.boss.cmd('window', 'remove_view', view=self._viewedit)
 
     def update_installed_plugins(self, start=False):
-        service_loader = ServiceLoader()
         self._view.clear_installed()
-        l_installed = service_loader.get_all_services([self.plugin_path])
+        l_installed = list(self._loader.get_all_service_files([self.plugin_path]))
         if start:
             start_list = manager.get_value(self._start_list)
         running_list = [plugin.servicename for plugin in
                 self.boss.get_plugins()]
 
-        for item in l_installed:
+        loading_errors = []
+
+        for service_name, service_file in l_installed:
             # read config
             plugin_item = self.read_plugin_informations(
-                    servicefile=item.servicefile_path)
+                    servicefile=service_file)
 
             if plugin_item.plugin in running_list:
                 plugin_item.enabled = True
 
             # start mode
             if start:
-                if item.servicename not in start_list:
+                if service_name not in start_list:
                     continue
-                plugin_path = os.path.dirname(item.servicefile_path)
-                self.boss.start_plugin(plugin_path)
-                plugin_item.enabled = True
+                plugin_path = os.path.dirname(service_file)
+                try:
+                    self.boss.start_plugin(plugin_path)
+                    plugin_item.enabled = True
+                except ServiceLoadingError, e:
+                    self.log_error(e)
             else:
                 self._view.add_installed(plugin_item)
 
@@ -425,20 +440,19 @@ class Plugins(Service):
 
     def _fetch_available_plugins(self):
         # get installed items
-        service_loader = ServiceLoader()
-        l_installed = service_loader.get_all_services([self.plugin_path])
+        l_installed = list(self._loader.get_all_service_files([self.plugin_path]))
         installed_list = []
-        for item in l_installed:
+        for service_name, service_file in l_installed:
             plugin_item = self.read_plugin_informations(
-                    servicefile=item.servicefile_path)
+                    servicefile=service_file)
             installed_list.append(plugin_item)
 
         self._view.start_pulse(_('Download available plugins'))
         try:
             proxy = xmlrpclib.ServerProxy(self.rpc_url)
-            list = proxy.plugins.list()
-            for k in list:
-                item = list[k]
+            plist = proxy.plugins.list()
+            for k in plist:
+                item = plist[k]
                 inst = None
                 isnew = False
                 for plugin in installed_list:
@@ -469,9 +483,8 @@ class Plugins(Service):
         file.close()
 
         # check if we need to stop and remove him
-        service_loader = ServiceLoader()
-        l_installed = [service.servicename for service in
-                service_loader.get_all_services([self.plugin_path])]
+        l_installed = [p[0] for p in
+            self._loader.get_all_service_files([self.plugin_path])]
         item.directory = plugin_path
         if item.plugin in l_installed:
             self.delete(item, force=True)
@@ -484,7 +497,7 @@ class Plugins(Service):
         os.unlink(filename)
 
         # start service
-        self.boss.start_plugin(plugin_path)
+        self.start_plugin(plugin_path)
 
     def delete(self, item, force=False):
         if not item:

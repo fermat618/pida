@@ -1,6 +1,6 @@
 import gtk
 
-from pida.core.servicemanager import ServiceManager 
+from pida.core.servicemanager import ServiceManager
 from pida.core.log import build_logger
 
 from pida.ui.icons import IconRegister
