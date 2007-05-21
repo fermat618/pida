@@ -124,7 +124,7 @@ class Pydb(Debugger):
         """
         Ends the debugging session
         """
-        self._console.close()
+        self._send_cmd('quit')
         self._console = None
         return True
 
@@ -145,7 +145,13 @@ class Pydb(Debugger):
         Continue execution
         """
         self._send_cmd('continue')
-    
+
+    def finish(self):
+        """
+        Jump to end of current function
+        """
+        self._send_cmd('return')
+
     def add_breakpoint(self, file, line):
         print 'pydb.add_breakpoint', file, line
         self._send_cmd('break '+file+':'+str(line))

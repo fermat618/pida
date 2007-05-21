@@ -122,10 +122,10 @@ class DebuggerActionsConfig(ActionsConfig):
         self.svc.step_in()
 
     def on_start(self, action):
-        self.svc.start()
+        self.svc.cont()
 
     def on_stop(self, action):
-        self.svc.stop()
+        self.svc.end()
 
     def on_return(self, action):
         self.svc.finish()
@@ -175,6 +175,7 @@ class DebuggerEventsConfig(EventsConfig):
         self.subscribe_event('add_breakpoint', self.on_add_breakpoint)
         self.subscribe_event('del_breakpoint', self.on_del_breakpoint)
         self.subscribe_event('debugger_started', self.on_start_debugging)
+        self.subscribe_event('debugger_ended', self.on_end_debugging)
 
         self.subscribe_event('step', self.on_step)
 
@@ -209,7 +210,7 @@ class DebuggerEventsConfig(EventsConfig):
             else:
                 self.svc.del_breakpoint(file, line)
         else:
-            self._controller.store_breakpoint(file, line)
+            self.svc._controller.store_breakpoint(file, line)
 
     def on_add_breakpoint(self, ident, file, line):
         """
@@ -231,8 +232,14 @@ class DebuggerEventsConfig(EventsConfig):
             del(self._breakpoints[str(ident)])
         self.svc._controller.flush_breakpoint(file, line)
 
+    def on_end_debugging(self):
+        print 'evt.on_end_debugging'
+        self._breakpoints = {}
+
     def on_start_debugging(self):
         print 'evt.on_start_debugging'
+        self._breakpoints = {}
+
         self.svc.get_action('debug_start').set_sensitive(True)
         self.svc.get_action('debug_stop').set_sensitive(True)
         self.svc.get_action('debug_return').set_sensitive(True)
@@ -383,8 +390,6 @@ class Debugger(Service):
 
     controller_config = GenericDebuggerController
 
-    __breakpoints = {}
-
     def _list_breakpoints(self, file=None):
         """
         Lists all breakpoints choosed by the user
@@ -431,13 +436,11 @@ class Debugger(Service):
         
         # load breakpoints
         self._controller.init_breakpoint()
-        self._list_breakpoints()
         self._load_breakpoints()
-        self._list_breakpoints()
 
         # open views
-        self.get_action('debug_show_breakpoints_view').activate()
-        self.get_action('debug_show_stack_view').activate()
+        self.get_action('debug_show_breakpoints_view').set_active(True)
+        self.get_action('debug_show_stack_view').set_active(True)
         
         return True
 
@@ -447,6 +450,7 @@ class Debugger(Service):
         """
         print 'svc._end'
         self._is_running = False
+        self.emit('debugger_ended')
 
         self.get_action('debug_start').set_sensitive(False)
         self.get_action('debug_stop').set_sensitive(False)

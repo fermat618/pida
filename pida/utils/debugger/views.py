@@ -62,6 +62,20 @@ class DebuggerBreakPointsView(PidaView):
         self.svc.subscribe_event('add_breakpoint', self.add_breakpoint)
         self.svc.subscribe_event('del_breakpoint', self.del_breakpoint)
         self.svc.subscribe_event('toggle_breakpoint', self.toggle_breakpoint)
+        self.svc.subscribe_event('debugger_started', self.start_debug_session)
+        self.svc.subscribe_event('debugger_ended', self.end_debug_session)
+
+    def start_debug_session(self):
+        pass
+
+    def end_debug_session(self):
+        self._prebreakpoints = self._breakpoints
+        self._breakpoints = {}
+        for item in self._breakpoint_list:
+            if item.status == 'disabled':
+                self._breakpoint_list.remove(item)
+            else:
+                item.status = 'disabled'
 
     def clear_items(self):
         self._prebreakpoints = {}
@@ -116,6 +130,9 @@ class DebuggerBreakPointsView(PidaView):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
         self.svc.boss.cmd('buffer', 'open_file', file_name=item.file)
 
+    def can_be_closed(self):
+        self.svc.get_action('debug_show_breakpoints_view').set_active(False)
+        return True
 
 # --- Function stack view
 
@@ -173,9 +190,13 @@ class DebuggerStackView(PidaView):
         self.svc.subscribe_event('function_return', self.on_function_return)
         self.svc.subscribe_event('step', self.on_step)
         self.svc.subscribe_event('thread', self.on_thread_stmt)
+        self.svc.subscribe_event('debugger_ended', self.end_debug_session)
 
         self._thread = { None:None }
         self.__current_thread = None
+
+    def end_debug_session(self):
+        self.clear_items()
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
@@ -220,7 +241,13 @@ class DebuggerStackView(PidaView):
         return True
 
     def clear_items(self):
-        gcall(self._breakpoint_list.clear)
+        self.__last = None
+        self.__call = False
+        self.__return = False
+        self.__cnt = 0
+        self._thread = { None:None }
+        self.__current_thread = None
+        gcall(self._stack_list.clear)
 
     def push_function(self, function, file, line, thread=None):
         self.__cnt = self.__cnt + 1
@@ -238,5 +265,9 @@ class DebuggerStackView(PidaView):
     def _on_frame_double_click(self, olist, item):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
         self.svc.boss.cmd('buffer', 'open_file', file_name=item.file)
+
+    def can_be_closed(self):
+        self.svc.get_action('debug_show_stack_view').set_active(False)
+        return True
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
