@@ -209,7 +209,12 @@ class FilemanagerView(PidaView):
                     path=entry.parent_path,
                     state=entry.state,
                     )
-        show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
+
+        if self.svc.get_option('show_hidden').get_value():
+            show = True
+        else:
+            show = reduce(and_, map(check, self.svc.features("file_hidden_check")))
+
         if show:
             if entry.visible:
                 self.file_list.update(entry)
@@ -547,7 +552,15 @@ class FileManagerActionsConfig(ActionsConfig):
             self.on_toolbar_delete,
             'NOACCEL',
         )
-
+        self.create_action(
+            'toolbar_toggle_hidden',
+            TYPE_TOGGLE,
+            _('Show Hidden files'),
+            _('Toggle the dislay of hidden files'),
+            gtk.STOCK_SELECT_ALL,
+            self.on_toggle_hidden,
+            'NOACCEL',
+        )
 
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
@@ -567,6 +580,10 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_toolbar_terminal(self, action):
         self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
+
+    def on_toggle_hidden(self, action):
+        self.svc.set_opt('show_hidden', action.get_active())
+        self.on_toolbar_refresh(action)
 
     def on_toolbar_refresh(self, action):
         self.svc.get_view().update_to_path()
@@ -608,6 +625,9 @@ class Filemanager(Service):
         self.file_view = FilemanagerView(self)
         self.emit('browsed_path_changed', path=self.path)
         self.on_project_switched(None)
+
+        self.get_action('toolbar_toggle_hidden').set_active(
+                self.get_option('show_hidden').get_value())
 
     def get_view(self):
         return self.file_view
