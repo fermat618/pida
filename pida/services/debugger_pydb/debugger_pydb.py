@@ -93,7 +93,7 @@ class Pydb(Debugger):
         """
         Sends a command to the debugger
         """
-        if self._console:
+        if self._is_running:
             os.write(self._console.master, cmd + '\n')
             return True
         return False
@@ -145,25 +145,13 @@ class Pydb(Debugger):
         Continue execution
         """
         self._send_cmd('continue')
-
-    def finish(self):
-        """
-        Finish current function call
-        """
-        self._send_cmd('return')
-
-    def toggle_breakpoint(self, file, line):
-        if (file, line) not in self._breakpoints:
-            self._breakpoints.append((file, line))
-            self.add_breakpoint(file, line)
-        else:
-            self._breakpoints.remove((file, line))
-            self.del_breakpoint(file, line)
     
     def add_breakpoint(self, file, line):
+        print 'pydb.add_breakpoint', file, line
         self._send_cmd('break '+file+':'+str(line))
 
     def del_breakpoint(self, file, line):
+        print 'pydb.del_breakpoint', file, line
         self._send_cmd('clear '+file+':'+str(line))
 
 # Required Service attribute for service loading
