@@ -178,6 +178,9 @@ class Service(object):
     def list_features(self):
         return self._get_features().list_features()
 
+    def has_foreign_feature(self, servicename, featurename):
+        return self._get_features().has_foreign_feature(servicename, featurename)
+
     def subscribe_feature(self, feature, instance):
         return self._get_features().subscribe_feature(feature, instance)
 

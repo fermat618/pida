@@ -197,6 +197,20 @@ class ProjectEventsConfig(EventsConfig):
     def create_events(self):
         self.create_event('project_switched')
 
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('plugins', 'plugin_started',
+            self.plugin_started)
+        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+            self.plugin_stopped)
+
+    def plugin_started(self, plugin):
+        if plugin.has_foreign_feature('project', IProjectController):
+            self.svc.refresh_controllers()
+
+    def plugin_stopped(self, plugin):
+        self.svc.refresh_controllers()
+        
+
 class ProjectActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -339,9 +353,7 @@ class Project(Service):
         self._projects = []
         self.set_current_project(None)
         self._manager = ProjectControllerMananger(self.boss)
-        for controller_type in self.features(IProjectController):
-            self._manager.register_controller(controller_type)
-
+        self._register_controllers()
         ###
         self.project_list = ProjectListView(self)
         self.project_properties_view = ProjectPropertiesView(self)
@@ -354,6 +366,16 @@ class Project(Service):
             if last:
                 if project.source_directory == last:
                     self.project_list.set_current_project(project)
+
+    def refresh_controllers(self):
+        self._manager.clear_controllers()
+        self._register_controllers()
+        if self._project is not None:
+            self.set_current_project(self._project)
+
+    def _register_controllers(self):
+        for controller_type in self.features(IProjectController):
+            self._manager.register_controller(controller_type)
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
@@ -405,10 +427,12 @@ class Project(Service):
         self.get_action('project_properties').set_sensitive(project is not None)
         self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
+            project.reload()
             self.project_properties_view.set_project(project)
             self.emit('project_switched', project=project)
             toolitem = self.get_action('project_execute').get_proxies()[0]
             toolitem.set_menu(self.create_menu())
+            self.get_action('project_execute').set_sensitive(len(project.controllers) > 0)
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
 

@@ -23,6 +23,9 @@ class ProjectControllerMananger(object):
 
     def __init__(self, boss=None):
         self.boss = boss
+        self.clear_controllers()
+
+    def clear_controllers(self):
         self._controller_types = {}
 
     def register_controller(self, controller):
@@ -70,6 +73,10 @@ class Project(object):
 
     def _create_options(self):
         self.options = ConfigObj(self.project_file)
+
+    def reload(self):
+        self._create_options()
+        self._create_controllers()
 
     def add_controller(self, controller_type, section_name = None):
         # first get a free section name

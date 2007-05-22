@@ -45,12 +45,20 @@ class FeaturesConfig(BaseConfig):
         """Subscribe to features here"""
 
     def unsubscribe_foreign_features(self):
-        for (servicename, featurename), feature_object in self._foreign_feature_objects.items():
-            self.svc.unsubscribe_foreign_feature(servicename, feature_object)
+        for (servicename, featurename), feature_objects in self._foreign_feature_objects.items():
+            for feature_object in feature_objects:
+                self.svc.unsubscribe_foreign_feature(servicename, feature_object)
+            del self._foreign_feature_objects[(servicename, featurename)]
+
+    def has_foreign_feature(self, servicename, featurename):
+        for (service, feature), feature_object in self._foreign_feature_objects.items():
+            if servicename == service and featurename == feature:
+                return True
+        return False
 
     def subscribe_foreign_feature(self, servicename, featurename, instance):
         feature_object = self.svc.subscribe_foreign_feature(servicename, featurename, instance)
-        self._foreign_feature_objects[(servicename, featurename)] = feature_object
+        self._foreign_feature_objects.setdefault((servicename, featurename), []).append(feature_object)
 
     def subscribe_feature(self, featurename, instance):
         return self._features.register_plugin(
