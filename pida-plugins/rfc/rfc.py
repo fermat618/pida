@@ -71,7 +71,7 @@ class RfcView(PidaView):
         self._search_description.connect('changed', self._on_search_changed)
         l = gtk.Label()
         l.set_text(_('Filter : '))
-        h.pack_start(l)
+        h.pack_start(l, expand=False)
         h.pack_start(self._search_description)
         self._vbox.pack_start(h, expand=False)
         self._search_description.show_all()
@@ -119,6 +119,9 @@ class RfcView(PidaView):
 
     def set_items(self, items):
         self._list.add_list(items, True)
+
+    def clear(self):
+        self._list.clear()
 
     def can_be_closed(self):
         self.svc.get_action('show_rfc').set_active(False)
@@ -194,12 +197,15 @@ class Rfc(Service):
         self.counter = 0
         self.task = None
         self._filter_id = 0
-        gcall(self.refresh_index)
+        self.is_refresh = False
 
     def show_rfc(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         if not self._has_loaded:
             self._has_loaded = True
+        if not self.is_refresh:
+            gcall(self.refresh_index)
+            self.is_refresh = True
 
     def hide_rfc(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
@@ -207,34 +213,50 @@ class Rfc(Service):
     def download_index(self):
         if self.task != None:
             self.task.stop()
+
+        def _download_index_finished():
+            self._view.show_progressbar(False)
+            self.get_action('rfc_downloadindex').set_sensitive(True)
+            self.boss.cmd('notify', 'notify', title=_('RFC'), data=_('Index download completed'))
+            gcall(self.refresh_index)
+
         self.task = GeneratorTask(self._download_index,
-                self.refresh_index)
+                _download_index_finished)
         self.task.start()
 
     def refresh_index(self):
-        try:
-            fp = open(self._filename)
-        except IOError:
-            return
-        data = ''
+        def _refresh_index_finished():
+            self._view.set_items(self.list)
+
+        def _refresh_index_add(item):
+            self.list.append(item)
+
+        def _refresh_index():
+            try:
+                fp = open(self._filename)
+            except IOError:
+                return
+            data = ''
+            zap = True
+            for line in fp:
+                line = line.rstrip('\n')
+                data += line.strip(' ') + ' '
+                if line == '':
+                    t = data.split(' ', 1)
+                    if zap == False:
+                        if data != '' and t[1].strip(' ') != 'Not Issued.':
+                            yield RfcItem(number=t[0], data=t[1])
+                        data = ''
+                    elif t[0] == '0001':
+                        zap = False
+                    elif zap == True:
+                        data = ''
+            fp.close()
+
         self.list = []
-        zap = True
-        for line in fp:
-            line = line.rstrip('\n')
-            data += line.strip(' ') + ' '
-            if line == '':
-                t = data.split(' ', 1)
-                if zap == False:
-                    if data != '' and t[1].strip(' ') != 'Not Issued.':
-                        #if t[1].find('Status: UNKNOWN') == -1:
-                        self.list.append(RfcItem(number=t[0], data=t[1]))
-                    data = ''
-                elif t[0] == '0001':
-                    zap = False
-                elif zap == True:
-                    data = ''
-        fp.close()
-        self._view.set_items(self.list)
+        self._view.clear()
+        task = GeneratorTask(_refresh_index, _refresh_index_add, _refresh_index_finished)
+        task.start()
 
     def filter(self, pattern):
         self._filter_id += 1
@@ -272,8 +294,6 @@ class Rfc(Service):
             sock.close()
             fp.close()
 
-        self._view.show_progressbar(False)
-        self.get_action('rfc_downloadindex').set_sensitive(True)
         yield None
 
     def browse(self, id):

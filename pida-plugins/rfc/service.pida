@@ -1,7 +1,7 @@
 [plugin]
 plugin = rfc
 name = RFC Viewer
-version = 0.1.1
+version = 0.2
 author = Mathieu Virbel <tito@bankiz.org>
 require_pida = 0.5
 depends = "os,gtk,re,urllib"
