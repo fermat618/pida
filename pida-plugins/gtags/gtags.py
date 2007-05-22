@@ -64,7 +64,7 @@ class GtagsItem(object):
 
 class GtagsView(PidaView):
 
-    label_text = 'Gtags'
+    label_text = _('Gtags')
 
     def create_ui(self):
         self._hbox = gtk.HBox(spacing=3)
@@ -218,7 +218,7 @@ class Gtags(Service):
     def start(self):
         self._view = GtagsView(self)
         self._has_loaded = False
-        self._project = None
+        self._project = self.boss.cmd('project', 'get_current_project')
         self._ticket = 0
         self.task = self._task = None
 
@@ -252,6 +252,8 @@ class Gtags(Service):
     def build_db_finished(self, w):
         self._view.activate(self.have_database())
         self._view._refresh_button.set_sensitive(True)
+        self.boss.cmd('notify', 'notify', title=_('Gtags'),
+            data=_('Database build complete'))
 
     def on_project_switched(self, project):
         if project != self._project:
