@@ -582,7 +582,8 @@ class Plugins(Service):
                     proxy = xmlrpclib.ServerProxy(self.rpc_url)
                     code = proxy.plugins.push(login, password,
                             plugin, base64.b64encode(data))
-                    print _('Community response : '), code
+                    gcall(self.boss.cmd, 'notify', 'notify',
+                            title=_('Plugins'), data=_('Package upload success !'))
                 except xmlrpclib.Fault, fault:
                     print _('Error while posting plugin : '), fault
                 except:
