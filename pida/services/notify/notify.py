@@ -83,7 +83,7 @@ class NotifyView(PidaView):
     def create_list(self):
         self.notify_list = ObjectList([
                 Column('stock', use_stock=True),
-                Column('time', sorted=True),
+                Column('time', sorted=True, order=gtk.SORT_DESCENDING),
                 Column('markup', use_markup=True, expand=True),
             ])
         self.notify_list.set_headers_visible(False)
