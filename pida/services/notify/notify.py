@@ -31,11 +31,13 @@ import datetime
 import locale
 
 from kiwi.ui.objectlist import Column, ObjectList
+from pida.core.environment import get_uidef_path
 from pida.ui.views import PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.options import OptionsConfig, OTypeInteger, OTypeBoolean, otype_string_options_factory
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
+from pida.ui.buttons import create_mini_button
 
 # locale
 from pida.core.locale import Locale
@@ -71,19 +73,42 @@ class NotifyView(PidaView):
     icon_name = gtk.STOCK_INDEX
 
     def create_ui(self):
-        self.__vbox = gtk.VBox(spacing=3)
-        self.__vbox.set_border_width(6)
+        self._hbox = gtk.HBox(spacing=3)
+        self._hbox.set_border_width(6)
+        self.create_list()
+        self.create_toolbar()
+        self.add_main_widget(self._hbox)
+        self._hbox.show_all()
+
+    def create_list(self):
         self.notify_list = ObjectList([
                 Column('stock', use_stock=True),
+                Column('time', sorted=True),
                 Column('markup', use_markup=True, expand=True),
             ])
         self.notify_list.set_headers_visible(False)
-        self.__vbox.pack_start(self.notify_list)
-        self.add_main_widget(self.__vbox)
-        self.__vbox.show_all()
+        self._hbox.pack_start(self.notify_list)
+
+    def create_toolbar(self):
+        self._bar = gtk.VBox(spacing=1)
+        self._clear_button = create_mini_button(
+            gtk.STOCK_DELETE, _('Clear history'),
+            self.on_clear_button)
+        self._bar.pack_start(self._clear_button, expand=False)
+        self._hbox.pack_start(self._bar, expand=False)
+        self._bar.show_all()
+
+    def on_clear_button(self, w):
+        self.clear()
 
     def add_item(self, item):
         self.notify_list.append(item)
+
+    def can_be_closed(self):
+        self.svc.get_action('show_notify').set_active(False)
+
+    def clear(self):
+        self.notify_list.clear()
 
 class NotifyPopupView(object):
 
@@ -148,6 +173,7 @@ class NotifyPopupView(object):
 
         # create markup
         label = gtk.Label()
+        label.set_alignment(0, 0.5)
         label.set_padding(10, 5)
         label.set_markup(item.markup)
         hbox.pack_start(label)
@@ -184,7 +210,7 @@ class NotifyOptionsConfig(OptionsConfig):
             'timeout',
             _('Timeout'),
             OTypeInteger,
-            4000,
+            6000,
             _('Timeout before hiding a notification'),
             self.on_change_timeout
         )
@@ -219,12 +245,13 @@ class NotifyActionsConfig(ActionsConfig):
         self.create_action(
             'show_notify',
             TYPE_TOGGLE,
-            _('Show notifications'),
-            _('Show the notifications'),
+            _('Show notification history'),
+            _('Show the notifications history'),
             '',
             self.on_show_notify,
             '',
         )
+
 
     def on_show_notify(self, action):
         if action.get_active():
@@ -255,7 +282,7 @@ class Notify(Service):
         self._popup.set_gravity(self.get_option('gravity').get_value())
 
     def show_notify(self):
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
         if not self._has_loaded:
             self._has_loaded = True
 
