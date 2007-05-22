@@ -284,9 +284,9 @@ class Notify(Service):
         self._view = NotifyView(self)
         self._popup = NotifyPopupView(self)
         self._has_loaded = False
-        self._show_notify = self.get_option('show_notify').get_value()
-        self._timeout = self.get_option('timeout').get_value()
-        self._popup.set_gravity(self.get_option('gravity').get_value())
+        self._show_notify = self.opt('show_notify')
+        self._timeout = self.opt('timeout')
+        self._popup.set_gravity(self.opt('gravity'))
 
     def show_notify(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
