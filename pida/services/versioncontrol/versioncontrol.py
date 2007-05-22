@@ -658,14 +658,20 @@ class Versioncontrol(Service):
         vc = self.get_workdir_manager_for_path(path)
         commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path], **kw)
         self._log.append_action(action.capitalize(), path, stock_id)
+        def _executed(term):
+            self._executed(action, path, stock_id, term)
         self.boss.cmd('commander', 'execute', commandargs=commandargs,
-                      cwd=vc.base_path, eof_handler=self._executed,
-                      use_python_fork=True)
+                      cwd=vc.base_path, eof_handler=_executed,
+                      use_python_fork=True, title=action.capitalize(),
+                      icon=stock_id)
 
-    def _executed(self, term):
+    def _executed(self, action, path, stock_id, term):
         self._log.append_result(term.get_all_text())
         self.boss.cmd('window', 'remove_view', view=term.parent_view)
-        self.ensure_log_visible()
+        self.boss.cmd('notify', 'notify',
+            title=_('Version Control %(action)s Completed') % {'action': action.capitalize()},
+            data=path,
+            stock=stock_id)
         self.boss.cmd('filemanager', 'refresh')
 
     def update_path(self, path):
