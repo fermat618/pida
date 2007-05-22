@@ -393,10 +393,9 @@ class Plugins(Service):
         self._start_list = OptionItem('plugins', 'start_list', _('Start plugin list'),
                 OTypeStringList, [], _('List of plugin to start'), None)
         manager.register_option(self._start_list)
-        self.update_installed_plugins(start=True)
 
     def start(self):
-        self.update_installed_plugins()
+        self.update_installed_plugins(start=True)
         self.check_for_updates(self.get_option('check_for_updates').get_value())
 
     def show_plugins(self):
