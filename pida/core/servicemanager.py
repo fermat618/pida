@@ -158,6 +158,7 @@ class ServiceManager(object):
             plugin.subscribe_all()
             plugin.pre_start()
             plugin.start()
+            return plugin
         else:
             self._boss.log.error('Unable to load plugin from %s' % plugin_path)
 
@@ -170,6 +171,7 @@ class ServiceManager(object):
                 plugin.stop_components()
                 plugin.stop()
                 self._reg.unregister(self._plugin_objects[plugin_name])
+                return plugin
             else:
                 self._boss.log.error('ServiceManager: Cannot stop services')
         else:

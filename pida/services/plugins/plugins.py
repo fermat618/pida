@@ -264,7 +264,7 @@ class PluginsView(PidaGladeView):
             success = self.svc.start_plugin(item.directory)
             item.enabled = success
         else:
-            self.svc.boss.stop_plugin(item.plugin)
+            self.svc.stop_plugin(item.plugin)
         self.svc.save_running_plugin()
 
     def on_publish_button__clicked(self, w):
@@ -365,11 +365,20 @@ class PluginsOptionsConfig(OptionsConfig):
     def on_check_for_updates(self, client, id, entry, option):
         self.svc.check_for_updates(option.get_value())
 
+
+class PluginsEvents(EventsConfig):
+
+    def create_events(self):
+        self.create_event('plugin_started')
+        self.create_event('plugin_stopped')
+
+
 class Plugins(Service):
     """ Plugins manager service """
 
     actions_config = PluginsActionsConfig
     options_config = PluginsOptionsConfig
+    events_config = PluginsEvents
     rpc_url = 'http://pida.co.uk/community/RPC2'
 
     def pre_start(self):
@@ -396,12 +405,17 @@ class Plugins(Service):
 
     def start_plugin(self, plugin_path):
         try:
-            self.boss.start_plugin(plugin_path)
+            plugin = self.boss.start_plugin(plugin_path)
+            self.emit('plugin_started', plugin=plugin)
             return True
         except ServiceLoadingError, e:
             self.error_dlg(_('Could not start plugin'),
                              '%s\n%s' % (plugin_path, e))
             return False
+
+    def stop_plugin(self, plugin_name):
+        plugin = self.boss.stop_plugin(plugin_name)
+        self.emit('plugin_stopped', plugin=plugin)
 
     def hide_plugins(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
@@ -538,7 +552,7 @@ class Plugins(Service):
         running_list = [plugin.servicename for plugin in
                 self.boss.get_plugins()]
         if item.plugin in running_list:
-            self.boss.stop_plugin(item.plugin)
+            self.stop_plugin(item.plugin)
         shutil.rmtree(item.directory, True)
         self.update_installed_plugins()
 

@@ -49,6 +49,7 @@ def service_sort_func(s1, s2):
 def options_sort_func(o, o1):
     return cmp(o1.name, o2.name)
 
+
 class PidaOptionsView(PidaGladeView):
 
     gladefile = 'options-editor'
@@ -58,22 +59,39 @@ class PidaOptionsView(PidaGladeView):
     icon_name = 'gnome-settings'
 
     def create_ui(self):
+        self.current = None
+        self.refresh_ui()
+
+    def clear_ui(self):
+        while self.options_book.get_n_pages():
+            self.options_book.remove_page(-1)
+        self._services_display = []
+        self._service_pages = {}
+
+    def refresh_ui(self):
+        current = self.current
+        self.clear_ui()
         self._services = []
         for svc in self.svc.boss.get_services():
             if len(svc.get_options()):
                 self._services.append(svc)
+                self._services_display.append(
+                    (svc.get_label(), svc),
+                )
         self._services.sort(service_sort_func)
-        self._services_display = []
         self._tips = gtk.Tooltips()
-        for svc in self._services:
-            self._add_service(svc)
         self.service_combo.prefill(self._services_display)
-        self.options_book.show_all()
-
+        if current is not None:
+            try:
+                self.service_combo.update(current)
+            except KeyError:
+                self.service_combo.update(self.current)
+                
 
     def _add_service(self, svc):
-        self._services_display.append((svc.get_label(), svc))
+        self._service_pages[svc.servicename] = self.options_book.get_n_pages()
         self.options_book.append_page(self._create_page(svc))
+        self.options_book.show_all()
         
     def _create_page(self, svc):
         mainvb = gtk.VBox(spacing=0)
@@ -115,8 +133,10 @@ class PidaOptionsView(PidaGladeView):
         return mainvb
 
     def on_service_combo__content_changed(self, cmb):
-        svc = self.service_combo.read()
-        pagenum = self._services.index(svc)
+        self.current = svc = self.service_combo.read()
+        if not svc.servicename in self._service_pages:
+            self._add_service(svc)
+        pagenum = self._service_pages[svc.servicename]
         self.options_book.set_current_page(pagenum)
 
     def _on_option_changed(self, widget, option):
@@ -159,11 +179,24 @@ class OptionsActions(ActionsConfig):
         else:
             self.svc.hide_options()
 
+class OptionsEvents(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('plugins', 'plugin_started',
+                                     self.plugin_changed)
+        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+                                     self.plugin_changed)
+
+    def plugin_changed(self, plugin):
+        if len(plugin.get_options()):
+            self.svc.refresh_view()
+
 # Service class
 class Optionsmanager(Service):
     """Describe your Service Here""" 
 
     actions_config = OptionsActions
+    events_config = OptionsEvents
 
     def start(self):
         self._view = PidaOptionsView(self)
@@ -173,6 +206,9 @@ class Optionsmanager(Service):
 
     def hide_options(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
+
+    def refresh_view(self):
+        self._view.refresh_ui()
 
 # Required Service attribute for service loading
 Service = Optionsmanager
