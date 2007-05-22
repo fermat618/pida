@@ -449,7 +449,7 @@ class Plugins(Service):
 
         def add_in_list(list, isnew):
             if isnew and self._check_notify:
-                self.boss.cmd('notify', 'notify', title=_('Plugins Manager'),
+                self.boss.cmd('notify', 'notify', title=_('Plugins'),
                     data=_('Version %(version)s of %(plugin)s is available !') \
                             % {'version':list['version'], 'plugin':list['plugin']})
             self._view.add_available(PluginsItem(list, isnew=isnew))
