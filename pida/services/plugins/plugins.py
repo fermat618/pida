@@ -34,7 +34,7 @@ from pida.ui.views import PidaGladeView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeInteger
+from pida.core.options import OptionsConfig, OTypeBoolean
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
@@ -350,13 +350,32 @@ class PluginsCommandsConfig(CommandsConfig):
         return self.svc.boss.cmd('window', 'present_view',
                                  view=self.svc.get_view())
 
+
+class PluginsOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'check_for_updates',
+            _('Check updates'),
+            OTypeBoolean,
+            True,
+            _('Check for plugins updates in background'),
+            self.on_check_for_updates)
+
+    def on_check_for_updates(self, client, id, entry, option):
+        self.svc.check_for_updates(option.get_value())
+
 class Plugins(Service):
     """ Plugins manager service """
 
     actions_config = PluginsActionsConfig
+    options_config = PluginsOptionsConfig
     rpc_url = 'http://pida.co.uk/community/RPC2'
 
     def pre_start(self):
+        self._check = False
+        self._check_notify = False
+        self._check_event = False
         self._loader = ServiceLoader(self.boss)
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
@@ -369,6 +388,7 @@ class Plugins(Service):
 
     def start(self):
         self.update_installed_plugins()
+        self.check_for_updates(self.get_option('check_for_updates').get_value())
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -428,9 +448,14 @@ class Plugins(Service):
             self.task.stop()
 
         def add_in_list(list, isnew):
+            if isnew and self._check_notify:
+                self.boss.cmd('notify', 'notify', title=_('Plugins Manager'),
+                    data=_('Version %(version)s of %(plugin)s is available !') \
+                            % {'version':list['version'], 'plugin':list['plugin']})
             self._view.add_available(PluginsItem(list, isnew=isnew))
 
         def stop_pulse():
+            self._check_notify = False
             self._view.stop_pulse()
 
         self._view.clear_available()
@@ -618,6 +643,35 @@ class Plugins(Service):
             markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
                     cgi.escape(item.require_pida))
         return markup
+
+
+    def check_for_updates(self, check):
+        # already activated, skip
+        if self._check and check:
+            return
+
+        # disabled:
+        if self._check and not check:
+            self._check = check
+            return
+
+        # enable
+        if not self._check and check:
+            self._check = check
+            # check now
+            self._check_for_updates()
+            return
+
+    def _check_for_updates(self):
+        self._check_event = False
+        if not self._check:
+            return
+        self._check_notify = True
+        self.fetch_available_plugins()
+        # relaunch event in 30 minutes
+        if not self._check_event:
+            gobject.timeout_add(30 * 60 * 1000, self._check_for_updates)
+            self._check_event = True
 
 
 Service = Plugins
