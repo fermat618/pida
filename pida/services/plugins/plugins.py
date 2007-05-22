@@ -407,6 +407,8 @@ class Plugins(Service):
         try:
             plugin = self.boss.start_plugin(plugin_path)
             self.emit('plugin_started', plugin=plugin)
+            self.boss.cmd('notify', 'notify', data=_('Plugin Started'),
+                          title=plugin.get_label())
             return True
         except ServiceLoadingError, e:
             self.error_dlg(_('Could not start plugin'),
@@ -416,6 +418,8 @@ class Plugins(Service):
     def stop_plugin(self, plugin_name):
         plugin = self.boss.stop_plugin(plugin_name)
         self.emit('plugin_stopped', plugin=plugin)
+        self.boss.cmd('notify', 'notify', data=_('Plugin Stopped'),
+                          title=plugin.get_label())
 
     def hide_plugins(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
