@@ -537,6 +537,8 @@ class Plugins(Service):
 
         # start service
         self.start_plugin(plugin_path)
+        self.boss.cmd('notify', 'notify', title=_('Plugins'),
+                data=_('Installation of %s completed') % item.plugin)
 
     def delete(self, item, force=False):
         if not item:
