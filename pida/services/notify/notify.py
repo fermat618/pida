@@ -64,7 +64,7 @@ class NotifyItem(object):
 
     def cb_clicked(self, w, ev):
         if self.callback is not None:
-            self.callback(self, w, ev)
+            self.callback(self)
 
 
 class NotifyView(PidaView):
@@ -87,6 +87,7 @@ class NotifyView(PidaView):
                 Column('markup', use_markup=True, expand=True),
             ])
         self.notify_list.set_headers_visible(False)
+        self.notify_list.connect('double-click', self.on_notify_list_click)
         self._hbox.pack_start(self.notify_list)
 
     def create_toolbar(self):
@@ -97,6 +98,9 @@ class NotifyView(PidaView):
         self._bar.pack_start(self._clear_button, expand=False)
         self._hbox.pack_start(self._bar, expand=False)
         self._bar.show_all()
+
+    def on_notify_list_click(self, olist, item):
+        item.cb_clicked(None, None)
 
     def on_clear_button(self, w):
         self.clear()
@@ -162,9 +166,11 @@ class NotifyPopupView(object):
 
     def add_item(self, item):
 
+        # create layout
+        eventbox = gtk.EventBox()
+        eventbox.set_events(eventbox.get_events() | gtk.gdk.BUTTON_PRESS_MASK)
+        eventbox.connect('button-press-event', item.cb_clicked)
         hbox = gtk.HBox()
-        hbox.set_events(hbox.get_events() | gtk.gdk.BUTTON_PRESS_MASK)
-        hbox.connect('button-press-event', item.cb_clicked)
 
         # create stock
         image = gtk.image_new_from_stock(item.stock, gtk.ICON_SIZE_MENU)
@@ -179,12 +185,13 @@ class NotifyPopupView(object):
         hbox.pack_start(label)
 
         # add item in vbox, and show popup
-        self.vbox.pack_start(hbox)
+        eventbox.add(hbox)
+        self.vbox.pack_start(eventbox)
         self.win.show_all()
 
         # don't remenber to hide him later
         self.counter += 1
-        gobject.timeout_add(item.timeout, self._remove_item, hbox)
+        gobject.timeout_add(item.timeout, self._remove_item, eventbox)
 
     def _remove_item(self, widget):
         self.vbox.remove(widget)
