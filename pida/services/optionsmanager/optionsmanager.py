@@ -111,6 +111,7 @@ class PidaOptionsView(PidaGladeView):
         options = list(svc.get_options().iter_options())
         options.sort()
         for opt in options:
+            print opt.name, '1'
             vb = gtk.VBox(spacing=2)
             vb.set_border_width(6)
             eb = gtk.EventBox()
@@ -127,7 +128,9 @@ class PidaOptionsView(PidaGladeView):
             widgetsizer.add_widget(optwidget)
             hb.pack_start(optwidget, expand=True)
             optwidget.update(opt.get_value())
+            print 2
             optwidget.connect('content-changed', self._on_option_changed, opt)
+            print 3
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)
             self._tips.set_tip(eb, opt.doc)
         return mainvb
