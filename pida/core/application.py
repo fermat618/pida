@@ -108,7 +108,7 @@ def set_trace():
         fn = frame.f_code.co_filename
         ln = frame.f_lineno
         co = linecache.getline(fn, ln).strip()
-        print '%s %s %s' % (ss * '>', fn, co)
+        print '%s %s:%s %s' % (ss * '>', fn, ln, co)
     sys.settrace(traceit)
 
 def main():
