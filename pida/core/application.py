@@ -114,7 +114,7 @@ def set_trace():
                 print '%s=%s' % (k, i)
             except:
                 print k, 'unable to print value'
-            print
+        print
     sys.settrace(traceit)
 
 def main():
