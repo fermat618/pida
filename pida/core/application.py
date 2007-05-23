@@ -101,6 +101,16 @@ def force_quit(signum, frame):
 
 # Set the signal handler and a 5-second alarm
 
+def set_trace():
+    import linecache
+    def traceit(frame, event, arg):
+        ss = frame.f_code.co_stacksize
+        fn = frame.f_code.co_filename
+        ln = frame.f_lineno
+        co = linecache.getline(fn, ln).strip()
+        print '%s %s %s' % (ss * '>', fn, co)
+    sys.settrace(traceit)
+
 def main():
     env = Environment(sys.argv)
     if env.is_debug():
@@ -108,6 +118,8 @@ def main():
         os.environ['PIDA_LOG_STDERR'] = '1'
     else:
         warnings.filterwarnings("ignore")
+    if env.is_trace():
+        set_trace()
     if env.is_version():
         run_func = run_version
     else:

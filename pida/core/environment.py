@@ -44,6 +44,8 @@ class Environment(object):
             help=_('Print version information and exit.'))
         op.add_option('-D', '--debug', action='store_true',
             help=_('Run PIDA with added debug information.'))
+        op.add_option('-T', '--trace', action='store_true',
+            help=_('Run PIDA with tracing.'))
         self.opts, self.args = op.parse_args(argv)
 
     def is_version(self):
@@ -51,6 +53,9 @@ class Environment(object):
 
     def is_debug(self):
         return self.opts.debug
+
+    def is_trace(self):
+        return self.opts.trace
 
     def get_base_service_directory(self):
         return os.path.join(
