@@ -109,6 +109,13 @@ def set_trace():
         ln = frame.f_lineno
         co = linecache.getline(fn, ln).strip()
         print '%s %s:%s %s' % (ss * '>', fn, ln, co)
+        if 'threading.py' not in fn:
+            for k, i in frame.f_locals.items():
+                try:
+                    print '%s=%s' % (k, i)
+                except:
+                    print k, 'unable to print value'
+            print
     sys.settrace(traceit)
 
 def main():
