@@ -250,7 +250,7 @@ class Webbrowser(Service):
         self._views = []
 
     def browse(self, url):
-        if gtkhtml is None:
+        if gtkhtml2 is None:
             webbrowser.open(url)
         else:
             view = BrowserView(self)
