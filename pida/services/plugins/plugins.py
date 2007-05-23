@@ -30,6 +30,7 @@ import base64
 import shutil
 
 from kiwi.ui.objectlist import Column
+from pida import PIDA_VERSION
 from pida.ui.views import PidaGladeView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
@@ -38,10 +39,13 @@ from pida.core.options import OptionsConfig, OTypeBoolean
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
-from pida.core.options import OptionItem, manager, OTypeStringList
+from pida.core.options import OptionItem, manager, OTypeStringList, OTypeString
 
 from pida.utils.web import fetch_url
 from pida.utils.configobj import ConfigObj
+
+# consts
+PLUGIN_RPC_URL = 'http://pida.co.uk/community/RPC2'
 
 # locale
 from pida.core.locale import Locale
@@ -355,12 +359,23 @@ class PluginsOptionsConfig(OptionsConfig):
 
     def create_options(self):
         self.create_option(
+            'rpc_url',
+            _('Webservice Url'),
+            OTypeString,
+            PLUGIN_RPC_URL,
+            _('URL of Webservice to download plugins'),
+            self.on_rpc_url)
+
+        self.create_option(
             'check_for_updates',
             _('Check updates'),
             OTypeBoolean,
             True,
             _('Check for plugins updates in background'),
             self.on_check_for_updates)
+
+    def on_rpc_url(self, client, id, entry, option):
+        self.svc.rpc_url = option.get_value()
 
     def on_check_for_updates(self, client, id, entry, option):
         self.svc.check_for_updates(option.get_value())
@@ -379,7 +394,7 @@ class Plugins(Service):
     actions_config = PluginsActionsConfig
     options_config = PluginsOptionsConfig
     events_config = PluginsEvents
-    rpc_url = 'http://pida.co.uk/community/RPC2'
+    rpc_url = PLUGIN_RPC_URL
 
     def pre_start(self):
         self._check = False
@@ -395,6 +410,7 @@ class Plugins(Service):
         manager.register_option(self._start_list)
 
     def start(self):
+        self.rpc_url = self.opt('rpc_url')
         self.update_installed_plugins(start=True)
         self.check_for_updates(self.get_option('check_for_updates').get_value())
 
@@ -453,7 +469,8 @@ class Plugins(Service):
                     continue
                 plugin_path = os.path.dirname(service_file)
                 try:
-                    self.boss.start_plugin(plugin_path)
+                    plugin = self.boss.start_plugin(plugin_path)
+                    self.emit('plugin_started', plugin=plugin)
                     plugin_item.enabled = True
                 except ServiceLoadingError, e:
                     self.log_error(e)
@@ -492,7 +509,7 @@ class Plugins(Service):
         self._view.start_pulse(_('Download available plugins'))
         try:
             proxy = xmlrpclib.ServerProxy(self.rpc_url)
-            plist = proxy.plugins.list()
+            plist = proxy.plugins.list({'version': PIDA_VERSION})
             for k in plist:
                 item = plist[k]
                 inst = None
