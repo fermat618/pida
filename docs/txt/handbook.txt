@@ -1,0 +1,209 @@
+PIDA Handbook
+=============
+David Soulayrol
+$Id$
+
+//////////////////////////////////////////////////////////////////////////////
+Please note here typo or documentation format rules that should be consistent
+throughout the whole document.
+
+- Ref should be explicit and composed using the hierarchy of the document
+   ie: service_project_manager
+//////////////////////////////////////////////////////////////////////////////
+
+
+PIDA is an IDE (integrated development environment). PIDA is different from other IDEs in that it will use the tools that are already available rather than attempting to reinvent each one. PIDA is written in Python with the PyGTK toolkit, and although it is designed to be used to program in any language, PIDA has fancy Python IDE features.
+
+This document describes PIDA features and usage. It is aimed at providing help for new comers and advanced users. Developer documentation is available in other sources for those who want to hack PIDA.
+
+CAUTION: Since PIDA is still being actively worked on, this manual is still incomplete and will grow with time.
+
+
+[#pida on freenode.net]
+_________________________________________________________
+[verse]
+.........................................................
+<tito> aa_: PIDA is an acronym ?
+<Zapek> PIDA Is Da Acronym
+<mnemoc> Python Integrated Developmenet Architecture iirc
+<aa_> Zapek: I like it
+.........................................................
+_________________________________________________________
+
+[[introduction]]
+Introduction
+------------
+There are many IDE around, and some are very good. But lots of them are also _closed_ in the sense that they are limited in terms of extensibility or communication with other tools. On the other hand, some of you may want to change your editor for anything else, even if you have to rely on external tools to complete its features.
+
+PIDA was designed with these problems in mind. PIDA's _motto_ is to reuse the tools that proved to be useful and solid, and to provide the glue for them. PIDA is written in Python with *PyGTK*, is easily extensible through plug-ins and can embed any editor provided someone writes an adapter for it.
+
+PIDA has a number of unique features, such as
+
+- Embedding Vim, Emacs or any editor. 
+footnote:[Of course, the editor has to provide a way to communicate with for external programs. *Moo*, *Scite*, and probably *GEdit* could be candidates]
+- Using any version control system.
+
+[[installation]]
+Installation
+------------
+PIDA is still not considered finalised by its authors. The most recent version lies in SVN repository, but milestones are available though to provide a snapshot of the development to the less adventurers.
+
+[[installation_compilation]]
+Compilation from sources
+~~~~~~~~~~~~~~~~~~~~~~~~
+The current development version is hosted on Google Code Subversion repository. You can use the following command to anonymously check the latest source code.
+-------------------------------------------------------
+svn checkout http://pida.googlecode.com/svn/trunk/ pida
+-------------------------------------------------------
+
+PIDA can be executed from its source directory. FIXME.
+
+[[installation_packages]]
+Distribution packages
+~~~~~~~~~~~~~~~~~~~~~
+Though there is still a long way before PIDA can be considered mature, it is already packaged by several Linux and BSD(FIXME?) distributions. Use the guidelines of your distribution to install or remove PIDA from your system.
+
+.Known distributions to provide PIDA
+`-------------`----------------------`-----------
+Distribution   Distribution version  PIDA version
+-------------------------------------------------
+Debian         Etch (_stable_)       0.3.1
+Debian         Lenny (_testing_)     0.4.4
+Debian         Sid (_unstable_)      0.4.4
+Gentoo         FIXME.                FIXME.
+Ubuntu         Breezy Badger         0.2.2
+Ubuntu         Dapper Drake          0.2.2
+Ubuntu         Edgy Eft              0.3.1
+Ubuntu         Feisty Fawn           0.3.1
+Ubuntu         Gutsy                 0.4.4
+-------------------------------------------------
+
+IMPORTANT: There are chances that the version packaged is a bit outdated. Please consider trying to install the most recent version before reporting a bug. You can either compile pida from sources or try to use a package prepared for a more recent version of your distribution.
+
+[[installation_windows]]
+MS Windows
+~~~~~~~~~~
+FIXME.
+
+Some pointers on how to install PIDA dependencies can be found http://code.google.com/p/pida/wiki/WindowsInstallation[here]
+
+[[installation_mac]]
+Mac OS X
+~~~~~~~~
+FIXME.
+
+
+[[getting_started]]
+Getting started
+---------------
+FIXME.
+
+[[getting_started_wizard]]
+First run wizard 
+~~~~~~~~~~~~~~~~
+NOTE: This feature is planned for a future version of PIDA, which is still undetermined yet.
+
+[[getting_started_window]]
+The PIDA window
+~~~~~~~~~~~~~~~
+File menu:
+
+Edit menu:
+
+project menu:
+
+[[getting_started_editor]]
+The editor
+~~~~~~~~~~
+FIXME.
+
+[[getting_started_views]]
+Views
+~~~~~
+FIXME.
+
+
+[[services]]
+Core services
+-------------
+FIXME.
+
+Editor
+~~~~~~
+
+Emacs
+^^^^^
+FIXME.
+
+Vim
+^^^
+FIXME.
+
+File Manager
+~~~~~~~~~~~~
+FIXME.
+
+[[service_project_manager]]
+Project Manager
+~~~~~~~~~~~~~~~
+FIXME.
+
+[[service_terminal]]
+Terminal
+~~~~~~~~
+FIXME.
+
+[[service_version_control]]
+Version Control
+~~~~~~~~~~~~~~~
+FIXME.
+
+Preferences
+~~~~~~~~~~~
+FIXME.
+
+
+[[plugins]]
+Plug-ins
+--------
+FIXME.
+
+Bookmark
+~~~~~~~~
+Manage bookmark (files, directories...)
+
+Checklist
+~~~~~~~~~
+FIXME.
+
+GTags
+~~~~~
+GNU Global Integration » Build global index, search through database
+
+Library
+~~~~~~~
+FIXME.
+
+Man
+~~~
+Search and browse man page
+
+PasteBin
+~~~~~~~~
+Send code to a pastebin service
+ 
+Python
+~~~~~~
+Show class/function from python file, and show compilation errors
+
+RFC
+~~~
+Download RFC index, search and view RFC pages inside PIDA
+
+TODO
+~~~~
+Manage a personal todo list per project
+
+Trac
+~~~~
+View bugs from Trac project inside PIDA
