@@ -383,17 +383,25 @@ class Emacs(Service):
         """Grab the focus"""
         self._view.grab_input_focus()
 
-    #def define_sign_type(self, name, icon, linehl, text, texthl):
-
-    #def undefine_sign_type(self, name):
-
+    def define_sign_type(self, name, icon, linehl, text, texthl):
+        # TODO
+        pass
+    
+    def undefine_sign_type(self, name):
+        # TODO
+        pass
+    
     #def _add_sign(self, type, filename, line):
         
     #def _del_sign(self, type, filename, line):
 
-    #def show_sign(self, type, filename, line):
-   
-    #def hide_sign(self, type, filename, line):
+    def show_sign(self, type, filename, line):
+        # TODO
+        pass
+    
+    def hide_sign(self, type, filename, line):
+        # TODO
+        pass
     
     def set_current_line(self, line_number):
         self._current_line = line_number
