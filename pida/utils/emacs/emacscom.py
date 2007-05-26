@@ -94,6 +94,9 @@ class EmacsClient(object):
     def paste(self):
         self._send('(yank)')
 
+    def ping(self):
+        self._send('(pida-ping)')
+        
     def goto_line(self, line):
         self._send('(goto-line %s)' % line)
 
@@ -237,7 +240,11 @@ EMACS_SCRIPT = """;; Emacs client script for Pida.
 (defun pida-send-message (message)
   (process-send-string "pida-connection"
 		       (concat message pida-connection-terminator)))
+
   
+(defun pida-ping ()
+  (pida-send-message "pida-pong ready"))
+
 ;; hook to the events pida is interested in.
 (add-hook 
  'find-file-hooks

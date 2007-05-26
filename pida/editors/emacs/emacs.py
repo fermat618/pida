@@ -31,6 +31,7 @@ The Emacs editor for Pida is also, heavily based on the Vim editor.
 
 import logging
 import os
+import gobject
 import gtk
 
 # PIDA Imports
@@ -211,6 +212,11 @@ class EmacsCallback(object):
     def has_quit(self):
         return self._has_quit
 
+    def cb_pida_pong(self, foo):
+        self._log.debug('emacs ready')
+        self._svc.emit_editor_started()
+        return True
+
     def cb_window_configuration_change_hook(self, filename):
         current = self._svc.current_document
         if filename and (not current or current.filename != filename):
@@ -268,7 +274,7 @@ class Emacs(Service):
         f.write(EMACS_SCRIPT)
         f.close()
 
-    def _emit_editor_started(self):
+    def emit_editor_started(self):
         self.boss.get_service('editor').emit('started')
 
     def pre_start(self):
@@ -291,7 +297,7 @@ class Emacs(Service):
         # Now create the socket and embed the Emacs window.
         self._view.run()
         if self._cb.connect():
-            self._emit_editor_started()
+            gobject.timeout_add(250, self._client.ping)
 
     def stop(self):
         if not self._cb.has_quit():
