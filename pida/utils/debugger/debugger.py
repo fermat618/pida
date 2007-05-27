@@ -408,6 +408,8 @@ class Debugger(Service):
 
     controller_config = GenericDebuggerController
 
+    _controller = None
+
     def _toggle_breakpoint(self, file, line):
         if self._controller.store_breakpoint(file, line):
             self.boss.editor.cmd('show_sign', type='breakpoint', 
