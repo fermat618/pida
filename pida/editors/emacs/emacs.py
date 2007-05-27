@@ -195,29 +195,28 @@ class EmacsCallback(object):
         self._log = logging.getLogger('emacs')
         self._svc = svc
         self._server = EmacsServer(self)
-        self._last_opened_file = ''
-        self._last_top_buffer = ''
-        self._has_quit = False
 
     def connect(self):
         """Establish the link with Emacs."""
         return self._server.connect()
 
-    def get_last_opened_file(self):
-        return self._last_opened_file
-
-    def get_last_top_buffer(self):
-        return self._last_top_buffer
-
-    def has_quit(self):
-        return self._has_quit
-
     def cb_pida_pong(self, foo):
+        """Emacs response to a ping.
+
+        This message is used to test connection at startup.
+        """
         self._log.debug('emacs ready')
         self._svc.emit_editor_started()
         return True
 
     def cb_window_configuration_change_hook(self, filename):
+        """Buffer changed event.
+
+        Actually, this hook is called whenever the window containing the
+        buffer changes. So notification can occur only when window is resized
+        or split for example.
+        """
+        self._svc.top_buffer = filename
         current = self._svc.current_document
         if filename and (not current or current.filename != filename):
             self._log.debug('emacs buffer changed "%s"' % filename)
@@ -225,11 +224,11 @@ class EmacsCallback(object):
                 self._svc.boss.cmd('filemanager', 'browse', new_path=filename)
                 self._svc.boss.cmd('filemanager', 'present_view')
             else:
-                self._last_top_buffer = filename
                 self._svc.boss.cmd('buffer', 'open_file', file_name=filename)
         return True
     
     def cb_kill_buffer_hook(self, filename):
+        """Buffer closed event."""
         if filename:
             self._log.debug('emacs buffer killed "%s"' % filename)
             self._svc.remove_file(filename)
@@ -237,21 +236,23 @@ class EmacsCallback(object):
         return True
 
     def cb_find_file_hooks(self, filename):
+        """File opened event."""
         # Nothing to do here. The window configuration change hook will
         # provide notification for the new buffer.
         if filename:
             self._log.debug('emacs buffer opened "%s"' % filename)
-            self._last_opened_file = filename
         return True
     
     def cb_after_save_hook(self, filename):
+        """Buffer saved event."""
         self._log.debug('emacs buffer saved "%s"' % filename)
         self._svc.boss.cmd('buffer', 'current_file_saved')
         return True
     
     def cb_kill_emacs_hook(self, foo):
+        """Emacs killed event."""
         self._log.debug('emacs killed')
-        self._has_quit = True
+        self._svc.inactivate_client()
         self._svc.boss.stop(force=True)
         return False
 
@@ -282,9 +283,15 @@ class Emacs(Service):
         self._log = build_logger('emacs')
         self._create_initscript()
         self._documents = {}
+
+        # The current document. Its value is set by Pida and used to drop
+        # useless messages to emacs.
         self._current = None
-        self._sign_index = 0
-        self._signs = {}
+
+        # The current buffer displayed. Its value is set by the EmacsCallback
+        # instance and is used as well to prevent sending useless messages.
+        self._top_buffer = ''
+
         self._current_line = 1
         self._cb = EmacsCallback(self)
         self._client = EmacsClient()
@@ -300,29 +307,42 @@ class Emacs(Service):
             gobject.timeout_add(250, self._client.ping)
 
     def stop(self):
-        if not self._cb.has_quit():
-            self._client.quit()
+        self._client.quit()
 
-    def get_current_document(self):
+    def _get_current_document(self):
         return self._current
 
-    def set_current_document(self, document):
+    def _set_current_document(self, document):
         self._current = document
 
-    current_document = property(fget=get_current_document,
-                                fset=set_current_document,
+    current_document = property(fget=_get_current_document,
+                                fset=_set_current_document,
                                 fdel=None,
                                 doc="The document currently edited")
+
+    def _get_top_buffer(self):
+        return self._top_buffer
+
+    def _set_top_buffer(self, filename):
+        self._top_buffer = filename
+
+    top_buffer = property(fget=_get_top_buffer,
+                          fset=_set_top_buffer,
+                          fdel=None,
+                          doc="The last buffer reported as being viewed by emacs")
+
+    def inactivate_client(self):
+        self._client.inactivate()
 
     def open(self, document):
         """Open a document"""
         if document is not self._current:
-            if document.unique_id in self._documents:
-                if self._cb.get_last_top_buffer() != document.filename:
+            if self.top_buffer != document.filename:
+                if document.unique_id in self._documents:
                     self._client.change_buffer(document.filename)
-            elif self._cb.get_last_opened_file() != document.filename:
-                self._client.open_file(document.filename)
-                self._documents[document.unique_id] = document
+                else:
+                    self._client.open_file(document.filename)
+                    self._documents[document.unique_id] = document
             self.current_document = document
 
     def open_many(documents):
