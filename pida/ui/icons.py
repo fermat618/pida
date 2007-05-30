@@ -40,9 +40,10 @@ class IconRegister(object):
         self._register_icon_set(icon_set, name)
 
     def _register_file_icon(self, name, filename):
-        im = gtk.Image()
-        im.set_from_file(filename)
-        pb = im.get_pixbuf()
+        #im = gtk.Image()
+        #im.set_from_file(filename)
+        #pb = im.get_pixbuf()
+        pb = gtk.gdk.pixbuf_new_from_file_at_size(filename, 32, 32)
         icon_set = gtk.IconSet(pb)
         self._register_icon_set(icon_set, name)
         # this is broken for some reason
