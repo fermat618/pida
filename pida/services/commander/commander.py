@@ -33,6 +33,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, \
     OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida import PIDA_VERSION
 
 from pida.utils.gthreads import AsyncTask
 
@@ -409,8 +410,12 @@ class Commander(Service):
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
+        env_pida = env
+        env_pida.append('PIDA_VERSION=%s' % PIDA_VERSION)
+        env_pida.append('PIDA_PROJECT=%s' % self.boss.cmd('project',
+            'get_current_project').source_directory)
         t = TerminalView(self, title, icon)
-        t.execute(commandargs, env, cwd, eof_handler, use_python_fork, parser_func)
+        t.execute(commandargs, env_pida, cwd, eof_handler, use_python_fork, parser_func)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
         return t
