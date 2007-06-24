@@ -16,16 +16,14 @@ def relative_to(base_path):
     """
     will turn absolute paths to paths relative to the base_path
 
-    :warning:
+    .. warning:
         will only work on paths below the base_path
         other paths will be unchanged
     """
     base_path = os.path.normpath(base_path)
     l = len(base_path)
-    print "REL TO",base_path
     def process_path(path):
 
-        print "rel from",path,"to",base_path
         if path.startswith(base_path):
             return "." + path[l:]
         else:
@@ -163,14 +161,7 @@ class CommandBased(VCSBase):
         return self.execute_command(args, result_type=iter, **kw)
 
 
-class CachedCommandMixin(object):
-    
-    def cache_impl(self,**kw):
-        args = self.get_cache_args(**kw)
-        return self.execute_command(args, result_type=iter, **kw)
-
-
-class DCommandBased(CommandBased, DVCSMixin):
+class DCommandBased(CommandBased,DVCSMixin):
     """
     base class for all distributed command based rcs's
     """
@@ -263,8 +254,12 @@ class Monotone(DCommandBased):
         return Path(os.path.normpath(item[8:].rstrip()), state, self.base_path)
 
 
-class Bazaar(DCommandBased, CachedCommandMixin):
-
+class Bazaar(DCommandBased):
+    """
+    .. warning:
+        badly broken
+    """
+    #TODO: fix caching
     cmd = "bzr"
 
     detect_subdir = ".bzr"
@@ -368,9 +363,9 @@ class Mercurial(DCommandBased):
 
 
 class Darcs(DCommandBased):
+    #TODO: ensure this really works in most cases
 
     cmd = 'darcs'
-
     detect_subdir = '_darcs'
 
     def get_list_args(self, **kw):
@@ -391,4 +386,10 @@ class Darcs(DCommandBased):
         state = self.state_map[elements[0]]
         file = os.path.normpath(elements[1])
         return Path(file, state, self.base_path)
+
+
+class Git(DCommandBased):
+    #TODO: change parse_list_item interface to get around git status
+    cmd = 'git'
+    detect_subdir = 'git'
 
