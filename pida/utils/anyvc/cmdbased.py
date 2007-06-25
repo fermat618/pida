@@ -8,6 +8,7 @@
 from subprocess import Popen, PIPE, STDOUT
 import os.path 
 
+#TODO: more reviews
 
 from bases import VCSBase, DVCSMixin
 from file import StatedPath as Path
@@ -42,8 +43,6 @@ class CommandBased(VCSBase):
         self.base_path = self.find_basepath()
     
     def find_basepath(self):
-        dsd = self.detect_subdir
-             
         act_path = self.path
         detected_path = None
         detected_sd = None
@@ -75,11 +74,11 @@ class CommandBased(VCSBase):
     def execute_command(self, args, result_type=str, **kw):
         if not args:
             raise ValueError('need a valid command')
-        ret = Popen( 
-                [self.cmd] + args, 
-                stdout=PIPE, 
+        ret = Popen(
+                [self.cmd] + args,
+                stdout=PIPE,
                 stderr=STDOUT,
-                cwd=self.base_path, 
+                cwd=self.base_path,
                 close_fds=True)
         if result_type is str:
             return ret.communicate()[0]
@@ -149,7 +148,7 @@ class CommandBased(VCSBase):
         args = self.get_revert_args(**kw)
         return self.execute_command(args, **kw)
 
-    def list_impl(self, recursive,**kw):
+    def list_impl(self, **kw):
         """
         the default implementation is only cappable of 
         recursive operation on the complete workdir
@@ -159,6 +158,20 @@ class CommandBased(VCSBase):
         """
         args = self.get_list_args(**kw)
         return self.execute_command(args, result_type=iter, **kw)
+    
+    def cache_impl(self, recursive, **kw):
+        """
+        only runs caching if it knows, how
+        """
+        args = self.get_cache_args(**kw)
+        print 'cache_args', args
+        if args:
+            return self.execute_command(args, result_type=iter, **kw)
+        else:
+            return []
+
+    def get_cache_args(self, **kw):
+        return None
 
 
 class DCommandBased(CommandBased,DVCSMixin):
@@ -265,7 +278,6 @@ class Bazaar(DCommandBased):
     detect_subdir = ".bzr"
 
     def get_list_args(self, recursive=True, paths=(),**kw):
-        print "XXX",repr(paths)
         ret = ["ls","-v"]
         if not recursive:
             ret.append("--non-recursive")
@@ -273,7 +285,6 @@ class Bazaar(DCommandBased):
         return ret
     
     def get_cache_args(self, paths=(), **kw):
-        print "CACHE",repr(locals())
         return ["st"]
 
     statemap  = {
@@ -285,26 +296,24 @@ class Bazaar(DCommandBased):
             "modified:": 'modified',
             "conflicts:": 'conflict' }
     
-    def parse_cache_item(self, item, actstate):
-        item = item.rstrip()
-        newstate = self.statemap.get(item, None)
-        if newstate is not None:
-            return None, newstate
-        elif item.startswith("  "):
-            return item.strip(), actstate
+    def parse_cache_items(self, items):
+        state = 'none'
+        for item in items:
+            item = item.rstrip()
+            state = self.statemap.get(item, state)
+            if item.startswith("  "):
+                yield item.strip(), state
         
-        print "XXX-item", item, actstate
-        return None, actstate
     
-    def parse_list_item(self, item):
-        if item.startswith("I"):
+    def parse_list_item(self, items, cache):
+        if item.startswith('I'):
             return Path(item[1:].strip(), 'ignored', self.base_path)
         else:
             fn = item[1:].strip()
             return Path(
-                fn, 
-                self._cache.get(fn, 'normal'),
-                self.base_path)
+                    fn, 
+                    cache.get(fn, 'normal'),
+                    self.base_path)
 
 
 class SubVersion(CommandBased):
@@ -388,8 +397,52 @@ class Darcs(DCommandBased):
         return Path(file, state, self.base_path)
 
 
-class Git(DCommandBased):
-    #TODO: change parse_list_item interface to get around git status
+class Git(CommandBased):
+    """
+    experimental
+    copyed processing from http://www.geekfire.com/~alex/pida-git.py by alex
+    """
     cmd = 'git'
-    detect_subdir = 'git'
+    detect_subdir = '.git'
+    
+    statemap = {
+        None: 'normal',
+        "new file": 'new',
+        "": 'normal',
+        "modified": 'modified',
+        "unmerged": 'conflict',
+        "deleted": 'removed'
+        }
+
+
+    def get_list_args(self, paths=(), recursive=True, **kw):
+        return ['ls-tree', '-r', 'HEAD']
+
+    def get_cache_args(self, **kw):
+        return ['status']
+    
+    def parse_list_items(self, items, cache):
+        print cache
+        for item in items:
+            item = item.split()[-1]
+            path = Path(item, cache.get(item, 'normal'), self.base_path)
+            if path.state != 'normal':
+                print repr(path)
+            yield path
+    
+    def parse_cache_items(self, items):
+        #TODO: fix the mess
+        for a in items:
+            if not a:continue
+            ev, date, options, tag = [""]*4
+            if a.startswith('#\t'):
+                a = a.strip("#\t")
+            if a.startswith('('):
+                continue # ignore some odd lines
+            state_and_name = a.split(':')
+            if len(state_and_name) < 2:
+                yield state_and_name[0].strip(), 'normal'
+            else:
+                yield state_and_name[1].strip(), self.statemap.get(state_and_name[0].strip())
+
 

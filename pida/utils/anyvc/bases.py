@@ -30,36 +30,66 @@ class VCSBase(object):
     """
     
     def __init__(self, path):
-        self._cache = None
         self.setup()
         self.path = path
 
+    def parse_list_items(self, items, cache):
+        """
+        redirect to parse_list_item
+        a more complex parser might need to overwrite
+        """
+        for item in items:
+            yield self.parse_list_item(item)
+
     def parse_list_item(self, item):
+        """
+        parse a single listing item
+        """
         raise NotImplementedError
 
-    def parse_cache_item(self, item, last_state):
-        raise NotImplementedError
+    def parse_cache_items(self, items):
+        """
+        parses vcs specific cache items to a list of (name, state) tuples
+        """
+        return []
 
     def cache_impl(self, paths=False, recursive=False):
-        return [] # generating a result dataset is only necessary for messed up vcs's 
+        """
+        creates a list of vcs specific cache items
+        only necessary by messed up vcs's
+
+        in case of doubt - dont touch ^^
+        """
+        return []
 
     def list_impl(self, paths=False, recursive=False):
+        """
+        yield a list of vcs specific listing items
+        """
         raise NotImplementedError
     
     def cache(self, paths=(), recursive=False):
-        self._cache={}
-        state = "none"
-        for i in self.cache_impl(paths = paths, recursive=recursive):
-            path, state = self.parse_cache_item(i, state)
-            if path is not None:
-                self._cache[path] = state
+        """
+        return a mapping of name to cached states
+        only necessary for messed up vcs's
+        """
+        return dict(
+                self.parse_cache_items(
+                self.cache_impl(
+                    paths = paths,
+                    recursive=recursive
+                    )))
     
     def list(self, paths=(), recursive=False):
-        self.cache(paths = paths,recursive=recursive)
-        for i in self.list_impl(paths = paths, recursive=recursive):
-            parsed = self.parse_list_item(i)
-            if parsed is not None:
-                yield parsed
+        """
+        yield a list of Path instances tagged with status informations
+        """
+        cache = self.cache(paths = paths,recursive=recursive)
+        return self.parse_list_items(
+                self.list_impl(
+                    paths = paths, 
+                    recursive=recursive, 
+                    ), cache)
 
     def diff(self, paths=()):
         raise NotImplementedError
