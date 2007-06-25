@@ -412,8 +412,9 @@ class Commander(Service):
                 use_python_fork=False, parser_func=None):
         env_pida = env
         env_pida.append('PIDA_VERSION=%s' % PIDA_VERSION)
-        env_pida.append('PIDA_PROJECT=%s' % self.boss.cmd('project',
-            'get_current_project').source_directory)
+        current_project = self.boss.cmd('project', 'get_current_project')
+        if current_project:
+            env_pida.append('PIDA_PROJECT=%s' % current_project.source_directory)
         t = TerminalView(self, title, icon)
         t.execute(commandargs, env_pida, cwd, eof_handler, use_python_fork, parser_func)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
