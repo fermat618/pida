@@ -1,7 +1,5 @@
-PIDA Handbook
-=============
-David Soulayrol
-$Id$
+= PIDA Handbook
+
 
 //////////////////////////////////////////////////////////////////////////////
 Please note here typo or documentation format rules that should be consistent
@@ -19,11 +17,18 @@ throughout the whole document.
 //////////////////////////////////////////////////////////////////////////////
 
 
-PIDA is an IDE (integrated development environment). PIDA is different from other IDEs in that it will use the tools that are already available rather than attempting to reinvent each one. PIDA is written in Python with the PyGTK toolkit, and although it is designed to be used to program in any language, PIDA has fancy Python IDE features.
+PIDA is an IDE (integrated development environment). PIDA is different from
+other IDEs in that it will use the tools that are already available rather than
+attempting to reinvent each one. PIDA is written in Python with the PyGTK
+toolkit, and although it is designed to be used to program in any language, PIDA
+has fancy Python IDE features.
 
-This document describes PIDA features and usage. It is aimed at providing help for new comers and advanced users. Developer documentation is available in other sources for those who want to hack PIDA.
+This document describes PIDA features and usage. It is aimed at providing help
+for new comers and advanced users. Developer documentation is available in other
+sources for those who want to hack PIDA.
 
-CAUTION: Since PIDA is still being actively worked on, this manual is still incomplete and will grow with time.
+CAUTION: Since PIDA is still being actively worked on, this manual is still
+incomplete and will grow with time.
 
 
 [#pida on freenode.net]
@@ -40,37 +45,142 @@ _________________________________________________________
 [[introduction]]
 Introduction
 ------------
-There are many IDE around, and some are very good. But lots of them are also _closed_ in the sense that they are limited in terms of extensibility or communication with other tools. On the other hand, some of you may want to change your editor for anything else, even if you have to rely on external tools to complete its features.
+There are many IDE around, and some are very good. But lots of them are also
+_closed_ in the sense that they are limited in terms of extensibility or
+communication with other tools. On the other hand, some of you may want to
+change your editor for anything else, even if you have to rely on external tools
+to complete its features.
 
-PIDA was designed with these problems in mind. PIDA's _motto_ is to reuse the tools that proved to be useful and solid, and to provide the glue for them. PIDA is written in Python with *PyGTK*, is easily extensible through plug-ins and can embed any editor provided someone writes an adapter for it.
+PIDA was designed with these problems in mind. PIDA's _motto_ is to reuse the
+tools that proved to be useful and solid, and to provide the glue for them. PIDA
+is written in Python with *PyGTK*, is easily extensible through plug-ins and can
+embed any editor provided someone writes an adapter for it.
 
 PIDA has a number of unique features, such as
 
-- Embedding Vim, Emacs or any editor. 
-footnote:[Of course, the editor has to provide a way to communicate with for external programs. *Moo*, *Scite*, and probably *GEdit* could be candidates]
+- Embedding Vim, Emacs or any editor.
+footnote:[Of course, the editor has to provide a way to communicate with for
+external programs. *Moo*, *Scite*, and probably *GEdit* could be candidates]
 - Using any version control system.
 
+[[requirements]]
+== Requirements
+
+Because of the nature of PIDA there are a number of tools that may optionally
+be used, but are not absolutely required. The list of requirements is
+therefore split into absolute and relative requirements.
+
+=== Absolute Requirements
+
+.Python
+
+Python is the programming language PIDA is written in. PIDA requires any
+version of Python greater than or equal to 2.4. Python is available from
+the `Python Web Site`_ or more likely packaged for your distribution. Most
+desktop Linuxes come with Python preinstalled.
+
+.PyGTK
+
+PyGTK are the Python bindings for the GTK toolkit. Note that you will also
+need to have GTK installed for them to work. These are available from the
+`PyGTK Web Site`_ and the `GTK Web Site`_ or more likely packaged by your
+Linux distribution.
+
+.Kiwi
+
+Kiwi is a helper library for PyGTK. It was decided a while ago that there should
+not be a duplication in effort in creating common widgets and patterns withing
+PyGTK programs. For this reason common things exist in Kiwi, and PIDA developers
+contribute fixes back upstream to Kiwi. Kiwi is available in the contrib
+directory of the source code. It is recommended to use this version if at all
+possible. It contains no changes from the original, but it is ensured to have
+all the latest fixes.
+
+=== Compilation Requirements
+
+.Python development headers
+
+These are usually available in your distribution as python-dev. They are the
+headers required for building python extensions.
+
+.PyGTK development headers
+
+These are required to build the external moo_stub extension, and are usually
+available in your distribution as pygtk-dev or pygtk-devel etc. packages.
+
+
 [[installation]]
-Installation
-------------
-PIDA is still not considered finalised by its authors. The most recent version lies in SVN repository, but milestones are available though to provide a snapshot of the development to the less adventurers.
+== Installation
+
+PIDA is still not considered finalised by its authors. The most recent version
+lies in SVN repository, but milestones are available though to provide a
+snapshot of the development to the less adventurers.
 
 [[installation_compilation]]
-Compilation from sources
-~~~~~~~~~~~~~~~~~~~~~~~~
-The current development version is hosted on Google Code Subversion repository. You can use the following command to anonymously check the latest source code.
+=== Compilation from sources
+
+The source code comes with a standard Python installation method.
+
+.Build
+
+The build step is necessary even when running from source so as to ensure that
+the extensions are built.
+
+-------------------------------------------
+python setup.py build
+-------------------------------------------
+
+[NOTE]
+.Debian Users
+=============================================================================
+Due to the location of headers on Debian, users must first:
+-----------------------------------------------------------------------------
+export PKG_CONFIG_PATH=/usr/lib/pkgconfig/python2
+-----------------------------------------------------------------------------
+=============================================================================
+
+.Install
+
+Installation is the recommended method of running PIDA. Running from source
+should be reserved for people who know what they are doing.
+
+------------------------------------------------------------------------------
+python setup.py install
+------------------------------------------------------------------------------
+
+[NOTE]
+==============================================================================
+you may need to use sudo or equivalent to obtain superuser access if you are
+installing to a global location.
+==============================================================================
+
+.Run from source
+
+First copy the moo_stub.so (that was built in the build stage) from the build/
+directory somewhere into PYTHONPATH or the working directory. Then execute:
+
+------------------------------------------------------------------------------
+run-pida.sh
+------------------------------------------------------------------------------
+
+=== Obtaining the development source code
+
+The current development version is hosted on Google Code Subversion repository.
+You can use the following command to anonymously check the latest source code.
 -------------------------------------------------------
 svn checkout http://pida.googlecode.com/svn/trunk/ pida
 -------------------------------------------------------
 
-PIDA can be executed from its source directory. FIXME.
+PIDA can be executed from its source directory as outlined above.
 
 [[installation_packages]]
 Distribution packages
 ~~~~~~~~~~~~~~~~~~~~~
-Though there is still a long way before PIDA can be considered mature, it is already packaged by several Linux and BSD(FIXME?) distributions. Use the guidelines of your distribution to install or remove PIDA from your system.
+Though there is still a long way before PIDA can be considered mature, it is
+already packaged by several Linux and BSD(FIXME?) distributions. Use the
+guidelines of your distribution to install or remove PIDA from your system.
 
-.Known distributions to provide PIDA
+.Known distributions that provide PIDA
 `-------------`----------------------`-----------
 Distribution   Distribution version  PIDA version
 -------------------------------------------------
@@ -85,7 +195,10 @@ Ubuntu         Feisty Fawn           0.3.1
 Ubuntu         Gutsy                 0.4.4
 -------------------------------------------------
 
-IMPORTANT: There are chances that the version packaged is a bit outdated. Please consider trying to install the most recent version before reporting a bug. You can either compile pida from sources or try to use a package prepared for a more recent version of your distribution.
+IMPORTANT: There are chances that the version packaged is a bit outdated. Please
+consider trying to install the most recent version before reporting a bug. You
+can either compile pida from sources or try to use a package prepared for a more
+recent version of your distribution.
 
 [[installation_windows]]
 MS Windows
@@ -106,7 +219,7 @@ Getting started
 FIXME.
 
 [[getting_started_wizard]]
-First run wizard 
+First run wizard
 ~~~~~~~~~~~~~~~~
 NOTE: This feature is planned for a future version of PIDA, which is still undetermined yet.
 
