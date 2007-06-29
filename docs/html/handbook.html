@@ -1509,7 +1509,13 @@ function tocEntries(el, toclevels) {
 // This function does the work. toclevels = 1..4.
 function generateToc(toclevels) {
   var toc = document.getElementById("toc");
-  var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
+  var el = document.getElementById('doc');
+  var entries = false;
+  if ( el )
+	entries = tocEntries(el, toclevels);
+  else
+	entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
+  //var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
   for (var i = 0; i < entries.length; ++i) {
     var entry = entries[i];
     if (entry.element.id == "")
