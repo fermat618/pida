@@ -33,3 +33,5 @@ Absolute Requirements
 .. _Python Web Site: http://python.org/
 .. _PyGTK Web Site: http://pygtk.org/
 .. _GTK Web Site: http://gtk.org/
+
+// vim: set filetype=asciidoc :
