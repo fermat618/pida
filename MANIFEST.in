@@ -1,10 +1,10 @@
 include *.txt *.py *.sh
-recursive-include pida *.py *.txt *.po *.svg *.png *.xml *.glade service.pida
-recursive-include pida-plugins *.py *.txt *.po *.svg *.png *.xml  *.glade
-recursive-include contrib *.py *.txt *.po *.svg *.png *.xml  *.glade
-recursive-include tests *.py *.txt *.po *.svg *.png *.xml  *.glade
+recursive-include pida *
+recursive-include pida-plugins *
+recursive-include contrib *
+recursive-include tests *
 recursive-include moo *
 recursive-include bin *
 recursive-include tools *
-recursive-include docs *.txt *.html *.png
+recursive-include docs *
 
