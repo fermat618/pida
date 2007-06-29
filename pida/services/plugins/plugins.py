@@ -45,7 +45,7 @@ from pida.utils.web import fetch_url
 from pida.utils.configobj import ConfigObj
 
 # consts
-PLUGIN_RPC_URL = 'http://pida.co.uk/community/RPC2'
+PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
 
 # locale
 from pida.core.locale import Locale
