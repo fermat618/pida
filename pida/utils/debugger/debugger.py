@@ -35,6 +35,62 @@ from pida.core.interfaces import IProjectController
 
 from pida.utils.debugger.views import DebuggerBreakPointsView, DebuggerStackView
 
+# Breakpoints
+
+class Breakpoint(object):
+    def __init__(self, file, line, enabled=False, ident=None):
+        self.file = file
+        self.line = line
+        self.enabled = enabled
+        self.ident = ident
+    
+    def get_location(self):
+        return (self.file, self.line)
+    location = property(get_location)
+
+class BreakpointHandlerInterface(object):
+    __breakpoints = {}
+    def on_add_breakpoint(self, b, enabled=True):
+        """
+        if enabled
+            if b in breakpoints:
+                if b is disabled:
+                    enable b
+            else
+                if b in breakpoi
+                add b
+        else
+
+
+
+        """
+        if b.enabled is True:
+            if b.location not in self.__breakpoints:
+                self.__breakpoints[b.location] = b
+        else:
+            self.__breakpoints[b.location].enabled = True
+
+    def on_del_breakpoint(self, b, enabled=True):
+        if b.enabled is True:
+            if b.location in self.__breakpoints:
+                self.__breakpoints[b.location].enabled = False
+        else:
+            if b.location in self.__breakpoints:
+                self.__breakpoints.remove(b.location)
+
+
+    def on_toggle(self, b):
+        if (file, line) in self.__breakpoints:
+            self.on_del_breakpoint(file, line, False)
+        else:
+            self.on_add_breakpoint(file, line, False)
+
+    def add_breakpoint(self, b):
+        raise NotImplementedError
+
+    def del_breakpoint(self, b):
+        raise NotImplementedError
+
 # Actions
 class DebuggerActionsConfig(ActionsConfig):
     def create_actions(self):
