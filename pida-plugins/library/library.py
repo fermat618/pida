@@ -53,7 +53,7 @@ _ = locale.gettext
 class LibraryView(PidaGladeView):
     
     _columns = [
-        Column('title', expand=True)
+        Column('title', expand=True, sorted=True)
     ]
 
     gladefile = 'library-viewer'
