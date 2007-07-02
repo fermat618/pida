@@ -31,6 +31,13 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="tools" />
+            <separator />
+            <placeholder name="panes">
+            <separator />
+            <menuitem action="focus_editor" name="focus_editor" />
+            <separator />
+            </placeholder>
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

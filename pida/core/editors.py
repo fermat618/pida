@@ -89,6 +89,17 @@ class EditorActionsConfig(ActionsConfig):
             self.on_save,
         )
 
+        self.create_action(
+            'focus_editor',
+            TYPE_NORMAL,
+            _('Focus Editor'),
+            _('Focus the editor component window'),
+            'application-edit',
+            self.on_focus_editor,
+            '<Shift><Control>e',
+        )
+
+
     def on_undo(self, action):
         self.svc.undo()
 
@@ -107,6 +118,8 @@ class EditorActionsConfig(ActionsConfig):
     def on_save(self, action):
         self.svc.save()
 
+    def on_focus_editor(self, action):
+        self.svc.grab_focus()
 
 class EditorCommandsConfig(CommandsConfig):
 
