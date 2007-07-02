@@ -60,6 +60,17 @@ class ContextCommandsConfig(CommandsConfig):
             time = event.time
         menu.popup(None, None, None, button, time)
 
+class ContextEventsConfig(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        self.subscribe_foreign_event('plugins', 'plugin_started',
+            self.plugins_changed)
+        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+            self.plugins_changed)
+
+    def plugins_changed(self, plugin):
+        self.svc.create_uims()
+
 
 # Service class
 class Contexts(Service):
@@ -67,11 +78,12 @@ class Contexts(Service):
 
     features_config = ContextFeaturesConfig
     commands_config = ContextCommandsConfig
+    events_config = ContextEventsConfig
 
     def start(self):
-        self._create_uims()
+        self.create_uims()
 
-    def _create_uims(self):
+    def create_uims(self):
         self._uims = {}
         for context in CONTEXT_TYPES:
             uim = self._uims[context] = gtk.UIManager()
