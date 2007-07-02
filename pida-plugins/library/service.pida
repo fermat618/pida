@@ -2,7 +2,7 @@
 plugin = library
 name = Docbook browser
 author = Ali Afshar <aafshar@gmail.com>
-version = 0.2.1
+version = 0.2.2
 require_pida = 0.5
 depends = "os, gzip, tempfile, threading, xml.sax, xml.com.minidom"
 category = documentation
