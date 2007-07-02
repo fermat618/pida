@@ -38,7 +38,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida.core.environment import get_uidef_path
+from pida.core.environment import get_uidef_path, get_pixmap_path
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
@@ -55,7 +55,7 @@ _ = locale.gettext
 
 
 class SessionManagerInternal(rpdb2.CSessionManagerInternal):
-    
+
     def _spawn_server(self, fchdir, ExpandedFilename, args, rid):
         """
         Start an OS console to act as server.
@@ -79,10 +79,10 @@ class SessionManagerInternal(rpdb2.CSessionManagerInternal):
         cmdargs = baseargs + args.split()
         python_exec = sys.executable
         self.terminal.fork_command(python_exec, cmdargs)
-        
+
 
 class SessionManager(rpdb2.CSessionManager):
-    
+
     def __init__(self, manager, pwd, fAllowUnencrypted, fAllowRemote, host):
         self.manager = manager
         smi = self._CSessionManager__smi = SessionManagerInternal(
@@ -280,7 +280,7 @@ class DebuggerConsole(gtk.VBox):
 
 
 nochildren = ['NoneType', 'str', 'int', 'float', 'long', 'bool']
-            
+
 reprable = nochildren + ['dict', 'list', 'tuple']
 
 
@@ -449,7 +449,7 @@ class StackViewer(gtk.VBox):
 
 
 class ThreadItem(object):
-    
+
     def __init__(self, tdict):
         self.tid = tdict[rpdb2.DICT_KEY_TID]
         self.broken = tdict[rpdb2.DICT_KEY_BROKEN]
@@ -503,7 +503,7 @@ class ThreadsViewer(gtk.VBox):
                 self.tree.update(item)
 
 class Breakpoint(object):
-    
+
     def __init__(self, index, filename, linenumber):
         self.key = index
         self.filename = filename
@@ -799,19 +799,44 @@ class DebuggerCommands(CommandsConfig):
         self.svc.launch(command_line, change_directory)
 
 
+class DebuggerEventsConfig(EventsConfig):
+
+    def subscribe_foreign_events(self):
+        #self.subscribe_foreign_event('buffer', 'document-changed',
+        #                             self.on_document_changed)
+        self.subscribe_foreign_event('editor', 'started',
+                                     self.on_editor_startup)
+
+    def on_editor_startup(self):
+        """
+        Set the highlights in vim
+        """
+        self.svc.boss.editor.cmd('define_sign_type', type="breakpoint", icon=get_pixmap_path("stop.svg"), 
+                                                linehl="", text="X", texthl="Search")
+        self.svc.boss.editor.cmd('define_sign_type', type="step", icon=get_pixmap_path("forward.svg"), 
+                                                linehl="lCursor", text=">", texthl="lCursor")
+
+    def on_document_changed(self, document):
+        if document is not None:
+            self.svc.get_action('debug_toggle_breakpoint').set_sensitive(True)
+            self.svc.update_editor(document)
+        else:
+            self.svc.get_action('debug_toggle_breakpoint').set_sensitive(False)
+
 # Service class
 class Python_debugger(Service):
     """Describe your Service Here""" 
     actions_config = DebuggerActionsConfig
     commands_config = DebuggerCommands
-    
+    events_config = DebuggerEventsConfig
+
     def start(self):
         self._view = PythonDebuggerView(self)
         self.set_all_actions_insensitive()
 
     def show_debugger_view(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
-    
+
     def hide_debugger_view(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
@@ -823,7 +848,6 @@ class Python_debugger(Service):
     def launch(self, command_line, change_directory):
         self.ensure_view_visible()
         self._view.manager.launch(command_line, change_directory)
-
 
     def update_state(self, state):
         if state == 'broken':
@@ -846,15 +870,13 @@ class Python_debugger(Service):
         self.set_all_actions_insensitive()
         for actname in ['debug_break']:
             self.get_action(actname).set_sensitive(True)
-        
+
     def set_broken_actions(self):
         self.set_all_actions_insensitive()
         for actname in ['debug_start', 'debug_next', 'debug_step',
                         'debug_return']:
             self.get_action(actname).set_sensitive(True)
 
-
-        
 
 # Required Service attribute for service loading
 Service = Python_debugger
