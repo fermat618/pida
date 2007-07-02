@@ -1,6 +1,54 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+
+
+#Bicycle Repair Man - the Python refactoring browser toolkit.
+#
+#Copyright (C) 2001-2006 Phil Dawes <phil@phildawes.net>
+#
+#(also see AUTHORS file for other contributors)
+#Maintainer
+#----------
+
+#Phil Dawes       <phil@phildawes.net>
+
+
+#The following people have contributed code, bugfixes and patches:
+#-----------------------------------------------------------------
+
+#Shae Erisson     <shae@lapland.fi>              - Original Maintainer 
+#    (although I don't think any of the original code now remains - sorry Shae!)
+
+#Jürgen Hermann   <jh@web.de>
+#Canis Lupus      
+#Syver Enstad     <syver-en@online.no>           Windows emacs patches
+#Mathew Yeates    <mathew@comma.jpl.nasa.gov>    VIM support and bug fixes
+#Marius Gedminas  <mgedmin@delfi.lt>             More VIM support
+#François Pinard  <pinard@iro.umontreal.ca>      Pymacs + help with 
+#                                                emacs integration
+#Ender            <ender@objectrealms.net>
+#Jonathan         <jonathan@infogen.net.nz>
+#Steve            <thepindropper@yahoo.com.au>
+#Peter Astrand    <peter@cendio.se>
+#Adam Feuer
+#Troy Frever
+#Aaron Bingham    <bingham@cenix-bioscience.com>
+
+#See ChangeLog for more details.
+
+#This library is free software; you can redistribute it and/or modify
+#it under the terms of the GNU Lesser General Public License as
+#published by the Free Software Foundation; either version 2.1 of the
+#License, or (at your option) any later version.
+
+#This library is distributed in the hope that it will be useful, but
+#WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#Lesser General Public License for more details.
+
+#[1] http://www.gnu.org/licenses/lgpl.txt
+
 #Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -669,12 +717,9 @@ class SourceCodeNode(object):
         )
 
 
-#from bike.parsing import fastparser
 
 
-#def is_bike_installed():
-#    return fastparser is not None
-
+# PIDA Code
 
 def adapt_brm_node(node):
     firstline = node.getLine(0).strip()
