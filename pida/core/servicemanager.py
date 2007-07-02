@@ -226,6 +226,10 @@ class ServiceManager(object):
             svc.log_debug('Starting Service')
             svc.start()
 
+    def get_available_editors(self):
+        dirs = self._boss.get_editor_dirs()
+        return self._loader.get_all_services(dirs)
+
     def activate_editor(self, name):
         self.load_editor(name)
         self.editor.create_all()
@@ -237,8 +241,7 @@ class ServiceManager(object):
         self.editor.start()
 
     def load_editor(self, name):
-        dirs = self._boss.get_editor_dirs()
-        for editor in self._loader.get_all_services(dirs):
+        for editor in self.get_available_editors():
             if editor.servicename == name:
                 self.editor = editor(self._boss)
                 return self.editor

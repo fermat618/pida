@@ -53,8 +53,16 @@ class Service(object):
     def get_name(self):
         return self.servicename
 
+    @classmethod
+    def get_name_cls(cls):
+        return cls.servicename
+
     def get_label(self):
         return self.label or self.get_name().capitalize()
+
+    @classmethod
+    def get_label_cls(cls):
+        return cls.label or cls.get_name_cls().capitalize()
 
     def pre_start(self):
         """Override to pre start up"""

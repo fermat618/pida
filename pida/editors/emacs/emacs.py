@@ -40,6 +40,7 @@ from pida.core.commands import CommandsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL
 from pida.core.log import build_logger
+from pida.core.editors import EditorService
 
 from pida.ui.views import PidaView
 
@@ -257,7 +258,7 @@ class EmacsCallback(object):
         return False
 
 # Service class
-class Emacs(Service):
+class Emacs(EditorService):
     """The Emacs service.
 
     This service is the Emacs editor driver. Emacs instance creation is decided

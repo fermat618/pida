@@ -46,6 +46,8 @@ class Environment(object):
             help=_('Run PIDA with added debug information.'))
         op.add_option('-T', '--trace', action='store_true',
             help=_('Run PIDA with tracing.'))
+        op.add_option('-F', '--firstrun', action='store_true',
+            help=_('Run the PIDA first run wizard.'))
         self.opts, self.args = op.parse_args(argv)
 
     def is_version(self):
@@ -56,6 +58,9 @@ class Environment(object):
 
     def is_trace(self):
         return self.opts.trace
+
+    def is_firstrun(self):
+        return self.opts.firstrun
 
     def get_base_service_directory(self):
         return os.path.join(
@@ -76,5 +81,11 @@ class Environment(object):
         if not os.path.exists(path):
             os.mkdir(path)
         return path
+
+    def get_firstrun_filename(self):
+        return os.path.join(self.pida_home, 'first_run_wizard')
+
+    def has_firstrun(self):
+        return os.path.exists(self.get_firstrun_filename())
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

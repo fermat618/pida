@@ -90,11 +90,13 @@ def run_version(env):
 def run_pida(env):
     b = Boss(env)
     PosixSignalHandler(b)
-    b.start()
-    gdk.threads_enter()
-    b.loop_ui()
-    gdk.threads_leave()
-    return 0
+    if b.start():
+        gdk.threads_enter()
+        b.loop_ui()
+        gdk.threads_leave()
+        return 0
+    else:
+        return 1
 
 def force_quit(signum, frame):
     os.kill(os.getpid(), 9)
@@ -119,6 +121,7 @@ def set_trace():
 
 def main():
     env = Environment(sys.argv)
+    sys.argv = sys.argv[:1]
     if env.is_debug():
         os.environ['PIDA_DEBUG'] = '1'
         os.environ['PIDA_LOG_STDERR'] = '1'

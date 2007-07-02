@@ -149,6 +149,10 @@ class EditorService(Service):
     actions_config = EditorActionsConfig
     commands_config = EditorCommandsConfig
 
+    @classmethod
+    def get_sanity_errors(cls):
+        return []
+
 
 
 
