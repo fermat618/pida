@@ -258,8 +258,8 @@ END OF TERMS AND CONDITIONS
 
 
 
-if '.' in __name__:
-    raise ImportError('rpdb2 must not be imported as part of a package!')
+#if '.' in __name__:
+#    raise ImportError('rpdb2 must not be imported as part of a package!')
 
 
     
