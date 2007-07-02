@@ -96,6 +96,12 @@ directory of the source code. It is recommended to use this version if at all
 possible. It contains no changes from the original, but it is ensured to have
 all the latest fixes.
 
+.VTE
+
+VTE is a GTK terminal widget that is used by gnome-terminal. PIDA uses this for
+many things, and since it is in most distributions that Gnome is in, we have
+made it an absolute requirement.
+
 === Compilation Requirements
 
 .Python development headers
