@@ -877,6 +877,12 @@ class Python_debugger(Service):
                         'debug_return']:
             self.get_action(actname).set_sensitive(True)
 
+    def stop(self):
+        try:
+            self._view.manager.session_manager.stop_debuggee()
+        except:
+            pass
+
 
 # Required Service attribute for service loading
 Service = Python_debugger
