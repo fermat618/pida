@@ -132,6 +132,9 @@ class PidaWindow(Window):
     def present_view(self, view):
         self._paned.present_view(view)
 
+    def present_paned(self, bookname):
+        self._paned.present_paned(bookname)
+
     def switch_next_view(self, bookname):
         self._paned.switch_next_pane(bookname)
 

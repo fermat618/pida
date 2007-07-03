@@ -22,6 +22,7 @@
             <placeholder name="panes">
             <menuitem action="switch_next_term" name="switch_next_term" />
             <menuitem action="switch_prev_term" name="switch_prev_term" />
+            <menuitem action="focus_terminal" name="focus_terminal" />
             <separator />
             <menuitem action="show_toolbar" name="show_toolbar" />
             <menuitem action="show_menubar" name="show_menubar" />

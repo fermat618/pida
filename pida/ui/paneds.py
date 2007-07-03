@@ -85,6 +85,16 @@ class PidaPaned(BigPaned):
         newpane = paned.get_nth_pane(newnum)
         newpane.present()
 
+    def present_paned(self, name):
+        paned, pane = self.get_open_pane(name)
+        if pane is None:
+            num = 0
+        else:
+            num = pane.get_index()
+        pane = paned.get_nth_pane(num)
+        if pane is not None:
+            pane.present()
+
     def _center_on_parent(self, view, size):
         gdkwindow = view.get_parent_window()
         px, py, pw, ph, pbd = view.svc.boss.get_window().window.get_geometry()

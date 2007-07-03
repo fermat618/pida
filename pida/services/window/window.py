@@ -98,6 +98,19 @@ class WindowActionsConfig(ActionsConfig):
             '<Alt>Left',
         )
 
+        self.create_action(
+            'focus_terminal',
+            TYPE_NORMAL,
+            _('Focus terminal'),
+            _('Focus terminal pane terminal'),
+            'terminal',
+            self.on_focus_terminal,
+            '<Shift><Control>i',
+        )
+
+    def on_focus_terminal(self, action):
+        self.svc.window.present_paned('Terminal')
+
     def on_switch_next_term(self, action):
         self.svc.window.switch_next_view('Terminal')
 
