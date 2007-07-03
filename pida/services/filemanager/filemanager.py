@@ -491,7 +491,7 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Go to the parent directory'),
             gtk.STOCK_GO_UP,
             self.on_toolbar_up,
-            'NOACCEL',
+            '<Shift><Control>Up',
         )
 
         self.create_action(
