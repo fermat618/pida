@@ -338,6 +338,8 @@ class SubVersion(CommandBased):
             "D": 'removed',
             "C": 'conflict',
             'X': 'external',
+            'R': 'modified',
+            '~': 'external',
             }
 
     def parse_list_item(self, item):
