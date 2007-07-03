@@ -111,18 +111,19 @@ class Document(object):
     markup_string = ('<span color="#600060">'
                      '%(project_name)s</span><tt>:</tt>'
                      '<span color="%(directory_colour)s">'
-                     '%(project_relative_path)s</span>'
+                     '%(project_relative_path)s/</span>'
                      '<b>%(basename)s</b>')
     contexts = []
     is_new = False
 
-    def __init__(self, filename=None,
+    def __init__(self, boss, filename=None,
                        markup_attributes=None,
                        markup_string=None,
                        contexts=None,
                        icon_name=None,
                        handler=None,
                        detect_encoding=DETECTOR_MANAGER):
+        self.boss = boss
         self.__handler = handler
         self.__filename = filename
         self.__unique_id = time.time()
@@ -140,6 +141,7 @@ class Document(object):
             self.markup_attributes = markup_attributes
         if markup_string is not None:
             self.markup_string = markup_string
+        self.project, self.project_relative_path = self.get_project_relative_path()
         self.__reset()
 
     def __reset(self):
@@ -327,19 +329,19 @@ class Document(object):
     handler = property(get_handler)
 
     def get_project_name(self):
-        if self.__project:
-            return self.__project.general__name
+        if self.project is not None:
+            return self.project.get_display_name()
         else:
             return ''
     project_name = property(get_project_name)
 
     def get_project_relative_path(self):
-        if self.__project:
-            return relpath(self.filename, self.__project.source__directory)
+        match = self.boss.cmd('project', 'get_project_for_document', document=self)
+        if match is None:
+            return None, os.sep.join(self.directory.split(os.path.sep)[-2:])
         else:
-            return os.path.join(self.directory_basename, '')
-
-    project_relative_path = property(get_project_relative_path)
+            project, path = match
+            return project, path
     
     def set_project(self, project):
         self.__project = project

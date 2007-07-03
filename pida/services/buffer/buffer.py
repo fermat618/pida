@@ -282,7 +282,7 @@ class Buffer(Service):
     def open_file(self, file_name):
         doc = self._get_document_for_filename(file_name)
         if doc is None:
-            doc = Document(file_name)
+            doc = Document(self.boss, file_name)
             self._add_document(doc)
         self.view_document(doc)
 

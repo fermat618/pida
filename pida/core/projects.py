@@ -5,6 +5,7 @@ from string import Template
 from weakref import proxy
 
 from pida.utils.configobj import ConfigObj
+from pida.utils.path import get_relative_path
 
 # locale
 from pida.core.locale import Locale
@@ -150,6 +151,9 @@ class Project(object):
     def set_display_name(self, display_name):
         self.options['name'] = display_name
         self.options.write()
+
+    def get_relative_path_for(self, filename):
+        return get_relative_path(self.source_directory, filename)
 
 
 class ProjectKeyDefinition(object):

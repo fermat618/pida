@@ -371,6 +371,9 @@ class ProjectCommandsConfig(CommandsConfig):
     def get_current_project_data(self, section_name):
         return self.svc.get_current_project().get_section(section_name)
 
+    def get_project_for_document(self, document):
+        return self.svc.get_project_for_document(document)
+
 
 # Service class
 class Project(Service):
@@ -469,7 +472,6 @@ class Project(Service):
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
 
-
     def get_current_project(self):
         return self._project
 
@@ -525,6 +527,25 @@ class Project(Service):
         else:
             self.boss.cmd('window', 'remove_view',
                 view=self.project_properties_view)
+
+    def get_project_for_document(self, document):
+        matches = []
+        for project in self._projects:
+            match = project.get_relative_path_for(document.filename)
+            if match is not None:
+                matches.append((project, match))
+        num_matches = len(matches)
+        if num_matches == 0:
+            return None
+        elif num_matches == 1:
+            return matches[0][0], os.sep.join(matches[0][1][-3:-1])
+        else:
+            shortest = 0
+            for i, (project, match) in enumerate(matches[1:]):
+                if len(match) < matches[shortest][1]:
+                    shortest = i + 1
+            return matches[shortest][0], os.sep.join(matches[shortest][1][-3:-1])
+            
 
 
 
