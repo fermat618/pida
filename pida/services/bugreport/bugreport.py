@@ -62,6 +62,7 @@ class BugreportView(PidaGladeView):
         task = AsyncTask(self.report, self.report_complete)
         task.start()
         self._pulsing = True
+        self.progress_bar.show()
         gobject.timeout_add(100, self._pulse)
 
     def on_close_button__clicked(self, button):
@@ -75,9 +76,12 @@ class BugreportView(PidaGladeView):
 
     def report_complete(self, success, data):
         if success:
-            self.progress_bar.set_text(_('Bug Reported:\n%s') % data)
+            self.svc.boss.cmd('notify', 'notify', title=_('Bug Reported'), data=data)
         else:
-            self.progress_bar.set_text(_('Bug Report Failed:\n%s') % data)
+            self.svc.boss.cmd('notify', 'notify', title=_('Bug Report Failed'), data=data)
+        self.title_entry.set_text('')
+        self.description_text.get_buffer().set_text('')
+        self.progress_bar.hide()
         self._pulsing = False
 
     def _pulse(self):
