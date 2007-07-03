@@ -66,7 +66,7 @@ class StatusbarEvents(EventsConfig):
         self.svc.set_label('document_size', '%d%s' % (size, ext))
 
     def on_project_switched(self, project):
-        self.svc.set_label('project', project.get_name())
+        self.svc.set_label('project', project.get_display_name())
 
     def on_browsed_path_changed(self, path):
         self.svc.set_label('path', (path, path))
@@ -178,7 +178,7 @@ class Statusbar(Service):
     def set_default_values(self):
         project = self.boss.cmd('project', 'get_current_project')
         if project is not None:
-            self.set_label('project', project.get_name())
+            self.set_label('project', project.get_display_name())
         path = self.boss.cmd('filemanager', 'get_browsed_path')
         self.set_label('path', (path, path))
 
