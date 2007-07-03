@@ -294,14 +294,16 @@ class Bazaar(DCommandBased):
             "removed:": 'removed',
             "ignored:": 'ignored',
             "modified:": 'modified',
-            "conflicts:": 'conflict' }
+            "conflicts:": 'conflict',
+            "pending merges:": None,
+            }
     
     def parse_cache_items(self, items):
         state = 'none'
         for item in items:
             item = item.rstrip()
             state = self.statemap.get(item, state)
-            if item.startswith("  "):
+            if item.startswith("  ") and state:
                 yield item.strip(), state
         
     
