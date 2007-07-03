@@ -541,10 +541,10 @@ class Project(Service):
         elif num_matches == 1:
             return matches[0][0], os.sep.join(matches[0][1][-3:-1])
         else:
-            shortest = 0
-            for i, (project, match) in enumerate(matches[1:]):
-                if len(match) < matches[shortest][1]:
-                    shortest = i + 1
+            shortest = None
+            for i, (project, match) in enumerate(matches):
+                if shortest is None or len(match) < matches[shortest][1]:
+                    shortest = i
             return matches[shortest][0], os.sep.join(matches[shortest][1][-3:-1])
             
 
