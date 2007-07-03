@@ -534,6 +534,7 @@ class Project(Service):
             match = project.get_relative_path_for(document.filename)
             if match is not None:
                 matches.append((project, match))
+        print matches
         num_matches = len(matches)
         if num_matches == 0:
             return None
