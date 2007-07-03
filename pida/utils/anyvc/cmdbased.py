@@ -321,13 +321,13 @@ class SubVersion(CommandBased):
     cmd = "svn"
     detect_subdir = ".svn"
 
-    def get_list_args(self, recursive=True, **kw):
+    def get_list_args(self, recursive=True, paths=(), **kw):
         #TODO: figure a good way to deal with changes in external
         # (maybe use the svn python api to do that)
         ret = ["st", "--no-ignore", "--ignore-externals", "--verbose"]
         if not recursive:
             ret.append("--non-recursive")
-        return ret
+        return ret + paths
 
     state_map = {
             "?": 'none',
