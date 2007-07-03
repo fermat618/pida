@@ -213,6 +213,10 @@ class Openwith(Service):
     def pre_start(self):
         self._filename = os.path.join(self.boss.get_pida_home(), 'openwith.ini')
         self._config = ConfigObj(self._filename)
+        if not os.path.exists(self._filename):
+            default = self.create_default_item()
+            self._config[default.name] = default.as_dict()
+            self._config.write()
         self._view = OpenWithEditor(self)
         self._view.prefill(self._config)
 
@@ -237,6 +241,9 @@ class Openwith(Service):
         for item in self.get_items():
             if item.match(file_name):
                 yield item
+
+    def create_default_item(self):
+        return OpenWithItem(dict(name="See", glob="*", command="see %s"))
         
 
 # Required Service attribute for service loading
