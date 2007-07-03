@@ -595,11 +595,11 @@ class communication_window(gtk.Window):
 
     def get_current_buffer(self, server):
         def cb(bs):
-            bn = bs.split(',')
+            bn = bs.split(chr(5))
             bn[1] = self.abspath(server, bn[1])
             self.do_evt('bufferchange', *bn)
         #self.get_cwd(server)
-        self.send_expr(server, "bufnr('%').','.bufname('%')", cb)
+        self.send_expr(server, "bufnr('%').'\\5'.bufname('%')", cb)
 
     def save(self, server):
         self.send_ex(server, 'w')
@@ -690,8 +690,9 @@ class communication_window(gtk.Window):
             server, data = data.split(':', 1)
         else:
             server = None
-        if data.count(','):
-            evt, d = data.split(',', 1)
+        sep = chr(4)
+        if data.count(sep):
+            evt, d = data.split(sep, 1)
             self.vim_event(server, evt, d)
         else:
             print 'bad async reply', data
@@ -699,7 +700,7 @@ class communication_window(gtk.Window):
     def vim_event(self, server, evt, d):
         funcname = 'vim_%s' % evt
         if hasattr(self.cb, funcname):
-            getattr(self.cb, funcname)(server, *d.split(','))
+            getattr(self.cb, funcname)(server, *d.split(chr(4)))
         else:
             print 'unhandled event', evt
 
@@ -728,7 +729,8 @@ let i = 1
     return @"
 :endfunction
 :silent function! Async_event(e)
-    let c = "silent call server2client('".expand('<client>')."', '".a:e."')"
+    let args = substitute(a:e, ",", "\4", "g")
+    let c = "silent call server2client('".expand('<client>')."', '".args."')"
     try
         exec c
     catch /.*/
