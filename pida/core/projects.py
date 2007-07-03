@@ -130,7 +130,7 @@ class Project(object):
         self.options.write()
 
     def get_markup(self):
-        return '<b>%s</b>\n%s' % (self.name, self.source_directory)
+        return '<b>%s</b>\n%s' % (self.get_display_name(), self.source_directory)
 
     markup = property(get_markup)
 
@@ -144,6 +144,12 @@ class Project(object):
     def get_name(self):
         return self.name
 
+    def get_display_name(self):
+        return self.options.get('name', None) or self.get_name()
+
+    def set_display_name(self, display_name):
+        self.options['name'] = display_name
+        self.options.write()
 
 
 class ProjectKeyDefinition(object):

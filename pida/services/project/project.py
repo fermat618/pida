@@ -122,6 +122,9 @@ class ProjectListView(PidaGladeView):
     def set_current_project(self, project):
         self.project_ol.select(project)
 
+    def update_project(self, project):
+        self.project_ol.update(project)
+
 class ProjectPropertiesView(PidaGladeView):
 
     gladefile = 'project-properties'
@@ -139,16 +142,25 @@ class ProjectPropertiesView(PidaGladeView):
             Column('label', title=_('Name'), expand=True, use_markup=True),
             Column('value', title=_('Value'), editable=True, expand=True),
         ])
+        sg = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        sg.add_widget(self.project_name_label)
+        sg.add_widget(self.name_label)
+        sg.add_widget(self.add_controller_label)
         self._project = None
 
     def set_project(self, project):
         self._project = project
         self.controllers_list.clear()
         self.project_label.set_text('')
+        self.project_name_entry.set_text('')
         if self._project is not None:
-            self.project_label.set_markup(self._project.markup)
+            self.update_project_label()
+            self.project_name_entry.set_text(self._project.get_display_name())
             for controller in self._project.controllers:
                 self.controllers_list.append(controller)
+
+    def update_project_label(self):
+        self.project_label.set_markup(self._project.source_directory)
 
     def on_controllers_list__selection_changed(self, ol, controller):
         self.items_list.clear()
@@ -187,6 +199,27 @@ class ProjectPropertiesView(PidaGladeView):
                 self.controllers_list.remove(controller)
                 self._project.remove_controller(controller)
                 self.svc.set_current_project(self._project)
+
+    def on_name_edit_button__clicked(self, button):
+        if self._project is None:
+            return
+        if button.get_label() == gtk.STOCK_EDIT:
+            self.project_name_entry.set_sensitive(True)
+            button.set_label(gtk.STOCK_SAVE)
+            self.project_name_entry.grab_focus()
+        else:
+            display_name = self.project_name_entry.get_text()
+            if display_name:
+                self._project.set_display_name(display_name)
+                self.update_project_label()
+                self.svc.project_list.update_project(self._project)
+                self.project_name_entry.set_sensitive(False)
+                button.set_label(gtk.STOCK_EDIT)
+            else:
+                self.project_name_entry.set_text(self._project.get_display_name())
+                self.project_name_entry.grab_focus()
+                self.svc.error_dlg(_('Do not set empty project names'))
+
 
     def can_be_closed(self):
         self.svc.get_action('project_properties').set_active(False)
