@@ -1,4 +1,4 @@
-name = pida-next
+name = PIDA
 [Run PIDA]
 controller = PYTHON_CONTROLLER
 default = True
