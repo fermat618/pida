@@ -164,7 +164,6 @@ class CommandBased(VCSBase):
         only runs caching if it knows, how
         """
         args = self.get_cache_args(**kw)
-        print 'cache_args', args
         if args:
             return self.execute_command(args, result_type=iter, **kw)
         else:
