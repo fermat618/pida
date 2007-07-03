@@ -307,7 +307,7 @@ class Bazaar(DCommandBased):
                 yield item.strip(), state
         
     
-    def parse_list_item(self, items, cache):
+    def parse_list_item(self, item, cache):
         if item.startswith('I'):
             return Path(item[1:].strip(), 'ignored', self.base_path)
         else:
