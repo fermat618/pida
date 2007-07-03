@@ -534,7 +534,6 @@ class Project(Service):
             match = project.get_relative_path_for(document.filename)
             if match is not None:
                 matches.append((project, match))
-        print matches, [m[0].get_display_name() for m in matches]
         num_matches = len(matches)
         if num_matches == 0:
             return None
