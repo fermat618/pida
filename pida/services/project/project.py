@@ -543,7 +543,7 @@ class Project(Service):
         else:
             shortest = None
             for i, (project, match) in enumerate(matches):
-                if shortest is None or len(match) < matches[shortest][1]:
+                if (shortest is None) or (len(match) < len(matches[shortest][1])):
                     shortest = i
             return matches[shortest][0], os.sep.join(matches[shortest][1][-3:-1])
             
