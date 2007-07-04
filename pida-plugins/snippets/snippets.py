@@ -93,11 +93,52 @@ class SnippetsManagerView(PidaGladeView):
     def add_available(self, item):
         self.available_list.append(item)
 
+    def set_label_from_snippet(self, label, snippet):
+        label_markup = _('Title: <b>%(title)s</b>\nShortcut: <b>%(shortcut)s</b>')
+        label.set_markup(label_markup % dict(
+            title=snippet.title,
+            shortcut=snippet.shortcut
+        ))
+
     def on_installed_list__selection_changed(self, ol, item):
-        self.installed_information_label.set_text(item.name)
+        self.set_label_from_snippet(
+            self.installed_information_label,
+            item
+        )
+
+    def on_available_list__selection_changed(self, ol, item):
+        self.set_label_from_snippet(
+            self.available_information_label,
+            item
+        )
 
     def on_available_refresh__clicked(self, button):
         self.svc.get_available_snippets()
+
+    def on_available_save__clicked(self, button):
+        selected = self.available_list.get_selected()
+        if selected is not None:
+            self.svc.install_available(selected)
+
+    def get_meta_filename(self):
+        return self.meta_file_chooser.get_filename()
+
+    def get_template_filename(self):
+        return self.template_file_chooser.get_filename()
+
+    def on_meta_file_chooser__selection_changed(self, chooser):
+        m_file = self.get_meta_filename()
+        t_file = m_file.rsplit('.', 1)[0] + '.tmpl'
+        if os.path.exists(t_file):
+            self.template_file_chooser.set_filename(t_file)
+
+    def on_publish_button__clicked(self, button):
+        self.svc.publish_snippet(
+            self.username_entry.get_text(),
+            self.password_entry.get_text(),
+            self.get_meta_filename(),
+            self.get_template_filename()
+        )
 
 
 class SnippetWindow(gtk.Window):
@@ -318,49 +359,110 @@ class JinjaSnippet(BaseSnippet):
     def substitute(self, values):
         return self.template.render(values)
 
-class CommunitySnippetMeta(object):
 
-    def __init__(self, data_dict):
-        self.data_dict = data_dict
-        self.meta = data_dict['meta']
+class SnippetMetaBase(object):
 
-    def save_as(self, filename):
-        pass
-
-    def generate_filename(self):
-        pass
-
-
-class SnippetMeta(object):
-    
-    def __init__(self, filename):
-        self.filename = filename
-        self.template_filename = self.filename.rsplit('.', 1)[0] + '.tmpl'
+    def __init__(self):
         self.read_metadata()
         self._text = None
 
     def get_configobj(self):
-        return ConfigObj(self.filename)
+        raise NotImplementedError
 
     def read_metadata(self):
         config = self.get_configobj()
         self.name = config['meta']['name']
         self.title = config['meta']['title']
         self.shortcut = config['meta']['shortcut']
+        self.tags = config['meta'].get('tags', [])
         self.variables = []
         for sect in config['variables']:
             self.variables.append(SnippetVariable(sect, config['variables'][sect]))
+
+    def read_text(self):
+        raise NotImplementedError
+
+    def get_text(self):
+        if self._text is None:
+            self._text = self.read_text()
+        return self._text
+
+
+class CommunitySnippetMeta(SnippetMetaBase):
+
+    def __init__(self, data_dict):
+        self.data_dict = data_dict
+        self.meta_data = data_dict['meta']
+        self.id = data_dict['id']
+        SnippetMetaBase.__init__(self)
+
+    def get_configobj(self):
+        return ConfigObj(self.read_meta_data().splitlines())
+
+    def read_meta_data(self):
+        return base64.b64decode(self.meta_data)
+
+    def read_text(self):
+        return base64.b64decode(self.data_dict['data'])
+
+    def save_in(self, directory):
+        file_base = 'pida.co.uk.%s.%%s' % self.id
+        self.save_meta_in(file_base, directory)
+        self.save_data_in(file_base, directory)
+
+    def save_meta_in(self, file_base, directory):
+        filename = os.path.join(directory, file_base % 'meta')
+        f = open(filename, 'w')
+        f.write(self.read_meta_data())
+        f.close()
+
+    def save_data_in(self, file_base, directory):
+        filename = os.path.join(directory, file_base % 'tmpl')
+        f = open(filename, 'w')
+        f.write(self.read_text())
+        f.close()
+
+
+class InstalledSnippetMeta(SnippetMetaBase):
+    
+    def __init__(self, filename):
+        self.filename = filename
+        self.template_filename = self.filename.rsplit('.', 1)[0] + '.tmpl'
+        SnippetMetaBase.__init__(self)
+
+    def get_configobj(self):
+        return ConfigObj(self.filename)
 
     def create_snippet(self):
         config = self.get_configobj()
         return StringTemplateSnippet(self)
 
-    def get_text(self):
-        if self._text is None:
-            f = open(self.template_filename, 'r')
-            self._text = f.read()
-            f.close()
-        return self._text
+    def read_text(self):
+        f = open(self.template_filename, 'r')
+        text = f.read()
+        f.close()
+        return text
+
+
+class PublishingSnippetMeta(InstalledSnippetMeta):
+
+    def __init__(self, meta_filename, template_filename):
+        self.filename = meta_filename
+        self.template_filename = template_filename
+        SnippetMetaBase.__init__(self)
+
+    def get_encoded_text(self):
+        return base64.b64encode(self.get_text())
+
+    def get_encoded_meta(self):
+        return base64.b64encode(self.read_meta_file())
+
+    def read_meta_file(self):
+        f = open(self.filename, 'r')
+        meta_data = f.read()
+        f.close()
+        return meta_data
+
         
 
 class SnippetActions(ActionsConfig):
@@ -424,14 +526,15 @@ class Snippets(Service):
     def _list_snippets(self):
         for name in os.listdir(self._snippet_dir):
             if name.endswith('.meta'):
-                yield SnippetMeta(os.path.join(self._snippet_dir, name))
+                yield InstalledSnippetMeta(os.path.join(self._snippet_dir, name))
 
     def _list_snippets_got(self, snippet_meta):
         self.add_snippet_meta(snippet_meta)
         self._view.add_installed(snippet_meta)
 
     def get_available_snippets(self):
-        self.boss.cmd('notify', 'notify', title='Snippets', data='Fetching available snippets')
+        self.boss.cmd('notify', 'notify', title=_('Snippets'),
+            data=_('Fetching available snippets'))
         self._view.clear_available()
         task = GeneratorTask(
             self._available_snippets,
@@ -445,19 +548,49 @@ class Snippets(Service):
             yield CommunitySnippetMeta(snippet_data)
 
     def _available_snippets_got(self, snippet_meta):
-        print snippet_meta
+        self._view.add_available(snippet_meta)
 
     def _available_snippets_completed(self):
-        self.boss.cmd('notify', 'notify', title='Snippets', data='Fetching available snippets')
-        print 'completed'
-        
-        
+        self.boss.cmd('notify', 'notify', title=_('Snippets'),
+            data=_('Fetching available snippets'))
+
+    def install_available(self, snippet_meta):
+        snippet_meta.save_in(self._snippet_dir)
+        self.boss.cmd('notify', 'notify', title=_('Snippets'),
+            data=_('Installed Snippet'))
+        self.get_snippet_list()
+
+    def publish_snippet(self, username, password, meta_file, template_file):
+        snippet = PublishingSnippetMeta(meta_file, template_file)
+        task = AsyncTask(self.publish_snippet_do, self.publish_snippet_done)
+        task.start(username, password, snippet)
+
+    def publish_snippet_do(self, username, password, snippet):
+        try:
+            response = server_proxy.snippet.push(username, password, snippet.title,
+                snippet.get_encoded_meta(),
+                snippet.get_encoded_text(),
+                snippet.tags
+            )
+        except Exception, e:
+            response = str(e)
+        return response
+
+    def publish_snippet_done(self, reply):
+        if reply == 'OK':
+            msg = 'Success'
+        else:
+            msg = 'Error: %s' % reply
+        self.boss.cmd('notify', 'notify',
+            title=_('Snippets'),
+            data=_('Publish Snippet: %(msg)s') % dict(msg = msg)
+        )
         
     def popup_snippet(self, word):
         try:
             snippet = self.snippets[word].create_snippet()
         except KeyError:
-            self.error_dlg('Snippet does not exist')
+            self.error_dlg(_('Snippet does not exist'))
             return
         popup = SnippetWindow(snippet, self.snippet_completed)
         popup.set_transient_for(self.window)
