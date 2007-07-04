@@ -156,6 +156,12 @@ class EditorCommandsConfig(CommandsConfig):
     def grab_focus(self):
         self.svc.grab_focus()
 
+    def delete_current_word(self):
+        self.svc.delete_current_word()
+
+    def insert_text(self, text):
+        self.svc.insert_text(text)
+
 
 class EditorService(Service):
     

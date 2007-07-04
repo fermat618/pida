@@ -659,10 +659,20 @@ class communication_window(gtk.Window):
         self.send_ex(server, 'sign unplace %s' % (index + 1))
 
     def get_cword(self, server, callback):
+        self.send_esc(server)
         self.send_expr(server, 'expand("<cword>")', callback)
 
     def get_selection(self, server, callback):
         self.send_expr(server, 'getreg("*")', callback)
+
+    def delete_cword(self, server):
+        self.send_esc(server)
+        self.send_keys(server, 'ciw')
+
+    def insert_text(self, server, text):
+        self.send_esc(server)
+        self.send_keys(server, 'a')
+        self.send_keys(server, text)
 
     def set_path(self, server, path):
         self.send_ex(server, 'cd %s' % path)

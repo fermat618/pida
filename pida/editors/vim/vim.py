@@ -238,6 +238,12 @@ class Vim(EditorService):
     def get_current_line(self):
         return self._current_line
 
+    def delete_current_word(self):
+        self._com.delete_cword(self.server)
+
+    def insert_text(self, text):
+        self._com.insert_text(self.server, text)
+
     def call_with_current_word(self, callback):
         return self._com.get_cword(self.server, callback)
 

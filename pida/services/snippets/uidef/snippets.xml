@@ -1,3 +1,4 @@
+
 <ui>
     <menubar>
 
@@ -10,12 +11,11 @@
             <placeholder name="cut"/>
             <separator />
             <placeholder name="find">
-                <menuitem name="show_grepper" action="show_grepper" />
-                <menuitem name="grep_current_word" action="grep_current_word" />
-                <menuitem name="grep_current_word_file" action="grep_current_word_file" />
             </placeholder>
             <separator />
-            <placeholder name="snippet"/>
+            <placeholder name="snippet">
+                <menuitem name="insert_snippet" action="insert_snippet" />
+            </placeholder>
             <separator />
             <placeholder name="prefs" />
         </menu>

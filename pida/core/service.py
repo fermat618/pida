@@ -120,7 +120,7 @@ class Service(object):
         if args:
             raise TypeError(
                     _('You must call command %(cmd)s in service %(svc)s with named arguments')
-                    % {cmd:commandname, svc:self.get_name()})
+                    % {'cmd':commandname, 'svc':self.get_name()})
         else:
             return self._get_commands().call(commandname, **kw)
 
