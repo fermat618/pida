@@ -23,6 +23,8 @@
 
 import os
 
+import gtk, gobject
+
 
 
 # PIDA Imports
@@ -35,6 +37,9 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.ui.views import PidaGladeView
 from pida.utils.path import walktree
+from pida.utils.gthreads import GeneratorTask
+from pida.utils.configobj import ConfigObj
+
 from kiwi.ui.objectlist import Column
 
 
@@ -45,7 +50,6 @@ _ = locale.gettext
 
 
 
-import gtk, gobject
 
 def get_value(tab, key):
     if not tab.has_key(key):
@@ -87,6 +91,9 @@ class SnippetsManagerView(PidaGladeView):
     def add_available(self, item):
         self.available_list.append(item)
 
+    def on_installed_list__selection_changed(self, ol, item):
+        self.installed_information_label.set_text(item.name)
+
 
 class SnippetWindow(gtk.Window):
 
@@ -97,8 +104,7 @@ class SnippetWindow(gtk.Window):
         self.add_events(gtk.gdk.FOCUS_CHANGE_MASK)
         #self.connect('set-focus-child', self.on_focus_child)
         self.connect('focus-out-event', self.focus_out)
-        self.connect('focus-in-event', self.focus_in)
-
+        self._focused = False
         self._vars = {}
         self._create_ui()
         self._vals = {}
@@ -201,7 +207,6 @@ class SnippetWindow(gtk.Window):
 
     def validate(self, entry, name):
         if self._vars[name].required:
-            print entry.get_text()
             if entry.get_text():
                 self._valids[name].set_from_stock(gtk.STOCK_YES, gtk.ICON_SIZE_MENU)
             else:
@@ -244,10 +249,7 @@ class SnippetWindow(gtk.Window):
         return False
 
     def focus_out(self, window, event):
-        print 'fo'
-
-    def focus_in(self, window, event):
-        print  'fi'
+        self.respond_failure()
 
     def close(self):
         self.hide_all()
@@ -261,39 +263,6 @@ class SnippetWindow(gtk.Window):
         self.response_callback(False, None)
         self.close()
 
-class MockSnippet(object):
-
-    def __init__(self):
-        self.title = 'HTML Tag'
-        #from string import Template
-        #self._t = Template('<$tag class="$class">\n</$tag>')
-        from jinja import from_string
-        self._t = from_string("""<{{ tag }}{% if class %} class="{{ class }}"{% endif %}>\n</{{ tag }}>""")
-
-        #self._defaults = {'class': '', 'extra': ''}
-        self._t = from_string(
-'''
-{#
-This is a comment
-#}
-class {{ name }}({% if super %}{{ super }}{% else %}object{% endif %}):
-{% if docstring %}    """{{ docstring }}"""\n{% endif %}
-    def __init__(self):
-'''
-)
-
-    def get_variables(self):
-        #nodupes = []
-        #[nodupes.append(''.join(i)) for i in
-        #self._t.pattern.findall(self._t.template) if ''.join(i) not in nodupes]
-        return ['name', 'super', 'docstring']
-
-    def substitute(self, vals):
-        #newvals = dict(vals)
-        #for k in self._defaults:
-        #    if k not in newvals:
-        #        newvals[k] = self._defaults[k]
-        return self._t.render(vals)
 
 class MissingSnippetMetadata(Exception):
     """The template had missing metadata"""
@@ -308,50 +277,18 @@ class SnippetVariable(object):
         self.default = config['default']
         self.required = config.as_bool('required')
 
-TEST_STRING_TEMPLATE = """
-[ meta ]
-name = py_class
-title = Python Class
-[ variables ]
-[[ name ]]
-label = Name
-default = 
-required = True
-[[ super ]]
-label = Super CLass
-default = object
-required = True
-[[ docstring ]]
-label = Docstring
-default = Enter a docstring
-required = False
-[ template ]
-text = '''class $name($super):  
-    "$docstring"
-'''
-""".splitlines()
-
-from configobj import ConfigObj
-
-TEST_CONF = ConfigObj(TEST_STRING_TEMPLATE)
-
 class BaseSnippet(object):
     
-    def __init__(self, config):
-        self.config = config
-        try:
-            self.name = self.config['meta']['name']
-            self.title = self.config['meta']['title']
-        except KeyError:
-            raise MissingSnippetMetadata
-        self.text = config['template']['text']
-        self.get_variables()
+    def __init__(self, snippet_meta):
+        self.meta = snippet_meta
+        self.name = self.meta.name
+        self.title = self.meta.title
+        self.variables = self.meta.variables
+        self.text = self.meta.get_text()
+        self.create_template()
 
-    def get_variables(self):
-        self.variables = []
-        for sect in self.config['variables']:
-            self.variables.append(SnippetVariable(sect, self.config['variables'][sect]))
-        print self.variables
+    def create_template(self):
+        raise NotImplementedError
 
     def substitute(self, values):
         raise NotImplementedError
@@ -359,14 +296,55 @@ class BaseSnippet(object):
 
 class StringTemplateSnippet(BaseSnippet):
 
-    def __init__(self, config):
-        BaseSnippet.__init__(self, config)
+    def create_template(self):
         from string import Template
         self.template = Template(self.text)
 
     def substitute(self, values):
         return self.template.substitute(values)
 
+
+class JinjaSnippet(BaseSnippet):
+
+    def create_template(self):
+        from jinja import from_string
+        self.template = from_string(self.text)
+
+    def substitute(self, values):
+        return self.template.render(values)
+
+
+class SnippetMeta(object):
+    
+    def __init__(self, filename):
+        self.filename = filename
+        self.template_filename = self.filename.rsplit('.', 1)[0] + '.tmpl'
+        self.read_metadata()
+        self._text = None
+
+    def get_configobj(self):
+        return ConfigObj(self.filename)
+
+    def read_metadata(self):
+        config = self.get_configobj()
+        self.name = config['meta']['name']
+        self.title = config['meta']['title']
+        self.shortcut = config['meta']['shortcut']
+        self.variables = []
+        for sect in config['variables']:
+            self.variables.append(SnippetVariable(sect, config['variables'][sect]))
+
+    def create_snippet(self):
+        config = self.get_configobj()
+        return StringTemplateSnippet(self)
+
+    def get_text(self):
+        if self._text is None:
+            f = open(self.template_filename, 'r')
+            self._text = f.read()
+            f.close()
+        return self._text
+        
 
 class SnippetActions(ActionsConfig):
     
@@ -409,16 +387,38 @@ class Snippets(Service):
 
     def start(self):
         self._view = SnippetsManagerView(self)
-        self.snippets = {'p':{'c': StringTemplateSnippet(TEST_CONF)}}
+        self.snippets = {}
+        self.create_snippet_directories()
+        self.get_snippet_list()
+
+    def add_snippet_meta(self, snippet_meta):
+        self.snippets[snippet_meta.shortcut] = snippet_meta
 
     def create_snippet_directories(self):
         self._snippet_dir = os.path.join(self.boss.get_pida_home(), 'snippets')
-        if not os.path.exists(self._snippets_dir):
-            os.mkdir(self._snippets_dir)
+        if not os.path.exists(self._snippet_dir):
+            os.mkdir(self._snippet_dir)
 
+    def get_snippet_list(self):
+        self._view.clear_installed()
+        task = GeneratorTask(self._list_snippets, self._list_snippets_got)
+        task.start()
+        
+    def _list_snippets(self):
+        for name in os.listdir(self._snippet_dir):
+            if name.endswith('.meta'):
+                yield SnippetMeta(os.path.join(self._snippet_dir, name))
+
+    def _list_snippets_got(self, snippet_meta):
+        self.add_snippet_meta(snippet_meta)
+        self._view.add_installed(snippet_meta)
+        
     def popup_snippet(self, word):
-        snippet_type, snippet_name = word[0], word[1:]
-        snippet = self.snippets[snippet_type][snippet_name]
+        try:
+            snippet = self.snippets[word].create_snippet()
+        except KeyError:
+            self.error_dlg('Snippet does not exist')
+            return
         popup = SnippetWindow(snippet, self.snippet_completed)
         popup.set_transient_for(self.window)
         popup.show_all()
