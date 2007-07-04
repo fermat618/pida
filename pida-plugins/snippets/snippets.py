@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 
-import os
+import os, xmlrpclib, base64
 
 import gtk, gobject
 
@@ -37,7 +37,7 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.ui.views import PidaGladeView
 from pida.utils.path import walktree
-from pida.utils.gthreads import GeneratorTask
+from pida.utils.gthreads import GeneratorTask, AsyncTask
 from pida.utils.configobj import ConfigObj
 
 from kiwi.ui.objectlist import Column
@@ -48,7 +48,9 @@ from pida.core.locale import Locale
 locale = Locale('snippets')
 _ = locale.gettext
 
+RPC_URL = 'http://pida.co.uk/RPC2'
 
+server_proxy = xmlrpclib.ServerProxy(RPC_URL)
 
 
 def get_value(tab, key):
@@ -93,6 +95,9 @@ class SnippetsManagerView(PidaGladeView):
 
     def on_installed_list__selection_changed(self, ol, item):
         self.installed_information_label.set_text(item.name)
+
+    def on_available_refresh__clicked(self, button):
+        self.svc.get_available_snippets()
 
 
 class SnippetWindow(gtk.Window):
@@ -313,6 +318,18 @@ class JinjaSnippet(BaseSnippet):
     def substitute(self, values):
         return self.template.render(values)
 
+class CommunitySnippetMeta(object):
+
+    def __init__(self, data_dict):
+        self.data_dict = data_dict
+        self.meta = data_dict['meta']
+
+    def save_as(self, filename):
+        pass
+
+    def generate_filename(self):
+        pass
+
 
 class SnippetMeta(object):
     
@@ -412,6 +429,29 @@ class Snippets(Service):
     def _list_snippets_got(self, snippet_meta):
         self.add_snippet_meta(snippet_meta)
         self._view.add_installed(snippet_meta)
+
+    def get_available_snippets(self):
+        self.boss.cmd('notify', 'notify', title='Snippets', data='Fetching available snippets')
+        self._view.clear_available()
+        task = GeneratorTask(
+            self._available_snippets,
+            self._available_snippets_got,
+            self._available_snippets_completed,    
+        )
+        task.start()
+
+    def _available_snippets(self):
+        for snippet_id, snippet_data in server_proxy.snippet.get([]).items():
+            yield CommunitySnippetMeta(snippet_data)
+
+    def _available_snippets_got(self, snippet_meta):
+        print snippet_meta
+
+    def _available_snippets_completed(self):
+        self.boss.cmd('notify', 'notify', title='Snippets', data='Fetching available snippets')
+        print 'completed'
+        
+        
         
     def popup_snippet(self, word):
         try:
