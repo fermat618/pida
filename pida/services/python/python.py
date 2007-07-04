@@ -195,6 +195,9 @@ class SourceView(PidaGladeView):
     def can_be_closed(self):
         self.svc.get_action('show_python_source').set_active(False)
 
+    def on_source_tree__double_click(self, tv, item):
+        self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
+
 
 class PythonBrowser(object):
 

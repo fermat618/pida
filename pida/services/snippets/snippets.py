@@ -21,6 +21,8 @@
 #SOFTWARE.
 
 
+import os
+
 
 
 # PIDA Imports
@@ -97,8 +99,10 @@ class SnippetWindow(gtk.Window):
         self.connect('focus-out-event', self.focus_out)
         self.connect('focus-in-event', self.focus_in)
 
+        self._vars = {}
         self._create_ui()
         self._vals = {}
+        self._valids = {}
         self._snippet = snippet
         self.set_title_label(self._snippet.title)
         self._create_entries()
@@ -118,6 +122,7 @@ class SnippetWindow(gtk.Window):
 
     def _create_entries(self):
         for variable in self._snippet.variables:
+            self._vars[variable.name] = variable
             self.add_entry(variable)
         self.preview()
 
@@ -164,11 +169,14 @@ class SnippetWindow(gtk.Window):
         label.set_alignment(1, 0.5)
         self._label_sizer.add_widget(label)
         hb.pack_start(label)
+        self._valids[name] = gtk.Image()
         entry = gtk.Entry()
         entry.set_text(default)
+        self.validate(entry, name)
+        entry.connect('changed', self.on_entry_changed, name)
         self._vals[name] = default
         hb.pack_start(entry, expand=False)
-        entry.connect('changed', self.on_entry_changed, name)
+        hb.pack_start(self._valids[name], expand=False)
         self._entries_vb.pack_start(hb, expand=False)
         self._entries[name] = entry
         self._entries_order.append(entry)
@@ -188,7 +196,18 @@ class SnippetWindow(gtk.Window):
 
     def on_entry_changed(self, entry, name):
         self._vals[name] = entry.get_text()
+        self.validate(entry, name)
         self.preview()
+
+    def validate(self, entry, name):
+        if self._vars[name].required:
+            print entry.get_text()
+            if entry.get_text():
+                self._valids[name].set_from_stock(gtk.STOCK_YES, gtk.ICON_SIZE_MENU)
+            else:
+                self._valids[name].set_from_stock(gtk.STOCK_NO, gtk.ICON_SIZE_MENU)
+        else:
+            self._valids[name].set_from_stock(gtk.STOCK_YES, gtk.ICON_SIZE_MENU)
 
     def preview(self):
         self._preview_text.get_buffer().set_text(self.get_substituted_text())
@@ -238,7 +257,7 @@ class SnippetWindow(gtk.Window):
         self.response_callback(True, self.get_substituted_text())
         self.close()
 
-    def response_failure(self):
+    def respond_failure(self):
         self.response_callback(False, None)
         self.close()
 
@@ -291,21 +310,21 @@ class SnippetVariable(object):
 
 TEST_STRING_TEMPLATE = """
 [ meta ]
-    name = py_class
-    title = Python Class
+name = py_class
+title = Python Class
 [ variables ]
-    [[ name ]]
-        label = Name
-        default = 
-        required = False
-    [[ super ]]
-        label = Super CLass
-        default = object
-        required = False
-    [[ docstring ]]
-        label = Docstring
-        default = Enter a docstring
-        required = False
+[[ name ]]
+label = Name
+default = 
+required = True
+[[ super ]]
+label = Super CLass
+default = object
+required = True
+[[ docstring ]]
+label = Docstring
+default = Enter a docstring
+required = False
 [ template ]
 text = '''class $name($super):  
     "$docstring"
@@ -391,6 +410,11 @@ class Snippets(Service):
     def start(self):
         self._view = SnippetsManagerView(self)
         self.snippets = {'p':{'c': StringTemplateSnippet(TEST_CONF)}}
+
+    def create_snippet_directories(self):
+        self._snippet_dir = os.path.join(self.boss.get_pida_home(), 'snippets')
+        if not os.path.exists(self._snippets_dir):
+            os.mkdir(self._snippets_dir)
 
     def popup_snippet(self, word):
         snippet_type, snippet_name = word[0], word[1:]
