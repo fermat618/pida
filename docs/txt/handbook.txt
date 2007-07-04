@@ -866,7 +866,7 @@ the core, and individual plugins. Because of this, Plugins which you might
 expect to find in a standard IDE or a standard Python IDE must be installed.
 Fortunately this is a matter of a single click.
 
-== The service.pida file
+=== The service.pida file
 
 The service.pida file in Plugins is in the _ini_ format with themetadata under
 the [plugin] tag. It contains metadata that is used by the
@@ -903,7 +903,7 @@ category = code
 description = Snippets: automatically enter repetitive text
 ------------------------------------------------------------------------------
 
-== Publishing Plugins
+=== Publishing Plugins
 
 Plugin publishing can be done from the safety of the PIDA user interface.
 First you will need to create the service directory (our advice is to use the
@@ -918,7 +918,7 @@ select the _Make package and upload_ button to complete the process.
 The plugin will be placed on standby, and approved by one of the developers.
 Once it is approved, anyone can download it.
 
-== Limitations to plugins
+=== Limitations to plugins
 
 The single limitation to a plugin is that it should not (although it can)
 provide events that can be subscribed to. This is because a plugin can be

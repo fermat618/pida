@@ -298,38 +298,82 @@ div.exampleblock-content {
 /* IE6 sets dynamically generated links as visited. */
 div#toc a:visited { color: blue; }
 </style>
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){generateToc(4)}
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, October 2006. License: GPL */
+
+function getText(el) {
+  var text = "";
+  for (var i = el.firstChild; i != null; i = i.nextSibling) {
+    if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+      text += i.data;
+    else if (i.firstChild != null)
+      text += getText(i);
+  }
+  return text;
+}
+
+function TocEntry(el, text, toclevel) {
+  this.element = el;
+  this.text = text;
+  this.toclevel = toclevel;
+}
+
+function tocEntries(el, toclevels) {
+  var result = new Array;
+  var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+  // Function that scans the DOM tree for header elements (the DOM2
+  // nodeIterator API would be a better technique but not supported by all
+  // browsers).
+  var iterate = function (el) {
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+        var mo = re.exec(i.tagName)
+        if (mo)
+          result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+        iterate(i);
+      }
+    }
+  }
+  iterate(el);
+  return result;
+}
+
+// This function does the work. toclevels = 1..4.
+function generateToc(toclevels) {
+  var toc = document.getElementById("toc");
+  var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "toc" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+}
+/*]]>*/
+</script>
 <title>PIDA Handbook</title>
 </head>
 <body>
-<style>
-
-div#toctitle {
-  color: #000;
-  font-family: sans-serif;
-  font-size: 1.1em;
-  font-weight: bold;
-  margin-top: 1.0em;
-  margin-bottom: 0.1em;
-}
-
-div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-div.toclevel2 {
-  margin-left: 2em;
-  font-size: 0.9em;
-}
-div.toclevel3 {
-  margin-left: 4em;
-  font-size: 0.9em;
-}
-div.toclevel4 {
-  margin-left: 6em;
-  font-size: 0.9em;
-}
-</style>
-<div class="header">
+<div id="header">
 <h1>PIDA Handbook</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
@@ -418,6 +462,10 @@ contribute fixes back upstream to Kiwi. Kiwi is available in the contrib
 directory of the source code. It is recommended to use this version if at all
 possible. It contains no changes from the original, but it is ensured to have
 all the latest fixes.</p>
+<div class="title">VTE</div>
+<p>VTE is a GTK terminal widget that is used by gnome-terminal. PIDA uses this for
+many things, and since it is in most distributions that Gnome is in, we have
+made it an absolute requirement.</p>
 <h3>2.2. Compilation Requirements</h3>
 <div class="title">Python development headers</div>
 <p>These are usually available in your distribution as python-dev. They are the
@@ -476,6 +524,19 @@ installing to a global location.</p>
 <div class="title">Run from source</div>
 <p>First copy the moo_stub.so (that was built in the build stage) from the build/
 directory somewhere into PYTHONPATH or the working directory. Then execute:</p>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note" />
+</td>
+<td class="content">
+<p>Running from source is generally reserved for developers of PIDA, or those
+people who really know what they are doing. It is very useful to be able to
+make a change and test it immediately. It is not recommended to use this as a
+general running method.</p>
+</td>
+</tr></table>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>run-pida.sh</tt></pre>
@@ -818,8 +879,22 @@ Python package with data.</p>
         uidef/
             myservice.xml</tt></pre>
 </div></div>
-<h3>7.2. Individual Components</h3>
-<h4>7.2.1. myservice.py</h4>
+<h3>7.2. Creating a starter service</h3>
+<p>As will be seen, there is a large amount of boiler plate involved in creating
+a service, and so we have provided the creator.py script in the tools/
+directory of the source distribution. You should run this with the single
+argument <em>service</em> and you will be asked a few questions to complete the
+process:</p>
+<div class="listingblock">
+<div class="title">Example: Using tools/creator.py</div>
+<div class="content">
+<pre><tt>ali@book:~/working/pida$ python tools/creator.py service
+Please enter the path for the service [/home/ali/working/pida/pida/services]: /tmp
+Please enter the Service name: MyService
+Creating service my service in /tmp</tt></pre>
+</div></div>
+<h3>7.3. Individual Components</h3>
+<h4>7.3.1. myservice.py</h4>
 <p>This is the file containing the Python code for the service. It is a Python
 module and should contain an attribute <tt>`Service</tt>`, which is the Class which
 will be instantiated as the service.</p>
@@ -874,7 +949,7 @@ classical (e.g. Trac) <strong>extension point</strong>.</p>
 directly to a single toolbar and menu action, and contains the necessary
 information to create this user interface item from it, including label, stock
 image etc.</p>
-<h4>7.2.2. Other files and directories</h4>
+<h4>7.3.2. Other files and directories</h4>
 <div class="title"><em>init</em>.py</div>
 <p>This file is required so that Python recognises the directory as a legitimate
 Python package.</p>
@@ -896,7 +971,7 @@ These are gtk.UIManager XML files, and define the menu bar and toolbar items
 for the service. The file myservice.xml is automatically loaded by PIDA, but
 others can exist in this directory and could be used to populate popup menus
 or to be further merged with the standard UI defnition.</p>
-<h3>7.3. Service Options</h3>
+<h3>7.4. Service Options</h3>
 <p>Options are currently stored in the GConf database. They are registered at
 activation time of the service. Each service has its own directory in the GConf
 database at /apps/pida/service_name. On registering the options, if they do not
@@ -930,15 +1005,15 @@ class MyService(Service):
 
     options_config = MyServiceOptions</tt></pre>
 </div></div>
-<h3>7.4. Service Commands</h3>
+<h3>7.5. Service Commands</h3>
 <p>Commands are the external interface for a service. This interface is
 specifically provided to other services for use of service activities.</p>
-<h4>7.4.1. Defining Commands</h4>
+<h4>7.5.1. Defining Commands</h4>
 <p>Commands are defined as methods on the <tt>commands_config</tt> attribute of the
 Service class. This attribute should reference a subclass of
 <tt>pida.core.commands.CommandsConfig</tt> class. Any method defined on that class will
 be available as a command on the service.</p>
-<h4>7.4.2. Calling service commands</h4>
+<h4>7.5.2. Calling service commands</h4>
 <p>Commands are called on a service using the <tt>cmd</tt> method of a service. Calling
 commands on other services must be performed through the Boss' <tt>cmd</tt> method
 which takes as an additional parameter then name of the target service.</p>
@@ -962,7 +1037,7 @@ The target service command
 </p>
 </li>
 </ol>
-<h4>7.4.3. Using arguments on service commands</h4>
+<h4>7.5.3. Using arguments on service commands</h4>
 <p>All arguments to service commands must be passed as keyword arguments. Because
 of this, they can be passed in any order after the servicename, and commandname
 parameters.</p>
@@ -975,11 +1050,11 @@ parameters.</p>
     cwd = '/',
 )</tt></pre>
 </div></div>
-<h3>7.5. Service Events</h3>
+<h3>7.6. Service Events</h3>
 <p>The events are asynchronous call back for the service. So any other service can
 subscribe its call back to an event, and it will get called back once the event
 occurs.</p>
-<h4>7.5.1. Events definition</h4>
+<h4>7.6.1. Events definition</h4>
 <p>To create a new event, like earlier, you just need to create a new class
 that you can call <em>MyServiceEvents</em>, and you bind it to your <em>MyService</em>
 class doing <em>events_config = MyServiceEvents</em>.</p>
@@ -998,7 +1073,7 @@ class MyService(Service):
 to manage your own events. You have to define in create_events all the events
 your service is about to use, and in subscribe_foreign_events all the events
 from other services your service needs.</p>
-<h4>7.5.2. Create your own new events</h4>
+<h4>7.6.2. Create your own new events</h4>
 <p>So, once you have your <em>EventsConfig</em> ready, you need to implement the
 create_events method so you can have your own new events. Three steps
 are needed to create an event :</p>
@@ -1020,7 +1095,7 @@ are needed to create an event :</p>
         if param != None:
             print 'with param:', param</tt></pre>
 </div></div>
-<h4>7.5.3. Subscribe to other services' events</h4>
+<h4>7.6.3. Subscribe to other services' events</h4>
 <p>We have seen how we can bind callbacks to events you created in
 your own service. But you often need to interact with other services
 as well. To do so, you need to implement the subscribe_foreign_events()
@@ -1052,7 +1127,7 @@ need to subscribe to the event:</p>
                                      self.on_myservice_foreign_event)</tt></pre>
 </div></div>
 <p>and finally define your callback.</p>
-<h4>7.5.4. Events emition</h4>
+<h4>7.6.4. Events emition</h4>
 <p>Now you have defined and bound all your events in your service and all
 you need is to emit them when you need them to be executed. Well, it's
 fairly simple, just call the emit() method :</p>
@@ -1075,13 +1150,13 @@ from someone else's service (then you use get_service().emit()).</p>
 <p>If your callback function needs parameters, you need to give the options to
 the emit method. You can also use, as in the above example, non-mandatory
 parameters.</p>
-<h3>7.6. Service Views</h3>
+<h3>7.7. Service Views</h3>
 <p>Service views are almost anything that appears visually in PIDA (apart from the
 main toolbar and menubar). All of these views belong to a service.</p>
-<h4>7.6.1. Creating Views</h4>
+<h4>7.7.1. Creating Views</h4>
 <p>Views may be designed in Glade3, or in pure <a href="#PyGTK">[PyGTK]</a>. Each method of view
 creation has its advantages and disadvantages, and these are discussed below.</p>
-<h4>7.6.2. Glade3 Views</h4>
+<h4>7.7.2. Glade3 Views</h4>
 <p>Views created with Glade3 have the following advantages:</p>
 <ul>
 <li>
@@ -1137,18 +1212,18 @@ signal for the widget:</p>
 <pre><tt>def on_close_button__clicked(self, button):
     print '%s was clicked!' % button</tt></pre>
 </div></div>
-<h4>7.6.3. Pure PyGTK Views</h4>
+<h4>7.7.3. Pure PyGTK Views</h4>
 <p>These views should subclass <tt>pida.ui.views.PidaView</tt> and should create the
 necessary widgets by overriding the create_ui method. The widgets can be added
 to the view by using the <tt>view.add_main_widget(widget, expand=True, fill=True)</tt>.
 The widgets will be added to the top-level VBox in the view.</p>
 <p>There is no signal autoconnection, and widgets behave exactly as if they had
 been created with PyGTK in any other circumstance.</p>
-<h4>7.6.4. Instantiating views</h4>
+<h4>7.7.4. Instantiating views</h4>
 <p>The service can instantiate its views at any time. They should pass the instance
 of the service as the first parameter to the View constructor. The service will
 then be stored as the <tt>svc</tt> attribute on the view.</p>
-<h4>7.6.5. Adding Views to PIDA</h4>
+<h4>7.7.5. Adding Views to PIDA</h4>
 <p>Views are displayed at runtime by calling the <em>window</em> service's command
 <em>add_view</em>. The required paned must be passed as well as the view itself.</p>
 <p>The paned attribute to the command should be one of:</p>
@@ -1206,7 +1281,7 @@ def start(self):
     self.boss.cmd('window', 'add_view', paned='Terminal', view=view)</tt></pre>
 </div></div>
 <p>Numerous other examples are available in almost every service in <tt>pida.services</tt>.</p>
-<h4>7.6.6. View icons and labels</h4>
+<h4>7.7.6. View icons and labels</h4>
 <p>View icons (the image displayed on the paned button) are referred to by their
 stock ID, and set as a class attribute on the view <tt>icon_name</tt>. Similarly, the
 text associating the icon is set as a class attribute on the view called
@@ -1214,12 +1289,12 @@ text associating the icon is set as a class attribute on the view called
 <p>Additionally, an <tt>icon_name</tt> and/or a <tt>label_text</tt> attribute can be passed to
 the view constructor, and these will be displayed as the view's label and icon
 when it is added to the PIDA main view.</p>
-<h3>7.7. Using custom pixmaps in services</h3>
+<h3>7.8. Using custom pixmaps in services</h3>
 <p>Any pixmap placed in the pixmaps directory in the service (<tt>myservice/pixmaps</tt>)
 will automatically be added as a stock image and can be used by the service
 using its name (without extension) for View icons or for gtk.Buttons or
 gtk.Images or any other widget which take a stock_id as an argument.</p>
-<h3>7.8. Links</h3>
+<h3>7.9. Links</h3>
 <ol>
 <li>
 <p>
@@ -1228,7 +1303,167 @@ gtk.Images or any other widget which take a stock_id as an argument.</p>
 </li>
 </ol>
 </div>
-<h2>8. PIDA Coding Style Guidelines</h2>
+<h2>8. PIDA Plugin Authoring Guide</h2>
+<div class="sectionbody">
+<p>PIDA plugins are very much identical to Services. Anything you can do in a
+Service, you can also do in a Plugin. There are however a few minor
+differences, based on the facts that:</p>
+<ol>
+<li>
+<p>
+Plugins can be loaded and unlaoded at runtime
+</p>
+</li>
+<li>
+<p>
+Plugins can be published on the PIDA community and installed
+</p>
+</li>
+</ol>
+<p>PIDA uses Plugins for all non-core funcitonality, and we have been quite
+strict about this, so that we can maintain a different release schedule for
+the core, and individual plugins. Because of this, Plugins which you might
+expect to find in a standard IDE or a standard Python IDE must be installed.
+Fortunately this is a matter of a single click.</p>
+<h3>8.1. The service.pida file</h3>
+<p>The service.pida file in Plugins is in the <em>ini</em> format with themetadata under
+the [plugin] tag. It contains metadata that is used by the
+installer and by the community website. This metadata includes:</p>
+<div class="tableblock">
+<table rules="all"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<caption class="title">Table: Service.pida metadata</caption>
+<col width="160" />
+<col width="731" />
+<thead>
+  <tr>
+    <th align="right">
+    Attribute
+    </th>
+    <th align="right">
+    Description
+    </th>
+  </tr>
+</thead>
+<tbody valign="top">
+  <tr>
+    <td align="right">
+    plugin *
+    </td>
+    <td align="right">
+    Technical name of plugin (only [a-z0-9_] name)
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    name *
+    </td>
+    <td align="right">
+    Long name of plugin
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    version *
+    </td>
+    <td align="right">
+    Version of plugin
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    author *
+    </td>
+    <td align="right">
+    Name of author &lt;email&gt;
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    require_pida *
+    </td>
+    <td align="right">
+    Version of PIDA
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    category *
+    </td>
+    <td align="right">
+    Category of plugins
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    depends
+    </td>
+    <td align="right">
+    List of dependencies
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    lastupdate
+    </td>
+    <td align="right">
+    Date of last update
+    </td>
+  </tr>
+  <tr>
+    <td align="right">
+    website
+    </td>
+    <td align="right">
+    Website of plugin
+    </td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p><em>* These fields are mandatory</em></p>
+<div class="listingblock">
+<div class="title">Example: An example service.pida file</div>
+<div class="content">
+<pre><tt>[plugin]
+plugin = snippets
+name = Snippets
+author = Ali Afshar &lt;aafshar@gmail.com&gt;
+version = 0.1
+require_pida = 0.5
+depends = ""
+category = code
+description = Snippets: automatically enter repetitive text</tt></pre>
+</div></div>
+<h3>8.2. Publishing Plugins</h3>
+<p>Plugin publishing can be done from the safety of the PIDA user interface.
+First you will need to create the service directory (our advice is to use the
+tools/creator.py script as outlined in the service authoring guide above).
+Once your plugin is created, in PIDA, select <em>Plugin Manager</em> from tools, and
+select the <em>Publish</em> tab. Enter the directory containing the service, and your
+username and password for the pida community website. You will be given a
+chance to edit the service metadata in the user interface. When you are happy,
+select the <em>Make package and upload</em> button to complete the process.</p>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note" />
+</td>
+<td class="content">The plugin will be placed on standby, and approved by one of the developers.
+Once it is approved, anyone can download it.</td>
+</tr></table>
+</div>
+<h3>8.3. Limitations to plugins</h3>
+<p>The single limitation to a plugin is that it should not (although it can)
+provide events that can be subscribed to. This is because a plugin can be
+loaded and unloaded at runtime, and so plugins that depend on other plugins'
+events will cease to function.</p>
+<p>We say <em>"should not"</em> rather than <em>"must not"</em> because you can actually do what
+you like. We have a strong philosophy about not getting in your way, but be
+warned that you have been warned!</p>
+</div>
+<h2>9. PIDA Coding Style Guidelines</h2>
 <div class="sectionbody">
 <p>First read <a href="#PEP8">[PEP8]</a> (the PEP on how to write readable Python code). The PEP gives
 a number of good insights. The PEP gives a few options on things, and I shall
@@ -1236,10 +1471,10 @@ try to clarify what I prefer here. Where this document differs from PEP8_, you
 should use what is presented here, unless you are a zealot in which case you
 should listen to the Python people (who are cleverer than me anyway). Also
 read PEP20_ while you are at it.</p>
-<h3>8.1. Indenting</h3>
+<h3>9.1. Indenting</h3>
 <p>4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
 your settings, somehow tabs creep into emacs-written code.</p>
-<h3>8.2. Line Width</h3>
+<h3>9.2. Line Width</h3>
 <p>79 characters, perhaps 78 to be safe. This is negotiable, and there are times
 when 83 character lines are acceptable. You can be the judge. I am not sure
 many people use 80-character terminals these days, so we can be a bit less
@@ -1270,13 +1505,13 @@ splitting depending on the purpose.</p>
 </div></div>
 <p>It all depends on the use at the time, and we should remember to keep it
 readable.</p>
-<h3>8.3. Blank Lines</h3>
+<h3>9.3. Blank Lines</h3>
 <p>As <a href="#PEP8">[PEP8]</a> for 2 lines between top-level classes and functions, with one line
 between methods.</p>
 <p>Extra blank line "to indicate logical blocks" should be avoided at all costs
 in my opinion. Real logical blocks should be used to indicate logical blocks!
 If you have to do this, a comment is better than a blank line.</p>
-<h3>8.4. Imports</h3>
+<h3>9.4. Imports</h3>
 <p>Only import the function or class you want to use, for example:</p>
 <div class="listingblock">
 <div class="content">
@@ -1312,7 +1547,7 @@ PIDA application/library specific imports
 </p>
 </li>
 </ol>
-<h3>8.5. Whitespace</h3>
+<h3>9.5. Whitespace</h3>
 <p>Yes:</p>
 <div class="listingblock">
 <div class="content">
@@ -1327,7 +1562,7 @@ def foo(blah,baz):</tt></pre>
 </div></div>
 <p>(that space after a comma is basic punctuation)</p>
 <p><a href="#PEP8">[PEP8]</a> has oodles on this.</p>
-<h3>8.6. Docstrings</h3>
+<h3>9.6. Docstrings</h3>
 <p>I like having the triple quotes as doubles, and for them to be on empty lines,
 like so:</p>
 <div class="listingblock">
@@ -1342,7 +1577,7 @@ guilty of being lazy, so I can't blame anyone. Also we use API generation
 which uses these doc strings, so it all helps.</p>
 <p>We use Pydoctor_ with ReStructured text directives for API generation, so I
 guess you should look them up too.</p>
-<h3>8.7. Strings</h3>
+<h3>9.7. Strings</h3>
 <p>Single quoted, unless you need single quotes in them, in which case use double
 quotes:</p>
 <div class="listingblock">
@@ -1350,7 +1585,7 @@ quotes:</p>
 <pre><tt>my_string = 'I am a banana'
 my_other_string = "I am a banana's uncle"</tt></pre>
 </div></div>
-<h3>8.8. Naming</h3>
+<h3>9.8. Naming</h3>
 <ul>
 <li>
 <p>
@@ -1376,7 +1611,7 @@ Module-level constants all in UPPERCASE_WITH_UNDERSCORES.
 </p>
 </li>
 </ul>
-<h3>8.9. Conditional blocks</h3>
+<h3>9.9. Conditional blocks</h3>
 <p>This is fine:</p>
 <div class="listingblock">
 <div class="content">
@@ -1394,7 +1629,7 @@ else:
 </div></div>
 <p>But I am not going to argue, needs can force you into a certain style.
 Remember, readability is key.</p>
-<h3>8.10. Magic</h3>
+<h3>9.10. Magic</h3>
 <p>I hate magic, perhaps because I am dumb. I am really wary of using some of
 Python's shoot-me-in-the-foot techniques because I have to maintain the code,
 so. I have made these mistakes myself, and have (hopefully learned from the
@@ -1429,7 +1664,7 @@ Inner classes
 </p>
 </dd>
 </dl>
-<h3>8.11. Bibliography</h3>
+<h3>9.11. Bibliography</h3>
 <ol>
 <li>
 <p>
@@ -1450,87 +1685,8 @@ Inner classes
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 29-Jun-2007 15:03:57 BST
+Last updated 04-Jul-2007 21:30:10 BST
 </div>
 </div>
-<script type="text/javascript">
-/*<![CDATA[*/
-// window.onload = function(){generateToc(4)}
-/* Author: Mihai Bazon, September 2002
- * http://students.infoiasi.ro/~mishoo
- *
- * Table Of Content generator
- * Version: 0.4
- *
- * Feel free to use this script under the terms of the GNU General Public
- * License, as long as you do not remove or alter this notice.
- */
-
- /* modified by Troy D. Hanson, September 2006. License: GPL */
- /* modified by Stuart Rackham, October 2006. License: GPL */
-
-function getText(el) {
-  var text = "";
-  for (var i = el.firstChild; i != null; i = i.nextSibling) {
-    if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
-      text += i.data;
-    else if (i.firstChild != null)
-      text += getText(i);
-  }
-  return text;
-}
-
-function TocEntry(el, text, toclevel) {
-  this.element = el;
-  this.text = text;
-  this.toclevel = toclevel;
-}
-
-function tocEntries(el, toclevels) {
-  var result = new Array;
-  var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
-  // Function that scans the DOM tree for header elements (the DOM2
-  // nodeIterator API would be a better technique but not supported by all
-  // browsers).
-  var iterate = function (el) {
-    for (var i = el.firstChild; i != null; i = i.nextSibling) {
-      if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
-        var mo = re.exec(i.tagName)
-        if (mo)
-          result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
-        iterate(i);
-      }
-    }
-  }
-  iterate(el);
-  return result;
-}
-
-// This function does the work. toclevels = 1..4.
-function generateToc(toclevels) {
-  var toc = document.getElementById("toc");
-  var el = document.getElementById('doc');
-  var entries = false;
-  if ( el )
-	entries = tocEntries(el, toclevels);
-  else
-	entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
-  //var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
-  for (var i = 0; i < entries.length; ++i) {
-    var entry = entries[i];
-    if (entry.element.id == "")
-      entry.element.id = "toc" + i;
-    var a = document.createElement("a");
-    a.href = "#" + entry.element.id;
-    a.appendChild(document.createTextNode(entry.text));
-    var div = document.createElement("div");
-    div.appendChild(a);
-    div.className = "toclevel" + entry.toclevel;
-    toc.appendChild(div);
-  }
-}
-/*]]>*/
-generateToc(4);
-</script>
 </body>
 </html>
