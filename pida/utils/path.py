@@ -40,7 +40,26 @@ def get_relative_path(from_path, to_path):
     else:
         return None
 
-           
+def walktree(top = ".", depthfirst = True, skipped_directory = []):
+    """Walk the directory tree, starting from top. Credit to Noah Spurrier and Doug Fort."""
+    import os, stat
+    names = os.listdir(top)
+    if not depthfirst:
+        yield top, names
+    for name in names:
+        try:
+            st = os.lstat(os.path.join(top, name))
+        except os.error:
+            continue
+        if stat.S_ISDIR(st.st_mode):
+            if name in skipped_directory:
+                continue
+            for (newtop, children) in walktree (os.path.join(top, name),
+                    depthfirst, skipped_directory):
+                yield newtop, children
+    if depthfirst:
+        names = [name for name in names if name not in skipped_directory]
+        yield top, names
 
 
 if __name__ == '__main__':

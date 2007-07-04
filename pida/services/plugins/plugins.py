@@ -43,6 +43,7 @@ from pida.core.options import OptionItem, manager, OTypeStringList, OTypeString
 
 from pida.utils.web import fetch_url
 from pida.utils.configobj import ConfigObj
+from pida.utils.path import walktree
 
 # consts
 PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
@@ -57,26 +58,6 @@ def get_value(tab, key):
         return ''
     return tab[key]
 
-def walktree(top = ".", depthfirst = True, skipped_directory = []):
-    """Walk the directory tree, starting from top. Credit to Noah Spurrier and Doug Fort."""
-    import os, stat
-    names = os.listdir(top)
-    if not depthfirst:
-        yield top, names
-    for name in names:
-        try:
-            st = os.lstat(os.path.join(top, name))
-        except os.error:
-            continue
-        if stat.S_ISDIR(st.st_mode):
-            if name in skipped_directory:
-                continue
-            for (newtop, children) in walktree (os.path.join(top, name),
-                    depthfirst, skipped_directory):
-                yield newtop, children
-    if depthfirst:
-        names = [name for name in names if name not in skipped_directory]
-        yield top, names
 
 class PluginsItem(object):
 
