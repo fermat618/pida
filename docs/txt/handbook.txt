@@ -165,6 +165,15 @@ installing to a global location.
 First copy the moo_stub.so (that was built in the build stage) from the build/
 directory somewhere into PYTHONPATH or the working directory. Then execute:
 
+[NOTE]
+==============================================================================
+Running from source is generally reserved for developers of PIDA, or those
+people who really know what they are doing. It is very useful to be able to
+make a change and test it immediately. It is not recommended to use this as a
+general running method.
+==============================================================================
+
+
 ------------------------------------------------------------------------------
 run-pida.sh
 ------------------------------------------------------------------------------
@@ -417,6 +426,22 @@ The structure of this directory is like so for a service named "myservice":
         uidef/
             myservice.xml
 ---------------------------
+
+=== Creating a starter service
+
+As will be seen, there is a large amount of boiler plate involved in creating
+a service, and so we have provided the creator.py script in the tools/
+directory of the source distribution. You should run this with the single
+argument _service_ and you will be asked a few questions to complete the
+process:
+
+.Using tools/creator.py
+------------------------------------------------------------------------
+ali@book:~/working/pida$ python tools/creator.py service
+Please enter the path for the service [/home/ali/working/pida/pida/services]: /tmp
+Please enter the Service name: MyService
+Creating service my service in /tmp
+------------------------------------------------------------------------
 
 === Individual Components
 
@@ -825,6 +850,84 @@ gtk.Images or any other widget which take a stock_id as an argument.
 === Links
 
 + [[[PyGTK]]] http://pygtk.org[PyGTK Website]
+
+== PIDA Plugin Authoring Guide
+
+PIDA plugins are very much identical to Services. Anything you can do in a
+Service, you can also do in a Plugin. There are however a few minor
+differences, based on the facts that:
+
+    1. Plugins can be loaded and unlaoded at runtime
+    2. Plugins can be published on the PIDA community and installed
+
+PIDA uses Plugins for all non-core funcitonality, and we have been quite
+strict about this, so that we can maintain a different release schedule for
+the core, and individual plugins. Because of this, Plugins which you might
+expect to find in a standard IDE or a standard Python IDE must be installed.
+Fortunately this is a matter of a single click.
+
+== The service.pida file
+
+The service.pida file in Plugins is in the _ini_ format with themetadata under
+the [plugin] tag. It contains metadata that is used by the
+installer and by the community website. This metadata includes:
+
+.Service.pida metadata
+[grid="all"]
+'-------------'---------------------------------------------------------------
+Attribute       Description
+------------------------------------------------------------------------------
+plugin * 	    Technical name of plugin (only [a-z0-9_] name)
+name * 	        Long name of plugin
+version * 	    Version of plugin
+author * 	    Name of author <email>
+require_pida * 	Version of PIDA
+category * 	    Category of plugins
+depends 	    List of dependencies
+lastupdate 	    Date of last update 	
+website 	    Website of plugin
+------------------------------------------------------------------------------
+
+_* These fields are mandatory_
+
+.An example service.pida file
+------------------------------------------------------------------------------
+[plugin]
+plugin = snippets
+name = Snippets
+author = Ali Afshar <aafshar@gmail.com>
+version = 0.1
+require_pida = 0.5
+depends = ""
+category = code
+description = Snippets: automatically enter repetitive text
+------------------------------------------------------------------------------
+
+== Publishing Plugins
+
+Plugin publishing can be done from the safety of the PIDA user interface.
+First you will need to create the service directory (our advice is to use the
+tools/creator.py script as outlined in the service authoring guide above).
+Once your plugin is created, in PIDA, select _Plugin Manager_ from tools, and
+select the _Publish_ tab. Enter the directory containing the service, and your
+username and password for the pida community website. You will be given a
+chance to edit the service metadata in the user interface. When you are happy,
+select the _Make package and upload_ button to complete the process.
+
+[NOTE]
+The plugin will be placed on standby, and approved by one of the developers.
+Once it is approved, anyone can download it.
+
+== Limitations to plugins
+
+The single limitation to a plugin is that it should not (although it can)
+provide events that can be subscribed to. This is because a plugin can be
+loaded and unloaded at runtime, and so plugins that depend on other plugins'
+events will cease to function.
+
+We say _"should not"_ rather than _"must not"_ because you can actually do what
+you like. We have a strong philosophy about not getting in your way, but be
+warned that you have been warned!
 
 
 == PIDA Coding Style Guidelines
