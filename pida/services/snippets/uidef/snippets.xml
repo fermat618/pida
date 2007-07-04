@@ -27,15 +27,12 @@
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">
+            <placeholder name="toolstools2">
+                <menuitem name="show_snippets" action="show_snippets" />
+			</placeholder>
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
-            <placeholder name="tools" />
-            <separator />
-            <placeholder name="perms">
-            </placeholder>
-            <separator />
-            <placeholder name="panes" />
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

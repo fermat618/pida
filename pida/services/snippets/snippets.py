@@ -31,6 +31,9 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.ui.views import PidaGladeView
+from pida.utils.path import walktree
+from kiwi.ui.objectlist import Column
 
 
 # locale
@@ -42,6 +45,45 @@ _ = locale.gettext
 
 import gtk, gobject
 
+def get_value(tab, key):
+    if not tab.has_key(key):
+        return ''
+    return tab[key]
+
+
+class SnippetsManagerView(PidaGladeView):
+
+    gladefile = 'snippets-manager'
+    locale = locale
+    label_text = _('Snippets manager')
+    icon_name = gtk.STOCK_INDEX
+
+    def create_ui(self):
+        self._current = None
+        self.item = None
+        self.installed_list.set_columns([
+            Column('title', title=_('Snippets'), sorted=True, data_type=str,
+                expand=True)
+            ])
+        self.available_list.set_columns([
+            Column('title', title=_('Snippets'), sorted=True, data_type=str,
+                expand=True)
+            ])
+
+    def can_be_closed(self):
+        self.svc.get_action('show_snippets').set_active(False)
+
+    def clear_installed(self):
+        self.installed_list.clear()
+
+    def add_installed(self, item):
+        self.installed_list.append(item)
+
+    def clear_available(self):
+        self.available_list.clear()
+
+    def add_available(self, item):
+        self.available_list.append(item)
 
 
 class SnippetWindow(gtk.Window):
@@ -320,6 +362,22 @@ class SnippetActions(ActionsConfig):
             '<Shift><Control>g',
         )
 
+        self.create_action(
+            'show_snippets',
+            TYPE_TOGGLE,
+            _('Snippets manager'),
+            _('Show the snippets'),
+            gtk.STOCK_EXECUTE,
+            self.on_show_snippets,
+            ''
+        )
+
+    def on_show_snippets(self, action):
+        if action.get_active():
+            self.svc.show_snippets()
+        else:
+            self.svc.hide_snippets()
+
     def on_insert_snippet(self, action):
         self.svc.boss.editor.cmd('call_with_current_word',
                                 callback=self.svc.popup_snippet)
@@ -331,6 +389,7 @@ class Snippets(Service):
     actions_config = SnippetActions
 
     def start(self):
+        self._view = SnippetsManagerView(self)
         self.snippets = {'p':{'c': StringTemplateSnippet(TEST_CONF)}}
 
     def popup_snippet(self, word):
@@ -347,6 +406,14 @@ class Snippets(Service):
     def insert_snippet(self, text):
         self.boss.editor.cmd('delete_current_word')
         self.boss.editor.cmd('insert_text', text=text)
+
+    def show_snippets(self):
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+        #self.update_installed_snippets()
+
+    def hide_snippets(self):
+        self.boss.cmd('window', 'remove_view', view=self._view)
+
 
 # Required Service attribute for service loading
 Service = Snippets
