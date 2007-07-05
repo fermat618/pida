@@ -407,8 +407,9 @@ class Plugins(Service):
                 data = _('Started %(plugin)s plugin' % {'plugin':plugin.get_label()}))
             return True
         except ServiceLoadingError, e:
-            self.error_dlg(_('Could not start plugin'),
-                             '%s\n%s' % (plugin_path, e))
+            self.boss.cmd('notify', 'notify', title=_('Plugins'),
+                data = _('Could not start plugin: %(plugin_path)s\n%(error)s' % 
+                    {'error':str(e), 'plugin_path':plugin_path}))
             return False
 
     def stop_plugin(self, plugin_name):
