@@ -234,7 +234,11 @@ class communication_window(gtk.Window):
         # only have to be fetched once.
         self.server_cwds = {}
         # An instance of the root window, so it only has to be fetched once.
-        self.root_window = gdk.get_default_root_window()
+        dpy = gdk.display_get_default()
+        if not dpy:
+            raise Exception('Unable to get default display')
+        screen = dpy.get_screen(0)
+        self.root_window = screen.get_root_window()
         # fetch the serverlist to begin with to know when we are started
         self.oldservers = None
         self.keep_fetching_serverlist = True
