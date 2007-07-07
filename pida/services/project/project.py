@@ -40,6 +40,7 @@ from pida.core.projects import ProjectControllerMananger, ProjectController, \
     ProjectKeyDefinition
 
 from pida.ui.views import PidaGladeView
+from pida.ui.objectlist import AttrSortCombo
 
 # locale
 from pida.core.locale import Locale
@@ -107,6 +108,17 @@ class ProjectListView(PidaGladeView):
     def create_ui(self):
         self.project_ol.set_headers_visible(False)
         self.project_ol.set_columns(PROJECT_LIST_COLUMNS)
+        self._sort_combo = AttrSortCombo(self.project_ol,
+            [
+                ('display_name', 'Name'),
+                ('source_directory', 'Full Path'),
+                ('name', 'Directory Name'),
+            ],
+            'display_name'
+        )
+        self._sort_combo.show()
+        self.main_vbox.pack_start(self._sort_combo, expand=False)
+
 
     def on_project_ol__selection_changed(self, ol, project):
         self.svc.set_current_project(project)

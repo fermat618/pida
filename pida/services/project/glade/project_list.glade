@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Sat Apr  7 10:55:13 2007 by ali@book-->
+<!--Generated with glade3 3.2.0 on Sat Jul  7 21:15:02 2007 by ali@book-->
 <glade-interface>
+
   <widget class="GtkWindow" id="project_list">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
-      <widget class="ObjectList" id="project_ol">
+      <widget class="GtkVBox" id="main_vbox">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-        <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+        <child>
+          <widget class="ObjectList" id="project_ol">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+            <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+          </widget>
+        </child>
       </widget>
     </child>
   </widget>

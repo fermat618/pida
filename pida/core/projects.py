@@ -148,6 +148,8 @@ class Project(object):
     def get_display_name(self):
         return self.options.get('name', None) or self.get_name()
 
+    display_name = property(get_display_name)
+
     def set_display_name(self, display_name):
         self.options['name'] = display_name
         self.options.write()
