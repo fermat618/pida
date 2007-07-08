@@ -119,7 +119,6 @@ class ProjectListView(PidaGladeView):
         self._sort_combo.show()
         self.main_vbox.pack_start(self._sort_combo, expand=False)
 
-
     def on_project_ol__selection_changed(self, ol, project):
         self.svc.set_current_project(project)
 
