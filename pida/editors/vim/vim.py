@@ -87,6 +87,11 @@ class VimCallback(object):
         if server == self.svc.server:
             self.svc.boss.stop(force=True)
 
+    def vim_complete(self, server, findstart, base, line, start):
+        # do this a few times
+        #self.svc._com.add_completion(server, 'banana')
+        pass
+
 
 # Service class
 class Vim(EditorService):

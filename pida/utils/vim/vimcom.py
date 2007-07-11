@@ -680,6 +680,12 @@ class communication_window(gtk.Window):
 
     def set_path(self, server, path):
         self.send_ex(server, 'cd %s' % path)
+
+    def add_completion(self, server, s):
+        self.send_expr(server, 'complete_add("%s")' % s, lambda *a: None)
+
+    def finish_completion(self, server):
+        self.send_keys(server, chr(3))
    
     def cb_notify(self, *a):
         win, ev =  a
@@ -768,5 +774,33 @@ let i = 1
 :silent au pida CursorMovedI * silent call Async_event(v:servername.":cursor_move,".line('.'))
 :silent au pida CursorMoved * silent call Async_event(v:servername.":cursor_move,".line('.'))
 
+:silent function! Pida_Complete(findstart, base)
+    " locate the start of the word
+    let line = getline('.')
+    let start = col('.') - 1
+    while start > 0 && line[start - 1] =~ '\a'
+        let start -= 1
+    endwhile
+    if a:findstart
+        let g:completing = 1
+	    return start
+    else
+        call Async_event(v:servername.":complete".a:findstart."".a:base."".line."".start)
+        let completion_time = 0
+        while g:completing && completion_time < 500
+            sleep 100m
+            let completion_time = completion_time + 100
+            "if complete_check()
+            "    break
+            "endif
+        endwhile
+        return []
+    endif
+:endfunction
+
+:silent function! Pida_Stop_Completing()
+    let g:completing = 1
+:endfunction
+set completefunc=Pida_Complete
 '''
         
