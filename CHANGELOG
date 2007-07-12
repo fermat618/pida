@@ -19,7 +19,7 @@ Bugs
 [1130] Allow Vim filenames with commas. LP: 78773. Fixes: #142
 [1132] Add missing subversion state (fix #123) 
 [1134] Handle pending merges output for bzr. Fixes LP 76368
-[1162] use notify for plugin loading errors. Fixes #145 
+[1162] Fix crash on plugin loading errors. Fixes #145 
 [1163] Allow PIDA to be started on any screen. Fixes #146
 [1171] Add commit support for GIT
 
