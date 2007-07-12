@@ -417,8 +417,19 @@ class Git(CommandBased):
         "deleted": 'removed'
         }
 
+    def process_paths(self, paths):
+        return map(relative_to(self.base_path), paths)
+    
+    def get_commit_args(self, message, paths=()):
+        if paths:
+            # commit only for the supplied paths
+            return ['commit', '-m', message, '--'] + self.process_paths(paths)
+        else:
+            # commit all found changes
+            # this also commits deletes
+            return ['commit', '-a', '-m', message]
 
-    def get_list_args(self, paths=(), recursive=True, **kw):
+    def get_list_args(self, **kw):
         return ['ls-tree', '-r', 'HEAD']
 
     def get_cache_args(self, **kw):
