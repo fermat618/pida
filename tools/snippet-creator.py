@@ -30,7 +30,7 @@ def create_snippet(location, name):
     base = os.path.join(location, name)
     meta = base + '.meta'
     tmpl = base + '.tmpl'
-    f = open(tmpl, 'w')
+    f = open(meta, 'w')
     f.write(meta_tmpl)
     f.close()
     open(tmpl, 'w').close()
