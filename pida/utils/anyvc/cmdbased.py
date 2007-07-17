@@ -276,14 +276,16 @@ class Bazaar(DCommandBased):
 
     detect_subdir = ".bzr"
 
+    def process_paths(self, paths):
+        return map(relative_to(self.base_path), paths)
+
     def get_list_args(self, recursive=True, paths=(),**kw):
         ret = ["ls","-v"]
         if not recursive:
             ret.append("--non-recursive")
-        ret.extend(list(paths))
         return ret
     
-    def get_cache_args(self, paths=(), **kw):
+    def get_cache_args(self, **kw):
         return ["st"]
 
     statemap  = {
@@ -301,20 +303,21 @@ class Bazaar(DCommandBased):
         state = 'none'
         for item in items:
             item = item.rstrip()
-            state = self.statemap.get(item, state)
+            state = self.statemap.get(item.rstrip(), state)
             if item.startswith("  ") and state:
                 yield item.strip(), state
         
     
-    def parse_list_item(self, item, cache):
-        if item.startswith('I'):
-            return Path(item[1:].strip(), 'ignored', self.base_path)
-        else:
-            fn = item[1:].strip()
-            return Path(
-                    fn, 
-                    cache.get(fn, 'normal'),
-                    self.base_path)
+    def parse_list_items(self, items, cache):
+        for item in items:
+            if item.startswith('I'):
+                yield Path(item[1:].strip(), 'ignored', self.base_path)
+            else:
+                fn = item[1:].strip()
+                yield Path(
+                        fn, 
+                        cache.get(fn, 'normal'),
+                        self.base_path)
 
 
 class SubVersion(CommandBased):
@@ -436,12 +439,9 @@ class Git(CommandBased):
         return ['status']
     
     def parse_list_items(self, items, cache):
-        print cache
         for item in items:
             item = item.split()[-1]
             path = Path(item, cache.get(item, 'normal'), self.base_path)
-            if path.state != 'normal':
-                print repr(path)
             yield path
     
     def parse_cache_items(self, items):
