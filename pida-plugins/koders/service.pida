@@ -1,0 +1,10 @@
+[plugin]
+plugin = koders
+name = Koders integration
+version = 0.1
+author = Mathieu Virbel <tito@bankiz.org>
+require_pida = 0.5
+depends = "os,gtk,re,urllib"
+description = "Search throught Koders database"
+website = ""
+category = documentation
