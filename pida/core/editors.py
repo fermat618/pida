@@ -42,6 +42,7 @@ class EditorActionsConfig(ActionsConfig):
             _('Undo the last editor action'),
             gtk.STOCK_UNDO,
             self.on_undo,
+            '<Shift><Control><Alt>Z',
         )
 
         self.create_action(
@@ -51,6 +52,7 @@ class EditorActionsConfig(ActionsConfig):
             _('Redo the last editor action'),
             gtk.STOCK_REDO,
             self.on_redo,
+            '<Shift><Control><Alt>Y',
         )
 
         self.create_action(
@@ -60,6 +62,7 @@ class EditorActionsConfig(ActionsConfig):
             _('Cut the selection in the editor'),
             gtk.STOCK_CUT,
             self.on_cut,
+            '<Shift><Control><Alt>X',
         )
 
         self.create_action(
@@ -69,6 +72,7 @@ class EditorActionsConfig(ActionsConfig):
             _('Copy the selection in the editor'),
             gtk.STOCK_COPY,
             self.on_copy,
+            '<Shift><Control><Alt>C',
         )
 
         self.create_action(
@@ -78,6 +82,7 @@ class EditorActionsConfig(ActionsConfig):
             _('Paste the clipboard in the editor'),
             gtk.STOCK_PASTE,
             self.on_paste,
+            '<Shift><Control><Alt>V',
         )
 
         self.create_action(
@@ -87,6 +92,7 @@ class EditorActionsConfig(ActionsConfig):
             _('Save the current document'),
             gtk.STOCK_SAVE,
             self.on_save,
+            '<Shift><Control><Alt>S',
         )
 
         self.create_action(
