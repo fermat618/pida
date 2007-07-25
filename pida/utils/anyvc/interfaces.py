@@ -35,7 +35,7 @@ class ILocalVCS(Interface):
     def is_in(dir):
         """determine if a directory is managed by the implementing vcs"""
     
-    def parse_list_item(item):
+    def parse_list_item(item, cache):
         """item is a rcs-specidic file entry, returns a stated file"""
 
     def _list_impl(paths=None, recursive=None):

@@ -261,7 +261,7 @@ class Monotone(DCommandBased):
     def get_list_args(self, **kw):
         return ["automate", "inventory"]
 
-    def parse_list_item(self, item):
+    def parse_list_item(self, item, cache):
         state = self.statemap.get(item[:3], "none")
         return Path(os.path.normpath(item[8:].rstrip()), state, self.base_path)
 
@@ -346,7 +346,7 @@ class SubVersion(CommandBased):
             '~': 'external',
             }
 
-    def parse_list_item(self, item):
+    def parse_list_item(self, item, cache):
         state = item[0]
         file = item.split()[-1]
         #TODO: handle paths with whitespace if ppl fall in that one
@@ -371,7 +371,7 @@ class Mercurial(DCommandBased):
             "R": 'removed',
             }
 
-    def parse_list_item(self, item):
+    def parse_list_item(self, item, cache):
         state = self.state_map[item[0]]
         file = item[2:].strip()
         return Path(file, state, self.base_path)
@@ -394,7 +394,7 @@ class Darcs(DCommandBased):
         "R": 'removed'
     }
 
-    def parse_list_item(self, item):
+    def parse_list_item(self, item, cache):
         if item.startswith('What') or item.startswith('No') or not item.strip():
             return None
         elements = item.split(None, 2)[:2] #TODO: handle filenames with spaces
