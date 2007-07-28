@@ -25,6 +25,7 @@ Bugs
 [1163] Allow PIDA to be started on any screen. Fixes #146.
 [1171] Add commit support for GIT.
 [1180] Good error message when Gvim is not isntalled. Fixes #152.
+[1186] Ensure plugin pixmaps get registered as stock icons. Fixes #154.
 
 Non Core
 
