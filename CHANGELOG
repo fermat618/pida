@@ -10,7 +10,7 @@ Features
 [1137] Shortcut to focus terminal pane. Closes #143.
 [1138] Project-relative filenames in buffer list.
 [1170] Completion hooks for vim.
-[1178] Allow setting keyboard shortcuts for basic actions.
+[1178] Allow setting keyboard shortcuts for basic editor actions.
 [1182] Added and option to use Gamin. False by default. Closes #153.
 
 Bugs
