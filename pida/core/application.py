@@ -90,7 +90,12 @@ def run_version(env):
 def run_pida(env):
     b = Boss(env)
     PosixSignalHandler(b)
-    if b.start():
+    try:
+        start_success = b.start()
+    except Exception, e:
+        print e
+        start_success = False
+    if start_success:
         gdk.threads_enter()
         b.loop_ui()
         gdk.threads_leave()

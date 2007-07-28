@@ -122,16 +122,21 @@ class VimEmbedWidget(gtk.EventBox):
         if not xid:
             return
         if not self.pid:
-            popen = subprocess.Popen(
-                [self._command,
-                 '--servername', self.get_server_name(),
-                 '--cmd', 'let PIDA_EMBEDDED=1',
-                 '--cmd', 'so %s' % self._init_script
-                 ] + args,
-            close_fds=True)
-            self.pid = popen.pid
+            try:
+                popen = subprocess.Popen(
+                    [self._command,
+                    '--servername', self.get_server_name(),
+                    '--cmd', 'let PIDA_EMBEDDED=1',
+                    '--cmd', 'so %s' % self._init_script
+                    ] + args,
+                    close_fds=True
+                )
+                self.pid = popen.pid
+            except OSError:
+                return False
         self.show_all()
-        
+        return True
+
     def grab_input_focus(self):
         self.child_focus(gtk.DIR_TAB_FORWARD)
 

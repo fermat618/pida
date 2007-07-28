@@ -39,7 +39,7 @@ class VimView(PidaView):
         self.add_main_widget(self._vim)
 
     def run(self):
-        self._vim.run()
+        return self._vim.run()
 
     def get_server_name(self):
         return self._vim.get_server_name()
@@ -132,7 +132,14 @@ class Vim(EditorService):
         self._sign_index = 0
         self._signs = {}
         self._current_line = 1
-        self._view.run()
+        success = self._view.run()
+        if not success:
+            err = _('There was a problem running the "gvim" '
+                             'executable. This is usually because it is not '
+                             'installed. Please check that you can run "gvim" '
+                             'from the command line.')
+            self.error_dlg(err)
+            raise RuntimeError(err)
 
 
     def open(self, document):
