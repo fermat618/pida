@@ -15,13 +15,15 @@ class IconRegister(object):
 
     def _register_file_icons(self):
         for directory in environ.get_resource_paths('pixmaps'):
-            for filename in os.listdir(directory):
-                name, ext = os.path.splitext(filename)
-                if ext in ['.png', '.gif', '.svg', '.jpg']:
-                    path = os.path.join(directory, filename)
-                    self._stock_add(name)
-                    self._register_file_icon(name, path)
-        
+            self.register_file_icons_for_directory(directory)
+
+    def register_file_icons_for_directory(self, directory):
+        for filename in os.listdir(directory):
+            name, ext = os.path.splitext(filename)
+            if ext in ['.png', '.gif', '.svg', '.jpg']:
+                path = os.path.join(directory, filename)
+                self._stock_add(name)
+                self._register_file_icon(name, path)
 
     def _register_theme_icons(self):
         stock_ids = gtk.stock_list_ids()
@@ -54,12 +56,12 @@ class IconRegister(object):
         source.set_icon_name(name)
         icon_set.add_source(source)
         self._factory.add(name, icon_set)
-        
-        
 
 
 
- 
+
+
+
 #w = gtk.Window()
 #i = gtk.Image()
 #i.set_from_stock("foo", gtk.ICON_SIZE_DIALOG)
