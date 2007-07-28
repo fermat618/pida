@@ -28,12 +28,38 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
+from pida.core.options import OptionsConfig, OTypeBoolean
+
+# locale
+from pida.core.locale import Locale
+locale = Locale('filewatcher')
+_ = locale.gettext
 
 try:
     import gamin
     have_gamin = True
 except ImportError:
     have_gamin = False
+
+
+class FileWatcherOptions(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'enable_gamin',
+            _('Enable Gamin'),
+            OTypeBoolean,
+            False,
+            _('Whether Gamin wil be enabled'),
+            self.on_enabled_changed
+        )
+
+    def on_enabled_changed(self, client, id, entry, option):
+        if option.value:
+            self.svc.start_gamin()
+        else:
+            self.svc.stop_gamin()
+
 
 class FilewatcherEvents(EventsConfig):
 
@@ -46,6 +72,7 @@ class Filewatcher(Service):
     """the File watcher service"""
 
     events_config = FilewatcherEvents
+    options_config = FileWatcherOptions
 
     def pre_start(self):
         self.dir = None
@@ -57,14 +84,20 @@ class Filewatcher(Service):
             self.gamin.no_exists()
 
     def start(self):
-        if self.gamin:
+        if self.gamin and self.opt('enable_gamin'):
+            self.start_gamin()
+
+    def start_gamin(self):
+        if have_gamin:
+            self.started = True
             gobject.timeout_add(1000, self._period_check)
 
     def stop(self):
-        if self.started and self.gamin:
-            self.gamin.stop_watch()
-        self.started = False
+        self.stop_gamin()
         self.gamin = None
+
+    def stop_gamin(self):
+        self.started = False
 
     def on_browsed_path_changed(self, path):
         self.set_directory(path)
@@ -103,7 +136,7 @@ class Filewatcher(Service):
                 dirname=self.dir)
 
     def _period_check(self):
-        if not self.gamin:
+        if not self.started:
             return False
         self.cache = []
         self.gamin.handle_events()
