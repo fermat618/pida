@@ -10,6 +10,7 @@ Features
 [1137] Shortcut to focus terminal pane. Closes #143
 [1138] Project-relative filenames in buffer list.
 [1170] Completion hooks for vim
+[1178] Allow setting keyboard shortcuts for basic actions
 
 Bugs
 
@@ -28,6 +29,7 @@ Non Core
 [1111] Prototype debugger plugin based on WinPDB
 [1115] Alphapetically sort documentation library book list
 [1152] Python source viewer now jumps to line
+[1177] Koders.com plugin
 
 
 0.5.0 "Strawberries and Cream"
