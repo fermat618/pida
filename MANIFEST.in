@@ -2,6 +2,8 @@ include *.txt *.py *.sh
 include AUTHORS
 include COPYING
 include INSTALL
+include CHANGELOG
+include README
 recursive-include pida *
 recursive-include pida-plugins *
 recursive-include contrib *
