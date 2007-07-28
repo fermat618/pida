@@ -8,6 +8,7 @@ from kiwi.utils import gsignal, gproperty, type_register, PropertyObject
 from pida.core.environment import get_pixmap_path
 
 from pida.utils.unique import create_unique_id
+from pida.ui.paneds import PaneLabel
 
 # locale
 from pida.core.locale import Locale
@@ -82,6 +83,8 @@ class PidaViewMixin(object):
     icon_name = gtk.STOCK_INFO
     label_text = _('Pida View')
 
+    pane = None
+
     def create_ui(self):
         """Create the user interface here"""
 
@@ -104,6 +107,18 @@ class PidaViewMixin(object):
 
     def can_be_closed(self):
         return False
+
+    def set_pane_label(self, label_text=None, icon_name=None):
+        if self.pane is not None:
+            if icon_name is None:
+                icon_name = self.icon_name
+            if label_text is None:
+                label_text = self.label_text
+            label = PaneLabel(icon_name, None, label_text)
+            self.pane.set_property('label', label)
+        else:
+            self.svc.log_error(_('Attempted to set a pane label on a view '
+                                 'which is not in a pane'))
 
 
 class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):

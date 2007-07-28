@@ -36,6 +36,7 @@ class PidaPaned(BigPaned):
             POS = POS_MAP[name]
             lab = PaneLabel(view.icon_name, None, view.label_text)
             pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
+            view.pane = pane
             if not removable:
                 pane.set_property('removable', False)
             pane.connect('remove', view.on_remove_attempt)
@@ -45,6 +46,7 @@ class PidaPaned(BigPaned):
 
     def remove_view(self, view):
         self.remove_pane(view.get_toplevel())
+        view.pane = None
 
     def detach_view(self, view, size=(400,300)):
         paned, pos = self.find_pane(view.get_toplevel())
