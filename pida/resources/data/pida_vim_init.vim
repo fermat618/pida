@@ -1,49 +1,37 @@
 
-:silent function! Bufferlist()
-let i = 1
-    let max = bufnr('$') + 1
-    let lis = ""
-    while i < max
-        if bufexists(i)
-            let lis = lis.";".i.":".bufname(i)
-        endif
-        let i = i + 1
-    endwhile
-    return lis
-:endfunction
-:silent function! BreakPoint(l)
-    call Async_event(v:servername.":set_breakpoint,".a:l)
-:endfunction
-:silent function! Yank_visual()
-    y
-    return @"
-:endfunction
-:silent function! Async_event(e)
-    "let args = substitute(a:e, ",", "\4", "g")
-    "let args = a:e
-    let c = "silent call server2client('".expand('<client>')."', '".a:e."')"
+
+" Asynchronous PIDA events
+:silent function! Async_event(...)
+    let client = '"'.expand('<client>').'"'
+    let server = v:servername
+    let command_args = '"'.v:servername.':'.join(a:000, "").'"'
+    let command_start = "silent call server2client("
+    let command_end = ")"
+    let command = command_start.client.",".command_args.command_end
     try
-        exec c
+        exec command
     catch /.*/
-        echo c
+        echo command
     endtry
 :endfunction
+
 :silent function! Pida_Started()
-    silent call Async_event(v:servername.":filesave")
+    silent call Async_event("filesave")
     echo "PIDA connected"
 :endfunction
+
 :silent sign define break text=!B
 :silent augroup pida
 :silent set guioptions-=T
 :silent set guioptions-=m
 :silent au! pida
-:silent au pida BufEnter * silent call Async_event(v:servername.":bufferchange".getcwd()."".bufname('%')."".bufnr('%'))
-:silent au pida BufDelete * silent call Async_event(v:servername.":bufferunload".expand('<amatch>'))
-:silent au pida VimLeave * silent call Async_event(v:servername.":shutdown")
+:silent au pida BufEnter * silent call Async_event("bufferchange", getcwd(), bufname('%'), bufnr('%'))
+:silent au pida BufDelete * silent call Async_event("bufferunload", expand('<amatch>'))
+:silent au pida VimLeave * silent call Async_event("shutdown")
 :silent au pida VimEnter * silent call Pida_Started()
-:silent au pida BufWritePost * silent call Async_event(v:servername.":filesave")
-:silent au pida CursorMovedI * silent call Async_event(v:servername.":cursor_move".line('.'))
-:silent au pida CursorMoved * silent call Async_event(v:servername.":cursor_move".line('.'))
+:silent au pida BufWritePost * silent call Async_event("filesave")
+:silent au pida CursorMovedI * silent call Async_event("cursor_move", line('.'))
+:silent au pida CursorMoved * silent call Async_event("cursor_move", line('.'))
 
 :silent function! Pida_Complete2(findstart, base)
     " locate the start of the word
@@ -110,4 +98,34 @@ set completefunc=Pida_Complete
           return "\<c-p>"
       endif
 :endfunction
-inoremap <Tab> "banana"
+
+
+"""""""""""""""""""""""""""""""""
+" Depracated things
+
+" depracated
+:silent function! Bufferlist()
+let i = 1
+    let max = bufnr('$') + 1
+    let lis = ""
+    while i < max
+        if bufexists(i)
+            let lis = lis.";".i.":".bufname(i)
+        endif
+        let i = i + 1
+    endwhile
+    return lis
+:endfunction
+
+" depracated
+:silent function! BreakPoint(l)
+    call Async_event(v:servername.":set_breakpoint,".a:l)
+:endfunction
+
+" depracated
+:silent function! Yank_visual()
+    y
+    return @"
+:endfunction
+
+"""""""""""""""""""""""""""""""""

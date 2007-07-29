@@ -90,6 +90,17 @@ class VimCallback(object):
             self.svc.boss.stop(force=True)
 
     def vim_complete(self, server, findstart, base, line, start, buffer, offset):
+        print findstart, base, line, start, buffer, offset
+        buffer = open(buffer).read()
+        offset = int(offset) - 1
+        from rope.ide.codeassist import PythonCodeAssist
+        from rope.base.project import Project
+        p = Project(self.svc.boss.cmd('buffer', 'get_current').directory)
+        c = PythonCodeAssist(p)
+        co = c.assist(buffer, offset).completions
+        print co
+        for comp in co:
+            self.svc._com.add_completion(server, comp.name)
         # do this a few times
         #self.svc._com.add_completion(server, 'banana')
         pass
