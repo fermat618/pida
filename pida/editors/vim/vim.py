@@ -24,10 +24,12 @@
 import os
 
 # PIDA Imports
+from pida.core.environment import get_data_path
+
 from pida.ui.views import PidaView
 
 from pida.utils.vim.vimembed import VimEmbedWidget
-from pida.utils.vim.vimcom import VimCom, VIMSCRIPT
+from pida.utils.vim.vimcom import VimCom
 
 from pida.core.editors import EditorService, _
 
@@ -87,7 +89,7 @@ class VimCallback(object):
         if server == self.svc.server:
             self.svc.boss.stop(force=True)
 
-    def vim_complete(self, server, findstart, base, line, start):
+    def vim_complete(self, server, findstart, base, line, start, buffer, offset):
         # do this a few times
         #self.svc._com.add_completion(server, 'banana')
         pass
@@ -100,10 +102,7 @@ class Vim(EditorService):
     ##### Vim Things
 
     def _create_initscript(self):
-        self.script_path = os.path.join(self.boss.get_pida_home(), 'pida_vim_init.vim')
-        f = open(self.script_path, 'w')
-        f.write(VIMSCRIPT)
-        f.close()
+        self.script_path = get_data_path('pida_vim_init.vim')
 
     def init_vim_server(self):
         if self.started == False:
