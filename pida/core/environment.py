@@ -13,6 +13,7 @@ library = Library('pida', root='../')
 library.add_global_resource('glade', 'resources/glade')
 library.add_global_resource('uidef', 'resources/uidef')
 library.add_global_resource('pixmaps', 'resources/pixmaps')
+library.add_global_resource('data', 'resources/data')
 
 def get_resource_path(resource, name):
     return environ.find_resource(resource, name)
@@ -25,7 +26,9 @@ def get_glade_path(name):
 
 def get_pixmap_path(name):
     return get_resource_path('pixmaps', name)
-    
+
+def get_data_path(name):
+    return get_resource_path('data', name)
 
 
 class Environment(object):
