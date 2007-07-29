@@ -43,9 +43,9 @@ silent function! Find_Start()
     while idx > 0
         let idx -= 1
         let c = line[idx]
-        if c =~ '\w'
-            continue
-        elseif ! c =~ '\.'
+        "if c =~ '\w'
+        "    continue
+        if ! c =~ '\.'
             let idx = -1
             break
         else
@@ -59,9 +59,7 @@ endfunction
 :silent function! Pida_Complete(findstart, base)
     " locate the start of the word
     let start_idx = Find_Start()
-    echo start_idx
     if a:findstart
-        let g:completing = 1
 	    return start_idx
     else
         let buffer_lines = getline(1, '$')
@@ -70,12 +68,12 @@ endfunction
         let buffer_offset = line2byte('.') + col('.') - 1
         call Async_event("complete", tempfile, buffer_offset)
         let completion_time = 0
-        while g:completing && completion_time < 500
+        while completion_time < 500
             sleep 100m
             let completion_time = completion_time + 100
-            "if complete_check()
-            "    break
-            "endif
+            if complete_check()
+                break
+            endif
         endwhile
         return []
     endif
@@ -87,13 +85,19 @@ endfunction
 set completefunc=Pida_Complete
 
 :function InsertTabWrapper()
-      let col = col('.') - 1
-      if !col || getline('.')[col - 1] !~ '\k'
-          return "\<tab>"
-      else
-          return "\<c-p>"
-      endif
+    echo pumvisible()
+    let col = col('.') - 1
+    if pumvisible()
+        return "\<C-N>"
+    elseif !col || getline('.')[col - 1] !~ '\.'
+        return "\<tab>"
+    else
+        return "\<C-X>\<C-U>"
+    endif
 :endfunction
+
+inoremap <silent><tab> <c-r>=InsertTabWrapper()<cr>
+inoremap <expr> <Esc> pumvisible()?"\<C-E>":"\<Esc>"
 
 """""""""""""""""""""""""""""""""
 " Some basic options

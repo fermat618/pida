@@ -89,9 +89,8 @@ class VimCallback(object):
         if server == self.svc.server:
             self.svc.boss.stop(force=True)
 
-    def vim_complete(self, server, findstart, base, line, start, buffer, offset):
-        print findstart, base, line, start, buffer, offset
-        buffer = open(buffer).read()
+    def vim_complete(self, server, temp_buffer_filename, offset):
+        buffer = open(temp_buffer_filename).read()
         offset = int(offset) - 1
         from rope.ide.codeassist import PythonCodeAssist
         from rope.base.project import Project
