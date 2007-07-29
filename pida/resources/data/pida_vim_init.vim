@@ -20,10 +20,7 @@
     echo "PIDA connected"
 :endfunction
 
-:silent sign define break text=!B
 :silent augroup pida
-:silent set guioptions-=T
-:silent set guioptions-=m
 :silent au! pida
 :silent au pida BufEnter * silent call Async_event("bufferchange", getcwd(), bufname('%'), bufnr('%'))
 :silent au pida BufDelete * silent call Async_event("bufferunload", expand('<amatch>'))
@@ -99,6 +96,10 @@ set completefunc=Pida_Complete
       endif
 :endfunction
 
+"""""""""""""""""""""""""""""""""
+" Some basic options
+:silent set guioptions-=T
+:silent set guioptions-=m
 
 """""""""""""""""""""""""""""""""
 " Depracated things
