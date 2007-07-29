@@ -127,7 +127,7 @@ class VimEmbedWidget(gtk.EventBox):
                     [self._command,
                     '--servername', self.get_server_name(),
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '--cmd', 'so %s' % self._init_script
+                    '-c', 'so %s' % self._init_script
                     ] + args,
                     close_fds=True
                 )
