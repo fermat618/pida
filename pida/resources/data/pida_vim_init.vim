@@ -1,5 +1,5 @@
 
-
+""""""""""""""""""""""""""""""""""""""""
 " Asynchronous PIDA events
 :silent function! Async_event(...)
     let client = '"'.expand('<client>').'"'
@@ -20,56 +20,55 @@
     echo "PIDA connected"
 :endfunction
 
+""""""""""""""""""""""""""""""""""""""""
+" PIDA Auto commands
+
 :silent augroup pida
 :silent au! pida
 :silent au pida BufEnter * silent call Async_event("bufferchange", getcwd(), bufname('%'), bufnr('%'))
 :silent au pida BufDelete * silent call Async_event("bufferunload", expand('<amatch>'))
-:silent au pida VimLeave * silent call Async_event("shutdown")
+:silent au pida VimLeave * silent call Async_event("shutdown", "")
 :silent au pida VimEnter * silent call Pida_Started()
-:silent au pida BufWritePost * silent call Async_event("filesave")
+:silent au pida BufWritePost * silent call Async_event("filesave", "")
 :silent au pida CursorMovedI * silent call Async_event("cursor_move", line('.'))
 :silent au pida CursorMoved * silent call Async_event("cursor_move", line('.'))
 
-:silent function! Pida_Complete2(findstart, base)
-    " locate the start of the word
+"""""""""""""""""""""""""""""""""
+" Completion
+"
+
+silent function! Find_Start()
     let line = getline('.')
-    let start = col('.') - 1
-    while start > 0 && line[start - 1] =~ '\a'
-        let start -= 1
+    let idx = col('.')
+    while idx > 0
+        let idx -= 1
+        let c = line[idx]
+        if c =~ '\w'
+            continue
+        elseif ! c =~ '\.'
+            let idx = -1
+            break
+        else
+            break
+        endif
     endwhile
-    if a:findstart
-        let g:completing = 1
-	    return start
-    else
-        silent! call Async_event(v:servername.":complete".a:findstart."".a:base."".line."".start)
-        let completion_time = 0
-        while g:completing && completion_time < 500
-            sleep 100m
-            let completion_time = completion_time + 100
-            "if complete_check()
-            "    break
-            "endif
-        endwhile
-        return []
-    endif
-:endfunction
+    return idx
+endfunction
+
 
 :silent function! Pida_Complete(findstart, base)
     " locate the start of the word
-    let line = getline('.')
-    let start = col('.') - 1
-    while start > 0 && line[start - 1] =~ '\a'
-        let start -= 1
-    endwhile
+    let start_idx = Find_Start()
+    echo start_idx
     if a:findstart
         let g:completing = 1
-	    return start
+	    return start_idx
     else
         let buffer_lines = getline(1, '$')
         let tempfile = tempname()
         call writefile(buffer_lines, tempfile)
         let buffer_offset = line2byte('.') + col('.') - 1
-        call Async_event(v:servername.":complete".a:findstart."".a:base."".line."".start."".tempfile."".buffer_offset)
+        call Async_event("complete", tempfile, buffer_offset)
         let completion_time = 0
         while g:completing && completion_time < 500
             sleep 100m
