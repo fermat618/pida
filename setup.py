@@ -77,6 +77,7 @@ def get_main_data():
             'resources/glade/*',
             'resources/pixmaps/*',
             'resources/uidef/*',
+            'resources/data/*',
 			'resources/locale/fr_FR/LC_MESSAGES/*'
         ]
     }
