@@ -1,0 +1,50 @@
+<ui>
+    <menubar>
+
+        <menu name="FileMenu" action="FileMenu">
+        </menu>
+    
+        <menu name="EditMenu" action="EditMenu">
+        </menu>
+        
+        <menu name="ProjectMenu" action="ProjectMenu">
+        </menu>
+        
+        <menu name="LanguageMenu" action="LanguageMenu">
+        <menuitem name="show_test_python" action="show_test_python" />
+        </menu>
+        
+        <menu name="ToolsMenu" action="ToolsMenu">
+        </menu>
+        
+        <menu name="ViewMenu" action="ViewMenu">
+        </menu>
+        
+        <menu name="HelpMenu" action="HelpMenu">
+        </menu>
+    
+    </menubar>
+    
+    <toolbar>
+        <placeholder name="OpenFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="SaveFileToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="EditToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ProjectToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="VcToolbar">
+        </placeholder>
+        <separator/>
+        <placeholder name="ToolsToolbar">
+        <toolitem name="test_python" action="test_python" />
+        </placeholder>
+
+    </toolbar>
+
+</ui>

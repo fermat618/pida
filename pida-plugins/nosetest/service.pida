@@ -1,0 +1,9 @@
+[plugin]
+plugin = nosetest
+name = NoseTest
+author = Ronny Pfannschmidt <Ronny.Pfannschmidt@gmx.de>
+version = 0.0.1
+require_pida = 0.5
+depends = ""
+category = code
+description = "Show testresults from nose-python \n(http://code.google.com/p/python-nose/)"
