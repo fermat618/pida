@@ -98,13 +98,16 @@ class EmacsCallback(object):
         """
         self._svc.top_buffer = filename
         current = self._svc.current_document
-        if filename and (not current or current.filename != filename):
-            self._log.debug('emacs buffer changed "%s"' % filename)
-            if os.path.isdir(filename):
-                self._svc.boss.cmd('filemanager', 'browse', new_path=filename)
-                self._svc.boss.cmd('filemanager', 'present_view')
-            else:
-                self._svc.boss.cmd('buffer', 'open_file', file_name=filename)
+        try:
+            if filename and (not current or current.filename != filename):
+                self._log.debug('emacs buffer changed "%s"' % filename)
+                if os.path.isdir(filename):
+                    self._svc.boss.cmd('filemanager', 'browse', new_path=filename)
+                    self._svc.boss.cmd('filemanager', 'present_view')
+                else:
+                    self._svc.boss.cmd('buffer', 'open_file', file_name=filename)
+        except IOError:
+            pass
         return True
     
     def cb_kill_buffer_hook(self, filename):
