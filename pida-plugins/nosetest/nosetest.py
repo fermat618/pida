@@ -21,7 +21,9 @@
 #SOFTWARE.
 
 # stdlib
-import sys, subprocess
+import sys
+import subprocess
+import re
 
 from cgi import escape
 
@@ -57,38 +59,71 @@ from pida.core.locale import Locale
 locale = Locale('nosetest')
 _ = locale.gettext
 
+testcase_re = re.compile(r'(?P<name>\w+) \((?P<case>[\w\.]+)\)')
+
 ### Pyflakes
 class TestResult:
-    status_map= {
-            'ok': 'gtk-ok',
-            'fail': 'gtk-no',
-            'error': 'gtk-close',
+    status_map= { # 1 is for sucess, 2 for fail
+                  # used for fast tree updates
+            'ok': ('gtk-apply', 1),
+            'fail': ('gtk-no', 2),
+            'error': ('gtk-cancel', 2),
             }
 
     output = ''
     parent = None
     def __init__(self, line):
         self.full_name, status = line.rsplit(' ... ', 2)
-        self.name = self.full_name.split('.')[-1] #XXX real parsing
+        self.name = self.parse_test_name()
         status = status.lower()
-        self.status = self.status_map[status]
+        self.status, self.state = self.status_map[status]
     
-    def get_testgroup_names(self):
-        #XXX: really broken for any more comlex cases
-        return self.full_name.split('.')[:-1]
+    def parse_test_name(self):
+        match = testcase_re.match(self.full_name)
+        if match:
+            name = match.group('name')
+            self.testgroup_names = tuple(match.group('case').split('.'))
+            return name
+        else:
+            dt = 'Doctest: '
+            if self.full_name.startswith(dt):
+                self.full_name = self.full_name[len(dt):]
+                pre = ('Doctest',)
+            else:
+                pre = ()
+
+            s = self.full_name.split('.')
+            self.testgroup_names = pre + tuple(s[:-1])
+            
+            return s[-1]
 
     def parents(self):
         p = self.parent
-        while p:
+        while p.parent:
             yield p
             p = p.parent
 
 class TestResultGroup:
-    status = 'gtk-directory'
-    def __init__(self, names, parent,):
+    state_map = {
+            0: 'gtk-directory',
+            1: 'gtk-ok',
+            2: 'gtk-dialog-error',
+            3: 'gtk-dialog-question',
+            }
+
+    def __init__(self, names, parent):
         self.name = names and names[-1] or None
         self.names = names
         self.parent = parent
+        self.state = 0
+        self.status = 'gtk-directory'
+
+    def add_child(self, child):
+        res = child.state | self.state
+        if res != self.state:
+            self.state = res
+            self.status = self.state_map[res]
+            return True
 
     @property
     def output(self):
@@ -117,11 +152,11 @@ class TestResultBrowser(PidaGladeView):
         self.source_tree.clear()
         self.items.clear()
         self.tree = {(): TestResultGroup(None, None)}
-        
+
 
     def can_be_closed(self):
         self.svc.get_action('show_test_python').set_active(False)
-    
+
     def get_or_create_testgroup(self, names):
         group = self.tree.get(names)
         if not group:
@@ -133,15 +168,25 @@ class TestResultBrowser(PidaGladeView):
                 a(None , group)
             else:
                 a(parent, group)
-                self.source_tree.expand(parent)
         return group
 
     def add_test_tree(self, test):
-        names = test.get_testgroup_names()
+        names = test.testgroup_names
         group = self.get_or_create_testgroup(tuple(names))
         test.parent = group
         self.source_tree.append(group,test)
-        self.source_tree.expand(group)
+
+        for parent in test.parents():
+            if parent.add_child(test):
+                self.source_tree.update(parent)
+            else:
+                break
+
+        if test.state == 2:
+            for parent in reversed(list(test.parents())):
+                self.source_tree.expand(parent, open_all=False)
+
+
 
     def add_test(self, test):
         test = TestResult(test)
@@ -183,7 +228,6 @@ class TestResultBrowser(PidaGladeView):
             line = line.rstrip()
             if not line:
                 break
-            print line
             yield line
         next_test = '='*70+'\n'
         next_block = '-'*70+'\n'
@@ -195,7 +239,6 @@ class TestResultBrowser(PidaGladeView):
             if line == '='*70+'\n':
                 if output:
                     out = ''.join(output)
-                    print name,'\n', out
                     yield name, out
                     output = []
                 name = f.next().rstrip()
