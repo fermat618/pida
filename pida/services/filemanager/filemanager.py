@@ -448,7 +448,7 @@ class FileManagerOptionsConfig(OptionsConfig):
                 'hide_regex',
                 _('Hide regex'),
                 OTypeString,
-                '^\.|.*\.py[co]$',
+                '^\.|.*~|.*\.py[co]$',
                 _('Hides files that match the regex'))
 
 class FileManagerActionsConfig(ActionsConfig):
