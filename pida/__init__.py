@@ -21,6 +21,7 @@ PIDA_AUTHORS = [PIDA_AUTHOR] + [
     'Mathieu Virbel <tito@bankiz.org>',
     'Ronny Pfannschmidt <Ronny.Pfannschmidt@gmx.de>',
     'Anders Conbere <aconbere@gmail.com>',
+    'David Soulayrol <david.soulayrol@gmail.com>',
 ]
 
 PIDA_SHORT_DESCRIPTION = 'An intergated development environment that reuses tools such as Vim, and all version control systems.'
