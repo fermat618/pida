@@ -6,6 +6,8 @@ Features
 
 Bugs
 
+[1210] Added the capability to run multiple instances of PIDA on Emacs. Closes #159.
+
 Non Core
 
 0.5.1 "Rhubarb Crumble"
