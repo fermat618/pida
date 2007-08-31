@@ -31,10 +31,9 @@ method on a EmacsCallback object (see editor/emacs/emacs.py).
 import logging
 import socket
 import subprocess
+import threading
 
 import gobject
-
-from pida.core.log import build_logger
 
 
 class EmacsClient(object):
@@ -46,12 +45,13 @@ class EmacsClient(object):
     is the only one having a running server.
     """
     
-    def __init__(self):
+    def __init__(self, instance_id):
         """Constructor."""
         #TODO: I would like to use something like  here,
         #      but then the log will be printed three times.
         self._log = logging.getLogger('emacs')
         self._active = True
+        self._instance_id = instance_id
 
     def activate(self):
         """Allow communication.
@@ -94,9 +94,6 @@ class EmacsClient(object):
     def paste(self):
         self._send('(yank)')
 
-    def ping(self):
-        self._send('(pida-ping)')
-        
     def goto_line(self, line):
         self._send('(goto-line %s)' % line)
 
@@ -122,7 +119,8 @@ class EmacsClient(object):
             self._log.debug('sending "%s"' % command)
             try:
                 subprocess.call(
-                    ['emacsclient', '-e', command], stdout=subprocess.PIPE)
+                    ['emacsclient', '-s', self._instance_id, '-e', command],
+                    stdout=subprocess.PIPE)
             except OSError, e:
                 self._log.debug('%s"' % e)
 
@@ -134,35 +132,44 @@ class EmacsServer(object):
     Emacs to register some callbacks and create a link with Pida.
     EmacsServer is the server part of this link.
     """
+
+    # The first port tried to bind.
+    # The author believes you could read it 'pida'.
+    BASE_PORT = 9164
     
     def __init__(self, cb):
         """Constructor."""
         self._log = logging.getLogger('emacs')
         self._cb = cb
+        self._socket_listen = None
         self._socket = None
 
-    def connect(self):
-        """Install the link between Pida and Emacs."""
-        result = self._socket is not None
-        if not result:
+    def bind(self):
+        """Bind the listening socket and return the elected port."""
+        port = EmacsServer.BASE_PORT
+        bound = False
+        self._socket_listen = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while not bound: 
             try:
-                self._socket = self._wait_connection()
-                gobject.io_add_watch(self._socket, gobject.IO_IN |
-                                     gobject.IO_HUP, self._cb_socket_event)
-                result = True
-            except socket.error, e:
-                if e.args[0] == 111:
-                    self._log.warn('emacs disconnected')
-        return result
-    
+                self._socket_listen.bind(('', port))
+                bound = True
+            except socket.error:
+                port += 1
+        self._socket_listen.listen(1)
+        threading.Thread(name='emacs listener', target=self._wait_connection).start()
+        return port
+
     def _wait_connection(self):
         """Wait for connection from Emacs."""
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('', 5001))
-        s.listen(1)
-        conn, addr = s.accept()
+        self._socket, addr = self._socket_listen.accept()
         self._log.debug('connection from "%s:%d"' % addr)
-        return conn
+        try:
+            gobject.io_add_watch(self._socket, gobject.IO_IN |
+                                 gobject.IO_HUP, self._cb_socket_event)
+            result = True
+        except socket.error, e:
+            if e.args[0] == 111:
+                self._log.warn('emacs disconnected')
 
     def _cb_socket_event(self, sock, condition):
         """Wait for Pida events.
@@ -225,9 +232,6 @@ EMACS_SCRIPT = """;; Emacs client script for Pida.
 (defconst pida-connection-terminator "\n"
   "The terminator used to send notifications to pida")
 
-(defconst pida-connection-port 5001
-  "The port used to communicate with pida")
-
 (defvar pida-connection nil
   "The socket to comunicate with pida")
 
@@ -276,6 +280,8 @@ EMACS_SCRIPT = """;; Emacs client script for Pida.
 ;;         first buffer ?
 ;; <pgas> d_rol: M-x customize-variable RET inhibit-splash-screen RET
 (setq inhibit-splash-screen 1)
+
+(pida-send-message "pida-ping ready"))
 """
 
 

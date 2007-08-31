@@ -31,8 +31,6 @@ The Emacs editor for Pida is also, heavily based on the Vim editor.
 
 import logging
 import os
-import gobject
-import gtk
 
 # PIDA Imports
 from pida.ui.views import PidaView
@@ -47,8 +45,19 @@ from pida.utils.emacs.emacscom import EmacsClient, EmacsServer, EMACS_SCRIPT
 
 class EmacsView(PidaView):
 
+    def __init__(self, service, script_path, instance_id, listen_port):
+        self._script_path = script_path
+        self._instance_id = instance_id
+        self._listen_port = listen_port
+        PidaView.__init__(self, service)
+        
     def create_ui(self):
-        self._emacs = EmacsEmbedWidget('emacs', self.svc.script_path)
+        self._emacs = EmacsEmbedWidget(
+            'emacs',
+            self._script_path,
+            ['-eval', '(setq server-name "' + self._instance_id + '")', '-eval',
+             '(setq pida-connection-port ' + str(self._listen_port) + ')']
+        )
         self.add_main_widget(self._emacs)
 
     def run(self):
@@ -76,14 +85,12 @@ class EmacsCallback(object):
         self._svc = svc
         self._server = EmacsServer(self)
 
-    def connect(self):
-        """Establish the link with Emacs."""
-        return self._server.connect()
+    def bind(self):
+        """Bind the listening socket and return the elected port."""
+        return self._server.bind()
 
-    def cb_pida_pong(self, foo):
-        """Emacs response to a ping.
-
-        This message is used to test connection at startup.
+    def cb_pida_ping(self, foo):
+        """Emacs message to signal it is up and ready.
         """
         self._log.debug('emacs ready')
         self._svc.emit_editor_started()
@@ -149,11 +156,12 @@ class Emacs(EditorService):
     """ 
 
     def _create_initscript(self):
-        self.script_path = os.path.join(
+        script_path = os.path.join(
             self.boss.get_pida_home(), 'pida_emacs_init.el')
-        f = open(self.script_path, 'w')
+        f = open(script_path, 'w')
         f.write(EMACS_SCRIPT)
         f.close()
+        return script_path
 
     def emit_editor_started(self):
         self.boss.get_service('editor').emit('started')
@@ -161,7 +169,6 @@ class Emacs(EditorService):
     def pre_start(self):
         """Start the editor"""
         self._log = build_logger('emacs')
-        self._create_initscript()
         self._documents = {}
 
         # The current document. Its value is set by Pida and used to drop
@@ -173,9 +180,16 @@ class Emacs(EditorService):
         self._top_buffer = ''
 
         self._current_line = 1
+
         self._cb = EmacsCallback(self)
-        self._client = EmacsClient()
-        self._view = EmacsView(self)
+
+        listen_port = self._cb.bind()
+        instance_id = 'pida-' + str(os.getpid())
+        self._client = EmacsClient(instance_id)
+        import time
+        time.sleep(1)
+        self._view = EmacsView(
+            self, self._create_initscript(), instance_id, listen_port)
 
         # Add the view to the top level window. Only after that, it will be
         # possible to add a socket in the view.
@@ -183,8 +197,6 @@ class Emacs(EditorService):
 
         # Now create the socket and embed the Emacs window.
         self._view.run()
-        if self._cb.connect():
-            gobject.timeout_add(250, self._client.ping)
 
     def stop(self):
         self._client.quit()

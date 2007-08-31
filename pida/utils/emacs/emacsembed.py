@@ -54,8 +54,7 @@ class EmacsEmbedWidget(gtk.EventBox):
             xid = self._create_ui()
             if xid:
                 args = self._args[:] # a copy
-                args.extend(['--parent-id',
-                             '%s' % xid,
+                args.extend(['--parent-id', '%s' % xid,
                              '-f', 'server-start',
                              '-l', '%s' % self._init_script])
                 popen = subprocess.Popen([self._command] + args, close_fds=True)
