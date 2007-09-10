@@ -43,6 +43,7 @@ _ = locale.gettext
 
 
 class Bin(object):
+    """ A Pastebin """
 
     PASTE_URL = None
 
@@ -50,11 +51,16 @@ class Bin(object):
         self.svc = svc
 
     def create_data_dict(self, title, name, content, syntax):
-        """Override in individual pastebins"""
+        """
+        Has to return a dict containing the POST data to send to the pastebin.
+        Override this in individual pastebins.
+        """
 
     @classmethod
     def get_syntax_items(cls):
-        """Override to return a list of syntax item tuples (lable, value)"""
+        """
+        Override to return a list of syntax item tuples (label, value)
+        """
 
     def post(self, *args):
         self.args = args
@@ -62,6 +68,56 @@ class Bin(object):
 
     def on_posted(self, url, content):
         self.svc.new_paste_complete(url, *self.args)
+
+
+class LodgeIt(Bin):
+
+    PASTE_URL = 'http://paste.pocoo.org/'
+
+    def create_data_dict(self, title, name, content, syntax):
+        return {
+            'code':     content,
+            'language': syntax
+        }
+
+    @classmethod
+    def get_syntax_items(cls):
+        return [
+            ('Text', 'text'),
+            ('Python', 'python'),
+            ('Python Console Sessions', 'pycon'),
+            ('Python Tracebacks', 'pycon'),
+            ('PHP', 'html+php'),
+            ('Django / Jinja Templates', 'html+django'),
+            ('Mako Templates', 'html+mako'),
+            ('Myghty Templates', 'html+myghty'),
+            ('Apache Config (.htaccess)', 'apache'),
+            ('Bash', 'bash'),
+            ('Batch (.bat)', 'bat'),
+            ('C', 'c'),
+            ('C++', 'cpp'),
+            ('C#', 'csharp'),
+            ('CSS', 'css'),
+            ('D', 'd'),
+            ('MiniD', 'minid'),
+            ('Smarty', 'smarty'),
+            ('HTML', 'html'),
+            ('Genshi Templates', 'html+genshi'),
+            ('JavaScript', 'js'),
+            ('Java', 'java'),
+            ('JSP', 'jsp'),
+            ('Lua', 'lua'),
+            ('Haskell', 'haskell'),
+            ('Scheme', 'scheme'),
+            ('Ruby', 'ruby'),
+            ('eRuby / rhtml', 'rhtml'),
+            ('TeX / LaTeX', 'tex'),
+            ('XML', 'xml'),
+            ('reStructuredText', 'rst'),
+            ('IRC Logs', 'irc'),
+            ('Unified DIff', 'diff'),
+            ('Vim Scripts', 'vim')
+        ]
 
 
 class Dpaste(Bin):
@@ -381,7 +437,7 @@ class Pastebin(Service):
 
     def cancel_paste(self):
         self._close_paste_editor()
-        
+
     def _close_paste_editor(self):
         self.boss.cmd('window', 'remove_view', view=self._editor)
         self.get_action('new_paste').set_sensitive(True)
@@ -400,6 +456,7 @@ class Pastebin(Service):
         return [
             ('DPaste', Dpaste),
             ('Rafb.net', Rafb),
+            ('LodgeIt', LodgeIt)
             #('Twisted', Twisted), #Broken for some reason
         ]
 
