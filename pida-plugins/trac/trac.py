@@ -70,12 +70,20 @@ class TracView(PidaGladeView):
     def get_base_address(self):
         return self.address_entry.get_text()
 
+    def get_auth_data(self):
+        if self.toggle_auth.get_active():
+            return (self.user_entry.get_text(), self.password_entry.get_text())
+
     def on_connect_button__clicked(self, button):
-        trac_report(self.get_base_address(), 1, self.report_received)
+        trac_report(self.get_base_address(), 1, self.report_received,
+                    self.get_auth_data())
 
     def on_tickets_list__selection_changed(self, ol, item):
         self.item_text.clear_html()
         self.item_text.display_html(item.description.strip())
+
+    def on_toggle_auth__toggled(self, btn):
+        self.auth_box.set_sensitive(btn.get_active())
 
     def report_received(self, url, data):
         self.tickets_list.clear()
@@ -104,19 +112,18 @@ def parse_report(data):
         yield ReportItem(entry)
 
 
-def trac_ticket(base_address, ticket_id, callback):
-    trac_action(base_address, 'ticket', ticket_id, callback)
+def trac_ticket(base_address, ticket_id, callback, auth):
+    trac_action(base_address, 'ticket', ticket_id, callback, auth)
 
 
-def trac_report(base_address, report_id, callback):
-    trac_action(base_address, 'report', report_id, callback)
+def trac_report(base_address, report_id, callback, auth):
+    trac_action(base_address, 'report', report_id, callback, auth)
 
 
-def trac_action(base_address, action, id, callback):
+def trac_action(base_address, action, id, callback, auth):
     action_fragment = '%s/%s?format=rss' % (action, id)
     action_url = urljoin(base_address, action_fragment)
-    fetch_url(action_url, callback)
-        
+    fetch_url(action_url, callback, auth=auth)
 
 class TracActions(ActionsConfig):
 
@@ -140,7 +147,7 @@ class TracActions(ActionsConfig):
 
 # Service class
 class Trac(Service):
-    """Describe your Service Here""" 
+    """Describe your Service Here"""
 
     actions_config = TracActions
 
@@ -150,7 +157,7 @@ class Trac(Service):
     def show_trac(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
 
-    def hide_trac(self):    
+    def hide_trac(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
     def ensure_view_visible(self):
