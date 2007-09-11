@@ -9,6 +9,16 @@ from distutils.command.build_ext import build_ext
 from pida import PIDA_VERSION, PIDA_AUTHOR, PIDA_WEBSITE, \
                  PIDA_SHORT_DESCRIPTION, PIDA_NAME
 
+# Check availability of pygtk 2.0
+import subprocess, sys
+NO_PYGTK_ERROR_MESSAGE = """pkg-config reports your system misses pygtk 2.0.
+PIDA needs pygtk headers at compile time. These can generally be found in the
+python-dev or python-gtk2-dev package of your distribution.
+"""
+if subprocess.call(['pkg-config', '--exists', 'pygtk-2.0']) != 0:
+    print NO_PYGTK_ERROR_MESSAGE
+    sys.exit(1)
+
 
 # Moo Extension
 from moo.dsutils import pkc_get_include_dirs, pkc_get_libraries, pkc_get_library_dirs
