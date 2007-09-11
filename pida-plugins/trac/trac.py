@@ -87,8 +87,15 @@ class TracView(PidaGladeView):
 
     def report_received(self, url, data):
         self.tickets_list.clear()
-        for item in parse_report(data):
-            self.tickets_list.append(item)
+        if url:
+            # no error
+            for item in parse_report(data):
+                self.tickets_list.append(item)
+        else:
+            # an error occured
+            self.svc.boss.cmd('notify', 'notify', title=data,
+                data=_('An error occured when fetching trac tickets.'))
+
 
     def can_be_closed(self):
         self.svc.get_action('show_trac').set_active(False)
@@ -102,26 +109,13 @@ class ReportItem(object):
         self.description = entry['description']
 
 
-def parse_result(data):
+def parse_report(data):
     feed = parse(data)
     for entry in feed.entries:
-        yield entry
-
-def parse_report(data):
-    for entry in parse_result(data):
         yield ReportItem(entry)
 
-
-def trac_ticket(base_address, ticket_id, callback, auth):
-    trac_action(base_address, 'ticket', ticket_id, callback, auth)
-
-
 def trac_report(base_address, report_id, callback, auth):
-    trac_action(base_address, 'report', report_id, callback, auth)
-
-
-def trac_action(base_address, action, id, callback, auth):
-    action_fragment = '%s/%s?format=rss' % (action, id)
+    action_fragment = 'report/%s?format=rss' % report_id
     action_url = urljoin(base_address, action_fragment)
     fetch_url(action_url, callback, auth=auth)
 

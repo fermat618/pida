@@ -46,7 +46,6 @@ def fetch_url(url, content_callback, data={}, auth=None):
     task.start()
 
 if __name__ == '__main__':
-    
     def cc(url, data):
         print url, data
         gtk.main_quit()
