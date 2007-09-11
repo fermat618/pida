@@ -9,6 +9,7 @@ Features
 Bugs
 
 [1210] Added the capability to run multiple instances of PIDA on Emacs. Closes #159.
+[1218] Added check of pygtk-dev in setup.py. Closes #156.
 
 Non Core
 
