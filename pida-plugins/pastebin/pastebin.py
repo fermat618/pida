@@ -67,12 +67,18 @@ class Bin(object):
         fetch_url(self.PASTE_URL, self.on_posted, self.create_data_dict(*args))
 
     def on_posted(self, url, content):
-        self.svc.new_paste_complete(url, *self.args)
+        self.svc._view.stop_pulse()
+        if url:
+            # pasting was successfully
+            self.svc.new_paste_complete(url, *self.args)
+        else:
+            # an error occured when pasting
+            self.svc.new_paste_failed(content)
 
 
 class LodgeIt(Bin):
 
-    PASTE_URL = 'http://paste.pocoo.org/'
+    PASTE_URL = 'http://paste.pocoo.org'
 
     def create_data_dict(self, title, name, content, syntax):
         return {
@@ -255,7 +261,8 @@ class PasteHistoryView(PidaView):
         self.__history_tree.connect('right-click', self.on_paste_rclick)
         self.__pulse_bar = gtk.ProgressBar()
         self.add_main_widget(self.__pulse_bar, expand=False)
-        self.__pulse_bar.show_all()
+        # only show pulse bar if working
+        self.__pulse_bar.hide()
         self.__pulse_bar.set_size_request(-1, 12)
         self.__pulse_bar.set_pulse_step(0.01)
         self.__history_tree.show_all()
@@ -351,9 +358,11 @@ class PasteHistoryView(PidaView):
     def start_pulse(self):
         '''Starts the pulse'''
         self._pulsing = True
+        self.__pulse_bar.show()
         gobject.timeout_add(100, self._pulse)
 
     def stop_pulse(self):
+        self.__pulse_bar.hide()
         self._pulsing = False
 
     def _pulse(self):
@@ -443,9 +452,17 @@ class Pastebin(Service):
         self.get_action('new_paste').set_sensitive(True)
 
     def new_paste_complete(self, url, *args):
-        self._view.stop_pulse()
         self._view.add_paste(PasteItem(url, *args))
         self.ensure_view_visible()
+
+    def new_paste_failed(self, response):
+        self.boss.cmd('notify', 'notify', title=response,
+            data=_('An error occured when pasting.\n'
+                   'Maybe you should try to use another pastebin?'))
+
+        # show editor field
+        self.new_paste()
+
 
     def ensure_view_visible(self):
         act = self.get_action('show_pastes')
