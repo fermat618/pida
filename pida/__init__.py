@@ -24,7 +24,7 @@ PIDA_AUTHORS = [PIDA_AUTHOR] + [
     'David Soulayrol <david.soulayrol@gmail.com>',
 ]
 
-PIDA_SHORT_DESCRIPTION = 'An intergated development environment that reuses tools such as Vim, and all version control systems.'
+PIDA_SHORT_DESCRIPTION = 'An integrated development environment that reuses tools such as Vim, and all version control systems.'
 
 PIDA_LICENSE = """
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
