@@ -1,4 +1,4 @@
-import os, imp
+import os, imp, sys
 
 from pida.core.interfaces import IService, IEditor, IPlugin
 from pida.core.plugins import Registry
@@ -90,6 +90,7 @@ class ServiceLoader(object):
 
     def _load_service_module(self, service_path):
         name = os.path.basename(service_path)
+        sys.path.insert(0, service_path)
         try:
             fp, pathname, description = imp.find_module(name, [service_path])
         except Exception, e:
@@ -101,6 +102,7 @@ class ServiceLoader(object):
         module.servicename = name
         module.servicefile_path = self._get_servicefile_path(service_path)
         self._register_service_env(name, service_path)
+        sys.path.remove(service_path)
         return module
 
     def _load_service_class(self, module):
