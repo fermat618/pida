@@ -3,8 +3,6 @@
 Features
 
 [1192] Added ability to change pane label/icon for a view. Closes #116.
-[1213] Added LodgeIt (http://paste.pocoo.org) to the pastebin plugin
-[1214] Support for http authentication in trac plugin. Closes #172
 
 Bugs
 
@@ -13,6 +11,10 @@ Bugs
 [1222] Allow services to import local modules. Closes #173
 
 Non Core
+
+[1213] Added LodgeIt (http://paste.pocoo.org) to the pastebin plugin
+[1214] Support for http authentication in trac plugin. Closes #172
+
 
 0.5.1 "Rhubarb Crumble"
 
