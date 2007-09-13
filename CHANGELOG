@@ -5,12 +5,12 @@ Features
 [1192] Added ability to change pane label/icon for a view. Closes #116.
 [1213] Added LodgeIt (http://paste.pocoo.org) to the pastebin plugin
 [1214] Support for http authentication in trac plugin. Closes #172
-[1222] Allow services to import local modules. Closes #173
 
 Bugs
 
 [1210] Added the capability to run multiple instances of PIDA on Emacs. Closes #159.
 [1218] Added check of pygtk-dev in setup.py. Closes #156.
+[1222] Allow services to import local modules. Closes #173
 
 Non Core
 
