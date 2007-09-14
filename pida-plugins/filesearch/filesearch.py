@@ -38,6 +38,7 @@ class SearchView(PidaGladeView):
     gladefile = 'search'
     locale = locale
     label_text = _('File Search')
+    icon_name = 'search'
     filters = []
     added_filters = []
     running = False

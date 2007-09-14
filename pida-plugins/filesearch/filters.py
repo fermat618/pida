@@ -64,7 +64,7 @@ class FileNameMatchesFilter(Filter):
         pattern = self.entry.get_text()
         pattern = fnmatch.translate(pattern).rstrip('$')
         try:
-            self.regex = re.compile(pattern)
+            self.regex = re.compile(pattern, re.IGNORECASE)
         except sre_constants.error, e:
             raise ValidationError(_('Invalid Regex'))
 
@@ -123,7 +123,7 @@ class ContentMatchesFilter(Filter):
         pattern = self.entry.get_text()
         pattern = fnmatch.translate(pattern).rstrip('$')
         try:
-            self.regex = re.compile(pattern)
+            self.regex = re.compile(pattern, re.IGNORECASE)
         except sre_constants.error, e:
             raise ValidationError(_('Invalid Regex'))
 
