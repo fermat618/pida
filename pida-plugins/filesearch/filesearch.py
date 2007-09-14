@@ -3,10 +3,11 @@
     filesearch.filesearch
     ~~~~~~~~~~~~~~~~~~~~~
 
-    This file contains the UI-related functions of the file search plugin.
+    This file contains the UI- and service-related functions of the file
+    search plugin.
 
-    The search itself is inside ``search.py``, the search filters inside
-    ``filters.py``.
+    The search functions itself are inside ``search.py``, the search filters
+    inside ``filters.py``.
 
     :copyright: 2007 by Benjamin Wiegand.
     :license: GNU GPL, see LICENSE for more details.
@@ -40,7 +41,6 @@ class SearchView(PidaGladeView):
     label_text = _('File Search')
     icon_name = 'search'
     filters = []
-    added_filters = []
     running = False
 
     def create_ui(self):
@@ -87,18 +87,27 @@ class SearchView(PidaGladeView):
         return True
 
     def start(self):
+        """
+        Start the asynchrounus search task.
+        """
         self.running = True
         self.match_list.clear()
         self.update_match_count(0)
         self.search_button.set_label(gtk.STOCK_STOP)
-        # start async search task.
         self.task.start(self.get_search_folder(), self.filters)
 
     def stop(self):
+        """
+        Stop the abort task.
+        """
         self.task.stop()
         self.search_finished()
 
     def new_filter(self, f):
+        """
+        This function adds a new filter to the GUI and registers it in
+        `self.filters``.
+        """
         entries = f.get_entries()
         box = gtk.HBox(False, 5)
         box.pack_start(gtk.Label(f.description), expand=False)
@@ -114,10 +123,18 @@ class SearchView(PidaGladeView):
         self.select_folder.set_current_folder(folder)
 
     def get_search_folder(self):
+        """
+        Returns the last folder opened in the filemanager.
+        If it's not available, it returns the path to the project root instead.
+        """
         # XXX: or project path
         return self.select_folder.get_current_folder()
 
     def validate(self):
+        """
+        Tell all filters to validate their input fields. If a filter raises a
+        ``ValidationError`` the user is shown an error message.
+        """
         for f in self.filters:
             try:
                 f.validate()
@@ -137,11 +154,11 @@ class SearchView(PidaGladeView):
     def append_to_match_list(self, match):
         self.match_list.append(match)
         self.update_match_count()
-        self.update_match_count()
 
     def search_finished(self):
         self.running = False
         self.search_button.set_label(gtk.STOCK_FIND)
+
 
 class SearchEvents(EventsConfig):
 
@@ -186,7 +203,6 @@ class Search(Service):
 
     def change_search_folder(self, path):
         self._view.set_search_folder(path)
-
 
     def show_search(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

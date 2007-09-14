@@ -17,7 +17,10 @@ from filters import filter_list
 
 
 class SearchMatch(object):
-
+    """
+    Symbolizes a file that matched all search filters.
+    You can add it directly to a ``kiwi.ObjectList`` object.
+    """
     def __init__(self, dirpath, name):
         self.state = 'normal'
         self.name = name

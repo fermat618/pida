@@ -37,10 +37,18 @@ class Filter(object):
     #: The description of the filter
     filter_desc = ''
 
-    #:
-    entries = {}
-
     def __init__(self):
+        """
+
+        """
+
+    def validate(self):
+        """
+
+        """
+
+    @staticmethod
+    def get_entries():
         """
 
         """
