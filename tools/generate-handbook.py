@@ -35,8 +35,6 @@ complex. Nothing that some DOM manipulation can manage though.
 #  . This script transforms '<' or '>' symbols in header stylesheets of
 #      the online version. I suspect this is bad, but I guess header is
 #      not used for the online version.
-#  . The generated page after transformation for online version is not
-#      W3C compliant.
 #
 
 import getopt
@@ -252,14 +250,18 @@ def do_transform(source, target):
         return 1
     body_element = body_elements[0]
     
-    # Change the id=\"header\" to class=\"header\"
+    # Change the id=\"header\" to class=\"header\".
+    # Also remove the footer.
     div_elements = body_element.getElementsByTagName('div')
     for element in div_elements:
         if element.getAttribute(u'id') == u'header':
             logging.getLogger('handbook').debug('changing id into class')
             element.removeAttribute(u'id')
             element.setAttribute(u'class', u'header')
-            break            
+        elif element.getAttribute(u'id') == u'footer':
+            logging.getLogger('handbook').debug('removing footer')
+            element.parentNode.removeChild(element)
+            #element.unlink()
             
     # Move the TOC script inside the body
     script_elements = document.getElementsByTagName('script')
@@ -269,12 +271,25 @@ def do_transform(source, target):
         if parent_element:
             logging.getLogger('handbook').debug('moving the TOC script')
             parent_element.removeChild(script_element)
-            body_elements[0].appendChild(script_element)
+            body_element.appendChild(script_element)
+
+            # Also fix the script so that it does only count handbook titles.
+            logging.getLogger('handbook').debug('patching the TOC script')
+
+            # Note that the first script element children are:
+            #   - a text node ("/*")
+            #   - a CDATA node ("window ...")
+            # The string we must modify is in this second node, not in the
+            # first text node.
+            element = script_element.childNodes[1]
+            element.data = element.data.replace(
+                'var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);',
+                'var entries = tocEntries(document.getElementById("doc"), toclevels);')
         else:
             logging.getLogger('handbook').error('no parent for script node')    
     else:
         logging.getLogger('handbook').warn('too many scripts to move the TOC one')
-    
+
     # Copy the toc stylesheet inside the body
     logging.getLogger('handbook').debug('copying the TOC stylesheet')
     style_element = document.createElement('style')
