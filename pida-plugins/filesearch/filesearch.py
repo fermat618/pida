@@ -98,9 +98,6 @@ class SearchView(PidaGladeView):
         self.entries = {}
         self.update_match_count(0)
         self.search_button.set_label(gtk.STOCK_STOP)
-        # Don't do this inside search loop due to performance reasons
-        self.file_listers = list(self.svc.boss.get_service('filemanager').
-                                                features('file_lister'))
         self.task.start(self.get_search_folder(), self.filters)
 
     def stop(self):
@@ -116,15 +113,31 @@ class SearchView(PidaGladeView):
         `self.filters``.
         """
         entries = f.get_entries()
+        new_filter = f(**entries)
+
         box = gtk.HBox(False, 5)
         box.pack_start(gtk.Label(f.description), expand=False)
 
+        # filter entry objects
         for name, entry in entries.iteritems():
             box.pack_start(entry)
 
+        # remove button
+        def remove_btn_clicked(btn):
+            btn.parent.destroy()
+            self.filters.remove(new_filter)
+
+        btn = gtk.Button()
+        btn.connect('clicked', remove_btn_clicked)
+        img = gtk.image_new_from_stock(gtk.STOCK_REMOVE, gtk.ICON_SIZE_MENU)
+        btn.set_image(img)
+
+        box.pack_start(btn, expand=False)
+
         self.filter_box.pack_start(box)
         box.show_all()
-        self.filters.append(f(**entries))
+
+        self.filters.append(new_filter)
 
     def set_search_folder(self, folder):
         self.select_folder.set_current_folder(folder)
@@ -149,7 +162,7 @@ class SearchView(PidaGladeView):
             try:
                 f.validate()
             except ValidationError, e:
-                # XXX
+                self.svc.error_dlg(e)
                 return False
 
         return True
@@ -162,32 +175,32 @@ class SearchView(PidaGladeView):
         self.count_label.set_text('%s files' % self.match_count)
 
     def append_to_match_list(self, dirpath, filename):
-        for lister in self.file_listers:
-            # XXX: this loads all files inside the directory and filters the
-            #      file later --> dirty hack
-            #      find a better way only to load the needed file
-            def _f(*args, **kwargs):
-                self.add_or_update_file(
-                    path.join(dirpath, filename),
-                    *args,
-                    **kwargs
-                )
-            GeneratorTask(lister, _f).start(dirpath)
+        #for lister in self.file_listers:
+        #    # XXX: this loads all files inside the directory and filters the
+        #    #      file later --> dirty hack
+        #    #      find a better way only to load the needed file
+        #    def _f(*args, **kwargs):
+        #        self.add_or_update_file(
+        #            path.join(dirpath, filename),
+        #            *args,
+        #            **kwargs
+        #        )
+        #    GeneratorTask(lister, _f).start(dirpath)
+        self.add_or_update_file(filename, dirpath, 'normal')
 
-    def add_or_update_file(self, search_file, name, basepath, state):
-        if search_file == path.join(basepath, name):
-            entry = self.entries.setdefault(search_file,
+    def add_or_update_file(self, name, basepath, state):
+        entry = self.entries.setdefault(path.join(basepath, name),
                                             SearchMatch(basepath, name))
-            entry.state = state
+        entry.state = state
 
-            if entry.visible:
-                # update file
-                self.match_list.update(entry)
-            else:
-                # add file
-                self.match_list.append(entry)
-                entry.visible = True
-                self.update_match_count()
+        if entry.visible:
+            # update file
+            self.match_list.update(entry)
+        else:
+            # add file
+            self.match_list.append(entry)
+            entry.visible = True
+            self.update_match_count()
 
     def search_finished(self):
         self.running = False

@@ -86,38 +86,6 @@ class FileNameMatchesFilter(Filter):
         return bool(self.regex.search(basename(path)))
 
 
-class ContentContainsFilter(Filter):
-    """
-    Checks whether the file contains a given text.
-    """
-    description = _('Contains the text')
-
-    def __init__(self, entry):
-        self.entry = entry
-
-    def validate(self):
-        self.text = self.entry.get_text()
-
-    @staticmethod
-    def get_entries():
-        return {
-            'entry': gtk.Entry()
-        }
-
-    def check(self, path):
-        f = file(path)
-        found = False
-
-        for line in f.readlines():
-            if self.text in line:
-                found = True
-                break
-
-        f.close()
-
-        return found
-
-
 class ContentMatchesFilter(Filter):
     """
     Checks whether the file content matches a given regular expression.
@@ -158,5 +126,4 @@ class ContentMatchesFilter(Filter):
         return found
 
 
-filter_list = [FileNameMatchesFilter, ContentContainsFilter,
-               ContentMatchesFilter]
+filter_list = [FileNameMatchesFilter, ContentMatchesFilter]

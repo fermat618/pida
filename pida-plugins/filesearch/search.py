@@ -67,8 +67,6 @@ def do_search(folder, filters, exclude_hidden=True, exclude_vcs=True):
     If a file matches all filters a ``SearchMatch`` object is yielded.
     """
     for dirpath, dirnames, filenames in walk(folder):
-        # XXX: add an option to the settings + add the possibility just to
-        #      exclude the version control folders
         def _get_hidden(dirnames):
             """
             Return the directories that shouldn't be shown.

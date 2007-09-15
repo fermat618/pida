@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Fri Sep 14 22:55:13 2007 by benjamin@Moritz-->
+<!--Generated with glade3 3.2.0 on Sat Sep 15 22:28:16 2007 by benjamin@Moritz-->
 <glade-interface>
-  <requires lib="kiwiwidgets"/>
+
   <widget class="GtkWindow" id="search">
     <property name="width_request">450</property>
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
