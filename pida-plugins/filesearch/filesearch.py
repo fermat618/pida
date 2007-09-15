@@ -22,12 +22,14 @@ from pida.core.locale import Locale
 from pida.ui.views import PidaGladeView
 from pida.core.service import Service
 from pida.core.events import EventsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE
+from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
 from pida.utils.gthreads import GeneratorTask
 
 from filters import ValidationError, FileNameMatchesFilter
-from search import get_filters, do_search
+from search import get_filters, do_search, SearchMatch
 
 
 locale = Locale('filesearch')
@@ -42,6 +44,7 @@ class SearchView(PidaGladeView):
     icon_name = 'search'
     filters = []
     running = False
+    entries = {}
 
     def create_ui(self):
         # filter select
@@ -92,8 +95,12 @@ class SearchView(PidaGladeView):
         """
         self.running = True
         self.match_list.clear()
+        self.entries = {}
         self.update_match_count(0)
         self.search_button.set_label(gtk.STOCK_STOP)
+        # Don't do this inside search loop due to performance reasons
+        self.file_listers = list(self.svc.boss.get_service('filemanager').
+                                                features('file_lister'))
         self.task.start(self.get_search_folder(), self.filters)
 
     def stop(self):
@@ -127,8 +134,11 @@ class SearchView(PidaGladeView):
         Returns the last folder opened in the filemanager.
         If it's not available, it returns the path to the project root instead.
         """
-        # XXX: or project path
-        return self.select_folder.get_current_folder()
+        folder = self.select_folder.get_current_folder()
+        # XXX: Windows?
+        if folder == '/':
+            folder = self.svc.current_project.source_directory
+        return folder
 
     def validate(self):
         """
@@ -151,9 +161,33 @@ class SearchView(PidaGladeView):
             self.match_count = 0
         self.count_label.set_text('%s files' % self.match_count)
 
-    def append_to_match_list(self, match):
-        self.match_list.append(match)
-        self.update_match_count()
+    def append_to_match_list(self, dirpath, filename):
+        for lister in self.file_listers:
+            # XXX: this loads all files inside the directory and filters the
+            #      file later --> dirty hack
+            #      find a better way only to load the needed file
+            def _f(*args, **kwargs):
+                self.add_or_update_file(
+                    path.join(dirpath, filename),
+                    *args,
+                    **kwargs
+                )
+            GeneratorTask(lister, _f).start(dirpath)
+
+    def add_or_update_file(self, search_file, name, basepath, state):
+        if search_file == path.join(basepath, name):
+            entry = self.entries.setdefault(search_file,
+                                            SearchMatch(basepath, name))
+            entry.state = state
+
+            if entry.visible:
+                # update file
+                self.match_list.update(entry)
+            else:
+                # add file
+                self.match_list.append(entry)
+                entry.visible = True
+                self.update_match_count()
 
     def search_finished(self):
         self.running = False
@@ -169,6 +203,18 @@ class SearchEvents(EventsConfig):
     def subscribe_foreign_events(self):
         self.subscribe_foreign_event('filemanager', 'browsed_path_changed',
                                      self.svc.change_search_folder)
+        self.subscribe_foreign_event('project', 'project_switched',
+                                     self.svc.on_project_switched)
+
+
+class SearchFeatures(FeaturesConfig):
+
+    def create_features(self):
+        # XXX: add features
+        pass
+
+    def subscribe_foreign_features(self):
+        pass
 
 
 class SearchActions(ActionsConfig):
@@ -184,7 +230,6 @@ class SearchActions(ActionsConfig):
             '<Shift><Control>f',
         )
 
-
     def on_show_search(self, action):
         if action.get_active():
             self.svc.show_search()
@@ -192,11 +237,33 @@ class SearchActions(ActionsConfig):
             self.svc.hide_search()
 
 
+class FileManagerOptionsConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'exclude_hidden',
+            _('Don\'t search in hidden directories'),
+            OTypeBoolean,
+            True,
+            _('Excludes hidden directories from search')
+        )
+
+        self.create_option(
+            'exclude_vcs',
+            _('Don\'t search in data directories of version control systems'),
+            OTypeBoolean,
+            True,
+            _('Excludes the data directories of version control systems '
+              'from search')
+        )
+
+
 class Search(Service):
     """Search service"""
 
     actions_config = SearchActions
     events_config = SearchEvents
+    features_config = SearchFeatures
+    options_config = FileManagerOptionsConfig
 
     def pre_start(self):
         self._view = SearchView(self)
@@ -219,6 +286,9 @@ class Search(Service):
     def stop(self):
         if self.get_action('show_search').get_active():
             self.hide_search()
+
+    def on_project_switched(self, project):
+        self.current_project = project
 
 
 # Required Service attribute for service loading

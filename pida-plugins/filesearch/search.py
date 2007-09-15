@@ -25,6 +25,7 @@ class SearchMatch(object):
         self.state = 'normal'
         self.name = name
         self.path = dirpath
+        self.visible = False
         self.extension = path.splitext(self.name)[-1]
         self.icon_stock_id = self.get_icon_stock_id()
 
@@ -60,13 +61,12 @@ def get_filters():
     """
     return [(f.description, f) for f in filter_list]
 
-def do_search(folder, filters):
+def do_search(folder, filters, exclude_hidden=True, exclude_vcs=True):
     """
     Test all ``filters`` on ``folder``'s content recursively.
     If a file matches all filters a ``SearchMatch`` object is yielded.
     """
     for dirpath, dirnames, filenames in walk(folder):
-        # XXX: maybe reimplement this as "folder filter"?
         # XXX: add an option to the settings + add the possibility just to
         #      exclude the version control folders
         def _get_hidden(dirnames):
@@ -79,15 +79,20 @@ def do_search(folder, filters):
                     hidden.append(dirname)
             return hidden
 
-        # remove the hidden folders of ``dirnames`` that they don't get
-        # crawled 
-        for dirname in _get_hidden(dirnames):
-            # XXX: Check whether removing using .pop with index is faster
-            dirnames.remove(dirname)
+        if exclude_hidden:
+            # remove the hidden folders of ``dirnames`` that they don't get
+            # crawled
+            for dirname in _get_hidden(dirnames):
+                # XXX: Check whether removing using .pop with index is faster
+                dirnames.remove(dirname)
 
         for file_name in filenames:
             fpath = path.join(dirpath, file_name)
             errors = False
+
+            if not path.exists(fpath):
+                # this may happen if there's a invalid symlink
+                continue
 
             for f in filters:
                 if not f.check(fpath):
@@ -97,4 +102,4 @@ def do_search(folder, filters):
 
             if not errors:
                 # file did match all filters
-                yield SearchMatch(dirpath, file_name)
+                yield dirpath, file_name
