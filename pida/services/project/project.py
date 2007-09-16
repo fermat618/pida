@@ -246,6 +246,8 @@ class ProjectEventsConfig(EventsConfig):
             self.plugin_started)
         self.subscribe_foreign_event('plugins', 'plugin_stopped',
             self.plugin_stopped)
+        self.subscribe_foreign_event('editor', 'started',
+            self.editor_started)
 
     def plugin_started(self, plugin):
         if plugin.has_foreign_feature('project', IProjectController):
@@ -253,7 +255,10 @@ class ProjectEventsConfig(EventsConfig):
 
     def plugin_stopped(self, plugin):
         self.svc.refresh_controllers()
-        
+
+    def editor_started(self):
+        self.svc.set_last_project()
+
 
 class ProjectActionsConfig(ActionsConfig):
 
@@ -406,14 +411,7 @@ class Project(Service):
         self.project_properties_view = ProjectPropertiesView(self)
         self.project_properties_view.set_controllers(self.features(IProjectController))
         self._read_options()
-
-    def start(self):
-        last = self.opt('last_project')
-        for project in self._projects:
-            if last:
-                if project.source_directory == last:
-                    self.project_list.set_current_project(project)
-
+    
     def refresh_controllers(self):
         self._manager.clear_controllers()
         self._register_controllers()
@@ -482,6 +480,13 @@ class Project(Service):
             self.get_action('project_execute').set_sensitive(len(project.controllers) > 0)
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
+
+    def set_last_project(self):
+        last = self.opt('last_project')
+        if last:
+            for project in self._projects:
+                if project.source_directory == last:
+                    self.project_list.set_current_project(project)
 
     def get_current_project(self):
         return self._project
