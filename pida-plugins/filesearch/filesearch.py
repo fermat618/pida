@@ -22,7 +22,6 @@ from pida.core.locale import Locale
 from pida.ui.views import PidaGladeView
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE
 from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
@@ -52,7 +51,7 @@ class SearchView(PidaGladeView):
 
         self.match_list.set_columns([
             Column('icon_stock_id', use_stock=True, title=' '),
-            Column('state_markup', use_markup=True, title=' '),
+            #Column('state_markup', use_markup=True, title=' '),
             Column('markup', use_markup=True, title=_('Name')),
             Column('path', title=_('Path'))
         ])
@@ -220,16 +219,6 @@ class SearchEvents(EventsConfig):
                                      self.svc.on_project_switched)
 
 
-class SearchFeatures(FeaturesConfig):
-
-    def create_features(self):
-        # XXX: add features
-        pass
-
-    def subscribe_foreign_features(self):
-        pass
-
-
 class SearchActions(ActionsConfig):
 
     def create_actions(self):
@@ -275,7 +264,6 @@ class Search(Service):
 
     actions_config = SearchActions
     events_config = SearchEvents
-    features_config = SearchFeatures
     options_config = FileManagerOptionsConfig
 
     def pre_start(self):
@@ -297,6 +285,8 @@ class Search(Service):
         self.boss.cmd('window', 'presnet_view', view=self._view)
 
     def stop(self):
+        # abort search task
+        self._view.stop()
         if self.get_action('show_search').get_active():
             self.hide_search()
 

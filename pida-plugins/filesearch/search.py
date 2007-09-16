@@ -44,7 +44,7 @@ class SearchMatch(object):
     def state_markup(self):
         text = state_text.get(self.state, ' ')
         wrap = '<span weight="ultrabold"><tt>%s</tt></span>'
-        return wrap%self.format(text)
+        return wrap % self.format(text)
 
     def format(self, text):
         color, b, i = state_style.get(self.state, ('black', False, False))

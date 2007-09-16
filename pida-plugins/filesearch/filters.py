@@ -37,25 +37,36 @@ class Filter(object):
     #: The description of the filter
     filter_desc = ''
 
-    def __init__(self):
+    @staticmethod
+    def get_entries():
+        """
+        This method should return a dictionary containing all input elements
+        the filter needs.
+        Example::
+
+            return {
+                'entry': gtk.Entry()
+            }
         """
 
+    def __init__(self):
+        """
+        The init function is called if the user added a new filter.
+        It get's all input elements defined in ``get_entries`` as keyword
+        arguments.
         """
 
     def validate(self):
         """
-
-        """
-
-    @staticmethod
-    def get_entries():
-        """
-
+        This function is called before the search process starts.
+        It should validate all input elements and raise a ``ValidationError``
+        on error.
         """
 
     def check(self, path):
         """
-
+        This function should return ``True`` if ``path`` matches the filter,
+        else ``False``.
         """
 
 
