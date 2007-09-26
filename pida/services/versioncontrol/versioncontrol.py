@@ -624,11 +624,16 @@ class Versioncontrol(Service):
         return not ( state == "hidden" or state == "ignored")
    
     def get_workdir_manager_for_path(self, path):
+        found_vcm = None
         for vcm in self.features("workdir-manager"):
             try:
-                return vcm(path) #TODO: this shouldnt need an exception
+                vcm_instance = vcm(path) #TODO: this shouldnt need an exception
+                if (not found_vcm 
+                    or len(vcm_instance.base_path) > len(found_vcm.base_path)):
+                    found_vcm = vcm_instance
             except ValueError:
                 pass
+        return found_vcm
 
     def list_files(self, path):
         workdir = self.get_workdir_manager_for_path(path)

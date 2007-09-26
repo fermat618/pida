@@ -40,29 +40,27 @@ class CommandBased(VCSBase):
 
     def __init__(self, versioned_path):
         self.path = os.path.normpath( os.path.abspath(versioned_path) )
-        self.base_path = self.find_basepath()
-    
-    def find_basepath(self):
-        act_path = self.path
+        self.base_path = self.find_basepath(self.path)
+        if self.base_path is None:
+            raise ValueError(
+                    'VC Basepath for vc class %r'
+                    'not found above %s'%(
+                        self.__class__.__name__, 
+                        self.path)
+                    )
+
+    @classmethod
+    def find_basepath(cls, act_path):
         detected_path = None
         detected_sd = None
         op = None
         while act_path != op:
-            if os.path.exists( os.path.join(act_path, self.detect_subdir)):
+            if os.path.exists( os.path.join(act_path, cls.detect_subdir)):
                 detected_path = act_path
                 # continue cause some vcs's 
                 # got the subdir in every path
             op = act_path
             act_path = os.path.dirname(act_path)
-                
-        if not detected_path:
-            raise ValueError(
-                    'VC Basepath for vc class %r'
-                    'not found above %s'%(
-                        type(self), 
-                        self.path)
-                    )
-
         return detected_path
 
     def process_paths(self, paths):

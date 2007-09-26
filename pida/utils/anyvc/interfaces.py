@@ -21,7 +21,11 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-from zope.interface import Interface, Attribute
+try:
+    from zope.interface import Interface
+except:
+    class Interface:
+        pass
 
 
 class ILocalVCS(Interface):

@@ -15,14 +15,16 @@ class StatedPath(object):
     """
     stores status informations about files
 
-    >>> StatedPath("a.txt", "normal")
+    >>> StatedPath('a.txt')
     <normal 'a.txt'>
+    >>> StatedPath('a.txt', 'changed')
+    <changed 'a.txt'>
 
     """
 
-    __slots__ = "name relpath path base state".split()
+    __slots__ = 'name', 'relpath', 'path', 'base', 'state'
     
-    def __init__(self, name, state, base=None):
+    def __init__(self, name, state='normal', base=None):
         self.relpath = name
         self.path = dirname(name)
         self.name = basename(name)
@@ -30,7 +32,7 @@ class StatedPath(object):
         self.state = intern(state)
 
     def __repr__(self):
-        return "<%s %r>"%(
+        return '<%s %r>'%(
                 self.state,
                 self.relpath,
                 )
@@ -44,11 +46,11 @@ class StatedPath(object):
         returns the absolute path if the base is known
         else it returns None
 
-        >>> StatedPath("a",None,"b").abspath
-        "a/b"
+        >>> StatedPath('a', base='b').abspath
+        'b/a'
 
-        >>> StatedPath("a",None).abspath
-        None
+        >>> StatedPath('a').abspath
+        
         """
         if self.base is not None:
             return join(self.base, self.relpath)
