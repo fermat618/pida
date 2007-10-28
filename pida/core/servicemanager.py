@@ -155,7 +155,8 @@ class ServiceManager(object):
     def start_plugin(self, plugin_path):
         plugin = self._loader.load_one_service(plugin_path, self._boss)
         pixmaps_dir = os.path.join(plugin_path, 'pixmaps')
-        self._boss._icons.register_file_icons_for_directory(pixmaps_dir)
+        if os.path.exists(pixmaps_dir):
+            self._boss._icons.register_file_icons_for_directory(pixmaps_dir)
         if plugin is not None:
             self._register_plugin(plugin)
             plugin.create_all()
