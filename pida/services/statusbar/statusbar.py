@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 import gtk
+import pango
 import locale
 import datetime
 
@@ -89,23 +90,29 @@ class StatusbarOptionsConfig(OptionsConfig):
 
 class TabLabel(gtk.HBox):
 
-    def __init__(self, icon_name, text):
+    def __init__(self, icon_name, text, ellipsize=pango.ELLIPSIZE_NONE):
         gtk.HBox.__init__(self, spacing=2)
         if None in [icon_name, text]:
             return None
-        self.__label = gtk.Label(text)
-        self.__label.set_padding(5, 5)
-        self.__icon = gtk.image_new_from_stock(icon_name, gtk.ICON_SIZE_SMALL_TOOLBAR)
-        self.pack_start(self.__icon, expand=False)
-        self.pack_start(self.__label, expand=False)
+        self._label = gtk.Label(text)
+        self._label.set_padding(5, 5)
+        self._label.set_max_width_chars(len(text))
+        self._label.set_single_line_mode(True)
+        self._label.set_ellipsize(ellipsize)
+
+        self._icon = gtk.image_new_from_stock(icon_name, gtk.ICON_SIZE_SMALL_TOOLBAR)
+        self.pack_start(self._icon, expand=False)
+        self.pack_start(self._label, expand=True)
         self.show_all()
 
     def set_text(self, text):
-        self.__label.set_text(text)
+        self._label.set_text(text)
+        self._label.set_max_width_chars(len(text))
 
 class StatusMenu(gtk.EventBox):
 
-    def __init__(self, icon_name, text, activate_callback):
+    def __init__(self, icon_name, text, activate_callback,
+                    ellipsize=pango.ELLIPSIZE_NONE ):
         gtk.EventBox.__init__(self)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect('button-press-event', self._on_eventbox__clicked)
@@ -115,9 +122,10 @@ class StatusMenu(gtk.EventBox):
         self.add(self._hb)
         self._label = gtk.Label(text)
         self._label.set_padding(5, 5)
+        self._label.set_ellipsize(ellipsize)
         self._icon = gtk.image_new_from_stock(icon_name, gtk.ICON_SIZE_SMALL_TOOLBAR)
         self._hb.pack_start(self._icon, expand=False)
-        self._hb.pack_start(self._label, expand=False)
+        self._hb.pack_start(self._label, expand=True)
         self.show_all()
 
     def set_text(self, (text, value)):
@@ -161,10 +169,11 @@ class Statusbar(Service):
     def create_ui(self):
         w = TabLabel('package_utilities','')
         self.add_status('project', widget=w, text='No project')
-        w = StatusMenu('file-manager','', self.on_filemanager_history_activate)
+        w = StatusMenu('file-manager','', self.on_filemanager_history_activate,
+                ellipsize=pango.ELLIPSIZE_START)
         self.add_status('path', widget=w, expand=True)
         w = StatusMenu('package_office','', self.on_buffer_history_activate)
-        self.add_status('document', widget=w, text='No document', expand=True)
+        self.add_status('document', widget=w, text='No document')
         w = gtk.Label()
         w.set_padding(5, 0)
         self.add_status('document_mtime', widget=w)
@@ -187,18 +196,16 @@ class Statusbar(Service):
         separator = gtk.VSeparator()
 
         # add in ui
-        if len(self._places) > 0:
+        if self._places:
             self._statusbar.pack_start(separator, expand=False)
-        self._statusbar.pack_start(widget, expand=expand, padding=6)
+        self._statusbar.pack_start(widget, expand=expand, padding=5)
         if self.opt('show_statusbar'):
             self._statusbar.show_all()
 
         # save in cache
         self._places[name] = {
                 'widget':widget,
-            }
-        self._places['_separator_'+name] = {
-                'widget':separator,
+                '_separator':separator,
             }
 
 
@@ -209,12 +216,11 @@ class Statusbar(Service):
     def remove_status(self, name):
         if not self._places.has_key(name):
             return
-        status = self._places[name]
-        separator = self._places['_separator_'+name]
-        self._statusbar.remove(status['widget'])
-        self._statusbar.remove(separator['widget'])
+        status = self._places[name]['widget']
+        separator = self._places[name]['_separator']
+        self._statusbar.remove(status)
+        self._statusbar.remove(separator)
         del self._places[name]
-        del self._places['_separator_'+name]
 
     def show_statusbar(self, visibility):
         self.window.set_statusbar_visibility(visibility)
