@@ -245,6 +245,7 @@ class Emacs(EditorService):
         if document.unique_id in self._documents:
             self._remove_document(document)
             self._client.close_buffer(document.filename)
+        return True
 
     def remove_file(self, filename):
         document = self._get_document_for_filename(filename)

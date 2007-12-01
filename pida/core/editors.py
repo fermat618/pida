@@ -133,7 +133,7 @@ class EditorCommandsConfig(CommandsConfig):
         self.svc.open(document)
 
     def close(self, document):
-        self.svc.close(document)
+        return self.svc.close(document)
 
     def goto_line(self, line):
         self.svc.goto_line(line)

@@ -174,6 +174,7 @@ class Vim(EditorService):
         if document.unique_id in self._documents:
             self._remove_document(document)
             self._com.close_buffer(self.server, document.filename)
+        return True
 
     def remove_file(self, file_name):
         document = self._get_document_for_filename(file_name)
