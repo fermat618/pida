@@ -3,6 +3,7 @@
 Features
 
 [1192] Added ability to change pane label/icon for a view. Closes #116.
+[1239] Added terminal highlighting of filenames and urls. Closes #121
 
 Bugs
 
