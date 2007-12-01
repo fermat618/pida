@@ -1,5 +1,12 @@
 import gtk
-from moo_stub import BigPaned, PaneLabel, PaneParams
+
+# Don't import moo twice from different locations when the full editor is
+# being used.
+try:
+    from moo.utils import BigPaned, PaneLabel, PaneParams
+except ImportError:
+    from moo_stub import BigPaned, PaneLabel, PaneParams
+
 from pida.utils.gthreads import gcall
 
 PANE_TERMINAL = 'Terminal'
