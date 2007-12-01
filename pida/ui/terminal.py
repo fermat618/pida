@@ -89,6 +89,16 @@ class TerminalMenuMatch(TerminalMatch):
         self.actions.append(action)
 
 
+
+class TerminalMenuCallbackMatch(TerminalMatch):
+
+    def __call__(self, event, *args, **kw):
+        menu = self.callback(*args, **kw)
+        # Don't popup anything for non matches
+        if menu is not None:
+            menu.popup(None, None, None, event.button, event.time)
+
+
 class PidaTerminal(Terminal):
 
     __gtype_name__ = 'PidaTerminal'
@@ -199,6 +209,11 @@ class PidaTerminal(Terminal):
                                 the match
         """
         match = TerminalMatch(name, match_str, match_groups, callback)
+        return self.match_add_match(match)
+
+    def match_add_menu_callback(self, name, match_str, match_groups, callback):
+        match = TerminalMenuCallbackMatch(name, match_str, match_groups,
+            callback)
         return self.match_add_match(match)
 
     def match_add_menu(self, name, match_str, match_groups, menu=None):

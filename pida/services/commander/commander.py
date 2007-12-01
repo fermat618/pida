@@ -244,6 +244,7 @@ class TerminalView(PidaView):
         self._hb.pack_start(self._bar, expand=False)
         self.master = None
         self.slave = None
+        self.prep_highlights()
 
     def _create_scrollbar(self):
         self._scrollbar = gtk.VScrollbar()
@@ -393,6 +394,32 @@ class TerminalView(PidaView):
 
     def on_window_title_changed(self, term):
         self._title.set_text(term.get_window_title())
+
+    def prep_highlights(self):
+        self._term.match_add_menu_callback('dir-match',
+            r'\b~{0,1}/[A-Za-z0-9/\.-_]+?\b',
+            r'\b(~{0,1}/[A-Za-z0-9/\.-_]+?)\b',
+            self.on_highlight_path)
+        self._term.match_add_menu_callback('url-match',
+            r'\bhttps{0,1}://\w+?\b',
+            r'\b(https{0,1}://\w+?)\b',
+            self.on_highlight_url)
+
+    def on_highlight_path(self, path, *args, **kw):
+        path = os.path.expanduser(path)
+        if os.path.isdir(path):
+            return self.svc.boss.cmd('contexts', 'get_menu', context='dir-menu',
+                                     dir_name=path)
+        elif os.path.isfile(path):
+            return self.svc.boss.cmd('contexts', 'get_menu', context='file-menu',
+                                     file_name=path)
+        else:
+            return None
+
+    def on_highlight_url(self, url, *args, **kw):
+        return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
+                                  url=url)
+        
 
 # Service class
 class Commander(Service):
