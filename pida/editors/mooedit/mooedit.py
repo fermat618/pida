@@ -365,8 +365,7 @@ class Mooedit(EditorService):
                     self.get_action('mooedit_find_word_prev').set_sensitive(True)
                     self.get_action('mooedit_replace').set_sensitive(True)
             else:
-                pass
-                #EA: the file could NOT be opened
+                raise Exception, 'Moo could not load the file.'
         else:
             #EA: the file was already open. we switch to it.
             self._embed.set_current_page(self._embed.page_num(self._documents[document.unique_id]))
