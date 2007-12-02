@@ -365,11 +365,10 @@ class Mooedit(EditorService):
                     self.get_action('mooedit_find_word_prev').set_sensitive(True)
                     self.get_action('mooedit_replace').set_sensitive(True)
                 return True
-            else:
-                self._embed.set_current_page(self._embed.page_num(self._documents[document.unique_id]))
-                return True #EA Don't know what to return if document was already open.
+        # AA If the file is already open, we have to switch to it
         else:
-            return False
+            self._embed.set_current_page(self._embed.page_num(self._documents[document.unique_id]))
+            return True #EA Don't know what to return if document was already open.
 
     def close(self, document):
         """Close a document"""
@@ -534,3 +533,4 @@ Service = Mooedit
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+
