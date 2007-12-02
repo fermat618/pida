@@ -72,6 +72,7 @@ class MooeditPreferences(PidaView):
     def create_ui(self):
         prefs = self.svc._editor_instance.prefs_page()
         prefs.emit('init')
+        prefs.show()
         vbox = gtk.VBox()
         vbox.pack_start(prefs)
         self._prefs = prefs
@@ -93,8 +94,9 @@ class MooeditPreferences(PidaView):
         bb.pack_start(self._apply_but)
         bb.pack_start(self._cancel_but)
         bb.pack_start(self._ok_but)
+        bb.show_all()
         vbox.pack_start(bb)
-        vbox.show_all()
+        vbox.show()
         self.add_main_widget(vbox)
 
     def cb_ok_button_clicked(self, button):
