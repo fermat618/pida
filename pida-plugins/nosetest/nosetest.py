@@ -144,7 +144,7 @@ class TestResultBrowser(PidaGladeView):
     def create_ui(self):
         self.source_tree.set_columns([
                 Column('status', use_stock=True),
-                Column('name'),
+                Column('name', column='status'),
             ])
         self.source_tree.set_headers_visible(False)
 
