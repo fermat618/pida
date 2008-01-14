@@ -22,6 +22,7 @@
 #SOFTWARE.
 __all__ = ["all_known"]
 
-from cmdbased import Monotone, Bazaar, SubVersion, Mercurial, Darcs, Git
+from cmdbased import Bazaar, SubVersion, Mercurial, Darcs, Git
+from monotone import Monotone
 
 all_known = [ Monotone, Bazaar, SubVersion, Mercurial, Darcs, Git]
