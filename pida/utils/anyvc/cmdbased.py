@@ -96,7 +96,7 @@ class CommandBased(VCSBase):
 
     def get_diff_args(self, paths=(), **kw):
         return ['diff'] + self.process_paths(paths)
-    
+
     def get_update_args(self, revision=None, **kw):
         if revision:
             return ['update', '-r', revision]
@@ -117,7 +117,7 @@ class CommandBased(VCSBase):
 
     def get_list_args(self, **kw):
         raise NotImplementedError("%s doesnt implement list"%self.__class__.__name__)
-    
+
     def commit(self, **kw):
         args = self.get_commit_args(**kw)
         return self.execute_command(args, **kw)
@@ -129,7 +129,7 @@ class CommandBased(VCSBase):
     def update(self, **kw):
         args = self.get_update_args(**kw)
         return self.execute_command(args, **kw)
-    
+
     def status(self, **kw):
         args = self.get_status_args(**kw)
         return self.execute_command(args, **kw)
@@ -141,7 +141,7 @@ class CommandBased(VCSBase):
     def remove(self, **kw):
         args = self.get_remove_args(**kw)
         return self.execute_command(args, **kw)
-    
+
     def revert(self, **kw):
         args = self.get_revert_args(**kw)
         return self.execute_command(args, **kw)
@@ -156,7 +156,7 @@ class CommandBased(VCSBase):
         """
         args = self.get_list_args(**kw)
         return self.execute_command(args, result_type=iter, **kw)
-    
+
     def cache_impl(self, recursive, **kw):
         """
         only runs caching if it knows, how
@@ -182,12 +182,10 @@ class DCommandBased(CommandBased,DVCSMixin):
     def pull(self, **kw):
         args = self.get_pull_args(**kw)
         return self._execute_command(args, **kw)
-    
+
     def push(self, **kw):
         args = self.get_push_args(**kw)
         return self._execute_command(args, **kw)
-
-
 
 
 
@@ -209,7 +207,7 @@ class Bazaar(DCommandBased):
         if not recursive:
             ret.append("--non-recursive")
         return ret
-    
+
     def get_cache_args(self, **kw):
         return ["st"]
 
@@ -223,7 +221,7 @@ class Bazaar(DCommandBased):
             "conflicts:": 'conflict',
             "pending merges:": None,
             }
-    
+
     def parse_cache_items(self, items):
         state = 'none'
         for item in items:
@@ -231,8 +229,7 @@ class Bazaar(DCommandBased):
             state = self.statemap.get(item.rstrip(), state)
             if item.startswith("  ") and state:
                 yield item.strip(), state
-        
-    
+
     def parse_list_items(self, items, cache):
         for item in items:
             if item.startswith('I'):
@@ -240,7 +237,7 @@ class Bazaar(DCommandBased):
             else:
                 fn = item[1:].strip()
                 yield Path(
-                        fn, 
+                        fn,
                         cache.get(fn, 'normal'),
                         self.base_path)
 
@@ -335,7 +332,7 @@ class Git(CommandBased):
     """
     cmd = 'git'
     detect_subdir = '.git'
-    
+
     statemap = {
         None: 'normal',
         "new file": 'new',
@@ -347,28 +344,31 @@ class Git(CommandBased):
 
     def process_paths(self, paths):
         return map(relative_to(self.base_path), paths)
-    
+
     def get_commit_args(self, message, paths=()):
         if paths:
             # commit only for the supplied paths
             return ['commit', '-m', message, '--'] + self.process_paths(paths)
         else:
             # commit all found changes
-            # this also commits deletes
+            # this also commits deletes ?!
             return ['commit', '-a', '-m', message]
+
+    def get_revert_args(self, paths=(), recursive=False, **kw):
+        return ['checkout'] + self.process_paths(paths)
 
     def get_list_args(self, **kw):
         return ['ls-tree', '-r', 'HEAD']
 
     def get_cache_args(self, **kw):
         return ['status']
-    
+
     def parse_list_items(self, items, cache):
         for item in items:
             item = item.split()[-1]
             path = Path(item, cache.get(item, 'normal'), self.base_path)
             yield path
-    
+
     def parse_cache_items(self, items):
         #TODO: fix the mess
         for a in items:
