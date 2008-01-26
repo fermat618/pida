@@ -2,6 +2,11 @@
     <menubar>
 
         <menu name="FileMenu" action="FileMenu">
+            <placeholder name="fm1">
+                <menuitem name="save" action="save" />
+                <menuitem name="mooedit_save_as" action="mooedit_save_as" />
+            </placeholder>
+
         </menu>
 
         <menu name="EditMenu" action="EditMenu">

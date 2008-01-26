@@ -178,6 +178,15 @@ class MooeditActionsConfig(EditorActionsConfig):
     def create_actions(self):
         EditorActionsConfig.create_actions(self)
         self.create_action(
+            'mooedit_save_as',
+            TYPE_NORMAL,
+            _('Save as'),
+            _('Save file as'),
+            gtk.STOCK_SAVE_AS,
+            self.on_save_as,
+            '<Shift><Control>S'
+        )
+        self.create_action(
             'mooedit_preferences',
             TYPE_TOGGLE,
             _('Edit Mooedit Preferences'),
@@ -252,6 +261,9 @@ class MooeditActionsConfig(EditorActionsConfig):
     def on_project_preferences(self, action):
         self.svc.show_preferences(action.get_active())
 
+    def on_save_as(self, action):
+        self.svc._current.editor.save_as()
+
     def on_find(self, action):
         self.svc._current.editor.emit('find-interactive')
 
@@ -314,6 +326,7 @@ class Mooedit(EditorService):
 
     def start(self):
         self.get_action('save').set_sensitive(False)
+        self.get_action('mooedit_save_as').set_sensitive(False)
         self.get_action('cut').set_sensitive(False)
         self.get_action('copy').set_sensitive(False)
         self.get_action('paste').set_sensitive(False)
@@ -353,6 +366,7 @@ class Mooedit(EditorService):
                 self._embed.set_current_page(-1)
                 if self._embed.get_n_pages() == 1:
                     self.get_action('save').set_sensitive(True)
+                    self.get_action('mooedit_save_as').set_sensitive(True)
                     self.get_action('cut').set_sensitive(True)
                     self.get_action('copy').set_sensitive(True)
                     self.get_action('paste').set_sensitive(True)
@@ -381,6 +395,7 @@ class Mooedit(EditorService):
             del self._documents[document.unique_id]
             if self._embed.get_n_pages() == 0:
                 self.get_action('save').set_sensitive(False)
+                self.get_action('mooedit_save_as').set_sensitive(False)
                 self.get_action('cut').set_sensitive(False)
                 self.get_action('copy').set_sensitive(False)
                 self.get_action('paste').set_sensitive(False)
@@ -399,6 +414,11 @@ class Mooedit(EditorService):
     def save(self):
         """Save the current document"""
         self._current.editor.save()
+        self.boss.cmd('buffer', 'current_file_saved')
+
+    def save_as(self):
+        """Save the current document"""
+        self._current.editor.save_as()
         self.boss.cmd('buffer', 'current_file_saved')
 
     def cut(self):
