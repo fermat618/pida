@@ -68,6 +68,7 @@
         <separator/>
         <placeholder name="SaveFileToolbar">
         <toolitem name="save" action="save" />
+        <toolitem name="mooedit_save_as" action="mooedit_save_as" />
         </placeholder>
         <separator/>
         <placeholder name="EditToolbar">
