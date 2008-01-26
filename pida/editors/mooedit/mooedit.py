@@ -155,17 +155,18 @@ class MooeditEmbed(gtk.Notebook):
         self._mooedit.svc.boss.get_service('buffer').cmd('close_file', file_name=editor.get_filename())
 
 
-class MooeditEditor(gtk.ScrolledWindow):
-    """Mooedit Editor
+class MooeditView(gtk.ScrolledWindow):
+    """Mooedit View
 
        A gtk.ScrolledWindow containing the editor instance we get from mooedit.
     """
 
-    def __init__(self, editor):
+    def __init__(self, document):
         gtk.ScrolledWindow.__init__(self)
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.editor = editor
-        self.add(editor)
+        self.editor = document.editor
+        self.document = document
+        self.add(document.editor)
         self.show_all()
 
 
@@ -303,8 +304,7 @@ class Mooedit(EditorService):
             moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=self._state_path)
             self._editor_instance = moo.edit.create_editor_instance()
             moo.edit.plugin_read_dirs()
-            self._files = {}
-            self._documents = self._files
+            self._documents = {}
             self._current = None
             self._main = MooeditMain(self)
             self._preferences = MooeditPreferences(self)
@@ -345,23 +345,23 @@ class Mooedit(EditorService):
     def show_preferences(self, visible):
         if visible:
             self.boss.cmd('window', 'add_view', paned='Plugin',
-                view=self._preferences)
+                          view=self._preferences)
         else:
             self.boss.cmd('window', 'remove_view',
-                view=self._preferences)
+                          view=self._preferences)
 
     def stop(self):
-        documents = [document for document in self._documents.values()]
+        views = [view for view in self._documents.values()]
         close = True
-        for document in documents:
-            editor_close = document.editor.close()
-            self._embed.remove_page(self._embed.page_num(document))
+        for view in views:
+            editor_close = view.editor.close()
+            self._embed.remove_page(self._embed.page_num(view))
             close = close & editor_close
         return close
 
     def open(self, document):
         """Open a document"""
-        if document.unique_id not in self._documents:
+        if document.unique_id not in self._documents.keys():
             if self._load_file(document):
                 self._embed.set_current_page(-1)
                 if self._embed.get_n_pages() == 1:
@@ -418,7 +418,7 @@ class Mooedit(EditorService):
 
     def save_as(self):
         """Save the current document"""
-        self._current.editor.save_as()
+        print self._current.editor.save_as()
         self.boss.cmd('buffer', 'current_file_saved')
 
     def cut(self):
@@ -463,33 +463,35 @@ class Mooedit(EditorService):
     def _load_file(self, document):
         try:
             editor = self._editor_instance.create_doc(document.filename)
-            box = MooeditEditor(editor)
-            box._star = False
-            box._exclam = False
-            editor.connect("doc_status_changed", self._buffer_changed, box)
-            label = self._embed._create_tab(editor)
-            self._embed.append_page( box, label)
-            self._embed.set_tab_reorderable(box, True)
-            #self._embed.set_tab_detachable(box, True)
-            self._documents[document.unique_id] = box
-            self._current = box
+            document.editor = editor
+            view = MooeditView(document)
+            view._star = False
+            view._exclam = False
+            document.editor.connect("doc_status_changed", self._buffer_changed, view)
+            document.editor.connect("filename-changed", self._buffer_renamed, view)
+            label = self._embed._create_tab(document.editor)
+            self._embed.append_page(view, label)
+            self._embed.set_tab_reorderable(view, True)
+            #self._embed.set_tab_detachable(view, True)
+            self._documents[document.unique_id] = view
+            self._current = view
             return True
         except Exception, err:
             print err
             return False
 
-    def _buffer_changed(self, buffer, editor):
-        status = editor.editor.get_status()
+    def _buffer_changed(self, buffer, view):
+        status = view.editor.get_status()
         if moo.edit.EDIT_MODIFIED & status == moo.edit.EDIT_MODIFIED:
             if not self._current.editor.can_redo():
                 self.get_action('redo').set_sensitive(False)
-            if not editor._star:
-                s = editor.editor._label.get_text()
-                if editor._exclam:
+            if not view._star:
+                s = view.editor._label.get_text()
+                if view._exclam:
                     s = s[1:]
-                    editor._exclam = False
-                editor.editor._label.set_text("*" + s)
-                editor._star = True
+                    view._exclam = False
+                view.editor._label.set_text("*" + s)
+                view._star = True
                 self.get_action('undo').set_sensitive(True)
         if moo.edit.EDIT_CLEAN & status == moo.edit.EDIT_CLEAN:
             #print "clean"
@@ -498,25 +500,28 @@ class Mooedit(EditorService):
             #print "new"
             pass
         if moo.edit.EDIT_CHANGED_ON_DISK & status == moo.edit.EDIT_CHANGED_ON_DISK:
-            if not editor._exclam:
-                s = editor.editor._label.get_text()
-                if editor._star:
+            if not view._exclam:
+                s = view.editor._label.get_text()
+                if view._star:
                     s = s[1:]
-                    editor._star = False
-                editor.editor._label.set_text("!" + s)
-                editor._exclam = True
+                    view._star = False
+                view.editor._label.set_text("!" + s)
+                view._exclam = True
         if status == 0:
-            if editor._star or editor._exclam:
-                s = editor.editor._label.get_text()
+            if view._star or view._exclam:
+                s = view.editor._label.get_text()
                 s = s[1:]
-                editor._exclam = False
-                editor._star = False
-                editor.editor._label.set_text(s)
+                view._exclam = False
+                view._star = False
+                view.editor._label.set_text(s)
 
-    def _buffer_modified(self, buffer, editor):
-        s = editor.get_label().get_text()
-        editor.get_label().set_text("*" + s)
+    def _buffer_modified(self, buffer, view):
+        s = view.editor._label.get_text()
+        view.editor._label.set_text("*" + s)
 
+    def _buffer_renamed(self, buffer, new_name, view):
+        view.editor._label.set_text(new_name)
+        view.document.filename = new_name
 
     def _drag_motion_cb (self, widget, context, x, y, time):
         list = widget.drag_dest_get_target_list()
