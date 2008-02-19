@@ -396,14 +396,14 @@ class TerminalView(PidaView):
         self._title.set_text(term.get_window_title())
 
     def prep_highlights(self):
-        self._term.match_add_menu_callback('dir-match',
-            r'\b~{0,1}/[A-Za-z0-9/\.-_]+?\b',
-            r'\b(~{0,1}/[A-Za-z0-9/\.-_]+?)\b',
-            self.on_highlight_path)
         self._term.match_add_menu_callback('url-match',
-            r'\bhttps{0,1}://\w+?\b',
-            r'\b(https{0,1}://\w+?)\b',
+            r'https{0,1}://[A-Za-z0-9/\-\._]+',
+            r'(https{0,1}://[A-Za-z0-9/\-\._]+)',
             self.on_highlight_url)
+        self._term.match_add_menu_callback('dir-match',
+            r'~{0,1}/[a-zA-Z/\-\._]+',
+            r'(~{0,1}/[A-Za-z0-9/\-\._]+)',
+            self.on_highlight_path)
 
     def on_highlight_path(self, path, *args, **kw):
         path = os.path.expanduser(path)
