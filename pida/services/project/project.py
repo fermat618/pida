@@ -182,7 +182,7 @@ class ProjectPropertiesView(PidaGladeView):
 
     def set_controllers(self, controllers):
         self.controllers_combo.prefill([(controller.label, controller) for
-            controller in controllers])
+            controller in controllers], True)
 
     def on_add_button__clicked(self, button):
         name = self.name_entry.get_text()
@@ -415,6 +415,7 @@ class Project(Service):
     def refresh_controllers(self):
         self._manager.clear_controllers()
         self._register_controllers()
+        self.project_properties_view.set_controllers(self.features(IProjectController))
         if self._project is not None:
             self.set_current_project(self._project)
 
