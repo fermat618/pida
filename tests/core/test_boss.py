@@ -1,6 +1,5 @@
 
 from pida.core.boss import Boss
-
 from unittest import TestCase
 
 class BossTest(TestCase):

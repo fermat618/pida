@@ -85,7 +85,10 @@ class ServiceLoadTest(TestCase):
         self._dumglade = os.path.join(self._gladedir, 'banana.glade')
         f = open(self._dumglade, 'w')
         f.close()
-        self.loader = ServiceLoader()
+
+        mock = Mock()
+        mock.log = Mock()
+        self.loader = ServiceLoader(boss=mock)
 
     def test_get(self):
         services = [svc for svc in self.loader.get_all_services([self._tdir])]
@@ -155,7 +158,7 @@ class ServiceManagerTest(TestCase):
         shutil.rmtree(self._tdir)
 
     def test_service_manager_register(self):
-        self._sm.register_service(self._svc)
+        self._sm._register_service(self._svc)
         self.assertEqual(
             self._sm.get_service('MyService').servicename,
             self._svc.servicename
@@ -166,7 +169,7 @@ class ServiceManagerTest(TestCase):
         )
 
     def test_service_manager_load(self):
-        self._sm.load_services()
+        self._sm.load_all_services()
         self.assertEqual(
             self._sm.get_service('testservice').__class__.__name__,
             'Service'

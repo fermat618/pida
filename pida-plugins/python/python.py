@@ -132,7 +132,7 @@ class Pyflaker(object):
         return self.check(self._current)
 
     def check(self, document):
-        code_string = document.string
+        code_string = document.content
         filename = document.filename
         try:
             tree = compiler.parse(code_string)
@@ -229,7 +229,7 @@ class PythonBrowser(object):
             yield (child, parent)
 
     def check(self, document):
-        code_string = document.string
+        code_string = str(document)
         return pythonparser.get_nodes_from_string(code_string)
 
     def add_view_node(self, node, parent):

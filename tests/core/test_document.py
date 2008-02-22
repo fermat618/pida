@@ -1,11 +1,18 @@
 
 import os
-
-from pida.core.document import Document as document
+import os
+from pida.core.document import Document as document_class
 #from pida.core.testing import test, assert_equal, assert_notequal
+
+from pida.utils.testing.mock import Mock
 
 from unittest import TestCase
 from tempfile import mktemp
+
+def document(*k, **kw):
+    mock = Mock()
+    mock.log = Mock()
+    return document_class(mock, *k, **kw)
 
 def c():
     tmp = mktemp()
@@ -17,23 +24,21 @@ def c():
     doc = document(filename=tmp)
     return doc, tmp, txt
 
-def d(tmp):
-    os.remove(tmp)
+def d(x):
+    os.remove(x)
+
 
 class DocumentTest(TestCase):
 
     def test_new_document(self):
         doc = document()
         self.assertEqual(doc.is_new, True)
+        self.assertEqual(doc.filename, None)
 
     def test_unnamed_document(self):
         doc = document()
         self.assertEqual(doc.filename, None)
 
-    def test_unnamed_is_new(self):
-        doc = document()
-        self.assertEqual(doc.is_new, True)
-        self.assertEqual(doc.filename, None)
 
     def test_new_index(self):
         doc = document()
@@ -43,11 +48,6 @@ class DocumentTest(TestCase):
     def test_no_project(self):
         doc = document()
         self.assertEqual(doc.project_name, '')
-
-    def test_no_handler(self):
-        doc = document()
-        self.assertEqual(doc.handler, None)
-
 
     def test_unique_id(self):
         doc = document()
@@ -61,7 +61,7 @@ class DocumentTest(TestCase):
 
     def test_file_text(self):
         doc, tmp, txt = c()
-        self.assertEqual(doc.string, txt)
+        self.assertEqual(doc.content, txt)
         d(tmp)
 
     def test_file_lines(self):
@@ -71,14 +71,8 @@ class DocumentTest(TestCase):
 
     def test_file_len(self):
         doc, tmp, txt = c()
-        self.assertEqual(len(doc), len(txt))
+        self.assertEqual(doc.filesize, len(txt))
         d(tmp)
-
-    def test_file_length(self):
-        doc, tmp, txt = c()
-        self.assertEqual(doc.length, len(doc))
-        d(tmp)
-
 
     def test_directory(self):
         doc, tmp, txt = c()
@@ -97,4 +91,10 @@ class DocumentTest(TestCase):
         self.assertEqual(doc.basename, os.path.basename(tmp))
         d(tmp)
 
-
+    def test_file_missing_load(self):
+        doc = document(filename='/this_is_hopefully_missing_for_sure')
+        self.assertRaises(IOError, doc._load)
+    
+    def test_file_missing_stat(self):
+        doc = document(filename='/this_is_hopefully_missing_for_sure')
+        self.assertEqual(doc.stat, (0,)*10)
