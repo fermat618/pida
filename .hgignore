@@ -1,0 +1,6 @@
+^build
+moo_stub.so
+moo/moo-pygtk.c
+moo/moomarshals.c
+moo/moomarshals.h
+moo/stock-moo.h
