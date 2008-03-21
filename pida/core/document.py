@@ -150,7 +150,7 @@ class Document(object):
         if self.filename is None:
             return '<New Document %d>'%self.newfile_index
         else:
-            return '<Document %r>'%self.flename
+            return '<Document %r>'%self.filename
 
     @property
     def modified_time(self):

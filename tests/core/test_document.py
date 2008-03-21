@@ -94,7 +94,18 @@ class DocumentTest(TestCase):
     def test_file_missing_load(self):
         doc = document(filename='/this_is_hopefully_missing_for_sure')
         self.assertRaises(IOError, doc._load)
-    
+
     def test_file_missing_stat(self):
         doc = document(filename='/this_is_hopefully_missing_for_sure')
         self.assertEqual(doc.stat, (0,)*10)
+
+    def test_repr_new(self):
+        from pida.core import document as document_module
+        doc = document()
+        self.assertEqual(repr(doc), '<New Document %d>'%(document_module.new_file_index-1))
+
+    def test_repr_known(self):
+        doc = document(filename='test')
+        self.assertEqual(repr(doc), "<Document 'test'>")
+        
+    
