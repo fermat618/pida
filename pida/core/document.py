@@ -85,7 +85,7 @@ class Document(object):
         if markup_string is not None:
             self.markup_string = markup_string
 
-        self.__project, self.project_relative_path = self.get_project_relative_path()
+        self.project, self.project_relative_path = self.get_project_relative_path()
         self.clear()
 
     def clear(self):
