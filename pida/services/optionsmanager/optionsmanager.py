@@ -135,6 +135,8 @@ class PidaOptionsView(PidaGladeView):
 
     def on_service_combo__content_changed(self, cmb):
         self.current = svc = self.service_combo.read()
+        if not svc:
+            return # no service was selected
         if not svc.servicename in self._service_pages:
             self._add_service(svc)
         pagenum = self._service_pages[svc.servicename]
