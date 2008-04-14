@@ -192,7 +192,9 @@ class BufferActionsConfig(ActionsConfig):
         )
 
     def on_open_file(self, action):
-        file_name = self.svc.boss.window.open_dlg()
+        project = self.svc.boss.cmd('project', 'get_current_project')
+        current_folder = project.source_directory
+        file_name = self.svc.boss.window.open_dlg(folder=current_folder)
         if file_name:
             self.svc.open_file(file_name)
 
@@ -202,7 +204,8 @@ class BufferActionsConfig(ActionsConfig):
         self.svc.open_file(file_name)
 
     def on_add_file(self, action):
-        file_name = self.svc.boss.window.save_dlg()
+        current_folder = self.svc.boss.cmd('filemanager', 'get_browsed_path')
+        file_name = self.svc.boss.window.save_dlg(folder=current_folder)
         if file_name:
             f = open(file_name, 'w')
             f.close()
