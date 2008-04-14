@@ -2,301 +2,877 @@
 # Copyright (C) 2005-2007 The PIDA Team
 # This file is distributed under the same license as the PIDA package.
 #
-
+#: pida/editors/mooedit/mooedit.py:211 pida/editors/mooedit/mooedit.py:220
+#: pida/editors/mooedit/mooedit.py:238 pida/editors/mooedit/mooedit.py:247
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-05-02 11:59+0200\n"
+"POT-Creation-Date: 2008-04-14 22:07+0200\n"
 "PO-Revision-Date: 2007-05-02 11:59+0200\n"
 "Last-Translator: Mathieu Virbel <tito@bankiz.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../pida/core/projects.py:65
-#, python-format
-msgid "no controller type for %s"
-msgstr "aucun type de controleur pour %s"
+#: pida-plugins/bookmark/bookmark.py:105
+msgid "Bookmarks"
+msgstr ""
 
-#: ../pida/core/projects.py:68
-#, python-format
-msgid "no controller defined for %s"
-msgstr "aucun controleur défini pour %s"
+#: pida-plugins/bookmark/bookmark.py:135
+msgid "Dirs"
+msgstr ""
 
-#: ../pida/core/projects.py:193
-msgid "Working Directory"
+#: pida-plugins/bookmark/bookmark.py:142
+#, fuzzy
+msgid "Files"
+msgstr "Fichier"
+
+#: pida-plugins/bookmark/bookmark.py:198
+msgid "Bookmark Viewer"
+msgstr ""
+
+#: pida-plugins/bookmark/bookmark.py:199
+msgid "Show bookmarks"
+msgstr ""
+
+#: pida-plugins/bookmark/bookmark.py:208 pida-plugins/bookmark/bookmark.py:209
+msgid "Bookmark current file"
+msgstr ""
+
+#: pida-plugins/bookmark/bookmark.py:218 pida-plugins/bookmark/bookmark.py:219
+#, fuzzy
+msgid "Bookmark current directory"
 msgstr "Répertoire de travail"
 
-#: ../pida/core/projects.py:194
-msgid "Environment Variables"
-msgstr "Variables d'environement"
+#: pida-plugins/bookmark/bookmark.py:228 pida-plugins/bookmark/bookmark.py:229
+#: pida-plugins/checklist/checklist.py:204
+#: pida-plugins/checklist/checklist.py:205
+msgid "Delete selected item"
+msgstr ""
 
-#: ../pida/core/servicemanager.py:153
-msgid "No editor found"
-msgstr "Aucun éditeur trouvé"
+#: pida-plugins/bookmark/bookmark.py:238 pida-plugins/bookmark/bookmark.py:248
+msgid "Add as bookmark"
+msgstr ""
 
-#: ../pida/core/service.py:110
+#: pida-plugins/bookmark/bookmark.py:239
+msgid "Add selected directory as bookmark"
+msgstr ""
+
+#: pida-plugins/bookmark/bookmark.py:249
+msgid "Add selected file as bookmark"
+msgstr ""
+
+#: pida-plugins/bookmark/bookmark.py:344
+msgid "(project root)"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:72
+msgid "Check list"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:97
+#: pida-plugins/checklist/checklist.py:110
+msgid "Done"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:98
+#: pida-plugins/checklist/checklist.py:111 pida-plugins/koders/koders.py:87
+#, fuzzy
+msgid "Title"
+msgstr "Fichier"
+
+#: pida-plugins/checklist/checklist.py:100
+#: pida-plugins/checklist/checklist.py:112
+msgid "Priority"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:184
+msgid "Checklist Viewer"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:185
+msgid "Show checklists"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:194
+#: pida-plugins/checklist/checklist.py:195
+msgid "Add something in checklist"
+msgstr ""
+
+#: pida-plugins/checklist/checklist.py:220
+msgid "__edit_this__"
+msgstr ""
+
+#: pida-plugins/filesearch/filesearch.py:42
+#: pida-plugins/filesearch/filesearch.py:228
+#, fuzzy
+msgid "File Search"
+msgstr "Menu Fichier"
+
+#: pida-plugins/filesearch/filesearch.py:55 pida-plugins/python/python.py:181
+msgid "Name"
+msgstr ""
+
+#: pida-plugins/filesearch/filesearch.py:56
+#, fuzzy
+msgid "Path"
+msgstr "Coller"
+
+#: pida-plugins/filesearch/filesearch.py:229
+msgid "Show the File Search"
+msgstr ""
+
+#: pida-plugins/filesearch/filesearch.py:246
+msgid "Don't search in hidden directories"
+msgstr ""
+
+#: pida-plugins/filesearch/filesearch.py:249
+msgid "Excludes hidden directories from search"
+msgstr ""
+
+#: pida-plugins/filesearch/filesearch.py:254
+msgid "Don't search in data directories of version control systems"
+msgstr ""
+
+#: pida-plugins/filesearch/filesearch.py:257
+msgid "Excludes the data directories of version control systems from search"
+msgstr ""
+
+#: pida-plugins/filesearch/filters.py:77
+msgid "Name matches"
+msgstr ""
+
+#: pida-plugins/filesearch/filters.py:88
+#: pida-plugins/filesearch/filters.py:115
+msgid "Invalid Regex"
+msgstr ""
+
+#: pida-plugins/filesearch/filters.py:104
+msgid "Content matches"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:67 pida-plugins/gtags/gtags.py:255
+msgid "Gtags"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:88
+msgid "Pattern : "
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:105
+msgid "Build TAGS database"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:114
+msgid "Symbol"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:116
+msgid "Location"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:118
+msgid "Data"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:146
 #, python-format
-msgid "You must call command %(cmd)s in service %(svc)s with named arguments"
-msgstr "Vous devez appeller la commande %(cmd)s dans le service %(svc)s with named arguments"
+msgid "%d match"
+msgstr ""
 
-#: ../pida/core/application.py:37
+#: pida-plugins/gtags/gtags.py:148
+#, python-format
+msgid "%d matchs"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:178
+msgid "Gtags Viewer"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:179
+msgid "Show the gtags"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:188 pida-plugins/gtags/gtags.py:189
+msgid "Complete current word"
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:249
+msgid "Gtags build..."
+msgstr ""
+
+#: pida-plugins/gtags/gtags.py:256
+msgid "Database build complete"
+msgstr ""
+
+#: pida-plugins/koders/koders.py:78 pida-plugins/rfc/rfc.py:73
+#, fuzzy
+msgid "Filter : "
+msgstr "Fichier"
+
+#: pida-plugins/koders/koders.py:148
+msgid "Koders Viewer"
+msgstr ""
+
+#: pida-plugins/koders/koders.py:149
+msgid "Show Koders search window"
+msgstr ""
+
+#: pida-plugins/library/library.py:62 pida-plugins/library/library.py:318
+msgid "Documentation"
+msgstr ""
+
+#: pida-plugins/library/library.py:115
+msgid "Documentation Library"
+msgstr ""
+
+#: pida-plugins/library/library.py:116
+msgid "Show the documentation library"
+msgstr ""
+
+#: pida-plugins/library/library.py:125 pida-plugins/library/library.py:126
+msgid "Documentation Browser"
+msgstr ""
+
+#: pida-plugins/library/library.py:169
+msgid "untitled"
+msgstr ""
+
+#: pida-plugins/man/man.py:74
+#, fuzzy
+msgid "Man page"
+msgstr "Langage"
+
+#: pida-plugins/man/man.py:76 pida-plugins/rfc/rfc.py:95
+msgid "Description"
+msgstr ""
+
+#: pida-plugins/man/man.py:124
+#, fuzzy
+msgid "Man Viewer"
+msgstr "Vue Pida"
+
+#: pida-plugins/man/man.py:125
+msgid "Show the man"
+msgstr ""
+
+#: pida-plugins/nosetest/nosetest.py:137 pida-plugins/nosetest/nosetest.py:261
+msgid "TestResults"
+msgstr ""
+
+#: pida-plugins/nosetest/nosetest.py:293 pida-plugins/nosetest/nosetest.py:301
+msgid "Python Unit Tester"
+msgstr ""
+
+#: pida-plugins/nosetest/nosetest.py:294
+msgid "Run the python unitTester"
+msgstr ""
+
+#: pida-plugins/nosetest/nosetest.py:302
+msgid "Show the python unitTester"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:172 pida/core/editors.py:81
+msgid "Paste"
+msgstr "Coller"
+
+#: pida-plugins/pastebin/pastebin.py:214
+msgid "Paste Editor"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:245 pida-plugins/pastebin/pastebin.py:391
+msgid "Paste History"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:301 pida-plugins/pastebin/pastebin.py:310
+msgid "ERROR: No paste selected"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:382
+msgid "Upload Text Snippet"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:383
+msgid "Upload a text snippet to a pastebin"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:392
+msgid "Show the paste history viewer"
+msgstr ""
+
+#: pida-plugins/pastebin/pastebin.py:460
+msgid ""
+"An error occured when pasting.\n"
+"Maybe you should try to use another pastebin?"
+msgstr ""
+
+#: pida-plugins/python/python.py:62
+msgid "Python Errors"
+msgstr ""
+
+#: pida-plugins/python/python.py:76 pida-plugins/python/python.py:180
+msgid "Line Number"
+msgstr ""
+
+#: pida-plugins/python/python.py:77
+msgid "Message"
+msgstr ""
+
+#: pida-plugins/python/python.py:78 pida-plugins/python/python.py:182
+msgid "Type"
+msgstr ""
+
+#: pida-plugins/python/python.py:166
+#, fuzzy
+msgid "Source"
+msgstr "Trier"
+
+#: pida-plugins/python/python.py:245
+msgid "Python Executable"
+msgstr ""
+
+#: pida-plugins/python/python.py:256
+msgid "Python Controller"
+msgstr ""
+
+#: pida-plugins/python/python.py:259
+msgid "File to execute"
+msgstr ""
+
+#: pida-plugins/python/python.py:260
+msgid "Args to execute"
+msgstr ""
+
+#: pida-plugins/python/python.py:267
+msgid "Controller has no \"execute_file\" set"
+msgstr ""
+
+#: pida-plugins/python/python.py:282
+msgid "Distutils Controller"
+msgstr ""
+
+#: pida-plugins/python/python.py:285
+msgid "Distutils command"
+msgstr ""
+
+#: pida-plugins/python/python.py:286
+msgid "Args for command"
+msgstr ""
+
+#: pida-plugins/python/python.py:292
+msgid "Controller has no \"command\" set"
+msgstr ""
+
+#: pida-plugins/python/python.py:322
+msgid "Python Executable for executing"
+msgstr ""
+
+#: pida-plugins/python/python.py:325
+msgid "The Python executable when executing a module"
+msgstr ""
+
+#: pida-plugins/python/python.py:344
+msgid "Execute Python Module"
+msgstr ""
+
+#: pida-plugins/python/python.py:345
+msgid "Execute the current Python module in a shell"
+msgstr ""
+
+#: pida-plugins/python/python.py:353
+msgid "Python Error Viewer"
+msgstr ""
+
+#: pida-plugins/python/python.py:354
+msgid "Show the python error browser"
+msgstr ""
+
+#: pida-plugins/python/python.py:362
+msgid "Python Source Viewer"
+msgstr ""
+
+#: pida-plugins/python/python.py:363
+msgid "Show the python source browser"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:93
+msgid "Number"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:104 pida-plugins/rfc/rfc.py:162
+#: pida-plugins/rfc/rfc.py:163
+msgid "Download RFC Index"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:142
+msgid "Rfc Viewer"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:143
+msgid "Show the rfc"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:152 pida-plugins/rfc/rfc.py:153
+msgid "Refresh RFC Index"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:220
+msgid "RFC"
+msgstr ""
+
+#: pida-plugins/rfc/rfc.py:220
+msgid "Index download completed"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:66 pida-plugins/snippets/snippets.py:484
+msgid "Snippets manager"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:73 pida-plugins/snippets/snippets.py:77
+#: pida-plugins/snippets/snippets.py:536 pida-plugins/snippets/snippets.py:554
+#: pida-plugins/snippets/snippets.py:559 pida-plugins/snippets/snippets.py:585
+msgid "Snippets"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:97
+#, python-format
+msgid ""
+"Title: <b>%(title)s</b>\n"
+"Shortcut: <b>%(shortcut)s</b>"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:474
+msgid "Insert snippet from word"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:475
+msgid "Insert a snippet with the current word"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:485
+msgid "Show the snippets"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:537 pida-plugins/snippets/snippets.py:555
+msgid "Fetching available snippets"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:560
+msgid "Installed Snippet"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:586
+#, python-format
+msgid "Publish Snippet: %(msg)s"
+msgstr ""
+
+#: pida-plugins/snippets/snippets.py:593
+#, fuzzy
+msgid "Snippet does not exist"
+msgstr "La destination n'existe pas: "
+
+#: pida-plugins/todo/todo.py:52
+msgid "TODO"
+msgstr ""
+
+#: pida-plugins/todo/todo.py:89
+#, fuzzy
+msgid "Todo Viewer"
+msgstr "Vue Pida"
+
+#: pida-plugins/todo/todo.py:90
+msgid "Show the Todo Viewer"
+msgstr ""
+
+#: pida-plugins/trac/trac.py:53
+msgid "Trac"
+msgstr ""
+
+#: pida-plugins/trac/trac.py:97
+msgid "An error occured when fetching trac tickets."
+msgstr ""
+
+#: pida-plugins/trac/trac.py:128
+#, fuzzy
+msgid "Trac Viewer"
+msgstr "Vue Pida"
+
+#: pida-plugins/trac/trac.py:129
+msgid "Show the Trac Viewer"
+msgstr ""
+
+#: pida/core/application.py:42
 msgid "Exiting. (this is fatal)"
 msgstr "Quitte. (c'est une erreur fatale)"
 
-#: ../pida/core/application.py:46
+#: pida/core/application.py:52
 #, python-format
 msgid "PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s"
-msgstr "PIDA requière PyGTK >= 2.8. Vous n'avez que la version %(major)s.%(minor)s"
+msgstr ""
+"PIDA requière PyGTK >= 2.8. Vous n'avez que la version %(major)s.%(minor)s"
 
-#: ../pida/core/application.py:49
+#: pida/core/application.py:55
 msgid "PIDA requires Python GTK bindings. They were not found."
 msgstr "PIDA requière les bindings Python GTK. Ils n'ont pas été trouvés."
 
-#: ../pida/core/application.py:56
+#: pida/core/application.py:62
 msgid "Fatal error, cannot start PIDA"
 msgstr "Erreur fatale, impossible de démarrer PIDA"
 
-#: ../pida/core/application.py:61
+#: pida/core/application.py:67
 msgid "Kiwi needs to be installed to run PIDA"
 msgstr "Kiwi est requis pour démarrer PIDA"
 
-#: ../pida/core/application.py:66
+#: pida/core/application.py:72
 #, python-format
 msgid "Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found."
-msgstr "Python 2.4 est requis pour démarrer PIDA. Seul la version %(major)s.%(minor)s a été trouvée."
+msgstr ""
+"Python 2.4 est requis pour démarrer PIDA. Seul la version %(major)s.%(minor)"
+"s a été trouvée."
 
-#: ../pida/core/application.py:76
+#: pida/core/application.py:82
 msgid "The pida package could not be found."
 msgstr "Le paquet PIDA n'a pas été trouvé."
 
-#: ../pida/core/application.py:80
+#: pida/core/application.py:86
 #, python-format
 msgid "PIDA, version %s"
 msgstr "PIDA, version %s"
 
-#: ../pida/core/environment.py:44
-msgid "Print version information and exit."
-msgstr "Affiche les informations et quitte"
-
-#: ../pida/core/environment.py:46
-msgid "Run PIDA with added debug information."
-msgstr "Démarre PIDA avec des informations de debuggage"
-
-#: ../pida/core/boss.py:35
+#: pida/core/boss.py:59
 msgid "Are you sure you want to quit PIDA ?"
 msgstr "Voulez-vous quitter PIDA ?"
 
-#: ../pida/core/signalhandler.py:16
-msgid "PIDA stopped by SIGTERM"
-msgstr "PIDA a été stoppé par le signal SIGTERM"
-
-#: ../pida/core/document.py:65
-msgid "Target does not exist: "
-msgstr "La destination n'existe pas: "
-
-#: ../pida/core/document.py:68
-msgid "Base is not a directory or does not exist: "
-msgstr "Base est un répertoire ou n'existe pas: "
-
-#: ../pida/core/document.py:76
-#, python-format
-msgid ""
-"Target is on a different drive to base. Target: %(target)s, base: %(base)s"
-msgstr "Target est sur un chemin différent de base. Target: %(target)s, base: %(base)s"
-
-#: ../pida/core/document.py:191
+#: pida/core/document.py:129
 #, python-format
 msgid "failed to open file %s"
 msgstr "erreur à l'ouverture du fichier %s"
 
-#: ../pida/editors/vim/vim.py:52
+#: pida/core/editors.py:41
 msgid "Undo"
 msgstr "Annuler"
 
-#: ../pida/editors/vim/vim.py:53
+#: pida/core/editors.py:42
 msgid "Undo the last editor action"
 msgstr "Annule la dernière action de l'éditeur"
 
-#: ../pida/editors/vim/vim.py:61
+#: pida/core/editors.py:51
 msgid "Redo"
 msgstr "Refaire"
 
-#: ../pida/editors/vim/vim.py:62
+#: pida/core/editors.py:52
 msgid "Redo the last editor action"
 msgstr "Refait la dernière action de l'éditeur"
 
-#: ../pida/editors/vim/vim.py:70
+#: pida/core/editors.py:61
 msgid "Cut"
 msgstr "Couper"
 
-#: ../pida/editors/vim/vim.py:71
+#: pida/core/editors.py:62
 msgid "Cut the selection in the editor"
 msgstr "Couper la sélection de l'éditeur"
 
-#: ../pida/editors/vim/vim.py:79
+#: pida/core/editors.py:71
 msgid "Copy"
 msgstr "Copier"
 
-#: ../pida/editors/vim/vim.py:80
+#: pida/core/editors.py:72
 msgid "Copy the selection in the editor"
 msgstr "Copier la sélection de l'éditeur"
 
-#: ../pida/editors/vim/vim.py:88
-msgid "Paste"
-msgstr "Coller"
-
-#: ../pida/editors/vim/vim.py:89
+#: pida/core/editors.py:82
 msgid "Paste the clipboard in the editor"
 msgstr "Coller le presse-papier dans l'éditeur"
 
-#: ../pida/editors/vim/vim.py:97 ../pida/ui/terminal.py:285
+#: pida/core/editors.py:91 pida/ui/terminal.py:300
 msgid "Save"
 msgstr "Sauvegarder"
 
-#: ../pida/editors/vim/vim.py:98
+#: pida/core/editors.py:92
 msgid "Save the current document"
 msgstr "Sauvegarder le document courant"
 
-#: ../pida/editors/vim/vim.py:352
+#: pida/core/editors.py:101
+msgid "Focus Editor"
+msgstr ""
+
+#: pida/core/editors.py:102
+msgid "Focus the editor component window"
+msgstr ""
+
+#: pida/core/environment.py:47
+msgid "Print version information and exit."
+msgstr "Affiche les informations et quitte"
+
+#: pida/core/environment.py:49
+msgid "Run PIDA with added debug information."
+msgstr "Démarre PIDA avec des informations de debuggage"
+
+#: pida/core/environment.py:51
+#, fuzzy
+msgid "Run PIDA with tracing."
+msgstr "PIDA démarre..."
+
+#: pida/core/environment.py:53
+msgid "Run the PIDA first run wizard."
+msgstr ""
+
+#: pida/core/projects.py:70
+#, python-format
+msgid "no controller type for %s"
+msgstr "aucun type de controleur pour %s"
+
+#: pida/core/projects.py:73
+#, python-format
+msgid "no controller defined for %s"
+msgstr "aucun controleur défini pour %s"
+
+#: pida/core/projects.py:220
+msgid "Working Directory"
+msgstr "Répertoire de travail"
+
+#: pida/core/projects.py:221
+msgid "Environment Variables"
+msgstr "Variables d'environement"
+
+#: pida/core/service.py:122
+#, python-format
+msgid "You must call command %(cmd)s in service %(svc)s with named arguments"
+msgstr ""
+"Vous devez appeller la commande %(cmd)s dans le service %(svc)s with named "
+"arguments"
+
+#: pida/core/servicemanager.py:253
+msgid "No editor found"
+msgstr "Aucun éditeur trouvé"
+
+#: pida/core/signalhandler.py:17
+msgid "PIDA stopped by SIGTERM"
+msgstr "PIDA a été stoppé par le signal SIGTERM"
+
+#: pida/core/signalhandler.py:21
+#, fuzzy
+msgid "PIDA stopped by SIGINT"
+msgstr "PIDA a été stoppé par le signal SIGTERM"
+
+#: pida/editors/mooedit/mooedit.py:68
+msgid "Mooedit Preferences"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:184
+#, fuzzy
+msgid "Save as"
+msgstr "Sauvegarder"
+
+#: pida/editors/mooedit/mooedit.py:185
+#, fuzzy
+msgid "Save file as"
+msgstr "Sauvegarder"
+
+#: pida/editors/mooedit/mooedit.py:193
+msgid "Edit Mooedit Preferences"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:194
+msgid "Show the editors preferences dialog"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:201
+msgid "Find in buffer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:202
+msgid "Find"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:210
+msgid "Find next in buffer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:219
+msgid "Find previous in buffer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:228
+msgid "Find and replace"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:229
+msgid "Find & replace"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:237
+msgid "Find current word down"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:246
+msgid "Find current word up"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:255 pida/editors/mooedit/mooedit.py:256
+msgid "Goto line"
+msgstr ""
+
+#: pida/editors/vim/vim.py:146
+msgid ""
+"There was a problem running the \"gvim\" executable. This is usually because "
+"it is not installed. Please check that you can run \"gvim\" from the command "
+"line."
+msgstr ""
+
+#: pida/editors/vim/vim.py:255
 msgid "Tried to remove non-existent sign"
 msgstr "Tentative de suppression d'un signe qui n'existe pas"
 
-#: ../pida/ui/uimanager.py:13
-msgid "File"
-msgstr "Fichier"
-
-#: ../pida/ui/uimanager.py:13
-msgid "File Menu"
-msgstr "Menu Fichier"
-
-#: ../pida/ui/uimanager.py:14
-msgid "Edit"
-msgstr "Edition"
-
-#: ../pida/ui/uimanager.py:14
-msgid "Edit Menu"
-msgstr "Menu d'édition"
-
-#: ../pida/ui/uimanager.py:15
-msgid "Project"
-msgstr "Projet"
-
-#: ../pida/ui/uimanager.py:15
-msgid "Project Menu"
-msgstr "Menu du projet"
-
-#: ../pida/ui/uimanager.py:16
-msgid "Language"
-msgstr "Langage"
-
-#: ../pida/ui/uimanager.py:16
-msgid "Language Menu"
-msgstr "Menu langage"
-
-#: ../pida/ui/uimanager.py:17
-msgid "Debug"
-msgstr "Debug"
-
-#: ../pida/ui/uimanager.py:17
-msgid "Debug Menu"
-msgstr "Menu debug"
-
-#: ../pida/ui/uimanager.py:18
-msgid "Tools"
-msgstr "Outils"
-
-#: ../pida/ui/uimanager.py:18
-msgid "Tools Menu"
-msgstr "Menu des outels"
-
-#: ../pida/ui/uimanager.py:19
-msgid "Debug Pida"
-msgstr "Debugger Pida"
-
-#: ../pida/ui/uimanager.py:19
-msgid "Debug Pida Menu"
-msgstr "Menu du debug Pida"
-
-#: ../pida/ui/uimanager.py:20
-msgid "View"
-msgstr "Fenêtres"
-
-#: ../pida/ui/uimanager.py:20
-msgid "View Menu"
-msgstr "Menu des fenêtres"
-
-#: ../pida/ui/uimanager.py:21
-msgid "Help"
-msgstr "Aide"
-
-#: ../pida/ui/uimanager.py:21
-msgid "Help Menu"
-msgstr "Menu d'aide"
-
-#: ../pida/ui/splash.py:40
-msgid "PIDA is starting..."
-msgstr "PIDA démarre..."
-
-#: ../pida/ui/splash.py:45
-msgid "and it <b>loves</b> you!"
-msgstr "et il vous <b>aime</b>!"
-
-#: ../pida/ui/terminal.py:180
-#, python-format
-msgid "No match named \"%s\" was found"
-msgstr "Aucune recherche nommé \"%s\" n'a été trouvée"
-
-#: ../pida/ui/terminal.py:284
-msgid "Open"
-msgstr "Ouvrir"
-
-#: ../pida/ui/terminal.py:284
-msgid "Open this file"
-msgstr "Ouvrir ce fichier"
-
-#: ../pida/ui/terminal.py:285
-msgid "Save This File"
-msgstr "Sauvegarder"
-
-#: ../pida/ui/views.py:23
-msgid "Untitled Pida View"
-msgstr "Nouvelle vue Pida"
-
-#: ../pida/ui/views.py:85
-msgid "Pida View"
-msgstr "Vue Pida"
-
-#: ../pida/ui/books.py:29
+#: pida/ui/books.py:29
 msgid "Must at least define a notebook name"
 msgstr "Il faut définir au moins un nom à l'onglet"
 
-#: ../pida/ui/books.py:32
-msgid "Must at leaste define a Name"
+#: pida/ui/books.py:32
+#, fuzzy
+msgid "Must at least define a Name"
 msgstr "Il faut définir au moins un Nom"
 
-#: ../pida/ui/books.py:135
+#: pida/ui/books.py:135
 #, python-format
 msgid "No Notebook attests to having that name %s"
 msgstr "Aucun onglet n'a de nom %s"
 
-#: ../pida/ui/books.py:181
+#: pida/ui/books.py:181
 msgid "This view is already in the manager"
 msgstr "Cette vue est déja affichée"
 
-#: ../pida/ui/books.py:226
+#: pida/ui/books.py:226
 msgid "View is not in any Notebook"
 msgstr "La vue n'est dans aucun onglet"
 
-#: ../pida/ui/objectlist.py:57
+#: pida/ui/objectlist.py:57
 msgid "Sort"
 msgstr "Trier"
 
-#: ../pida/ui/widgets.py:121
+#: pida/ui/splash.py:40
+msgid "PIDA is starting..."
+msgstr "PIDA démarre..."
+
+#: pida/ui/splash.py:45
+msgid "and it <b>loves</b> you!"
+msgstr "et il vous <b>aime</b>!"
+
+#: pida/ui/terminal.py:190
+#, python-format
+msgid "No match named \"%s\" was found"
+msgstr "Aucune recherche nommé \"%s\" n'a été trouvée"
+
+#: pida/ui/terminal.py:299
+msgid "Open"
+msgstr "Ouvrir"
+
+#: pida/ui/terminal.py:299
+msgid "Open this file"
+msgstr "Ouvrir ce fichier"
+
+#: pida/ui/terminal.py:300
+msgid "Save This File"
+msgstr "Sauvegarder"
+
+#: pida/ui/uimanager.py:13
+msgid "File"
+msgstr "Fichier"
+
+#: pida/ui/uimanager.py:13
+msgid "File Menu"
+msgstr "Menu Fichier"
+
+#: pida/ui/uimanager.py:14
+msgid "Edit"
+msgstr "Edition"
+
+#: pida/ui/uimanager.py:14
+msgid "Edit Menu"
+msgstr "Menu d'édition"
+
+#: pida/ui/uimanager.py:15
+msgid "Project"
+msgstr "Projet"
+
+#: pida/ui/uimanager.py:15
+msgid "Project Menu"
+msgstr "Menu du projet"
+
+#: pida/ui/uimanager.py:16
+msgid "Language"
+msgstr "Langage"
+
+#: pida/ui/uimanager.py:16
+msgid "Language Menu"
+msgstr "Menu langage"
+
+#: pida/ui/uimanager.py:17
+msgid "Debug"
+msgstr "Debug"
+
+#: pida/ui/uimanager.py:17
+msgid "Debug Menu"
+msgstr "Menu debug"
+
+#: pida/ui/uimanager.py:18
+msgid "Tools"
+msgstr "Outils"
+
+#: pida/ui/uimanager.py:18
+msgid "Tools Menu"
+msgstr "Menu des outels"
+
+#: pida/ui/uimanager.py:19
+msgid "Debug Pida"
+msgstr "Debugger Pida"
+
+#: pida/ui/uimanager.py:19
+msgid "Debug Pida Menu"
+msgstr "Menu du debug Pida"
+
+#: pida/ui/uimanager.py:20
+msgid "View"
+msgstr "Fenêtres"
+
+#: pida/ui/uimanager.py:20
+msgid "View Menu"
+msgstr "Menu des fenêtres"
+
+#: pida/ui/uimanager.py:21
+msgid "Help"
+msgstr "Aide"
+
+#: pida/ui/uimanager.py:21
+msgid "Help Menu"
+msgstr "Menu d'aide"
+
+#: pida/ui/views.py:22
+msgid "Untitled Pida View"
+msgstr "Nouvelle vue Pida"
+
+#: pida/ui/views.py:84
+msgid "Pida View"
+msgstr "Vue Pida"
+
+#: pida/ui/views.py:120
+msgid "Attempted to set a pane label on a view which is not in a pane"
+msgstr ""
+
+#: pida/ui/widgets.py:121
 msgid "Select File"
 msgstr "Sélectionnez un fichier"
 
-#: ../pida/ui/window.py:62
+#: pida/ui/window.py:62
 msgid "PIDA Loves You!"
 msgstr "PIDA vous aime !"
+
+#~ msgid "Base is not a directory or does not exist: "
+#~ msgstr "Base est un répertoire ou n'existe pas: "
+
+#~ msgid ""
+#~ "Target is on a different drive to base. Target: %(target)s, base: %(base)s"
+#~ msgstr ""
+#~ "Target est sur un chemin différent de base. Target: %(target)s, base: %"
+#~ "(base)s"

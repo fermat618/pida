@@ -29,7 +29,7 @@ class BaseBookConfig(object):
         raise NotImplementedError(_('Must at least define a notebook name'))
 
     def get_name(self):
-        raise NotImplementedError(_('Must at leaste define a Name'))
+        raise NotImplementedError(_('Must at least define a Name'))
 
     def create_tab_label(self, icon, text):
         if None in [icon, text]:
