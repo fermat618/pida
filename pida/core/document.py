@@ -116,14 +116,17 @@ class Document(object):
             stream = codecs.EncodedFile(stream, self._encoding)
             self._str = stream.read()
             self._lines = self._str.splitlines()
-        except:
+        except IOError:
             if stream is not None:
                 stream.close()
-            # When there's a problem set the encoding to None and the rest too
+
+            # set the encoding to None and the rest too empty
             self.clear()
-            # Also warn the log about it
+            self._str = ''
+            self._lines = []
+            self._encoding = 'none'
+
             self.boss.log.warn(_('failed to open file %s'), self.filename)
-            raise
 
 
     @property
