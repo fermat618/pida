@@ -33,6 +33,8 @@ import logging
 import os
 
 # PIDA Imports
+from pida.core.environment import get_data_path
+
 from pida.ui.views import PidaView
 
 from pida.core.log import build_logger
@@ -40,7 +42,9 @@ from pida.core.editors import EditorService, _
 
 # Emacs specific
 from pida.utils.emacs.emacsembed import EmacsEmbedWidget
-from pida.utils.emacs.emacscom import EmacsClient, EmacsServer, EMACS_SCRIPT
+from pida.utils.emacs.emacscom import EmacsClient, EmacsServer
+from pida.utils.emacs import emacscom
+
 
 
 class EmacsView(PidaView):
@@ -55,8 +59,8 @@ class EmacsView(PidaView):
         self._emacs = EmacsEmbedWidget(
             'emacs',
             self._script_path,
-            ['-eval', '(setq server-name "' + self._instance_id + '")', '-eval',
-             '(setq pida-connection-port ' + str(self._listen_port) + ')']
+            ['-eval', '(setq server-name "' + self._instance_id + '")', 
+             '-eval', '(pida-connect ' + str(self._listen_port) + ')']
         )
         self.add_main_widget(self._emacs)
 
@@ -156,15 +160,15 @@ class Emacs(EditorService):
     """ 
 
     def _create_initscript(self):
-        script_path = os.path.join(
-            self.boss.get_pida_home(), 'pida_emacs_init.el')
-        f = open(script_path, 'w')
-        f.write(EMACS_SCRIPT)
-        f.close()
-        return script_path
+        # This method does not create the script anymore but only
+        # returns the path of the new script.
+        return get_data_path('pida_emacs_init.el')
 
     def emit_editor_started(self):
         self.boss.get_service('editor').emit('started')
+        # At this point calling (pida-frame-setup nil) should work, so let's
+        # do it.
+        self._client.frame_setup()
 
     def pre_start(self):
         """Start the editor"""
