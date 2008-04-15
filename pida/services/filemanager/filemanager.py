@@ -607,6 +607,11 @@ class FileManagerActionsConfig(ActionsConfig):
             ):
                 self.svc.get_view().remove_path(current)
 
+                print '** refresh?', self.svc.boss.get_service('filewatcher').started
+                if not self.svc.boss.get_service('filewatcher').started:
+                    print '** do refresh!'
+                    self.svc.get_view().update_to_path()
+
 
 
 # Service class
