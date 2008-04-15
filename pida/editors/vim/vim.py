@@ -275,6 +275,8 @@ class Vim(EditorService):
     def set_path(self, path):
         return self._com.set_path(self.server, path)
 
+    def stop(self):
+        self._com.quit(self.server)
 # Required Service attribute for service loading
 Service = Vim
 
