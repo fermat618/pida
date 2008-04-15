@@ -21,89 +21,124 @@
 #SOFTWARE.
 
 # stdlib
-import sys
 import subprocess
-import re
 
-from cgi import escape
-
+from xml.etree.ElementTree import iterparse
 # gtk
 import gtk
 
 # kiwi
-from kiwi.ui.objectlist import ObjectList, Column
+from kiwi.ui.objectlist import Column
 
 # PIDA Imports
 
 # core
 from pida.core.service import Service
-from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
-from pida.core.options import OptionsConfig, OTypeString
-from pida.core.features import FeaturesConfig
-from pida.core.projects import ProjectController,  ProjectKeyDefinition
-from pida.core.interfaces import IProjectController
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
-from pida.ui.htmltextview import HtmlTextView
-
 
 # utils
-from pida.utils import pyflakes
-from pida.utils import pythonparser
-from pida.utils.gthreads import AsyncTask, GeneratorTask
+from pida.utils.gthreads import GeneratorTask
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('nosetest')
 _ = locale.gettext
 
-testcase_re = re.compile(r'(?P<name>\w+) \((?P<case>[\w\.]+)\)')
 
-### Pyflakes
-class TestResult:
+class TraceItem(object):
+    def __init__(self, **kw):
+        for name in 'text file function line'.split():
+            setattr(self, name, kw[name])
+
+    def __str__(self):
+        return 'File %r, line %s, in %s'%(self.file, self.line, self.function)
+
+    @property
+    def markup(self):
+        return '  %s'%self
+
+
+class Trace(object):
+    def __init__(self, type, args):
+        self.type = type
+        self.args = args
+        self.items = []
+
+    @staticmethod
+    def from_element(element):
+        cause = element.find('cause')
+        if cause is None:
+            return
+        type = cause.attrib['type']
+        args = cause.findtext('')
+
+        #XXX: unescape hack, find a better one in the stdlib
+        for f, t in zip('&lt; &gt; &quot; &apos; &amp;'.split(), '<>"\'&'):
+            args = args.replace(f, t)
+        args = args.strip()
+
+        trace = Trace(type, args)
+        trace.items.extend(TraceItem(**x.attrib) 
+                                  for x in element.findall('frame'))
+
+        # XXX: captured output support
+        return trace
+    
+    @property
+    def markup(self):
+        return '%s: %s'%(self.type, self.args)
+
+    def __str__(self):
+        lines = ['Traceback:']
+        lines.extend(x.markup for x in self.items)
+        lines.append(self.markup)
+        return '\n'.join(lines)
+
+class TestResult(object) : 
     status_map= { # 1 is for sucess, 2 for fail
                   # used for fast tree updates
-            'ok': ('gtk-apply', 1),
-            'fail': ('gtk-no', 2),
+            'success': ('gtk-apply', 1),
+            'failure': ('gtk-no', 2),
             'error': ('gtk-cancel', 2),
             }
 
-    output = ''
     parent = None
-    def __init__(self, line):
-        self.full_name, status = line.rsplit(' ... ', 2)
-        self.name = self.parse_test_name()
+    trace = None
+
+    def __init__(self, full_name, status, trace, capture) :
+        self.full_name = full_name
+        self.trace = trace
+        self.capture = capture
+        self.name, self.group_names = self.parse_test_name(full_name)
         status = status.lower()
         self.status, self.state = self.status_map[status]
-    
-    def parse_test_name(self):
-        match = testcase_re.match(self.full_name)
-        if match:
-            name = match.group('name')
-            self.testgroup_names = tuple(match.group('case').split('.'))
-            return name
+
+    def parse_test_name (self, name):
+        if '(' in name:
+            group, name = name.split('(', 2)
+            return name[:-1], tuple(group.split('.'))
         else:
-            dt = 'Doctest: '
-            if self.full_name.startswith(dt):
-                self.full_name = self.full_name[len(dt):]
-                pre = ('Doctest',)
-            else:
-                pre = ()
+            groups = tuple(name.split('.'))
+            return groups[-1], groups[:-1]
 
-            s = self.full_name.split('.')
-            self.testgroup_names = pre + tuple(s[:-1])
-            
-            return s[-1]
-
-    def parents(self):
+    def parents(self): 
         p = self.parent
+
         while p.parent:
             yield p
             p = p.parent
 
-class TestResultGroup:
+    @property
+    def output(self):
+        if self.trace:
+            return str(self.trace)
+        else:
+            return 'Success'
+
+class TestResultGroup(object):
     state_map = {
             0: 'gtk-directory',
             1: 'gtk-ok',
@@ -111,14 +146,14 @@ class TestResultGroup:
             3: 'gtk-dialog-question',
             }
 
-    def __init__(self, names, parent):
+    def __init__(self,  names, parent):
         self.name = names and names[-1] or None
         self.names = names
         self.parent = parent
         self.state = 0
         self.status = 'gtk-directory'
 
-    def add_child(self, child):
+    def add_child(self,  child):
         res = child.state | self.state
         if res != self.state:
             self.state = res
@@ -136,15 +171,16 @@ class TestResultBrowser(PidaGladeView):
     icon_name = 'python-icon'
     label_text = _('TestResults')
 
-    def __init__(self,*k,**kw):
+    def __init__(self,* k,**kw):
         PidaGladeView.__init__(self,*k,**kw)
         self.items = {}
         self.tree = {(): TestResultGroup(None, None)}
+        self.gt = None
 
     def create_ui(self):
         self.source_tree.set_columns([
-                Column('status', use_stock=True),
-                Column('name', column='status'),
+                Column('status', use_stock=True, justify=gtk.JUSTIFY_LEFT),
+                Column('name', column='status',),
             ])
         self.source_tree.set_headers_visible(False)
 
@@ -170,9 +206,9 @@ class TestResultBrowser(PidaGladeView):
                 a(parent, group)
         return group
 
-    def add_test_tree(self, test):
-        names = test.testgroup_names
-        group = self.get_or_create_testgroup(tuple(names))
+    def add_test_tree(self , test):
+        names = test.group_names
+        group = self.get_or_create_testgroup(names)
         test.parent = group
         self.source_tree.append(group,test)
 
@@ -188,26 +224,35 @@ class TestResultBrowser(PidaGladeView):
 
 
 
-    def add_test(self, test):
-        test = TestResult(test)
+    def test_add(self, element):
+        attr = element.attrib
+        name = attr['id']
+        status = attr['status']
+
+        trace = None
+        capture = None
+
+        test = TestResult(name, status, trace, capture) #XXX add traces
+        
+        trace = Trace.from_element(element)
+        if trace:
+            test.trace = trace
+
         self.items[test.full_name] = test
         self.add_test_tree(test)
 
-    def append_test(self, name, output=None):
-        if not output:
-            self.add_test(name)
-        else:
-            self.items[name].output = output
-
     def run_tests(self):
+        if self.gt:
+            self.svc.log_info('tried to start nosetests twice')
+            return
+
         self.clear_items()
-        gt = GeneratorTask(
-                self.test_task,
-                self.append_test,
-                self.source_tree.refresh()
-                )
+        gt = GeneratorTask(self.test_task, self.test_add, self.test_done)
         gt.start()
         self.gt = gt
+
+    def test_done(self):
+        self.gt = None
 
     def test_task(self):
         """
@@ -218,49 +263,27 @@ class TestResultBrowser(PidaGladeView):
         project = self.svc.boss.cmd('project','get_current_project')
         src = project.source_directory
         proc = subprocess.Popen(
-                ['nosetests','-v'],
+                ['nosetests','--xml'],
                 cwd=src,
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 )
-        for line in proc.stderr:
-            line = line.rstrip()
-            if not line:
-                break
-            yield line
-        next_test = '='*70+'\n'
-        next_block = '-'*70+'\n'
-        name = None
-        output = []
-        f = proc.stderr
 
-        for line in f:
-            if line == '='*70+'\n':
-                if output:
-                    out = ''.join(output)
-                    yield name, out
-                    output = []
-                name = f.next().rstrip()
-                name = name[name.find(':')+2:]
-
-                while f.next() != next_block: pass
-                continue
-
-            output.append(line)
-
-
+        for event, element in iterparse(proc.stdout):
+            if element.tag == 'test':
+                yield element
 
     def on_source_tree__double_click(self, tv, item):
             self.svc.show_result(item)
 
 class TestOutputView(PidaView):
-    
+
     locale = locale
     icon_name = 'python-icon'
     label_text = _('TestResults')
-    
-    
+
+
     def create_ui(self):
         hb = gtk.HBox()
         self.add_main_widget(hb)
@@ -268,24 +291,22 @@ class TestOutputView(PidaView):
         sb.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         sb.set_shadow_type(gtk.SHADOW_IN)
         sb.set_border_width(3)
-        self._html = HtmlTextView()
-        self._html.set_left_margin(6)
-        self._html.set_right_margin(6)
-        sb.add(self._html)
+        self._trace = gtk.TextView()
+        self._trace.set_left_margin(6)
+        self._trace.set_right_margin(6)
+        sb.add(self._trace)
         hb.pack_start(sb)
         hb.show_all()
 
     def set_result(self, result):
-        data = '<pre>%s</pre>'%escape(result.output)
-        self._html.clear_html()
-        self._html.display_html(data)
+        self._trace.get_buffer().set_text(result.output)
 
     def can_be_closed(self):
         self.svc.output_visible = False
         return True
 
 class PythonActionsConfig(ActionsConfig):
-    
+
     def create_actions(self):
         self.create_action(
             'test_python',
@@ -301,10 +322,10 @@ class PythonActionsConfig(ActionsConfig):
             _('Python Unit Tester'),
             _('Show the python unitTester'),
             'none',
-            self.on_show_results,
+            self.on_toggle_results,
         )
 
-    def on_show_results(self, action):
+    def on_toggle_results(self, action):
         if action.get_active():
             self.svc.show_results()
         else:
@@ -331,25 +352,24 @@ class PythonTestResults(Service):
 
 
     def show_results(self):
-        self.boss.cmd('window', 'add_view',
-            paned='Plugin', view=self._tests.get_view())
+        self.boss.cmd('window', 'add_view', 
+                paned='Plugin', view=self._tests)
 
     def hide_results(self):
-        self.boss.cmd('window', 'remove_view',
-            view=self._tests.get_view())
+        self.boss.cmd('window', 'remove_view', view=self._tests)
 
     def show_result(self, result):
         self._view.set_result(result)
         if not self.output_visible:
-            self.boss.cmd('window', 'add_view',
-                paned='Terminal', view=self._view.get_view())
+            self.boss.cmd('window', 'add_view', 
+                    paned='Terminal', view=self._view)
             self.output_visible = True
-
-
 
     def stop(self):
         if self.get_action('show_test_python').get_active():
             self.hide_results()
+        if self.output_visible:
+            self.boss.cmd('window', 'remove_view', view =self._view)
 
     def run_tests(self):
         self._tests.run_tests()

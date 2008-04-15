@@ -20,7 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import os, re, sre_constants, cgi
+import os, re, cgi
 import gtk, gobject
 
 from glob import fnmatch
@@ -161,7 +161,7 @@ class GrepperView(PidaGladeView):
     def on_matches_list__row_activated(self, rowitem, grepper_item):
         self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path)
         self.svc.boss.editor.cmd('goto_line',
-                                 line=grepper_item.linenumber + 1)
+                                 line=grepper_item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
     def append_to_matches_list(self, grepper_item):
@@ -224,7 +224,7 @@ class GrepperView(PidaGladeView):
 
         try:
             regex = re.compile(pattern)
-        except sre_constants.error, e:
+        except Exception, e:
             # More verbose error dialog
             self.svc.boss.get_window().error_dlg(
                 _('Improper regular expression "%s"') % pattern,
@@ -386,9 +386,12 @@ class Grepper(Service):
                 if self.BINARY_RE.search(line):
                     break
 
+                # enumerate is 0 based, line numbers are 1 based
+                linenumber = linenumber + 1
+
                 line_matches = regex.findall(line)
 
-                if len(line_matches):
+                if line_matches:
                     self._result_count += 1
                     yield GrepperItem(filename, linenumber, line, line_matches)
         except IOError:
