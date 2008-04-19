@@ -31,13 +31,7 @@ import gtk
 # pida core import(s)
 from pida.core.base import BaseConfig
 from pida.core.options import OptionItem, manager, OTypeString
-
-(
-TYPE_RADIO,
-TYPE_TOGGLE,
-TYPE_NORMAL,
-TYPE_MENUTOOL,
-) = range(4)
+import warnings
 
 
 
@@ -54,12 +48,10 @@ class PidaMenuToolAction(gtk.Action):
         self.set_tool_item_type(gtk.MenuToolButton)
 
 
-_ACTIONS = {
-    TYPE_NORMAL: gtk.Action,
-    TYPE_TOGGLE: gtk.ToggleAction,
-    TYPE_RADIO: gtk.RadioAction,
-    TYPE_MENUTOOL: PidaMenuToolAction,
-}
+TYPE_NORMAL = gtk.Action
+TYPE_TOGGLE = gtk.ToggleAction
+TYPE_RADIO = gtk.RadioAction
+TYPE_MENUTOOL = PidaMenuToolAction
 
 
 accelerator_group = gtk.AccelGroup()
@@ -106,7 +98,7 @@ class ActionsConfig(BaseConfig):
         self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
 
     def create_action(self, name, atype, label, tooltip, stock_id,
-                      callback=None, accel_string='NOACCEL'):
+                      callback=None, accel=None):
         """
         Create an action for this service.
 
@@ -131,25 +123,29 @@ class ActionsConfig(BaseConfig):
         :param callback:
             The callback function to be called when the action is activated.
             This function should take the action as a parameter.
-        :param accel_string:
+        :param accel:
             The accelerator string set as the default accelerator for this
-            action, or 'NOACCEL' for actions that do not need an accelerator.
+            action, or `None` for actions that do not need an accelerator.
             To be used these actions must be proxied as items in one of the
             menus or toolbars.
         """
-        aclass = _ACTIONS[atype]
-        act = aclass(name=name, label=label, tooltip=tooltip, stock_id=stock_id)
+        act = atype(name=name, label=label, tooltip=tooltip, stock_id=stock_id)
         self._actions.add_action(act)
         if callback is None:
             callback = getattr(self, 'act_%s' % name, None)
         if callback is not None:
             act.connect('activate', callback)
-        if accel_string != 'NOACCEL':
-            self._create_key_option(act, name, label, tooltip, accel_string)
+        
+        if accel == 'NOACCEL':
+            warnings.warn('the accel `NOACCEL` is deprecated, use None',
+                    DeprecationWarning, 2)
 
-    def _create_key_option(self, act, name, label, tooltip, accel_string):
+        if accel != 'NOACCEL' and accel is not None:
+            self._create_key_option(act, name, label, tooltip, accel)
+
+    def _create_key_option(self, act, name, label, tooltip, accel):
         opt = OptionItem(self._get_group_name(), name, label, OTypeString,
-                         accel_string, tooltip, self._on_shortcut_notify)
+                         accel, tooltip, self._on_shortcut_notify)
         opt.action = act
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt

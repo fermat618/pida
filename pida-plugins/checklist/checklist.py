@@ -195,7 +195,6 @@ class ChecklistActions(ActionsConfig):
             _('Add something in checklist'),
             gtk.STOCK_ADD,
             self.on_checklist_add,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -205,7 +204,6 @@ class ChecklistActions(ActionsConfig):
             _('Delete selected item'),
             gtk.STOCK_DELETE,
             self.on_checklist_del,
-            'NOACCEL',
         )
 
 

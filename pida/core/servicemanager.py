@@ -14,7 +14,7 @@ _ = locale.gettext
 def sort_services_func(s1, s2):
     return cmp(s1.servicename, s2.servicename)
 
-class ServiceLoadingError(Exception):
+class ServiceLoadingError(ImportError):
     """An error loading a service"""
 
 class ServiceModuleError(ServiceLoadingError):
@@ -53,22 +53,19 @@ class ServiceLoader(object):
 
     def load_all_services(self, service_dirs, boss):
         services = []
-        for service_class in self.get_all_services(service_dirs):
-            services.append(self._instantiate_service(service_class, boss))
+        for service in self.get_all_services(service_dirs):
+            services.append(service(boss))
         services.sort(sort_services_func)
         return services
 
     def load_one_service(self, service_path, boss):
-        service_class = self.get_one_service(service_path)
-        if service_class is not None:
-            return self._instantiate_service(service_class, boss)
+        service = self.get_one_service(service_path)
+        if service is not None:
+            return service(boss)
 
     def get_all_service_files(self, service_dirs):
         for service_path in self._find_all_service_paths(service_dirs):
             yield os.path.basename(service_path), self._get_servicefile_path(service_path)
-
-    def _instantiate_service(self, service_class, boss):
-        return service_class(boss)
 
     def _find_service_paths(self, service_dir):
         for f in os.listdir(service_dir):
@@ -114,7 +111,7 @@ class ServiceLoader(object):
         return service
 
     def _register_service_env(self, servicename, service_path):
-        for name in ['glade', 'uidef', 'pixmaps', 'data']:
+        for name in 'glade', 'uidef', 'pixmaps', 'data':
             path = os.path.join(service_path, name)
             if os.path.isdir(path):
                 library.add_global_resource(name, path)

@@ -165,7 +165,6 @@ class CommanderActionsConfig(ActionsConfig):
             _('Open a shell prompt in the parent directory of this file'),
             'terminal',
             self.on_terminal_for_file,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -175,7 +174,6 @@ class CommanderActionsConfig(ActionsConfig):
             _('Open a shell prompt in the directory'),
             'terminal',
             self.on_terminal_for_dir,
-            'NOACCEL',
         )
 
     def execute_shell(self, action):

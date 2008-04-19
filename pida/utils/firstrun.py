@@ -53,10 +53,10 @@ class FirstTimeWindow(object):
         self.radio = gtk.RadioButton()
         self.editors = {}
         for editor in editors:
-            self.editors[editor.get_label_cls()] = editor.get_name_cls()
+            self.editors[editor.get_label()] = editor.get_name()
             ebox = gtk.HBox(spacing=6)
             box.pack_start(ebox, expand=False, padding=4)
-            radio = gtk.RadioButton(self.radio, label=editor.get_label_cls())
+            radio = gtk.RadioButton(self.radio, label=editor.get_label())
             ebox.pack_start(radio)
             cbox = gtk.VBox(spacing=3)
             label = gtk.Label()

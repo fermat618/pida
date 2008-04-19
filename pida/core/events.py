@@ -70,11 +70,11 @@ class Event(object):
     def has_event(self, event_name):
         return event_name in self.__events
 
-    def register (self, event_name, callback):
+    def register(self, event_name, callback):
         assert self.has_event(event_name)
         self.__events[event_name].append(callback)
 
-    def unregister (self, event_name, callback):
+    def unregister(self, event_name, callback):
         assert self.has_event(event_name)
         self.__events[event_name].remove(callback)
 

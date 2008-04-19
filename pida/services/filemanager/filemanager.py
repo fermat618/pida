@@ -461,7 +461,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Browse the parent directory of this file'),
             'file-manager',
             self.on_browse_for_file,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -471,7 +470,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Browse the directory'),
             'file-manager',
             self.on_browse_for_dir,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -501,7 +499,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Open a terminal in this directory'),
             'terminal',
             self.on_toolbar_terminal,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -511,7 +508,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Refresh the current directory'),
             gtk.STOCK_REFRESH,
             self.on_toolbar_refresh,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -521,7 +517,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Browse the root of the current project'),
             'user-home',
             self.on_toolbar_projectroot,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -531,7 +526,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Copy selected file to the clipboard'),
             gtk.STOCK_COPY,
             self.on_toolbar_copy,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -541,7 +535,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Paste selected file from the clipboard'),
             gtk.STOCK_PASTE,
             self.on_toolbar_paste,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -551,7 +544,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Delete the selected file'),
             gtk.STOCK_DELETE,
             self.on_toolbar_delete,
-            'NOACCEL',
         )
         self.create_action(
             'toolbar_toggle_hidden',
@@ -560,7 +552,6 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Toggle the display of hidden files'),
             gtk.STOCK_SELECT_ALL,
             self.on_toggle_hidden,
-            'NOACCEL',
         )
 
     def on_browse_for_file(self, action):

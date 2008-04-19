@@ -11,19 +11,16 @@ class cached_property(object):
     calculating the property value is called only once
 
     >>> class Test(object):
+    ...     @cached_property
     ...     def attr(self):
     ...         print 'did it'
     ...         return 2
-    ...     attr = lazy_property(attr)
-    
     >>> Test.attr
     <cached_property: attr>
     >>> test = Test()
-    
     >>> test.attr
     did it
     2
-    
     >>> test.attr
     2
 

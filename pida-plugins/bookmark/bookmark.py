@@ -209,7 +209,6 @@ class BookmarkActions(ActionsConfig):
             _('Bookmark current file'),
             'text-x-generic',
             self.on_bookmark_curfile,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -219,7 +218,6 @@ class BookmarkActions(ActionsConfig):
             _('Bookmark current directory'),
             'stock_folder',
             self.on_bookmark_curdir,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -229,7 +227,6 @@ class BookmarkActions(ActionsConfig):
             _('Delete selected item'),
             gtk.STOCK_DELETE,
             self.on_bookmark_delsel,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -239,7 +236,6 @@ class BookmarkActions(ActionsConfig):
             _('Add selected directory as bookmark'),
             gtk.STOCK_ADD,
             self.on_bookmark_for_dir,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -249,7 +245,6 @@ class BookmarkActions(ActionsConfig):
             _('Add selected file as bookmark'),
             gtk.STOCK_ADD,
             self.on_bookmark_for_file,
-            'NOACCEL',
         )
 
 

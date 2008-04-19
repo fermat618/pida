@@ -126,7 +126,6 @@ class LibraryActions(ActionsConfig):
             _('Documentation Browser'),
             '',
             self.on_show_browser,
-            'NOACCEL',
         )
 
     def on_show_library(self, action):

@@ -275,7 +275,6 @@ class VersionControlActions(ActionsConfig):
             _('Show the commit message'),
             gtk.STOCK_GO_UP,
             self.on_show_commit,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -285,7 +284,6 @@ class VersionControlActions(ActionsConfig):
             _('More Version Control Commands'),
             gtk.STOCK_CONNECT,
             lambda *a: None,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -314,7 +312,6 @@ class VersionControlActions(ActionsConfig):
             _('Get the version control diff on this file'),
             gtk.STOCK_COPY,
             self.on_diff_for_file,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -324,7 +321,6 @@ class VersionControlActions(ActionsConfig):
             _('Get the version control diff on this directory'),
             gtk.STOCK_COPY,
             self.on_diff_for_dir,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -352,7 +348,6 @@ class VersionControlActions(ActionsConfig):
             _('Commit the selected file'),
             gtk.STOCK_GO_UP,
             self.on_commit_for_file,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -362,7 +357,6 @@ class VersionControlActions(ActionsConfig):
             _('Commit the selected directory'),
             gtk.STOCK_GO_UP,
             self.on_commit_for_directory,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -390,7 +384,6 @@ class VersionControlActions(ActionsConfig):
             _('Update the selected file'),
             gtk.STOCK_GO_DOWN,
             self.on_update_for_file,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -400,7 +393,6 @@ class VersionControlActions(ActionsConfig):
             _('Update the selected file'),
             gtk.STOCK_GO_DOWN,
             self.on_update_for_dir,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -419,7 +411,6 @@ class VersionControlActions(ActionsConfig):
             _('Add the selected file'),
             gtk.STOCK_ADD,
             self.on_add_for_file,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -429,7 +420,6 @@ class VersionControlActions(ActionsConfig):
             _('Add the selected file'),
             gtk.STOCK_ADD,
             self.on_add_for_dir,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -439,7 +429,6 @@ class VersionControlActions(ActionsConfig):
             _('Remove the current document'),
             gtk.STOCK_DELETE,
             self.on_remove_document,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -449,7 +438,6 @@ class VersionControlActions(ActionsConfig):
             _('Remove the selected file'),
             gtk.STOCK_DELETE,
             self.on_remove_for_file,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -459,7 +447,6 @@ class VersionControlActions(ActionsConfig):
             _('Remove the selected directory'),
             gtk.STOCK_DELETE,
             self.on_remove_for_dir,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -469,7 +456,6 @@ class VersionControlActions(ActionsConfig):
             _('Revert the current document'),
             gtk.STOCK_UNDO,
             self.on_revert_document,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -479,7 +465,6 @@ class VersionControlActions(ActionsConfig):
             _('Revert the current project'),
             gtk.STOCK_UNDO,
             self.on_revert_project,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -489,7 +474,6 @@ class VersionControlActions(ActionsConfig):
             _('Revert the selected file'),
             gtk.STOCK_UNDO,
             self.on_revert_for_file,
-            'NOACCEL'
         )
 
         self.create_action(
@@ -499,7 +483,6 @@ class VersionControlActions(ActionsConfig):
             _('Revert the selected directory'),
             gtk.STOCK_UNDO,
             self.on_revert_for_dir,
-            'NOACCEL'
         )
 
     def on_show_vc_log(self, action):

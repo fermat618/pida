@@ -153,7 +153,6 @@ class RfcActions(ActionsConfig):
             _('Refresh RFC Index'),
             gtk.STOCK_REFRESH,
             self.on_rfc_refreshindex,
-            'NOACCEL',
         )
 
         self.create_action(
@@ -163,7 +162,6 @@ class RfcActions(ActionsConfig):
             _('Download RFC Index'),
             gtk.STOCK_GO_DOWN,
             self.on_rfc_downloadindex,
-            'NOACCEL',
         )
 
 

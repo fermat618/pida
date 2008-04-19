@@ -48,35 +48,35 @@ Defining Plugins:
 
 a. First you will need a registry item:
 
-    reg = Registry()
+    >>> reg = Registry()
 
 b. now define a behavioural interface:
 
-    class IAmYellow(Interface):
-        def get_shade():
-            "get the shade of yellow"
+    >>> class IAmYellow(Interface):
+    ...     def get_shade():
+    ...         "get the shade of yellow"
 
 c. now write a class that implements this behaviour:
 
-    class Banana(object):
-        def get_shade(self):
-            return 'light and greeny'
+    >>> class Banana(object):
+    ...     def get_shade(self):
+    ...         return 'light and greeny'
 
 d. create an instance of the plugin
 
-    plugin = Banana()
+    >>> plugin = Banana()
 
 e. register it with the registry:
 
-    reg.register_plugin(
-            instance=plugin,
-            singletons=(IAmYellow,)
-        )
+    >>> reg.register_plugin(
+    ...         instance=plugin,
+    ...         singletons=(IAmYellow,)
+    ...     )
 
 f. get the item from the registry at a later time:
 
-    plugin = reg.get_singleton(IAmYellow)
-    print plugin.get_shade()
+    >>> plugin = reg.get_singleton(IAmYellow)
+    >>> print plugin.get_shade()
 
 Things to note:
 
@@ -489,11 +489,8 @@ class Registry(object):
         # Check for singletons conflicts
         # In this case we do not allow overriding an existing Singleton
         for key in singletons:
-            try:
-                val = self.singletons[key]
+            if key in self.singletons:
                 raise SingletonError(key)
-            except KeyError:
-                pass
     
         for key in singletons:
             self.singletons[key] = plugin
@@ -563,7 +560,7 @@ class Registry(object):
     
     def _check_plugin(self, plugin):
         entry = self.plugins[plugin]
-        if len(entry.features) == 0 and len(entry.singletons) == 0:
+        if not(entry.features or entry.singletons):
             self.unregister(plugin)
     
     def unregister_singleton(self, singleton):
