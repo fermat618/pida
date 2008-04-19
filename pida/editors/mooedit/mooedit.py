@@ -357,6 +357,7 @@ class Mooedit(EditorService):
             editor_close = view.editor.close()
             self._embed.remove_page(self._embed.page_num(view))
             close = close & editor_close
+        self.boss.stop(force=True)
         return close
 
     def open(self, document):

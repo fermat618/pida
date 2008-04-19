@@ -3,8 +3,19 @@ import gtk
 # Don't import moo twice from different locations when the full editor is
 # being used.
 try:
+    import moo
     from moo.utils import BigPaned, PaneLabel, PaneParams
+    version = moo.version.split('.')
+    if ((int(version[0]) > 0) or
+        ((int(version[1]) > 8) and (int(version[2]) > 0)) or
+        (int(version[1]) > 9)):
+        use_old = False
+    else:
+        use_old = True
 except ImportError:
+    use_old = True
+
+if use_old:
     from moo_stub import BigPaned, PaneLabel, PaneParams
 
 from pida.utils.gthreads import gcall
@@ -42,7 +53,10 @@ class PidaPaned(BigPaned):
         else:
             POS = POS_MAP[name]
             lab = PaneLabel(view.icon_name, None, view.label_text)
-            pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
+            if use_old:
+                pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
+            else:
+                pane = self.insert_pane(view.get_toplevel(), None, lab, POS, POS)
             view.pane = pane
             if not removable:
                 pane.set_property('removable', False)
