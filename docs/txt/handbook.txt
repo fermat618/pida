@@ -207,14 +207,16 @@ guidelines of your distribution to install or remove PIDA from your system.
 Distribution   Distribution version  PIDA version
 -------------------------------------------------
 Debian         Etch (_stable_)       0.3.1
-Debian         Lenny (_testing_)     0.4.4
-Debian         Sid (_unstable_)      0.4.4
-Gentoo         FIXME.                FIXME.
+Debian         Lenny (_testing_)     0.5.1
+Debian         Sid (_unstable_)      0.5.1
+Gentoo                               0.5.1
+Fedora         8                     0.5.1
 Ubuntu         Breezy Badger         0.2.2
 Ubuntu         Dapper Drake          0.2.2
 Ubuntu         Edgy Eft              0.3.1
 Ubuntu         Feisty Fawn           0.3.1
-Ubuntu         Gutsy                 0.4.4
+Ubuntu         Gutsy Gibbon          0.4.4
+Ubuntu         Hardy Heron           0.5.1
 -------------------------------------------------
 
 IMPORTANT: There are chances that the version packaged is a bit outdated. Please
