@@ -52,7 +52,7 @@ class TestOptions(TestCase):
         svc = MYService(boss=MockBoss())
         svc.create_all()
         self.assertEqual(
-            svc.reg.get_singleton(IOptions).get_option('g1'),
+            svc.options.get_option('g1'),
             svc.o_test
         )
 

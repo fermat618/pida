@@ -72,5 +72,7 @@ class FeaturesConfig(BaseConfig):
     def get_feature_providers(self, featurename):
         return self._features.get_features(featurename)
 
+    #XXX: workaround for keeping svc.features(name)
+    __call__ = get_feature_providers
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
