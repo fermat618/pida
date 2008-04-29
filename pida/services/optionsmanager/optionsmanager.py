@@ -73,7 +73,7 @@ class PidaOptionsView(PidaGladeView):
         self.clear_ui()
         self._services = []
         for svc in self.svc.boss.get_services():
-            if len(svc.options):
+            if svc.options:
                 self._services.append(svc)
                 self._services_display.append(
                     (svc.get_label(), svc),
@@ -108,9 +108,8 @@ class PidaOptionsView(PidaGladeView):
         mainvb.pack_start(optsw)
         labelsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         widgetsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
-        options = list(svc.options.iter_options())
-        options.sort()
-        for opt in options:
+
+        for opt in sorted(svc.options):
             vb = gtk.VBox(spacing=2)
             vb.set_border_width(6)
             eb = gtk.EventBox()
@@ -191,7 +190,7 @@ class OptionsEvents(EventsConfig):
                                      self.plugin_changed)
 
     def plugin_changed(self, plugin):
-        if len(plugin.options):
+        if plugin.options:
             self.svc.refresh_view()
 
 # Service class

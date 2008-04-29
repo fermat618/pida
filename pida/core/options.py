@@ -176,7 +176,9 @@ class OptionsConfig(BaseConfig):
     def __len__(self):
         return len(self._options)
 
-    def iter_options(self):
-        return self._options.values()
-
+    def __iter__(self):
+        return self._options.itervalues()
+    
+    def __nonzero__(self):
+        return bool(self._options)
 

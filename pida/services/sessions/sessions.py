@@ -303,7 +303,7 @@ class Sessions(Service):
         """
         load each file in self.buffers into the buffer manager
         """
-        if len(files):
+        if files:
             self.boss.cmd('buffer', 'open_file', file_name=files.pop())
         else:
             return
