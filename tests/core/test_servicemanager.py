@@ -12,6 +12,15 @@ from pida.utils.testing.mock import Mock
 
 from pida.core.environment import get_glade_path
 
+test_service = '''
+from pida.core.service import Service as BaseService
+class TestService(BaseService):
+    pass
+Service = TestService
+'''
+
+
+
 class ServiceLoadTest(TestCase):
 
     def setUp(self):
@@ -22,9 +31,7 @@ class ServiceLoadTest(TestCase):
         for name in ['__init__.py', 'testservice.py', 'service.pida']:
             f = open(os.path.join(self._spath, name), 'w')
             if name == 'testservice.py':
-                f.write('class Service(object):\n')
-                f.write('    def __init__(self, boss):\n')
-                f.write('        """A test"""\n')
+                f.write(test_service)
             f.close()
 
         self._spath = os.path.join(self._tdir, 'testservice2')
@@ -32,9 +39,7 @@ class ServiceLoadTest(TestCase):
         for name in ['__init__.py', 'testservice2.py', 'service.pida']:
             f = open(os.path.join(self._spath, name), 'w')
             if name == 'testservice2.py':
-                f.write('class Service(object):\n')
-                f.write('    def __init__(self, boss):\n')
-                f.write('        """A test"""\n')
+                f.write(test_service)
             f.close()
 
         self._tdir2 = mkdtemp()
@@ -54,9 +59,7 @@ class ServiceLoadTest(TestCase):
         for name in ['__init__.py', 'testservice.py']:
             f = open(os.path.join(self._spath3, name), 'w')
             if name == 'testservice.py':
-                f.write('class Service(object):\n')
-                f.write('    def __init__(self, boss):\n')
-                f.write('        """A test"""\n')
+                f.write(test_service)
             f.close()
 
         self._tdir4 = mkdtemp()
@@ -65,9 +68,7 @@ class ServiceLoadTest(TestCase):
         for name in ['__init__.py', 'testservice.py', 'service.pida']:
             f = open(os.path.join(self._spath4, name), 'w')
             if name == 'testservice.py':
-                f.write('class Service(object):\n')
-                f.write('    def __init__(self, boss):\n')
-                f.write('        """A test"""\n')
+                f.write(test_service)
             f.close()
 
         self._tdir5 = mkdtemp()
@@ -76,9 +77,7 @@ class ServiceLoadTest(TestCase):
         for name in ['__init__.py', 'testservice.py', 'service.pida']:
             f = open(os.path.join(self._spath5, name), 'w')
             if name == 'testservice.py':
-                f.write('class Service(object):\n')
-                f.write('    def __init__(self, boss):\n')
-                f.write('        """A test"""\n')
+                f.write(test_service)
             f.close()
         self._gladedir = os.path.join(self._spath5, 'glade')
         os.mkdir(self._gladedir)
@@ -92,7 +91,7 @@ class ServiceLoadTest(TestCase):
 
     def test_get(self):
         services = [svc for svc in self.loader.get_all_services([self._tdir])]
-        self.assertEqual(services[0].__name__, 'Service')
+        self.assertEqual(services[0].__name__, 'TestService')
 
     def test_get_both(self):
         services = [svc for svc in self.loader.get_all_services([self._tdir])]
@@ -100,7 +99,7 @@ class ServiceLoadTest(TestCase):
         
     def test_load(self):
         services = [svc for svc in self.loader.load_all_services([self._tdir], None)]
-        self.assertEqual(services[0].__class__.__name__, 'Service')
+        self.assertEqual(services[0].__class__.__name__, 'TestService')
 
     def test_bad_load(self):
         services = [svc for svc in self.loader.get_all_services([self._tdir2])]
@@ -136,22 +135,21 @@ class ServiceManagerTest(TestCase):
         for name in ['__init__.py', 'testservice.py', 'service.pida']:
             f = open(os.path.join(self._spath, name), 'w')
             if name == 'testservice.py':
-                f.write('class Service(object):\n')
-                f.write('    def __init__(self, boss):\n')
-                f.write('        """A test"""\n')
+                f.write(testservice)
             f.close()
 
         class MyService:
-            servicename = 'MyService'
+            @staticmethod
+            def get_name():
+                return 'MyService'
 
         self._svc = MyService()
 
-        self._boss = Mock(
-            dict(
-                get_service_dirs = [self._tdir]
-            )
-        )
-        self._sm = ServiceManager(self._boss)
+        mock = Mock({
+            'get_service_dirs': [self._tdir]
+            })
+        mock.log = Mock()
+        self._sm = ServiceManager(boss=mock)
 
 
     def tearDown(self):

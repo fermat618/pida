@@ -75,12 +75,12 @@ class PluginsItem(object):
         self.directory = directory
         self.enabled = enabled
 
-    def get_markup(self):
+    @property
+    def markup(self):
         if self.isnew:
             return '<span color="red"><b>!N</b></span> %s' % self.name
         return self.name
 
-    markup = property(get_markup)
 
 class PluginsEditItem(object):
 
@@ -455,7 +455,7 @@ class Plugins(Service):
                     self.emit('plugin_started', plugin=plugin)
                     plugin_item.enabled = True
                 except ServiceLoadingError, e:
-                    self.log_error(e)
+                    self.log.error(e)
             else:
                 self._view.add_installed(plugin_item)
 

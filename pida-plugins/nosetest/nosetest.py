@@ -243,7 +243,7 @@ class TestResultBrowser(PidaGladeView):
 
     def run_tests(self):
         if self.gt:
-            self.svc.log_info('tried to start nosetests twice')
+            self.svc.log.info('tried to start nosetests twice')
             return
 
         self.clear_items()

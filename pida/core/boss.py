@@ -1,9 +1,10 @@
+import logging
 import sys
-
+import warnings
 import gtk
 
 from pida.core.servicemanager import ServiceManager
-from pida.core.log import build_logger
+from pida.core.log import get_logger
 
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
@@ -16,16 +17,28 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
+log = get_logger('pida')
+
 class Boss(object):
 
 
     def __init__(self, env=None):
         self._env = env
-        self.log = build_logger('pida')
+
+        if env.is_debug():
+            get_logger().setLevel(logging.DEBUG)
+        else:
+            get_logger().setLevel(logging.INFO)
+
         self.show_splash()
         self._sm = ServiceManager(self)
         self._run_first_time()
         self._window = PidaWindow(self)
+
+    @property
+    def log(self):
+        warnings.warn("log is deprecated", DeprecationWarning, 2)
+        return log
 
     def _run_first_time(self):
         if not self._env.has_firstrun() or self._env.is_firstrun():

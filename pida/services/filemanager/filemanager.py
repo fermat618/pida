@@ -103,27 +103,26 @@ class FileEntry(object):
         self.extension_sort = self.extension, self.lower_name
         self.is_dir = os.path.isdir(self.path)
         self.is_dir_sort = not self.is_dir, self.lower_name
-        self.icon_stock_id = self.get_icon_stock_id()
         self.visible = False
 
-    def get_markup(self):
+    @property
+    def markup(self):
         return self.format(cgi.escape(self.name))
 
-    markup = property(get_markup)
-
-    def get_icon_stock_id(self):
+    @property
+    def icon_stock_id(self):
         if path.isdir(self.path):
             return 'stock_folder'
         else:
             #TODO: get a real mimetype icon
             return 'text-x-generic'
 
-    def get_state_markup(self):
+    @property
+    def state_markup(self):
         text = state_text.get(self.state, ' ')
         wrap = '<span weight="ultrabold"><tt>%s</tt></span>'
         return wrap%self.format(text)
 
-    state_markup = property(get_state_markup)
 
     def format(self, text):
         color, b, i = state_style.get(self.state, ('black', False, False))

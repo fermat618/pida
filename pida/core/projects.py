@@ -101,7 +101,7 @@ class Project(object):
         del self.options[controller.config_section]
         default = self.get_default_controller()
         if default is None:
-            if len(self.controllers):
+            if self.controllers:
                 self.controllers[0].default = True
         self.save()
 
@@ -130,10 +130,9 @@ class Project(object):
         self.options[section][name] = value
         self.options.write()
 
-    def get_markup(self):
+    @property
+    def markup(self):
         return '<b>%s</b>\n%s' % (self.get_display_name(), self.source_directory)
-
-    markup = property(get_markup)
 
     def save_section(self, section_name, section):
         self.options[section_name] = section
@@ -284,11 +283,10 @@ class ProjectController(object):
         for attr in self.attributes:
             yield ProjectKeyItem(attr, self.project, self)
 
-    def get_markup(self):
+    @property
+    def markup(self):
         return ('<b>%s</b>\n<span foreground="#0000c0">%s</span>' %
             (self.config_section, self.label))
-
-    markup = property(get_markup)
 
     def set_default(self, value):
         aval = (value and 'True') or ''

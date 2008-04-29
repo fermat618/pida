@@ -56,11 +56,11 @@ class NotifyItem(object):
                 locale.nl_langinfo(locale.D_T_FMT))
         self.callback = callback
 
-    def get_markup(self):
+    @property
+    def markup(self):
         if self.title != '':
             return '<b>%s</b>\n%s' % (self.title, self.data)
         return self.data
-    markup = property(get_markup)
 
     def cb_clicked(self, w, ev):
         if self.callback is not None:

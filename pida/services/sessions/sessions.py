@@ -263,7 +263,7 @@ class Sessions(Service):
         except IOError:
             # when we catch this exception we should really make an attempt
             # at repairing whatever session file it was failing on.
-            self.log_warn(_('Session file:%s failed to load') % file_path)
+            self.log.warn(_('Session file:%s failed to load') % file_path)
             return
 
     def save_last_session(self, document):
@@ -303,7 +303,7 @@ class Sessions(Service):
         """
         load each file in self.buffers into the buffer manager
         """
-        if len(files):
+        if files:
             self.boss.cmd('buffer', 'open_file', file_name=files.pop())
         else:
             return

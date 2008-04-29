@@ -410,11 +410,11 @@ class PasteItem(object):
         self.url = url
         self.title, self.name, self.content, self.syntax = args
 
-    def get_markup(self):
+    @property
+    def markup(self):
         return ('<b>%s</b> (<span foreground="#0000c0">%s</span>)\n%s' %
                     (self.title, self.syntax, self.url))
 
-    markup = property(get_markup)
 
 # Service class
 class Pastebin(Service):

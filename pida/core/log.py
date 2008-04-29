@@ -22,33 +22,16 @@
 #SOFTWARE.
 
 import os
+import warnings
 import logging
 import logging.handlers
 
-def build_logger(name, filepath=None):
-    format_str = ('%(asctime)s '
-                  '%(levelname)s '
-                  '%(module)s.%(name)s:%(lineno)s '
-                  '%(message)s')
-    format = logging.Formatter(format_str)
-    # logger
-    logger = logging.getLogger(name)
-    # to file
-    if filepath is not None:
-        handler = logging.handlers.RotatingFileHandler(filepath,
-                                                   'a', 16000, 3)
-    else:
-        handler = logging.StreamHandler()
-    handler.setFormatter(format)
-    logger.addHandler(handler)
-    # optionally to stdout
-    #if 'PIDA_LOG_STDERR' in os.environ:
-    #    handler = logging.StreamHandler()
-    #    handler.setFormatter(format)
-    #    logger.addHandler(handler)
-    if 'PIDA_DEBUG' in os.environ:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
-    logger.setLevel(level)
-    return logger
+from logging import getLogger as get_logger
+
+format_str = '%(levelname)s %(name)s: %(message)s'
+format = logging.Formatter(format_str)
+
+root_logger = get_logger('pida')
+handler = logging.StreamHandler()
+handler.setFormatter(format)
+root_logger.addHandler(handler)

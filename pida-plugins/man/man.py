@@ -161,7 +161,7 @@ class Man(Service):
         self._view.clear_items()
 
         # don't make empty search
-        if len(pattern) <= 0:
+        if not pattern:
             return
 
         # prepare command

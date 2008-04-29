@@ -10,6 +10,8 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.features import FeaturesConfig
+from pida.core.log import get_logger
+from pida.utils.descriptors import cached_property
 
 # locale
 from pida.core.locale import Locale
@@ -28,22 +30,21 @@ class Service(object):
     features_config = FeaturesConfig
     actions_config = ActionsConfig
 
-    def __init__(self, boss=None):
+    def __init__(self, boss):
         self.boss = boss
-        self.log_debug('Loading Service')
-        self.reg = Registry()
+        self.log.debug('Loading Service')
 
     def create_all(self):
         """
         Called to create all the services by the
         {servicemanager.ServiceManager}
         """
-
-        self._register_options_config(self.options_config)
-        self._register_events_config(self.events_config)
-        self._register_commands_config(self.commands_config)
-        self._register_feature_config(self.features_config)
-        self._register_actions_config(self.actions_config)
+        
+        self.options = self.options_config(self)
+        self.events = self.events_config(self)
+        self.commands = self.commands_config(self)
+        self.features = self.features_config(self)
+        self.actions = self.actions_config(self)
 
     def subscribe_all(self):
         self._subscribe_foreign_events()
@@ -52,7 +53,11 @@ class Service(object):
 
     @classmethod
     def get_name(cls):
-        return cls.servicename
+        return cls.__module__.split('.')[-1]
+
+    @staticmethod
+    def sort_key(service): #XXX: for service sorting
+        return service.get_name()
 
     @classmethod
     def get_label(cls):
@@ -74,72 +79,37 @@ class Service(object):
         self._unregister_actions_config()
 
     ##########
-    # Options
-
-    def _register_options_config(self, config_cls):
-        instance = config_cls(self)
-        self.reg.register_plugin(
-            instance=instance,
-            singletons=(IOptions,)
-        )
-
-    # Public Options API
-    def get_options(self):
-        return self.reg.get_singleton(IOptions)
-
+    # Options API
     def get_option(self, name):
-        return self.get_options().get_option(name)
+        return self.options.get_option(name)
 
     def opt(self, name):
-        return self.get_options().get_value(name)
+        return self.options.get_value(name)
 
     def set_opt(self, name, value):
-        return self.get_options().set_value(name, value)
+        return self.options.set_value(name, value)
 
     ##########
-    # Commands
+    # Commands API
 
-    def _register_commands_config(self, config_cls):
-        self.reg.register_plugin(
-            instance = config_cls(self),
-            singletons=(ICommands,)
-        )
 
-    # Public Commands API
-
-    def _get_commands(self):
-        return self.reg.get_singleton(ICommands)
-
-    def cmd(self, commandname, *args, **kw):
-        if args:
-            raise TypeError(
-                    _('You must call command %(cmd)s in service %(svc)s with named arguments')
-                    % {'cmd':commandname, 'svc':self.get_name()})
-        else:
-            return self._get_commands().call(commandname, **kw)
+    def cmd(self, commandname, **kw):
+        return self.commands.call(commandname, **kw)
 
     ##########
     # Events
 
     # Private Events API
-    def _register_events_config(self, config_cls):
-        self.reg.register_plugin(
-            instance = config_cls(self),
-            singletons=(IEvents,)
-        )
 
     def _subscribe_foreign_events(self):
-        self._get_events().subscribe_foreign_events()
+        self.events.subscribe_foreign_events()
 
     def _unsubscribe_foreign_events(self):
-        self._get_events().unsubscribe_foreign_events()
+        self.events.unsubscribe_foreign_events()
 
     # Public Events API
-    def _get_events(self):
-        return self.reg.get_singleton(IEvents)
-
     def get_event(self, name):
-        return self._get_events().get(name)
+        return self.events.get(name)
 
     def subscribe_foreign_event(self, servicename, name, callback):
         self.boss.subscribe_event(servicename, name, callback)
@@ -148,46 +118,37 @@ class Service(object):
         self.boss.unsubscribe_event(servicename, name, callback)
 
     def subscribe_event(self, name, callback):
-        self._get_events().subscribe_event(name, callback)
+        self.events.subscribe_event(name, callback)
 
     def unsubscribe_event(self, name, callback):
-        self._get_events().unsubscribe_event(name, callback)
-        
+        self.events.unsubscribe_event(name, callback)
 
     def emit(self, name, **kw):
-        self._get_events().emit(name, **kw)
+        self.events.emit(name, **kw)
 
     ##########
     # Features
 
-    def _register_feature_config(self, config_cls):
-        self.reg.register_plugin(
-            instance = config_cls(self),
-            singletons=(IFeatures,)
-        )
 
     def _subscribe_foreign_features(self):
-        self._get_features().subscribe_foreign_features()
+        self.features.subscribe_foreign_features()
 
     def _unsubscribe_foreign_features(self):
-        self._get_features().unsubscribe_foreign_features()
-
-    def _get_features(self):
-        return self.reg.get_singleton(IFeatures)
+        self.features.unsubscribe_foreign_features()
 
     # Public Feature API
 
     def list_features(self):
-        return self._get_features().list_features()
+        return self.features.list_features()
 
     def has_foreign_feature(self, servicename, featurename):
-        return self._get_features().has_foreign_feature(servicename, featurename)
+        return self.features.has_foreign_feature(servicename, featurename)
 
     def subscribe_feature(self, feature, instance):
-        return self._get_features().subscribe_feature(feature, instance)
+        return self.features.subscribe_feature(feature, instance)
 
     def unsubscribe_feature(self, feature_object):
-        self._get_features().unsubscribe_feature(feature_object)
+        self.features.unsubscribe_feature(feature_object)
 
     def subscribe_foreign_feature(self, servicename, feature, instance):
         return self.boss.subscribe_feature(servicename, feature, instance)
@@ -195,57 +156,37 @@ class Service(object):
     def unsubscribe_foreign_feature(self, servicename, feature_object):
         self.boss.unsubscribe_feature(servicename, feature_object)
 
-    def features(self, name):
-        return self._get_features().get_feature_providers(name)
-
     ##########
     # Actions
 
-    def _register_actions_config(self, config_cls):
-        self.reg.register_plugin(
-            instance = config_cls(self),
-            singletons=(IActions,)
-        )
-
     def _unregister_actions_config(self):
-        self._get_actions().remove_actions()
+        self.actions.remove_actions()
 
     def _subscribe_keyboard_shortcuts(self):
-        self._get_actions().subscribe_keyboard_shortcuts()
+        self.actions.subscribe_keyboard_shortcuts()
 
-    def _get_actions(self):
-        return self.reg.get_singleton(IActions)
 
     def get_action_group(self):
-        return self._get_actions().get_action_group()
+        return self.actions.get_action_group()
 
     def get_action(self, name):
-        return self._get_actions().get_action(name)
+        return self.actions.get_action(name)
 
     def get_keyboard_options(self):
-        return self._get_actions().get_keyboard_options()
+        return self.actions.get_keyboard_options()
 
     # Logging
 
-    def log_debug(self, message):
-        self.boss.log.debug('svc: %s: %s' % (self.get_name(), message))
-
-    def log_info(self, message):
-        self.boss.log.info('svc: %s: %s' % (self.get_name(), message))
-
-    def log_warn(self, message):
-        self.boss.log.warn('svc: %s: %s' % (self.get_name(), message))
-
-    def log_error(self, message):
-        self.boss.log.error('svc: %s: %s' % (self.get_name(), message))
+    @cached_property
+    def log(self):
+        return get_logger('pida.svc.' + self.get_name())
 
 
     # window proxy
 
-    def get_window(self):
-        return self.boss.get_window()
-    
-    window = property(get_window)
+    @property
+    def window(self):
+        return self.boss.window
 
     def save_dlg(self, *args, **kw):
         return self.window.save_dlg(*args, **kw)
