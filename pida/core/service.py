@@ -235,7 +235,7 @@ class Service(object):
 
     @cached_property
     def log(self):
-        return get_logger('svc.' + self.get_name())
+        return get_logger('pida.svc.' + self.get_name())
 
 
     # window proxy

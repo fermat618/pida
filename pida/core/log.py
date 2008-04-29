@@ -28,12 +28,10 @@ import logging.handlers
 
 from logging import getLogger as get_logger
 
-format_str = '%(asctime)s %(levelname)s %(name)s: %(message)s'
+format_str = '%(levelname)s %(name)s: %(message)s'
 format = logging.Formatter(format_str)
 
-
-root_logger = get_logger()
+root_logger = get_logger('pida')
 handler = logging.StreamHandler()
 handler.setFormatter(format)
 root_logger.addHandler(handler)
-
