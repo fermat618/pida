@@ -37,7 +37,7 @@ from pida.core.environment import get_data_path
 
 from pida.ui.views import PidaView
 
-from pida.core.log import build_logger
+from pida.core.log import get_logger
 from pida.core.editors import EditorService, _
 
 # Emacs specific
@@ -85,7 +85,7 @@ class EmacsCallback(object):
 
     def __init__(self, svc):
         """Constructor."""
-        self._log = logging.getLogger('emacs')
+        self.log = get_logger('emacs')
         self._svc = svc
         self._server = EmacsServer(self)
 
@@ -96,7 +96,7 @@ class EmacsCallback(object):
     def cb_pida_ping(self, foo):
         """Emacs message to signal it is up and ready.
         """
-        self._log.debug('emacs ready')
+        self.log.debug('emacs ready')
         self._svc.emit_editor_started()
         return True
 
@@ -124,7 +124,7 @@ class EmacsCallback(object):
     def cb_kill_buffer_hook(self, filename):
         """Buffer closed event."""
         if filename:
-            self._log.debug('emacs buffer killed "%s"' % filename)
+            self.log.debug('emacs buffer killed "%s"' % filename)
             self._svc.remove_file(filename)
             self._svc.boss.get_service('buffer').cmd('close_file', file_name=filename)
         return True
@@ -139,13 +139,13 @@ class EmacsCallback(object):
     
     def cb_after_save_hook(self, filename):
         """Buffer saved event."""
-        self._log.debug('emacs buffer saved "%s"' % filename)
+        self.log.debug('emacs buffer saved "%s"' % filename)
         self._svc.boss.cmd('buffer', 'current_file_saved')
         return True
     
     def cb_kill_emacs_hook(self, foo):
         """Emacs killed event."""
-        self._log.debug('emacs killed')
+        self.log.debug('emacs killed')
         self._svc.inactivate_client()
         self._svc.boss.stop(force=True)
         return False
@@ -172,7 +172,6 @@ class Emacs(EditorService):
 
     def pre_start(self):
         """Start the editor"""
-        self._log = build_logger('emacs')
         self._documents = {}
 
         # The current document. Its value is set by Pida and used to drop

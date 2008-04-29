@@ -117,7 +117,7 @@ class PidaViewMixin(object):
             label = PaneLabel(icon_name, None, label_text)
             self.pane.set_property('label', label)
         else:
-            self.svc.log_error(_('Attempted to set a pane label on a view '
+            self.svc.log.error(_('Attempted to set a pane label on a view '
                                  'which is not in a pane'))
 
 

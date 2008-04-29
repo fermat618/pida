@@ -455,7 +455,7 @@ class Plugins(Service):
                     self.emit('plugin_started', plugin=plugin)
                     plugin_item.enabled = True
                 except ServiceLoadingError, e:
-                    self.log_error(e)
+                    self.log.error(e)
             else:
                 self._view.add_installed(plugin_item)
 

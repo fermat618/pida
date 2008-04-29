@@ -430,7 +430,7 @@ class Project(Service):
             if os.path.exists(path):
                 project = self._load_project(path)
             else:
-                self.log_warn(_('Project path %s has disappeared') % path)
+                self.log.warn(_('Project path %s has disappeared') % path)
 
     def _save_options(self):
         self.set_opt('project_dirs',

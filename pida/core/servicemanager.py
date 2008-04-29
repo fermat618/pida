@@ -2,6 +2,7 @@ import os, imp, sys
 
 from pida.core.interfaces import IService, IEditor, IPlugin
 from pida.core.plugins import Registry
+from pida.core.service import Service
 
 from pida.core.environment import library, environ
 
@@ -10,9 +11,6 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-
-def sort_services_func(s1, s2):
-    return cmp(s1.servicename, s2.servicename)
 
 class ServiceLoadingError(ImportError):
     """An error loading a service"""
@@ -25,21 +23,18 @@ class ServiceDependencyError(ServiceLoadingError):
 
 class ServiceLoader(object):
 
-    def __init__(self, boss=None):
+    def __init__(self, boss):
         self.boss = boss
 
     def get_all_services(self, service_dirs):
         classes = []
         for service_path in self._find_all_service_paths(service_dirs):
             try:
-                service_class = self.get_one_service(service_path)
+                classes.append(self.get_one_service(service_path))
             except ServiceLoadingError, e:
                 self.boss.log.error('Service error: %s: %s' %
                                    (e.__class__.__name__, e))
-                service_class = None
-            if service_class is not None:
-                classes.append(service_class)
-        classes.sort(sort_services_func)
+        classes.sort(key=Service.sort_key)
         return classes
 
     def get_one_service(self, service_path):
@@ -52,11 +47,8 @@ class ServiceLoader(object):
                 return service_class
 
     def load_all_services(self, service_dirs, boss):
-        services = []
-        for service in self.get_all_services(service_dirs):
-            services.append(service(boss))
-        services.sort(sort_services_func)
-        return services
+        return sorted(service(boss=boss)
+                      for service in self.get_all_services(service_dirs))
 
     def load_one_service(self, service_path, boss):
         service = self.get_one_service(service_path)
@@ -129,14 +121,14 @@ class ServiceManager(object):
         return self._reg.get_singleton(name)
 
     def get_services(self):
-        services = list(self._reg.get_features(IService))
-        services.sort(sort_services_func)
-        return services
+        return sorted(
+                self._reg.get_features(IService),
+                key=Service.sort_key)
 
     def get_plugins(self):
-        plugins = list(self._reg.get_features(IPlugin))
-        plugins.sort(sort_services_func)
-        return plugins
+        return sorted(
+                self._reg.get_features(IPlugin),
+                key=Service.sort_key)
 
     def get_services_not_plugins(self):
         services = self.get_services()
@@ -169,7 +161,7 @@ class ServiceManager(object):
         if plugin is not None:
             # Check plugin is a plugin not a service
             if plugin in self.get_plugins():
-                plugin.log_debug('Stopping')
+                plugin.log.debug('Stopping')
                 plugin.stop_components()
                 plugin.stop()
                 self._reg.unregister(self._plugin_objects[plugin_name])
@@ -210,22 +202,22 @@ class ServiceManager(object):
 
     def _create_services(self):
         for svc in self.get_services():
-            svc.log_debug('Creating Service')
+            svc.log.debug('Creating Service')
             svc.create_all()
 
     def _subscribe_services(self):
         for svc in self.get_services():
-            svc.log_debug('Subscribing Service')
+            svc.log.debug('Subscribing Service')
             svc.subscribe_all()
 
     def _pre_start_services(self):
         for svc in self.get_services():
-            svc.log_debug('Pre Starting Service')
+            svc.log.debug('Pre Starting Service')
             svc.pre_start()
 
     def start_services(self):
         for svc in self.get_services():
-            svc.log_debug('Starting Service')
+            svc.log.debug('Starting Service')
             svc.start()
 
     def get_available_editors(self):

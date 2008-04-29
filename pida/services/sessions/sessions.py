@@ -263,7 +263,7 @@ class Sessions(Service):
         except IOError:
             # when we catch this exception we should really make an attempt
             # at repairing whatever session file it was failing on.
-            self.log_warn(_('Session file:%s failed to load') % file_path)
+            self.log.warn(_('Session file:%s failed to load') % file_path)
             return
 
     def save_last_session(self, document):

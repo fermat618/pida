@@ -10,6 +10,8 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.features import FeaturesConfig
+from pida.core.log import get_logger
+from pida.utils.descriptors import cached_property
 
 # locale
 from pida.core.locale import Locale
@@ -28,9 +30,9 @@ class Service(object):
     features_config = FeaturesConfig
     actions_config = ActionsConfig
 
-    def __init__(self, boss=None):
+    def __init__(self, boss):
         self.boss = boss
-        self.log_debug('Loading Service')
+        self.log.debug('Loading Service')
         self.reg = Registry()
 
     def create_all(self):
@@ -52,7 +54,11 @@ class Service(object):
 
     @classmethod
     def get_name(cls):
-        return cls.servicename
+        return cls.__module__.split('.')[-1]
+
+    @staticmethod
+    def sort_key(service): #XXX: for service sorting
+        return service.get_name()
 
     @classmethod
     def get_label(cls):
@@ -227,25 +233,16 @@ class Service(object):
 
     # Logging
 
-    def log_debug(self, message):
-        self.boss.log.debug('svc: %s: %s' % (self.get_name(), message))
-
-    def log_info(self, message):
-        self.boss.log.info('svc: %s: %s' % (self.get_name(), message))
-
-    def log_warn(self, message):
-        self.boss.log.warn('svc: %s: %s' % (self.get_name(), message))
-
-    def log_error(self, message):
-        self.boss.log.error('svc: %s: %s' % (self.get_name(), message))
+    @cached_property
+    def log(self):
+        return get_logger('svc.' + self.get_name())
 
 
     # window proxy
 
-    def get_window(self):
-        return self.boss.get_window()
-    
-    window = property(get_window)
+    @property
+    def window(self):
+        return self.boss.window
 
     def save_dlg(self, *args, **kw):
         return self.window.save_dlg(*args, **kw)
