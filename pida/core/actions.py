@@ -131,16 +131,10 @@ class ActionsConfig(BaseConfig):
         """
         act = atype(name=name, label=label, tooltip=tooltip, stock_id=stock_id)
         self._actions.add_action(act)
-        if callback is None:
-            callback = getattr(self, 'act_%s' % name, None)
         if callback is not None:
             act.connect('activate', callback)
-        
-        if accel == 'NOACCEL':
-            warnings.warn('the accel `NOACCEL` is deprecated, use None',
-                    DeprecationWarning, 2)
 
-        if accel != 'NOACCEL' and accel is not None:
+        if accel is not None:
             self._create_key_option(act, name, label, tooltip, accel)
 
     def _create_key_option(self, act, name, label, tooltip, accel):

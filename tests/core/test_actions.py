@@ -9,12 +9,8 @@ from pida.utils.testing import refresh_gui
 class MyActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action('banana', TYPE_NORMAL, 'do a banana', 'bananatt', gtk.STOCK_OPEN)
-        self.create_action('banana2', TYPE_NORMAL, 'do a banana', 'bananatt', gtk.STOCK_OPEN,
+        self.create_action('banana', TYPE_NORMAL, 'do a banana', 'bananatt', gtk.STOCK_OPEN,
             self.my_handler)
-
-    def act_banana(self, action):
-        self.svc.banana = True
 
     def my_handler(self, action):
         self.svc.banana = True
@@ -40,16 +36,16 @@ class ActionTestCase(TestCase):
         self.assertEqual(self.banana, True)
 
     def test_label(self):
-        self.assertEqual(self._acts.get_action('banana').get_property('label'), 'do a banana')
+        self.assertEqual(self._act.get_property('label'), 'do a banana')
 
     def test_tt(self):
-        self.assertEqual(self._acts.get_action('banana').get_property('tooltip'), 'bananatt')
+        self.assertEqual(self._act.get_property('tooltip'), 'bananatt')
 
     def test_sid(self):
-        self.assertEqual(self._acts.get_action('banana').get_property('stock_id'), gtk.STOCK_OPEN)
+        self.assertEqual(self._act.get_property('stock_id'), gtk.STOCK_OPEN)
 
     def test_action_callback(self):
         self.assertEqual(self.banana, False)
-        self._acts._actions.get_action('banana2').activate()
+        self._act.activate()
         refresh_gui()
         self.assertEqual(self.banana, True)
