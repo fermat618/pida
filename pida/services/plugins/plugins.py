@@ -75,12 +75,12 @@ class PluginsItem(object):
         self.directory = directory
         self.enabled = enabled
 
-    def get_markup(self):
+    @property
+    def markup(self):
         if self.isnew:
             return '<span color="red"><b>!N</b></span> %s' % self.name
         return self.name
 
-    markup = property(get_markup)
 
 class PluginsEditItem(object):
 

@@ -51,10 +51,6 @@ class BookmarkItem(object):
         self.title = title
         self.data = data
 
-    def get_markup(self):
-        return self.title
-    markup = property(get_markup)
-
     def run(self, service):
         pass
 
@@ -123,23 +119,21 @@ class BookmarkView(PidaView):
         b.show_all()
         return b
 
+    def create_objectlist(self, icon_name, text):
+            l = ObjectList([Column('title')])
+            l.connect('row-activated', self._on_item_activated)
+            l.connect('selection-changed', self._on_item_selected)
+            l.set_headers_visible(False)
+            l.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+            lf._books.append_page(self._list_dirs,
+                    tab_label=self.create_tab_label(icon_name, text))
+            return l
+
     def create_ui_list(self):
         self._books = gtk.Notebook()
         self._books.set_border_width(6)
-        self._list_dirs = ObjectList([Column('markup', data_type=str, use_markup=True)])
-        self._list_dirs.connect('row-activated', self._on_item_activated)
-        self._list_dirs.connect('selection-changed', self._on_item_selected)
-        self._list_dirs.set_headers_visible(False)
-        self._list_dirs.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self._books.append_page(self._list_dirs,
-                tab_label=self.create_tab_label('stock_folder', _('Dirs')))
-        self._list_files = ObjectList([Column('markup', data_type=str, use_markup=True)])
-        self._list_files.connect('row-activated', self._on_item_activated)
-        self._list_files.connect('selection-changed', self._on_item_selected)
-        self._list_files.set_headers_visible(False)
-        self._list_files.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self._books.append_page(self._list_files,
-                tab_label=self.create_tab_label('text-x-generic', _('Files')))
+        self._list_dirs = self.create_objectlist('stock_folder', _('Dirs'))
+        self._list_files = self.create_objectlist('text-x-generic', _('Files')))
         """
         self._list_url = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_url.set_headers_visible(False)
