@@ -228,10 +228,6 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
             self.subscribe_feature("workdir-manager", mgr)
 
         self.subscribe_foreign_feature(
-                "filemanager", "file_lister",
-                self.svc.list_files
-                )
-        self.subscribe_foreign_feature(
                 "filemanager", "file_hidden_check",
                 self.svc.ignored_file_checker
                 )
@@ -253,6 +249,9 @@ class VersioncontrolCommandsConfig(CommandsConfig):
     
     def get_workdirmanager(self,path):
         return self.svc.get_workdir_manager_for_path(path)
+
+    def list_file_states(self, path):
+        return self.svc.list_file_states(path)
 
 class VersionControlActions(ActionsConfig):
 
@@ -618,7 +617,7 @@ class Versioncontrol(Service):
                 pass
         return found_vcm
 
-    def list_files(self, path):
+    def list_file_states(self, path):
         workdir = self.get_workdir_manager_for_path(path)
 
         if workdir is not None: 

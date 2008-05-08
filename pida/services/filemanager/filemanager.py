@@ -235,8 +235,27 @@ class FilemanagerView(PidaView):
         self.file_list.clear()
         self.entries.clear()
 
-        for lister in self.svc.features('file_lister'):
-            GeneratorTask(lister, self.add_or_update_file).start(self.path)
+        def work(basepath):
+            dir_content = listdir(basepath)
+            # add all files from vcs and remove the corresponding items 
+            # from dir_content
+            for item in self.svc.boss.cmd('versioncontrol', 'list_file_states',
+              path=self.path):
+                if (item[1] == self.path):
+                    try:
+                        dir_content.remove(item[0])
+                    except:
+                        pass
+                    yield item
+            # handle remaining files
+            for filename in dir_content:
+                if (path.isdir(path.join(basepath, filename))):
+                    state = 'normal'
+                else:
+                    state = 'unknown'
+                yield filename, basepath, state
+
+        GeneratorTask(work, self.add_or_update_file).start(self.path)
 
         self.create_ancest_tree()
 
@@ -407,11 +426,9 @@ class FilemanagerFeatureConfig(FeaturesConfig):
     def create_features(self):
         self.create_feature('file_manager')
         self.create_feature('file_hidden_check')
-        self.create_feature('file_lister')
 
     def subscribe_foreign_features(self):
         self.subscribe_feature('file_hidden_check', self.svc.check_hidden_regex)
-        self.subscribe_feature('file_lister', self.svc.file_lister)
 
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
@@ -649,10 +666,6 @@ class Filemanager(Service):
             return True
         else:
             return re.match(_re, name) is None
-
-    def file_lister(self, basepath):
-        for name in listdir(basepath):
-            yield name, basepath, 'normal'
 
     def rename_file(self, old, new, basepath):
         pass
