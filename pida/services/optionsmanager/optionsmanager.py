@@ -43,12 +43,6 @@ from pida.core.locale import Locale
 locale = Locale('optionsmanager')
 _ = locale.gettext
 
-def service_sort_func(s1, s2):
-    return cmp(s1.get_label(), s2.get_label())
-
-def options_sort_func(o, o1):
-    return cmp(o1.name, o2.name)
-
 
 class PidaOptionsView(PidaGladeView):
 
@@ -78,7 +72,7 @@ class PidaOptionsView(PidaGladeView):
                 self._services_display.append(
                     (svc.get_label(), svc),
                 )
-        self._services.sort(service_sort_func)
+        self._services.sort(key=Service.sort_key)
         self._tips = gtk.Tooltips()
         self.service_combo.prefill(self._services_display)
         if current is not None:
