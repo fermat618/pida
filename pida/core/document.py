@@ -230,7 +230,7 @@ class Document(object):
         #XXX: 
         match = self.boss.cmd('project', 'get_project_for_document', document=self)
         if match is None:
-            return None, os.path.join(os.path.split(self.directory)[-2:])
+            return None, os.path.join(*os.path.split(self.directory)[-2:])
         else:
             project, path = match
             return project, path
