@@ -8,7 +8,3 @@ class BaseConfig(object):
     def create(self):
         """Override to do the creations"""
 
-    def get_service_name(self):
-        return self.svc.get_name()
-
-
