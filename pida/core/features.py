@@ -20,59 +20,24 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-from pida.core.base import BaseConfig
+from pida.core.base import SubscriberConfig
 
 from pida.core.plugins import Registry
 
-class FeaturesConfig(BaseConfig):
+class FeaturesConfig(SubscriberConfig):
 
-    def create(self):
-        self._features = Registry()
-        self._featurenames = []
-        self._foreign_feature_objects = {}
-        self.create_features()
-
-    def create_features(self):
-        """Create the features here"""
+    foreign_name = "features"
 
     def create_feature(self, name):
-        self._featurenames.append(name)
-
-    def list_features(self):
-        return self._featurenames
+        self.publish(name)
 
     def subscribe_foreign_features(self):
         """Subscribe to features here"""
 
-    def unsubscribe_foreign_features(self):
-        for (servicename, featurename), feature_objects in self._foreign_feature_objects.items():
-            for feature_object in feature_objects:
-                self.svc.unsubscribe_foreign_feature(servicename, feature_object)
-            del self._foreign_feature_objects[(servicename, featurename)]
-
-    def has_foreign_feature(self, servicename, featurename):
-        for (service, feature), feature_object in self._foreign_feature_objects.items():
-            if servicename == service and featurename == feature:
-                return True
-        return False
-
-    def subscribe_foreign_feature(self, servicename, featurename, instance):
-        feature_object = self.svc.subscribe_foreign_feature(servicename, featurename, instance)
-        self._foreign_feature_objects.setdefault((servicename, featurename), []).append(feature_object)
-
     def subscribe_feature(self, featurename, instance):
-        return self._features.register_plugin(
-            instance=instance,
-            features=(featurename,)
-        )
+        self.subscribe(featurename, instance)
+        return featurename, instance #XXX: that will be the feature_object, ugly
 
-    def unsubscribe_feature(self, feature_object):
-        self._features.unregister(feature_object)
-
-    def get_feature_providers(self, featurename):
-        return self._features.get_features(featurename)
-
-    #XXX: workaround for keeping svc.features(name)
-    __call__ = get_feature_providers
-
+    def __call__(self, key):
+        return self[key]
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

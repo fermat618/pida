@@ -421,7 +421,7 @@ class GenericDebuggerController(ProjectController):
         
 class DebuggerFeaturesConfig(FeaturesConfig):
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('project', IProjectController, 
+        self.subscribe_foreign('project', IProjectController, 
                                                     self.svc.controller_config)
 
 class DebuggerOptionsConfig(OptionsConfig):

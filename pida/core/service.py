@@ -48,7 +48,7 @@ class Service(object):
 
     def subscribe_all(self):
         self._subscribe_foreign_events()
-        self._subscribe_foreign_features()
+        self.features.subscribe_foreign_features()
         self._subscribe_keyboard_shortcuts()
 
     @classmethod
@@ -75,7 +75,7 @@ class Service(object):
     def stop_components(self):
         # Will remove everything
         self._unsubscribe_foreign_events()
-        self._unsubscribe_foreign_features()
+        self.features.unsubscribe_foreign()
         self._unregister_actions_config()
 
     ##########
@@ -125,36 +125,6 @@ class Service(object):
 
     def emit(self, name, **kw):
         self.events.emit(name, **kw)
-
-    ##########
-    # Features
-
-
-    def _subscribe_foreign_features(self):
-        self.features.subscribe_foreign_features()
-
-    def _unsubscribe_foreign_features(self):
-        self.features.unsubscribe_foreign_features()
-
-    # Public Feature API
-
-    def list_features(self):
-        return self.features.list_features()
-
-    def has_foreign_feature(self, servicename, featurename):
-        return self.features.has_foreign_feature(servicename, featurename)
-
-    def subscribe_feature(self, feature, instance):
-        return self.features.subscribe_feature(feature, instance)
-
-    def unsubscribe_feature(self, feature_object):
-        self.features.unsubscribe_feature(feature_object)
-
-    def subscribe_foreign_feature(self, servicename, feature, instance):
-        return self.boss.subscribe_feature(servicename, feature, instance)
-
-    def unsubscribe_foreign_feature(self, servicename, feature_object):
-        self.boss.unsubscribe_feature(servicename, feature_object)
 
     ##########
     # Actions

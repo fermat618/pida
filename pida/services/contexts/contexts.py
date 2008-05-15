@@ -40,7 +40,7 @@ CONTEXT_TYPES = [
 
 class ContextFeaturesConfig(FeaturesConfig):
 
-    def create_features(self):
+    def create(self):
         for context in CONTEXT_TYPES:
             self.create_feature(context)
 

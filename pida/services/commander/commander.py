@@ -206,9 +206,9 @@ class CommanderCommandsConfig(CommandsConfig):
 class CommanderFeaturesConfig(FeaturesConfig):
 
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('contexts', 'file-menu',
+        self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
-        self.subscribe_foreign_feature('contexts', 'dir-menu',
+        self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'commander-dir-menu.xml'))
 
 class CommanderEvents(EventsConfig):

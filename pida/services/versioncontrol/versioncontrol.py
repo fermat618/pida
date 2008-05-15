@@ -218,7 +218,7 @@ class CommitViewer(PidaGladeView):
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
     
-    def create_features(self):
+    def create(self):
         self.create_feature("workdir-manager")
     
     def subscribe_foreign_features(self):
@@ -227,13 +227,13 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
         for mgr in all_known:
             self.subscribe_feature("workdir-manager", mgr)
 
-        self.subscribe_foreign_feature(
+        self.subscribe_foreign(
                 "filemanager", "file_hidden_check",
                 self.svc.ignored_file_checker
                 )
-        self.subscribe_foreign_feature('contexts', 'file-menu',
+        self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
-        self.subscribe_foreign_feature('contexts', 'dir-menu',
+        self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'versioncontrol-dir-menu.xml'))
 
 class VersionControlEvents(EventsConfig):

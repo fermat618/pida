@@ -250,7 +250,7 @@ class ProjectEventsConfig(EventsConfig):
             self.editor_started)
 
     def plugin_started(self, plugin):
-        if plugin.has_foreign_feature('project', IProjectController):
+        if plugin.features.has_foreign('project', IProjectController):
             self.svc.refresh_controllers()
 
     def plugin_stopped(self, plugin):
@@ -341,11 +341,11 @@ class ProjectActionsConfig(ActionsConfig):
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
-    def create_features(self):
+    def create(self):
         self.create_feature(IProjectController)
 
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('project', IProjectController, GenericExecutionController)
+        self.subscribe_foreign('project', IProjectController, GenericExecutionController)
 
 
 class ProjectOptions(OptionsConfig):

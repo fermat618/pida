@@ -192,7 +192,7 @@ class WebCommands(CommandsConfig):
 class WebFeatures(FeaturesConfig):
 
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('contexts', 'url-menu',
+        self.subscribe_foreign('contexts', 'url-menu',
             (self.svc.get_action_group(), 'webbrowser-url-menu.xml'))
 
 class WebActions(ActionsConfig):

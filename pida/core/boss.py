@@ -124,14 +124,6 @@ class Boss(object):
         svc = self.get_service(servicename)
         svc.unsubscribe_event(event, callback)
 
-    def subscribe_feature(self, servicename, feature, instance):
-        svc = self.get_service(servicename)
-        return svc.subscribe_feature(feature, instance)
-
-    def unsubscribe_feature(self, servicename, feature_object):
-        svc = self.get_service(servicename)
-        svc.unsubscribe_feature(feature_object)
-
     def add_action_group_and_ui(self, actiongroup, uidef):
         self._window.add_action_group(actiongroup)
         return self._window.add_uidef(uidef)

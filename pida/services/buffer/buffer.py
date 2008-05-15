@@ -227,7 +227,7 @@ class BufferActionsConfig(ActionsConfig):
 class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('contexts', 'file-menu',
+        self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'buffer-file-menu.xml'))
 
 class BufferEventsConfig(EventsConfig):

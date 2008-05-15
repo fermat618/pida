@@ -308,9 +308,9 @@ class PythonDistutilstoolsController(ProjectController):
 class PythonFeatures(FeaturesConfig):
 
     def subscribe_foreign_features(self):
-        self.subscribe_foreign_feature('project', IProjectController,
+        self.subscribe_foreign('project', IProjectController,
             PythonProjectController)
-        self.subscribe_foreign_feature('project', IProjectController,
+        self.subscribe_foreign('project', IProjectController,
             PythonDistutilstoolsController)
 
 

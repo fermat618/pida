@@ -27,7 +27,7 @@ from pida.core.features import FeaturesConfig
 
 class MyFeatureConfig(FeaturesConfig):
 
-    def create_features(self):
+    def create(self):
         self.create_feature('banana')
 
 class TestFeatureConfig(TestCase):
@@ -37,17 +37,16 @@ class TestFeatureConfig(TestCase):
         self._fc.create()
 
     def test_add_feature(self):
-        self._fc.create_feature('banana')
-        self.assert_('banana' in self._fc.list_features())
+        self._fc.create_feature('banana2')
+        self.assert_('banana2' in self._fc)
+        self.assert_('banana' in self._fc)
 
     def test_subscribe_feature(self):
         self._fc.create_feature('banana')
-        self.assert_('banana' in self._fc.list_features())
+        self.assert_('banana' in self._fc)
         inst = 123
-        self._fc.subscribe_feature('banana', inst)
-        self.assert_(123 in self._fc.get_feature_providers('banana'))
-        self.assert_(12 not in self._fc.get_feature_providers('banana'))
-        
+        self._fc.subscribe('banana', inst)
+        self.assert_(123 in self._fc('banana'))
+        self.assert_(12 not in self._fc('banana'))
 
-    
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -423,16 +423,16 @@ class FilemanagerCommandsConfig(CommandsConfig):
 
 class FilemanagerFeatureConfig(FeaturesConfig):
 
-    def create_features(self):
+    def create(self):
         self.create_feature('file_manager')
         self.create_feature('file_hidden_check')
 
     def subscribe_foreign_features(self):
-        self.subscribe_feature('file_hidden_check', self.svc.check_hidden_regex)
+        self.subscribe('file_hidden_check', self.svc.check_hidden_regex)
 
-        self.subscribe_foreign_feature('contexts', 'file-menu',
+        self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
-        self.subscribe_foreign_feature('contexts', 'dir-menu',
+        self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
 
 
