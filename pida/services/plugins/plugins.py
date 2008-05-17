@@ -364,9 +364,8 @@ class PluginsOptionsConfig(OptionsConfig):
 
 class PluginsEvents(EventsConfig):
 
-    def create_events(self):
-        self.create_event('plugin_started')
-        self.create_event('plugin_stopped')
+    def create(self):
+        self.publish('plugin_started', 'plugin_stopped')
 
 
 class Plugins(Service):

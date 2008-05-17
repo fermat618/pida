@@ -212,28 +212,29 @@ class DebuggerActionsConfig(ActionsConfig):
 class DebuggerEventsConfig(EventsConfig):
     _breakpoints = {}
 
-    def create_events(self):
+    def create(self):
         # UI events
-        self.create_event('toggle_breakpoint')
+        self.publish('toggle_breakpoint')
 
         # Debugger events
-        self.create_event('debugger_started')
-        self.create_event('reset')
-        self.create_event('step')
-        self.create_event('thread')
-        self.create_event('function_call')
-        self.create_event('function_return')
-        self.create_event('add_breakpoint')
-        self.create_event('del_breakpoint')
-        self.create_event('debugger_ended')
+        self.publish(
+                'debugger_started',
+                'reset',
+                'step',
+                'thread',
+                'function_call',
+                'function_return',
+                'add_breakpoint',
+                'del_breakpoint',
+                'debugger_ended')
 
-        self.subscribe_event('toggle_breakpoint', self.on_toggle_breakpoint)
-        self.subscribe_event('add_breakpoint', self.on_add_breakpoint)
-        self.subscribe_event('del_breakpoint', self.on_del_breakpoint)
-        self.subscribe_event('debugger_started', self.on_start_debugging)
-        self.subscribe_event('debugger_ended', self.on_end_debugging)
+        self.subscribe('toggle_breakpoint', self.on_toggle_breakpoint)
+        self.subscribe('add_breakpoint', self.on_add_breakpoint)
+        self.subscribe('del_breakpoint', self.on_del_breakpoint)
+        self.subscribe('debugger_started', self.on_start_debugging)
+        self.subscribe('debugger_ended', self.on_end_debugging)
 
-        self.subscribe_event('step', self.on_step)
+        self.subscribe('step', self.on_step)
 
     def on_step(self, file, line, function):
         self.svc.boss.cmd('buffer', 'open_file', file_name=file)
@@ -312,10 +313,10 @@ class DebuggerEventsConfig(EventsConfig):
         self.svc.get_action('debug_step').set_sensitive(True)
         self.svc.get_action('debug_next').set_sensitive(True)
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('buffer', 'document-changed',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('buffer', 'document-changed',
                                      self.on_document_changed)
-        self.subscribe_foreign_event('editor', 'started',
+        self.subscribe_foreign('editor', 'started',
                                      self.on_editor_startup)
 
     def on_editor_startup(self):
@@ -420,7 +421,7 @@ class GenericDebuggerController(ProjectController):
         return l
         
 class DebuggerFeaturesConfig(FeaturesConfig):
-    def subscribe_foreign_features(self):
+    def subscribe_all_foreign(self):
         self.subscribe_foreign('project', IProjectController, 
                                                     self.svc.controller_config)
 

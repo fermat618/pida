@@ -801,10 +801,10 @@ class DebuggerCommands(CommandsConfig):
 
 class DebuggerEventsConfig(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        #self.subscribe_foreign_event('buffer', 'document-changed',
+    def subscribe_all_foreign(self):
+        #self.subscribe_foreign('buffer', 'document-changed',
         #                             self.on_document_changed)
-        self.subscribe_foreign_event('editor', 'started',
+        self.subscribe_foreign('editor', 'started',
                                      self.on_editor_startup)
 
     def on_editor_startup(self):

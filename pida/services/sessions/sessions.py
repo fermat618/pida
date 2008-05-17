@@ -197,9 +197,9 @@ class SessionsOptionsConfig(OptionsConfig):
 
 class SessionsEventsConfig(EventsConfig):
 
-    def subscribe_foreign_events(self):    
-        self.subscribe_foreign_event('buffer', 'document-changed', self.svc.save_last_session)
-        self.subscribe_foreign_event('editor', 'started', self.svc.load_last_session)
+    def subscribe_all_foreign(self):    
+        self.subscribe_foreign('buffer', 'document-changed', self.svc.save_last_session)
+        self.subscribe_foreign('editor', 'started', self.svc.load_last_session)
 
 class Sessions(Service):
     """

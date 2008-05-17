@@ -158,7 +158,7 @@ class PidaOptionsView(PidaGladeView):
 
 class OptionsActions(ActionsConfig):
 
-    def create_actions(self):
+    def create_actions(self): 
         self.create_action(
             'show_options',
             TYPE_TOGGLE,
@@ -177,11 +177,11 @@ class OptionsActions(ActionsConfig):
 
 class OptionsEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('plugins', 'plugin_started',
-                                     self.plugin_changed)
-        self.subscribe_foreign_event('plugins', 'plugin_stopped',
-                                     self.plugin_changed)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('plugins', 'plugin_started',
+                               self.plugin_changed)
+        self.subscribe_foreign('plugins', 'plugin_stopped',
+                               self.plugin_changed)
 
     def plugin_changed(self, plugin):
         if plugin.options:

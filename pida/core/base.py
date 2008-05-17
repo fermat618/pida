@@ -20,9 +20,10 @@ class SubscriberConfig(BaseConfig):
         self.foreign_subscriptions = []
         BaseConfig.__init__(self, service)
 
-    def publish(self, name):
-        """publish a new subscription point"""
-        self.published[name] = set()
+    def publish(self, *names):
+        """publish a new subscription points"""
+        for name in names:
+            self.published[name] = set()
 
     def subscribe(self, name, instance):
         """subscribe an `instance` to the subscription point `name`
@@ -50,6 +51,8 @@ class SubscriberConfig(BaseConfig):
         service = self.svc.boss.get_service(service)
         return getattr(service, self.foreign_name)
 
+    def subscribe_all_foreign(self):
+        """Subscribe to foreign items here"""
 
     def subscribe_foreign(self, service, name, instance):
         foreign = self._get_foreign_config(service)

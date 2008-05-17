@@ -42,12 +42,12 @@ _ = _locale.gettext
 
 class StatusbarEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('buffer', 'document-changed',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('buffer', 'document-changed',
                 self.on_document_changed)
-        self.subscribe_foreign_event('project', 'project_switched',
+        self.subscribe_foreign('project', 'project_switched',
                 self.on_project_switched)
-        self.subscribe_foreign_event('filemanager', 'browsed_path_changed',
+        self.subscribe_foreign('filemanager', 'browsed_path_changed',
                 self.on_browsed_path_changed)
 
     def on_document_changed(self, document):

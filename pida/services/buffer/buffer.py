@@ -226,15 +226,14 @@ class BufferActionsConfig(ActionsConfig):
 
 class BufferFeaturesConfig(FeaturesConfig):
 
-    def subscribe_foreign_features(self):
+    def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'buffer-file-menu.xml'))
 
 class BufferEventsConfig(EventsConfig):
 
-    def create_events(self):
-        self.create_event('document-saved')
-        self.create_event('document-changed')
+    def create(self):
+        self.publish('document-saved', 'document-changed')
 
 class BufferCommandsConfig(CommandsConfig):
 

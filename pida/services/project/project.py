@@ -238,15 +238,15 @@ class ProjectPropertiesView(PidaGladeView):
 
 class ProjectEventsConfig(EventsConfig):
 
-    def create_events(self):
-        self.create_event('project_switched')
+    def create(self):
+        self.publish('project_switched')
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('plugins', 'plugin_started',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('plugins', 'plugin_started',
             self.plugin_started)
-        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+        self.subscribe_foreign('plugins', 'plugin_stopped',
             self.plugin_stopped)
-        self.subscribe_foreign_event('editor', 'started',
+        self.subscribe_foreign('editor', 'started',
             self.editor_started)
 
     def plugin_started(self, plugin):
@@ -342,9 +342,9 @@ class ProjectActionsConfig(ActionsConfig):
 class ProjectFeaturesConfig(FeaturesConfig):
 
     def create(self):
-        self.create_feature(IProjectController)
+        self.publish(IProjectController)
 
-    def subscribe_foreign_features(self):
+    def subscribe_all_foreign(self):
         self.subscribe_foreign('project', IProjectController, GenericExecutionController)
 
 

@@ -203,9 +203,9 @@ class GtagsActions(ActionsConfig):
 
 class GtagsEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('project', 'project_switched',
-                                     self.svc.on_project_switched)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('project', 'project_switched',
+                               self.svc.on_project_switched)
 
 
 # Service class

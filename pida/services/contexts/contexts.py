@@ -42,7 +42,7 @@ class ContextFeaturesConfig(FeaturesConfig):
 
     def create(self):
         for context in CONTEXT_TYPES:
-            self.create_feature(context)
+            self.publish(context)
 
 class ContextCommandsConfig(CommandsConfig):
 
@@ -62,10 +62,10 @@ class ContextCommandsConfig(CommandsConfig):
 
 class ContextEventsConfig(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('plugins', 'plugin_started',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('plugins', 'plugin_started',
             self.plugins_changed)
-        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+        self.subscribe_foreign('plugins', 'plugin_stopped',
             self.plugins_changed)
 
     def plugins_changed(self, plugin):

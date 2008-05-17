@@ -47,8 +47,8 @@ class Service(object):
         self.actions = self.actions_config(self)
 
     def subscribe_all(self):
-        self.events.subscribe_foreign_events()
-        self.features.subscribe_foreign_features()
+        self.events.subscribe_all_foreign()
+        self.features.subscribe_all_foreign()
         self._subscribe_keyboard_shortcuts()
 
     @classmethod
@@ -74,9 +74,9 @@ class Service(object):
 
     def stop_components(self):
         # Will remove everything
-        self._unsubscribe_foreign_events()
+        self.events.unsubscribe_foreign()
         self.features.unsubscribe_foreign()
-        self._unregister_actions_config()
+        self.actions.remove_actions()
 
     ##########
     # Options API
@@ -89,28 +89,19 @@ class Service(object):
     def set_opt(self, name, value):
         return self.options.set_value(name, value)
 
-    ##########
-    # Commands API
-
-
     def cmd(self, commandname, **kw):
+        """delegates a command to the commandsconfig"""
         return self.commands.call(commandname, **kw)
 
-    ##########
-    # Public Events API
-
     def emit(self, name, **kw):
+        """delegates a emited event to the eventsconfig"""
         self.events.emit(name, **kw)
 
     ##########
     # Actions
 
-    def _unregister_actions_config(self):
-        self.actions.remove_actions()
-
     def _subscribe_keyboard_shortcuts(self):
         self.actions.subscribe_keyboard_shortcuts()
-
 
     def get_action_group(self):
         return self.actions.get_action_group()

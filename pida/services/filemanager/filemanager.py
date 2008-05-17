@@ -385,13 +385,15 @@ class FilemanagerView(PidaView):
 
 class FilemanagerEvents(EventsConfig):
 
-    def create_events(self):
-        self.create_event('browsed_path_changed')
-        self.create_event('file_renamed')
+    def create(self):
+        self.publish(
+                'browsed_path_changed',
+                'file_renamed')
+        
+        self.subscribe('file_renamed', self.svc.rename_file)
 
-    def subscribe_foreign_events(self):
-        self.subscribe_event('file_renamed', self.svc.rename_file)
-        self.subscribe_foreign_event('project', 'project_switched',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('project', 'project_switched',
                                      self.svc.on_project_switched)
 
 
@@ -424,11 +426,11 @@ class FilemanagerCommandsConfig(CommandsConfig):
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create(self):
-        self.create_feature('file_manager')
-        self.create_feature('file_hidden_check')
-
-    def subscribe_foreign_features(self):
+        self.publish('file_manager')
+        self.publish('file_hidden_check')
         self.subscribe('file_hidden_check', self.svc.check_hidden_regex)
+
+    def subscribe_all_foreign(self):
 
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))

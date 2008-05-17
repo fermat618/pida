@@ -265,7 +265,7 @@ class BookmarkActions(ActionsConfig):
 
 class BookmarkFeatures(FeaturesConfig):
 
-    def subscribe_foreign_features(self):
+    def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'bookmark-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
@@ -273,9 +273,9 @@ class BookmarkFeatures(FeaturesConfig):
 
 class BookmarkEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('project', 'project_switched',
-                                     self.svc.on_project_switched)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('project', 'project_switched',
+                               self.svc.on_project_switched)
 
 
 

@@ -29,27 +29,6 @@ class EventsConfig(SubscriberConfig):
 
     foreign_name = 'events'
 
-    def create(self):
-        self.create_events()
-
-    def create_events(self):
-        """Create your events here"""
-
-    def create_event(self, name):
-        self.publish(name)
-
-    def subscribe_foreign_events(self):
-        """Subscribe to events here"""
-
-    def subscribe_foreign_event(self, *k):
-        self.subscribe_foreign(*k)
-
-    def subscribe_event(self, event, callback):
-        self.subscribe(event, callback)
-
-    def unsubscribe_event(self, event, callback):
-        self.unsubscribe(event, callback)
-
     def get(self, event):
         return self[event]
 

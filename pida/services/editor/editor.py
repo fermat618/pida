@@ -50,8 +50,8 @@ class EditorOptionsConfig(OptionsConfig):
 
 class EditorEvents(EventsConfig):
 
-    def create_events(self):
-        self.create_event('started')
+    def create(self):
+        self.publish('started')
 
 
 # Service class

@@ -284,8 +284,8 @@ class GrepperOptions(OptionsConfig):
 
 class GrepperEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('project', 'project_switched',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('project', 'project_switched',
             self.svc.set_current_project)
 
 class Grepper(Service):

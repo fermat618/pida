@@ -205,7 +205,7 @@ class CommanderCommandsConfig(CommandsConfig):
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
-    def subscribe_foreign_features(self):
+    def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
@@ -213,9 +213,9 @@ class CommanderFeaturesConfig(FeaturesConfig):
 
 class CommanderEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('project', 'project_switched',
-                                     self.svc.set_current_project)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('project', 'project_switched',
+                               self.svc.set_current_project)
 
 
 

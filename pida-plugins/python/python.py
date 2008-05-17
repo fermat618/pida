@@ -307,7 +307,7 @@ class PythonDistutilstoolsController(ProjectController):
 
 class PythonFeatures(FeaturesConfig):
 
-    def subscribe_foreign_features(self):
+    def subscribe_all_foreign(self):
         self.subscribe_foreign('project', IProjectController,
             PythonProjectController)
         self.subscribe_foreign('project', IProjectController,
@@ -328,9 +328,9 @@ class PythonOptionsConfig(OptionsConfig):
 
 class PythonEventsConfig(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('buffer', 'document-changed', self.on_document_changed)
-        self.subscribe_foreign_event('buffer', 'document-saved', self.on_document_changed)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('buffer', 'document-changed', self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-saved', self.on_document_changed)
 
     def on_document_changed(self, document):
         self.svc.set_current_document(document)

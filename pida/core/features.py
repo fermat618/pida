@@ -22,21 +22,9 @@
 
 from pida.core.base import SubscriberConfig
 
-from pida.core.plugins import Registry
-
 class FeaturesConfig(SubscriberConfig):
 
     foreign_name = "features"
-
-    def create_feature(self, name):
-        self.publish(name)
-
-    def subscribe_foreign_features(self):
-        """Subscribe to features here"""
-
-    def subscribe_feature(self, featurename, instance):
-        self.subscribe(featurename, instance)
-        return featurename, instance #XXX: that will be the feature_object, ugly
 
     def __call__(self, key):
         return self[key]

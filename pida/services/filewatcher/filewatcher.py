@@ -63,9 +63,9 @@ class FileWatcherOptions(OptionsConfig):
 
 class FilewatcherEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('filemanager', 'browsed_path_changed',
-                                     self.svc.on_browsed_path_changed)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('filemanager', 'browsed_path_changed',
+                               self.svc.on_browsed_path_changed)
 
 # Service class
 class Filewatcher(Service):

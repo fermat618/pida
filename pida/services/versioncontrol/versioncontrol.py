@@ -217,18 +217,18 @@ class CommitViewer(PidaGladeView):
 
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
-    
+
     def create(self):
-        self.create_feature("workdir-manager")
-    
-    def subscribe_foreign_features(self):
+        self.publish('workdir-manager')
         from pida.utils.anyvc import all_known
 
         for mgr in all_known:
-            self.subscribe_feature("workdir-manager", mgr)
+            self.subscribe('workdir-manager', mgr)
+
+    def subscribe_all_foreign(self):
 
         self.subscribe_foreign(
-                "filemanager", "file_hidden_check",
+                'filemanager', 'file_hidden_check',
                 self.svc.ignored_file_checker
                 )
         self.subscribe_foreign('contexts', 'file-menu',
@@ -238,10 +238,10 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
 
 class VersionControlEvents(EventsConfig):
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('buffer', 'document-changed',
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('buffer', 'document-changed',
             self.svc.on_document_changed)
-        self.subscribe_foreign_event('project', 'project_switched',
+        self.subscribe_foreign('project', 'project_switched',
             self.svc.on_project_changed)
 
 

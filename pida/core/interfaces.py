@@ -19,9 +19,7 @@ class IOptions(IBaseConfig):
 
 
 class IEvents(IBaseConfig):
-
-    def create_event(name):
-        """Create an Event"""
+    pass
 
 
 class ICommands(IBaseConfig):

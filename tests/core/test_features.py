@@ -28,7 +28,7 @@ from pida.core.features import FeaturesConfig
 class MyFeatureConfig(FeaturesConfig):
 
     def create(self):
-        self.create_feature('banana')
+        self.publish('banana')
 
 class TestFeatureConfig(TestCase):
 
@@ -37,12 +37,12 @@ class TestFeatureConfig(TestCase):
         self._fc.create()
 
     def test_add_feature(self):
-        self._fc.create_feature('banana2')
+        self._fc.publish('banana2')
         self.assert_('banana2' in self._fc)
         self.assert_('banana' in self._fc)
 
     def test_subscribe_feature(self):
-        self._fc.create_feature('banana')
+        self._fc.publish('banana')
         self.assert_('banana' in self._fc)
         inst = 123
         self._fc.subscribe('banana', inst)
