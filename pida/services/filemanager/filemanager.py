@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 
-# Copyright (c) 2007 The PIDA Project
+# Copyright (c) 2007-2008 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -39,15 +39,19 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
+from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString, OTypeStringList
 from pida.core.environment import get_uidef_path
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
 
 from pida.ui.views import PidaView
 from pida.ui.objectlist import AttrSortCombo
+from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
+
+from filehiddencheck import *
+
 
 # locale
 from pida.core.locale import Locale
@@ -149,6 +153,8 @@ class FilemanagerView(PidaView):
         self._vbox = gtk.VBox()
         self._vbox.show()
         self.create_toolbar()
+        self._file_hidden_check_actions = {}
+        self._create_file_hidden_check_toolbar()
         self.create_file_list()
         self._clipboard_file = None
         self._fix_paste_sensitivity()
@@ -203,11 +209,13 @@ class FilemanagerView(PidaView):
     def show_or_hide(self, entry):
         from operator import and_
         def check(checker):
-            return checker(
-                    name=entry.name, 
-                    path=entry.parent_path,
-                    state=entry.state,
-                    )
+            check = checker(self.svc.boss)
+            if (check.identifier in self._file_hidden_check_actions) and \
+               (self._file_hidden_check_actions[check.identifier].get_active()):
+                return check(name=entry.name, path=entry.parent_path,
+                    state=entry.state, )
+            else:
+                return True
 
         if self.svc.opt('show_hidden'):
             show = True
@@ -333,6 +341,84 @@ class FilemanagerView(PidaView):
             directory = parent
         return ancs
 
+    def _on_act_file_hidden_check(self, action, check):
+        if (check.scope == SCOPE_GLOBAL):
+            # global
+            active_checker = self.svc.opt('file_hidden_check')
+            if (action.get_active()):
+                active_checker.append(check.identifier)
+            else:
+                active_checker.remove(check.identifier)
+            self.svc.set_opt('file_hidden_check', active_checker)
+        else:
+            # project
+            if (self.svc.current_project is not None):
+                section = self.svc.current_project.get_section('file_hidden_check')
+                if (section is None):
+                    section = {}
+                section[check.identifier] = action.get_active()
+                self.svc.current_project.save_section('file_hidden_check',
+                  section)
+        self.update_to_path()
+    
+    def __file_hidden_check_scope_project_set_active(self, action):
+        """sets active state of a file hidden check action with
+           scope = project
+           relies on action name = identifier of checker"""
+        if (self.svc.current_project is not None):
+            section = self.svc.current_project.get_section('file_hidden_check')
+            action.set_active(
+              (section is not None) and
+              (action.get_name() in section) and
+              (section[action.get_name()] == 'True'))
+        else:
+            action.set_active(False)
+        
+    
+    def refresh_file_hidden_check(self):
+        """refreshes active status of actions of project scope checker"""
+        for checker in self.svc.features('file_hidden_check'):
+            check = checker(self.svc.boss)
+            if (check.scope == SCOPE_PROJECT):
+                action = self._file_hidden_check_actions[check.identifier]
+                self.__file_hidden_check_scope_project_set_active(action)
+    
+    def _create_file_hidden_check_toolbar(self):
+        self._file_hidden_check_actions = {}
+        menu = gtk.Menu()
+        separator = gtk.SeparatorMenuItem()
+        project_scope_count = 0
+        menu.append(separator)
+        for checker in self.svc.features('file_hidden_check'):
+            check = checker(self.svc.boss)
+            action = gtk.ToggleAction(check.identifier, check.label,
+              check.label, None)
+            # active?
+            if (check.scope == SCOPE_GLOBAL):
+                action.set_active(
+                    check.identifier in self.svc.opt('file_hidden_check'))
+            else:
+                self.__file_hidden_check_scope_project_set_active(action)
+
+            action.connect('activate', self._on_act_file_hidden_check, check)
+            self._file_hidden_check_actions[check.identifier] = action
+            menuitem = action.create_menu_item()
+            if (check.scope == SCOPE_GLOBAL):
+                menu.prepend(menuitem)
+            else:
+                menu.append(menuitem)
+                project_scope_count += 1
+        menu.show_all()
+        if (project_scope_count == 0):
+            separator.hide()
+        toolitem = None
+        for proxy in self.svc.get_action('toolbar_hidden_menu').get_proxies():
+            if (isinstance(proxy, DropDownMenuToolButton)):
+                toolitem = proxy
+                break
+        if (toolitem is not None):
+            toolitem.set_menu(menu)
+
     def get_selected_filename(self):
         fileentry = self.file_list.get_selected()
         if fileentry is not None:
@@ -382,6 +468,25 @@ class FilemanagerView(PidaView):
             self._clipboard_file = None
             self._fix_paste_sensitivity()
 
+class DotFilesFileHiddenCheck(FileHiddenCheck):
+    _identifier = "DotFiles"
+    _label = "Hide Dot-Files"
+    _scope = SCOPE_GLOBAL
+    
+    def __call__(self, name, path, state):
+        return name[0] != '.'
+
+class RegExFileHiddenCheck(FileHiddenCheck):
+    _identifier = "RegEx"
+    _label = "Hide by User defined Regular Expression"
+    _scope = SCOPE_GLOBAL
+    
+    def __call__(self, name, path, state):
+        _re = self.boss.get_service('filemanager').opt('hide_regex')
+        if not re:
+            return True
+        else:
+            return re.match(_re, name) is None
 
 class FilemanagerEvents(EventsConfig):
 
@@ -393,6 +498,17 @@ class FilemanagerEvents(EventsConfig):
         self.subscribe_event('file_renamed', self.svc.rename_file)
         self.subscribe_foreign_event('project', 'project_switched',
                                      self.svc.on_project_switched)
+        self.subscribe_foreign_event('plugins', 'plugin_started',
+            self.on_plugin_started)
+        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+            self.on_plugin_stopped);
+
+    def on_plugin_started(self, plugin):
+        if (plugin.has_foreign_feature('filemanager', 'file_hidden_check')):
+            self.svc.refresh_file_hidden_check_menu()
+    
+    def on_plugin_stopped(self, plugin):
+        self.svc.refresh_file_hidden_check_menu()
 
 
 class FilemanagerCommandsConfig(CommandsConfig):
@@ -428,7 +544,8 @@ class FilemanagerFeatureConfig(FeaturesConfig):
         self.create_feature('file_hidden_check')
 
     def subscribe_foreign_features(self):
-        self.subscribe_feature('file_hidden_check', self.svc.check_hidden_regex)
+        self.subscribe_feature('file_hidden_check', DotFilesFileHiddenCheck)
+        self.subscribe_feature('file_hidden_check', RegExFileHiddenCheck)
 
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
@@ -445,6 +562,12 @@ class FileManagerOptionsConfig(OptionsConfig):
                 OTypeBoolean,
                 True,
                 _('Shows hidden files'))
+        self.create_option(
+                'file_hidden_check',
+                _('Used file hidden checker'),
+                OTypeStringList,
+                [],
+                _('The used file hidden checker'))
         
         self.create_option(
                 'last_browsed_remember',
@@ -565,10 +688,19 @@ class FileManagerActionsConfig(ActionsConfig):
             'toolbar_toggle_hidden',
             TYPE_TOGGLE,
             _('Show Hidden Files'),
-            _('Toggle the display of hidden files'),
+            _('Show hidden files'),
             gtk.STOCK_SELECT_ALL,
             self.on_toggle_hidden,
         )
+        self.create_action(
+            'toolbar_hidden_menu',
+            TYPE_DROPDOWNMENUTOOL,
+            '',
+            _('Setup which kind of files should be hidden'),
+            None,
+            None,
+        )
+
 
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
@@ -589,6 +721,10 @@ class FileManagerActionsConfig(ActionsConfig):
     def on_toolbar_terminal(self, action):
         self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
 
+    def _on_menu_down(self, menu, action):
+        action.set_active(False)
+        print "down"
+    
     def on_toggle_hidden(self, action):
         self.svc.set_opt('show_hidden', action.get_active())
         self.on_toolbar_refresh(action)
@@ -660,19 +796,16 @@ class Filemanager(Service):
             dir = "/" #XXX: unportable, what about non-unix
         self.browse(dir)
 
-    def check_hidden_regex(self, name, path, state):
-        _re = self.opt('hide_regex')
-        if not re:
-            return True
-        else:
-            return re.match(_re, name) is None
-
     def rename_file(self, old, new, basepath):
         pass
 
+    def refresh_file_hidden_check_menu(self):
+        self.get_view()._create_file_hidden_check_toolbar()
+    
     def on_project_switched(self, project):
         self.current_project = project
         self.get_action('toolbar_projectroot').set_sensitive(project is not None)
+        self.get_view().refresh_file_hidden_check()
 
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 
-# Copyright (c) 2007 The PIDA Project
+# Copyright (c) 2007-2008 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,8 @@ from pida.ui.htmltextview import HtmlTextView
 from pida.ui.buttons import create_mini_button
 
 from pida.utils.gthreads import AsyncTask, gcall
+
+from pida.services.filemanager.filehiddencheck import FileHiddenCheck, SCOPE_GLOBAL
 
 # locale
 from pida.core.locale import Locale
@@ -215,6 +217,13 @@ class CommitViewer(PidaGladeView):
         self.set_path(None)
         self.svc.get_action('show_commit').set_active(False)
 
+class VersionControlFileHiddenCheck(FileHiddenCheck):
+    _identifier = "VersionControl"
+    _label = "Hide Ignored Files by Version Control"
+    _scope = SCOPE_GLOBAL
+    
+    def __call__(self, name, path, state):
+        return not (state == "hidden" or state == "ignored")
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
     
@@ -227,10 +236,12 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
         for mgr in all_known:
             self.subscribe_feature("workdir-manager", mgr)
 
-        self.subscribe_foreign_feature(
-                "filemanager", "file_hidden_check",
-                self.svc.ignored_file_checker
-                )
+        #self.subscribe_foreign_feature(
+        #        "filemanager", "file_hidden_check",
+        #        self.svc.ignored_file_checker
+        #        )
+        self.subscribe_foreign_feature('filemanager', 'file_hidden_check',
+            VersionControlFileHiddenCheck)
         self.subscribe_foreign_feature('contexts', 'file-menu',
             (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
         self.subscribe_foreign_feature('contexts', 'dir-menu',
