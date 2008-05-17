@@ -5,7 +5,8 @@
         <toolitem action="toolbar_projectroot" name="toolbar_projectroot"/>
         <toolitem action="toolbar_refresh" name="toolbar_refresh"/>
         <toolitem action="toolbar_terminal" name="toolbar_terminal"/>
-        <toolitem action="toolbar_toggle_hidden" name="toggle_hidden"/>
+        <toolitem action="toolbar_toggle_hidden" name="toolbar_toggle_hidden"/>
+        <toolitem action="toolbar_hidden_menu" name="toolbar_hidden_menu"/>
         <separator />
         <toolitem action="toolbar_delete" name="toolbar_delete"/>
     </toolbar>

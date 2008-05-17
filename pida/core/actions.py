@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005-2006 The PIDA Project
+#Copyright (c) 2005-2006,2008 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,9 @@ from pida.core.base import BaseConfig
 from pida.core.options import OptionItem, manager, OTypeString
 import warnings
 
+# kiwi imports
+from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
+
 
 
 class PidaMenuToolAction(gtk.Action):
@@ -47,11 +50,32 @@ class PidaMenuToolAction(gtk.Action):
         gtk.Action.__init__(self, *args, **kw)
         self.set_tool_item_type(gtk.MenuToolButton)
 
+class PidaDropDownMenuToolAction(gtk.Action):
+    """
+    Custom gtk.Action subclass for handling toolitems with a dropdown menu
+    attached.
+    """
+
+    __gtype_name__ = "PidaDropDownMenuToolAction"
+
+    def __init__(self, *args, **kw):
+        gtk.Action.__init__(self, *args, **kw)
+        self.set_tool_item_type(DropDownMenuToolButton)
+        self._set_arrow = ((kw['label'] == None) or (kw['label'] == '')) and \
+                          (kw['stock_id'] == None)
+
+    def create_tool_item(self):
+        toolitem = gtk.Action.create_tool_item(self)
+        if (self._set_arrow == True):
+            toolitem.set_arrow()
+        return toolitem
+
 
 TYPE_NORMAL = gtk.Action
 TYPE_TOGGLE = gtk.ToggleAction
 TYPE_RADIO = gtk.RadioAction
 TYPE_MENUTOOL = PidaMenuToolAction
+TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
 
 
 accelerator_group = gtk.AccelGroup()
