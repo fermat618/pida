@@ -377,7 +377,7 @@ class FilemanagerView(PidaView):
     
     def refresh_file_hidden_check(self):
         """refreshes active status of actions of project scope checker"""
-        for checker in self.svc.features('file_hidden_check'):
+        for checker in self.svc.features['file_hidden_check']:
             check = checker(self.svc.boss)
             if (check.scope == SCOPE_PROJECT):
                 action = self._file_hidden_check_actions[check.identifier]
@@ -389,7 +389,7 @@ class FilemanagerView(PidaView):
         separator = gtk.SeparatorMenuItem()
         project_scope_count = 0
         menu.append(separator)
-        for checker in self.svc.features('file_hidden_check'):
+        for checker in self.svc.features['file_hidden_check']:
             check = checker(self.svc.boss)
             action = gtk.ToggleAction(check.identifier, check.label,
               check.label, None)
@@ -500,13 +500,13 @@ class FilemanagerEvents(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('project', 'project_switched',
                                      self.svc.on_project_switched)
-        self.subscribe_foreign_event('plugins', 'plugin_started',
+        self.subscribe_foreign('plugins', 'plugin_started',
             self.on_plugin_started)
-        self.subscribe_foreign_event('plugins', 'plugin_stopped',
+        self.subscribe_foreign('plugins', 'plugin_stopped',
             self.on_plugin_stopped);
 
     def on_plugin_started(self, plugin):
-        if (plugin.has_foreign_feature('filemanager', 'file_hidden_check')):
+        if (plugin.features.has_foreign('filemanager', 'file_hidden_check')):
             self.svc.refresh_file_hidden_check_menu()
     
     def on_plugin_stopped(self, plugin):
