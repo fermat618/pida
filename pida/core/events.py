@@ -23,126 +23,37 @@
 
 import time
 
-from base import BaseConfig
+from base import SubscriberConfig
 
-class Event(object):
+class EventsConfig(SubscriberConfig):
 
-    """
-    An event dispatcher is the central events object. To use it you must
-    first create an event with the ``create_event`` method, this will return
-    an event source which is basically the function you'll use to trigger
-    the event. After that you register the callbacks. Its usage follows:
-
-    >>> dispatcher = Event()
-    >>> evt_src = dispatcher.create_event ("on-ring-event")
-    >>> def callback1 ():
-    ...     print "riiiing!"
-
-    >>> dispatcher.register("on-ring-event", callback1)
-    
-    >>> evt_src ()
-    riiiing!
-    
-    """
-    def __init__(self):
-        self.__events = {}
-
-    def create_event (self, event_name):
-        self.__events[event_name] = []
-        def event_source (*args, **kwargs):
-            for callback in self.__events[event_name]:
-                callback(*args, **kwargs)
-        return event_source
-
-    def create_events (self, event_names, event_sources = None):
-        """
-        This is a utility method that creates or fills a dict-like object
-        and returns it. The keys are the event names and the values are the
-        event sources.
-        """
-        if event_sources is None:
-            event_sources = {}
-            
-        for evt_name in event_names:
-            event_sources[evt_name] = self.create_event(evt_name)
-        return event_sources
-
-    def has_event(self, event_name):
-        return event_name in self.__events
-
-    def register(self, event_name, callback):
-        assert self.has_event(event_name)
-        self.__events[event_name].append(callback)
-
-    def unregister(self, event_name, callback):
-        assert self.has_event(event_name)
-        self.__events[event_name].remove(callback)
-
-    def emit(self, event_name, **kw):
-        for callback in self.__events.get(event_name):
-            # TODO: remove this after profilling is done 
-            current_time = time.time()
-            callback(**kw)
-            elapsed = time.time() - current_time
-            if elapsed >= 0.001:
-                try:
-                    classname = callback.im_self.__class__.__name__
-                    kind = callback.im_self.__class__.__module__
-                    
-                    # im within pida - strip useless extra informations
-                    if kind.startswith("pida"): 
-                        kind = kind.split('.')[1]
-
-                    #self.log.debug( "%s: %f -- %s: %s" % ( 
-                    #      event_name, elapsed, kind, classname))
-                except AttributeError, v:
-                    #self.log.debug(
-                    #"Error couldnt extract callback informations - %s"%v)
-                    #self.log.debug(
-                    #    "%s: %f -- %r" % (event_name, elapsed, callback))
-                    pass
-
-    def get(self, event_name):
-        return self.__events[event_name]
-
-    def list_events(self):
-        return self.__events.keys()
-
-
-class EventsConfig(BaseConfig):
+    foreign_name = 'events'
 
     def create(self):
-        self._events = Event()
-        self._foreign_events = {}
         self.create_events()
 
     def create_events(self):
         """Create your events here"""
 
     def create_event(self, name):
-        self._events.create_event(name)
+        self.publish(name)
 
     def subscribe_foreign_events(self):
         """Subscribe to events here"""
 
-    def subscribe_foreign_event(self, servicename, event, callback):
-        self._foreign_events[(servicename, event)] = callback
-        self.svc.subscribe_foreign_event(servicename, event, callback)
-
-    def unsubscribe_foreign_events(self):
-        for (servicename, eventname), callback in self._foreign_events.items():
-            self.svc.unsubscribe_foreign_event(servicename, eventname, callback)
+    def subscribe_foreign_event(self, *k):
+        self.subscribe_foreign(*k)
 
     def subscribe_event(self, event, callback):
-        self._events.register(event, callback)
+        self.subscribe(event, callback)
 
     def unsubscribe_event(self, event, callback):
-        self._events.unregister(event, callback)
+        self.unsubscribe(event, callback)
 
     def get(self, event):
-        return self._events.get(event)
+        return self[event]
 
     def emit(self, event, **kw):
-        return self._events.emit(event, **kw)
-
+        for callback in self[event]:
+            callback(**kw)
 

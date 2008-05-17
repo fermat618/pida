@@ -47,7 +47,7 @@ class Service(object):
         self.actions = self.actions_config(self)
 
     def subscribe_all(self):
-        self._subscribe_foreign_events()
+        self.events.subscribe_foreign_events()
         self.features.subscribe_foreign_features()
         self._subscribe_keyboard_shortcuts()
 
@@ -97,31 +97,7 @@ class Service(object):
         return self.commands.call(commandname, **kw)
 
     ##########
-    # Events
-
-    # Private Events API
-
-    def _subscribe_foreign_events(self):
-        self.events.subscribe_foreign_events()
-
-    def _unsubscribe_foreign_events(self):
-        self.events.unsubscribe_foreign_events()
-
     # Public Events API
-    def get_event(self, name):
-        return self.events.get(name)
-
-    def subscribe_foreign_event(self, servicename, name, callback):
-        self.boss.subscribe_event(servicename, name, callback)
-
-    def unsubscribe_foreign_event(self, servicename, name, callback):
-        self.boss.unsubscribe_event(servicename, name, callback)
-
-    def subscribe_event(self, name, callback):
-        self.events.subscribe_event(name, callback)
-
-    def unsubscribe_event(self, name, callback):
-        self.events.unsubscribe_event(name, callback)
 
     def emit(self, name, **kw):
         self.events.emit(name, **kw)
