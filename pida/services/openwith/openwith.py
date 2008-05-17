@@ -116,7 +116,7 @@ class OpenWithEditor(PidaGladeView):
         self.svc.get_action('show_openwith').set_active(False)
 
     def on_delete_button__clicked(self, button):
-        if self.svc.boss.get_window().yesno_dlg(
+        if self.svc.yesno_dlg(
                 _('Are you sure you want to delete %s') % self._current.name):
             self.items_ol.remove(self._current, select=True)
             self.save_button.set_sensitive(True)

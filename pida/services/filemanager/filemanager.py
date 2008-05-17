@@ -212,8 +212,8 @@ class FilemanagerView(PidaView):
         if self.svc.opt('show_hidden'):
             show = True
         else:
-            show = reduce(and_, map(check, 
-                self.svc.features('file_hidden_check')))
+            show = all(check(x)
+                        for x in self.svc.features['file_hidden_check'])
 
         if show:
             if entry.visible:
@@ -268,7 +268,7 @@ class FilemanagerView(PidaView):
                     self.entries[oname] = FileEntry(oname, obasepath, self)
                 self.entries[oname].state = state
                 self.show_or_hide(self.entries[oname])
-        for lister in self.svc.features('file_lister'):
+        for lister in self.svc.features['file_lister']:
             GeneratorTask(lister, _update_file).start(self.path)
 
     def update_single_file(self, name, basepath):

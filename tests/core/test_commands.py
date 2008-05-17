@@ -50,21 +50,21 @@ class TestCommandConfig(TestCase):
 
     def test_named_call(self):
         self.assertEqual(self.something_done, False)
-        self.com.call('do_something')
+        self.com('do_something')
         self.assertEqual(self.something_done, True)
 
     def test_argument(self):
         self.assertEqual(self.another, None)
-        self.com.call('do_another', banana='melon')
+        self.com('do_another', banana='melon')
         self.assertEqual(self.another, 'melon')
 
     def test_error_non_kw(self):
         def c():
-            self.com.call('do_another', 'melon')
+            self.com('do_another', 'melon')
         self.assertRaises(TypeError, c)
 
     def test_return_val(self):
-        self.assertEqual(self.com.call('do_one_more'), 12345)
+        self.assertEqual(self.com('do_one_more'), 12345)
 
     
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

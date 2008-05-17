@@ -216,7 +216,7 @@ class GrepperView(PidaGladeView):
             return False
 
         if not os.path.exists(location):
-            self.svc.boss.get_window().error_dlg(_('Path does not exist'))
+            self.svc.boss.error_dlg(_('Path does not exist'))
             return False
 
         if not self.re_check.get_active():
@@ -226,7 +226,7 @@ class GrepperView(PidaGladeView):
             regex = re.compile(pattern)
         except Exception, e:
             # More verbose error dialog
-            self.svc.boss.get_window().error_dlg(
+            self.svc.error_dlg(
                 _('Improper regular expression "%s"') % pattern,
                 str(e))
             return False

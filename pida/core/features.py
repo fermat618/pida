@@ -23,9 +23,6 @@
 from pida.core.base import SubscriberConfig
 
 class FeaturesConfig(SubscriberConfig):
-
     foreign_name = "features"
 
-    def __call__(self, key):
-        return self[key]
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

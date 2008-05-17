@@ -409,18 +409,18 @@ class Project(Service):
         ###
         self.project_list = ProjectListView(self)
         self.project_properties_view = ProjectPropertiesView(self)
-        self.project_properties_view.set_controllers(self.features(IProjectController))
+        self.project_properties_view.set_controllers(self.features[IProjectController])
         self._read_options()
     
     def refresh_controllers(self):
         self._manager.clear_controllers()
         self._register_controllers()
-        self.project_properties_view.set_controllers(self.features(IProjectController))
+        self.project_properties_view.set_controllers(self.features[IProjectController])
         if self._project is not None:
             self.set_current_project(self._project)
 
     def _register_controllers(self):
-        for controller_type in self.features(IProjectController):
+        for controller_type in self.features[IProjectController]:
             self._manager.register_controller(controller_type)
 
     def _read_options(self):

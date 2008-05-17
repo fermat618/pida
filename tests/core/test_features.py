@@ -46,7 +46,7 @@ class TestFeatureConfig(TestCase):
         self.assert_('banana' in self._fc)
         inst = 123
         self._fc.subscribe('banana', inst)
-        self.assert_(123 in self._fc('banana'))
-        self.assert_(12 not in self._fc('banana'))
+        self.assert_(123 in self._fc['banana'])
+        self.assert_(12 not in self._fc['banana'])
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

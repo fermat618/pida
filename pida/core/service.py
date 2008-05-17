@@ -49,7 +49,7 @@ class Service(object):
     def subscribe_all(self):
         self.events.subscribe_all_foreign()
         self.features.subscribe_all_foreign()
-        self._subscribe_keyboard_shortcuts()
+        self.actions.subscribe_keyboard_shortcuts()
 
     @classmethod
     def get_name(cls):
@@ -91,7 +91,7 @@ class Service(object):
 
     def cmd(self, commandname, **kw):
         """delegates a command to the commandsconfig"""
-        return self.commands.call(commandname, **kw)
+        return self.commands(commandname, **kw)
 
     def emit(self, name, **kw):
         """delegates a emited event to the eventsconfig"""
@@ -99,9 +99,6 @@ class Service(object):
 
     ##########
     # Actions
-
-    def _subscribe_keyboard_shortcuts(self):
-        self.actions.subscribe_keyboard_shortcuts()
 
     def get_action_group(self):
         return self.actions.get_action_group()

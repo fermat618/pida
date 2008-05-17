@@ -29,9 +29,6 @@ class EventsConfig(SubscriberConfig):
 
     foreign_name = 'events'
 
-    def get(self, event):
-        return self[event]
-
     def emit(self, event, **kw):
         for callback in self[event]:
             callback(**kw)

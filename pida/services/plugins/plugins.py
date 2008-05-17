@@ -549,7 +549,7 @@ class Plugins(Service):
         if not os.path.exists(item.directory):
             return
         if not force:
-            if not self.boss.get_window().yesno_dlg(
+            if not self.yesno_dlg(
                 _('Are you sure to delete "%s" plugin ?' % item.name)):
                 return
         running_list = [plugin.servicename for plugin in

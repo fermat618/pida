@@ -47,7 +47,7 @@ class PidaAboutDialog(gtk.AboutDialog):
 
     def __init__(self, boss):
         gtk.AboutDialog.__init__(self)
-        self.set_transient_for(boss.get_window())
+        self.set_transient_for(boss.window)
         self.set_name(PIDA_NAME)
         self.set_version(PIDA_VERSION)
         self.set_logo(self._create_logo())

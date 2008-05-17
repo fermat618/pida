@@ -33,7 +33,7 @@ class Boss(object):
         self.show_splash()
         self._sm = ServiceManager(self)
         self._run_first_time()
-        self._window = PidaWindow(self)
+        self.window = PidaWindow(self)
 
     @property
     def log(self):
@@ -61,7 +61,7 @@ class Boss(object):
             editor_name = self.get_service('editor').opt('editor_type')
             self._sm.activate_editor(editor_name)
             self._icons = IconRegister()
-            self._window.start()
+            self.window.start()
             self._sm.start_services()
             self._sm.start_editor()
             return True
@@ -116,21 +116,14 @@ class Boss(object):
     def stop_plugin(self, plugin_name):
         return self._sm.stop_plugin(plugin_name)
 
-    def subscribe_event(self, servicename, event, callback):
-        svc = self.get_service(servicename)
-        svc.subscribe_event(event, callback)
-
-    def unsubscribe_event(self, servicename, event, callback):
-        svc = self.get_service(servicename)
-        svc.unsubscribe_event(event, callback)
 
     def add_action_group_and_ui(self, actiongroup, uidef):
-        self._window.add_action_group(actiongroup)
-        return self._window.add_uidef(uidef)
+        self.window.add_action_group(actiongroup)
+        return self.window.add_uidef(uidef)
 
     def remove_action_group_and_ui(self, actiongroup, ui_merge_id):
-        self._window.remove_uidef(ui_merge_id)
-        self._window.remove_action_group(actiongroup)
+        self.window.remove_uidef(ui_merge_id)
+        self.window.remove_action_group(actiongroup)
 
     def cmd(self, servicename, commandname, **kw):
         return self.get_service(servicename).cmd(commandname, **kw)
@@ -138,15 +131,11 @@ class Boss(object):
     def get_pida_home(self):
         return self._env.pida_home
 
-    def get_window(self):
-        return self._window
-    window = property(get_window)
-
     def show_splash(self):
         self._splash = SplashScreen()
         self._splash.show_splash()
 
     def hide_splash(self):
         self._splash.hide_splash()
-        
+
 

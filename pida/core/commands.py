@@ -25,7 +25,7 @@ from pida.core.base import BaseConfig
 
 class CommandsConfig(BaseConfig):
 
-    def call(self, name, **kw):
+    def __call__(self, name, **kw):
         cmd = getattr(self, name)
         val = cmd(**kw)
         return val

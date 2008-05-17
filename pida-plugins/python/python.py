@@ -264,7 +264,7 @@ class PythonProjectController(BasePythonProjectController):
         execute_file = self.get_option('execute_file')
         execute_args = self.get_option('execute_args')
         if not execute_file:
-            self.boss.get_window().error_dlg(_('Controller has no "execute_file" set'))
+            self.boss.window.error_dlg(_('Controller has no "execute_file" set'))
         else:
             commandargs = [self.get_python_executable(), execute_file]
             if execute_args is not None:
@@ -289,7 +289,7 @@ class PythonDistutilstoolsController(ProjectController):
     def execute(self):
         command = self.get_option('command')
         if not command:
-            self.boss.get_window().error_dlg(_('Controller has no "command" set'))
+            self.boss.window.error_dlg(_('Controller has no "command" set'))
         else:
             commandargs = [self.get_python_executable(), 'setup.py', command]
             args = self.get_option('args')

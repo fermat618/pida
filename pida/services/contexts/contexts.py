@@ -88,7 +88,7 @@ class Contexts(Service):
         for context in CONTEXT_TYPES:
             uim = self._uims[context] = gtk.UIManager()
             uim.add_ui_from_file(self.get_base_ui_definition_path(context))
-            for ag, uidef in self.features(context):
+            for ag, uidef in self.features[context]:
                 uim.insert_action_group(ag, 0)
                 uidef_path = get_uidef_path(uidef)
                 uim.add_ui_from_file(uidef_path)

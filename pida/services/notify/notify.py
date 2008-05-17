@@ -125,7 +125,7 @@ class NotifyPopupView(object):
         self.win.connect_after('expose_event', self.expose)
         self.win.connect('size-request', self.on_size_request)
         self.win.set_events(gtk.gdk.POINTER_MOTION_MASK)
-        self.win.set_transient_for(self.svc.boss.get_window())
+        self.win.set_transient_for(self.svc.window)
         self.vbox = gtk.VBox()
         self.win.add(self.vbox)
         self.counter = 0
