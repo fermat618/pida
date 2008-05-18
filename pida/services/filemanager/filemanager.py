@@ -166,6 +166,8 @@ class FilemanagerView(PidaView):
         self.file_list.set_columns(self._columns);
         self.file_list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         #XXX: real file
+        self.file_list.get_treeview().connect('button-press-event',
+            self.on_file_button_press_event)
         self.file_list.connect('selection-changed', self.on_selection_changed)
         self.file_list.connect('row-activated', self.on_file_activated)
         self.file_list.connect('right-click', self.on_file_right_click)
@@ -290,6 +292,20 @@ class FilemanagerView(PidaView):
         entry = self.entries.pop(filename, None)
         if entry is not None and entry.visible:
             self.file_list.remove(entry)
+
+    def on_file_button_press_event(self, file_list, event):
+        # unselect all rows if user clicked on the empty space below the last
+        # row
+        if (file_list.get_path_at_pos(int(event.x), int(event.y)) is None):
+            file_list.get_selection().unselect_all()
+            if (event.button == 3):
+                # right click on base directory
+                item = FileEntry(os.path.basename(self.path),
+                    os.path.dirname(self.path), self)
+                self.on_file_right_click(file_list, item, event)
+            return True
+        else:
+            return False
 
     def on_file_activated(self, rowitem, fileentry):
         if os.path.exists(fileentry.path):
