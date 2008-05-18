@@ -69,7 +69,7 @@ class SubscriberConfig(BaseConfig):
             except KeyError: # ignore unsubscribe errors
                 pass
 
-        self.foreign_subscriptions.clear()
+        self.foreign_subscriptions = []
 
 
     def has_foreign(self, service, name):
