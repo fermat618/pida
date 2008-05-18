@@ -133,7 +133,7 @@ class BookmarkView(PidaView):
         self._books = gtk.Notebook()
         self._books.set_border_width(6)
         self._list_dirs = self.create_objectlist('stock_folder', _('Dirs'))
-        self._list_files = self.create_objectlist('text-x-generic', _('Files')))
+        self._list_files = self.create_objectlist('text-x-generic', _('Files'))
         """
         self._list_url = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_url.set_headers_visible(False)
