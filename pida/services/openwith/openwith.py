@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 import os, glob
+from subprocess import Popen
 
 import gtk
 
@@ -50,16 +51,28 @@ class OpenWithItem(object):
             self.name = section['name']
             self.command = section['command']
             self.glob = section['glob']
+            if section.has_key('terminal'):
+                # the bad guy saves a boolean as text in openwith.ini but 
+                # cannot restore it as a boolean later
+                if (isinstance(section['terminal'], str)):
+                    self.terminal = section['terminal'] == 'True'
+                else:
+                    self.terminal = section['terminal']
+            else:
+                # if ini is from an older version without terminal property
+                self.terminal = True
         else:
             self.name = _('unnamed')
             self.command = ''
             self.glob = '*'
+            self.terminal = True
 
     def as_dict(self):
         return dict(
             name=self.name,
             command=self.command,
             glob=self.glob,
+            terminal=self.terminal,
         )
 
     def match(self, file_name):
@@ -77,6 +90,7 @@ class OpenWithEditor(PidaGladeView):
             Column('name', title=_('Name')),
             Column('command', title=_('Command')),
             Column('glob', title=_('Glob')),
+            Column('terminal', title=_('Terminal'), radio=True, data_type=bool),
         ])
         self._current = None
         self._block_changed = False
@@ -93,12 +107,14 @@ class OpenWithEditor(PidaGladeView):
             self.name_entry.set_text('')
             self.command_entry.set_text('')
             self.glob_entry.set_text('')
+            self.terminal_checkbutton.set_active(True)
             self.attrs_table.set_sensitive(False)
             self.delete_button.set_sensitive(False)
         else:
             self.name_entry.set_text(item.name)
             self.command_entry.set_text(item.command)
             self.glob_entry.set_text(item.glob)
+            self.terminal_checkbutton.set_active(item.terminal)
             self.attrs_table.set_sensitive(True)
             self.delete_button.set_sensitive(True)
         self._block_changed = False
@@ -137,6 +153,11 @@ class OpenWithEditor(PidaGladeView):
     def on_glob_entry__changed(self, entry):
         if not self._block_changed:
             self._current.glob = entry.get_text()
+            self.item_changed()
+
+    def on_terminal_checkbutton__toggled(self, checkbutton):
+        if not self._block_changed:
+            self._current.terminal = checkbutton.get_active()
             self.item_changed()
 
     def item_changed(self):
@@ -192,9 +213,12 @@ class OpenWithActions(ActionsConfig):
 
     def on_open_with(self, action, file_name, item):
         command = item.command % file_name
-        self.svc.boss.cmd('commander', 'execute',
-            commandargs=['bash', '-c', command], title=item.name,
-            icon=gtk.STOCK_OPEN)
+        if (item.terminal):
+            self.svc.boss.cmd('commander', 'execute',
+                commandargs=['bash', '-c', command], title=item.name,
+                icon=gtk.STOCK_OPEN)
+        else:
+            Popen(command, shell=True)
 
 
 class OpenWithFeatures(FeaturesConfig):
@@ -242,7 +266,9 @@ class Openwith(Service):
                 yield item
 
     def create_default_item(self):
-        return OpenWithItem(dict(name="See", glob="*", command="see %s"))
+        print "create_default_item"
+        return OpenWithItem(dict(name="See", glob="*", command="see %s",
+            terminal=True))
         
 
 # Required Service attribute for service loading
