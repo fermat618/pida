@@ -431,7 +431,7 @@ class Plugins(Service):
         l_installed = list(self._loader.get_all_service_files([self.plugin_path]))
         if start:
             start_list = manager.get_value(self._start_list)
-        running_list = [plugin.servicename for plugin in
+        running_list = [plugin.get_name() for plugin in
                 self.boss.get_plugins()]
 
         loading_errors = []
@@ -552,7 +552,7 @@ class Plugins(Service):
             if not self.yesno_dlg(
                 _('Are you sure to delete "%s" plugin ?' % item.name)):
                 return
-        running_list = [plugin.servicename for plugin in
+        running_list = [plugin.get_name() for plugin in
                 self.boss.get_plugins()]
         if item.plugin in running_list:
             self.stop_plugin(item.plugin)
@@ -640,7 +640,7 @@ class Plugins(Service):
         config.write()
 
     def save_running_plugin(self):
-        list = [plugin.servicename for plugin in self.boss.get_plugins()]
+        list = [plugin.get_name() for plugin in self.boss.get_plugins()]
         manager.set_value(self._start_list, list)
 
     def _get_item_markup(self, item):

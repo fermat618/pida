@@ -83,7 +83,7 @@ class PidaOptionsView(PidaGladeView):
                 
 
     def _add_service(self, svc):
-        self._service_pages[svc.servicename] = self.options_book.get_n_pages()
+        self._service_pages[svc.get_name()] = self.options_book.get_n_pages()
         self.options_book.append_page(self._create_page(svc))
         self.options_book.show_all()
         
@@ -130,9 +130,9 @@ class PidaOptionsView(PidaGladeView):
         self.current = svc = self.service_combo.read()
         if not svc:
             return # no service was selected
-        if not svc.servicename in self._service_pages:
+        if not svc.get_name() in self._service_pages:
             self._add_service(svc)
-        pagenum = self._service_pages[svc.servicename]
+        pagenum = self._service_pages[svc.get_name()]
         self.options_book.set_current_page(pagenum)
 
     def _on_option_changed(self, widget, option):

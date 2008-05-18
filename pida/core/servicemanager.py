@@ -42,8 +42,6 @@ class ServiceLoader(object):
         if module is not None:
             service_class = self._load_service_class(module)
             if service_class is not None:
-                service_class.servicename = module.servicename
-                service_class.servicefile_path = module.servicefile_path
                 return service_class
 
     def load_all_services(self, service_dirs, boss):
@@ -88,8 +86,6 @@ class ServiceLoader(object):
             module = imp.load_module(name, fp, pathname, description)
         except ImportError, e:
             raise ServiceDependencyError('%s: %s' % (name, e))
-        module.servicename = name
-        module.servicefile_path = self._get_servicefile_path(service_path)
         self._register_service_env(name, service_path)
         sys.path.remove(service_path)
         return module
@@ -180,7 +176,7 @@ class ServiceManager(object):
         self._reg.register_plugin(
             instance=service,
             singletons=(
-                service.servicename,
+                service.get_name(),
             ),
             features=(
                 IService,
@@ -191,14 +187,14 @@ class ServiceManager(object):
         plugin_object = self._reg.register_plugin(
             instance=plugin,
             singletons=(
-                plugin.servicename,
+                plugin.get_name(),
             ),
             features=(
                 IService,
                 IPlugin,
             )
         )
-        self._plugin_objects[plugin.servicename] = plugin_object
+        self._plugin_objects[plugin.get_name()] = plugin_object
 
     def _create_services(self):
         for svc in self.get_services():
@@ -236,7 +232,7 @@ class ServiceManager(object):
 
     def load_editor(self, name):
         for editor in self.get_available_editors():
-            if editor.servicename == name:
+            if editor.get_name() == name:
                 self.editor = editor(self._boss)
                 return self.editor
         raise AttributeError(_('No editor found'))
@@ -245,7 +241,7 @@ class ServiceManager(object):
         self._reg.register_plugin(
             instance=service,
             singletons=(
-                service.servicename,
+                service.get_name(),
                 IEditor,
             ),
             features=(

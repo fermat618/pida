@@ -160,8 +160,8 @@ class ServiceManagerTest(TestCase):
         service = self._sm._loader.get_one_service(self._tdir)
         self._sm._register_service(service)
         self.assertEqual(
-            self._sm.get_service('MyService').servicename,
-            self._svc.servicename
+            self._sm.get_service('MyService').get_name(),
+            self._svc.get_name()
         )
         self.assertEqual(
             [s for s in self._sm.get_services()][0],
