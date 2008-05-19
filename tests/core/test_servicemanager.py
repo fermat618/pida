@@ -5,7 +5,6 @@ from tempfile import mkdtemp
 import shutil
 import os
 
-from pida.core.interfaces import IService
 from pida.core.servicemanager import ServiceLoader, ServiceManager
 
 from pida.utils.testing.mock import Mock
@@ -135,7 +134,7 @@ class ServiceManagerTest(TestCase):
         for name in ['__init__.py', 'testservice.py', 'service.pida']:
             f = open(os.path.join(self._spath, name), 'w')
             if name == 'testservice.py':
-                f.write(testservice)
+                f.write(test_service)
             f.close()
 
         class MyService:
