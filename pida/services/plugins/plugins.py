@@ -41,6 +41,8 @@ from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 from pida.core.options import OptionItem, manager, OTypeStringList, OTypeString
 
+from pida.core.environment import plugins_dir
+
 from pida.utils.web import fetch_url
 from pida.utils.configobj import ConfigObj
 from pida.utils.path import walktree
@@ -147,7 +149,6 @@ class PluginsView(PidaGladeView):
         self._current = None
         self.item = None
         self.installed_item = None
-        self.plugins_dir = ''
         self.first_start = True
         self.installed_list.set_columns([
             Column('name', title=_('Plugin'), sorted=True, data_type=str,
@@ -384,7 +385,6 @@ class Plugins(Service):
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
-        self.plugin_path = self.boss._env.get_plugins_directory()
         self._start_list = OptionItem('plugins', 'start_list', _('Start plugin list'),
                 OTypeStringList, [], _('List of plugin to start'), None)
         manager.register_option(self._start_list)
@@ -428,7 +428,7 @@ class Plugins(Service):
 
     def update_installed_plugins(self, start=False):
         self._view.clear_installed()
-        l_installed = list(self._loader.get_all_service_files([self.plugin_path]))
+        l_installed = list(self._loader.get_all_service_files([plugins_dir]))
         if start:
             start_list = manager.get_value(self._start_list)
         running_list = [plugin.get_name() for plugin in
@@ -480,7 +480,7 @@ class Plugins(Service):
 
     def _fetch_available_plugins(self):
         # get installed items
-        l_installed = list(self._loader.get_all_service_files([self.plugin_path]))
+        l_installed = list(self._loader.get_all_service_files([plugins_dir]))
         installed_list = []
         for service_name, service_file in l_installed:
             plugin_item = self.read_plugin_informations(
@@ -516,15 +516,15 @@ class Plugins(Service):
 
     def install(self, item, content):
         # write plugin
-        plugin_path = os.path.join(self.plugin_path, item.plugin)
-        filename = os.path.join(self.plugin_path, os.path.basename(item.url))
+        plugin_path = os.path.join(plugins_dir, item.plugin)
+        filename = os.path.join(plugins_dir, os.path.basename(item.url))
         file = open(filename, 'wb')
         file.write(content)
         file.close()
 
         # check if we need to stop and remove him
         l_installed = [p[0] for p in
-            self._loader.get_all_service_files([self.plugin_path])]
+            self._loader.get_all_service_files([plugins_dir])]
         item.directory = plugin_path
         if item.plugin in l_installed:
             self.delete(item, force=True)
@@ -532,12 +532,12 @@ class Plugins(Service):
         # extract him
         tar = tarfile.open(filename, 'r:gz')
         for tarinfo in tar:
-            tar.extract(tarinfo, path=self.plugin_path)
+            tar.extract(tarinfo, path=plugins_dir)
         tar.close()
         os.unlink(filename)
 
         # start service
-        self.start_plugin(plugin_path)
+        self.start_plugin(plugin_dir)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data=_('Installation of %s completed') % item.plugin)
 

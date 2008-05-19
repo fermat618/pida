@@ -75,7 +75,7 @@ if sys.version_info < (2,4):
 
 # This can test if PIDA is installed
 try:
-    from pida.core.environment import Environment
+    from pida.core import environment as env
     from pida.core.boss import Boss
     from pida import PIDA_VERSION
 except ImportError, e:
@@ -87,8 +87,8 @@ def run_version(env):
     return 0
 
 
-def run_pida(env):
-    b = Boss(env)
+def run_pida():
+    b = Boss()
     PosixSignalHandler(b)
     try:
         start_success = b.start()
@@ -125,8 +125,6 @@ def set_trace():
     sys.settrace(traceit)
 
 def main():
-    env = Environment(sys.argv)
-    sys.argv = sys.argv[:1]
     if env.is_debug():
         os.environ['PIDA_DEBUG'] = '1'
         os.environ['PIDA_LOG_STDERR'] = '1'
@@ -135,13 +133,12 @@ def main():
     if env.is_trace():
         set_trace()
     if env.is_version():
-        run_func = run_version
+        run_version()
     else:
-        run_func = run_pida
-    exit_val = run_func(env)
-    signal.signal(signal.SIGALRM, force_quit)
-    signal.alarm(3)
-    sys.exit(exit_val)
+        exit_val = run_pida()
+        signal.signal(signal.SIGALRM, force_quit)
+        signal.alarm(3)
+        sys.exit(exit_val)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

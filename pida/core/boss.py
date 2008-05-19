@@ -5,7 +5,7 @@ import gtk
 
 from pida.core.servicemanager import ServiceManager
 from pida.core.log import get_logger
-
+from pida.core import environment as env
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
@@ -22,9 +22,7 @@ log = get_logger('pida')
 class Boss(object):
 
 
-    def __init__(self, env=None):
-        self._env = env
-
+    def __init__(self):
         if env.is_debug():
             get_logger().setLevel(logging.DEBUG)
         else:
@@ -41,9 +39,9 @@ class Boss(object):
         return log
 
     def _run_first_time(self):
-        if not self._env.has_firstrun() or self._env.is_firstrun():
+        if not env.has_firstrun() or env.is_firstrun():
             ft = FirstTimeWindow(self._sm.get_available_editors())
-            success, editor = ft.run(self._env.get_firstrun_filename())
+            success, editor = ft.run(env.firstrun_filename)
             self.override_editor = editor
             self.quit_before_started = not success
         else:
@@ -86,26 +84,16 @@ class Boss(object):
         return self._sm.get_services()
 
     def get_service_dirs(self):
-        if self._env is None:
-            return []
-        else:
-            return [
-                self._env.get_base_service_directory(),
-                self._env.get_local_service_directory(),
-            ]
+        import pida.services
+        return pida.services.__path__
 
     def get_editor_dirs(self):
-        if self._env is None:
-            return []
-        else:
-            return [
-                self._env.get_base_editor_directory(),
-            ]
+        import pida.editors
+        return pida.editors.__path__
 
-    def get_editor(self):
+    @property
+    def editor(self):
         return self._sm.editor
-
-    editor = property(get_editor)
 
     def get_plugins(self):
         return self._sm.get_plugins()
@@ -129,7 +117,7 @@ class Boss(object):
         return self.get_service(servicename).cmd(commandname, **kw)
 
     def get_pida_home(self):
-        return self._env.pida_home
+        return env.pida_home
 
     def show_splash(self):
         self._splash = SplashScreen()

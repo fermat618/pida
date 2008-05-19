@@ -72,7 +72,7 @@ class ShortcutsView(PidaView):
         vbox.set_border_width(6)
         self.add_main_widget(vbox)
         for service in self.svc.boss.get_services() + [
-                                self.svc.boss.get_editor()]:
+                                self.svc.boss.editor]:
             if len(service.get_keyboard_options()):
                 sli = ServiceListItem(service)
                 self.shortcuts_list.append(None, sli)

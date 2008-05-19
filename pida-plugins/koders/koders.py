@@ -29,7 +29,6 @@ import gobject
 from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import Environment, get_uidef_path
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE, TYPE_NORMAL

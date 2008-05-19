@@ -27,7 +27,7 @@ import re
 from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import Environment, get_uidef_path
+from pida.core.environment import get_uidef_path
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig

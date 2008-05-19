@@ -1,4 +1,5 @@
 import os
+import sys
 from optparse import OptionParser
 
 from kiwi.environ import Library, environ
@@ -30,65 +31,39 @@ def get_pixmap_path(name):
 def get_data_path(name):
     return get_resource_path('data', name)
 
+pida_home = os.path.expanduser('~/.pida2')
+firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
+plugins_dir = os.path.join(pida_home, 'plugins')
 
-class Environment(object):
+if not os.path.exists(pida_home):
+    os.mkdir(pida_home)
 
-    pida_home = os.path.expanduser('~/.pida2')
+op = OptionParser()
+op.add_option('-v', '--version', action='store_true',
+    help=_('Print version information and exit.'))
+op.add_option('-D', '--debug', action='store_true',
+    help=_('Run PIDA with added debug information.'))
+op.add_option('-T', '--trace', action='store_true',
+    help=_('Run PIDA with tracing.'))
+op.add_option('-F', '--firstrun', action='store_true',
+    help=_('Run the PIDA first run wizard.'))
 
-    def __init__(self, argv):
-        if not os.path.exists(self.pida_home):
-            os.mkdir(self.pida_home)
-        self.get_options(argv)
-        self.env = dict(os.environ)
+opts, args = op.parse_args(sys.argv)
+env = dict(os.environ)
 
-    def get_options(self, argv):
-        op = OptionParser()
-        op.add_option('-v', '--version', action='store_true',
-            help=_('Print version information and exit.'))
-        op.add_option('-D', '--debug', action='store_true',
-            help=_('Run PIDA with added debug information.'))
-        op.add_option('-T', '--trace', action='store_true',
-            help=_('Run PIDA with tracing.'))
-        op.add_option('-F', '--firstrun', action='store_true',
-            help=_('Run the PIDA first run wizard.'))
-        self.opts, self.args = op.parse_args(argv)
+def is_version():
+    return opts.version
 
-    def is_version(self):
-        return self.opts.version
+def is_debug():
+    return opts.debug
 
-    def is_debug(self):
-        return self.opts.debug
+def is_trace():
+    return opts.trace
 
-    def is_trace(self):
-        return self.opts.trace
+def is_firstrun():
+    return opts.firstrun
 
-    def is_firstrun(self):
-        return self.opts.firstrun
-
-    def get_base_service_directory(self):
-        return os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'services')
-
-    def get_local_service_directory(self):
-        path = os.path.join(self.pida_home, 'services')
-        if not os.path.exists(path):
-            os.mkdir(path)
-        return path
-
-    def get_base_editor_directory(self):
-        return os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'editors')
-
-    def get_plugins_directory(self):
-        path = os.path.join(self.pida_home, 'plugins')
-        if not os.path.exists(path):
-            os.mkdir(path)
-        return path
-
-    def get_firstrun_filename(self):
-        return os.path.join(self.pida_home, 'first_run_wizard')
-
-    def has_firstrun(self):
-        return os.path.exists(self.get_firstrun_filename())
+def has_firstrun():
+    return os.path.exists(firstrun_filename)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -28,7 +28,7 @@ import urllib
 from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import Environment, get_uidef_path
+from pida.core.environment import pida_home, get_uidef_path
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE, TYPE_NORMAL
@@ -188,7 +188,7 @@ class Rfc(Service):
     buffer_len = 16384
 
     def start(self):
-        self._filename = os.path.join(Environment.pida_home, 'rfc-index.txt')
+        self._filename = os.path.join(pida_home, 'rfc-index.txt')
         self._view = RfcView(self)
         self._has_loaded = False
         self.list = []

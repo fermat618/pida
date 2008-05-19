@@ -362,17 +362,17 @@ class GenericDebuggerController(ProjectController):
         self.svc._controller = self
 
         if not self.svc._executable:
-            self.boss.get_window().error_dlg(
+            self.boss.window.error_dlg(
                 'Debug controller is not fully configured.')
         else:
             if self.svc._is_running:
-                self.boss.get_window().error_dlg(
+                self.boss.window.error_dlg(
                     'Debugger already running.')
             else:
                 if self.svc._init():
                     self.svc.emit('debugger_started')
                 else:
-                    self.boss.get_window().error_dlg(
+                    self.boss.window.error_dlg(
                         'Debug session failed to launch.')
 
     # breakpoint recording management
