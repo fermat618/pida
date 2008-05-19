@@ -3,8 +3,6 @@ PIDA Services
 """
 
 # PIDA Imports
-from pida.core.interfaces import IOptions, IEvents, ICommands, IActions, IFeatures
-from pida.core.plugins import Registry
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig

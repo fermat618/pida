@@ -1,7 +1,5 @@
 import os, imp, sys
 
-from pida.core.interfaces import IService, IEditor, IPlugin
-from pida.core.plugins import Registry
 from pida.core.service import Service
 
 from pida.core.environment import library, environ
@@ -110,26 +108,23 @@ class ServiceManager(object):
     def __init__(self, boss):
         self._boss = boss
         self._loader = ServiceLoader(self._boss)
-        self._reg = Registry()
-        self._plugin_objects = {}
+        self._reg = {}
 
     def get_service(self, name):
-        return self._reg.get_singleton(name)
+        return self._reg[name]
 
     def get_services(self):
         return sorted(
-                self._reg.get_features(IService),
+                self._reg.values(),
                 key=Service.sort_key)
 
     def get_plugins(self):
-        return sorted(
-                self._reg.get_features(IPlugin),
-                key=Service.sort_key)
+        services = self.get_services()
+        return [s for s in services if not s.__module__.startswith('pida.services')]
 
     def get_services_not_plugins(self):
         services = self.get_services()
-        plugins = self.get_plugins()
-        return [s for s in services if s not in plugins]
+        return [s for s in services if s.__module__.startswith('pida.services')]
 
     def activate_services(self):
         self._register_services()
@@ -160,7 +155,7 @@ class ServiceManager(object):
                 plugin.log.debug('Stopping')
                 plugin.stop_components()
                 plugin.stop()
-                self._reg.unregister(self._plugin_objects[plugin_name])
+                del self._reg[plugin_name]
                 return plugin
             else:
                 self._boss.log.error('ServiceManager: Cannot stop services')
@@ -173,28 +168,10 @@ class ServiceManager(object):
             self._register_service(svc)
 
     def _register_service(self, service):
-        self._reg.register_plugin(
-            instance=service,
-            singletons=(
-                service.get_name(),
-            ),
-            features=(
-                IService,
-            )
-        )
+        self._reg[service.get_name()] = service
 
-    def _register_plugin(self, plugin):
-        plugin_object = self._reg.register_plugin(
-            instance=plugin,
-            singletons=(
-                plugin.get_name(),
-            ),
-            features=(
-                IService,
-                IPlugin,
-            )
-        )
-        self._plugin_objects[plugin.get_name()] = plugin_object
+    def _register_plugin(self, service):
+        self._reg[service.get_name()] = service
 
     def _create_services(self):
         for svc in self.get_services():
@@ -238,16 +215,7 @@ class ServiceManager(object):
         raise AttributeError(_('No editor found'))
 
     def register_editor(self, service):
-        self._reg.register_plugin(
-            instance=service,
-            singletons=(
-                service.get_name(),
-                IEditor,
-            ),
-            features=(
-                IService,
-            )
-        )
+        self._reg[service.get_name()] = service
 
     def stop(self):
         for svc in self.get_services():
