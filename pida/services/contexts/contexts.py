@@ -62,10 +62,10 @@ class ContextCommandsConfig(CommandsConfig):
 
             def on_menu_deactivated(menu):
                 menu.handler_disconnect(handler_id)
-                self.svc.emit('menu-deactivated', context=context, **kw)
+                self.svc.emit('menu-deactivated', menu=menu, context=context, **kw)
 
         handler_id = menu.connect('deactivate', on_menu_deactivated)
-        self.svc.emit('show-menu', context=context, **kw)
+        self.svc.emit('show-menu', menu=menu, context=context, **kw)
         menu.popup(None, None, None, button, time)
 
 class ContextEventsConfig(EventsConfig):

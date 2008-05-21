@@ -532,7 +532,7 @@ class FilemanagerEvents(EventsConfig):
     def on_plugin_stopped(self, plugin):
         self.svc.refresh_file_hidden_check_menu()
 
-    def on_contexts__show_menu(self, context, **kw):        
+    def on_contexts__show_menu(self, menu, context, **kw):        
         if (kw.has_key('filemanager')):
             if (context == 'file-menu'):
                 self.svc.get_action('delete-file').set_visible(True)
@@ -543,7 +543,7 @@ class FilemanagerEvents(EventsConfig):
             self.svc.get_action('delete-file').set_visible(False)
             self.svc.get_action('delete-dir').set_visible(False)
 
-    def on_contexts__menu_deactivated(self, context, **kw):
+    def on_contexts__menu_deactivated(self, menu, context, **kw):
         if (kw.has_key('filemanager')):
             if (context == 'file-menu'):
                 self.svc.get_action('delete-file').set_visible(False)
