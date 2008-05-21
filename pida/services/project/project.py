@@ -128,7 +128,7 @@ class ProjectListView(PidaGladeView):
 
     def on_project_ol__right_click(self, ol, project, event):
         self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
-                          dir_name=project.source_directory, event=event)
+            dir_name=project.source_directory, event=event, project=True)
 
     def set_current_project(self, project):
         self.project_ol.select(project)
@@ -248,6 +248,9 @@ class ProjectEventsConfig(EventsConfig):
             self.plugin_stopped)
         self.subscribe_foreign('editor', 'started',
             self.editor_started)
+        self.subscribe_foreign('contexts', 'show-menu', self.show_menu)
+        self.subscribe_foreign('contexts', 'menu-deactivated',
+            self.menu_deactivated)
 
     def plugin_started(self, plugin):
         if plugin.features.has_foreign('project', IProjectController):
@@ -258,6 +261,15 @@ class ProjectEventsConfig(EventsConfig):
 
     def editor_started(self):
         self.svc.set_last_project()
+
+    def show_menu(self, menu, context, **kw):
+        if (context == 'dir-menu'):
+            self.svc.get_action('project_properties').set_visible(
+                kw.has_key('project'))
+
+    def menu_deactivated(self, menu, context, **kw):
+        if (context == 'dir-menu'):
+            self.svc.get_action('project_properties').set_visible(True)
 
 
 class ProjectActionsConfig(ActionsConfig):
@@ -346,6 +358,8 @@ class ProjectFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('project', IProjectController, GenericExecutionController)
+        self.subscribe_foreign('contexts', 'dir-menu',
+            (self.svc.get_action_group(), 'project-dir-menu.xml'))
 
 
 class ProjectOptions(OptionsConfig):

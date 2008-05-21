@@ -1,0 +1,14 @@
+<ui>
+<popup>
+<placeholder name="1"/>
+<separator/>
+<placeholder name="2"/>
+<separator/>
+<placeholder name="3"/>
+<separator/>
+<placeholder name="4">
+  <menuitem action="project_properties" name="project_properties"/>
+</placeholder>
+<separator/>
+</popup>
+</ui>
