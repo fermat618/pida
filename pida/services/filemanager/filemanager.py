@@ -319,10 +319,10 @@ class FilemanagerView(PidaView):
     def on_file_right_click(self, ol, item, event=None):
         if item.is_dir:
             self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
-                          dir_name=item.path, event=event) 
+                          dir_name=item.path, event=event, filemanager=True) 
         else:
             self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
-                          file_name=item.path, event=event) 
+                          file_name=item.path, event=event, filemanager=True)
 
     def on_selection_changed(self, ol, item):
         for act_name in ['toolbar_copy', 'toolbar_delete']:
@@ -520,6 +520,10 @@ class FilemanagerEvents(EventsConfig):
             self.on_plugin_started)
         self.subscribe_foreign('plugins', 'plugin_stopped',
             self.on_plugin_stopped);
+        self.subscribe_foreign('contexts', 'show-menu',
+            self.on_contexts__show_menu)
+        self.subscribe_foreign('contexts', 'menu-deactivated',
+            self.on_contexts__menu_deactivated)
 
     def on_plugin_started(self, plugin):
         if (plugin.features.has_foreign('filemanager', 'file_hidden_check')):
@@ -527,6 +531,24 @@ class FilemanagerEvents(EventsConfig):
     
     def on_plugin_stopped(self, plugin):
         self.svc.refresh_file_hidden_check_menu()
+
+    def on_contexts__show_menu(self, context, **kw):        
+        if (kw.has_key('filemanager')):
+            if (context == 'file-menu'):
+                self.svc.get_action('delete-file').set_visible(True)
+            else:
+                self.svc.get_action('delete-dir').set_visible(
+                    kw['dir_name'] != self.svc.get_view().path)
+        else:
+            self.svc.get_action('delete-file').set_visible(False)
+            self.svc.get_action('delete-dir').set_visible(False)
+
+    def on_contexts__menu_deactivated(self, context, **kw):
+        if (kw.has_key('filemanager')):
+            if (context == 'file-menu'):
+                self.svc.get_action('delete-file').set_visible(False)
+            else:
+                self.svc.get_action('delete-dir').set_visible(False)
 
 
 class FilemanagerCommandsConfig(CommandsConfig):
@@ -611,12 +633,30 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def create_actions(self):
         self.create_action(
+            'delete-file',
+            TYPE_NORMAL,
+            _('Delete File'),
+            _('Delete selected file'),
+            gtk.STOCK_DELETE,
+            self.on_delete
+        )
+        
+        self.create_action(
             'browse-for-file',
             TYPE_NORMAL,
             _('Browse the file directory'),
             _('Browse the parent directory of this file'),
             'file-manager',
             self.on_browse_for_file,
+        )
+        
+        self.create_action(
+            'delete-dir',
+            TYPE_NORMAL,
+            _('Delete Directory'),
+            _('Delete selected directory'),
+            gtk.STOCK_DELETE,
+            self.on_delete
         )
 
         self.create_action(
@@ -699,7 +739,7 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Delete File'),
             _('Delete the selected file'),
             gtk.STOCK_DELETE,
-            self.on_toolbar_delete,
+            self.on_delete,
         )
         self.create_action(
             'toolbar_toggle_hidden',
@@ -758,7 +798,7 @@ class FileManagerActionsConfig(ActionsConfig):
     def on_toolbar_paste(self, action):
         self.svc.get_view().paste_clipboard()
 
-    def on_toolbar_delete(self, action):
+    def on_delete(self, action):
         current = self.svc.get_view().get_selected_filename()
         if current is not None:
             if self.svc.yesno_dlg(

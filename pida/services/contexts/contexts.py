@@ -50,6 +50,7 @@ class ContextCommandsConfig(CommandsConfig):
         return self.svc.get_menu(context, **kw)
 
     def popup_menu(self, context, event=None, **kw):
+        handler_id = 0
         menu = self.get_menu(context, **kw)
         menu.show_all()
         if event is None:
@@ -58,10 +59,21 @@ class ContextCommandsConfig(CommandsConfig):
         else:
             button = event.button
             time = event.time
+
+            def on_menu_deactivated(menu):
+                menu.handler_disconnect(handler_id)
+                self.svc.emit('menu-deactivated', context=context, **kw)
+
+        handler_id = menu.connect('deactivate', on_menu_deactivated)
+        self.svc.emit('show-menu', context=context, **kw)
         menu.popup(None, None, None, button, time)
 
 class ContextEventsConfig(EventsConfig):
 
+    def create(self):
+        self.publish('show-menu')
+        self.publish('menu-deactivated')
+    
     def subscribe_all_foreign(self):
         self.subscribe_foreign('plugins', 'plugin_started',
             self.plugins_changed)
