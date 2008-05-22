@@ -85,7 +85,7 @@ class GenericExecutionController(ProjectController):
     def execute(self):
         command = self.get_option('command')
         if not command:
-            self.boss.get_window().error_dlg(
+            self.boss.window.error_dlg(
                 _('Controller has no command set')
             )
             return
@@ -187,12 +187,12 @@ class ProjectPropertiesView(PidaGladeView):
     def on_add_button__clicked(self, button):
         name = self.name_entry.get_text()
         if not name:
-            self.svc.boss.get_window().error_dlg(
+            self.svc.error_dlg(
                 _('Please enter a controller name'))
             return
         for controller in self._project.controllers:
             if controller.config_section == name:
-                self.svc.boss.get_window().error_dlg(
+                self.svc.error_dlg(
                     _('This project already has a controller named %s') % name)
                 return
         self.name_entry.set_text('')
@@ -204,7 +204,7 @@ class ProjectPropertiesView(PidaGladeView):
     def on_delete_button__clicked(self, button):
         controller = self.controllers_list.get_selected()
         if controller is not None:
-            if self.svc.boss.get_window().yesno_dlg(
+            if self.svc.yesno_dlg(
             _('Are you sure you want to delete controller "%s" from this project?')
             % controller.config_section):
                 self.controllers_list.remove(controller)
@@ -325,7 +325,7 @@ class ProjectActionsConfig(ActionsConfig):
 
     def on_project_add(self, action):
         path = open_directory_dialog(
-            self.svc.boss.get_window(),
+            self.svc.window,
             _('Select a directory to add')
         )
         if path:
@@ -340,7 +340,7 @@ class ProjectActionsConfig(ActionsConfig):
         if controller is not None:
             controller.execute()
         else:
-            self.svc.boss.get_window().error_dlg(
+            self.svc.error_dlg(
                 _('This project has no controllers'))
 
     def on_project_properties(self, action):
@@ -461,7 +461,7 @@ class Project(Service):
                 project = self.load_and_set_project(os.path.join(project_directory, name))
                 self._save_options()
                 return project
-        if self.boss.get_window().yesno_dlg(
+        if self.boss.window.yesno_dlg(
             _('The directory does not contain a project file, ') +
             _('do you want to create one?')
         ):
@@ -520,7 +520,7 @@ class Project(Service):
         self.remove_project(self._project)
 
     def remove_project(self, project):
-        if self.boss.get_window().yesno_dlg(
+        if self.boss.window.yesno_dlg(
             _('Are you sure you want to remove project "%s" from the workspace?')
             % project.name
         ):
