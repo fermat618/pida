@@ -85,7 +85,7 @@ class EmacsCallback(object):
 
     def __init__(self, svc):
         """Constructor."""
-        self.log = get_logger('emacs')
+        self._log = get_logger('emacs')
         self._svc = svc
         self._server = EmacsServer(self)
 
@@ -96,7 +96,7 @@ class EmacsCallback(object):
     def cb_pida_ping(self, foo):
         """Emacs message to signal it is up and ready.
         """
-        self.log.debug('emacs ready')
+        self._log.debug('emacs ready')
         self._svc.emit_editor_started()
         return True
 
@@ -124,7 +124,7 @@ class EmacsCallback(object):
     def cb_kill_buffer_hook(self, filename):
         """Buffer closed event."""
         if filename:
-            self.log.debug('emacs buffer killed "%s"' % filename)
+            self._log.debug('emacs buffer killed "%s"' % filename)
             self._svc.remove_file(filename)
             self._svc.boss.get_service('buffer').cmd('close_file', file_name=filename)
         return True
@@ -139,13 +139,13 @@ class EmacsCallback(object):
     
     def cb_after_save_hook(self, filename):
         """Buffer saved event."""
-        self.log.debug('emacs buffer saved "%s"' % filename)
+        self._log.debug('emacs buffer saved "%s"' % filename)
         self._svc.boss.cmd('buffer', 'current_file_saved')
         return True
     
     def cb_kill_emacs_hook(self, foo):
         """Emacs killed event."""
-        self.log.debug('emacs killed')
+        self._log.debug('emacs killed')
         self._svc.inactivate_client()
         self._svc.boss.stop(force=True)
         return False
