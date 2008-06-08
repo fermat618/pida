@@ -2,12 +2,14 @@
 
 Features
 
+[1179] Prevent version control actions in non-versioned directories. Closes #103.
 [1192] Added ability to change pane label/icon for a view. Closes #116.
 [1239] Added terminal highlighting of filenames and urls. Closes #121
 [1241] Pida asks editor if files can be closed (for use with unsaved files).
 [1257] Make project controllers appear when added in the project preferences.
 
 Bugs
+
 
 [1210] Added the capability to run multiple instances of PIDA on Emacs. Closes #159.
 [1218] Added check of pygtk-dev in setup.py. Closes #156.
