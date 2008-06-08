@@ -29,6 +29,8 @@ method on a EmacsCallback object (see editor/emacs/emacs.py).
 """
 
 import logging
+import os
+import pwd
 import socket
 import subprocess
 import threading
@@ -47,11 +49,11 @@ class EmacsClient(object):
     
     def __init__(self, instance_id):
         """Constructor."""
-        #TODO: I would like to use something like  here,
-        #      but then the log will be printed three times.
         self._log = logging.getLogger('emacs')
         self._active = True
         self._instance_id = instance_id
+        self._socket_path = _get_socket_path(self._instance_id)
+        self._pending_commands = []
 
     def activate(self):
         """Allow communication.
@@ -118,15 +120,28 @@ class EmacsClient(object):
 
         The message is only sent is this object is not inactivated.
         """
+        # The implementation here is still broken: if communnication
+        # fails once, then the failed command is not tried again until
+        # another command is issued... (by experience, this is not a
+        # problem so far)
+        #
+        # Another problem is the use of emacs-client which should be bypassed.
         if self._active:
-            self._log.debug('sending "%s"' % command)
-            try:
-                subprocess.call(
-                    ['emacsclient', '-s', self._instance_id, '-e', command],
-                    stdout=subprocess.PIPE)
-            except OSError, e:
-                self._log.debug('%s"' % e)
-
+            self._log.debug('queuing "%s"' % command)
+            self._pending_commands.append(command)
+            if os.path.exists(self._socket_path):
+                try:
+                    while len(self._pending_commands):
+                        cmd = self._pending_commands[0]
+                        self._log.debug('calling "%s"' % cmd)
+                        subprocess.call(
+                            ['emacsclient', '-s', self._instance_id, '-e', cmd],
+                            stdout=subprocess.PIPE)
+                        self._pending_commands.pop(0)
+                except OSError, e:
+                    self._log.error('%s' % e)
+            else:
+                self._log.debug('socket not ready')
 
 class EmacsServer(object):
     """Listener for Emacs notifications.
@@ -223,5 +238,17 @@ class EmacsServer(object):
         else:
             self._log.warn('unknown hook "%s"' % hook)
         return cont
+
+
+def _get_socket_path(instance_id):
+    # Only tested on unix until now.
+    uid = pwd.getpwnam(os.environ['USER']).pw_uid
+    dirname = os.path.join("/tmp", "emacs%s" % uid)
+#     if not os.path.exists(dirname):
+#         os.makedirs(dirname)
+#         os.chmod(dirname, 0700)
+#         os.chown(dirname, uid, uid)
+
+    return os.path.join(dirname, instance_id)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
