@@ -31,9 +31,10 @@ The Emacs editor for Pida is also, heavily based on the Vim editor.
 
 import logging
 import os
+import time
 
 # PIDA Imports
-from pida.core.environment import get_data_path
+import pida.core.environment as env
 
 from pida.ui.views import PidaView
 
@@ -162,14 +163,14 @@ class Emacs(EditorService):
     def _create_initscript(self):
         # This method does not create the script anymore but only
         # returns the path of the new script.
-        return get_data_path('pida_emacs_init.el')
+        return env.get_data_path('pida_emacs_init.el')
 
     def emit_editor_started(self):
         self.boss.get_service('editor').emit('started')
         # At this point calling (pida-frame-setup nil) should work, so let's
         # do it.
         self._client.frame_setup()
-
+        
     def pre_start(self):
         """Start the editor"""
         self._documents = {}
@@ -184,12 +185,24 @@ class Emacs(EditorService):
 
         self._current_line = 1
 
+        # Prepare logger for emacs related stuff.
+        format = logging.Formatter('%(levelname)s %(name)s: %(message)s')
+        emacs_logger = get_logger('emacs')
+        handler = logging.StreamHandler()
+        handler.setFormatter(format)
+        emacs_logger.addHandler(handler)
+        if env.is_debug():
+            emacs_logger.setLevel(logging.DEBUG)
+        else:
+            emacs_logger.setLevel(logging.INFO)
+
+        # Start Emacs server.
         self._cb = EmacsCallback(self)
 
         listen_port = self._cb.bind()
         instance_id = 'pida-' + str(os.getpid())
         self._client = EmacsClient(instance_id)
-        import time
+
         time.sleep(1)
         self._view = EmacsView(
             self, self._create_initscript(), instance_id, listen_port)
