@@ -640,15 +640,21 @@ class Versioncontrol(Service):
 
     def _do_diff(self, path):
         vc = self.get_workdir_manager_for_path(path)
+        if vc is None:
+            return (None,)
         return vc.diff(paths=[path])
 
     def _done_diff(self, diff):
+        if diff is None:
+            return self.error_dlg(_('File or directory is not versioned.'))
         view = DiffViewer(self)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
         view.set_diff(diff)
 
     def execute(self, action, path, stock_id, **kw):
         vc = self.get_workdir_manager_for_path(path)
+        if vc is None:
+            return self.error_dlg(_('File or directory is not versioned.'))
         commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path], **kw)
         self._log.append_action(action.capitalize(), path, stock_id)
         def _executed(term):
@@ -674,6 +680,9 @@ class Versioncontrol(Service):
         self.execute('commit', path, gtk.STOCK_GO_UP, message=message)
 
     def commit_path_dialog(self, path):
+        vc = self.get_workdir_manager_for_path(path)
+        if vc is None:
+            return self.error_dlg(_('File or directory is not versioned.'))
         self._commit.set_path(path)
         self.ensure_commit_visible()
 
