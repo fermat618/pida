@@ -11,6 +11,7 @@ Features
 Bugs
 
 
+[1181] Allow plugins to be installed over a web proxy. lp:120543.
 [1210] Added the capability to run multiple instances of PIDA on Emacs. Closes #159.
 [1218] Added check of pygtk-dev in setup.py. Closes #156.
 [1222] Allow services to import local modules. Closes #173
