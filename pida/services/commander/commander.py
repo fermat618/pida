@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 import os, subprocess
+import pty
 
 import gtk, gobject
 
@@ -283,8 +284,8 @@ class TerminalView(PidaView):
         else:
             self._vte_fork(commandargs, env, cwd) 
 
-    def _python_fork_waiter(self, popen):
-        exit_code = popen.wait()
+    def _python_fork_waiter(self, pid):
+        stupid, exit_code = os.waitpid(pid, 0)
         return exit_code
 
     def _python_fork_complete(self, exit_code):
@@ -298,16 +299,16 @@ class TerminalView(PidaView):
         # TODO: Env broken
         env = dict(os.environ)
         env['TERM'] = 'xterm'
-        (master, slave) = os.openpty()
-        self.slave = slave
-        self.master = master
-        self._term.set_pty(master)
-        p = subprocess.Popen(commandargs, stdin=slave, stdout=slave,
-                             preexec_fn=self._python_fork_preexec_fn,
-                             stderr=slave, env=env, cwd=cwd, close_fds=True)
-        self._pid = p.pid
-        t = AsyncTask(self._python_fork_waiter, self._python_fork_complete)
-        t.start(p)
+        pid, fd = pty.fork()
+        if pid:
+            self._term.set_pty(fd)
+            self._pid = pid
+            t = AsyncTask(self._python_fork_waiter, self._python_fork_complete)
+            t.start(pid)
+        else:
+            self._python_fork_preexec_fn()
+            os.chdir(cwd)
+            os.execvpe(commandargs[0], commandargs, env)
 
     def _python_fork_parse(self, commandargs, env, cwd, parser_func):
         self._term.connect('commit', self.on_commit_python)
