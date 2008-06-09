@@ -28,6 +28,7 @@ import tarfile
 import os
 import base64
 import shutil
+import httplib
 
 from kiwi.ui.objectlist import Column
 from pida import PIDA_VERSION
@@ -60,6 +61,31 @@ def get_value(tab, key):
         return ''
     return tab[key]
 
+# http://docs.python.org/lib/xmlrpc-client-example.html
+class ProxiedTransport(xmlrpclib.Transport):
+
+    def set_proxy(self, proxy):
+        self.proxy = proxy
+
+    def make_connection(self, host):
+        self.realhost = host
+        h = httplib.HTTP(self.proxy)
+        return h
+
+    def send_request(self, connection, handler, request_body):
+        connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
+
+    def send_host(self, connection, host):
+        connection.putheader('Host', self.realhost)
+
+def create_transport():
+    if 'http_proxy' in os.environ:
+        host = os.environ['http_proxy']
+        t = ProxiedTransport()
+        t.set_proxy(host)
+        return t
+    else:
+        return xmlrpclib.Transport()
 
 class PluginsItem(object):
 
@@ -184,7 +210,9 @@ class PluginsView(PidaGladeView):
         if index == 1:
             if self.first_start:
                 self.first_start = False
-                gcall(self.svc.fetch_available_plugins)
+                def _fetch():
+                    gcall(self.svc.fetch_available_plugins)
+                gobject.idle_add(_fetch)
         else:
             self.svc.update_installed_plugins()
 
@@ -489,7 +517,8 @@ class Plugins(Service):
 
         self._view.start_pulse(_('Download available plugins'))
         try:
-            proxy = xmlrpclib.ServerProxy(self.rpc_url)
+            proxy = xmlrpclib.ServerProxy(self.rpc_url,
+                                          transport=create_transport())
             plist = proxy.plugins.list({'version': PIDA_VERSION})
             for k in plist:
                 item = plist[k]
@@ -596,7 +625,8 @@ class Plugins(Service):
                     file = open(filename, 'rb')
                     data = file.read()
                     file.close()
-                    proxy = xmlrpclib.ServerProxy(self.rpc_url)
+                    proxy = xmlrpclib.ServerProxy(self.rpc_url,
+                                                  transport=create_transport())
                     code = proxy.plugins.push(login, password,
                             plugin, base64.b64encode(data))
                     gcall(self.boss.cmd, 'notify', 'notify',
