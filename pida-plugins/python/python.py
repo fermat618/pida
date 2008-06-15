@@ -229,8 +229,7 @@ class PythonBrowser(object):
             yield (child, parent)
 
     def check(self, document):
-        code_string = str(document)
-        return pythonparser.get_nodes_from_string(code_string)
+        return pythonparser.get_nodes_from_string(document.content)
 
     def add_view_node(self, node, parent):
         self._view.add_node(node, parent)
