@@ -168,20 +168,23 @@ class SourceView(PidaGladeView):
     def create_ui(self):
         self.source_tree.set_columns(
             [
-                Column('linenumber'),
-                Column('ctype_markup', use_markup=True),
-                Column('nodename_markup', use_markup=True),
+                #Column('linenumber'),
+                #Column('ctype_markup', use_markup=True),
+                #Column('nodename_markup', use_markup=True),
+                Column('rendered', use_markup=True, expand=True),
+                Column('sort_hack', visible=False),
+                Column('line_sort_hack', visible=False),
             ]
         )
         self.source_tree.set_headers_visible(False)
         self.sort_box = AttrSortCombo(
             self.source_tree,
             [
-                ('linenumber', _('Line Number')),
-                ('nodename', _('Name')),
-                ('nodetype', _('Type')),
+                ('sort_hack', _('Alphabetical by type')),
+                ('line_sort_hack', _('Line Number')),
+                ('name', _('Name')),
             ],
-            'linenumber'
+            'sort_hack'
         )
         self.sort_box.show()
         self.main_vbox.pack_start(self.sort_box, expand=False)
@@ -196,8 +199,15 @@ class SourceView(PidaGladeView):
         self.svc.get_action('show_python_source').set_active(False)
 
     def on_source_tree__double_click(self, tv, item):
+        if item.linenumber is None:
+            return
+        if item.filename is not None:
+            self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename)
         self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
+        self.svc.boss.editor.cmd('grab_focus')
 
+
+from ropebrowser import ModuleParser
 
 class PythonBrowser(object):
 
@@ -222,20 +232,22 @@ class PythonBrowser(object):
             task.start()
 
     def check_current(self):
-        root_node = self.check(self._current)
-        for child, parent in root_node.get_recursive_children():
-            if parent is root_node:
-                parent = None
-            yield (child, parent)
+        for node, parent in self.check(self._current):
+            yield (node, parent)
 
     def check(self, document):
-        return pythonparser.get_nodes_from_string(document.content)
+        mp = ModuleParser(document.filename)
+        return mp.get_nodes()
 
     def add_view_node(self, node, parent):
         self._view.add_node(node, parent)
 
     def get_view(self):
         return self._view
+
+
+
+
 
 
 class BasePythonProjectController(ProjectController):
