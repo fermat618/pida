@@ -37,8 +37,11 @@ def markup_location(linenumber, filename=None):
         s = '%s:%s' % (filename, linenumber)
     return markup_grey_italic(s)
 
+def markup_fixed(text):
+    return '<tt>%s</tt>' % text
+
 def markup_name(name):
-    return markup_bold(name)
+    return markup_bold(markup_fixed(name))
 
 class TreeOptions(object):
 
@@ -53,6 +56,9 @@ class TreeOptions(object):
     def get_extra_markup(self):
         return ''
 
+    def get_pre_markup(self):
+        return ''
+
 
 class FunctionOptions(TreeOptions):
 
@@ -60,10 +66,25 @@ class FunctionOptions(TreeOptions):
     type_color = '#900000'
     position = 2
 
+    def get_pre_markup(self):
+        decs = ', '.join(['@' + d.id for d in
+            self.item.object.decorators])
+        if decs:
+            decs = decs + '\n'
+        return markup_fixed(markup_italic(decs))
+
+
     def get_extra_markup(self):
-        return markup_bold_bracketted(
+        attrs = markup_bold_bracketted(
             ', '.join(self.item.object.get_param_names())
         )
+        return attrs
+
+
+class EvaluatedOptions(TreeOptions):
+
+    type_name = 'p'
+    type_color = '#900090'
 
 
 class MethodOptions(FunctionOptions):
@@ -75,6 +96,16 @@ class SuperMethodOptions(MethodOptions):
 
     type_name = '(m)'
     position = 6
+
+class ClassMethodOptions(MethodOptions):
+
+    type_name = 'cm'
+    position = 3
+
+class StaticMethodOptions(MethodOptions):
+
+    type_name = 'sm'
+    position = 4
 
 
 
@@ -116,12 +147,18 @@ def get_option_for_item(item):
         return ImportedOptions(item)
     elif isinstance(item.node, pynames.DefinedName):
         if isinstance(item.object, pyobjects.PyFunction):
-            if item.object.get_kind() == 'method':
+            kind = item.object.get_kind()
+            if kind == 'method':
                 if item.name in item.parent.object.get_scope().get_defined_names():
                     return MethodOptions(item)
                 else:
                     return SuperMethodOptions(item)
+            elif kind == 'classmethod':
+                return ClassMethodOptions(item)
+            elif kind == 'staticmethod':
+                return StaticMethodOptions(item)
             else:
+                print item.object.get_kind(), item.name
                 return FunctionOptions(item)
         else:
             return ClassOptions(item)
@@ -129,8 +166,10 @@ def get_option_for_item(item):
         return AssignedOptions(item)
     elif isinstance(item.node, builtins.BuiltinName):
         return BuiltinOptions(item)
+    elif isinstance(item.node, pynames.EvaluatedName):
+        return EvaluatedOptions(item)
     else:
-        print 'boo', item, item.node
+        print 'boo', item, item.node, item.name, item.object
 
 
 class SourceTreeItem(object):
@@ -163,10 +202,12 @@ class SourceTreeItem(object):
 
         self.rendered = self.render()
 
+        self.type_markup = markup_type(self.options.type_name,
+                                       self.options.type_color)
+
     def render(self):
-        return '%s %s%s %s' % (
-            markup_type(self.options.type_name,
-                         self.options.type_color),
+        return '%s%s%s %s' % (
+            self.options.get_pre_markup(),
             markup_name(self.name),
             self.options.get_extra_markup(),
             markup_location(self.linenumber, self.filename)

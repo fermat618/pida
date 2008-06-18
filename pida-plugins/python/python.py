@@ -171,6 +171,7 @@ class SourceView(PidaGladeView):
                 #Column('linenumber'),
                 #Column('ctype_markup', use_markup=True),
                 #Column('nodename_markup', use_markup=True),
+                Column('type_markup', use_markup=True),
                 Column('rendered', use_markup=True, expand=True),
                 Column('sort_hack', visible=False),
                 Column('line_sort_hack', visible=False),
