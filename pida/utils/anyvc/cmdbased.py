@@ -268,6 +268,9 @@ class SubVersion(CommandBased):
             '~': 'external',
             }
 
+    def get_diff_args(self, paths=(), **kw):
+        return ['diff', '--diff-cmd', 'diff'] + self.process_paths(paths)
+
     def parse_list_item(self, item, cache):
         state = item[0]
         file = item.split()[-1]
@@ -341,6 +344,9 @@ class Git(CommandBased):
         "unmerged": 'conflict',
         "deleted": 'removed'
         }
+
+    def get_diff_args(self, paths=(), **kw):
+        return ['diff', '--no-color'] + self.process_paths(paths)
 
     def process_paths(self, paths):
         return map(relative_to(self.base_path), paths)
