@@ -1,33 +1,23 @@
 # -*- coding: utf-8 -*- 
+"""
+    pida.core.application
+    ~~~~~~~~~~~~~~~~~~~~~
 
-# Copyright (c) 2007 The PIDA Project
+    this module handle starting up pida
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
+    :copyright: 
+        * 2007      Ali Afshar
+        * 2007-2008 Ronny Pfannschmidt
 
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
-
+    :license: GPL2 or later
+"""
 # system import(s)
 import os
 import sys
 import signal
 import warnings
 
-from pida.core.signalhandler import PosixSignalHandler
+from pida.core.signalhandler import handle_signals
 
 # locale
 from pida.core.locale import Locale
@@ -75,32 +65,24 @@ if sys.version_info < (2,4):
 
 # This can test if PIDA is installed
 try:
-    from pida.core import environment as env
+    from pida.core.environment import opts
     from pida.core.boss import Boss
     from pida import PIDA_VERSION
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
 
-def run_version(env):
-    print _('PIDA, version %s') % PIDA_VERSION
-    return 0
-
-
 def run_pida():
     b = Boss()
-    PosixSignalHandler(b)
+    handle_signals(b)
     try:
         start_success = b.start()
-    except Exception, e:
-        print e
-        start_success = False
-    if start_success:
         gdk.threads_enter()
         b.loop_ui()
         gdk.threads_leave()
         return 0
-    else:
+    except Exception, e:
+        print e
         return 1
 
 def force_quit(signum, frame):
@@ -125,17 +107,17 @@ def set_trace():
     sys.settrace(traceit)
 
 def main():
-    if env.is_debug():
-        os.environ['PIDA_DEBUG'] = '1'
-        os.environ['PIDA_LOG_STDERR'] = '1'
-    else:
+    if not opts.debug:
         warnings.filterwarnings("ignore")
-    if env.is_trace():
+
+    if opts.trace:
         set_trace()
-    if env.is_version():
-        run_version()
+
+    if opts.version:
+        print _('PIDA, version %s') % PIDA_VERSION
     else:
         exit_val = run_pida()
+        #XXX: hack for killing threads - better soltions
         signal.signal(signal.SIGALRM, force_quit)
         signal.alarm(3)
         sys.exit(exit_val)

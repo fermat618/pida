@@ -33,6 +33,7 @@ import codecs
 
 import actions
 
+from pida.core.log import log
 from pida.utils.descriptors import cached_property
 
 # locale
@@ -126,7 +127,7 @@ class Document(object):
             self._lines = []
             self._encoding = 'none'
 
-            self.boss.log.warn(_('failed to open file %s'), self.filename)
+            log.warn(_('failed to open file %s'), self.filename)
 
 
     @property

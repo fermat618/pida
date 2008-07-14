@@ -84,9 +84,7 @@ class ServiceLoadTest(TestCase):
         f = open(self._dumglade, 'w')
         f.close()
 
-        mock = Mock()
-        mock.log = Mock()
-        self.loader = ServiceLoader(boss=mock)
+        self.loader = ServiceLoader()
 
     def test_get(self):
         services = [svc for svc in self.loader.get_all_services([self._tdir])]
@@ -148,7 +146,7 @@ class ServiceManagerTest(TestCase):
             'get_service_dirs': [self._tdir]
             })
         mock.log = Mock()
-        self._sm = ServiceManager(boss=mock)
+        self._sm = ServiceManager()
 
 
     def tearDown(self):

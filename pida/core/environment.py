@@ -35,8 +35,21 @@ pida_home = os.path.expanduser('~/.pida2')
 firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
 plugins_dir = os.path.join(pida_home, 'plugins')
 
-if not os.path.exists(pida_home):
-    os.mkdir(pida_home)
+for path in pida_home, plugins_dir:
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+#XXX: development hack
+import pida
+buildin_plugins_dir = os.path.join(
+        os.path.dirname(pida.__path__[0]),
+        'pida-plugins')
+
+if os.path.exists(buildin_plugins_dir):
+    plugins_path = [plugins_dir, buildin_plugins_dir]
+else:
+    plugins_path = [plugins_dir]
+
 
 op = OptionParser()
 op.add_option('-v', '--version', action='store_true',
@@ -61,9 +74,6 @@ def is_trace():
     return opts.trace
 
 def is_firstrun():
-    return opts.firstrun
-
-def has_firstrun():
-    return os.path.exists(firstrun_filename)
+    return not os.path.exists(firstrun_filename) or opts.firstrun
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

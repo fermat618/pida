@@ -1,9 +1,18 @@
-"""Project features for PIDA"""
+"""
+    pida.core.project
+    ~~~~~~~~~~~~~~~~~~~~
+
+    Project features for PIDA
+
+    :copyright: 2007 Ali
+    :license: GPL2 or later
+"""
 
 import os
 from string import Template
 from weakref import proxy
 
+from pida.core.log import log
 from pida.utils.configobj import ConfigObj
 from pida.utils.path import get_relative_path
 
@@ -67,10 +76,10 @@ class Project(object):
                 if controller_type is not None:
                     self.controllers.append(controller_type(self, section))
                 else:
-                    self.boss.log.debug(_('no controller type for %s') %
+                    log.debug(_('no controller type for %s') %
                                         controller_name)
             else:
-                self.boss.log.debug(_('no controller defined for %s') % section)
+                log.debug(_('no controller defined for %s') % section)
 
     def _create_options(self):
         self.options = ConfigObj(self.project_file)
@@ -240,7 +249,7 @@ class ProjectController(object):
         if self.get_options() is not None:
             self.get_options()[name] = value
         else:
-            self.boss.log.debug('Deleted controller attempting to set value')
+            log.debug('Deleted controller attempting to set value')
 
     def get_project_option(self, name):
         return self.project.options.get(name, None)

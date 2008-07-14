@@ -1,22 +1,22 @@
 
+
 import signal
 
 # locale
 from pida.core.locale import Locale
+from pida.core.log  import log
 locale = Locale('pida')
 _ = locale.gettext
 
-class PosixSignalHandler(object):
+def handle_signals(boss):
 
-    def __init__(self, boss):
-        self.boss = boss
-        signal.signal(signal.SIGTERM, self.handle_SIGTERM)
-        signal.signal(signal.SIGINT, self.handle_SIGINT)
+    def SIGTERM(self, signum, frame):
+        log.error(_('PIDA stopped by SIGTERM')) 
+        boss.stop(force=True)
 
-    def handle_SIGTERM(self, signum, frame):
-        self.boss.log.error(_('PIDA stopped by SIGTERM')) 
-        self.boss.stop(force=True)
+    def SIGINT(self, signum, frame):
+        log.info(_('PIDA stopped by SIGINT')) 
+        boss.stop(force=True)
 
-    def handle_SIGINT(self, signum, frame):
-        self.boss.log.info(_('PIDA stopped by SIGINT')) 
-        self.boss.stop(force=True)
+    signal.signal(signal.SIGTERM, SIGTERM)
+    signal.signal(signal.SIGINT, SIGINT)

@@ -4,7 +4,7 @@ import warnings
 import gtk
 
 from pida.core.servicemanager import ServiceManager
-from pida.core.log import get_logger
+from pida.core.log import log
 from pida.core import environment as env
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
@@ -17,17 +17,11 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-log = get_logger('pida')
 
 class Boss(object):
 
 
     def __init__(self):
-        if env.is_debug():
-            get_logger().setLevel(logging.DEBUG)
-        else:
-            get_logger().setLevel(logging.INFO)
-
         self.show_splash()
         self._sm = ServiceManager(self)
         self._run_first_time()
@@ -39,7 +33,7 @@ class Boss(object):
         return log
 
     def _run_first_time(self):
-        if not env.has_firstrun() or env.is_firstrun():
+        if env.is_firstrun():
             ft = FirstTimeWindow(self._sm.get_available_editors())
             success, editor = ft.run(env.firstrun_filename)
             self.override_editor = editor

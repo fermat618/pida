@@ -1,9 +1,11 @@
 import os, imp, sys
 
 from pida.core.service import Service
+from pida.core.environment import library, environ, plugins_path
 
-from pida.core.environment import library, environ
-
+# log
+import logging
+log = logging.getLogger('pida.sm')
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -19,10 +21,8 @@ class ServiceModuleError(ServiceLoadingError):
 class ServiceDependencyError(ServiceLoadingError):
     """Service does not have the necessary dependencies to start"""
 
-class ServiceLoader(object):
 
-    def __init__(self, boss):
-        self.boss = boss
+class ServiceLoader(object):
 
     def get_all_services(self, service_dirs):
         classes = []
@@ -30,8 +30,8 @@ class ServiceLoader(object):
             try:
                 classes.append(self.get_one_service(service_path))
             except ServiceLoadingError, e:
-                self.boss.log.error('Service error: %s: %s' %
-                                   (e.__class__.__name__, e))
+                log.error('Service error: %s: %s' %
+                          (e.__class__.__name__, e))
         classes.sort(key=Service.sort_key)
         return classes
 
@@ -107,7 +107,7 @@ class ServiceManager(object):
 
     def __init__(self, boss):
         self._boss = boss
-        self._loader = ServiceLoader(self._boss)
+        self._loader = ServiceLoader()
         self._reg = {}
 
     def get_service(self, name):
@@ -145,7 +145,7 @@ class ServiceManager(object):
             plugin.start()
             return plugin
         else:
-            self._boss.log.error('Unable to load plugin from %s' % plugin_path)
+            log.error('Unable to load plugin from %s' % plugin_path)
 
     def stop_plugin(self, plugin_name):
         plugin = self.get_service(plugin_name)
@@ -158,9 +158,9 @@ class ServiceManager(object):
                 del self._reg[plugin_name]
                 return plugin
             else:
-                self._boss.log.error('ServiceManager: Cannot stop services')
+                log.error('ServiceManager: Cannot stop services')
         else:
-            self._boss.log.error('ServiceManager: Cannot find plugin %s' % plugin_name)
+            log.error('ServiceManager: Cannot find plugin %s' % plugin_name)
 
     def _register_services(self):
         for svc in self._loader.load_all_services(

@@ -1,5 +1,14 @@
 """
-PIDA Services
+    pida.core.service
+    ~~~~~~~~~~~~~~~~~
+
+    Base classes for services/plugins.
+
+    :copyright:
+        * 2007-2008 Ali Afshar
+        * 2007-2008 Ronny Pfannschmidt
+
+    :license: GPL2 or later
 """
 
 # PIDA Imports
@@ -37,7 +46,7 @@ class Service(object):
         Called to create all the services by the
         {servicemanager.ServiceManager}
         """
-        
+
         self.options = self.options_config(self)
         self.events = self.events_config(self)
         self.commands = self.commands_config(self)
@@ -49,12 +58,20 @@ class Service(object):
         self.features.subscribe_all_foreign()
         self.actions.subscribe_keyboard_shortcuts()
 
+    def __repr__(self):
+        #XXX: bad factoring, get better types
+        if self.__class__.__module__.startswith('pida.service'):
+            return '<Service: %s>'%self.__class__.__name__
+        else:
+            return '<Plugin: %s>'%self.__class__.__name__
+
     @classmethod
     def get_name(cls):
         return cls.__module__.split('.')[-1]
 
     @staticmethod
-    def sort_key(service): #XXX: for service sorting
+    def sort_key(service):
+        """helper for sorting, use as key argument for `list.sort`/`sorted`"""
         return service.get_name()
 
     @classmethod

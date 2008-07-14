@@ -2,23 +2,19 @@
 
 # Copyright (c) 2007 The PIDA Project
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
+"""
+    pida.services.plugins
+    ~~~~~~~~~~~~~~~~~~~~~
 
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
+    Supplies ui components for plugin management
 
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+    .. deprecated::
+
+        the current plugin updating mechanism is kinda borked
+        it needs a reimplementation when creating a new homepage
+
+    :license: GPL2 or later
+"""
 
 import gtk
 import xmlrpclib
@@ -57,20 +53,17 @@ locale = Locale('plugins')
 _ = locale.gettext
 
 def get_value(tab, key):
-    if not tab.has_key(key):
-        return ''
-    return tab[key]
+    return tab.get(key, None)
 
 # http://docs.python.org/lib/xmlrpc-client-example.html
 class ProxiedTransport(xmlrpclib.Transport):
 
-    def set_proxy(self, proxy):
+    def __init__(self, proxy):
         self.proxy = proxy
 
     def make_connection(self, host):
         self.realhost = host
-        h = httplib.HTTP(self.proxy)
-        return h
+        return httplib.HTTP(self.proxy)
 
     def send_request(self, connection, handler, request_body):
         connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
@@ -81,9 +74,7 @@ class ProxiedTransport(xmlrpclib.Transport):
 def create_transport():
     if 'http_proxy' in os.environ:
         host = os.environ['http_proxy']
-        t = ProxiedTransport()
-        t.set_proxy(host)
-        return t
+        return ProxiedTransport(host)
     else:
         return xmlrpclib.Transport()
 
@@ -409,7 +400,7 @@ class Plugins(Service):
         self._check = False
         self._check_notify = False
         self._check_event = False
-        self._loader = ServiceLoader(self.boss)
+        self._loader = ServiceLoader()
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
@@ -566,7 +557,7 @@ class Plugins(Service):
         os.unlink(filename)
 
         # start service
-        self.start_plugin(plugin_dir)
+        self.start_plugin(plugins_dir)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data=_('Installation of %s completed') % item.plugin)
 
