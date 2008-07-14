@@ -46,7 +46,6 @@ from pida.ui.objectlist import AttrSortCombo
 
 # utils
 from pida.utils import pyflakes
-from pida.utils import pythonparser
 from pida.utils.gthreads import AsyncTask, GeneratorTask
 
 # locale

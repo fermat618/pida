@@ -16,6 +16,7 @@ import os
 import sys
 import signal
 import warnings
+import traceback
 
 from pida.core.signalhandler import handle_signals
 
@@ -82,7 +83,7 @@ def run_pida():
         gdk.threads_leave()
         return 0
     except Exception, e:
-        print e
+        traceback.print_exc()
         return 1
 
 def force_quit(signum, frame):

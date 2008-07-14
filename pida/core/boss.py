@@ -27,11 +27,6 @@ class Boss(object):
         self._run_first_time()
         self.window = PidaWindow(self)
 
-    @property
-    def log(self):
-        warnings.warn("log is deprecated", DeprecationWarning, 2)
-        return log
-
     def _run_first_time(self):
         if env.is_firstrun():
             ft = FirstTimeWindow(self._sm.get_available_editors())
@@ -92,11 +87,11 @@ class Boss(object):
     def get_plugins(self):
         return self._sm.get_plugins()
 
-    def start_plugin(self, plugin_path):
-        return self._sm.start_plugin(plugin_path)
+    def start_plugin(self, name):
+        return self._sm.start_plugin(name)
 
-    def stop_plugin(self, plugin_name):
-        return self._sm.stop_plugin(plugin_name)
+    def stop_plugin(self, name):
+        return self._sm.stop_plugin(name)
 
 
     def add_action_group_and_ui(self, actiongroup, uidef):

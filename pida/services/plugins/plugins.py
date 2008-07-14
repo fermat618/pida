@@ -25,6 +25,7 @@ import os
 import base64
 import shutil
 import httplib
+import pida.plugins
 
 from kiwi.ui.objectlist import Column
 from pida import PIDA_VERSION
@@ -400,7 +401,7 @@ class Plugins(Service):
         self._check = False
         self._check_notify = False
         self._check_event = False
-        self._loader = ServiceLoader()
+        self._loader = ServiceLoader(pida.plugins)
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
@@ -417,21 +418,21 @@ class Plugins(Service):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         self.update_installed_plugins()
 
-    def start_plugin(self, plugin_path):
+    def start_plugin(self, name):
         try:
-            plugin = self.boss.start_plugin(plugin_path)
+            plugin = self.boss.start_plugin(name)
             self.emit('plugin_started', plugin=plugin)
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data = _('Started %(plugin)s plugin' % {'plugin':plugin.get_label()}))
             return True
         except ServiceLoadingError, e:
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
-                data = _('Could not start plugin: %(plugin_path)s\n%(error)s' % 
-                    {'error':str(e), 'plugin_path':plugin_path}))
+                data = _('Could not start plugin: %(name)s\n%(error)s' % 
+                    {'error':str(e), 'plugin_path':name}))
             return False
 
-    def stop_plugin(self, plugin_name):
-        plugin = self.boss.stop_plugin(plugin_name)
+    def stop_plugin(self, name):
+        plugin = self.boss.stop_plugin(name)
         self.emit('plugin_stopped', plugin=plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
             data = _('Stopped %(plugin)s plugin' % {'plugin':plugin.get_label()}))
@@ -447,7 +448,7 @@ class Plugins(Service):
 
     def update_installed_plugins(self, start=False):
         self._view.clear_installed()
-        l_installed = list(self._loader.get_all_service_files([plugins_dir]))
+        l_installed = list(self._loader.get_all_service_files())
         if start:
             start_list = manager.get_value(self._start_list)
         running_list = [plugin.get_name() for plugin in
@@ -468,8 +469,9 @@ class Plugins(Service):
                 if service_name not in start_list:
                     continue
                 plugin_path = os.path.dirname(service_file)
+                plugin_name = os.path.basename(plugin_path)
                 try:
-                    plugin = self.boss.start_plugin(plugin_path)
+                    plugin = self.boss.start_plugin(plugin_name)
                     self.emit('plugin_started', plugin=plugin)
                     plugin_item.enabled = True
                 except ServiceLoadingError, e:
@@ -499,7 +501,7 @@ class Plugins(Service):
 
     def _fetch_available_plugins(self):
         # get installed items
-        l_installed = list(self._loader.get_all_service_files([plugins_dir]))
+        l_installed = list(self._loader.get_all_service_files())
         installed_list = []
         for service_name, service_file in l_installed:
             plugin_item = self.read_plugin_informations(
@@ -530,7 +532,7 @@ class Plugins(Service):
         self._view.start_pulse(_('Download %s') % item.name)
         def download_complete(url, content):
             self._view.stop_pulse()
-            if content != '':
+            if content:
                 self.install(item, content)
         fetch_url(item.url, download_complete)
 
@@ -544,7 +546,7 @@ class Plugins(Service):
 
         # check if we need to stop and remove him
         l_installed = [p[0] for p in
-            self._loader.get_all_service_files([plugins_dir])]
+            self._loader.get_all_service_files()]
         item.directory = plugin_path
         if item.plugin in l_installed:
             self.delete(item, force=True)

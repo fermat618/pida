@@ -1,11 +1,12 @@
-import os, imp, sys
+import os
+import sys
 
 from pida.core.service import Service
-from pida.core.environment import library, environ, plugins_path
+from pida.core.environment import library
 
 # log
 import logging
-log = logging.getLogger('pida.sm')
+log = logging.getLogger('pida.servicemanager')
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -24,79 +25,59 @@ class ServiceDependencyError(ServiceLoadingError):
 
 class ServiceLoader(object):
 
-    def get_all_services(self, service_dirs):
+    def __init__(self, package):
+        self.package = package
+        self._path = package.__path__
+        self._name = package.__name__
+
+    def get_all(self):
         classes = []
-        for service_path in self._find_all_service_paths(service_dirs):
+        for name in self._find_all():
             try:
-                classes.append(self.get_one_service(service_path))
-            except ServiceLoadingError, e:
-                log.error('Service error: %s: %s' %
-                          (e.__class__.__name__, e))
+                classes.append(self.get_one(name))
+            except ImportError, e:
+                log.exception(e)
         classes.sort(key=Service.sort_key)
         return classes
 
-    def get_one_service(self, service_path):
-        module = self._load_service_module(service_path)
-        if module is not None:
-            service_class = self._load_service_class(module)
-            if service_class is not None:
-                return service_class
+    def get_one(self, name):
+        module = '.'.join([self._name, name, name])
+        module = __import__(module, fromlist=['*'], level=0)
+        self._register_service_env(module)
 
-    def load_all_services(self, service_dirs, boss):
-        return sorted(service(boss=boss)
-                      for service in self.get_all_services(service_dirs))
-
-    def load_one_service(self, service_path, boss):
-        service = self.get_one_service(service_path)
-        if service is not None:
-            return service(boss)
-
-    def get_all_service_files(self, service_dirs):
-        for service_path in self._find_all_service_paths(service_dirs):
-            yield os.path.basename(service_path), self._get_servicefile_path(service_path)
-
-    def _find_service_paths(self, service_dir):
-        for f in os.listdir(service_dir):
-            service_path = os.path.join(service_dir, f)
-            if self._has_servicefile(service_path):
-                yield service_path
-
-    def _find_all_service_paths(self, service_dirs):
-        for service_dir in service_dirs:
-            if os.path.isdir(service_dir):
-                for service_path in self._find_service_paths(service_dir):
-                    yield service_path
-
-    def _get_servicefile_path(self, service_path, servicefile_name='service.pida'):
-        return os.path.join(service_path, servicefile_name)
-
-    def _has_servicefile(self, service_path):
-        return os.path.exists(self._get_servicefile_path(service_path))
-
-    def _load_service_module(self, service_path):
-        name = os.path.basename(service_path)
-        sys.path.insert(0, service_path)
-        try:
-            fp, pathname, description = imp.find_module(name, [service_path])
-        except Exception, e:
-            raise ServiceLoadingError('%s: %s' % (name, e))
-        try:
-            module = imp.load_module(name, fp, pathname, description)
-        except ImportError, e:
-            raise ServiceDependencyError('%s: %s' % (name, e))
-        self._register_service_env(name, service_path)
-        sys.path.remove(service_path)
-        return module
-
-    def _load_service_class(self, module):
         try:
             service = module.Service
+            service.__path__ = os.path.dirname(module.__file__) #XXX: hack
+            service.__loader__ = self
+            return service
         except AttributeError, e:
-            raise ServiceModuleError('Service has no Service class')
-        service.servicemodule = module
-        return service
 
-    def _register_service_env(self, servicename, service_path):
+            raise ServiceModuleError(module.__name__), None, None
+
+
+    def get_all_service_files(self):
+        for base in self._path:
+            for name in self._find_of_dir(base):
+                yield name, self._servicefile_path(base, name)
+
+    def _find_of_dir(self, path):
+        for name in os.listdir(path):
+            if self._has_servicefile(path, name):
+                yield name
+
+    def _find_all(self):
+        for base in self._path:
+            for name in self._find_of_dir(base):
+                yield name
+
+    def _servicefile_path(self, base, name):
+        return os.path.join(base, name, 'service.pida')
+
+    def _has_servicefile(self, base,  name):
+        return os.path.exists(self._servicefile_path(base, name))
+
+    def _register_service_env(self, module):
+        service_path = os.path.dirname(module.__file__)
         for name in 'glade', 'uidef', 'pixmaps', 'data':
             path = os.path.join(service_path, name)
             if os.path.isdir(path):
@@ -106,25 +87,27 @@ class ServiceLoader(object):
 class ServiceManager(object):
 
     def __init__(self, boss):
+        from pida import plugins, services, editors
         self._boss = boss
-        self._loader = ServiceLoader()
+        self._services = ServiceLoader(services)
+        self._plugins = ServiceLoader(plugins)
+        self._editors = ServiceLoader(editors)
         self._reg = {}
 
     def get_service(self, name):
         return self._reg[name]
 
+    def __iter__(self):
+        return self._reg.itervalues()
+
     def get_services(self):
-        return sorted(
-                self._reg.values(),
-                key=Service.sort_key)
+        return sorted(self, key=Service.sort_key)
 
     def get_plugins(self):
-        services = self.get_services()
-        return [s for s in services if not s.__module__.startswith('pida.services')]
+        return [s for s in self if not s.__module__.startswith('pida.services')]
 
     def get_services_not_plugins(self):
-        services = self.get_services()
-        return [s for s in services if s.__module__.startswith('pida.services')]
+        return [s for s in self if s.__module__.startswith('pida.services')]
 
     def activate_services(self):
         self._register_services()
@@ -132,45 +115,44 @@ class ServiceManager(object):
         self._subscribe_services()
         self._pre_start_services()
 
-    def start_plugin(self, plugin_path):
-        plugin = self._loader.load_one_service(plugin_path, self._boss)
-        pixmaps_dir = os.path.join(plugin_path, 'pixmaps')
+    def start_plugin(self, name):
+        plugin = self._plugins.get_one(name)(self._boss)
+        pixmaps_dir = os.path.join(plugin.__path__, 'pixmaps')
         if os.path.exists(pixmaps_dir):
             self._boss._icons.register_file_icons_for_directory(pixmaps_dir)
         if plugin is not None:
-            self._register_plugin(plugin)
+            self._register(plugin)
             plugin.create_all()
             plugin.subscribe_all()
             plugin.pre_start()
             plugin.start()
             return plugin
         else:
-            log.error('Unable to load plugin from %s' % plugin_path)
+            log.error('Unable to load plugin %s' % name)
 
-    def stop_plugin(self, plugin_name):
-        plugin = self.get_service(plugin_name)
-        if plugin is not None:
-            # Check plugin is a plugin not a service
-            if plugin in self.get_plugins():
-                plugin.log.debug('Stopping')
-                plugin.stop_components()
-                plugin.stop()
-                del self._reg[plugin_name]
-                return plugin
+    def stop_plugin(self, name):
+        plugin = self.get_service(name)
+        # Check plugin is a plugin not a service
+        if plugin in self.get_plugins():
+            plugin.log.debug('Stopping')
+            plugin.stop_components()
+            plugin.stop()
+            del self._reg[name]
+            del_name = getattr(self.package, name).__name__
+            delattr(self.package, name)
+            for name in list(sys.modules):
+                if name.startswith(del_name):
+                    del sys.modules[name]
+
             else:
                 log.error('ServiceManager: Cannot stop services')
-        else:
-            log.error('ServiceManager: Cannot find plugin %s' % plugin_name)
+        return plugin
 
     def _register_services(self):
-        for svc in self._loader.load_all_services(
-                self._boss.get_service_dirs(), self._boss):
-            self._register_service(svc)
+        for service in self._services.get_all():
+            self._register(service(self._boss))
 
-    def _register_service(self, service):
-        self._reg[service.get_name()] = service
-
-    def _register_plugin(self, service):
+    def _register(self, service):
         self._reg[service.get_name()] = service
 
     def _create_services(self):
@@ -194,8 +176,7 @@ class ServiceManager(object):
             svc.start()
 
     def get_available_editors(self):
-        dirs = self._boss.get_editor_dirs()
-        return self._loader.get_all_services(dirs)
+        return self._editors.get_all()
 
     def activate_editor(self, name):
         self.load_editor(name)
@@ -204,21 +185,17 @@ class ServiceManager(object):
         self.editor.pre_start()
 
     def start_editor(self):
-        self.register_editor(self.editor)
+        self._register(self.editor)
         self.editor.start()
 
     def load_editor(self, name):
-        for editor in self.get_available_editors():
-            if editor.get_name() == name:
-                self.editor = editor(self._boss)
-                return self.editor
-        raise AttributeError(_('No editor found'))
-
-    def register_editor(self, service):
-        self._reg[service.get_name()] = service
+        assert not hasattr(self, 'editor') , "can't load a second editor"
+        editor = self._editors.get_one(name)
+        self.editor = editor(self._boss)
+        return self.editor
 
     def stop(self):
-        for svc in self.get_services():
+        for svc in self:
             svc.stop()
 
 
