@@ -30,6 +30,17 @@ class ServiceLoader(object):
         self._path = package.__path__
         self._name = package.__name__
 
+    def unload(self, name):
+        """
+        unload a plugin module
+        """
+        del_name = getattr(self.package, name).__name__
+        delattr(self.package, name)
+        for name in list(sys.modules):
+            if name.startswith(del_name):
+                del sys.modules[name]
+
+
     def get_all(self):
         classes = []
         for name in self._find_all():
@@ -137,15 +148,11 @@ class ServiceManager(object):
             plugin.log.debug('Stopping')
             plugin.stop_components()
             plugin.stop()
-            del self._reg[name]
-            del_name = getattr(self.package, name).__name__
-            delattr(self.package, name)
-            for name in list(sys.modules):
-                if name.startswith(del_name):
-                    del sys.modules[name]
 
-            else:
-                log.error('ServiceManager: Cannot stop services')
+            del self._reg[name]
+            self._plugins.unload(name)
+        else:
+            log.error('ServiceManager: Cannot stop services')
         return plugin
 
     def _register_services(self):
