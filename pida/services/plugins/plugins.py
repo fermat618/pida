@@ -267,7 +267,7 @@ class PluginsView(PidaGladeView):
         if not item.directory:
             return
         if item.enabled:
-            success = self.svc.start_plugin(item.directory)
+            success = self.svc.start_plugin(os.path.basename(item.directory))
             item.enabled = success
         else:
             self.svc.stop_plugin(item.plugin)
