@@ -39,6 +39,8 @@ from pida.core.options import OptionsConfig
 from pida.core.options import OTypeString, OTypeBoolean, \
     OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
 
+from pida.core.environment import pida_home
+
 from pida.ui.views import PidaGladeView
 
 # locale
@@ -229,10 +231,10 @@ class Sessions(Service):
     last_session_file = 'last.session'
 
     def pre_start(self):
-        self.sessions_dir = os.path.join(self.boss.get_pida_home(),
-            'sessions')
-        self.last_session_path = os.path.join(self.sessions_dir,
-                self.last_session_file)
+        self.sessions_dir = os.path.join(pida_home, 'sessions')
+        self.last_session_path = os.path.join(
+                    self.sessions_dir,
+                    self.last_session_file)
         if not os.path.exists(self.sessions_dir):
             os.mkdir(self.sessions_dir)
 

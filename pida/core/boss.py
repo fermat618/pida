@@ -1,11 +1,21 @@
-import logging
-import sys
-import warnings
+"""
+    pida.core.boss
+    ~~~~~~~~~~~~~~
+
+    Boss is the main controller for Pida,
+    it manages glueing together the rest
+
+    :license: GPL2 or later
+    :copyright:
+        * 2007-2008 Ali Afshar
+        * 2007-2008 Ronny Pfannschmidt
+"""
+
+
 import gtk
 
+from pida.core.environment import is_firstrun, firstrun_filename
 from pida.core.servicemanager import ServiceManager
-from pida.core.log import log
-from pida.core import environment as env
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
@@ -20,7 +30,6 @@ _ = locale.gettext
 
 class Boss(object):
 
-
     def __init__(self):
         self.show_splash()
         self._sm = ServiceManager(self)
@@ -28,9 +37,9 @@ class Boss(object):
         self.window = PidaWindow(self)
 
     def _run_first_time(self):
-        if env.is_firstrun():
+        if is_firstrun():
             ft = FirstTimeWindow(self._sm.get_available_editors())
-            success, editor = ft.run(env.firstrun_filename)
+            success, editor = ft.run(firstrun_filename)
             self.override_editor = editor
             self.quit_before_started = not success
         else:
@@ -85,7 +94,6 @@ class Boss(object):
     def stop_plugin(self, name):
         return self._sm.stop_plugin(name)
 
-
     def add_action_group_and_ui(self, actiongroup, uidef):
         self.window.add_action_group(actiongroup)
         return self.window.add_uidef(uidef)
@@ -96,9 +104,6 @@ class Boss(object):
 
     def cmd(self, servicename, commandname, **kw):
         return self.get_service(servicename).cmd(commandname, **kw)
-
-    def get_pida_home(self):
-        return env.pida_home
 
     def show_splash(self):
         self._splash = SplashScreen()

@@ -31,6 +31,7 @@ import moo
 from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.environment import pida_home
 
 
 # locale
@@ -299,8 +300,8 @@ class Mooedit(EditorService):
 
     def pre_start(self):
         try:
-            self.script_path = os.path.join(self.boss.get_pida_home(), 'pida_mooedit.rc')
-            self._state_path = os.path.join(self.boss.get_pida_home(), 'pida_mooedit.state')
+            self.script_path = os.path.join(pida_home, 'pida_mooedit.rc')
+            self._state_path = os.path.join(pida_home, 'pida_mooedit.state')
             moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=self._state_path)
             self._editor_instance = moo.edit.create_editor_instance()
             moo.edit.plugin_read_dirs()

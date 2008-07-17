@@ -29,6 +29,7 @@ import gtk, gobject
 
 # PIDA Imports
 from pida.core.service import Service
+from pida.core.environment import pida_home
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
@@ -514,7 +515,7 @@ class Snippets(Service):
         self.snippets[snippet_meta.shortcut] = snippet_meta
 
     def create_snippet_directories(self):
-        self._snippet_dir = os.path.join(self.boss.get_pida_home(), 'snippets')
+        self._snippet_dir = os.path.join(pida_home, 'snippets')
         if not os.path.exists(self._snippet_dir):
             os.mkdir(self._snippet_dir)
 

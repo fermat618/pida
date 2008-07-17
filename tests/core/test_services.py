@@ -7,12 +7,12 @@ from pida.core.options import OptionsConfig, OTypeString
 from pida.core.commands import CommandsConfig
 
 from pida.core.interfaces import IOptions
-from pida.core.boss import log as boss_log
+from pida.core.log import log
 
 
 class MockBoss(object):
 
-    log = boss_log
+    log = log
 
     def add_action_group_and_ui(*args):
         pass
