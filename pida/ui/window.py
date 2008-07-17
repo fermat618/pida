@@ -121,8 +121,8 @@ class PidaWindow(Window):
             self._uim.remove_ui(ui_merge_id)
 
     # View API
-    def add_view(self, bookname, view, removable=True, present=False):
-        self._paned.add_view(bookname, view, removable, present)
+    def add_view(self, paned, view, removable=True, present=False):
+        self._paned.add_view(paned, view, removable, present)
 
     def remove_view(self, view):
         self._paned.remove_view(view)
