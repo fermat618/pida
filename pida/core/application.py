@@ -58,9 +58,9 @@ except ImportError, e:
     die_cli(_('Kiwi needs to be installed to run PIDA'), e)
 
 
-# Python 2.4
-if sys.version_info < (2,4):
-    die_gui(_('Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
+# Python 2.5
+if sys.version_info < (2, 5):
+    die_gui(_('Python 2.5 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
         {'major':sys.version_info[:2][0], 'minor':sys.version_info[:2][1]})
 
 
