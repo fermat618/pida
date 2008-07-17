@@ -223,7 +223,7 @@ class ModuleParser(object):
     def __init__(self, filename):
         self.filename = filename
         self.project, self.modname = get_project(filename)
-        self.mod = self.project.get_pycore().get_module(self.modname)
+        self.mod = self.project.pycore.get_module(self.modname)
 
     def get_nodes(self):
         for name, node in self.mod.get_attributes().items():
