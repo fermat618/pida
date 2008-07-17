@@ -1,18 +1,30 @@
 
 
+"""
+Rope integration for PIDA.
+
+Rope is an all-round python analysis/refactoring library.
+
+http://rope.sourceforge.net
+"""
+
 from os.path import dirname, basename
 
 from rope.base.project import Project
 from rope.base import pynames, pyobjects, builtins
 
 
+
 def markup_italic(text):
+    """Make some italic pango"""
     return '<i>%s</i>' % text
 
 def markup_color(text, color):
+    """Make some coloured pango"""
     return '<span foreground="%s">%s</span>' % (color, text)
 
 def markup_bold(name):
+    """Make some bold pango"""
     return '<b>%s</b>' % name
 
 def markup_grey_italic(text):
@@ -43,8 +55,9 @@ def markup_fixed(text):
 def markup_name(name):
     return markup_bold(markup_fixed(name))
 
-class TreeOptions(object):
 
+class TreeOptions(object):
+    """The per-type options for a source node type."""
     type_name = 'u'
     type_color = '#000000'
     position = 0
@@ -54,19 +67,23 @@ class TreeOptions(object):
         self.item = treeitem
 
     def get_extra_markup(self):
+        """Markup added to the end of each definition"""
         return ''
 
     def get_pre_markup(self):
+        """Markup prepended to the definition name"""
         return ''
 
 
 class FunctionOptions(TreeOptions):
+    """Describe how functions are shown"""
 
     type_name = 'f'
     type_color = '#900000'
     position = 2
 
     def get_pre_markup(self):
+        """Draw decorators"""
         decs = ', '.join(['@' + d.id for d in
             self.item.object.decorators])
         if decs:
@@ -78,6 +95,10 @@ class FunctionOptions(TreeOptions):
         attrs = markup_bold_bracketted(
             ', '.join(self.item.object.get_param_names())
         )
+        doc = self.item.object.get_doc()
+        if doc:
+            doc_markup = markup_grey_italic('"""%s"""' % doc.splitlines()[0])
+            attrs = attrs + '\n' + doc_markup
         return attrs
 
 
@@ -117,10 +138,16 @@ class ClassOptions(TreeOptions):
     has_children = True
 
     def get_extra_markup(self):
-        return markup_bold_bracketted(
+        attrs = markup_bold_bracketted(
             ', '.join([s.get_name() for s in
                        self.item.object.get_superclasses()])
         )
+
+        doc = self.item.object.get_doc()
+        if doc:
+            doc_markup = markup_grey_italic('"""%s"""' % doc.splitlines()[0])
+            attrs = attrs + '\n' + doc_markup
+        return attrs
 
 class AssignedOptions(TreeOptions):
 

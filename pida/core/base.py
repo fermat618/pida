@@ -1,3 +1,17 @@
+"""
+Service Configurators
+
+These "Configs" are not quite configurations, but more entities that cause a
+service to behave in a certain way. They provide a way in which an arbitrary
+number of behaviours may be added to a service.
+
+Each behaviour "publishes" a number of "subscription points" which can then be
+connected to by other services.
+
+For examples of their use, you can see pida.core.features.
+
+"""
+
 
 class BaseConfig(object):
 

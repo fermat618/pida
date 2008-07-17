@@ -35,7 +35,7 @@ class MyCommands(CommandsConfig):
         self.svc.something = val
 
 class MYService(Service):
-    
+
     options_config = MYOptions
     commands_config = MyCommands
 
@@ -85,7 +85,7 @@ class TestCommands(TestCase):
         def c():
             self.svc.cmd('do_something', True)
         self.assertRaises(TypeError, c)
-        
-        
 
-        
+
+
+
