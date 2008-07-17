@@ -125,7 +125,7 @@ class BookmarkView(PidaView):
             l.connect('selection-changed', self._on_item_selected)
             l.set_headers_visible(False)
             l.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            lf._books.append_page(self._list_dirs,
+            l._books.append_page(self._list_dirs,
                     tab_label=self.create_tab_label(icon_name, text))
             return l
 
