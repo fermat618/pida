@@ -72,14 +72,6 @@ class Boss(object):
     def get_services(self):
         return self._sm.get_services()
 
-    def get_service_dirs(self):
-        import pida.services
-        return pida.services.__path__
-
-    def get_editor_dirs(self):
-        import pida.editors
-        return pida.editors.__path__
-
     @property
     def editor(self):
         return self._sm.editor
