@@ -26,7 +26,7 @@ class OptionsManager(object):
     def register_option(self, option):
         val = self._client.get(option.key)
         if val is None:
-            option.set(self._client, option.default)
+            self.set(option, option.default)
         if option.callback is not None:
             self.add_notify(option, option.callback)
 
@@ -88,17 +88,8 @@ class OptionItem(object):
         self.type = rtype
         self.doc = doc
         self.default = default
-        self.key = self._create_key()
+        self.key = '/apps/pida/%s/%s' % (self.group, self.name)
         self.callback = callback
-
-    def _create_key(self):
-        return '/apps/pida/%s/%s' % (self.group, self.name)
-
-    def get(self, client):
-        return self.type.get(client, self.key)
-        
-    def set(self, client, value):
-        return self.type.set(client, self.key, value)
 
     def get_value(self):
         return manager.get(self)
