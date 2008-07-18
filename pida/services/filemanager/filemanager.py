@@ -40,7 +40,7 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString, OTypeStringList
+from pida.core.options import OptionsConfig
 from pida.core.environment import get_uidef_path
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
@@ -598,34 +598,34 @@ class FileManagerOptionsConfig(OptionsConfig):
         self.create_option(
                 'show_hidden',
                 _('Show hidden files'),
-                OTypeBoolean,
+                bool,
                 True,
                 _('Shows hidden files'))
         self.create_option(
                 'file_hidden_check',
                 _('Used file hidden checker'),
-                OTypeStringList,
+                list,
                 [],
                 _('The used file hidden checker'))
         
         self.create_option(
                 'last_browsed_remember',
                 _('Remember last Path'),
-                OTypeBoolean,
+                list,
                 True,
                 _('Remembers the last browsed path'))
         
         self.create_option(
                 'last_browsed',
                 _('Last browsed Path'),
-                OTypeString,
+                str,
                 path.expanduser('~'),
                 _('The last browsed path'))
         
         self.create_option(
                 'hide_regex',
                 _('Hide regex'),
-                OTypeString,
+                str,
                 '^\.|.*~|.*\.py[co]$',
                 _('Hides files that match the regex'))
 

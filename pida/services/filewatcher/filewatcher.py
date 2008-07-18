@@ -28,7 +28,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, OTypeBoolean
+from pida.core.options import OptionsConfig
 
 # locale
 from pida.core.locale import Locale
@@ -48,7 +48,7 @@ class FileWatcherOptions(OptionsConfig):
         self.create_option(
             'enable_gamin',
             _('Enable Gamin'),
-            OTypeBoolean,
+            bool,
             False,
             _('Whether Gamin wil be enabled'),
             self.on_enabled_changed

@@ -37,6 +37,8 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.core.environment import pida_home
+
 from pida.ui.views import PidaGladeView
 
 # locale
@@ -234,7 +236,7 @@ class Openwith(Service):
     features_config = OpenWithFeatures
 
     def pre_start(self):
-        self._filename = os.path.join(self.boss.get_pida_home(), 'openwith.ini')
+        self._filename = os.path.join(pida_home, 'openwith.ini')
         self._config = ConfigObj(self._filename)
         if not os.path.exists(self._filename):
             default = self.create_default_item()

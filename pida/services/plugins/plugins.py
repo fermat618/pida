@@ -2,23 +2,19 @@
 
 # Copyright (c) 2007 The PIDA Project
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
+"""
+    pida.services.plugins
+    ~~~~~~~~~~~~~~~~~~~~~
 
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
+    Supplies ui components for plugin management
 
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+    .. deprecated::
+
+        the current plugin updating mechanism is kinda borked
+        it needs a reimplementation when creating a new homepage
+
+    :license: GPL2 or later
+"""
 
 import gtk
 import xmlrpclib
@@ -29,6 +25,7 @@ import os
 import base64
 import shutil
 import httplib
+import pida.plugins
 
 from kiwi.ui.objectlist import Column
 from pida import PIDA_VERSION
@@ -36,11 +33,10 @@ from pida.ui.views import PidaGladeView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeBoolean
+from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
-from pida.core.options import OptionItem, manager, OTypeStringList, OTypeString
 
 from pida.core.environment import plugins_dir
 
@@ -57,20 +53,17 @@ locale = Locale('plugins')
 _ = locale.gettext
 
 def get_value(tab, key):
-    if not tab.has_key(key):
-        return ''
-    return tab[key]
+    return tab.get(key, None)
 
 # http://docs.python.org/lib/xmlrpc-client-example.html
 class ProxiedTransport(xmlrpclib.Transport):
 
-    def set_proxy(self, proxy):
+    def __init__(self, proxy):
         self.proxy = proxy
 
     def make_connection(self, host):
         self.realhost = host
-        h = httplib.HTTP(self.proxy)
-        return h
+        return httplib.HTTP(self.proxy)
 
     def send_request(self, connection, handler, request_body):
         connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
@@ -81,9 +74,7 @@ class ProxiedTransport(xmlrpclib.Transport):
 def create_transport():
     if 'http_proxy' in os.environ:
         host = os.environ['http_proxy']
-        t = ProxiedTransport()
-        t.set_proxy(host)
-        return t
+        return ProxiedTransport(host)
     else:
         return xmlrpclib.Transport()
 
@@ -275,7 +266,7 @@ class PluginsView(PidaGladeView):
         if not item.directory:
             return
         if item.enabled:
-            success = self.svc.start_plugin(item.directory)
+            success = self.svc.start_plugin(os.path.basename(item.directory))
             item.enabled = success
         else:
             self.svc.stop_plugin(item.plugin)
@@ -371,7 +362,7 @@ class PluginsOptionsConfig(OptionsConfig):
         self.create_option(
             'rpc_url',
             _('Webservice Url'),
-            OTypeString,
+            str,
             PLUGIN_RPC_URL,
             _('URL of Webservice to download plugins'),
             self.on_rpc_url)
@@ -379,10 +370,18 @@ class PluginsOptionsConfig(OptionsConfig):
         self.create_option(
             'check_for_updates',
             _('Check updates'),
-            OTypeBoolean,
+            bool,
             True,
             _('Check for plugins updates in background'),
             self.on_check_for_updates)
+
+        self.create_option(
+                'start_list', 
+                _('Start plugin list'),
+                list, 
+                [], 
+                _('List of plugin to start'),
+                )
 
     def on_rpc_url(self, client, id, entry, option):
         self.svc.rpc_url = option.get_value()
@@ -409,13 +408,10 @@ class Plugins(Service):
         self._check = False
         self._check_notify = False
         self._check_event = False
-        self._loader = ServiceLoader(self.boss)
+        self._loader = ServiceLoader(pida.plugins)
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
-        self._start_list = OptionItem('plugins', 'start_list', _('Start plugin list'),
-                OTypeStringList, [], _('List of plugin to start'), None)
-        manager.register_option(self._start_list)
 
     def start(self):
         self.rpc_url = self.opt('rpc_url')
@@ -426,21 +422,21 @@ class Plugins(Service):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         self.update_installed_plugins()
 
-    def start_plugin(self, plugin_path):
+    def start_plugin(self, name):
         try:
-            plugin = self.boss.start_plugin(plugin_path)
+            plugin = self.boss.start_plugin(name)
             self.emit('plugin_started', plugin=plugin)
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data = _('Started %(plugin)s plugin' % {'plugin':plugin.get_label()}))
             return True
         except ServiceLoadingError, e:
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
-                data = _('Could not start plugin: %(plugin_path)s\n%(error)s' % 
-                    {'error':str(e), 'plugin_path':plugin_path}))
+                data = _('Could not start plugin: %(name)s\n%(error)s' % 
+                    {'error':str(e), 'plugin_path':name}))
             return False
 
-    def stop_plugin(self, plugin_name):
-        plugin = self.boss.stop_plugin(plugin_name)
+    def stop_plugin(self, name):
+        plugin = self.boss.stop_plugin(name)
         self.emit('plugin_stopped', plugin=plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
             data = _('Stopped %(plugin)s plugin' % {'plugin':plugin.get_label()}))
@@ -456,9 +452,9 @@ class Plugins(Service):
 
     def update_installed_plugins(self, start=False):
         self._view.clear_installed()
-        l_installed = list(self._loader.get_all_service_files([plugins_dir]))
+        l_installed = list(self._loader.get_all_service_files())
         if start:
-            start_list = manager.get_value(self._start_list)
+            start_list = self.opt('start_list')
         running_list = [plugin.get_name() for plugin in
                 self.boss.get_plugins()]
 
@@ -476,9 +472,8 @@ class Plugins(Service):
             if start:
                 if service_name not in start_list:
                     continue
-                plugin_path = os.path.dirname(service_file)
                 try:
-                    plugin = self.boss.start_plugin(plugin_path)
+                    plugin = self.boss.start_plugin(service_name)
                     self.emit('plugin_started', plugin=plugin)
                     plugin_item.enabled = True
                 except ServiceLoadingError, e:
@@ -508,7 +503,7 @@ class Plugins(Service):
 
     def _fetch_available_plugins(self):
         # get installed items
-        l_installed = list(self._loader.get_all_service_files([plugins_dir]))
+        l_installed = list(self._loader.get_all_service_files())
         installed_list = []
         for service_name, service_file in l_installed:
             plugin_item = self.read_plugin_informations(
@@ -539,7 +534,7 @@ class Plugins(Service):
         self._view.start_pulse(_('Download %s') % item.name)
         def download_complete(url, content):
             self._view.stop_pulse()
-            if content != '':
+            if content:
                 self.install(item, content)
         fetch_url(item.url, download_complete)
 
@@ -553,7 +548,7 @@ class Plugins(Service):
 
         # check if we need to stop and remove him
         l_installed = [p[0] for p in
-            self._loader.get_all_service_files([plugins_dir])]
+            self._loader.get_all_service_files()]
         item.directory = plugin_path
         if item.plugin in l_installed:
             self.delete(item, force=True)
@@ -566,7 +561,7 @@ class Plugins(Service):
         os.unlink(filename)
 
         # start service
-        self.start_plugin(plugin_dir)
+        self.start_plugin(item.plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data=_('Installation of %s completed') % item.plugin)
 
@@ -671,7 +666,7 @@ class Plugins(Service):
 
     def save_running_plugin(self):
         list = [plugin.get_name() for plugin in self.boss.get_plugins()]
-        manager.set_value(self._start_list, list)
+        self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
         markup = '<b>%s</b>' % cgi.escape(item.name)

@@ -26,7 +26,6 @@ from pida.core.features import FeaturesConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
-from pida.core.options import OTypeString, OTypeFile
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.environment import get_pixmap_path
 from pida.core.projects import ProjectController, \
@@ -426,28 +425,27 @@ class DebuggerFeaturesConfig(FeaturesConfig):
                                                     self.svc.controller_config)
 
 class DebuggerOptionsConfig(OptionsConfig):
-    name = 'debugger'
     def create_options(self):
         self.create_option(
-            self.name+'breakpoint_pixmap',
+            'breakpoint_pixmap',
             "Breakpoint's pixmap",
-            OTypeFile,
+            file,
             get_pixmap_path("stop.svg"),
-            'Path to a pixmap for the breakpoints to be displayed at \
-beginning of line',
+            'Path to a pixmap for the breakpoints to be displayed at '
+            'beginning of line',
         )
         self.create_option(
-            self.name+'_cursor_pixmap',
+            'cursor_pixmap',
             "Debugging cursor's pixmap",
-            OTypeFile,
+            file,
             get_pixmap_path("forward.svg"),
             'Path to a pixmap for the cursor to be displayed at \
 beginning of line where debugger is halted')
 
         self.create_option(
-            self.name+'_executable_path',
+            'executable_path',
             'Pathes to the GDB-compatible debugger : ',
-            OTypeString,
+            str,
             self.svc.DEFAULT_DEBUGGER_PATH_OPTION,
             ('Set the path to the debugger executable.')
         )

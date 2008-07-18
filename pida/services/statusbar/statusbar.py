@@ -30,7 +30,7 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeBoolean
+from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
@@ -79,7 +79,7 @@ class StatusbarOptionsConfig(OptionsConfig):
         self.create_option(
             'show_statusbar',
             _('Show the statusbar'),
-            OTypeBoolean,
+            bool,
             True,
             _('Whether the statusbar will be shown'),
             self.on_show_ui,

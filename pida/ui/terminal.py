@@ -1,40 +1,23 @@
 # -*- coding: utf-8 -*- 
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
 """
-The PIDA Terminal Widget
+    The PIDA Terminal Widget
+    ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The widget `PidaTerminal` encapsulates some of the common functions of VTE in a
-more usable format.
+    The widget `PidaTerminal` encapsulates VTE in a more usable api.
 
+    :license:   GPL2 or later
+    :copyright:
+        2005 Ali Afshar aafshar@gmail.com
 """
-from math import floor
 
 import re
-
+import os
+import gobject
+import subprocess
 import gtk
 
-from kiwi.utils import gsignal, type_register
+from kiwi.utils import gsignal
 
 from vte import Terminal
 
@@ -149,7 +132,7 @@ class PidaTerminal(Terminal):
         """
         cw = self.get_char_width()
         ch = self.get_char_height()
-        return int(floor(x / cw)), int(floor(y / ch))
+        return int(x / cw), int(y / ch)
 
     def _on_button_press(self, term, event):
         """
@@ -243,46 +226,6 @@ class PidaTerminal(Terminal):
     def get_all_text(self):
         col, row = self.get_cursor_position()
         return self.get_text_range(0, 0, row, col, lambda *a: True)
-
-
-
-
-
-class popen(object):
-    def __init__(self, cmdargs, callback, kwargs):
-        self.__running = False
-        self.__readbuf = []
-        self.__callback = callback
-        self.run(cmdargs, **kwargs)
-    
-    def run(self, cmdargs, **kwargs):
-        console = subprocess.Popen(args=cmdargs, stdout=subprocess.PIPE,
-                                                 stderr=subprocess.STDOUT,
-                                                 **kwargs)
-        self.__running = True
-        self.__readtag = gobject.io_add_watch(
-            console.stdout, gobject.IO_IN, self.cb_read)
-        self.__huptag = gobject.io_add_watch(
-            console.stdout, gobject.IO_HUP, self.cb_hup)
-        self.pid = console.pid
-
-    def cb_read(self, fd, cond):
-        data = os.read(fd.fileno(), 1024)
-        self.__readbuf.append(data)
-        return True
-
-    def cb_hup(self, fd, cond):
-        while True:
-            data = os.read(fd.fileno(), 1024)
-            if data == '':
-                break
-            self.__readbuf.append(data)
-        self.__callback(''.join(self.__readbuf))
-        self.__running = False
-        gobject.source_remove(self.__readtag)
-        return False
-
-
 
 
 if __name__ == '__main__':

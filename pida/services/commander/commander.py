@@ -22,7 +22,9 @@
 
 import os, subprocess
 
-import gtk, gobject
+import gtk
+import gobject
+import pango
 
 # PIDA Imports
 from pida.core.service import Service
@@ -30,8 +32,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, OTypeString, OTypeBoolean, \
-    OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
+from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida import PIDA_VERSION
 
@@ -58,7 +59,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'font',
             _('Terminal Font'),
-            OTypeFont,
+            pango.Font,
             'Monospace 10',
             _('The font used in terminals'),
         )
@@ -66,7 +67,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'transparent',
             _('Terminal Transparency'),
-            OTypeBoolean,
+            bool,
             False,
             _('Whether terminals will be transparent'),
         )
@@ -74,7 +75,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'use_background_image',
             _('Use a background image'),
-            OTypeBoolean,
+            bool,
             False,
             _('Whether a background image will be displayed'),
         )
@@ -82,7 +83,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'background_image_file',
             _('Background image file'),
-            OTypeFile,
+            file,
             '',
             _('The file used for the background image'),
         )
@@ -90,7 +91,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'cursor_blinks',
             _('Cursor Blinks'),
-            OTypeBoolean,
+            bool,
             False,
             _('Whether the cursor will blink')
         )
@@ -98,7 +99,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'scrollback_lines',
             _('Scrollback line numer'),
-            OTypeInteger,
+            int,
             100,
             _('The number of lines in the terminal scrollback buffer'),
         )
@@ -106,7 +107,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'scrollbar_visible',
             _('Show terminal scrollbar'),
-            OTypeBoolean,
+            bool,
             True,
             _('Whether a scrollbar should be shown'),
         )
@@ -114,7 +115,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'allow_bold',
             _('Allow bold in the terminal'),
-            OTypeBoolean,
+            bool,
             True,
             _('Whether bold text is allowed in the terminal'),
         )
@@ -122,7 +123,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'audible_bell',
             _('Emit audible bell in terminal'),
-            OTypeBoolean,
+            bool,
             False,
             _('Whether an audible bell will be emitted in the terminal'),
         )
@@ -132,7 +133,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'shell_command',
             _('The shell command'),
-            OTypeString,
+            str,
             get_default_system_shell(),
             _('The command that will be used for shells')
         )
@@ -140,7 +141,7 @@ class CommanderOptionsConfig(OptionsConfig):
         self.create_option(
             'shell_command_args',
             _('The shell arguments'),
-            OTypeStringList,
+            list,
             [],
             _('The arguments to pass to the shell command'),
         )
@@ -186,7 +187,7 @@ class CommanderActionsConfig(ActionsConfig):
 
     def on_terminal_for_dir(self, action):
         cwd = action.contexts_kw['dir_name']
-        self.svc.cmd('execute_shell', cwd=cwd)
+        self.svc .cmd('execute_shell', cwd=cwd)
 
 
 class CommanderCommandsConfig(CommandsConfig):

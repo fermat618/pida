@@ -27,7 +27,7 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeBoolean
+from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
@@ -143,7 +143,7 @@ class WindowOptionsConfig(OptionsConfig):
         self.create_option(
             'show_toolbar',
             _('Show the toolbar'),
-            OTypeBoolean,
+            bool,
             True,
             _('Whether the main toolbar will be shown'),
             self.on_show_ui,
@@ -152,7 +152,7 @@ class WindowOptionsConfig(OptionsConfig):
         self.create_option(
             'show_menubar',
             _('Show the menubar'),
-            OTypeBoolean,
+            bool,
             True,
             _('Whether the main menubar will be shown'),
             self.on_show_ui,

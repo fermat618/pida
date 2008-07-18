@@ -5,6 +5,7 @@ from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_inpu
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
+from pida.core.log import log
 from pida.core.environment import get_uidef_path, get_pixmap_path
 from pida.core.actions import accelerator_group
 
@@ -109,7 +110,7 @@ class PidaWindow(Window):
             uifile = get_uidef_path(filename)
             return self._uim.add_ui_from_file(uifile)
         except Exception, e:
-            self._boss.log.debug('unable to get %s resource: %s' %
+            log.debug('unable to get %s resource: %s' %
                                 (filename, e))
 
     def remove_action_group(self, actiongroup):
@@ -120,8 +121,8 @@ class PidaWindow(Window):
             self._uim.remove_ui(ui_merge_id)
 
     # View API
-    def add_view(self, bookname, view, removable=True, present=False):
-        self._paned.add_view(bookname, view, removable, present)
+    def add_view(self, paned, view, removable=True, present=False):
+        self._paned.add_view(paned, view, removable, present)
 
     def remove_view(self, view):
         self._paned.remove_view(view)

@@ -1,26 +1,13 @@
 # -*- coding: utf-8 -*- 
+"""
+    pida.editors.vim.vim
+    ~~~~~~~~~~~~~~~~~~~~
 
-# Copyright (c) 2007 The PIDA Project
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
-
+    :license: GPL 2 or later
+    :copyright:
+        2007-2008 Ali Afshar
+        2008      Ronny Pfannschmidt
+"""
 import os
 
 # PIDA Imports
@@ -28,8 +15,8 @@ from pida.core.environment import get_data_path
 
 from pida.ui.views import PidaView
 
-from pida.utils.vim.vimembed import VimEmbedWidget
-from pida.utils.vim.vimcom import VimCom
+from .embed import VimEmbedWidget
+from .com import VimCom
 
 from pida.core.editors import EditorService, _
 
@@ -40,14 +27,14 @@ class VimView(PidaView):
         self._vim = VimEmbedWidget('gvim', self.svc.script_path)
         self.add_main_widget(self._vim)
 
-    def run(self):
+    def  run(self):
         return self._vim.run()
 
     def get_server_name(self):
-        return self._vim.get_server_name()
-
+        return self._vim.server_name
+ 
     def grab_input_focus(self):
-        self._vim.grab_input_focus()
+         self._vim.grab_input_focus()
 
 
 class VimCallback(object):
@@ -123,10 +110,10 @@ class Vim(EditorService):
     def _emit_editor_started(self):
         self.boss.get_service('editor').emit('started')
 
-    def get_server_name(self):
+    @property
+    def server(self):
         return self._view.get_server_name()
 
-    server = property(get_server_name)
 
     def pre_start(self):
         """Start the editor"""
@@ -135,7 +122,7 @@ class Vim(EditorService):
         self._cb = VimCallback(self)
         self._com = VimCom(self._cb)
         self._view = VimView(self)
-        self.boss.cmd('window', 'add_view', paned='Editor', view=self._view)
+        self.boss.window.add_view(paned='Editor', view=self._view)
         self._documents = {}
         self._current = None
         self._sign_index = 0
@@ -143,10 +130,10 @@ class Vim(EditorService):
         self._current_line = 1
         success = self._view.run()
         if not success:
-            err = _('There was a problem running the "gvim" '
-                             'executable. This is usually because it is not '
-                             'installed. Please check that you can run "gvim" '
-                             'from the command line.')
+            err = _( 'There was a problem running the "gvim" '
+                     'executable. This is usually because it is not '
+                     'installed. Please check that you can run "gvim" '
+                     'from the command line.')
             self.error_dlg(err)
             raise RuntimeError(err)
 

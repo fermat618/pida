@@ -1,11 +1,21 @@
-import logging
-import sys
-import warnings
+"""
+    pida.core.boss
+    ~~~~~~~~~~~~~~
+
+    Boss is the main controller for Pida,
+    it manages glueing together the rest
+
+    :license: GPL2 or later
+    :copyright:
+        * 2007-2008 Ali Afshar
+        * 2007-2008 Ronny Pfannschmidt
+"""
+
+
 import gtk
 
+from pida.core.environment import is_firstrun, firstrun_filename
 from pida.core.servicemanager import ServiceManager
-from pida.core.log import get_logger
-from pida.core import environment as env
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
@@ -17,31 +27,19 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-log = get_logger('pida')
 
 class Boss(object):
 
-
     def __init__(self):
-        if env.is_debug():
-            get_logger().setLevel(logging.DEBUG)
-        else:
-            get_logger().setLevel(logging.INFO)
-
         self.show_splash()
         self._sm = ServiceManager(self)
         self._run_first_time()
         self.window = PidaWindow(self)
 
-    @property
-    def log(self):
-        warnings.warn("log is deprecated", DeprecationWarning, 2)
-        return log
-
     def _run_first_time(self):
-        if not env.has_firstrun() or env.is_firstrun():
+        if is_firstrun():
             ft = FirstTimeWindow(self._sm.get_available_editors())
-            success, editor = ft.run(env.firstrun_filename)
+            success, editor = ft.run(firstrun_filename)
             self.override_editor = editor
             self.quit_before_started = not success
         else:
@@ -83,14 +81,6 @@ class Boss(object):
     def get_services(self):
         return self._sm.get_services()
 
-    def get_service_dirs(self):
-        import pida.services
-        return pida.services.__path__
-
-    def get_editor_dirs(self):
-        import pida.editors
-        return pida.editors.__path__
-
     @property
     def editor(self):
         return self._sm.editor
@@ -98,12 +88,11 @@ class Boss(object):
     def get_plugins(self):
         return self._sm.get_plugins()
 
-    def start_plugin(self, plugin_path):
-        return self._sm.start_plugin(plugin_path)
+    def start_plugin(self, name):
+        return self._sm.start_plugin(name)
 
-    def stop_plugin(self, plugin_name):
-        return self._sm.stop_plugin(plugin_name)
-
+    def stop_plugin(self, name):
+        return self._sm.stop_plugin(name)
 
     def add_action_group_and_ui(self, actiongroup, uidef):
         self.window.add_action_group(actiongroup)
@@ -115,9 +104,6 @@ class Boss(object):
 
     def cmd(self, servicename, commandname, **kw):
         return self.get_service(servicename).cmd(commandname, **kw)
-
-    def get_pida_home(self):
-        return env.pida_home
 
     def show_splash(self):
         self._splash = SplashScreen()

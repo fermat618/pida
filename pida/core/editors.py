@@ -173,6 +173,9 @@ class EditorService(Service):
     
     actions_config = EditorActionsConfig
     commands_config = EditorCommandsConfig
+    
+    def __repr__(self):
+        return '<Editor: %s>'%self.__class__.__name__
 
     @classmethod
     def get_sanity_errors(cls):

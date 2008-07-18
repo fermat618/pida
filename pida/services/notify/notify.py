@@ -35,7 +35,7 @@ from pida.core.environment import get_uidef_path
 from pida.ui.views import PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
-from pida.core.options import OptionsConfig, OTypeInteger, OTypeBoolean, otype_string_options_factory
+from pida.core.options import OptionsConfig, choices
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.ui.buttons import create_mini_button
 
@@ -207,7 +207,7 @@ class NotifyOptionsConfig(OptionsConfig):
         self.create_option(
             'show_notify',
             _('Show notifications'),
-            OTypeBoolean,
+            bool,
             True,
             _('Show notifications popup'),
             self.on_show_notify
@@ -216,7 +216,7 @@ class NotifyOptionsConfig(OptionsConfig):
         self.create_option(
             'timeout',
             _('Timeout'),
-            OTypeInteger,
+            int,
             6000,
             _('Timeout before hiding a notification'),
             self.on_change_timeout
@@ -225,7 +225,7 @@ class NotifyOptionsConfig(OptionsConfig):
         self.create_option(
             'gravity',
             _('Gravity'),
-            otype_string_options_factory([
+            choices([
                 _('North East'),
                 _('North West'),
                 _('South East'),

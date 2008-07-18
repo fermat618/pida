@@ -89,7 +89,7 @@ class VimEmbedWidget(gtk.EventBox):
 
     def __init__(self, command, script_path, args=[]):
         gtk.EventBox.__init__(self)
-        self._servername = self._generate_servername()
+        self.server_name = 'PIDA_EMBEDDED_%s' % time.time()
         self._command = command
         self._init_script = script_path
         self.pid = None
@@ -105,30 +105,23 @@ class VimEmbedWidget(gtk.EventBox):
         self.show_all()
         return socket.get_id()
 
-    def _generate_servername(self):
-        return 'PIDA_EMBEDDED_%s' % time.time()
-
-    def get_server_name(self):
-        return self._servername
-
     def should_remove(self):
         self.service.remove_attempt()
         return False
 
     def run(self):
         xid = self._create_ui()
-        args = self.args[:] # a copy
-        args.extend(['--socketid', '%s' % xid])
         if not xid:
             return
         if not self.pid:
             try:
                 popen = subprocess.Popen(
                     [self._command,
-                    '--servername', self.get_server_name(),
+                    '--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '-c', 'so %s' % self._init_script
-                    ] + args,
+                    '-c', 'so %s' % self._init_script,
+                    '--socketid', str(xid),
+                    ] + self.args,
                     close_fds=True
                 )
                 self.pid = popen.pid
