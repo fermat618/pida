@@ -116,7 +116,7 @@ class PidaOptionsView(PidaGladeView):
             optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
-            optwidget = get_widget_for_type(opt.rtype)
+            optwidget = get_widget_for_type(opt.type)
             widgetsizer.add_widget(optwidget)
             hb.pack_start(optwidget, expand=True)
             value = opt.get_value()

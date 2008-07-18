@@ -33,11 +33,10 @@ from pida.ui.views import PidaGladeView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeBoolean
+from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
-from pida.core.options import OptionItem, manager, OTypeStringList, OTypeString
 
 from pida.core.environment import plugins_dir
 
@@ -363,7 +362,7 @@ class PluginsOptionsConfig(OptionsConfig):
         self.create_option(
             'rpc_url',
             _('Webservice Url'),
-            OTypeString,
+            str,
             PLUGIN_RPC_URL,
             _('URL of Webservice to download plugins'),
             self.on_rpc_url)
@@ -371,10 +370,18 @@ class PluginsOptionsConfig(OptionsConfig):
         self.create_option(
             'check_for_updates',
             _('Check updates'),
-            OTypeBoolean,
+            bool,
             True,
             _('Check for plugins updates in background'),
             self.on_check_for_updates)
+
+        self.create_option(
+                'start_list', 
+                _('Start plugin list'),
+                list, 
+                [], 
+                _('List of plugin to start'),
+                )
 
     def on_rpc_url(self, client, id, entry, option):
         self.svc.rpc_url = option.get_value()
@@ -405,9 +412,6 @@ class Plugins(Service):
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
-        self._start_list = OptionItem('plugins', 'start_list', _('Start plugin list'),
-                OTypeStringList, [], _('List of plugin to start'), None)
-        manager.register_option(self._start_list)
 
     def start(self):
         self.rpc_url = self.opt('rpc_url')
@@ -450,7 +454,7 @@ class Plugins(Service):
         self._view.clear_installed()
         l_installed = list(self._loader.get_all_service_files())
         if start:
-            start_list = manager.get_value(self._start_list)
+            start_list = self.opt('start_list')
         running_list = [plugin.get_name() for plugin in
                 self.boss.get_plugins()]
 
@@ -468,10 +472,8 @@ class Plugins(Service):
             if start:
                 if service_name not in start_list:
                     continue
-                plugin_path = os.path.dirname(service_file)
-                plugin_name = os.path.basename(plugin_path)
                 try:
-                    plugin = self.boss.start_plugin(plugin_name)
+                    plugin = self.boss.start_plugin(service_name)
                     self.emit('plugin_started', plugin=plugin)
                     plugin_item.enabled = True
                 except ServiceLoadingError, e:
@@ -559,7 +561,7 @@ class Plugins(Service):
         os.unlink(filename)
 
         # start service
-        self.start_plugin(plugins_dir)
+        self.start_plugin(item.plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data=_('Installation of %s completed') % item.plugin)
 
@@ -664,7 +666,7 @@ class Plugins(Service):
 
     def save_running_plugin(self):
         list = [plugin.get_name() for plugin in self.boss.get_plugins()]
-        manager.set_value(self._start_list, list)
+        self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
         markup = '<b>%s</b>' % cgi.escape(item.name)

@@ -35,7 +35,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
-from pida.core.options import OptionsConfig, OTypeString
+from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.projects import ProjectController,  ProjectKeyDefinition
 from pida.core.interfaces import IProjectController
@@ -331,7 +331,7 @@ class PythonOptionsConfig(OptionsConfig):
         self.create_option(
             'python_for_executing',
             _('Python Executable for executing'),
-            OTypeString,
+            str,
             'python',
             _('The Python executable when executing a module'),
         )

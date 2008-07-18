@@ -30,7 +30,7 @@ from pida.ui.views import PidaGladeView, PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig, OTypeInteger
+from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, gcall
 from pida.utils.testing import refresh_gui
@@ -277,7 +277,7 @@ class GrepperOptions(OptionsConfig):
         self.create_option(
             'maximum_results',
             _('Maximum Results'),
-            OTypeInteger,
+            int,
             500,
             _('The maximum number of results to find (approx).'),
         )

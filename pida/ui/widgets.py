@@ -3,6 +3,8 @@ from cgi import escape
 
 import gtk
 import gobject
+import pango
+
 from kiwi.ui.gadgets import gdk_color_to_string
 from kiwi.ui.widgets.entry import ProxyEntry
 from kiwi.ui.widgets.label import ProxyLabel
@@ -15,9 +17,6 @@ from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
 from kiwi.utils import gsignal
 
 from kiwi.ui.objectlist import ObjectList, Column
-
-from pida.core.options import OTypeBoolean, OTypeString, OTypeInteger, \
-    OTypeStringList, OTypeFile, OTypeFont, OTypeStringOption
 
 # locale
 from pida.core.locale import Locale
@@ -111,47 +110,46 @@ class ProxyStringList(gtk.VBox):
         return [ProxyStringListItem(v) for v in value]
 
 
-def get_widget_for_type(rtype_instance):
-    rtype = rtype_instance.__class__
-    if rtype is OTypeBoolean:
+def get_widget_for_type(type):
+    if type is bool:
         return ProxyCheckButton()
-    elif rtype is OTypeStringList:
+    elif type is list:
         return ProxyStringList()
-    elif rtype is OTypeFile:
+    elif type is file:
         w = ProxyFileChooserButton(_('Select File'))
         w.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
         return w
-    #elif rtype is types.readonlyfile:
+    #elif type is types.readonlyfile:
     #    w = ProxyFileChooserButton('Select File')
     #    w.set_sensitive(False)
     #    #w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
     #    return w
-    #elif rtype in [types.directory]:
+    #elif type in [types.directory]:
     #    w = ProxyFileChooserButton(title='Select Directory')
     #    w.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
     #    return w
-    elif rtype is OTypeFont:
+    elif type is pango.Font:
         return ProxyFontButton()
-    #elif rtype is types.color:
+    #elif type is types.color:
     #    return CleverProxyColorButton()
-    elif rtype is OTypeInteger:
+    elif type is int:
         w = ProxySpinButton()
         w.set_adjustment(gtk.Adjustment(0, 0, 10000, 1))
         return w
-    elif isinstance(rtype_instance, OTypeStringOption):
+    elif issubclass(type, str) and type is not str:
         w = ProxyComboBox()
-        w.prefill([(v, v) for v in rtype.options])
+        w.prefill([(v, v) for v in type.options])
         return w
         
-    #elif rtype.__name__ is 'intrange':
-    #    adjvals = rtype.lower, rtype.upper, rtype.step
+    #elif type.__name__ is 'intrange':
+    #    adjvals = type.lower, type.upper, type.step
     #    adj = gtk.Adjustment(0, *adjvals)
     #    w = ProxySpinButton()
     #    w.set_adjustment(adj)
     #    return w
-    #elif rtype is types.readonly:
+    #elif type is types.readonly:
     #    return FormattedLabel(VC_NAME_MU)
-    #elif rtype.__name__ is OTypeStringList:
+    #elif type.__name__ is OTypeStringList:
     #    return w
     else:
         w = ProxyEntry(data_type=str)

@@ -29,7 +29,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.options import OptionsConfig, otype_string_options_factory
+from pida.core.options import OptionsConfig, choices
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 # locale
@@ -43,7 +43,7 @@ class EditorOptionsConfig(OptionsConfig):
         self.create_option(
             'editor_type',
             _('Editor Type'),
-            otype_string_options_factory(['vim', 'emacs']),
+            choices(['vim', 'emacs']),
             'vim',
             _('The Editor used'),
         )

@@ -36,8 +36,6 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, \
     TYPE_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.core.options import OTypeString, OTypeBoolean, \
-    OTypeInteger, OTypeFile, OTypeFont, OTypeStringList
 
 from pida.core.environment import pida_home
 
@@ -176,7 +174,7 @@ class SessionsOptionsConfig(OptionsConfig):
         self.create_option(
             'load_last_session',
             _('Load last session on startup'),
-            OTypeBoolean,
+            bool,
             True,
             _('Load last session on startup'),
         )
@@ -184,7 +182,7 @@ class SessionsOptionsConfig(OptionsConfig):
         self.create_option(
             'clear_old_buffers',
             _('Clear old buffers when loading session'),
-            OTypeBoolean,
+            bool,
             False,
             _('Clear old buffers when loading session'),
         )

@@ -31,7 +31,7 @@ from kiwi.ui.objectlist import Column
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
-from pida.core.options import OptionsConfig, OTypeStringList, OTypeFile
+from pida.core.options import OptionsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
@@ -368,7 +368,7 @@ class ProjectOptions(OptionsConfig):
         self.create_option(
             'project_dirs',
             _('Project Directories'),
-            OTypeStringList,
+            list,
             [],
             _('The current directories in the workspace'),
         )
@@ -376,7 +376,7 @@ class ProjectOptions(OptionsConfig):
         self.create_option(
             'last_project',
             _('Last Project'),
-            OTypeFile,
+            file,
             '',
             (_('The last project selected. ') +
             _('(Do not change this unless you know what you are doing)'))

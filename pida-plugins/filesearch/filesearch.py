@@ -24,7 +24,7 @@ from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE
-from pida.core.options import OptionsConfig, OTypeBoolean, OTypeString
+from pida.core.options import OptionsConfig
 from pida.utils.gthreads import GeneratorTask
 
 from filters import ValidationError, FileNameMatchesFilter
@@ -240,7 +240,7 @@ class FileManagerOptionsConfig(OptionsConfig):
         self.create_option(
             'exclude_hidden',
             _('Don\'t search in hidden directories'),
-            OTypeBoolean,
+            bool,
             True,
             _('Excludes hidden directories from search')
         )
@@ -248,7 +248,7 @@ class FileManagerOptionsConfig(OptionsConfig):
         self.create_option(
             'exclude_vcs',
             _('Don\'t search in data directories of version control systems'),
-            OTypeBoolean,
+            bool,
             True,
             _('Excludes the data directories of version control systems '
               'from search')

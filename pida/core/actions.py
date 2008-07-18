@@ -30,7 +30,7 @@ import gtk
 
 # pida core import(s)
 from pida.core.base import BaseConfig
-from pida.core.options import OptionItem, manager, OTypeString
+from pida.core.options import OptionItem, manager
 import warnings
 
 # kiwi imports
@@ -162,8 +162,10 @@ class ActionsConfig(BaseConfig):
             self._create_key_option(act, name, label, tooltip, accel)
 
     def _create_key_option(self, act, name, label, tooltip, accel):
-        opt = OptionItem(self._get_group_name(), name, label, OTypeString,
-                         accel, tooltip, self._on_shortcut_notify)
+        opt = OptionItem('keyboard_shortcuts/%s' % self.svc.get_name(), name,
+                         label, str,
+                         accel, tooltip, 
+                         self._on_shortcut_notify)
         opt.action = act
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
@@ -175,9 +177,6 @@ class ActionsConfig(BaseConfig):
     def _get_shortcut_gconf_key(self, name):
         return '/app/pida/keyboard_shortcuts/%s/%s' % (self.svc.get_name(),
                                                        name)
-
-    def _get_group_name(self):
-        return 'keyboard_shortcuts/%s' % self.svc.get_name()
 
     def get_action(self, name):
         """
@@ -211,7 +210,7 @@ class ActionsConfig(BaseConfig):
             keyval, modmask, True)
 
     def _set_action_keypress_from_option(self, option):
-        self._set_action_keypress(option.name, manager.get_value(option))
+        self._set_action_keypress(option.name, manager.get(option))
 
     def _on_shortcut_notify(self, client, id, entry, option, *args):
         self._set_action_keypress_from_option(option)
@@ -224,7 +223,3 @@ class ActionsConfig(BaseConfig):
         for name, opt in self._keyboard_options.items():
             self._set_action_keypress_from_option(opt)
 
-
-        
-
-        
