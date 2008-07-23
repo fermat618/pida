@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+INTLTOOL=`which intltool-extract`
+if [ "X" == "X$INTLTOOL" ]; then
+	echo "intltool-extract not found."
+	echo "You need to install intltool package before using this tool."
+	exit
+fi
+
+GETTEXT=`which gettext`
+if [ "X" == "X$GETTEXT" ]; then
+	echo "gettext not found."
+	echo "You need to install gettext package before using this tool."
+	exit
+fi
+
 function usage()
 {
 	echo "Usage: tools/locale.sh [build|update|create] <servicename> <lang>"
