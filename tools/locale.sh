@@ -18,10 +18,11 @@ function usage()
 {
 	echo "Usage: tools/locale.sh [build|update|create] <servicename> <lang>"
 	echo "Examples:"
-	echo "  - Build all locales : tools/locale.sh build"
-	echo "  - Create po for a service : tools/locale.sh create service fr_FR"
-	echo "  - Update po for a service : tools/locale.sh update service fr_FR"
-	echo "  - Update po for pida : tools/locale.sh update pida fr_FR"
+	echo "  - Build all locales : tools/locales.sh build"
+	echo "  - Create po for a service : tools/locales.sh create service fr_FR"
+	echo "  - Update po for a service : tools/locales.sh update service fr_FR"
+	echo "  - Update po for pida : tools/locales.sh update pida fr_FR"
+	echo "  - Import all po from launchpad : tools/locales.sh import_launchpad launchpad-export.tar.gz"
 }
 
 function locale_build()
@@ -152,6 +153,52 @@ function locale_update_pida()
 	cd ..
 }
 
+function locale_import_launchpad()
+{
+	tmpdir="/tmp/pidalocale_$RANDOM"
+
+	echo "Create temporary $tmpdir"
+	mkdir -p $tmpdir
+
+	echo "Extract launchpad file"
+	tar -C $tmpdir -xzf $1
+	if [ $? -ne 0 ]; then
+		echo ""
+		echo "Invalid launchpad tar.gz export file"
+		echo "Go to https://translations.launchpad.net/pida/trunk/+export"
+		echo "And click on 'Request Download'"
+		exit
+	fi
+
+	cd pida
+	for tr in $tmpdir/pida-*.po; do
+		lang=`basename $tr .po | sed 's/pida-//'`
+		dir="resources/locale/$lang/LC_MESSAGES"
+		file="$dir/pida.po"
+
+		if [ ! -d "$dir" ]; then
+			echo "Create lang $lang"
+			mkdir -p $dir
+		fi
+
+		echo "Copy file for $lang"
+		cp $tr $file
+
+		pushd .
+		cd ..
+		locale_update_pida $lang
+		popd
+	done
+
+	echo "Remove temporary $tmpdir"
+	rm -rf $tmpdir
+
+	echo "Done."
+	echo ""
+	echo "Now, build all po file :"
+	echo " - tools/locales.sh build"
+}
+
 case "$1" in 
 	"build")
 		locale_build
@@ -187,6 +234,15 @@ case "$1" in
 		fi
 
 		locale_create $2 $3
+		;;
+
+	"import_launchpad")
+		if [ "X$2" == "X" ]; then
+			usage
+			exit
+		fi
+
+		locale_import_launchpad $2
 		;;
 	
 	*)
