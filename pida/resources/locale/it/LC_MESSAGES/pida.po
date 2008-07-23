@@ -1,0 +1,308 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-05-02 11:59+0200\n"
+"PO-Revision-Date: 2008-04-16 19:54+0000\n"
+"Last-Translator: Luca Livraghi <luca.91@hotmail.it>\n"
+"Language-Team: <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2008-07-23 21:48+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
+"X-Poedit-Country: ITALY\n"
+"X-Poedit-Language: Italian\n"
+
+#: ../pida/core/projects.py:65
+#, python-format
+msgid "no controller type for %s"
+msgstr "nessun controllore di tipo per %s"
+
+#: ../pida/core/projects.py:68
+#, python-format
+msgid "no controller defined for %s"
+msgstr "nessun controllore definito per %s"
+
+#: ../pida/core/projects.py:193
+msgid "Working Directory"
+msgstr "Cartella di Lavoro"
+
+#: ../pida/core/projects.py:194
+msgid "Environment Variables"
+msgstr "Variabili d'Ambiente"
+
+#: ../pida/core/servicemanager.py:153
+msgid "No editor found"
+msgstr "Editor non trovato"
+
+#: ../pida/core/service.py:110
+#, python-format
+msgid "You must call command %(cmd)s in service %(svc)s with named arguments"
+msgstr ""
+
+#: ../pida/core/application.py:37
+msgid "Exiting. (this is fatal)"
+msgstr "Uscita. (fatale)"
+
+#: ../pida/core/application.py:46
+#, python-format
+msgid "PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s"
+msgstr ""
+"PIDA necessita PyGTK >= 2.8. E' stato trovato solo %(major)s.%(minor)s"
+
+#: ../pida/core/application.py:49
+msgid "PIDA requires Python GTK bindings. They were not found."
+msgstr "PIDA richiede le dipendenze Python GTK. Non sono state trovate."
+
+#: ../pida/core/application.py:56
+msgid "Fatal error, cannot start PIDA"
+msgstr "Errore fatale, impossibile avviare PIDA"
+
+#: ../pida/core/application.py:61
+msgid "Kiwi needs to be installed to run PIDA"
+msgstr "E' necessario installare Kiwi per eseguire PIDA"
+
+#: ../pida/core/application.py:66
+#, python-format
+msgid ""
+"Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found."
+msgstr ""
+"E' richiesto Python 2.4 per eseguire PIDA. Trovato invece "
+"%(major)s.%(minor)s."
+
+#: ../pida/core/application.py:76
+msgid "The pida package could not be found."
+msgstr "Impossibile trovare il pacchetto PIDA."
+
+#: ../pida/core/application.py:80
+#, python-format
+msgid "PIDA, version %s"
+msgstr "PIDA, versione %s"
+
+#: ../pida/core/environment.py:44
+msgid "Print version information and exit."
+msgstr "Stampa le informazioni sulla versione ed esce."
+
+#: ../pida/core/environment.py:46
+#, fuzzy
+msgid "Run PIDA with added debug information."
+msgstr "Esegui PIDA con aggiunte le informazioni di debug."
+
+#: ../pida/core/boss.py:35
+msgid "Are you sure you want to quit PIDA ?"
+msgstr "Sei sicuro di voler uscire da PIDA?"
+
+#: ../pida/core/signalhandler.py:16
+msgid "PIDA stopped by SIGTERM"
+msgstr "PIDA stoppato da SIGTERM"
+
+#: ../pida/core/document.py:65
+#, fuzzy
+msgid "Target does not exist: "
+msgstr "L'obiettivo non esiste: "
+
+#: ../pida/core/document.py:68
+msgid "Base is not a directory or does not exist: "
+msgstr "Base non è una cartella o non esiste: "
+
+#: ../pida/core/document.py:76
+#, python-format
+msgid ""
+"Target is on a different drive to base. Target: %(target)s, base: %(base)s"
+msgstr ""
+
+#: ../pida/core/document.py:191
+#, python-format
+msgid "failed to open file %s"
+msgstr "impossibile aprire il file %s"
+
+#: ../pida/editors/vim/vim.py:52
+msgid "Undo"
+msgstr "Annulla"
+
+#: ../pida/editors/vim/vim.py:53
+msgid "Undo the last editor action"
+msgstr "Annulla l'ultima azione nell'editor"
+
+#: ../pida/editors/vim/vim.py:61
+msgid "Redo"
+msgstr "Ripeti"
+
+#: ../pida/editors/vim/vim.py:62
+msgid "Redo the last editor action"
+msgstr "Ripeti l'ultima azione di modifica"
+
+#: ../pida/editors/vim/vim.py:70
+msgid "Cut"
+msgstr "Taglia"
+
+#: ../pida/editors/vim/vim.py:71
+msgid "Cut the selection in the editor"
+msgstr "Taglia la selezione nell'editor"
+
+#: ../pida/editors/vim/vim.py:79
+msgid "Copy"
+msgstr "Copia"
+
+#: ../pida/editors/vim/vim.py:80
+msgid "Copy the selection in the editor"
+msgstr "Copia la selezione nell'editor"
+
+#: ../pida/editors/vim/vim.py:88
+msgid "Paste"
+msgstr "Incolla"
+
+#: ../pida/editors/vim/vim.py:89
+msgid "Paste the clipboard in the editor"
+msgstr "Incolla la clipboard nell'editor"
+
+#: ../pida/editors/vim/vim.py:97 ../pida/ui/terminal.py:285
+msgid "Save"
+msgstr "Salva"
+
+#: ../pida/editors/vim/vim.py:98
+msgid "Save the current document"
+msgstr "Salva il documento corrente"
+
+#: ../pida/editors/vim/vim.py:352
+msgid "Tried to remove non-existent sign"
+msgstr "Si è cercato di rimuovere un segno non esistente"
+
+#: ../pida/ui/uimanager.py:13
+msgid "File"
+msgstr "File"
+
+#: ../pida/ui/uimanager.py:13
+msgid "File Menu"
+msgstr "Menu File"
+
+#: ../pida/ui/uimanager.py:14
+msgid "Edit"
+msgstr "Modifica"
+
+#: ../pida/ui/uimanager.py:14
+msgid "Edit Menu"
+msgstr "Menu Modifica"
+
+#: ../pida/ui/uimanager.py:15
+msgid "Project"
+msgstr "Progetto"
+
+#: ../pida/ui/uimanager.py:15
+msgid "Project Menu"
+msgstr "Menu Progetto"
+
+#: ../pida/ui/uimanager.py:16
+msgid "Language"
+msgstr "Lingua"
+
+#: ../pida/ui/uimanager.py:16
+msgid "Language Menu"
+msgstr "Menu Lingua"
+
+#: ../pida/ui/uimanager.py:17
+msgid "Debug"
+msgstr "Debug"
+
+#: ../pida/ui/uimanager.py:17
+msgid "Debug Menu"
+msgstr "Menu Debug"
+
+#: ../pida/ui/uimanager.py:18
+msgid "Tools"
+msgstr "Srumenti"
+
+#: ../pida/ui/uimanager.py:18
+msgid "Tools Menu"
+msgstr "Meu Strumenti"
+
+#: ../pida/ui/uimanager.py:19
+msgid "Debug Pida"
+msgstr "Debug Pida"
+
+#: ../pida/ui/uimanager.py:19
+msgid "Debug Pida Menu"
+msgstr "Menu Debug Pida"
+
+#: ../pida/ui/uimanager.py:20
+msgid "View"
+msgstr "Visualizza"
+
+#: ../pida/ui/uimanager.py:20
+msgid "View Menu"
+msgstr "Visualizza Menu"
+
+#: ../pida/ui/uimanager.py:21
+msgid "Help"
+msgstr "Aiuto"
+
+#: ../pida/ui/uimanager.py:21
+msgid "Help Menu"
+msgstr "Menu Aiuto"
+
+#: ../pida/ui/splash.py:40
+msgid "PIDA is starting..."
+msgstr "Avvio di PIDA..."
+
+#: ../pida/ui/splash.py:45
+msgid "and it <b>loves</b> you!"
+msgstr "e ti <b>ama</b>!"
+
+#: ../pida/ui/terminal.py:180
+#, python-format
+msgid "No match named \"%s\" was found"
+msgstr "Non è stata trovata nessuna corrispondenza con \"%s\""
+
+#: ../pida/ui/terminal.py:284
+msgid "Open"
+msgstr "Apri"
+
+#: ../pida/ui/terminal.py:284
+msgid "Open this file"
+msgstr "Apri questo file"
+
+#: ../pida/ui/terminal.py:285
+msgid "Save This File"
+msgstr "Salva Questo File"
+
+#: ../pida/ui/views.py:23
+msgid "Untitled Pida View"
+msgstr "Visualizzazione Pida senza nome"
+
+#: ../pida/ui/views.py:85
+msgid "Pida View"
+msgstr "Visualizzazione Pida"
+
+#: ../pida/ui/books.py:29
+msgid "Must at least define a notebook name"
+msgstr "Devi definire almeno un nome notebook"
+
+#: ../pida/ui/books.py:32
+msgid "Must at leaste define a Name"
+msgstr "Devi definire almeno un Nome"
+
+#: ../pida/ui/books.py:135
+#, python-format
+msgid "No Notebook attests to having that name %s"
+msgstr "Nessun Notebook attesta di avere questo nome %s"
+
+#: ../pida/ui/books.py:181
+msgid "This view is already in the manager"
+msgstr ""
+
+#: ../pida/ui/books.py:226
+msgid "View is not in any Notebook"
+msgstr ""
+
+#: ../pida/ui/objectlist.py:57
+msgid "Sort"
+msgstr "Ordina"
+
+#: ../pida/ui/widgets.py:121
+msgid "Select File"
+msgstr "Seleziona File"
+
+#: ../pida/ui/window.py:62
+msgid "PIDA Loves You!"
+msgstr "PIDA Ti Ama!"

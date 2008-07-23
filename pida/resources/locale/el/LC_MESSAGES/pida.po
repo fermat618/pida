@@ -1,0 +1,312 @@
+# Greek translation for pida
+# Copyright (c) 2007 Rosetta Contributors and Canonical Ltd 2007
+# This file is distributed under the same license as the pida package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: pida\n"
+"Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2007-05-02 11:59+0200\n"
+"PO-Revision-Date: 2007-07-12 22:31+0000\n"
+"Last-Translator: Ion Ikon <Unknown>\n"
+"Language-Team: Greek <el@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2008-07-23 21:48+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
+
+#: ../pida/core/projects.py:65
+#, python-format
+msgid "no controller type for %s"
+msgstr "δεν υπάρχει τύπος ελεγκτή για %s"
+
+#: ../pida/core/projects.py:68
+#, python-format
+msgid "no controller defined for %s"
+msgstr "δεν ορίστηκε ελεγκτής για %s"
+
+#: ../pida/core/projects.py:193
+msgid "Working Directory"
+msgstr "Κατάλογος Εργασίας"
+
+#: ../pida/core/projects.py:194
+msgid "Environment Variables"
+msgstr "Μεταβλητές Περιβάλλοντος"
+
+#: ../pida/core/servicemanager.py:153
+msgid "No editor found"
+msgstr "Δε βρέθηκε επεξεργαστής κειμένου"
+
+#: ../pida/core/service.py:110
+#, python-format
+msgid "You must call command %(cmd)s in service %(svc)s with named arguments"
+msgstr ""
+"Πρέπει να καλέσετε την εντολή %(cmd)s στην υπηρεσία %(svc)s με τις δοσμένες "
+"παραμέτρους"
+
+#: ../pida/core/application.py:37
+msgid "Exiting. (this is fatal)"
+msgstr "Τερματισμός. (είναι μοιραίο)"
+
+#: ../pida/core/application.py:46
+#, python-format
+msgid "PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s"
+msgstr "Το PIDA απαιτεί PyGTK >= 2.8. Βρέθηκε μόνο η %(major)s.%(minor)s"
+
+#: ../pida/core/application.py:49
+msgid "PIDA requires Python GTK bindings. They were not found."
+msgstr "Το PIDA απαιτεί τους δεσμούς Python GTK. Δε βρέθηκαν."
+
+#: ../pida/core/application.py:56
+msgid "Fatal error, cannot start PIDA"
+msgstr "Μοιραίο σφάλμα, αδύνατη η εκκίνηση του PIDA"
+
+#: ../pida/core/application.py:61
+msgid "Kiwi needs to be installed to run PIDA"
+msgstr "Το Kiwi πρέπει να εγκατασταθεί για να εκτελεστεί το PIDA"
+
+#: ../pida/core/application.py:66
+#, python-format
+msgid ""
+"Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found."
+msgstr ""
+"Η Python 2.4 απατείται για να εκτελεστεί το PIDA. Μόνο η %(major)s.%(minor)s "
+"βρέθηκε."
+
+#: ../pida/core/application.py:76
+msgid "The pida package could not be found."
+msgstr "Το πακέτο pida δεν ήταν δυνατόν να βρεθεί."
+
+#: ../pida/core/application.py:80
+#, python-format
+msgid "PIDA, version %s"
+msgstr "PIDA, έκδοση %s"
+
+#: ../pida/core/environment.py:44
+msgid "Print version information and exit."
+msgstr "Εκτύπωση πληροφοριών έκδοσης και έξοδος."
+
+#: ../pida/core/environment.py:46
+msgid "Run PIDA with added debug information."
+msgstr "Εκτέλεση του PIDA με πρόσθετες πληροφορίες αποσφαλμάτωσης."
+
+#: ../pida/core/boss.py:35
+msgid "Are you sure you want to quit PIDA ?"
+msgstr "Είσαστε σίγουρος ότι θέλετε να τερματίσετε το PIDA;"
+
+#: ../pida/core/signalhandler.py:16
+msgid "PIDA stopped by SIGTERM"
+msgstr "Το PIDA σταμάτησε από το SIGTERM"
+
+#: ../pida/core/document.py:65
+msgid "Target does not exist: "
+msgstr "Ο προορισμός δεν υπάρχει: "
+
+#: ../pida/core/document.py:68
+msgid "Base is not a directory or does not exist: "
+msgstr "Η βάση δεν είναι κατάλογος ή δεν υπάρχει: "
+
+#: ../pida/core/document.py:76
+#, python-format
+msgid ""
+"Target is on a different drive to base. Target: %(target)s, base: %(base)s"
+msgstr ""
+"Ο προορισμός είναι σε διαφορετικό οδηγό από τη βάση. Προορισμός: %(target)s, "
+"βάση: %(base)s"
+
+#: ../pida/core/document.py:191
+#, python-format
+msgid "failed to open file %s"
+msgstr "αποτυχία ανοίγματος του αρχείου %s"
+
+#: ../pida/editors/vim/vim.py:52
+msgid "Undo"
+msgstr "Ακύρωση ενέργειας"
+
+#: ../pida/editors/vim/vim.py:53
+msgid "Undo the last editor action"
+msgstr "Ακύρωση της τελευταίας ενέργειας του επεξεργαστή κειμένου"
+
+#: ../pida/editors/vim/vim.py:61
+msgid "Redo"
+msgstr "Επαναφορά"
+
+#: ../pida/editors/vim/vim.py:62
+msgid "Redo the last editor action"
+msgstr "Επαναφορά της τελευταίας ενέργειας του επεξεργαστή κειμένου"
+
+#: ../pida/editors/vim/vim.py:70
+msgid "Cut"
+msgstr "Αποκοπή"
+
+#: ../pida/editors/vim/vim.py:71
+msgid "Cut the selection in the editor"
+msgstr "Αποκοπή της επιλεγμένης περιοχής του επεξεργαστή κειμένου"
+
+#: ../pida/editors/vim/vim.py:79
+msgid "Copy"
+msgstr "Αντιγραφή"
+
+#: ../pida/editors/vim/vim.py:80
+msgid "Copy the selection in the editor"
+msgstr "Αντιγραφή της επιλεγμένης περιοχής του επεξεργαστή κειμένου"
+
+#: ../pida/editors/vim/vim.py:88
+msgid "Paste"
+msgstr "Επικόλληση"
+
+#: ../pida/editors/vim/vim.py:89
+msgid "Paste the clipboard in the editor"
+msgstr "Επικόλληση του προχείρου στον επεξεργαστή κειμένου"
+
+#: ../pida/editors/vim/vim.py:97 ../pida/ui/terminal.py:285
+msgid "Save"
+msgstr "Αποθήκευση"
+
+#: ../pida/editors/vim/vim.py:98
+msgid "Save the current document"
+msgstr "Αποθήκευση του τρέχοντος εγγράφου"
+
+#: ../pida/editors/vim/vim.py:352
+msgid "Tried to remove non-existent sign"
+msgstr "Προσπάθεια να αφαιρεθεί μη-υπαρκτό σύμβολο"
+
+#: ../pida/ui/uimanager.py:13
+msgid "File"
+msgstr "Αρχείο"
+
+#: ../pida/ui/uimanager.py:13
+msgid "File Menu"
+msgstr "Μενού Αρχείου"
+
+#: ../pida/ui/uimanager.py:14
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+#: ../pida/ui/uimanager.py:14
+msgid "Edit Menu"
+msgstr "Μενού Επεξεργασίας"
+
+#: ../pida/ui/uimanager.py:15
+msgid "Project"
+msgstr "Εργασία"
+
+#: ../pida/ui/uimanager.py:15
+msgid "Project Menu"
+msgstr "Μενού Εργασίας"
+
+#: ../pida/ui/uimanager.py:16
+msgid "Language"
+msgstr "Γλώσσα"
+
+#: ../pida/ui/uimanager.py:16
+msgid "Language Menu"
+msgstr "Μενού Γλωσσών"
+
+#: ../pida/ui/uimanager.py:17
+msgid "Debug"
+msgstr "Αποσφαλμάτωση"
+
+#: ../pida/ui/uimanager.py:17
+msgid "Debug Menu"
+msgstr "Μενού Αποσφαλμάτωσης"
+
+#: ../pida/ui/uimanager.py:18
+msgid "Tools"
+msgstr "Εργαλεία"
+
+#: ../pida/ui/uimanager.py:18
+msgid "Tools Menu"
+msgstr "Μενού Εργαλείων"
+
+#: ../pida/ui/uimanager.py:19
+msgid "Debug Pida"
+msgstr "Αποσφαλμάτωση PIDA"
+
+#: ../pida/ui/uimanager.py:19
+msgid "Debug Pida Menu"
+msgstr "Μενού Αποσφαλμάτωσης PIDA"
+
+#: ../pida/ui/uimanager.py:20
+msgid "View"
+msgstr "Προβολή"
+
+#: ../pida/ui/uimanager.py:20
+msgid "View Menu"
+msgstr "Μενού Προβολής"
+
+#: ../pida/ui/uimanager.py:21
+msgid "Help"
+msgstr "Βοήθεια"
+
+#: ../pida/ui/uimanager.py:21
+msgid "Help Menu"
+msgstr "Μενού Βοήθειας"
+
+#: ../pida/ui/splash.py:40
+msgid "PIDA is starting..."
+msgstr "Το PIDA εκκινείται..."
+
+#: ../pida/ui/splash.py:45
+msgid "and it <b>loves</b> you!"
+msgstr "και σας <b>αγαπάει</b>!"
+
+#: ../pida/ui/terminal.py:180
+#, python-format
+msgid "No match named \"%s\" was found"
+msgstr "Δε βρέθηκε ταίριασμα ονομαζόμενο \"%s\""
+
+#: ../pida/ui/terminal.py:284
+msgid "Open"
+msgstr "Άνοιγμα"
+
+#: ../pida/ui/terminal.py:284
+msgid "Open this file"
+msgstr "Άνοιγμα αυτού του αρχείου"
+
+#: ../pida/ui/terminal.py:285
+msgid "Save This File"
+msgstr "Αποθήκευση αυτού του αρχείου"
+
+#: ../pida/ui/views.py:23
+msgid "Untitled Pida View"
+msgstr "Χωρίς τίτλο Προβολή PIDA"
+
+#: ../pida/ui/views.py:85
+msgid "Pida View"
+msgstr "Προβολή PIDA"
+
+#: ../pida/ui/books.py:29
+msgid "Must at least define a notebook name"
+msgstr "Πρέπει να καθοριστεί τουλάχιστον ένα όνομα σημειωματαρίου"
+
+#: ../pida/ui/books.py:32
+msgid "Must at leaste define a Name"
+msgstr "Πρέπει να καθοριστεί τουλάχιστον ένα Όνομα"
+
+#: ../pida/ui/books.py:135
+#, python-format
+msgid "No Notebook attests to having that name %s"
+msgstr "Κανένα Σημειωματάριο δεν μπορεί να πιστοποιηθεί ότι ονομάζεται %s"
+
+#: ../pida/ui/books.py:181
+msgid "This view is already in the manager"
+msgstr "Αυτή η προβολή είναι ήδη στο διαχειριστή"
+
+#: ../pida/ui/books.py:226
+msgid "View is not in any Notebook"
+msgstr "Η προβολή δεν είναι σε κάνενα Σημειωματάριο"
+
+#: ../pida/ui/objectlist.py:57
+msgid "Sort"
+msgstr "Ταξινόμηση"
+
+#: ../pida/ui/widgets.py:121
+msgid "Select File"
+msgstr "Επιλογή Αρχείου"
+
+#: ../pida/ui/window.py:62
+msgid "PIDA Loves You!"
+msgstr "Το PIDA Σας Αγαπάει!"

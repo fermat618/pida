@@ -1,0 +1,306 @@
+# Simplified Chinese translation for pida
+# Copyright (c) 2007 Rosetta Contributors and Canonical Ltd 2007
+# This file is distributed under the same license as the pida package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: pida\n"
+"Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2007-05-02 11:59+0200\n"
+"PO-Revision-Date: 2007-07-28 15:43+0000\n"
+"Last-Translator: gosman <lianmingchang2008@gmail.com>\n"
+"Language-Team: Simplified Chinese <zh_CN@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2008-07-23 21:48+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
+
+#: ../pida/core/projects.py:65
+#, python-format
+msgid "no controller type for %s"
+msgstr "没有%s的控制器类型"
+
+#: ../pida/core/projects.py:68
+#, python-format
+msgid "no controller defined for %s"
+msgstr "没有%s的控制器定义"
+
+#: ../pida/core/projects.py:193
+msgid "Working Directory"
+msgstr "工作目录"
+
+#: ../pida/core/projects.py:194
+msgid "Environment Variables"
+msgstr "环境变量"
+
+#: ../pida/core/servicemanager.py:153
+msgid "No editor found"
+msgstr "没有发现编辑器"
+
+#: ../pida/core/service.py:110
+#, python-format
+msgid "You must call command %(cmd)s in service %(svc)s with named arguments"
+msgstr ""
+
+#: ../pida/core/application.py:37
+msgid "Exiting. (this is fatal)"
+msgstr "退出。(这是致命的错误)"
+
+#: ../pida/core/application.py:46
+#, python-format
+msgid "PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s"
+msgstr ""
+
+#: ../pida/core/application.py:49
+msgid "PIDA requires Python GTK bindings. They were not found."
+msgstr "PIDA需要Python GTK绑定。它们没有被发现"
+
+#: ../pida/core/application.py:56
+msgid "Fatal error, cannot start PIDA"
+msgstr "致命错误，无法启动PIDA"
+
+#: ../pida/core/application.py:61
+msgid "Kiwi needs to be installed to run PIDA"
+msgstr "运行PIDA必须安装Kiwi"
+
+#: ../pida/core/application.py:66
+#, python-format
+msgid ""
+"Python 2.4 is required to run PIDA. Only %(major)s.%(minor)s was found."
+msgstr ""
+
+#: ../pida/core/application.py:76
+msgid "The pida package could not be found."
+msgstr "没有发现PIDA包。"
+
+#: ../pida/core/application.py:80
+#, python-format
+msgid "PIDA, version %s"
+msgstr "PIDA，版本%s"
+
+#: ../pida/core/environment.py:44
+msgid "Print version information and exit."
+msgstr "显示版本信息并退出。"
+
+#: ../pida/core/environment.py:46
+msgid "Run PIDA with added debug information."
+msgstr "加上调试信息来运行PIDA"
+
+#: ../pida/core/boss.py:35
+msgid "Are you sure you want to quit PIDA ?"
+msgstr "确定退出PIDA吗？"
+
+#: ../pida/core/signalhandler.py:16
+msgid "PIDA stopped by SIGTERM"
+msgstr "PIDA被SIGTERM停止"
+
+#: ../pida/core/document.py:65
+msgid "Target does not exist: "
+msgstr "没有发现目标： "
+
+#: ../pida/core/document.py:68
+msgid "Base is not a directory or does not exist: "
+msgstr ""
+
+#: ../pida/core/document.py:76
+#, python-format
+msgid ""
+"Target is on a different drive to base. Target: %(target)s, base: %(base)s"
+msgstr ""
+
+#: ../pida/core/document.py:191
+#, python-format
+msgid "failed to open file %s"
+msgstr "打开文件失败%s"
+
+#: ../pida/editors/vim/vim.py:52
+msgid "Undo"
+msgstr "撤销"
+
+#: ../pida/editors/vim/vim.py:53
+msgid "Undo the last editor action"
+msgstr "撤销上一编辑动作"
+
+#: ../pida/editors/vim/vim.py:61
+msgid "Redo"
+msgstr "重试"
+
+#: ../pida/editors/vim/vim.py:62
+msgid "Redo the last editor action"
+msgstr "重做上一编辑动作"
+
+#: ../pida/editors/vim/vim.py:70
+msgid "Cut"
+msgstr "切开"
+
+#: ../pida/editors/vim/vim.py:71
+msgid "Cut the selection in the editor"
+msgstr "剪切编辑器的选区"
+
+#: ../pida/editors/vim/vim.py:79
+msgid "Copy"
+msgstr "拷贝"
+
+#: ../pida/editors/vim/vim.py:80
+msgid "Copy the selection in the editor"
+msgstr "复制编辑器的选区"
+
+#: ../pida/editors/vim/vim.py:88
+msgid "Paste"
+msgstr "粘贴"
+
+#: ../pida/editors/vim/vim.py:89
+msgid "Paste the clipboard in the editor"
+msgstr "粘贴编辑器的剪贴板"
+
+#: ../pida/editors/vim/vim.py:97 ../pida/ui/terminal.py:285
+msgid "Save"
+msgstr "保存"
+
+#: ../pida/editors/vim/vim.py:98
+msgid "Save the current document"
+msgstr "保存当前文档"
+
+#: ../pida/editors/vim/vim.py:352
+msgid "Tried to remove non-existent sign"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:13
+msgid "File"
+msgstr "文件"
+
+#: ../pida/ui/uimanager.py:13
+msgid "File Menu"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:14
+msgid "Edit"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:14
+msgid "Edit Menu"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:15
+msgid "Project"
+msgstr "项目"
+
+#: ../pida/ui/uimanager.py:15
+msgid "Project Menu"
+msgstr "项目菜单"
+
+#: ../pida/ui/uimanager.py:16
+msgid "Language"
+msgstr "语言"
+
+#: ../pida/ui/uimanager.py:16
+msgid "Language Menu"
+msgstr "语言菜单"
+
+#: ../pida/ui/uimanager.py:17
+msgid "Debug"
+msgstr "调试"
+
+#: ../pida/ui/uimanager.py:17
+msgid "Debug Menu"
+msgstr "调试菜单"
+
+#: ../pida/ui/uimanager.py:18
+msgid "Tools"
+msgstr "工具"
+
+#: ../pida/ui/uimanager.py:18
+msgid "Tools Menu"
+msgstr "工具菜单"
+
+#: ../pida/ui/uimanager.py:19
+msgid "Debug Pida"
+msgstr "调试PIDA"
+
+#: ../pida/ui/uimanager.py:19
+msgid "Debug Pida Menu"
+msgstr "调试PIDA菜单"
+
+#: ../pida/ui/uimanager.py:20
+msgid "View"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:20
+msgid "View Menu"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:21
+msgid "Help"
+msgstr ""
+
+#: ../pida/ui/uimanager.py:21
+msgid "Help Menu"
+msgstr ""
+
+#: ../pida/ui/splash.py:40
+msgid "PIDA is starting..."
+msgstr "PIDA 正在启动 . . ."
+
+#: ../pida/ui/splash.py:45
+msgid "and it <b>loves</b> you!"
+msgstr ""
+
+#: ../pida/ui/terminal.py:180
+#, python-format
+msgid "No match named \"%s\" was found"
+msgstr ""
+
+#: ../pida/ui/terminal.py:284
+msgid "Open"
+msgstr "打开"
+
+#: ../pida/ui/terminal.py:284
+msgid "Open this file"
+msgstr "打开文件"
+
+#: ../pida/ui/terminal.py:285
+msgid "Save This File"
+msgstr "保存文件"
+
+#: ../pida/ui/views.py:23
+msgid "Untitled Pida View"
+msgstr ""
+
+#: ../pida/ui/views.py:85
+msgid "Pida View"
+msgstr ""
+
+#: ../pida/ui/books.py:29
+msgid "Must at least define a notebook name"
+msgstr "必须至少定义一个记事本名字"
+
+#: ../pida/ui/books.py:32
+msgid "Must at leaste define a Name"
+msgstr "必须至少定义一个名字"
+
+#: ../pida/ui/books.py:135
+#, python-format
+msgid "No Notebook attests to having that name %s"
+msgstr ""
+
+#: ../pida/ui/books.py:181
+msgid "This view is already in the manager"
+msgstr ""
+
+#: ../pida/ui/books.py:226
+msgid "View is not in any Notebook"
+msgstr ""
+
+#: ../pida/ui/objectlist.py:57
+msgid "Sort"
+msgstr "排序"
+
+#: ../pida/ui/widgets.py:121
+msgid "Select File"
+msgstr "选择文件"
+
+#: ../pida/ui/window.py:62
+msgid "PIDA Loves You!"
+msgstr "PIDA爱上你了！"
