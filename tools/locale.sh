@@ -18,11 +18,11 @@ function usage()
 {
 	echo "Usage: tools/locale.sh [build|update|create] <servicename> <lang>"
 	echo "Examples:"
-	echo "  - Build all locales : tools/locales.sh build"
-	echo "  - Create po for a service : tools/locales.sh create service fr_FR"
-	echo "  - Update po for a service : tools/locales.sh update service fr_FR"
-	echo "  - Update po for pida : tools/locales.sh update pida fr_FR"
-	echo "  - Import all po from launchpad : tools/locales.sh import_launchpad launchpad-export.tar.gz"
+	echo "  - Build all locales : tools/locale.sh build"
+	echo "  - Create po for a service : tools/locale.sh create service fr_FR"
+	echo "  - Update po for a service : tools/locale.sh update service fr_FR"
+	echo "  - Update po for pida : tools/locale.sh update pida fr_FR"
+	echo "  - Import all po from launchpad : tools/locale.sh import_launchpad launchpad-export.tar.gz"
 }
 
 function locale_build()
