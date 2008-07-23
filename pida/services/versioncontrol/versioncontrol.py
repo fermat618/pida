@@ -33,12 +33,11 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 
 from pida.ui.views import PidaView, PidaGladeView
 
 from pida.ui.htmltextview import HtmlTextView
-from pida.ui.buttons import create_mini_button
 
 from pida.utils.gthreads import AsyncTask, gcall
 

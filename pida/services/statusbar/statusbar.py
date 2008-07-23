@@ -27,12 +27,8 @@ import datetime
 
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.features import FeaturesConfig
-from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
-from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 # locale
 from pida.core.locale import Locale

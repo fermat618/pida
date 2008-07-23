@@ -31,7 +31,6 @@ import datetime
 import locale
 
 from kiwi.ui.objectlist import Column, ObjectList
-from pida.core.environment import get_uidef_path
 from pida.ui.views import PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service

@@ -1,44 +1,25 @@
 # -*- coding: utf-8 -*- 
+"""
+    Sessions Service
+    ~~~~~~~~~~~~~~~~
 
-# Copyright (c) 2007 The PIDA Project
+    currently this saves the open files to a gconf list
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
+    .. todo::
+        * window/sudebar/paned positions
 
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
+    :license: GPL2 or later
+    :copyright:
+        * 2007 Ali Afshar
+        * 2008 Ronny Pfannschmidt
+"""
 
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
-import os
 import gobject
-
-from pida.utils.configobj import ConfigObj
-from tempfile import mkstemp
 
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.features import FeaturesConfig
-from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, \
-    TYPE_TOGGLE
 from pida.core.options import OptionsConfig
-
-from pida.core.environment import pida_home
-
-from pida.ui.views import PidaGladeView
 
 # locale
 from pida.core.locale import Locale
@@ -107,6 +88,8 @@ class Sessions(Service):
             self.boss.cmd('buffer', 'open_file', file_name=files.pop())
         else:
             return
+        #XXX: this way is not acceptable,
+        #     need find a way to tell editors to open at once
         gobject.timeout_add(1000, self.load_buffers, files)
 
 Service = Sessions
