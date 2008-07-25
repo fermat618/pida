@@ -62,6 +62,7 @@ class TreeOptions(object):
     type_color = '#000000'
     position = 0
     has_children = False
+    icon_name = 'source-property'
 
     def __init__(self, treeitem):
         self.item = treeitem
@@ -79,6 +80,7 @@ class FunctionOptions(TreeOptions):
     """Describe how functions are shown"""
 
     type_name = 'f'
+    icon_name = 'source-function'
     type_color = '#900000'
     position = 2
 
@@ -87,6 +89,7 @@ class FunctionOptions(TreeOptions):
         decs = ', '.join(['@' + d.id for d in
             self.item.object.decorators])
         if decs:
+            print self.item.object.decorators
             decs = decs + '\n'
         return markup_fixed(markup_italic(decs))
 
@@ -105,27 +108,32 @@ class FunctionOptions(TreeOptions):
 class EvaluatedOptions(TreeOptions):
 
     type_name = 'p'
+    icon_name = 'source-property'
     type_color = '#900090'
 
 
 class MethodOptions(FunctionOptions):
 
     type_name = 'm'
+    icon_name = 'source-method'
 
 
 class SuperMethodOptions(MethodOptions):
 
     type_name = '(m)'
+    icon_name = 'source-extramethod'
     position = 6
 
 class ClassMethodOptions(MethodOptions):
 
     type_name = 'cm'
+    icon_name = 'source-method'
     position = 3
 
 class StaticMethodOptions(MethodOptions):
 
     type_name = 'sm'
+    icon_name = 'source-method'
     position = 4
 
 
@@ -133,6 +141,7 @@ class StaticMethodOptions(MethodOptions):
 class ClassOptions(TreeOptions):
 
     type_name = 'c'
+    icon_name = 'source-class'
     type_color = '#000090'
     position = 1
     has_children = True
@@ -152,20 +161,24 @@ class ClassOptions(TreeOptions):
 class AssignedOptions(TreeOptions):
 
     type_name = 'a'
+    icon_name = 'source-attribute'
     type_color = '#009000'
     position = 5
 
 class BuiltinOptions(TreeOptions):
 
     type_name = '(b)'
+    icon_name = None
     type_color = '#999999'
     position = 7
 
 class ImportedOptions(TreeOptions):
 
     type_name = 'imp'
+    icon_name = 'source-import'
     type_color = '#999999'
     position = 8
+    icon_name = 'source-module'
 
 def get_option_for_item(item):
     if isinstance(item.node, pynames.ImportedName):
@@ -232,6 +245,8 @@ class SourceTreeItem(object):
         self.type_markup = markup_type(self.options.type_name,
                                        self.options.type_color)
 
+        self.icon_name = self.options.icon_name
+
     def render(self):
         return '%s%s%s %s' % (
             self.options.get_pre_markup(),
@@ -257,7 +272,7 @@ class ModuleParser(object):
             for name, node in self.create_tree_items(name, node):
                 yield name, node
 
-    def create_tree_items(self, name, node, parent=None):
+    def create_tree_items(self, name, node, parent=None, start=False):
         ti = SourceTreeItem(self.mod, name, node, parent)
         if ti:
             yield ti, parent
