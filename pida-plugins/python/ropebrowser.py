@@ -80,16 +80,20 @@ class FunctionOptions(TreeOptions):
     """Describe how functions are shown"""
 
     type_name = 'f'
-    icon_name = 'source-function'
+    icon_name = 'source-method'
     type_color = '#900000'
     position = 2
 
     def get_pre_markup(self):
         """Draw decorators"""
-        decs = ', '.join(['@' + d.id for d in
-            self.item.object.decorators])
+        decs = []
+        for dec in self.item.object.decorators:
+            if hasattr(dec, 'id'):
+                decs.append('@' + dec.id)
+            elif hasattr(dec, 'func'):
+                decs.append('@' + dec.func.id + '()')
+        decs = ', '.join(decs)
         if decs:
-            print self.item.object.decorators
             decs = decs + '\n'
         return markup_fixed(markup_italic(decs))
 
@@ -198,7 +202,6 @@ def get_option_for_item(item):
             elif kind == 'staticmethod':
                 return StaticMethodOptions(item)
             else:
-                print item.object.get_kind(), item.name
                 return FunctionOptions(item)
         else:
             return ClassOptions(item)
@@ -209,7 +212,7 @@ def get_option_for_item(item):
     elif isinstance(item.node, pynames.EvaluatedName):
         return EvaluatedOptions(item)
     else:
-        print 'boo', item, item.node, item.name, item.object
+        print 'Unknown Node', item, item.node, item.name, item.object
 
 
 class SourceTreeItem(object):
