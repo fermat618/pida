@@ -156,7 +156,7 @@ class ClassOptions(TreeOptions):
     def get_extra_markup(self):
         attrs = markup_bold_bracketted(
             ', '.join([s.get_name() for s in
-                       self.item.object.get_superclasses()])
+                       self.item.object.get_superclasses() if hasattr(s, 'get_name')])
         )
 
         doc = self.item.object.get_doc()
