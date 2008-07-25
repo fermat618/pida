@@ -30,6 +30,9 @@ def markup_bold(name):
 def markup_grey_italic(text):
     return markup_color(markup_italic(text), '#999999')
 
+def markup_green_italic(text):
+    return markup_color(markup_italic(text), '#339933')
+
 def markup_bold_bracketted(text):
     return '%s%s%s' % (
         markup_bold('('),
@@ -104,7 +107,7 @@ class FunctionOptions(TreeOptions):
         )
         doc = self.item.object.get_doc()
         if doc:
-            doc_markup = markup_grey_italic('"""%s"""' % doc.splitlines()[0])
+            doc_markup = markup_green_italic('"""%s"""' % doc.splitlines()[0])
             attrs = attrs + '\n' + doc_markup
         return attrs
 
@@ -158,7 +161,7 @@ class ClassOptions(TreeOptions):
 
         doc = self.item.object.get_doc()
         if doc:
-            doc_markup = markup_grey_italic('"""%s"""' % doc.splitlines()[0])
+            doc_markup = markup_green_italic('"""%s"""' % doc.splitlines()[0])
             attrs = attrs + '\n' + doc_markup
         return attrs
 
