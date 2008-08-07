@@ -285,7 +285,7 @@ class ProjectService(Service):
         project_name = os.path.basename(project_directory)
         path = os.path.join(project_directory, 'build.vel')
         self._create_blank_project_file(project_name, path)
-        self.load_and_set_project(path)
+        self.load_and_set_project(project_directory)
 
     def _create_blank_project_file(self, name, file_path):
         with open(file_path, 'w') as project_file:
