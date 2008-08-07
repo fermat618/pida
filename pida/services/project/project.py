@@ -343,7 +343,12 @@ class ProjectService(Service):
             self._save_options()
 
     def execute_target(self, action, target):
-        pass #XXX: invoke vellum in the project
+        project = self._current
+        self.boss.cmd('commander', 'execute',
+                commandargs=['vellum', target],
+                cwd=project.source_directory,
+                title=_('Vellum %s -> %s') % (project.name, target), 
+                )
 
     def create_menu(self):
         if self._current is not None:
