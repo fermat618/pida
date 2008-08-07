@@ -116,7 +116,7 @@ class Checker(object):
     def ignore(self, node):
         pass
 
-    STMT = PRINT = PRINTNL = TUPLE = LIST = ASSTUPLE = ASSATTR = \
+    STMT = PRINT = PRINTNL = TUPLE = LIST = ASSTUPLE = ASSATTR = WITH =\
     ASSLIST = GETATTR = SLICE = SLICEOBJ = IF = CALLFUNC = DISCARD = FOR = \
     RETURN = ADD = MOD = SUB = NOT = UNARYSUB = INVERT = ASSERT = COMPARE = \
     SUBSCRIPT = AND = OR = TRYEXCEPT = RAISE = YIELD = DICT = LEFTSHIFT = \
