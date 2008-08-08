@@ -48,10 +48,7 @@ locale = Locale('commander')
 _ = locale.gettext
 
 def get_default_system_shell():
-    if 'SHELL' in os.environ:
-        return os.environ['SHELL']
-    else:
-        return 'bash'
+    return os.environ.get('SHELL', 'bash')
 
 class CommanderOptionsConfig(OptionsConfig):
 
