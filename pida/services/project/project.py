@@ -173,9 +173,9 @@ class ProjectActionsConfig(ActionsConfig):
             self.svc.add_directory(path)
 
     def on_project_execute(self, action):
-        controller = self.svc.get_default_controller()
-        if controller is not None:
-            controller.execute()
+        default = self.svc._current.script.options.get('default')
+        if default is not None:
+            self.svc.execute_target(None, default)
         else:
             self.svc.error_dlg(
                 _('This project has no default controller'))
