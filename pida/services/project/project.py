@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*- 
+"""
+    Service project
+    ~~~~~~~~~~~~~~~
+
+    This service handles manging Projects and invoking vellum.
+
+    :license: GPL3
+    :copyright:
+        * 2007 Ali Afshar
+        * 2008 Ronny Pfannschmidt
+"""
 from __future__ import with_statement
 import os
 
@@ -14,7 +25,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.projects import Project
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
 
 # locale
@@ -86,6 +97,22 @@ class ProjectListView(PidaGladeView):
 
     def can_be_closed(self):
         self.svc.get_action('project_properties').set_active(False)
+
+class ProjectSetupView(PidaView):
+
+    label_text = _('Project Properties')
+
+    def create_ui(self):
+        from vellumui.view import ScriptView
+        self.script_view = ScriptView()
+        self.script_view.show()
+        self.add_main_widget(self.script_view.get_toplevel())
+
+    def set_project(self, project):
+        #XXX: should we have more than one project viev ?
+        #     for different projects each
+        self.project = project
+        self.script_view.set_script(project.script)
 
 
 class ProjectEventsConfig(EventsConfig):
@@ -247,6 +274,7 @@ class ProjectService(Service):
         self.set_current_project(None)
         ###
         self.project_list = ProjectListView(self)
+        self.project_properties_view = ProjectSetupView(self)
         self._read_options()
 
     def _read_options(self):
@@ -306,6 +334,7 @@ class ProjectService(Service):
             self.emit('project_switched', project=project)
             toolitem = self.get_action('project_execute').get_proxies()[0]
             toolitem.set_menu(self.create_menu())
+            self.project_properties_view.set_project(project)
             self.get_action('project_execute').set_sensitive(bool(project.targets))
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
@@ -317,11 +346,8 @@ class ProjectService(Service):
                 if project.source_directory == last:
                     self.project_list.set_current_project(project)
 
-    def get_current_project(self):
-        return self._current
-
     def load_and_set_project(self, project_file):
-        self._current = self._load_project(project_file)
+        set_current_project( self._load_project(project_file))
 
     def _load_project(self, project_path):
         project = Project(project_path)
@@ -377,17 +403,11 @@ class ProjectService(Service):
             match = project.get_relative_path_for(document.filename)
             if match is not None:
                 matches.append((project, match))
-        num_matches = len(matches)
-        if num_matches == 0:
-            return None
-        elif num_matches == 1:
-            return matches[0][0], os.sep.join(matches[0][1][-3:-1])
+        if not matches:
+            return match
         else:
-            shortest = None
-            for i, (project, match) in enumerate(matches):
-                if (shortest is None) or (len(match) < len(matches[shortest][1])):
-                    shortest = i
-            return matches[shortest][0], os.sep.join(matches[shortest][1][-3:-1])
+            shortest = min(matches, key=lambda x:len(x[1]))
+            return shortest[0], os.sep.join(shortest[1][-3:-1])
             
 
 
