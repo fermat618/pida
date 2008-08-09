@@ -9,7 +9,7 @@ depends(
 targets(
     build.ext $ python setup.py build_ext -i
 
-    run $ bin/pida
+    run $ python bin/pida
 
     gen.api_doc $ pydoctor -c tools/pida-pydoctor.cfg
     
