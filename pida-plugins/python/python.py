@@ -43,7 +43,7 @@ from pida.ui.views import PidaView, PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
 
 # utils
-from pida.utils import pyflakes
+from . import pyflakes
 from pida.utils.gthreads import AsyncTask, GeneratorTask
 
 # locale
