@@ -88,9 +88,6 @@ class PidaViewMixin(object):
     def create_ui(self):
         """Create the user interface here"""
 
-    def get_unique_id(self):
-        return self._uid
-
     def create_tab_label_icon(self):
         return gtk.image_new_from_stock(self.icon_name, gtk.ICON_SIZE_MENU)
 
@@ -128,7 +125,6 @@ class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
             self.locale.bindglade()
         self.svc = service
         GladeSlaveDelegate.__init__(self, *args, **kw)
-        self._uid = create_unique_id()
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
         self.create_ui()
@@ -139,7 +135,6 @@ class PidaView(SlaveDelegate, PidaViewMixin):
         self.svc = service
         self._main_widget = gtk.VBox()
         SlaveDelegate.__init__(self, toplevel=self._main_widget, *args, **kw)
-        self._uid = create_unique_id()
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
         self.create_ui()
