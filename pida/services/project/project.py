@@ -111,8 +111,14 @@ class ProjectSetupView(PidaView):
     def set_project(self, project):
         #XXX: should we have more than one project viev ?
         #     for different projects each
+        #XXX: ask on case of unsaved changes?
         self.project = project
-        self.script_view.set_script(project.script)
+        self.script_view.load_script(
+                os.path.join(
+                    project.source_directory,
+                    'build.vel'
+                    )
+                )
 
 
 class ProjectEventsConfig(EventsConfig):
@@ -347,7 +353,7 @@ class ProjectService(Service):
                     self.project_list.set_current_project(project)
 
     def load_and_set_project(self, project_file):
-        set_current_project( self._load_project(project_file))
+        self.set_current_project(self._load_project(project_file))
 
     def _load_project(self, project_path):
         project = Project(project_path)
