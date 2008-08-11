@@ -27,69 +27,15 @@
 
 import gtk
 import os
-import time
 
 
 import subprocess
-
-class vim_embed(object):
-
-    HAS_CONTROL_BOX = False
-    
-    HAS_TITLE = False
-
-    def init(self, command='gvim', args=[]):
-        self.__servername = self.__generate_servername()
-        self.pid = None
-        self.args = args
-        self.r_cb_plugged = None
-        self.r_cb_unplugged = None
-        self.__eb = None
-
-    def __pack(self):
-        socket = gtk.Socket()
-        eb = gtk.EventBox()
-        self.widget.pack_start(eb)
-        eb.add_events(gtk.gdk.KEY_PRESS_MASK)
-        eb.add(socket)
-        self.show_all()
-        self.__eb = eb
-        return socket.get_id()
-
-    def __generate_servername(self):
-        return 'PIDA_EMBEDDED_%s' % time.time()
-
-    def get_servername(self):
-        return self.__servername
-    servername = property(get_servername)
-
-    def should_remove(self):
-        self.service.remove_attempt()
-        return False
-
-    def run(self, command):
-        self.command = command
-        xid = self.__pack()
-        args = self.args[:] # a copy
-        args.extend(['--socketid', '%s' % xid])
-        if not xid:
-            return
-        if not self.pid:
-            popen = subprocess.Popen([self.command, '--servername',
-                                      self.servername, '--cmd',
-                                      'let PIDA_EMBEDDED=1'] + args,
-                                      close_fds=True)
-            self.pid = popen.pid
-        self.show_all()
-        
-    def grab_input_focus(self):
-        self.__eb.child_focus(gtk.DIR_TAB_FORWARD)
 
 class VimEmbedWidget(gtk.EventBox):
 
     def __init__(self, command, script_path, args=[]):
         gtk.EventBox.__init__(self)
-        self.server_name = 'PIDA_EMBEDDED_%s' % time.time()
+        self.server_name = 'PIDA_EMBEDDED_%s' % os.getpid()
         self._command = command
         self._init_script = script_path
         self.pid = None
