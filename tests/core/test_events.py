@@ -14,10 +14,13 @@ class MockCallback(object):
     def __call__(self, **kw):
         self.calls.append(kw)
 
+class MockService(object):
+    """used instead of None cause weakref proxy cant handle None"""
+
 class EventTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.e = EventsConfig(None)
+        self.e = EventsConfig(MockService())
         self.c = MockCallback()
         self.e.publish('initial')
         self.e.subscribe('initial', self.c)

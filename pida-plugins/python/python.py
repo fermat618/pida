@@ -373,6 +373,8 @@ class Python(Service):
             self.hide_source()
         if self.get_action('show_python_errors').get_active():
             self.hide_errors()
+        del self._pysource
+        del self._pyflaker
 
 # Required Service attribute for service loading
 Service = Python
