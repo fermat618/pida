@@ -611,7 +611,7 @@ class FileManagerOptionsConfig(OptionsConfig):
         self.create_option(
                 'last_browsed_remember',
                 _('Remember last Path'),
-                list,
+                bool,
                 True,
                 _('Remembers the last browsed path'))
         
