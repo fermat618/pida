@@ -30,6 +30,9 @@ def markup_bold(name):
 def markup_grey_italic(text):
     return markup_color(markup_italic(text), '#999999')
 
+def markup_green_italic(text):
+    return markup_color(markup_italic(text), '#339933')
+
 def markup_bold_bracketted(text):
     return '%s%s%s' % (
         markup_bold('('),
@@ -62,6 +65,7 @@ class TreeOptions(object):
     type_color = '#000000'
     position = 0
     has_children = False
+    icon_name = 'source-property'
 
     def __init__(self, treeitem):
         self.item = treeitem
@@ -79,13 +83,19 @@ class FunctionOptions(TreeOptions):
     """Describe how functions are shown"""
 
     type_name = 'f'
+    icon_name = 'source-method'
     type_color = '#900000'
     position = 2
 
     def get_pre_markup(self):
         """Draw decorators"""
-        decs = ', '.join(['@' + d.id for d in
-            self.item.object.decorators])
+        decs = []
+        for dec in self.item.object.decorators:
+            if hasattr(dec, 'id'):
+                decs.append('@' + dec.id)
+            elif hasattr(dec, 'func'):
+                decs.append('@' + dec.func.id + '()')
+        decs = ', '.join(decs)
         if decs:
             decs = decs + '\n'
         return markup_fixed(markup_italic(decs))
@@ -97,7 +107,7 @@ class FunctionOptions(TreeOptions):
         )
         doc = self.item.object.get_doc()
         if doc:
-            doc_markup = markup_grey_italic('"""%s"""' % doc.splitlines()[0])
+            doc_markup = markup_green_italic('"""%s"""' % doc.splitlines()[0])
             attrs = attrs + '\n' + doc_markup
         return attrs
 
@@ -105,27 +115,32 @@ class FunctionOptions(TreeOptions):
 class EvaluatedOptions(TreeOptions):
 
     type_name = 'p'
+    icon_name = 'source-property'
     type_color = '#900090'
 
 
 class MethodOptions(FunctionOptions):
 
     type_name = 'm'
+    icon_name = 'source-method'
 
 
 class SuperMethodOptions(MethodOptions):
 
     type_name = '(m)'
+    icon_name = 'source-extramethod'
     position = 6
 
 class ClassMethodOptions(MethodOptions):
 
     type_name = 'cm'
+    icon_name = 'source-method'
     position = 3
 
 class StaticMethodOptions(MethodOptions):
 
     type_name = 'sm'
+    icon_name = 'source-method'
     position = 4
 
 
@@ -133,6 +148,7 @@ class StaticMethodOptions(MethodOptions):
 class ClassOptions(TreeOptions):
 
     type_name = 'c'
+    icon_name = 'source-class'
     type_color = '#000090'
     position = 1
     has_children = True
@@ -140,32 +156,36 @@ class ClassOptions(TreeOptions):
     def get_extra_markup(self):
         attrs = markup_bold_bracketted(
             ', '.join([s.get_name() for s in
-                       self.item.object.get_superclasses()])
+                       self.item.object.get_superclasses() if hasattr(s, 'get_name')])
         )
 
         doc = self.item.object.get_doc()
         if doc:
-            doc_markup = markup_grey_italic('"""%s"""' % doc.splitlines()[0])
+            doc_markup = markup_green_italic('"""%s"""' % doc.splitlines()[0])
             attrs = attrs + '\n' + doc_markup
         return attrs
 
 class AssignedOptions(TreeOptions):
 
     type_name = 'a'
+    icon_name = 'source-attribute'
     type_color = '#009000'
     position = 5
 
 class BuiltinOptions(TreeOptions):
 
     type_name = '(b)'
+    icon_name = None
     type_color = '#999999'
     position = 7
 
 class ImportedOptions(TreeOptions):
 
     type_name = 'imp'
+    icon_name = 'source-import'
     type_color = '#999999'
     position = 8
+    icon_name = 'source-module'
 
 def get_option_for_item(item):
     if isinstance(item.node, pynames.ImportedName):
@@ -185,7 +205,6 @@ def get_option_for_item(item):
             elif kind == 'staticmethod':
                 return StaticMethodOptions(item)
             else:
-                print item.object.get_kind(), item.name
                 return FunctionOptions(item)
         else:
             return ClassOptions(item)
@@ -196,7 +215,7 @@ def get_option_for_item(item):
     elif isinstance(item.node, pynames.EvaluatedName):
         return EvaluatedOptions(item)
     else:
-        print 'boo', item, item.node, item.name, item.object
+        print 'Unknown Node', item, item.node, item.name, item.object
 
 
 class SourceTreeItem(object):
@@ -232,6 +251,8 @@ class SourceTreeItem(object):
         self.type_markup = markup_type(self.options.type_name,
                                        self.options.type_color)
 
+        self.icon_name = self.options.icon_name
+
     def render(self):
         return '%s%s%s %s' % (
             self.options.get_pre_markup(),
@@ -257,7 +278,7 @@ class ModuleParser(object):
             for name, node in self.create_tree_items(name, node):
                 yield name, node
 
-    def create_tree_items(self, name, node, parent=None):
+    def create_tree_items(self, name, node, parent=None, start=False):
         ti = SourceTreeItem(self.mod, name, node, parent)
         if ti:
             yield ti, parent

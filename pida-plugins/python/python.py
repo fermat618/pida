@@ -171,8 +171,9 @@ class SourceView(PidaGladeView):
                 #Column('linenumber'),
                 #Column('ctype_markup', use_markup=True),
                 #Column('nodename_markup', use_markup=True),
-                Column('type_markup', use_markup=True),
+                Column('icon_name', use_stock=True),
                 Column('rendered', use_markup=True, expand=True),
+                Column('type_markup', use_markup=True),
                 Column('sort_hack', visible=False),
                 Column('line_sort_hack', visible=False),
             ]
@@ -207,6 +208,16 @@ class SourceView(PidaGladeView):
         self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
+    def on_show_super__toggled(self, but):
+        self.browser.refresh_view()
+
+    def on_show_builtins__toggled(self, but):
+        self.browser.refresh_view()
+
+    def on_show_imports__toggled(self, but):
+        self.browser.refresh_view()
+
+
 
 from ropebrowser import ModuleParser
 
@@ -215,6 +226,8 @@ class PythonBrowser(object):
     def __init__(self, svc):
         self.svc = svc
         self._view = SourceView(self.svc)
+        # Naughty ali
+        self._view.browser = self
         self.set_current_document(None)
 
     def set_current_document(self, document):
@@ -227,6 +240,7 @@ class PythonBrowser(object):
             self._view.get_toplevel().set_sensitive(False)
 
     def refresh_view(self):
+        self.options = self.read_options()
         self._view.clear_items()
         if self.svc.is_current_python():
             task = GeneratorTask(self.check_current, self.add_view_node)
@@ -241,10 +255,20 @@ class PythonBrowser(object):
         return mp.get_nodes()
 
     def add_view_node(self, node, parent):
+        t = node.options.type_name
+        if t in self.options and not self.options[t]:
+            return
         self._view.add_node(node, parent)
 
     def get_view(self):
         return self._view
+
+    def read_options(self):
+        return {
+            '(m)': self._view.show_super.get_active(),
+            '(b)': self._view.show_builtins.get_active(),
+            'imp': self._view.show_imports.get_active(),
+        }
 
 
 class PythonFeatures(FeaturesConfig):

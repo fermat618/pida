@@ -21,6 +21,18 @@
 #SOFTWARE.
 
 
+def any_f():
+    pass
+
+def any_f2(a):
+    pass
+
+@any_f2
+def dec_f(a):
+    pass
+
+dec_f = any_f2(dec_f)
+
 
 
 
