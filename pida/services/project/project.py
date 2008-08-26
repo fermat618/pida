@@ -405,6 +405,7 @@ class ProjectService(Service):
 
     def get_project_for_document(self, document):
         matches = []
+        match = None
         for project in self._projects:
             match = project.get_relative_path_for(document.filename)
             if match is not None:
