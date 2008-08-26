@@ -245,6 +245,27 @@ class VersionControlEvents(EventsConfig):
             self.svc.on_document_changed)
         self.subscribe_foreign('project', 'project_switched',
             self.svc.on_project_changed)
+        self.subscribe_foreign('contexts', 'show-menu',
+            self.on_contexts__show_menu)
+        self.subscribe_foreign('contexts', 'menu-deactivated',
+            self.on_contexts__menu_deactivated)
+
+    def on_contexts__show_menu(self, menu, context, **kw):
+        under_vc = False
+        if (context == 'file-menu'):
+            path = kw['file_name']
+            under_vc = self.svc.get_workdir_manager_for_path(path) is not None
+            self.svc.get_action('diff_for_file').set_visible(under_vc)
+            self.svc.get_action('revert_for_file').set_visible(under_vc)
+        elif (context == 'dir-menu'):
+            path = kw['dir_name']
+            under_vc = self.svc.get_workdir_manager_for_path(path) is not None
+            self.svc.get_action('diff_for_directory').set_visible(under_vc)
+            self.svc.get_action('revert_for_dir').set_visible(under_vc)
+        self.svc.get_action('more_vc_menu').set_visible(under_vc)
+
+    def on_contexts__menu_deactivated(self, menu, context, **kw):
+        self.svc.get_action('more_vc_menu').set_visible(True)
 
 
 class VersioncontrolCommandsConfig(CommandsConfig):
