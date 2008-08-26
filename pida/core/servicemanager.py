@@ -146,8 +146,8 @@ class ServiceManager(object):
         # Check plugin is a plugin not a service
         if plugin in self.get_plugins():
             plugin.log.debug('Stopping')
-            plugin.stop_components()
             plugin.stop()
+            plugin.stop_components()
 
             del self._reg[name]
             self._plugins.unload(name)

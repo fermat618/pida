@@ -63,7 +63,7 @@ class StatusbarEvents(EventsConfig):
         self.svc.set_label('document_size', '%d%s' % (size, ext))
 
     def on_project_switched(self, project):
-        self.svc.set_label('project', project.get_display_name())
+        self.svc.set_label('project', project.display_name)
 
     def on_browsed_path_changed(self, path):
         self.svc.set_label('path', (path, path))

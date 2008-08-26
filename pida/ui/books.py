@@ -165,7 +165,7 @@ class BookManager(object):
 
     def add_view(self, bookname, view):
         if not self.has_view(view):
-            self._views[bookname][view.get_unique_id()] = view
+            self._views[bookname][id(view)] = view
             book = self._get_book(bookname)
             tab_label = self._create_tab_label(
                 bookname,
@@ -184,14 +184,14 @@ class BookManager(object):
         book_name = self._get_book_for_view(view)
         book = self._get_book(book_name)
         book.remove(view.get_toplevel())
-        del self._views[book_name][view.get_unique_id()]
+        del self._views[book_name][id(view)]
 
     def move_view(self, bookname, view):
         self.remove_view(view)
         self.add_view(bookname, view)
 
     def has_view(self, view):
-        return view.get_unique_id() in self._get_view_uids()
+        return id(view) in self._get_view_ids()
 
     def next_page(self, bookname):
         book = self._get_book(bookname)
@@ -221,11 +221,11 @@ class BookManager(object):
         
     def _get_book_for_view(self, view):
         for name, views in self._views.items():
-            if view.get_unique_id() in views:
+            if id(view) in views:
                 return name
         raise ValueError(_('View is not in any Notebook'))
 
-    def _get_view_uids(self):
+    def _get_view_ids(self):
         uids = []
         for book in self._views.values():
             uids.extend(book.keys())

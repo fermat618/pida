@@ -180,13 +180,11 @@ class TestBookManager(TestCase):
 
         self._mview1 = Mock(
             dict(
-                get_unique_id = 1,
                 get_toplevel = gtk.Label('1')
             )
         )
         self._mview2 = Mock(
             dict(
-                get_unique_id = 2,
                 get_toplevel = gtk.Label('2')
             )
         )

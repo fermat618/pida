@@ -92,6 +92,11 @@ class Service(object):
         self.events.unsubscribe_foreign()
         self.features.unsubscribe_foreign()
         self.actions.remove_actions()
+        del self.events
+        del self.features
+        del self.actions
+        del self.commands
+        del self.options
 
     ##########
     # Options API

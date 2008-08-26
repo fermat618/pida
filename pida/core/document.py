@@ -220,7 +220,7 @@ class Document(object):
     @property
     def project_name(self):
         if self.project is not None:
-            return self.project.get_display_name()
+            return self.project.display_name
         else:
             return ''
 

@@ -37,15 +37,13 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
-from pida.core.projects import ProjectController,  ProjectKeyDefinition
-from pida.core.interfaces import IProjectController
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
 
 # utils
-from pida.utils import pyflakes
+from . import pyflakes
 from pida.utils.gthreads import AsyncTask, GeneratorTask
 
 # locale
@@ -271,84 +269,6 @@ class PythonBrowser(object):
 
 
 
-
-
-
-class BasePythonProjectController(ProjectController):
-
-    attributes = [
-        ProjectKeyDefinition('python_executable', _('Python Executable'), False),
-    ] + ProjectController.attributes
-
-    def get_python_executable(self):
-        return self.get_option('python_executable') or 'python'
-
-
-class PythonProjectController(BasePythonProjectController):
-
-    name = 'PYTHON_CONTROLLER'
-
-    label = _('Python Controller')
-
-    attributes = [
-        ProjectKeyDefinition('execute_file', _('File to execute'), True),
-        ProjectKeyDefinition('execute_args', _('Args to execute'), False),
-    ] + BasePythonProjectController.attributes
-
-    def execute(self):
-        execute_file = self.get_option('execute_file')
-        execute_args = self.get_option('execute_args')
-        if not execute_file:
-            self.boss.window.error_dlg(_('Controller has no "execute_file" set'))
-        else:
-            commandargs = [self.get_python_executable(), execute_file]
-            if execute_args is not None:
-                commandargs.extend(execute_args.split())
-            self.execute_commandargs(
-                commandargs,
-            )
-
-
-class PythonDistutilstoolsController(ProjectController):
-    """Controller for running a distutils command"""
-
-    name = 'DISTUTILS_CONTROLLER'
-
-    label = _('Distutils Controller')
-
-    attributes = [
-        ProjectKeyDefinition('command', _('Distutils command'), True),
-        ProjectKeyDefinition('args', _('Args for command'), False),
-    ] + BasePythonProjectController.attributes
-
-    def execute(self):
-        command = self.get_option('command')
-        if not command:
-            self.boss.window.error_dlg(_('Controller has no "command" set'))
-        else:
-            commandargs = [self.get_python_executable(), 'setup.py', command]
-            args = self.get_option('args')
-            if args:
-                args = args.split()
-                commandargs.extend(args)
-            self.execute_commandargs(
-                commandargs,
-            )
-
-    def get_python_executable(self):
-        return self.get_option('python_executable') or 'python'
-
-
-
-class PythonFeatures(FeaturesConfig):
-
-    def subscribe_all_foreign(self):
-        self.subscribe_foreign('project', IProjectController,
-            PythonProjectController)
-        self.subscribe_foreign('project', IProjectController,
-            PythonDistutilstoolsController)
-
-
 class PythonOptionsConfig(OptionsConfig):
 
     def create_options(self):
@@ -423,7 +343,6 @@ class Python(Service):
     events_config = PythonEventsConfig
     actions_config = PythonActionsConfig
     options_config = PythonOptionsConfig
-    features_config = PythonFeatures
 
     def pre_start(self):
         """Start the service"""
@@ -478,6 +397,8 @@ class Python(Service):
             self.hide_source()
         if self.get_action('show_python_errors').get_active():
             self.hide_errors()
+        del self._pysource
+        del self._pyflaker
 
 # Required Service attribute for service loading
 Service = Python

@@ -45,38 +45,44 @@ locale = Locale('bookmark')
 _ = locale.gettext
 
 class BookmarkItem(object):
-
-    def __init__(self, group='none', title='no title', data=None):
-        self.group = group
+    group = None
+    keys = 'data', 'group', 'title'
+    def __init__(self, title, data):
         self.title = title
         self.data = data
 
     def run(self, service):
         pass
 
-    def key(self):
-        return self.data + self.group + self.title
+    def _key(self):
+        return tuple(getattr(self, key) for key in self.keys)
+
+    def __hash__(self):
+        return hash(self._key())
+
+    def __cmp__(self, other):
+        assert isinstance(other, BookmarkItem)
+        return cmp(self._key(), other._key())
 
 
 class BookmarkItemFile(BookmarkItem):
+    group = 'file'
+    keys = BookmarkItem.keys + ('line',)
 
     def __init__(self, title='no title', data=None, line=1):
         self.line = line
-        BookmarkItem.__init__(self, group='file', title=title, data=data)
-
-    def key(self):
-        return BookmarkItem.key(self) + str(self.line)
+        BookmarkItem.__init__(self,  title=title, data=data)
 
     def run(self, service):
         service.boss.cmd('buffer', 'open_file', file_name=self.data)
         service.boss.editor.goto_line(self.line)
 
 class BookmarkItemPath(BookmarkItem):
-
+    group = 'path'
     ICON_NAME = 'folder'
 
     def __init__(self, title='no title', data=None):
-        BookmarkItem.__init__(self, group='path', title=title, data=data)
+        BookmarkItem.__init__(self,  title=title, data=data)
 
     def run(self, service):
         service.boss.cmd('filemanager', 'browse', new_path=self.data)
@@ -84,11 +90,11 @@ class BookmarkItemPath(BookmarkItem):
 
 """
 class BookmarkItemUrl(BookmarkItem):
-
+    group = 'url'
     ICON_NAME = 'www'
 
     def __init__(self, title='no title', data=None):
-        BookmarkItem.__init__(self, group='url', title=title, data=data)
+        BookmarkItem.__init__(self, title=title, data=data)
 
     def run(self, service):
         service.boss.call_command('webbrowser', 'browse', url=self.data)
@@ -132,8 +138,9 @@ class BookmarkView(PidaView):
     def create_ui_list(self):
         self._books = gtk.Notebook()
         self._books.set_border_width(6)
-        self._list_dirs = self.create_objectlist('stock_folder', _('Dirs'))
-        self._list_files = self.create_objectlist('text-x-generic', _('Files'))
+        self.list = {}
+        self._list['path'] = self.create_objectlist('stock_folder', _('Dirs'))
+        self._list['file'] = self.create_objectlist('text-x-generic', _('Files'))
         """
         self._list_url = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_url.set_headers_visible(False)
@@ -154,25 +161,14 @@ class BookmarkView(PidaView):
         self._toolbar.show_all()
 
     def add_item(self, item):
-        if item.group == 'file':
-            self._list_files.append(item)
-        elif item.group == 'path':
-            self._list_dirs.append(item)
-        elif item.group == 'url':
-            self._list_urls.append(item)
+        self._list[item.group].append(item)
 
     def remove_item(self, item):
-        if item.group == 'file':
-            self._list_files.remove(item)
-        elif item.group == 'path':
-            self._list_dirs.remove(item)
-        elif item.group == 'url':
-            self._list_urls.remove(item)
+        self._list[item.group].remove(item)
 
     def clear_all(self):
-        self._list_files.clear()
-        self._list_dirs.clear()
-        #self._list_urls.clear()
+        for l in self._list.values():
+            l.clear()
 
     def can_be_closed(self):
         self.svc.get_action('show_bookmark').set_active(False)

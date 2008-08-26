@@ -15,6 +15,8 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
+from weakref import proxy
+
 class PidaViewWidget(PropertyObject, gtk.VBox):
 
     __gtype_name__ = 'PidaViewWidget'
@@ -88,9 +90,6 @@ class PidaViewMixin(object):
     def create_ui(self):
         """Create the user interface here"""
 
-    def get_unique_id(self):
-        return self._uid
-
     def create_tab_label_icon(self):
         return gtk.image_new_from_stock(self.icon_name, gtk.ICON_SIZE_MENU)
 
@@ -126,9 +125,8 @@ class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
     def __init__(self, service, title=None, icon=None, *args, **kw):
         if hasattr(self, 'locale') and self.locale is not None:
             self.locale.bindglade()
-        self.svc = service
+        self.svc = proxy(service) if type(service) is service.__class__ else service
         GladeSlaveDelegate.__init__(self, *args, **kw)
-        self._uid = create_unique_id()
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
         self.create_ui()
@@ -136,10 +134,9 @@ class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 class PidaView(SlaveDelegate, PidaViewMixin):
 
     def __init__(self, service, title=None, icon=None, *args, **kw):
-        self.svc = service
+        self.svc = proxy(service) if type(service) is service.__class__ else service
         self._main_widget = gtk.VBox()
         SlaveDelegate.__init__(self, toplevel=self._main_widget, *args, **kw)
-        self._uid = create_unique_id()
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
         self.create_ui()

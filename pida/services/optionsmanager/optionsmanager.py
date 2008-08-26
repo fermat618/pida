@@ -23,6 +23,7 @@
 from textwrap import wrap
 
 import gtk
+from weakref import proxy
 
 
 # PIDA Imports
@@ -35,7 +36,6 @@ from pida.ui.views import PidaGladeView
 from pida.ui.widgets import get_widget_for_type
 
 from kiwi import ValueUnset
-
 # locale
 from pida.core.locale import Locale
 locale = Locale('optionsmanager')
@@ -64,6 +64,7 @@ class PidaOptionsView(PidaGladeView):
         current = self.current
         self.clear_ui()
         self._services = []
+
         for svc in self.svc.boss.get_services():
             if svc.options:
                 self._services.append(svc)
@@ -182,8 +183,7 @@ class OptionsEvents(EventsConfig):
                                self.plugin_changed)
 
     def plugin_changed(self, plugin):
-        if plugin.options:
-            self.svc.refresh_view()
+        self.svc.refresh_view()
 
 # Service class
 class Optionsmanager(Service):

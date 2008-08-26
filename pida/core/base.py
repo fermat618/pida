@@ -11,12 +11,12 @@ connected to by other services.
 For examples of their use, you can see pida.core.features.
 
 """
-
+from weakref import proxy
 
 class BaseConfig(object):
 
     def __init__(self, service):
-        self.svc = service
+        self.svc = proxy(service)
         self.create()
 
     def create(self):
