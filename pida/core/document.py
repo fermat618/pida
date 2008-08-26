@@ -163,6 +163,8 @@ class Document(object):
     @property
     def encoding(self):
         self._load()
+        # FIXME: if self.is_new we should run the _encode detection from
+        # the editors buffer if possible
         return self._encoding
 
     @property
@@ -177,14 +179,20 @@ class Document(object):
 
     @property
     def directory(self):
+        if self.is_new:
+            return None
         return os.path.dirname(self.filename)
 
     @property
     def directory_basename(self):
+        if self.is_new:
+            return None
         return os.path.basename(self.directory)
 
     @property
     def basename(self):
+        if self.is_new:
+            return None
         return os.path.basename(self.filename)
 
     @property

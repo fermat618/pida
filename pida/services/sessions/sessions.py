@@ -77,7 +77,7 @@ class Sessions(Service):
 
     def save_session(self, document=None):
         documents = self.boss.cmd('buffer', 'get_documents')
-        files = [d.filename for d in documents.values()]
+        files = [d.filename for d in documents.values() if d.filename]
         self.set_opt('open_files', files)
 
     def load_buffers(self, files):
