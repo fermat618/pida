@@ -41,7 +41,7 @@ from pida.ui.htmltextview import HtmlTextView
 
 from pida.utils.gthreads import AsyncTask, gcall
 
-from pida.services.filemanager.filehiddencheck import FileHiddenCheck, SCOPE_GLOBAL
+import pida.services.filemanager.filehiddencheck as filehiddencheck
 
 # locale
 from pida.core.locale import Locale
@@ -216,14 +216,6 @@ class CommitViewer(PidaGladeView):
         self.set_path(None)
         self.svc.get_action('show_commit').set_active(False)
 
-class VersionControlFileHiddenCheck(FileHiddenCheck):
-    _identifier = "VersionControl"
-    _label = "Hide Ignored Files by Version Control"
-    _scope = SCOPE_GLOBAL
-    
-    def __call__(self, name, path, state):
-        return not (state == "hidden" or state == "ignored")
-
 class VersioncontrolFeaturesConfig(FeaturesConfig):
 
     def create(self):
@@ -234,12 +226,17 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
             self.subscribe('workdir-manager', mgr)
 
     def subscribe_all_foreign(self):
-        self.subscribe_foreign(
-            'filemanager', 'file_hidden_check', VersionControlFileHiddenCheck)
+        self.subscribe_foreign('filemanager', 'file_hidden_check', 
+            self.versioncontrol)
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'versioncontrol-dir-menu.xml'))
+
+    @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, 
+        _("Hide Ignored Files by Version Control"))
+    def versioncontrol(self, name, path, state):
+        return not (state == "hidden" or state == "ignored")
 
 class VersionControlEvents(EventsConfig):
 
