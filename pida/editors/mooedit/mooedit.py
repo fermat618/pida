@@ -132,7 +132,10 @@ class MooeditEmbed(gtk.Notebook):
 
     def _create_tab(self, editor):
         hb = gtk.HBox(spacing=2)
-        fn = os.path.split(editor.get_filename())[1]
+        if editor.get_filename():
+            fn = os.path.split(editor.get_filename())[1]
+        else:
+            fn = _("New Document")
         editor._label = gtk.Label()
         editor._label.set_text(fn)
         b = gtk.Button()
@@ -297,8 +300,11 @@ class Mooedit(EditorService):
     """
 
     actions_config = MooeditActionsConfig
-
+    
     def pre_start(self):
+        # mooedit is able to open empty documents
+        self.features.publish('new_file')
+        
         try:
             self.script_path = os.path.join(pida_home, 'pida_mooedit.rc')
             self._state_path = os.path.join(pida_home, 'pida_mooedit.state')
@@ -326,18 +332,7 @@ class Mooedit(EditorService):
             return False
 
     def start(self):
-        self.get_action('save').set_sensitive(False)
-        self.get_action('mooedit_save_as').set_sensitive(False)
-        self.get_action('cut').set_sensitive(False)
-        self.get_action('copy').set_sensitive(False)
-        self.get_action('paste').set_sensitive(False)
-        self.get_action('mooedit_goto').set_sensitive(False)
-        self.get_action('mooedit_find').set_sensitive(False)
-        self.get_action('mooedit_find_next').set_sensitive(False)
-        self.get_action('mooedit_find_prev').set_sensitive(False)
-        self.get_action('mooedit_find_word_next').set_sensitive(False)
-        self.get_action('mooedit_find_word_prev').set_sensitive(False)
-        self.get_action('mooedit_replace').set_sensitive(False)
+        self.update_actions(enabled=False)
         return True
 
     def save_moo_state(self):
@@ -361,32 +356,46 @@ class Mooedit(EditorService):
         self.boss.stop(force=True)
         return close
 
+    def update_actions(self, enabled=True):
+        all = True
+        if not enabled:
+            all = False
+        self.get_action('save').set_sensitive(all)
+        self.get_action('mooedit_save_as').set_sensitive(all)
+        self.get_action('cut').set_sensitive(all)
+        self.get_action('copy').set_sensitive(all)
+        self.get_action('paste').set_sensitive(all)
+        if enabled and self._current and self._current.editor:
+            self.get_action('undo').set_sensitive(self._current.editor.can_undo())
+            self.get_action('redo').set_sensitive(self._current.editor.can_redo())
+        else:
+            self.get_action('undo').set_sensitive(all)
+            self.get_action('redo').set_sensitive(all)
+        self.get_action('focus_editor').set_sensitive(all)
+        self.get_action('mooedit_goto').set_sensitive(all)
+        self.get_action('mooedit_find').set_sensitive(all)
+        self.get_action('mooedit_find_next').set_sensitive(all)
+        self.get_action('mooedit_find_prev').set_sensitive(all)
+        self.get_action('mooedit_find_word_next').set_sensitive(all)
+        self.get_action('mooedit_find_word_prev').set_sensitive(all)
+        self.get_action('mooedit_replace').set_sensitive(all)
+        
+
     def open(self, document):
         """Open a document"""
         if document.unique_id not in self._documents.keys():
             if self._load_file(document):
                 self._embed.set_current_page(-1)
-                if self._embed.get_n_pages() == 1:
-                    self.get_action('save').set_sensitive(True)
-                    self.get_action('mooedit_save_as').set_sensitive(True)
-                    self.get_action('cut').set_sensitive(True)
-                    self.get_action('copy').set_sensitive(True)
-                    self.get_action('paste').set_sensitive(True)
-                    self.get_action('undo').set_sensitive(False)
-                    self.get_action('redo').set_sensitive(False)
-                    self.get_action('focus_editor').set_sensitive(True)
-                    self.get_action('mooedit_goto').set_sensitive(True)
-                    self.get_action('mooedit_find').set_sensitive(True)
-                    self.get_action('mooedit_find_next').set_sensitive(True)
-                    self.get_action('mooedit_find_prev').set_sensitive(True)
-                    self.get_action('mooedit_find_word_next').set_sensitive(True)
-                    self.get_action('mooedit_find_word_prev').set_sensitive(True)
-                    self.get_action('mooedit_replace').set_sensitive(True)
-            else:
-                raise Exception, 'Moo could not load the file.'
+                if self._embed.get_n_pages() > 0:
+                    self.update_actions()
+                    if document.is_new:
+                        self.get_action('save').set_sensitive(True)
+                    else:
+                        self.get_action('save').set_sensitive(False)
         else:
             #EA: the file was already open. we switch to it.
             self._embed.set_current_page(self._embed.page_num(self._documents[document.unique_id]))
+            self.update_actions()
 
 
     def close(self, document):
@@ -396,21 +405,7 @@ class Mooedit(EditorService):
             self._embed.remove_page(self._embed.page_num(self._documents[document.unique_id]))
             del self._documents[document.unique_id]
             if self._embed.get_n_pages() == 0:
-                self.get_action('save').set_sensitive(False)
-                self.get_action('mooedit_save_as').set_sensitive(False)
-                self.get_action('cut').set_sensitive(False)
-                self.get_action('copy').set_sensitive(False)
-                self.get_action('paste').set_sensitive(False)
-                self.get_action('undo').set_sensitive(False)
-                self.get_action('redo').set_sensitive(False)
-                self.get_action('focus_editor').set_sensitive(False)
-                self.get_action('mooedit_goto').set_sensitive(False)
-                self.get_action('mooedit_find').set_sensitive(False)
-                self.get_action('mooedit_find_next').set_sensitive(False)
-                self.get_action('mooedit_find_prev').set_sensitive(False)
-                self.get_action('mooedit_find_word_next').set_sensitive(False)
-                self.get_action('mooedit_find_word_prev').set_sensitive(False)
-                self.get_action('mooedit_replace').set_sensitive(False)
+                self.update_actions(enabled=False)
         return closing
 
     def save(self):
@@ -420,7 +415,7 @@ class Mooedit(EditorService):
 
     def save_as(self):
         """Save the current document"""
-        print self._current.editor.save_as()
+        self._current.editor.save_as()
         self.boss.cmd('buffer', 'current_file_saved')
 
     def cut(self):
@@ -464,7 +459,10 @@ class Mooedit(EditorService):
 
     def _load_file(self, document):
         try:
-            editor = self._editor_instance.create_doc(document.filename)
+            if document is None:
+                editor = self._editor_instance.new_doc()
+            else:
+                editor = self._editor_instance.create_doc(document.filename)
             document.editor = editor
             view = MooeditView(document)
             view._star = False
@@ -479,7 +477,7 @@ class Mooedit(EditorService):
             self._current = view
             return True
         except Exception, err:
-            print err
+            self.log.exception(e)
             return False
 
     def _buffer_changed(self, buffer, view):
@@ -556,7 +554,70 @@ class Mooedit(EditorService):
         else:
             return False
 
+    def _get_current_word_pos(self):
+        # returns the start, endposition of the current word and the text
+        buf = self._current.editor.get_buffer()
+        cursor = buf.props.cursor_position
+        try:
+            # moo stores the text always as utf-8 in the internal buffer
+            txt = buf.props.text.decode('utf-8')
+        except UnicodeDecodeError:
+            txt = buf.props.text
+        
+        start = cursor-1
+        end = cursor
+        # FIXME: maybe this is faster with a regular expression
+        while end < len(txt):
+            if txt[end].isspace():
+                break
+            end += 1
+        # this isn't handled easy with a regular expression as its a 
+        # forward lookup. maybe we could search for whitespace and guess
+        # as startstring max(0, cursor-10) and if it doesn't find anything
+        # we use the full buffer and use the last find...
+        while start >= 0:
+            if txt[start].isspace():
+                start += 1
+                break
+            start -= 1
+        start = max(start, 0)
+        return (start, end, txt)
+        
 
+    def call_with_current_word(self, callback):
+        start, end, txt = self._get_current_word_pos()
+        
+        rv = txt[start:end]
+        
+        if rv:
+            callback(rv)
+        
+    def call_with_selection(self, callback):
+        if not self._current.editor.has_selection():
+            return
+        
+        buf = self._current.editor.get_buffer()
+        tmb = buf.get_selection_bounds()
+        try:
+            rv = buf.props.text.decode('utf-8') \
+                                    [tmb[0].get_offset():tmb[1].get_offset()]
+        except UnicodeDecodeError:
+            # the buf.props.text is raw binary. so we have to convert it to 
+            # unicode
+            return
+
+        callback(rv)
+    
+    def insert_text(self, text):
+        self._current.editor.get_buffer().insert_at_cursor(text)
+    
+    def delete_current_word(self):
+        start, end, txt = self._get_current_word_pos()
+        buf = self._current.editor.get_buffer()
+        
+        buf.delete(buf.get_iter_at_offset(start), 
+                   buf.get_iter_at_offset(end))
+    
 # Required Service attribute for service loading
 Service = Mooedit
 

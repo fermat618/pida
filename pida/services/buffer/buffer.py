@@ -144,7 +144,7 @@ class BufferActionsConfig(ActionsConfig):
             'new_file',
             TYPE_NORMAL,
             _('New File'),
-            _('Create a temporary new file'),
+            _('Create a new file'),
             gtk.STOCK_NEW,
             self.on_new_file,
             '<Shift><Control>N',
@@ -192,15 +192,16 @@ class BufferActionsConfig(ActionsConfig):
 
     def on_open_file(self, action):
         project = self.svc.boss.cmd('project', 'get_current_project')
-        current_folder = project.source_directory
+        if project:
+            current_folder = project.source_directory
+        else:
+            current_folder = None 
         file_name = self.svc.boss.window.open_dlg(folder=current_folder)
         if file_name:
             self.svc.open_file(file_name)
 
     def on_new_file(self, action):
-        fd, file_name = mkstemp()
-        os.close(fd)
-        self.svc.open_file(file_name)
+        self.svc.new_file()
 
     def on_add_file(self, action):
         current_folder = self.svc.boss.cmd('filemanager', 'get_browsed_path')
@@ -258,7 +259,7 @@ class BufferCommandsConfig(CommandsConfig):
 # Service class
 class Buffer(Service):
     """
-    Buffer is a graphical manager for vim buffers.
+    Buffer is a graphical manager for editor buffers.
     """ 
 
     commands_config = BufferCommandsConfig
@@ -279,6 +280,21 @@ class Buffer(Service):
     def _refresh_buffer_action_sensitivities(self):
         for action_name in ['switch_next_buffer', 'switch_prev_buffer']:
             self.get_action(action_name).set_sensitive(len(self._documents) > 0)
+
+    def new_file(self, temp_file=False):
+        # some editors don't support the new_file feature, so we have to 
+        # fall back and create a tmp file
+        if temp_file or not 'new_file' in self.boss.editor.features:
+            fd, file_name = mkstemp()
+            os.close(fd)
+            self.open_file(file_name)
+        else:
+            document = Document(self.boss)
+            self._add_document(document)
+            self._current = document
+            self._view.set_document(document)
+            self.boss.editor.cmd('open', document=document)
+            self.emit('document-changed', document=document)
 
     def open_file(self, file_name):
         doc = self._get_document_for_filename(file_name)

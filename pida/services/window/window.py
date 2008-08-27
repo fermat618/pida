@@ -130,7 +130,11 @@ class WindowEvents(EventsConfig):
             self.on_editor_started)
 
     def on_document_changed(self, document):
-        self.svc.window.set_title(document.filename)
+        if document.is_new:
+            self.svc.window.set_title(_("New Document"))
+        else:
+            self.svc.window.set_title(document.filename)
+            
 
     def on_editor_started(self):
         self.svc.boss.hide_splash()

@@ -47,20 +47,26 @@ class StatusbarEvents(EventsConfig):
                 self.on_browsed_path_changed)
 
     def on_document_changed(self, document):
-        self.svc.set_label('document', (document.basename, document))
-        self.svc.set_label('document_encoding', document.encoding)
+        if document.is_new:
+            self.svc.set_label('document', (_('New Document'),''))
+            self.svc.set_label('document_encoding', 'Unknown')
+            self.svc.set_label('document_mtime', '')
+            self.svc.set_label('document_size', '%d' %0)
+        else:
+            self.svc.set_label('document', (document.basename, document))
+            self.svc.set_label('document_encoding', document.encoding)
 
-        dt = datetime.datetime.fromtimestamp(document.modified_time)
-        text = dt.strftime(locale.nl_langinfo(locale.D_T_FMT))
-        self.svc.set_label('document_mtime', text)
-
-        size = document.filesize
-        for ext in ['o', 'Ko', 'Mo', 'Go', 'To']:
-            if size > 1024 * 10:
-                size = size / 1024
-            else:
-                break
-        self.svc.set_label('document_size', '%d%s' % (size, ext))
+            dt = datetime.datetime.fromtimestamp(document.modified_time)
+            text = dt.strftime(locale.nl_langinfo(locale.D_T_FMT))
+            self.svc.set_label('document_mtime', text)
+    
+            size = document.filesize
+            for ext in ['o', 'Ko', 'Mo', 'Go', 'To']:
+                if size > 1024 * 10:
+                    size = size / 1024
+                else:
+                    break
+            self.svc.set_label('document_size', '%d%s' % (size, ext))
 
     def on_project_switched(self, project):
         self.svc.set_label('project', project.display_name)
@@ -183,7 +189,7 @@ class Statusbar(Service):
     def set_default_values(self):
         project = self.boss.cmd('project', 'get_current_project')
         if project is not None:
-            self.set_label('project', project.get_display_name())
+            self.set_label('project', project.display_name)
         path = self.boss.cmd('filemanager', 'get_browsed_path')
         self.set_label('path', (path, path))
 
