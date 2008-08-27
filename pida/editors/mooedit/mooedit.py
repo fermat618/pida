@@ -386,7 +386,7 @@ class Mooedit(EditorService):
         if document.unique_id not in self._documents.keys():
             if self._load_file(document):
                 self._embed.set_current_page(-1)
-                if self._embed.get_n_pages() == 1:
+                if self._embed.get_n_pages() > 0:
                     self.update_actions()
                     if document.is_new:
                         self.get_action('save').set_sensitive(True)
@@ -554,7 +554,70 @@ class Mooedit(EditorService):
         else:
             return False
 
+    def _get_current_word_pos(self):
+        # returns the start, endposition of the current word and the text
+        buf = self._current.editor.get_buffer()
+        cursor = buf.props.cursor_position
+        try:
+            # moo stores the text always as utf-8 in the internal buffer
+            txt = buf.props.text.decode('utf-8')
+        except UnicodeDecodeError:
+            txt = buf.props.text
+        
+        start = cursor-1
+        end = cursor
+        # FIXME: maybe this is faster with a regular expression
+        while end < len(txt):
+            if txt[end].isspace():
+                break
+            end += 1
+        # this isn't handled easy with a regular expression as its a 
+        # forward lookup. maybe we could search for whitespace and guess
+        # as startstring max(0, cursor-10) and if it doesn't find anything
+        # we use the full buffer and use the last find...
+        while start >= 0:
+            if txt[start].isspace():
+                start += 1
+                break
+            start -= 1
+        start = max(start, 0)
+        return (start, end, txt)
+        
 
+    def call_with_current_word(self, callback):
+        start, end, txt = self._get_current_word_pos()
+        
+        rv = txt[start:end]
+        
+        if rv:
+            callback(rv)
+        
+    def call_with_selection(self, callback):
+        if not self._current.editor.has_selection():
+            return
+        
+        buf = self._current.editor.get_buffer()
+        tmb = buf.get_selection_bounds()
+        try:
+            rv = buf.props.text.decode('utf-8') \
+                                    [tmb[0].get_offset():tmb[1].get_offset()]
+        except UnicodeDecodeError:
+            # the buf.props.text is raw binary. so we have to convert it to 
+            # unicode
+            return
+
+        callback(rv)
+    
+    def insert_text(self, text):
+        self._current.editor.get_buffer().insert_at_cursor(text)
+    
+    def delete_current_word(self):
+        start, end, txt = self._get_current_word_pos()
+        buf = self._current.editor.get_buffer()
+        
+        buf.delete(buf.get_iter_at_offset(start), 
+                   buf.get_iter_at_offset(end))
+    
 # Required Service attribute for service loading
 Service = Mooedit
 
