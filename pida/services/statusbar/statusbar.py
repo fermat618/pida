@@ -189,7 +189,7 @@ class Statusbar(Service):
     def set_default_values(self):
         project = self.boss.cmd('project', 'get_current_project')
         if project is not None:
-            self.set_label('project', project.get_display_name())
+            self.set_label('project', project.display_name)
         path = self.boss.cmd('filemanager', 'get_browsed_path')
         self.set_label('path', (path, path))
 
