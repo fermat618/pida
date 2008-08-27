@@ -356,6 +356,9 @@ class ProjectService(Service):
         self.set_current_project(self._load_project(project_file))
 
     def _load_project(self, project_path):
+        if not os.path.isdir(project_path):
+            self.log(_("Can't load project. Path does not exist: %s") %project_path)
+            return None
         project = Project(project_path)
         self._projects.append(project)
         self.project_list.project_ol.append(project)

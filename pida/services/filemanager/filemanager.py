@@ -42,6 +42,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.environment import get_uidef_path
+from pida.core.log import Log
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
 
@@ -137,7 +138,7 @@ class FileEntry(object):
         return '<span color="%s">%s</span>' % (color, text)
 
 
-class FilemanagerView(PidaView):
+class FilemanagerView(PidaView, Log):
 
     _columns = [
         Column("icon_stock_id", use_stock=True),
@@ -247,6 +248,7 @@ class FilemanagerView(PidaView):
 
         def work(basepath):
             if not os.path.isdir(basepath):
+                self.log(_("Can't open directory: %s") %basepath)
                 return
             dir_content = listdir(basepath)
             # add all files from vcs and remove the corresponding items 

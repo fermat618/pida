@@ -19,6 +19,7 @@ import logging.handlers
 from logging import getLogger as get_logger
 
 from pida.core.environment import opts
+from pida.utils.descriptors import cached_property
 
 format_str = '%(levelname)s %(name)s: %(message)s'
 format = logging.Formatter(format_str)
@@ -33,4 +34,13 @@ if opts.debug:
     get_logger().setLevel(logging.DEBUG)
 else:
     get_logger().setLevel(logging.INFO)
+    
+class Log(object):
+    
+    def get_name(self):
+        return '%s.%s' %(self.__module__, self.__class__.__name__)
+    
+    @cached_property
+    def log(self):
+        return get_logger(self.get_name())
 

@@ -328,7 +328,8 @@ class Mooedit(EditorService):
             self.boss.get_service('editor').emit('started')
             return True
         except Exception, err:
-            print err
+            import traceback
+            traceback.print_exc()
             return False
 
     def start(self):
@@ -397,6 +398,9 @@ class Mooedit(EditorService):
             self._embed.set_current_page(self._embed.page_num(self._documents[document.unique_id]))
             self.update_actions()
 
+    def open_list(self, documents):
+        for doc in documents:
+            self._load_file(doc)
 
     def close(self, document):
         """Close a document"""
@@ -470,14 +474,14 @@ class Mooedit(EditorService):
             document.editor.connect("doc_status_changed", self._buffer_changed, view)
             document.editor.connect("filename-changed", self._buffer_renamed, view)
             label = self._embed._create_tab(document.editor)
+            self._documents[document.unique_id] = view
             self._embed.append_page(view, label)
             self._embed.set_tab_reorderable(view, True)
             #self._embed.set_tab_detachable(view, True)
-            self._documents[document.unique_id] = view
             self._current = view
             return True
         except Exception, err:
-            self.log.exception(e)
+            self.log.exception(err)
             return False
 
     def _buffer_changed(self, buffer, view):

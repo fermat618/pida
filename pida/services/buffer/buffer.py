@@ -24,6 +24,7 @@ import os
 from tempfile import mkstemp
 
 import gtk
+import gobject
 
 from kiwi.ui.objectlist import Column
 
@@ -240,6 +241,9 @@ class BufferCommandsConfig(CommandsConfig):
 
     def open_file(self, file_name):
         self.svc.open_file(file_name)
+        
+    def open_files(self, files):
+        self.svc.open_files(files)
 
     def close_file(self, file_name):
         self.svc.close_file(file_name)
@@ -299,9 +303,22 @@ class Buffer(Service):
     def open_file(self, file_name):
         doc = self._get_document_for_filename(file_name)
         if doc is None:
+            if not os.path.isfile(file_name):
+                return False
             doc = Document(self.boss, file_name)
             self._add_document(doc)
         self.view_document(doc)
+
+    def open_files(self, files):
+        if not files:
+            # empty list
+            return
+        docs = []
+        for file_name in files:
+            document = Document(self.boss, file_name)
+            self._add_document(document)
+            docs.append(document)
+        self.boss.editor.cmd('open_list', documents=docs)
 
     def close_current(self):
         if self._current is not None:

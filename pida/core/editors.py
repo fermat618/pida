@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 import gtk
+import gobject
 
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.commands import CommandsConfig
@@ -131,6 +132,9 @@ class EditorCommandsConfig(CommandsConfig):
 
     def open(self, document):
         self.svc.open(document)
+        
+    def open_list(self, documents):
+        self.svc.open_list(documents)
 
     def close(self, document):
         return self.svc.close(document)
@@ -176,6 +180,22 @@ class EditorService(Service):
     
     def __repr__(self):
         return '<Editor: %s>'%self.__class__.__name__
+
+    def _open_single(self, docs):
+        if not docs:
+            # return fales to be not called anymore
+            return False
+        self.open(docs.pop())
+        return True
+    
+    def open_list(self, documents):
+        #XXX: this way is not acceptable, and only the fallback
+        # solution for editors not implementing the open_list interface
+        
+        # make a copy of the file list as we modify it and 
+        # this could cause side effects very hard to debug
+        documents_c = documents[:]
+        gobject.timeout_add(1000, self._open_single, documents_c)
 
     @classmethod
     def get_sanity_errors(cls):

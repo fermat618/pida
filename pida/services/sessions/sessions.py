@@ -85,12 +85,7 @@ class Sessions(Service):
         load each file in into the buffer manager
         """
         if files:
-            self.boss.cmd('buffer', 'open_file', file_name=files.pop())
-        else:
-            return
-        #XXX: this way is not acceptable,
-        #     need find a way to tell editors to open at once
-        gobject.timeout_add(1000, self.load_buffers, files)
+            self.boss.cmd('buffer', 'open_files', files=files)
 
 Service = Sessions
 
