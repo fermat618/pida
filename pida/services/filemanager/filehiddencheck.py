@@ -23,31 +23,12 @@
 SCOPE_PROJECT  = 0
 SCOPE_GLOBAL = 1
 
-class FileHiddenCheck(object):
-    """A File Hidden Check"""
-    _identifier = ""
-    _label = ""
-    _scope = SCOPE_GLOBAL
-
-    def __init__(self, boss):
-        self.boss = boss
-    
-    def __call__(self, name, path, state):
-        """checks if a file is hidden"""
-
-    @property
-    def identifier(self):
-        """returns a unique identifier"""
-        return self._identifier
-
-    @property
-    def label(self):
-        """returns a label displayed in hidden check menu"""
-        return self._label
-    
-    @property
-    def scope(self):
-        """returns if selection should be saved globally or per project"""
-        return self._scope
+def fhc(scope, label):
+    def decorate(fn):
+        fn.scope = scope
+        fn.label = label
+        fn.identifier = fn.__name__
+        return fn
+    return decorate
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

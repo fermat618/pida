@@ -51,8 +51,7 @@ from pida.ui.objectlist import AttrSortCombo
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
-from filehiddencheck import *
-
+import filehiddencheck
 
 # locale
 from pida.core.locale import Locale
@@ -212,10 +211,9 @@ class FilemanagerView(PidaView, Log):
     def show_or_hide(self, entry):
         from operator import and_
         def check(checker):
-            check = checker(self.svc.boss)
-            if (check.identifier in self._file_hidden_check_actions) and \
-               (self._file_hidden_check_actions[check.identifier].get_active()):
-                return check(name=entry.name, path=entry.parent_path,
+            if (checker.identifier in self._file_hidden_check_actions) and \
+               (self._file_hidden_check_actions[checker.identifier].get_active()):
+                return checker(name=entry.name, path=entry.parent_path,
                     state=entry.state, )
             else:
                 return True
@@ -362,7 +360,7 @@ class FilemanagerView(PidaView, Log):
         return ancs
 
     def _on_act_file_hidden_check(self, action, check):
-        if (check.scope == SCOPE_GLOBAL):
+        if (check.scope == filehiddencheck.SCOPE_GLOBAL):
             # global
             active_checker = self.svc.opt('file_hidden_check')
             if (action.get_active()):
@@ -398,9 +396,8 @@ class FilemanagerView(PidaView, Log):
     def refresh_file_hidden_check(self):
         """refreshes active status of actions of project scope checker"""
         for checker in self.svc.features['file_hidden_check']:
-            check = checker(self.svc.boss)
-            if (check.scope == SCOPE_PROJECT):
-                action = self._file_hidden_check_actions[check.identifier]
+            if (checker.scope == filehiddencheck.SCOPE_PROJECT):
+                action = self._file_hidden_check_actions[checker.identifier]
                 self.__file_hidden_check_scope_project_set_active(action)
     
     def _create_file_hidden_check_toolbar(self):
@@ -410,20 +407,19 @@ class FilemanagerView(PidaView, Log):
         project_scope_count = 0
         menu.append(separator)
         for checker in self.svc.features['file_hidden_check']:
-            check = checker(self.svc.boss)
-            action = gtk.ToggleAction(check.identifier, check.label,
-              check.label, None)
+            action = gtk.ToggleAction(checker.identifier, checker.label,
+              checker.label, None)
             # active?
-            if (check.scope == SCOPE_GLOBAL):
+            if (checker.scope == filehiddencheck.SCOPE_GLOBAL):
                 action.set_active(
-                    check.identifier in self.svc.opt('file_hidden_check'))
+                    checker.identifier in self.svc.opt('file_hidden_check'))
             else:
                 self.__file_hidden_check_scope_project_set_active(action)
 
-            action.connect('activate', self._on_act_file_hidden_check, check)
-            self._file_hidden_check_actions[check.identifier] = action
+            action.connect('activate', self._on_act_file_hidden_check, checker)
+            self._file_hidden_check_actions[checker.identifier] = action
             menuitem = action.create_menu_item()
-            if (check.scope == SCOPE_GLOBAL):
+            if (checker.scope == filehiddencheck.SCOPE_GLOBAL):
                 menu.prepend(menuitem)
             else:
                 menu.append(menuitem)
@@ -487,26 +483,6 @@ class FilemanagerView(PidaView, Log):
         if path == self._clipboard_file:
             self._clipboard_file = None
             self._fix_paste_sensitivity()
-
-class DotFilesFileHiddenCheck(FileHiddenCheck):
-    _identifier = "DotFiles"
-    _label = "Hide Dot-Files"
-    _scope = SCOPE_GLOBAL
-    
-    def __call__(self, name, path, state):
-        return name[0] != '.'
-
-class RegExFileHiddenCheck(FileHiddenCheck):
-    _identifier = "RegEx"
-    _label = "Hide by User defined Regular Expression"
-    _scope = SCOPE_GLOBAL
-    
-    def __call__(self, name, path, state):
-        _re = self.boss.get_service('filemanager').opt('hide_regex')
-        if not re:
-            return True
-        else:
-            return re.match(_re, name) is None
 
 class FilemanagerEvents(EventsConfig):
 
@@ -586,8 +562,8 @@ class FilemanagerFeatureConfig(FeaturesConfig):
     def create(self):
         self.publish('file_manager')
         self.publish('file_hidden_check')
-        self.subscribe('file_hidden_check', DotFilesFileHiddenCheck)
-        self.subscribe('file_hidden_check', RegExFileHiddenCheck)
+        self.subscribe('file_hidden_check', self.dot_files)
+        self.subscribe('file_hidden_check', self.regex)
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
@@ -595,6 +571,19 @@ class FilemanagerFeatureConfig(FeaturesConfig):
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
 
+    # File Hidden Checks
+    @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, _("Hide Dot-Files"))
+    def dot_files(self, name, path, state):
+        return name[0] != '.'
+
+    @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, 
+        _("Hide by User defined Regular Expression"))
+    def regex(self, name, path, state):
+        _re = self.svc.opt('hide_regex')
+        if not re:
+            return True
+        else:
+            return re.match(_re, name) is None
 
 
 class FileManagerOptionsConfig(OptionsConfig):

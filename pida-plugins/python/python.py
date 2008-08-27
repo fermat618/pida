@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 # stdlib
-import sys, compiler
+import sys, compiler, os.path
 
 # gtk
 import gtk
@@ -37,6 +37,9 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
+
+# services
+import pida.services.filemanager.filehiddencheck as filehiddencheck
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
@@ -268,6 +271,16 @@ class PythonBrowser(object):
         }
 
 
+class PythonFeatures(FeaturesConfig):
+
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('filemanager', 'file_hidden_check',
+            self.python)
+
+    @filehiddencheck.fhc(filehiddencheck.SCOPE_PROJECT, 
+        _("Hide Python Compiled Files"))
+    def python(self, name, path, state):
+        return os.path.splitext(name)[1] != '.pyc'
 
 class PythonOptionsConfig(OptionsConfig):
 
@@ -339,10 +352,11 @@ class PythonActionsConfig(ActionsConfig):
 # Service class
 class Python(Service):
     """Service for all things Python""" 
-
+    
     events_config = PythonEventsConfig
     actions_config = PythonActionsConfig
     options_config = PythonOptionsConfig
+    features_config = PythonFeatures
 
     def pre_start(self):
         """Start the service"""

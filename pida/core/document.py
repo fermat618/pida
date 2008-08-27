@@ -1,37 +1,21 @@
 # -*- coding: utf-8 -*- 
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+"""
+    pida.core.document
+    ~~~~~~~~~~~~~~~~~~
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
+    :license: GPL3 or later
+    :copyright:
+        * 2005 Ali Afshar
+        * 2008 Ronny Pfannschmidt
+"""
 import os
 import mimetypes
 import stat
-import gobject
-import base
 import time
 
 from charfinder import DETECTOR_MANAGER
 import codecs
-
-import actions
 
 from pida.core.log import log
 from pida.utils.descriptors import cached_property
@@ -45,11 +29,7 @@ new_file_index = 1
 
 
 class Document(object):
-    """Base document class.
-
-    Represents a file on disk.
-    """
-    icon_name = 'new'
+    """Represents a file on disk."""
 
     markup_prefix = ''
     markup_directory_color = '#0000c0'
@@ -60,20 +40,14 @@ class Document(object):
                      '<span color="%(directory_colour)s">'
                      '%(project_relative_path)s/</span>'
                      '<b>%(basename)s</b>')
-    def __init__(self, boss, filename=None,
-                       markup_attributes=None,
-                       markup_string=None,
-                       contexts=None,
-                       icon_name=None,
-                       handler=None,
-                       detect_encoding=DETECTOR_MANAGER):
+
+    def __init__(self, boss, filename=None, project=None):
         self.boss = boss
-        self._handler = handler
         self.filename = filename
-        self.project = None
-        self._detect_encoding = detect_encoding
+        self.project = project
+        self._detect_encoding = DETECTOR_MANAGER
         self.creation_time = time.time()
-        
+
         if filename is None:
             global new_file_index
             self.newfile_index = new_file_index
@@ -81,12 +55,11 @@ class Document(object):
         else:
             self.newfile_index = None
 
-        if markup_attributes is not None:
-            self.markup_attributes = markup_attributes
-        if markup_string is not None:
-            self.markup_string = markup_string
+        if project is None:
+            self.project, self.project_relative_path = self.get_project_relative_path()
+        else:
+            self.project_relative_path = project.get_relative_path_for(filename)
 
-        self.project, self.project_relative_path = self.get_project_relative_path()
         self.clear()
 
     def clear(self):
@@ -199,12 +172,9 @@ class Document(object):
     def directory_colour(self):
         return self.markup_directory_color
 
-
     @property
     def unique_id(self):
-        #XXX: this is kinda obsolete
-        #     the creation_time attribute does the same thing
-        return self.creation_time
+        return self.filename, self.newfile_index
 
     @property
     def markup(self):
@@ -222,10 +192,6 @@ class Document(object):
         return markup_dict
 
     @property
-    def handler(self):
-        return self._handler
-
-    @property
     def project_name(self):
         if self.project is not None:
             return self.project.display_name
@@ -236,7 +202,7 @@ class Document(object):
         if self.filename is None:
             return None, None
 
-        #XXX: 
+        #XXX: move to buffer manager
         match = self.boss.cmd('project', 'get_project_for_document', document=self)
         if match is None:
             return None, os.path.join(*os.path.split(self.directory)[-2:])
