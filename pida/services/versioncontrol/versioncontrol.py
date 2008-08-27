@@ -126,7 +126,11 @@ class VersionControlLog(PidaGladeView):
     def append(self, text, tag):
         self._buffer.insert_with_tags_by_name(
             self._buffer.get_end_iter(), text, tag)
-        gcall(self.log_text.scroll_to_iter, self._buffer.get_end_iter(), 0)
+        gcall(self._scroll_to_end)
+    
+    def _scroll_to_end(self):
+        # scroll to the end of the buffer
+        self.log_text.scroll_to_iter(self._buffer.get_end_iter(), 0)
 
     def can_be_closed(self):
         self.svc.get_action('show_vc_log').set_active(False)
