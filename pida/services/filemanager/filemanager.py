@@ -246,6 +246,8 @@ class FilemanagerView(PidaView):
         self.entries.clear()
 
         def work(basepath):
+            if not os.path.isdir(basepath):
+                return
             dir_content = listdir(basepath)
             # add all files from vcs and remove the corresponding items 
             # from dir_content
