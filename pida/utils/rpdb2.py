@@ -9721,15 +9721,18 @@ def PrintUsage(fExtended = False):
 
 
 
-def main(StartClient_func = StartClient):
+def main(StartClient_func = StartClient, argv = None):
     global g_fScreen
     global g_fDebug
     
     create_rpdb_settings_folder()
 
+    if argv is None:
+        argv = sys.argv[1:]
+
     try:
         options, args = getopt.getopt(
-                            sys.argv[1:], 
+                            argv, 
                             'hdao:rtep:sc', 
                             ['help', 'debugee', 'debuggee', 'attach', 'host=', 'remote', 'plaintext', 'encrypt', 'pwd=', 'rid=', 'screen', 'chdir', 'debug']
                             )

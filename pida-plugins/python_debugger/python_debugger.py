@@ -107,7 +107,7 @@ class DebuggerManager(object):
     
     def __init__(self, svc):
         self.svc = svc
-        rpdb2.main(self.start_client)
+        rpdb2.main(self.start_client, argv=[])
         self.last_step = None
         self.connect_events()
         sm = self.session_manager
