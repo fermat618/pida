@@ -24,7 +24,6 @@ import os
 from tempfile import mkstemp
 
 import gtk
-import gobject
 
 from kiwi.ui.objectlist import Column
 
