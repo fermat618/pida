@@ -77,7 +77,8 @@ class CommandBased(VCSBase):
                 stdout=PIPE,
                 stderr=STDOUT,
                 cwd=self.base_path,
-                close_fds=True)
+                close_fds=True,
+                env={'LANG':'C', 'LANGUAGE': 'C', 'LC_All': 'C'})
         if result_type is str:
             return ret.communicate()[0]
         elif result_type is iter:
@@ -272,6 +273,9 @@ class SubVersion(CommandBased):
         return ['diff', '--diff-cmd', 'diff'] + self.process_paths(paths)
 
     def parse_list_item(self, item, cache):
+        if item[0:4] == 'svn:':
+            # ignore all svn error messages
+            return None
         state = item[0]
         file = item.split()[-1]
         #TODO: handle paths with whitespace if ppl fall in that one

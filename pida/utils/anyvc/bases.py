@@ -39,7 +39,8 @@ class VCSBase(object):
         a more complex parser might need to overwrite
         """
         for item in items:
-            yield self.parse_list_item(item, cache)
+            rv = self.parse_list_item(item, cache)
+            if rv: yield rv
 
     def parse_list_item(self, item, cache):
         """

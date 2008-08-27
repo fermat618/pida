@@ -42,9 +42,10 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.environment import get_uidef_path
-from pida.core.log import Log
+from pida.core.log import get_logger
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pida.utils.path import homedir
 
 from pida.ui.views import PidaView
 from pida.ui.objectlist import AttrSortCombo
@@ -92,6 +93,14 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         external=('#333333', False, True),
         )
 
+def check_or_home(path):
+    print "check_or_home"
+    if not os.path.isdir(path):
+        get_logger('pida.svc.filemanager').info(_("Can't open directory: %s") %path)
+        return homedir
+    return path
+
+
 
 class FileEntry(object):
     """The model for file entries"""
@@ -137,7 +146,7 @@ class FileEntry(object):
         return '<span color="%s">%s</span>' % (color, text)
 
 
-class FilemanagerView(PidaView, Log):
+class FilemanagerView(PidaView):
 
     _columns = [
         Column("icon_stock_id", use_stock=True),
@@ -239,15 +248,12 @@ class FilemanagerView(PidaView, Log):
         if new_path is None:
             new_path = self.path
         else:
-            self.path = new_path
+            self.path = check_or_home(new_path)
 
         self.file_list.clear()
         self.entries.clear()
-
+        
         def work(basepath):
-            if not os.path.isdir(basepath):
-                self.log(_("Can't open directory: %s") %basepath)
-                return
             dir_content = listdir(basepath)
             # add all files from vcs and remove the corresponding items 
             # from dir_content
@@ -816,7 +822,8 @@ class Filemanager(Service):
     actions_config = FileManagerActionsConfig
 
     def pre_start(self):
-        self.path = self.opt('last_browsed')
+        self.path = check_or_home(self.opt('last_browsed'))
+
 
     def start(self):
         self.file_view = FilemanagerView(self)
@@ -830,7 +837,8 @@ class Filemanager(Service):
         return self.file_view
    
     def browse(self, new_path):
-        new_path = path.abspath(new_path)
+        new_path = check_or_home(path.abspath(new_path))
+
         if new_path == self.path:
             return
         else:

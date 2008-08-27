@@ -22,6 +22,7 @@
 
 import os
 
+homedir = os.path.expanduser('~')
 
 def get_relative_path(from_path, to_path):
     """Get the relative path to to_path from from_path"""
@@ -67,7 +68,6 @@ if __name__ == '__main__':
     print get_relative_path('/a/b/c/d', '/a/b/c/d/e/f')
     print get_relative_path('/a/b/c/d', '/a/b/c/d1')
     print get_relative_path('/a/b/c/d', '/a/b/c')
-
 
 
 
