@@ -102,10 +102,17 @@ class DocumentTest(TestCase):
     def test_repr_new(self):
         from pida.core import document as document_module
         doc = document()
-        self.assertEqual(repr(doc), '<New Document %d>'%(document_module.new_file_index-1))
+        self.assertEqual(repr(doc), '<New Document %d (%s)>'%(document_module.new_file_index-1, id(doc)))
 
     def test_repr_known(self):
         doc = document(filename='test')
-        self.assertEqual(repr(doc), "<Document 'test'>")
+        self.assertEqual(repr(doc), "<Document 'test' (%s)>" %id(doc))
         
+    def test_unicode_new(self):
+        from pida.core import document as document_module
+        doc = document()
+        self.assertEqual(unicode(doc), u'Untitled (%d)' %(document_module.new_file_index-1))
     
+    def test_unicode_knows(self):
+        doc = document(filename='test')
+        self.assertEqual(unicode(doc), doc.filename)

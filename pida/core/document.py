@@ -13,7 +13,6 @@ import os
 import mimetypes
 import stat
 import time
-import threading
 
 from charfinder import DETECTOR_MANAGER
 import codecs
@@ -29,17 +28,6 @@ _ = locale.gettext
 
 new_file_index = 1
 
-_unique_id_count = 1
-_unique_lock = threading.Lock()
-
-def get_unique_id():
-    global _unique_lock, _unique_id_count
-    _unique_lock.acquire()
-    _unique_id_count += 1
-    rv = _unique_id_count
-    _unique_lock.release()
-    return rv
-
 class Document(object):
     """Represents a file on disk."""
 
@@ -54,7 +42,6 @@ class Document(object):
                      '<b>%(basename)s</b>')
 
     def __init__(self, boss, filename=None, project=None):
-        self._unique_id = get_unique_id()
         self.boss = boss
         self.filename = filename
         self.project = project
@@ -196,8 +183,7 @@ class Document(object):
 
     @property
     def unique_id(self):
-        return self._unique_id
-        #return self.filename, self.newfile_index
+        return id(self)
 
     @property
     def markup(self):
