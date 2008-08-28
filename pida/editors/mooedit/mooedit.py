@@ -130,17 +130,14 @@ class MooeditEmbed(gtk.Notebook):
         self._mooedit = mooedit
         self.show_all()
 
-    def _create_tab(self, editor):
+    def _create_tab(self, document):
+        editor = document.editor
         hb = gtk.HBox(spacing=2)
-        if editor.get_filename():
-            fn = os.path.split(editor.get_filename())[1]
-        else:
-            fn = _("New Document")
         editor._label = gtk.Label()
-        editor._label.set_text(fn)
+        editor._label.set_text(unicode(document))
         b = gtk.Button()
         b.set_border_width(0)
-        b.connect("clicked", self._close_cb, editor)
+        b.connect("clicked", self._close_cb, document)
         b.set_relief(gtk.RELIEF_NONE)
         b.set_size_request(20, 20)
         img = gtk.Image()
@@ -155,8 +152,8 @@ class MooeditEmbed(gtk.Notebook):
         hb.show_all()
         return hb
 
-    def _close_cb(self, btn, editor):
-        self._mooedit.svc.boss.get_service('buffer').cmd('close_file', file_name=editor.get_filename())
+    def _close_cb(self, btn, document):
+        self._mooedit.svc.boss.get_service('buffer').cmd('close_file', document=document)
 
 
 class MooeditView(gtk.ScrolledWindow):
@@ -262,6 +259,15 @@ class MooeditActionsConfig(EditorActionsConfig):
             self.on_goto,
             '<Control>G',
         )
+        self.create_action(
+            'mooedit_last_edit',
+            TYPE_NORMAL,
+            _('Goto last edit place'),
+            _('Goto last edit place'),
+            gtk.STOCK_JUMP_TO,
+            self.on_last_edit,
+            '<Control>q',
+        )
 
     def on_project_preferences(self, action):
         self.svc.show_preferences(action.get_active())
@@ -290,6 +296,9 @@ class MooeditActionsConfig(EditorActionsConfig):
     def on_goto(self, action):
         self.svc._current.editor.emit('goto-line-interactive')
 
+    def on_last_edit(self, action):
+        self.svc.boss.editor.goto_last_edit()
+
 
 # Service class
 class Mooedit(EditorService):
@@ -303,6 +312,7 @@ class Mooedit(EditorService):
     
     def pre_start(self):
         # mooedit is able to open empty documents
+        self._last_modified = None
         self.features.publish('new_file')
         
         try:
@@ -334,6 +344,7 @@ class Mooedit(EditorService):
 
     def start(self):
         self.update_actions(enabled=False)
+        self.get_action('mooedit_last_edit').set_sensitive(False)
         return True
 
     def save_moo_state(self):
@@ -404,6 +415,11 @@ class Mooedit(EditorService):
 
     def close(self, document):
         """Close a document"""
+        # remove the last modified reference as it is not available when closed
+        if self._last_modified and self._last_modified[0].document == document:
+            self._last_modified = None
+            self.get_action('mooedit_last_edit').set_sensitive(False)
+
         closing = self._documents[document.unique_id].editor.close()
         if closing:
             self._embed.remove_page(self._embed.page_num(self._documents[document.unique_id]))
@@ -450,6 +466,12 @@ class Mooedit(EditorService):
         """Goto a line"""
         self._current.editor.move_cursor(line-1, 0, False, True)
 
+    def goto_last_edit(self):
+        if self._last_modified:
+            view, count = self._last_modified
+            self.open(view.document)
+            view.editor.get_buffer().place_cursor(view.editor.get_buffer().get_iter_at_offset(count))
+
     def set_path(self, path):
         pass
 
@@ -459,7 +481,7 @@ class Mooedit(EditorService):
 
     def _changed_page(self, notebook, page, page_num):
         self._current = self._embed.get_nth_page(page_num)
-        self.boss.cmd('buffer', 'open_file', file_name=self._current.editor.get_filename())
+        self.boss.cmd('buffer', 'open_file', document=self._current.document)
 
     def _load_file(self, document):
         try:
@@ -471,9 +493,10 @@ class Mooedit(EditorService):
             view = MooeditView(document)
             view._star = False
             view._exclam = False
-            document.editor.connect("doc_status_changed", self._buffer_changed, view)
+            document.editor.connect("doc_status_changed", self._buffer_status_changed, view)
             document.editor.connect("filename-changed", self._buffer_renamed, view)
-            label = self._embed._create_tab(document.editor)
+            document.editor.get_buffer().connect("changed", self._buffer_changed, view)
+            label = self._embed._create_tab(document)
             self._documents[document.unique_id] = view
             self._embed.append_page(view, label)
             self._embed.set_tab_reorderable(view, True)
@@ -484,7 +507,7 @@ class Mooedit(EditorService):
             self.log.exception(err)
             return False
 
-    def _buffer_changed(self, buffer, view):
+    def _buffer_status_changed(self, buffer, view):
         status = view.editor.get_status()
         if moo.edit.EDIT_MODIFIED & status == moo.edit.EDIT_MODIFIED:
             if not self._current.editor.can_redo():
@@ -518,6 +541,11 @@ class Mooedit(EditorService):
                 view._exclam = False
                 view._star = False
                 view.editor._label.set_text(s)
+
+    def _buffer_changed(self, buffer, view):
+        self._last_modified = (view, buffer.props.cursor_position)
+        self.get_action('mooedit_last_edit').set_sensitive(True)
+
 
     def _buffer_modified(self, buffer, view):
         s = view.editor._label.get_text()

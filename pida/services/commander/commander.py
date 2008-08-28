@@ -214,10 +214,14 @@ class CommanderEvents(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('project', 'project_switched',
                                self.svc.set_current_project)
+        self.subscribe_foreign('contexts', 'show-menu',
+                               self.on_contexts__show_menu)
 
 
-
-
+    def on_contexts__show_menu(self, menu, context, **kw):
+        if (context == 'file-menu'):
+            self.svc.get_action('terminal-for-file').set_visible(kw['file_name'] is not None)
+            
 class TerminalView(PidaView):
 
     icon_name = 'terminal'

@@ -13,6 +13,7 @@ import os
 import mimetypes
 import stat
 import time
+import threading
 
 from charfinder import DETECTOR_MANAGER
 import codecs
@@ -25,8 +26,19 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
+
 new_file_index = 1
 
+_unique_id_count = 1
+_unique_lock = threading.Lock()
+
+def get_unique_id():
+    global _unique_lock, _unique_id_count
+    _unique_lock.acquire()
+    _unique_id_count += 1
+    rv = _unique_id_count
+    _unique_lock.release()
+    return rv
 
 class Document(object):
     """Represents a file on disk."""
@@ -42,6 +54,7 @@ class Document(object):
                      '<b>%(basename)s</b>')
 
     def __init__(self, boss, filename=None, project=None):
+        self._unique_id = get_unique_id()
         self.boss = boss
         self.filename = filename
         self.project = project
@@ -54,7 +67,7 @@ class Document(object):
             new_file_index = new_file_index + 1
         else:
             self.newfile_index = None
-
+            
         if project is None:
             self.project, self.project_relative_path = self.get_project_relative_path()
         else:
@@ -125,9 +138,18 @@ class Document(object):
 
     def __repr__(self):
         if self.filename is None:
-            return '<New Document %d>'%self.newfile_index
+            return '<New Document %d (%s)>' %(self.newfile_index, self.unique_id)
         else:
-            return '<Document %r>'%self.filename
+            return '<Document %r (%s)>' %(self.filename, self.unique_id)
+
+    def __unicode__(self):
+        if self.filename is None:
+            if self.newfile_index > 1:
+                return _(u'Untitled (%d)') %(self.newfile_index)
+            return _(u'Untitled')
+        else:
+            return self.filename
+        
 
     @property
     def modified_time(self):
@@ -174,7 +196,8 @@ class Document(object):
 
     @property
     def unique_id(self):
-        return self.filename, self.newfile_index
+        return self._unique_id
+        #return self.filename, self.newfile_index
 
     @property
     def markup(self):
@@ -182,7 +205,7 @@ class Document(object):
         if self.filename is not None:
             s = self.markup_string % self._build_markup_dict()
         else:
-            s = '<b>New File %s</b>' % self.newfile_index
+            s = '<b>%s</b>' % self.__unicode__()
         return '%s%s' % (prefix, s)
 
     def _build_markup_dict(self):

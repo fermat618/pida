@@ -258,7 +258,8 @@ class VersionControlEvents(EventsConfig):
         under_vc = False
         if (context == 'file-menu'):
             path = kw['file_name']
-            under_vc = self.svc.get_workdir_manager_for_path(path) is not None
+            if path is not None:
+                under_vc = self.svc.get_workdir_manager_for_path(path) is not None
             self.svc.get_action('diff_for_file').set_visible(under_vc)
             self.svc.get_action('revert_for_file').set_visible(under_vc)
         elif (context == 'dir-menu'):

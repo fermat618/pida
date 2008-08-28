@@ -78,6 +78,8 @@ class OpenWithItem(object):
         )
 
     def match(self, file_name):
+        if file_name is None:
+            return False
         return glob.fnmatch.fnmatch(file_name, self.glob)
 
 class OpenWithEditor(PidaGladeView):

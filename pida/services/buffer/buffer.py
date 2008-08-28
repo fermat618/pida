@@ -238,14 +238,18 @@ class BufferEventsConfig(EventsConfig):
 
 class BufferCommandsConfig(CommandsConfig):
 
-    def open_file(self, file_name):
-        self.svc.open_file(file_name)
+    def open_file(self, file_name=None, document=None):
+        if not file_name and not document:
+            return
+        self.svc.open_file(file_name, document)
         
     def open_files(self, files):
         self.svc.open_files(files)
 
-    def close_file(self, file_name):
-        self.svc.close_file(file_name)
+    def close_file(self, file_name=None, document=None):
+        if not file_name and not document:
+            return
+        self.svc.close_file(file_name=file_name, document=document)
 
     def current_file_saved(self):
         self.svc.file_saved()
@@ -299,14 +303,15 @@ class Buffer(Service):
             self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
 
-    def open_file(self, file_name):
-        doc = self._get_document_for_filename(file_name)
-        if doc is None:
+    def open_file(self, file_name = None, document = None):
+        if not document:
+            document = self._get_document_for_filename(file_name)
+        if document is None:
             if not os.path.isfile(file_name):
                 return False
-            doc = Document(self.boss, file_name)
-            self._add_document(doc)
-        self.view_document(doc)
+            document = Document(self.boss, file_name)
+            self._add_document(document)
+        self.view_document(document)
 
     def open_files(self, files):
         if not files:
@@ -320,12 +325,14 @@ class Buffer(Service):
         self.boss.editor.cmd('open_list', documents=docs)
 
     def close_current(self):
-        if self._current is not None:
-            if self.boss.editor.cmd('close', document=self._current):
-                self._remove_document(self._current)
+        document = self._current
+        if document is not None:
+            if self.boss.editor.cmd('close', document=document):
+                self._remove_document(document)
 
-    def close_file(self, file_name):
-        document = self._get_document_for_filename(file_name)
+    def close_file(self, file_name = None, document = None):
+        if not document:
+            document = self._get_document_for_filename(file_name)
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
@@ -341,12 +348,13 @@ class Buffer(Service):
         self._refresh_buffer_action_sensitivities()
 
     def _remove_document(self, document):
+        "_remove_doc", document
         del self._documents[document.unique_id]
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
     def view_document(self, document):
-        if document is not None and self._current is not document:
+        if document is not None and self._current != document:
             self._current = document
             self._view.set_document(document)
             self.boss.editor.cmd('open', document=document)

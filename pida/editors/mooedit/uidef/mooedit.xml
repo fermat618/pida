@@ -29,6 +29,7 @@
             <menuitem name="mooedit_find_word_prev" action="mooedit_find_word_prev" />
             <separator />
             <menuitem name="mooedit_goto" action="mooedit_goto" />
+            <menuitem name="mooedit_last_edit" action="mooedit_last_edit" />    
             </placeholder>
             <separator />
             <placeholder name="find" />

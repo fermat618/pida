@@ -378,7 +378,7 @@ class Python(Service):
             self.execute_action.set_sensitive(False)
 
     def is_current_python(self):
-        if self._current is not None:
+        if self._current is not None and self._current.filename:
             return self._current.filename.endswith('.py')
         else:
             return False

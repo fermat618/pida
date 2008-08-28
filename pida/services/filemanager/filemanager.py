@@ -521,13 +521,14 @@ class FilemanagerEvents(EventsConfig):
     def on_contexts__show_menu(self, menu, context, **kw):        
         if (kw.has_key('filemanager')):
             if (context == 'file-menu'):
-                self.svc.get_action('delete-file').set_visible(True)
+                self.svc.get_action('delete-file').set_visible(kw['file_name'] is not None)
             else:
                 self.svc.get_action('delete-dir').set_visible(
                     kw['dir_name'] != self.svc.get_view().path)
         else:
             self.svc.get_action('delete-file').set_visible(False)
             self.svc.get_action('delete-dir').set_visible(False)
+            self.svc.get_action('browse-for-file').set_visible(kw['file_name'] is not None)
 
     def on_contexts__menu_deactivated(self, menu, context, **kw):
         if (kw.has_key('filemanager')):
