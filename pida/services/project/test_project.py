@@ -1,30 +1,33 @@
 # -*- coding: utf-8 -*- 
+"""
+    :copyright: 2008 by Ronny Pfannschmidt
+    :license: GPL3 or later
+"""
 
-# Copyright (c) 2007 The PIDA Project
+import os
+from pida.core.projects import Project
+from .project import ProjectService
+from pida.utils.testing.mock import Mock
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
-
+def test_loaded_event():
+    boss = Mock()
+    
+    project_service = ProjectService(boss)
+    project_service.create_all()
+    project_service.start()
+    #XXX: mock mimicing the result of project_service.pre_start
+    project_service._projects = []
+    project_service.project_list = Mock()
+    project_service.project_list.project_ol = Mock()
 
 
+    caught = []
 
-
+    project_service.events.subscribe('loaded', 
+            lambda project:caught.append(project)
+            )
+    got = project_service._load_project('.') #XXX: hack
+    assert got is caught[0]
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

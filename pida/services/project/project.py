@@ -124,7 +124,7 @@ class ProjectSetupView(PidaView):
 class ProjectEventsConfig(EventsConfig):
 
     def create(self):
-        self.publish('project_switched')
+        self.publish('project_switched', 'loaded')
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('editor', 'started',
@@ -362,6 +362,7 @@ class ProjectService(Service):
         project = Project(project_path)
         self._projects.append(project)
         self.project_list.project_ol.append(project)
+        self.emit('loaded', project=project)
         return project
 
     def remove_current_project(self):

@@ -27,14 +27,29 @@ class Project(object):
     """
     A PIDA project.
 
-    This is essentially a wrapper for vellum
+    Functions:
+     * wrap vellum
+     * dict-alike api (but it is NOT a dict
+
     """
 
     def __init__(self, source_dir):
         self.source_directory = source_dir
         self.name = os.path.basename(source_dir)
+        self.__data = {}
         self.reload()
 
+    def __getitem__(self, key):
+        return self.__data[key]
+
+    def get(self, key, default=None):
+        return self.__data.get(key)
+
+    def __setitem__(self, key, value):
+        self.__data[key] = value
+
+    def __contains__(self, key):
+        return key in self.__data
 
     def reload(self):
         """Loads the project file"""
@@ -42,6 +57,11 @@ class Project(object):
         self.script = Script(
                 os.path.join(self.source_directory, 'build')
                 )
+
+        #XXX: this might need wrappers for reload
+        for m in self.__data.values():
+            if hasattr(m, 'reload'):
+                m.reload()
 
     @property
     def options(self): 
