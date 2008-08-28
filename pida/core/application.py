@@ -116,6 +116,28 @@ def main():
 
     if opts.version:
         print _('PIDA, version %s') % PIDA_VERSION
+    elif opts.profile_path:
+        print "---- Running in profile mode ----"
+        import hotshot, hotshot.stats, test.pystone
+        prof = hotshot.Profile(opts.profile_path)
+        prof.start()
+        try:
+            run_pida()
+            #benchtime, stones = prof.runcall(run_pida)
+        finally: 
+            prof.stop()
+            prof.close()
+        
+        #signal.signal(signal.SIGALRM, force_quit)
+        #signal.alarm(3)
+        print "---- Top 100 statistic ----"
+        stats = hotshot.stats.load(opts.profile_path)
+        #stats.strip_dirs()
+        stats.sort_stats('time', 'calls')
+        stats.print_stats(100)
+
+        sys.exit(0)
+
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
