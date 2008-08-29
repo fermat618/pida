@@ -216,7 +216,8 @@ class CommanderEvents(EventsConfig):
                                self.svc.set_current_project)
         self.subscribe_foreign('contexts', 'show-menu',
                                self.on_contexts__show_menu)
-
+        self.subscribe_foreign('buffer', 'document-changed',
+                               self.svc.on_buffer_change)
 
     def on_contexts__show_menu(self, menu, context, **kw):
         if (context == 'file-menu'):
@@ -227,6 +228,7 @@ class TerminalView(PidaView):
     icon_name = 'terminal'
 
     def create_ui(self):
+        self._pwd = None
         self._pid = None
         self._hb = gtk.HBox()
         self._hb.show()
@@ -253,6 +255,10 @@ class TerminalView(PidaView):
 
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
+        self._stick_button = create_mini_button(
+            gtk.STOCK_OPEN, _('Automatic change to the current buffer\'s directory'),
+            None, toggleButton=True)
+        self._bar.pack_start(self._stick_button, expand=False)
         self._copy_button = create_mini_button(
             gtk.STOCK_COPY, _('Copy the selection to the clipboard'),
             self.on_copy_clicked)
@@ -419,7 +425,18 @@ class TerminalView(PidaView):
     def on_highlight_url(self, url, *args, **kw):
         return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
                                   url=url)
-        
+    
+    def chdir(self, path):
+        # here we could look at the environment var to find out the real 
+        # directory
+        if self._pwd == path:
+            return
+        # maybe we find a good way to check if the term is currently
+        # in shell mode and maybe there is a better way to change
+        # directories somehow
+        # this is like kate does it
+        self._term.feed_child(u'cd %s\n' %path)
+        self._pwd = path
 
 # Service class
 class Commander(Service):
@@ -471,6 +488,16 @@ class Commander(Service):
         else:
             return os.getcwd()
 
+    def on_buffer_change(self, document):
+        if not hasattr(self, '_terminals') or \
+           not document.directory:
+            # service not started yet
+            # or new document
+            return
+        for term in self._terminals:
+            if term._stick_button.child.get_active() and \
+               term._term.window.is_visible():
+                term.chdir(document.directory)
 
 
 # Required Service attribute for service loading
