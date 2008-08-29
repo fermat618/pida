@@ -23,6 +23,7 @@
 import os, subprocess
 
 import gtk
+import gtk.gdk
 import gobject
 import pango
 
@@ -46,6 +47,15 @@ from pida.ui.buttons import create_mini_button
 from pida.core.locale import Locale
 locale = Locale('commander')
 _ = locale.gettext
+
+
+#RE_ABSOLUTE_UNIX = r'^((?:\/[a-zA-Z0-9]+(?:_[a-zA-Z0-9]+)*(?:\-[a-zA-Z0-9]+)*)+)$'
+#RE_ABSOLUTE_UNIX = r'''((?:\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:[1-9]+)?)'''
+#RE_ABSOLUTE_UNIX = r'((\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:\d+)?)'
+
+RE_MATCHES = (r'((\.\./|[-a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
+              r'((\.\./|[-a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
+             )
 
 def get_default_system_shell():
     return os.environ.get('SHELL', 'bash')
@@ -234,9 +244,13 @@ class TerminalView(PidaView):
         self._hb.show()
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
+        for match in RE_MATCHES:
+            i = self._term.match_add(match)
+            self._term.match_set_cursor_type(i, gtk.gdk.HAND2)
         self._term.parent_view = self
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
+        self._term.connect('button_press_event', self.on_button_pressed)
         self._term.show()
         self._create_scrollbar()
         self._create_bar()
@@ -381,6 +395,22 @@ class TerminalView(PidaView):
                 os.kill(self._pid, 9)
             except OSError:
                 self.svc.log_debug('PID %s has already gone' % self._pid)
+
+    def on_button_pressed(self, term, event):
+        if not event.button in [1,2] or \
+           not event.state & gtk.gdk.CONTROL_MASK:
+            return
+        line = int(event.y/self._term.get_char_height())
+        col = int(event.x/self._term.get_char_width())
+        match = self._term.match_check(col, line)
+        if match:
+            match = match[0]
+            if match.find(":") != -1:
+                file_name, line = match.rsplit(":", 1)
+                self.svc.boss.cmd('buffer', 'open_file', file_name=file_name,
+                                     line=int(line))
+            else:
+                self.svc.boss.cmd('buffer', 'open_file', file_name=match)
 
     def on_selection_changed(self, term):
         self._copy_button.set_sensitive(self._term.get_has_selection())

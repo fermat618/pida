@@ -238,10 +238,10 @@ class BufferEventsConfig(EventsConfig):
 
 class BufferCommandsConfig(CommandsConfig):
 
-    def open_file(self, file_name=None, document=None):
+    def open_file(self, file_name=None, document=None, line=None):
         if not file_name and not document:
             return
-        self.svc.open_file(file_name, document)
+        self.svc.open_file(file_name, document, line=line)
         
     def open_files(self, files):
         self.svc.open_files(files)
@@ -303,7 +303,7 @@ class Buffer(Service):
             self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
 
-    def open_file(self, file_name = None, document = None):
+    def open_file(self, file_name = None, document = None, line=None):
         if not document:
             document = self._get_document_for_filename(file_name)
         if document is None:
@@ -311,7 +311,7 @@ class Buffer(Service):
                 return False
             document = Document(self.boss, file_name)
             self._add_document(document)
-        self.view_document(document)
+        self.view_document(document, line=line)
 
     def open_files(self, files):
         if not files:
@@ -353,12 +353,14 @@ class Buffer(Service):
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
-    def view_document(self, document):
+    def view_document(self, document, line=None):
         if document is not None and self._current != document:
             self._current = document
             self._view.set_document(document)
             self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
+        if line is not None:
+            self.boss.editor.goto_line(line)
         self.get_action('close').set_sensitive(document is not None)
 
     def file_saved(self):
