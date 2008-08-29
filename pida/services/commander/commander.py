@@ -53,8 +53,8 @@ _ = locale.gettext
 #RE_ABSOLUTE_UNIX = r'''((?:\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:[1-9]+)?)'''
 #RE_ABSOLUTE_UNIX = r'((\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:\d+)?)'
 
-RE_MATCHES = (r'((\.\./|[-a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
-              r'((\.\./|[-a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
+RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
+              r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
              )
 
 def get_default_system_shell():
@@ -404,13 +404,23 @@ class TerminalView(PidaView):
         col = int(event.x/self._term.get_char_width())
         match = self._term.match_check(col, line)
         if match:
-            match = match[0]
+            match = os.path.expanduser(match[0])
             if match.find(":") != -1:
+                
                 file_name, line = match.rsplit(":", 1)
-                self.svc.boss.cmd('buffer', 'open_file', file_name=file_name,
-                                     line=int(line))
+                if os.path.isfile(file_name):
+                    self.svc.boss.cmd('buffer', 'open_file', file_name=file_name,
+                                         line=int(line))
+                else:
+                    self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
+                    self.svc.boss.cmd('filemanager', 'present_view')
+                    
             else:
-                self.svc.boss.cmd('buffer', 'open_file', file_name=match)
+                if os.path.isfile(match):
+                    self.svc.boss.cmd('buffer', 'open_file', file_name=match)
+                else:
+                    self.svc.boss.cmd('filemanager', 'browse', new_path=match)
+                    self.svc.boss.cmd('filemanager', 'present_view')
 
     def on_selection_changed(self, term):
         self._copy_button.set_sensitive(self._term.get_has_selection())
