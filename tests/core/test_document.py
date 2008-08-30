@@ -2,6 +2,7 @@
 import os
 import os
 from pida.core.document import Document as document_class
+from pida.core.document import DocumentException
 #from pida.core.testing import test, assert_equal, assert_notequal
 
 from pida.utils.testing.mock import Mock
@@ -116,3 +117,14 @@ class DocumentTest(TestCase):
     def test_unicode_knows(self):
         doc = document(filename='test')
         self.assertEqual(unicode(doc), doc.filename)
+
+    def test_exception_add(self):
+        de1 = DocumentException(files=('/tmp/1',), documents=('doc1',))
+        de2 = DocumentException(files=('/tmp/2',), documents=('doc2',))
+        dc = de1 + de2
+        self.assertEqual(dc.files, ('/tmp/1', '/tmp/2',))
+        self.assertEqual(dc.documents, ('doc1', 'doc2',))
+        de1 += de2
+        self.assertEqual(de1.files, ('/tmp/1', '/tmp/2',))
+        self.assertEqual(de1.documents, ('doc1', 'doc2',))
+        

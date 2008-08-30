@@ -37,7 +37,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.ui.views import PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
-from pida.core.document import Document
+from pida.core.document import Document, DocumentException
 
 # locale
 from pida.core.locale import Locale
@@ -322,7 +322,20 @@ class Buffer(Service):
             document = Document(self.boss, file_name)
             self._add_document(document)
             docs.append(document)
-        self.boss.editor.cmd('open_list', documents=docs)
+        try:
+            self.boss.editor.cmd('open_list', documents=docs)
+        except DocumentException, e:
+            self._recover_loading_error(e)
+
+    def _recover_loading_error(self, err):
+        # recover from a loading exception
+        self.log('error loading file(s): %s' %err.message)
+        for doc in err.documents:
+            self._remove_document(doc)
+        # switch to the first doc to make sure editor gets consistent
+        if self._documents:
+            self.view_document(self._documents[self._documents.keys()[0]])
+        #self.log.exception(err)
 
     def close_current(self):
         document = self._current
@@ -357,7 +370,12 @@ class Buffer(Service):
         if document is not None and self._current != document:
             self._current = document
             self._view.set_document(document)
-            self.boss.editor.cmd('open', document=document)
+            try:
+                self.boss.editor.cmd('open', document=document)
+            except DocumentException, e:
+                # document can't be loaded. we have to remove the document from 
+                # the system
+                self._recover_loading_error(e)
             self.emit('document-changed', document=document)
         if line is not None:
             self.boss.editor.goto_line(line)
