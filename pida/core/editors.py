@@ -26,6 +26,7 @@ import gobject
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
+from pida.core.document import DocumentException
 
 # locale
 from pida.core.locale import Locale
@@ -185,7 +186,10 @@ class EditorService(Service):
         if not docs:
             # return fales to be not called anymore
             return False
-        self.open(docs.pop())
+        try:
+            self.open(docs.pop())
+        except DocumentException, err:
+            self.log.exception(err)
         return True
     
     def open_list(self, documents):
