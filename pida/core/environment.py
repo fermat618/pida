@@ -60,8 +60,10 @@ op.add_option('-T', '--trace', action='store_true',
     help=_('Run PIDA with tracing.'))
 op.add_option('-F', '--firstrun', action='store_true',
     help=_('Run the PIDA first run wizard.'))
+op.add_option('-S', '--safe_mode', action='store_true',
+    help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
 op.add_option('-P', '--profile', dest="profile_path",
-    help=_('Run the PIDA first run wizard.'))
+    help=_('Generate profile data on path.'))
 
 opts, args = op.parse_args(sys.argv)
 env = dict(os.environ)
@@ -77,5 +79,8 @@ def is_trace():
 
 def is_firstrun():
     return not os.path.exists(firstrun_filename) or opts.firstrun
+
+def is_safe_mode():
+    return opts.safe_mode
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

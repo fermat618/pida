@@ -52,6 +52,7 @@ class SessionsOptionsConfig(OptionsConfig):
             list,
             [],
             _('The list of open files'),
+            safe=False
             )
 
     gladefile = 'sessions-properties'

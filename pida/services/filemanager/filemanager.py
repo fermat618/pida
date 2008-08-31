@@ -635,7 +635,8 @@ class FileManagerOptionsConfig(OptionsConfig):
                 _('Last browsed Path'),
                 str,
                 path.expanduser('~'),
-                _('The last browsed path'))
+                _('The last browsed path'),
+                safe=False)
         
         self.create_option(
                 'hide_regex',
