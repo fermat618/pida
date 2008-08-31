@@ -77,6 +77,7 @@ class ManView(PidaView):
                        use_markup=True),
                ])
         self.__list.connect('double-click', self._on_man_double_click)
+        self.__list.connect('row-activated', self._on_man_key_pressed)
         self.__list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__hbox.pack_start(self.__entry)
         self.__hbox.pack_start(self.__check, expand=False)
@@ -93,7 +94,7 @@ class ManView(PidaView):
         self._count += 1
         self.__list.append(item)
 
-    def _on_man_double_click(self, olist, item):
+    def open(self, item):
         commandargs = ['/usr/bin/env', 'man', item.number, item.pattern]
         directory = os.path.dirname(commandargs[0])
         self.svc.boss.cmd('commander', 'execute',
@@ -104,6 +105,11 @@ class ManView(PidaView):
                     pattern=item.pattern,
                     number=int(item.number)
                 ))
+    
+    def _on_man_double_click(self, olist, item):
+        self.open(item)
+    def _on_man_key_pressed(self, olist, item):
+        self.open(item)
 
     def cb_entry_changed(self, w):
         options = '-f'
