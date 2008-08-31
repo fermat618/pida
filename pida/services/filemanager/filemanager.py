@@ -50,6 +50,7 @@ from pida.utils.path import homedir
 from pida.ui.views import PidaView
 from pida.ui.objectlist import AttrSortCombo
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
+from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
 from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
 
 import filehiddencheck
@@ -94,7 +95,6 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         )
 
 def check_or_home(path):
-    print "check_or_home"
     if not os.path.isdir(path):
         get_logger('pida.svc.filemanager').info(_("Can't open directory: %s") %path)
         return homedir
@@ -209,15 +209,15 @@ class FilemanagerView(PidaView):
         self._vbox.pack_start(self._toolbar, expand=False)
         self._toolbar.show_all()
 
-    def add_or_update_file(self, name, basepath, state):
+    def add_or_update_file(self, name, basepath, state, select=False):
         if basepath != self.path:
             return
         entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
         entry.state = state
 
-        self.show_or_hide(entry)
+        self.show_or_hide(entry, select=select)
 
-    def show_or_hide(self, entry):
+    def show_or_hide(self, entry, select=False):
         from operator import and_
         def check(checker):
             if (checker.identifier in self._file_hidden_check_actions) and \
@@ -239,12 +239,14 @@ class FilemanagerView(PidaView):
             else:
                 self.file_list.append(entry)
                 entry.visible = True
+            if select:
+                self.file_list.select(entry)
         else:
             if entry.visible:
                 self.file_list.remove(entry)
                 entry.visible = False
 
-    def update_to_path(self, new_path=None):
+    def update_to_path(self, new_path=None, select=None):
         if new_path is None:
             new_path = self.path
         else:
@@ -273,7 +275,11 @@ class FilemanagerView(PidaView):
                     state = 'unknown'
                 yield filename, basepath, state
 
-        GeneratorTask(work, self.add_or_update_file).start(self.path)
+        # wrap add_or_update_file to set select accordingly
+        def _add_or_update_file(name, basepath, state):
+            self.add_or_update_file(name, basepath, state, select=(name==select))
+
+        GeneratorTask(work, _add_or_update_file).start(self.path)
 
         self.create_ancest_tree()
 
@@ -289,12 +295,12 @@ class FilemanagerView(PidaView):
         for lister in self.svc.features['file_lister']:
             GeneratorTask(lister, _update_file).start(self.path)
 
-    def update_single_file(self, name, basepath):
+    def update_single_file(self, name, basepath, select=False):
         if basepath != self.path:
             return
         if name not in self.entries:
             self.entries[name] = FileEntry(name, basepath, self)
-            self.show_or_hide(self.entries[name])
+            self.show_or_hide(self.entries[name], select=select)
 
     def update_removed_file(self, filename):
         entry = self.entries.pop(filename, None)
@@ -315,6 +321,15 @@ class FilemanagerView(PidaView):
         else:
             return False
 
+    def create_dir(self):
+        opts = DialogOptions().add('name', label=_("Directory name"), value="")
+        create_gtk_dialog(opts, parent=self.svc.boss.window).run()
+        if opts.name:
+            npath = os.path.join(self.path, opts.name)
+            if not os.path.exists(npath):
+                os.mkdir(npath)
+            self.update_single_file(opts.name, self.path, select=True)
+             
     def on_file_activated(self, rowitem, fileentry):
         if os.path.exists(fileentry.path):
             if fileentry.is_dir:
@@ -716,6 +731,25 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'toolbar_create_dir',
+            TYPE_NORMAL,
+            _('Create Directory'),
+            _('Create a new directory'),
+            gtk.STOCK_DIRECTORY,
+            self.on_toolbar_create_dir,
+        )
+
+        self.create_action(
+            'toolbar_home',
+            TYPE_NORMAL,
+            _('Home'),
+            _('Browse your home directory'),
+            'user-home',
+            self.on_toolbar_home,
+        )
+
+
+        self.create_action(
             'toolbar_copy',
             TYPE_NORMAL,
             _('Copy File'),
@@ -764,6 +798,7 @@ class FileManagerActionsConfig(ActionsConfig):
         self.svc.cmd('browse', new_path=new_path)
         self.svc.cmd('present_view')
 
+
     def on_browse_for_dir(self, action):
         new_path = action.contexts_kw['dir_name']
         self.svc.cmd('browse', new_path=new_path)
@@ -771,9 +806,15 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_show_filebrowser(self, action):
         self.svc.cmd('present_view')
+    
+    def on_toolbar_create_dir(self, action):
+        self.svc.create_dir()
 
     def on_toolbar_up(self, action):
         self.svc.go_up()
+
+    def on_toolbar_home(self, action):
+        self.svc.cmd('browse', new_path=homedir)
 
     def on_toolbar_terminal(self, action):
         self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
@@ -837,23 +878,27 @@ class Filemanager(Service):
     def get_view(self):
         return self.file_view
    
-    def browse(self, new_path):
-        new_path = check_or_home(path.abspath(new_path))
+    def browse(self, new_path, select=None):
+        new_path = path.abspath(new_path)
 
         if new_path == self.path:
             return
         else:
             self.path = new_path
             self.set_opt('last_browsed', new_path)
-            self.file_view.update_to_path(new_path)
+            self.file_view.update_to_path(new_path, select=select)
         self.emit('browsed_path_changed', path=new_path)
+
+    def create_dir(self):
+        self.file_view.create_dir()
 
 
     def go_up(self):
+        oldname = path.basename(self.path)
         dir = path.dirname(self.path)
         if not dir:
             dir = "/" #XXX: unportable, what about non-unix
-        self.browse(dir)
+        self.browse(dir, select=oldname)
 
     def rename_file(self, old, new, basepath):
         pass
