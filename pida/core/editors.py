@@ -190,6 +190,7 @@ class EditorService(Service):
             self.open(docs.pop())
         except DocumentException, err:
             self.log.exception(err)
+            self.emit('document-exception', error=err)
         return True
     
     def open_list(self, documents):

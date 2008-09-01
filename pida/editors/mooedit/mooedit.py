@@ -410,17 +410,11 @@ class Mooedit(EditorService):
             self.update_actions()
 
     def open_list(self, documents):
-        rv = None
         for doc in documents:
             try:
                 self._load_file(doc)
-            except DocumentException, e:
-                if rv is None:
-                    rv = e
-                else:
-                    rv += e
-        if rv is not None:
-            raise rv
+            except DocumentException, err:
+                self.boss.get_service('editor').emit('document-exception', error=err)
 
     def close(self, document):
         """Close a document"""
@@ -514,8 +508,7 @@ class Mooedit(EditorService):
             return True
         except Exception, err:
             #self.log.exception(err)
-            raise DocumentException(err.message, documents=(document,))
-            return False
+            raise DocumentException(err.message, document=document, orig=err)
 
     def _buffer_status_changed(self, buffer, view):
         status = view.editor.get_status()

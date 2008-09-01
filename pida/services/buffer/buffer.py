@@ -235,6 +235,10 @@ class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed')
+    
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('editor', 'document-exception',
+                                     self.svc.recover_loading_error)
 
 class BufferCommandsConfig(CommandsConfig):
 
@@ -322,16 +326,13 @@ class Buffer(Service):
             document = Document(self.boss, file_name)
             self._add_document(document)
             docs.append(document)
-        try:
-            self.boss.editor.cmd('open_list', documents=docs)
-        except DocumentException, e:
-            self._recover_loading_error(e)
+        self.boss.editor.cmd('open_list', documents=docs)
 
-    def _recover_loading_error(self, err):
+    def recover_loading_error(self, error):
         # recover from a loading exception
-        self.log('error loading file(s): %s' %err.message)
-        for doc in err.documents:
-            self._remove_document(doc)
+        self.log('error loading file(s): %s' %error.message)
+        if error.document:
+            self._remove_document(error.document)
         # switch to the first doc to make sure editor gets consistent
         if self._documents:
             self.view_document(self._documents[self._documents.keys()[0]])

@@ -228,16 +228,7 @@ class Document(object):
 class DocumentException(Exception):
     """Raised when the file can't be loaded by a editor"""
     def __init__(self, *args, **kwargs):
-        self.files = kwargs.pop('files', ())
-        self.documents = kwargs.pop('documents', ())
+        self.document = kwargs.pop('document', None)
+        self.orig = kwargs.pop('orig', None)
         super(DocumentException, self).__init__(*args, **kwargs)
-        
-    def __iadd__(self, other):
-        self.files += other.files
-        self.documents += other.documents
-        return self
-    
-    def __add__(self, other):
-        return self.__class__(files=self.files+other.files,
-                        documents=self.documents+other.documents)
 

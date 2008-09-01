@@ -51,7 +51,7 @@ class EditorOptionsConfig(OptionsConfig):
 class EditorEvents(EventsConfig):
 
     def create(self):
-        self.publish('started')
+        self.publish('started', 'document-exception')
 
 
 # Service class
