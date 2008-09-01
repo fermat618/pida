@@ -118,13 +118,3 @@ class DocumentTest(TestCase):
         doc = document(filename='test')
         self.assertEqual(unicode(doc), doc.filename)
 
-    def test_exception_add(self):
-        de1 = DocumentException(files=('/tmp/1',), documents=('doc1',))
-        de2 = DocumentException(files=('/tmp/2',), documents=('doc2',))
-        dc = de1 + de2
-        self.assertEqual(dc.files, ('/tmp/1', '/tmp/2',))
-        self.assertEqual(dc.documents, ('doc1', 'doc2',))
-        de1 += de2
-        self.assertEqual(de1.files, ('/tmp/1', '/tmp/2',))
-        self.assertEqual(de1.documents, ('doc1', 'doc2',))
-        
