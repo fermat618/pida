@@ -94,7 +94,6 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         )
 
 def check_or_home(path):
-    print "check_or_home"
     if not os.path.isdir(path):
         get_logger('pida.svc.filemanager').info(_("Can't open directory: %s") %path)
         return homedir
