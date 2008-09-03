@@ -13,39 +13,25 @@
 """
 
 import gtk
-import cgi
-import gobject
-import tarfile
-import os
-import base64
-import shutil
-import httplib
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
-from pida import PIDA_VERSION
-from pida.ui.views import PidaGladeView
-from pida.core.commands import CommandsConfig
-from kiwi.ui.objectlist import ObjectList, Column
+from kiwi.ui.objectlist import ObjectList
 
 #from pida.core.service import Service
 #from pida.core.events import EventsConfig
 #from pida.core.options import OptionsConfig
 #from pida.core.actions import ActionsConfig, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
-from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
+#from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pida.core.servicemanager import ServiceLoader
 
 from pida.core.environment import plugins_dir
-
-from pida.utils.web import fetch_url
-from pida.utils.configobj import ConfigObj
-from pida.utils.path import walktree
 
 
 # core
 from pida.core.service import Service
-from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
+#from pida.core.events import EventsConfig
+from pida.core.actions import ActionsConfig, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 
