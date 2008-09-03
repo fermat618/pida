@@ -589,6 +589,12 @@ class Mooedit(EditorService):
         else:
             return False
 
+    def get_content(self, editor):
+        return editor.get_buffer().props.text
+
+    def set_content(self, editor, text):
+        return editor.get_buffer().set_text(text)
+
     def _get_current_word_pos(self):
         # returns the start, endposition of the current word and the text
         buf = self._current.editor.get_buffer()

@@ -154,10 +154,20 @@ class Document(object):
         self._load()
         return self._lines
 
-    @property
-    def content(self):
+    def _get_content(self):
+        if hasattr(self.editor, 'get_content'):
+            return self.boss.editor.get_content(self.editor)
         self._load()
         return self._str
+
+    def _set_content(self, value):
+        if hasattr(self.boss.editor, 'set_content'):
+            return self.boss.editor.set_content(self.editor, value)
+        self._load()
+        return self._str
+        
+        
+    content = property(_get_content, _set_content)
 
     @property
     def directory(self):

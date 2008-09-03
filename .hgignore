@@ -7,3 +7,5 @@ moo/stock-moo.h
 ^docs/.build
 .ropeproject
 .*\.swp
+.*\.pyc
+tmp
