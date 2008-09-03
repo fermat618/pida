@@ -64,6 +64,8 @@ op.add_option('-S', '--safe_mode', action='store_true',
     help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
 op.add_option('-P', '--profile', dest="profile_path",
     help=_('Generate profile data on path.'))
+op.add_option('', '--killsettings', action="store_true",
+    help=_('Resets all settings of pida to their default'))
 
 opts, args = op.parse_args(sys.argv)
 env = dict(os.environ)
@@ -82,5 +84,12 @@ def is_firstrun():
 
 def is_safe_mode():
     return opts.safe_mode
+
+if opts.killsettings:
+    opts.firstrun = True
+
+def killsettings():
+    return opts.killsettings
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
