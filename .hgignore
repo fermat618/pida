@@ -1,9 +1,11 @@
 ^build
 moo_stub.so
+moo/.*.o
 moo/moo-pygtk.c
 moo/moomarshals.c
 moo/moomarshals.h
 moo/stock-moo.h
+moo/test
 ^docs/.build
 .ropeproject
 .*\.swp
