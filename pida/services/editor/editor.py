@@ -43,7 +43,7 @@ class EditorOptionsConfig(OptionsConfig):
         self.create_option(
             'editor_type',
             _('Editor Type'),
-            choices(['vim', 'emacs']),
+            choices(['vim', 'emacs', 'mooedit']),
             'vim',
             _('The Editor used'),
         )
@@ -51,7 +51,7 @@ class EditorOptionsConfig(OptionsConfig):
 class EditorEvents(EventsConfig):
 
     def create(self):
-        self.publish('started')
+        self.publish('started', 'document-exception')
 
 
 # Service class

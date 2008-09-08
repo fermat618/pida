@@ -23,6 +23,7 @@
 import os, subprocess
 
 import gtk
+import gtk.gdk
 import gobject
 import pango
 
@@ -46,6 +47,15 @@ from pida.ui.buttons import create_mini_button
 from pida.core.locale import Locale
 locale = Locale('commander')
 _ = locale.gettext
+
+
+#RE_ABSOLUTE_UNIX = r'^((?:\/[a-zA-Z0-9]+(?:_[a-zA-Z0-9]+)*(?:\-[a-zA-Z0-9]+)*)+)$'
+#RE_ABSOLUTE_UNIX = r'''((?:\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:[1-9]+)?)'''
+#RE_ABSOLUTE_UNIX = r'((\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:\d+)?)'
+
+RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
+              r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
+             )
 
 def get_default_system_shell():
     return os.environ.get('SHELL', 'bash')
@@ -216,7 +226,8 @@ class CommanderEvents(EventsConfig):
                                self.svc.set_current_project)
         self.subscribe_foreign('contexts', 'show-menu',
                                self.on_contexts__show_menu)
-
+        self.subscribe_foreign('buffer', 'document-changed',
+                               self.svc.on_buffer_change)
 
     def on_contexts__show_menu(self, menu, context, **kw):
         if (context == 'file-menu'):
@@ -227,14 +238,19 @@ class TerminalView(PidaView):
     icon_name = 'terminal'
 
     def create_ui(self):
+        self._pwd = None
         self._pid = None
         self._hb = gtk.HBox()
         self._hb.show()
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
+        for match in RE_MATCHES:
+            i = self._term.match_add(match)
+            self._term.match_set_cursor_type(i, gtk.gdk.HAND2)
         self._term.parent_view = self
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
+        self._term.connect('button_press_event', self.on_button_pressed)
         self._term.show()
         self._create_scrollbar()
         self._create_bar()
@@ -253,6 +269,10 @@ class TerminalView(PidaView):
 
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
+        self._stick_button = create_mini_button(
+            gtk.STOCK_OPEN, _('Automatic change to the current buffer\'s directory'),
+            None, toggleButton=True)
+        self._bar.pack_start(self._stick_button, expand=False)
         self._copy_button = create_mini_button(
             gtk.STOCK_COPY, _('Copy the selection to the clipboard'),
             self.on_copy_clicked)
@@ -376,6 +396,32 @@ class TerminalView(PidaView):
             except OSError:
                 self.svc.log_debug('PID %s has already gone' % self._pid)
 
+    def on_button_pressed(self, term, event):
+        if not event.button in [1,2] or \
+           not event.state & gtk.gdk.CONTROL_MASK:
+            return
+        line = int(event.y/self._term.get_char_height())
+        col = int(event.x/self._term.get_char_width())
+        match = self._term.match_check(col, line)
+        if match:
+            match = os.path.expanduser(match[0])
+            if match.find(":") != -1:
+                
+                file_name, line = match.rsplit(":", 1)
+                if os.path.isfile(file_name):
+                    self.svc.boss.cmd('buffer', 'open_file', file_name=file_name,
+                                         line=int(line))
+                else:
+                    self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
+                    self.svc.boss.cmd('filemanager', 'present_view')
+                    
+            else:
+                if os.path.isfile(match):
+                    self.svc.boss.cmd('buffer', 'open_file', file_name=match)
+                else:
+                    self.svc.boss.cmd('filemanager', 'browse', new_path=match)
+                    self.svc.boss.cmd('filemanager', 'present_view')
+
     def on_selection_changed(self, term):
         self._copy_button.set_sensitive(self._term.get_has_selection())
 
@@ -419,7 +465,18 @@ class TerminalView(PidaView):
     def on_highlight_url(self, url, *args, **kw):
         return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
                                   url=url)
-        
+    
+    def chdir(self, path):
+        # here we could look at the environment var to find out the real 
+        # directory
+        if self._pwd == path:
+            return
+        # maybe we find a good way to check if the term is currently
+        # in shell mode and maybe there is a better way to change
+        # directories somehow
+        # this is like kate does it
+        self._term.feed_child(u'cd %s\n' %path)
+        self._pwd = path
 
 # Service class
 class Commander(Service):
@@ -471,6 +528,16 @@ class Commander(Service):
         else:
             return os.getcwd()
 
+    def on_buffer_change(self, document):
+        if not hasattr(self, '_terminals') or \
+           not document.directory:
+            # service not started yet
+            # or new document
+            return
+        for term in self._terminals:
+            if term._stick_button.child.get_active() and \
+               term._term.window.is_visible():
+                term.chdir(document.directory)
 
 
 # Required Service attribute for service loading

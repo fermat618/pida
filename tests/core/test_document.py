@@ -2,6 +2,7 @@
 import os
 import os
 from pida.core.document import Document as document_class
+from pida.core.document import DocumentException
 #from pida.core.testing import test, assert_equal, assert_notequal
 
 from pida.utils.testing.mock import Mock
@@ -116,3 +117,4 @@ class DocumentTest(TestCase):
     def test_unicode_knows(self):
         doc = document(filename='test')
         self.assertEqual(unicode(doc), doc.filename)
+

@@ -14,7 +14,7 @@
 
 import gtk
 
-from pida.core.environment import is_firstrun, firstrun_filename
+from pida.core.environment import is_firstrun, firstrun_filename, is_safe_mode
 from pida.core.servicemanager import ServiceManager
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow

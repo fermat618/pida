@@ -1,6 +1,7 @@
 import gconf
 
 from pida.core.base import BaseConfig
+from pida.core.environment import is_safe_mode, killsettings
 from pango import Font
 
 
@@ -9,6 +10,8 @@ class OptionsManager(object):
     def __init__(self, boss=None):
         self._client = gconf.client_get_default()
         self.initialize_gconf()
+        if killsettings():
+            self.unset_directory()
 
     def initialize_gconf(self):
         self.add_directory()
@@ -22,6 +25,9 @@ class OptionsManager(object):
 
     def add_service_directory(self, service):
         self.add_directory(service.get_name())
+        
+    def unset_directory(self, *parts):
+        self._client.recursive_unset('/'.join(['/apps/pida'] + list(parts)), -1)
         
     def register_option(self, option):
         val = self._client.get(option.key)
@@ -120,10 +126,16 @@ class OptionsConfig(BaseConfig):
         for option in self._options.values():
             manager.register_option(option)
 
-    def create_option(self, name, label, type, default, doc, callback=None):
+    def create_option(self, name, label, type, default, doc, callback=None, 
+                      safe=True):
         opt = OptionItem(self.svc.get_name(), name, label, type, default, doc,
                          callback)
         self.add_option(opt)
+        # in safemode we reset all dangerouse variables so pida can start
+        # even if there are some settings + pida bugs that cause problems
+        # default values MUST be safe
+        if not safe and is_safe_mode():
+            self.set_value(name, default)
         return opt
 
     def add_option(self, option):

@@ -237,6 +237,7 @@ class ProjectOptions(OptionsConfig):
             list,
             [],
             _('The current directories in the workspace'),
+            safe=False
         )
 
         self.create_option(
@@ -245,7 +246,8 @@ class ProjectOptions(OptionsConfig):
             file,
             '',
             (_('The last project selected. ') +
-            _('(Do not change this unless you know what you are doing)'))
+            _('(Do not change this unless you know what you are doing)')),
+            safe=False
         )
 
 

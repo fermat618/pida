@@ -51,7 +51,8 @@ class FileWatcherOptions(OptionsConfig):
             bool,
             False,
             _('Whether Gamin wil be enabled'),
-            self.on_enabled_changed
+            self.on_enabled_changed,
+            safe=False
         )
 
     def on_enabled_changed(self, client, id, entry, option):

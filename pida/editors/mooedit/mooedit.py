@@ -32,7 +32,7 @@ from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.environment import pida_home
-
+from pida.core.document import DocumentException
 
 # locale
 from pida.core.locale import Locale
@@ -411,7 +411,10 @@ class Mooedit(EditorService):
 
     def open_list(self, documents):
         for doc in documents:
-            self._load_file(doc)
+            try:
+                self._load_file(doc)
+            except DocumentException, err:
+                self.boss.get_service('editor').emit('document-exception', error=err)
 
     def close(self, document):
         """Close a document"""
@@ -504,8 +507,8 @@ class Mooedit(EditorService):
             self._current = view
             return True
         except Exception, err:
-            self.log.exception(err)
-            return False
+            #self.log.exception(err)
+            raise DocumentException(err.message, document=document, orig=err)
 
     def _buffer_status_changed(self, buffer, view):
         status = view.editor.get_status()

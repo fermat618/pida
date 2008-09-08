@@ -52,6 +52,7 @@ class SessionsOptionsConfig(OptionsConfig):
             list,
             [],
             _('The list of open files'),
+            safe=False
             )
 
     gladefile = 'sessions-properties'
@@ -63,6 +64,7 @@ class SessionsEventsConfig(EventsConfig):
     def subscribe_all_foreign(self):    
         self.subscribe_foreign('buffer', 'document-changed', self.svc.save_session)
         self.subscribe_foreign('editor', 'started', self.svc.load_session)
+        self.subscribe_foreign('editor', 'document-exception', self.svc.on_document_exception)
 
 class Sessions(Service):
     """
@@ -86,6 +88,12 @@ class Sessions(Service):
         """
         if files:
             self.boss.cmd('buffer', 'open_files', files=files)
+    
+    def on_document_exception(self, error):
+        if error.document.filename in self.opt('open_files'):
+            nv = self.opt('open_files')
+            nv.remove(error.document.filename)
+            self.set_opt('open_files', nv)
 
 Service = Sessions
 

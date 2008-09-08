@@ -37,7 +37,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.ui.views import PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
-from pida.core.document import Document
+from pida.core.document import Document, DocumentException
 
 # locale
 from pida.core.locale import Locale
@@ -235,13 +235,17 @@ class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed')
+    
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('editor', 'document-exception',
+                                     self.svc.recover_loading_error)
 
 class BufferCommandsConfig(CommandsConfig):
 
-    def open_file(self, file_name=None, document=None):
+    def open_file(self, file_name=None, document=None, line=None):
         if not file_name and not document:
             return
-        self.svc.open_file(file_name, document)
+        self.svc.open_file(file_name, document, line=line)
         
     def open_files(self, files):
         self.svc.open_files(files)
@@ -303,7 +307,7 @@ class Buffer(Service):
             self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
 
-    def open_file(self, file_name = None, document = None):
+    def open_file(self, file_name = None, document = None, line=None):
         if not document:
             document = self._get_document_for_filename(file_name)
         if document is None:
@@ -311,7 +315,7 @@ class Buffer(Service):
                 return False
             document = Document(self.boss, file_name)
             self._add_document(document)
-        self.view_document(document)
+        self.view_document(document, line=line)
 
     def open_files(self, files):
         if not files:
@@ -323,6 +327,16 @@ class Buffer(Service):
             self._add_document(document)
             docs.append(document)
         self.boss.editor.cmd('open_list', documents=docs)
+
+    def recover_loading_error(self, error):
+        # recover from a loading exception
+        self.log('error loading file(s): %s' %error.message)
+        if error.document:
+            self._remove_document(error.document)
+        # switch to the first doc to make sure editor gets consistent
+        if self._documents:
+            self.view_document(self._documents[self._documents.keys()[0]])
+        #self.log.exception(err)
 
     def close_current(self):
         document = self._current
@@ -353,12 +367,19 @@ class Buffer(Service):
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
-    def view_document(self, document):
+    def view_document(self, document, line=None):
         if document is not None and self._current != document:
             self._current = document
             self._view.set_document(document)
-            self.boss.editor.cmd('open', document=document)
+            try:
+                self.boss.editor.cmd('open', document=document)
+            except DocumentException, e:
+                # document can't be loaded. we have to remove the document from 
+                # the system
+                self._recover_loading_error(e)
             self.emit('document-changed', document=document)
+        if line is not None:
+            self.boss.editor.goto_line(line)
         self.get_action('close').set_sensitive(document is not None)
 
     def file_saved(self):

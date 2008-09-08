@@ -135,9 +135,11 @@ class Document(object):
                 return _(u'Untitled (%d)') %(self.newfile_index)
             return _(u'Untitled')
         else:
-            return self.filename
+            if self.project:
+                return u'%s:%s' %(self.project_name,self.project_relative_path)
+            else:
+                return os.path.basename(self.filename)
         
-
     @property
     def modified_time(self):
         return self.stat[stat.ST_MTIME]
@@ -223,3 +225,12 @@ class Document(object):
     @property
     def is_new(self):
         return self.filename is None
+
+
+class DocumentException(Exception):
+    """Raised when the file can't be loaded by a editor"""
+    def __init__(self, *args, **kwargs):
+        self.document = kwargs.pop('document', None)
+        self.orig = kwargs.pop('orig', None)
+        super(DocumentException, self).__init__(*args, **kwargs)
+
