@@ -392,12 +392,9 @@ class FilemanagerView(PidaView):
         else:
             # project
             if (self.svc.current_project is not None):
-                section = self.svc.current_project.get_section('file_hidden_check')
-                if (section is None):
-                    section = {}
+                section = self.svc.current_project.options.get('file_hidden_check', {})
                 section[check.identifier] = action.get_active()
-                self.svc.current_project.save_section('file_hidden_check',
-                  section)
+                self.svc.current_project.options['file_hidden_check'] = section
         self.update_to_path()
     
     def __file_hidden_check_scope_project_set_active(self, action):
@@ -405,7 +402,7 @@ class FilemanagerView(PidaView):
            scope = project
            relies on action name = identifier of checker"""
         if (self.svc.current_project is not None):
-            section = self.svc.current_project.get_section('file_hidden_check')
+            section = self.svc.current_project.options.get('file_hidden_check')
             action.set_active(
               (section is not None) and
               (action.get_name() in section) and
@@ -542,8 +539,10 @@ class FilemanagerEvents(EventsConfig):
                     kw['dir_name'] != self.svc.get_view().path)
         else:
             self.svc.get_action('delete-file').set_visible(False)
-            self.svc.get_action('delete-dir').set_visible(False)
-            self.svc.get_action('browse-for-file').set_visible(kw['file_name'] is not None)
+            self.svc.get_action('delete-dir').set_visible(False)            
+            self.svc.get_action('browse-for-file').set_visible(
+                (kw.has_key('file_name') and kw['file_name'] is not None) or
+                (kw.has_key('dir_name') and kw['dir_name'] is not None))
 
     def on_contexts__menu_deactivated(self, menu, context, **kw):
         if (kw.has_key('filemanager')):

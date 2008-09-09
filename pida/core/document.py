@@ -135,9 +135,11 @@ class Document(object):
                 return _(u'Untitled (%d)') %(self.newfile_index)
             return _(u'Untitled')
         else:
-            return self.filename
+            if self.project:
+                return u'%s:%s' %(self.project_name,self.project_relative_path)
+            else:
+                return os.path.basename(self.filename)
         
-
     @property
     def modified_time(self):
         return self.stat[stat.ST_MTIME]

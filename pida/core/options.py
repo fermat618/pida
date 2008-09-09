@@ -1,7 +1,7 @@
 import gconf
 
 from pida.core.base import BaseConfig
-from pida.core.environment import is_safe_mode
+from pida.core.environment import is_safe_mode, killsettings
 from pango import Font
 
 
@@ -10,7 +10,8 @@ class OptionsManager(object):
     def __init__(self, boss=None):
         self._client = gconf.client_get_default()
         self.initialize_gconf()
-        self.safe_mode = False
+        if killsettings():
+            self.unset_directory()
 
     def initialize_gconf(self):
         self.add_directory()
@@ -24,6 +25,9 @@ class OptionsManager(object):
 
     def add_service_directory(self, service):
         self.add_directory(service.get_name())
+        
+    def unset_directory(self, *parts):
+        self._client.recursive_unset('/'.join(['/apps/pida'] + list(parts)), -1)
         
     def register_option(self, option):
         val = self._client.get(option.key)
