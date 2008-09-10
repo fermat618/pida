@@ -555,8 +555,10 @@ class Mooedit(EditorService):
         view.editor._label.set_text("*" + s)
 
     def _buffer_renamed(self, buffer, new_name, view):
-        view.editor._label.set_text(new_name)
         view.document.filename = new_name
+        view.editor._label.set_text(unicode(view.document))
+        view._exclam = False
+        view._star = False
 
     def _drag_motion_cb (self, widget, context, x, y, time):
         list = widget.drag_dest_get_target_list()
