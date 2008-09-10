@@ -343,7 +343,10 @@ class Mooedit(EditorService):
             return False
 
     def start(self):
-        self.update_actions(enabled=False)
+        # we only disable the buttons if no document is loaded
+        # session may already have loaded docs
+        if not len(self._documents):
+            self.update_actions(enabled=False)
         self.get_action('mooedit_last_edit').set_sensitive(False)
         return True
 
@@ -523,6 +526,8 @@ class Mooedit(EditorService):
                 view.editor._label.set_text("*" + s)
                 view._star = True
                 self.get_action('undo').set_sensitive(True)
+                self.get_action('save').set_sensitive(True)
+                
         if moo.edit.EDIT_CLEAN & status == moo.edit.EDIT_CLEAN:
             #print "clean"
             pass
@@ -537,6 +542,8 @@ class Mooedit(EditorService):
                     view._star = False
                 view.editor._label.set_text("!" + s)
                 view._exclam = True
+                self.get_action('save').set_sensitive(True)
+                
         if status == 0:
             if view._star or view._exclam:
                 s = view.editor._label.get_text()
@@ -544,6 +551,8 @@ class Mooedit(EditorService):
                 view._exclam = False
                 view._star = False
                 view.editor._label.set_text(s)
+            self.get_action('save').set_sensitive(False)
+                
 
     def _buffer_changed(self, buffer, view):
         self._last_modified = (view, buffer.props.cursor_position)
