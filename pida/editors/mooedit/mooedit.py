@@ -24,6 +24,19 @@
 import os
 import gtk
 
+# UGLY UGLY workarround as suggested by muntyan_
+# this will be changed someday when there will be a correct 
+# api for this.
+from pida.core.environment import pida_home
+MOO_DATA_DIRS=":".join((
+                os.environ.get("XDG_DATA_DIRS", 
+                               "/usr/share/moo:/usr/local/share/moo"),
+                os.path.join(os.path.dirname(__file__), "shared"),
+                os.path.join(pida_home, 'moo')
+                ))
+os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
+
+
 # Moo Imports
 import moo
 
@@ -31,7 +44,6 @@ import moo
 from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
-from pida.core.environment import pida_home
 from pida.core.document import DocumentException
 
 # locale
