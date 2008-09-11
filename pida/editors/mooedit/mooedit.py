@@ -134,7 +134,9 @@ class MooeditEmbed(gtk.Notebook):
         editor = document.editor
         hb = gtk.HBox(spacing=2)
         editor._label = gtk.Label()
-        editor._label.set_text(unicode(document))
+        ns = document.markup_title
+        editor._label.set_markup(ns)
+        editor._label._markup = ns
         b = gtk.Button()
         b.set_border_width(0)
         b.connect("clicked", self._close_cb, document)
@@ -519,11 +521,13 @@ class Mooedit(EditorService):
             if not self._current.editor.can_redo():
                 self.get_action('redo').set_sensitive(False)
             if not view._star:
-                s = view.editor._label.get_text()
+                s = view.editor._label._markup
                 if view._exclam:
                     s = s[1:]
                     view._exclam = False
-                view.editor._label.set_text("*" + s)
+                ns = "*" + s
+                view.editor._label.set_markup(ns)
+                view.editor._label._markup = ns
                 view._star = True
                 self.get_action('undo').set_sensitive(True)
                 self.get_action('save').set_sensitive(True)
@@ -536,21 +540,24 @@ class Mooedit(EditorService):
             pass
         if moo.edit.EDIT_CHANGED_ON_DISK & status == moo.edit.EDIT_CHANGED_ON_DISK:
             if not view._exclam:
-                s = view.editor._label.get_text()
+                s = view.editor._label._markup
                 if view._star:
                     s = s[1:]
                     view._star = False
-                view.editor._label.set_text("!" + s)
+                ns = "!" + s
+                view.editor._label.set_markup(ns)
+                view.editor._label._markup = ns
                 view._exclam = True
                 self.get_action('save').set_sensitive(True)
                 
         if status == 0:
             if view._star or view._exclam:
                 s = view.editor._label.get_text()
-                s = s[1:]
+                ns = s[1:]
                 view._exclam = False
                 view._star = False
-                view.editor._label.set_text(s)
+                view.editor._label._markup = ns
+                view.editor._label.set_markup(ns)
             self.get_action('save').set_sensitive(False)
                 
 
@@ -561,11 +568,15 @@ class Mooedit(EditorService):
 
     def _buffer_modified(self, buffer, view):
         s = view.editor._label.get_text()
-        view.editor._label.set_text("*" + s)
+        ns = "*" + s
+        view.editor._label.set_markup(ns)
+        view.editor._label._markup(ns)
 
     def _buffer_renamed(self, buffer, new_name, view):
         view.document.filename = new_name
-        view.editor._label.set_text(unicode(view.document))
+        ns = view.document.markup_title
+        view.editor._label.set_markup(ns)
+        view.editor._label._markup = ns
         view._exclam = False
         view._star = False
 

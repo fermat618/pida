@@ -20,6 +20,8 @@ import codecs
 from pida.core.log import log
 from pida.utils.descriptors import cached_property
 
+from xml.sax.saxutils import escape
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -35,11 +37,11 @@ class Document(object):
     markup_directory_color = '#0000c0'
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'directory_colour']
-    markup_string = ('<span color="#600060">'
-                     '%(project_name)s</span><tt>:</tt>'
-                     '<span color="%(directory_colour)s">'
-                     '%(project_relative_path)s/</span>'
-                     '<b>%(basename)s</b>')
+    markup_string = (u'<span color="#600060">'
+                     u'%(project_name)s</span><tt>:</tt>'
+                     u'<span color="%(directory_colour)s">'
+                     u'%(project_relative_path)s/</span>'
+                     u'<b>%(basename)s</b>')
 
     def __init__(self, boss, filename=None, project=None):
         self.boss = boss
@@ -125,9 +127,9 @@ class Document(object):
 
     def __repr__(self):
         if self.filename is None:
-            return '<New Document %d (%s)>' %(self.newfile_index, self.unique_id)
+            return u'<New Document %d (%s)>' %(self.newfile_index, self.unique_id)
         else:
-            return '<Document %r (%s)>' %(self.filename, self.unique_id)
+            return u'<Document %r (%s)>' %(self.filename, self.unique_id)
 
     def __unicode__(self):
         if self.filename is None:
@@ -136,9 +138,25 @@ class Document(object):
             return _(u'Untitled')
         else:
             if self.project:
-                return u'%s:%s' %(self.project_name,self.project_relative_path)
+                return u'%s:%s/%s' %(self.project_name,
+                                     self.project_relative_path, self.basename)
             else:
                 return os.path.basename(self.filename)
+        
+    @property
+    def markup_title(self):
+        """Returns a markup version of unicode"""
+        if self.filename is None:
+            if self.newfile_index > 1:
+                return _(u'<b>Untitled (%d)</b>') %(self.newfile_index)
+            return _(u'<b>Untitled</b>')
+        else:
+            if self.project:
+                return u'%s:%s/<b>%s</b>' %(escape(self.project_name),
+                                     escape(self.project_relative_path), 
+                                     escape(self.basename))
+            else:
+                return '<b>%s</b>' %escape(os.path.basename(self.filename))
         
     @property
     def modified_time(self):
@@ -189,17 +207,17 @@ class Document(object):
 
     @property
     def markup(self):
-        prefix = '<b><tt>%s </tt></b>' % self.markup_prefix
-        if self.filename is not None:
+        prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
+        if self.filename is not None and self.project:
             s = self.markup_string % self._build_markup_dict()
         else:
-            s = '<b>%s</b>' % self.__unicode__()
+            s = u'<b>%s</b>' % escape(self.__unicode__())
         return '%s%s' % (prefix, s)
 
     def _build_markup_dict(self):
         markup_dict = {}
         for attr in self.markup_attributes:
-            markup_dict[attr] = getattr(self, attr)
+            markup_dict[attr] = getattr(self, escape(attr))
         return markup_dict
 
     @property
