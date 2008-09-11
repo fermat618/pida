@@ -747,6 +747,15 @@ class FileManagerActionsConfig(ActionsConfig):
             'user-home',
             self.on_toolbar_home,
         )
+        
+        self.create_action(
+            'toolbar_current_file',
+            TYPE_NORMAL,
+            _('Current Directory'),
+            _('Browse directory of current file'),
+            gtk.STOCK_GOTO_FIRST,
+            self.on_toolbar_current_file,
+        )
 
 
         self.create_action(
@@ -815,6 +824,9 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_toolbar_home(self, action):
         self.svc.cmd('browse', new_path=homedir)
+    
+    def on_toolbar_current_file(self, action):
+        self.svc.go_current_file()
 
     def on_toolbar_terminal(self, action):
         self.svc.boss.cmd('commander','execute_shell', cwd=self.svc.path)
@@ -892,6 +904,10 @@ class Filemanager(Service):
     def create_dir(self):
         self.file_view.create_dir()
 
+    def go_current_file(self):
+        cd = self.boss.cmd('buffer', 'get_current')
+        if cd and not cd.is_new:
+            self.browse(cd.directory)
 
     def go_up(self):
         oldname = path.basename(self.path)
