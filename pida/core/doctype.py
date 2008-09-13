@@ -9,7 +9,7 @@
         * 2008 Daniel Poelzleithner
 """
 
-from glob.fnmatch import fnmatch
+from glob import fnmatch
 
 # taken from pygments _mappings.py
 
@@ -125,7 +125,8 @@ class DocType(object):
     """Represents a type of document. Like a python sourcecode file, a xml
     file, etc.
     """
-    __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes', 'parser')
+    __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes', 
+                 'parsers', 'validators')
 
     def __init__(self, internal, human, aliases = None, extensions = None, mimes = None):
         self.internal = internal
@@ -138,7 +139,7 @@ class DocType(object):
         self.validators = []
 
     
-    def _register(self, lst, prio, val)
+    def _register(self, lst, prio, val):
         self.parser.append((prio, val))
         self.parser.sort(key=lambda x: x[0], reverse=True)
     
@@ -157,7 +158,7 @@ class DocType(object):
     def unregister_parser(self, parser):
         self._unregister(self.parsers, parser)
     
-    def register_validator(self, validator, priority = PRIO_DEFAULT)
+    def register_validator(self, validator, priority = PRIO_DEFAULT):
         """
         Register a Validator for this DocType.
         """
@@ -208,7 +209,7 @@ class TypeManager(dict):
         """Returns a list of DocTypes matching for the given filename"""
         rv = []
         for test in self._globs.keys():
-            if fnmatch(filename, test):
+            if fnmatch.fnmatch(filename, test):
                 rv += self._globs[test]
         
         return rv
@@ -218,7 +219,7 @@ class TypeManager(dict):
         best = None
         best_glob = ""
         for test in self._globs.keys():
-            if fnmatch(filename, test):
+            if fnmatch.fnmatch(filename, test):
                 if len(test) > len(best_glob):
                     best_glob = test
                     best_list += self._globs[test]

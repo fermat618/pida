@@ -658,6 +658,18 @@ class Mooedit(EditorService):
         
         buf.delete(buf.get_iter_at_offset(start), 
                    buf.get_iter_at_offset(end))
+                   
+    def replace_line(self, editor, lineno, text):
+        """
+        Replace a line in the editor. lineno is index 0 based.
+        """
+        buf = editor.get_buffer()
+        it1 = buf.get_iter_at_line(lineno)
+        it2 = buf.get_iter_at_line(lineno)
+        it2.forward_to_line_end()
+        buf.delete(it1, it2)
+        buf.insert(it1, text)
+
     
 # Required Service attribute for service loading
 Service = Mooedit

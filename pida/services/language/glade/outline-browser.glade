@@ -2,7 +2,7 @@
 <!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
 <glade-interface>
     <widget class="GtkWindow" id="outline_browser">
-        <property name="visible">True</property>
+        <property name="visible">False</property>
         <child>
             <widget class="GtkVBox" id="main_vbox">
                 <property name="visible">True</property>

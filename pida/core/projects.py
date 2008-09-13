@@ -14,7 +14,7 @@ import os
 from string import Template
 from weakref import proxy
 
-from pida.core.log import log
+from pida.core.log import Log
 from pida.utils.path import get_relative_path
 
 # locale
@@ -23,7 +23,10 @@ locale = Locale('pida')
 _ = locale.gettext
 
 
-class Project(object):
+#FIXME: win32 fixup
+DATA_DIR = ".pida-project"
+
+class Project(Log):
     """
     A PIDA project.
 
@@ -58,6 +61,13 @@ class Project(object):
                 os.path.join(self.source_directory, 'build')
                 )
 
+        # every project has a cache directory, we ensure it exists
+        if not os.path.isdir(self.data_dir):
+            try:
+                os.mkdir(self.data_dir)
+            except OSError, e:
+                self.log.exception(e)
+                
         #XXX: this might need wrappers for reload
         for m in self.__data.values():
             if hasattr(m, 'reload'):
@@ -74,6 +84,10 @@ class Project(object):
     @property
     def markup(self):
         return '<b>%s</b>\n%s' % (self.display_name, self.source_directory)
+
+    @property
+    def data_dir(self):
+        return os.path.join(self.source_directory, DATA_DIR)
 
     @property
     def display_name(self):

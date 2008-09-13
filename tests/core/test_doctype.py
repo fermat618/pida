@@ -25,7 +25,8 @@ class DocumentTest(TestCase):
         self.assertEqual(_DEFMAPPING.keys().sort(), Manager.keys().sort())
         
     def test_manager_lookup(self):
+        pass
         
     
     def test_doctype_parsers(self):
-        
+        pass
