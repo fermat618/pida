@@ -25,7 +25,8 @@ class ServiceDependencyError(ServiceLoadingError):
 
 class ServiceLoader(object):
 
-    def __init__(self, package):
+    def __init__(self, package, test_file='service.pida'):
+        self._test_file = test_file
         self.package = package
         self._path = package.__path__
         self._name = package.__name__
@@ -82,7 +83,7 @@ class ServiceLoader(object):
                 yield name
 
     def _servicefile_path(self, base, name):
-        return os.path.join(base, name, 'service.pida')
+        return os.path.join(base, name, self._test_file)
 
     def _has_servicefile(self, base,  name):
         return os.path.exists(self._servicefile_path(base, name))

@@ -623,6 +623,12 @@ class Mooedit(EditorService):
         else:
             return False
 
+    def get_content(self, editor):
+        return editor.get_buffer().props.text
+
+    def set_content(self, editor, text):
+        return editor.get_buffer().set_text(text)
+
     def _get_current_word_pos(self):
         # returns the start, endposition of the current word and the text
         buf = self._current.editor.get_buffer()
@@ -686,6 +692,18 @@ class Mooedit(EditorService):
         
         buf.delete(buf.get_iter_at_offset(start), 
                    buf.get_iter_at_offset(end))
+                   
+    def replace_line(self, editor, lineno, text):
+        """
+        Replace a line in the editor. lineno is index 0 based.
+        """
+        buf = editor.get_buffer()
+        it1 = buf.get_iter_at_line(lineno)
+        it2 = buf.get_iter_at_line(lineno)
+        it2.forward_to_line_end()
+        buf.delete(it1, it2)
+        buf.insert(it1, text)
+
     
 # Required Service attribute for service loading
 Service = Mooedit
