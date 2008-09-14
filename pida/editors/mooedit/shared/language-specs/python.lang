@@ -447,6 +447,7 @@
           <keyword>opcode</keyword>
           <keyword>optparse</keyword>
           <keyword>os</keyword>
+          <keyword>os.path</keyword>
           <keyword>os2emxpath</keyword>
           <keyword>pdb</keyword>
           <keyword>pickle</keyword>
