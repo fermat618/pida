@@ -15,7 +15,7 @@
 	<style foreground="#CC7833" name="def:keyword"/>
     <style background="#3C3C3C" foreground="#737373" name="line-numbers"/>
 	<style foreground="#A5C261" name="def:number"/>
-	<style foreground="#E6E1DC" name="def:preprocessor"/>
+	<style foreground="#EC77FF" name="def:preprocessor"/>
 	<style background="#FFFF00" name="search-match"/>
 	<style foreground="#CC7833" name="def:statement"/>
 	<style foreground="#A5C261" name="def:string"/>
@@ -30,6 +30,7 @@
         <style name="bracket-match"    foreground="#C40000"/>
         <style name="bracket-mismatch" background="#990000" foreground="#FFFFFF" />
         
-        <style name="bookmark"                    background="#C4DC3B"/>        
+        <style name="bookmark"                    background="#C4DC3B"/>
+        <style name="python:stdlib-module"        foreground="#8D73FF"/>
 </style-scheme>
 
