@@ -84,6 +84,12 @@ def choices(choices):
         options = choices
     return Choices
 
+class Color(str):
+    """
+    Option which is a color in RGB Hex
+    """
+    pass
+
 
 class OptionItem(object):
 

@@ -33,6 +33,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
+from pida.core.pdbus import DbusBase, EXPORT
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaGladeView
@@ -246,7 +247,7 @@ class BufferCommandsConfig(CommandsConfig):
         if not file_name and not document:
             return
         self.svc.open_file(file_name, document, line=line)
-        
+    
     def open_files(self, files):
         self.svc.open_files(files)
 
@@ -267,6 +268,12 @@ class BufferCommandsConfig(CommandsConfig):
     def get_documents(self):
         return self.svc.get_documents()
 
+class BufferDbusConfig(DbusBase):
+    
+    @EXPORT(in_signature='s')
+    def open_file(self, file_name):
+        self.svc.open_file(file_name)
+
 # Service class
 class Buffer(Service):
     """
@@ -277,6 +284,7 @@ class Buffer(Service):
     actions_config = BufferActionsConfig
     events_config = BufferEventsConfig
     features_config = BufferFeaturesConfig
+    dbus_config = BufferDbusConfig
 
     def pre_start(self):
         self._documents = {}

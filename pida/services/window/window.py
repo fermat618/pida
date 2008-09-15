@@ -26,9 +26,10 @@ import gtk
 from pida.core.service import Service
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig
+from pida.core.options import OptionsConfig, Color
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.document import Document
 
 # locale
 from pida.core.locale import Locale
@@ -160,9 +161,31 @@ class WindowOptionsConfig(OptionsConfig):
             _('Whether the main menubar will be shown'),
             self.on_show_ui,
         )
+        
+        self.create_option(
+            'project_color',
+            _('Project color'),
+            Color,
+            '#600060',
+            _('The color projects shall have in PIDA'),
+            self.on_color_change,
+        )
+
+        self.create_option(
+            'directory_color',
+            _('Directory color'),
+            Color,
+            '#0000c0',
+            _('The color directories shall have in PIDA'),
+            self.on_color_change,
+        )
+        
 
     def on_show_ui(self, client, id, entry, option):
         self.svc.get_action(option.name).set_active(option.get_value())
+
+    def on_color_change(self, client, id, entry, option):
+        self.svc.update_colors()
 
 # Service class
 class Window(Service):
@@ -172,6 +195,10 @@ class Window(Service):
     options_config = WindowOptionsConfig
     actions_config = WindowActionsConfig
     events_config = WindowEvents
+    
+    def pre_start(self):
+        super(Window, self).pre_start()
+        self.update_colors()
 
     def start(self):
         # Explicitly add the permanent views
@@ -179,6 +206,12 @@ class Window(Service):
             view = self.boss.cmd(service, 'get_view')
             self.cmd('add_view', paned='Buffer', view=view, removable=False, present=False)
         self._fix_visibilities()
+        self.update_colors()
+        
+    def update_colors(self):
+        # set the colors of Document
+        Document.markup_directory_color = self.opt('directory_color')
+        Document.markup_project_color = self.opt('project_color')
 
     def _fix_visibilities(self):
         for name in ['show_toolbar', 'show_menubar']:

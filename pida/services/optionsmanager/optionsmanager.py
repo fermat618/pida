@@ -196,6 +196,7 @@ class Optionsmanager(Service):
         self._view = PidaOptionsView(self)
 
     def show_options(self):
+        self._view.refresh_ui()
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
 
     def hide_options(self):

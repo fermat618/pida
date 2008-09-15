@@ -35,13 +35,24 @@ class Document(object):
 
     markup_prefix = ''
     markup_directory_color = '#0000c0'
+    markup_project_color = '#600060'
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
-                         'directory_colour']
-    markup_string = (u'<span color="#600060">'
+                         'markup_project_color', 'markup_directory_color', 
+                         'filename', 'directory']
+    markup_string_project = (
+                     u'<span color="%(markup_project_color)s">'
                      u'%(project_name)s</span><tt>:</tt>'
-                     u'<span color="%(directory_colour)s">'
+                     u'<span color="%(markup_directory_color)s">'
                      u'%(project_relative_path)s/</span>'
                      u'<b>%(basename)s</b>')
+
+    markup_string_fullpath = (
+                     u'<span color="%(markup_directory_color)s">'
+                     u'%(directory)s/</span>'
+                     u'<b>%(basename)s</b>')
+
+    markup_string = (u'<b>%(basename)s</b>')
+
 
     def __init__(self, boss, filename=None, project=None):
         self.boss = boss
@@ -205,19 +216,25 @@ class Document(object):
     def unique_id(self):
         return id(self)
 
-    @property
-    def markup(self):
+    def get_markup(self, markup_string=None):
+        if markup_string is None:
+            if self.project:
+                markup_string = self.markup_string_project
+            else:
+                markup_string = self.markup_string
         prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
-        if self.filename is not None and self.project:
-            s = self.markup_string % self._build_markup_dict()
+        if self.filename is not None:
+            s = markup_string % self._build_markup_dict()
         else:
             s = u'<b>%s</b>' % escape(self.__unicode__())
         return '%s%s' % (prefix, s)
 
+    markup = property(get_markup)
+
     def _build_markup_dict(self):
         markup_dict = {}
         for attr in self.markup_attributes:
-            markup_dict[attr] = getattr(self, escape(attr))
+            markup_dict[attr] = escape(getattr(self, attr))
         return markup_dict
 
     @property

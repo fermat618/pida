@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<style-scheme id="fog" name="Fog" version="1.0">
+	<author/>
+	<_description>
+		Fog theme
+	</_description>
+	<style background="#grey80" foreground="#660066" name="text"/>
+	<style foreground="#444499" name="def:comment"/>
+	<style foreground="#7070a0" name="def:constant"/>
+	<style bold="true" foreground="#DarkGreen" name="def:statement"/>
+	<style foreground="#DarkGreen" name="def:identifier"/>
+	<style foreground="#408040" name="def:preprocessor"/>
+	<style foreground="#DarkBlue" name="def:type"/>
+	<style foreground="#Blue" name="def:number"/>
+	<style foreground="#aa8822" name="def:specials"/>
+	<style background="#880088" foreground="#LightGrey" name="cursor"/>
+	<style foreground="#ccaa22" name="line-numbers"/>
+	<style background="#887722" foreground="#Black" name="search-match"/>
+	<style background="#DarkBlue" name="diff:added-line"/>
+	<style background="#DarkMagenta" name="diff:changed-line"/>
+	<style background="#DarkCyan" bold="true" foreground="#Blue" name="diff:removed-line"/>
+</style-scheme>
+

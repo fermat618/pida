@@ -28,11 +28,12 @@ import gtk
 # this will be changed someday when there will be a correct 
 # api for this.
 from pida.core.environment import pida_home
+
 MOO_DATA_DIRS=":".join((
+                os.path.join(pida_home, 'moo'),
+                os.path.join(os.path.dirname(__file__), "shared"),
                 os.environ.get("XDG_DATA_DIRS", 
                                "/usr/share/moo:/usr/local/share/moo"),
-                os.path.join(os.path.dirname(__file__), "shared"),
-                os.path.join(pida_home, 'moo')
                 ))
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
 
@@ -45,6 +46,7 @@ from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.document import DocumentException
+from pida.core.options import OptionsConfig, choices
 
 # locale
 from pida.core.locale import Locale
@@ -69,6 +71,19 @@ class MooeditMain(PidaView):
         print "\n\ngrab_input_focus\n\n"
         self.svc.grab_focus()
         pass
+
+class MooeditOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'display_type',
+            _('Display notebook title'),
+            choices({'filename':_('Filename'), 'fullpath':_('Full path'), 
+                     'project_or_filename':_('Project relative path or filename')}),
+            'project_or_filename',
+            _('Text to display in the Notebook'),
+        )
+
 
 
 class MooeditPreferences(PidaView):
@@ -146,7 +161,7 @@ class MooeditEmbed(gtk.Notebook):
         editor = document.editor
         hb = gtk.HBox(spacing=2)
         editor._label = gtk.Label()
-        ns = document.markup_title
+        ns = self._mooedit.svc._get_document_title(document)
         editor._label.set_markup(ns)
         editor._label._markup = ns
         b = gtk.Button()
@@ -321,7 +336,7 @@ class Mooedit(EditorService):
        Let's you enjoy all the GUI love from mooedit with all the superb IDE
        features PIDA has to offer. Use with caution, may lead to addiction.
     """
-
+    options_config = MooeditOptionsConfig
     actions_config = MooeditActionsConfig
     
     def pre_start(self):
@@ -431,6 +446,7 @@ class Mooedit(EditorService):
             try:
                 self._load_file(doc)
             except DocumentException, err:
+                self.log.exception(err)
                 self.boss.get_service('editor').emit('document-exception', error=err)
 
     def close(self, document):
@@ -490,7 +506,9 @@ class Mooedit(EditorService):
         if self._last_modified:
             view, count = self._last_modified
             self.open(view.document)
-            view.editor.get_buffer().place_cursor(view.editor.get_buffer().get_iter_at_offset(count))
+            itr = view.editor.get_buffer().get_iter_at_offset(count)
+            view.editor.get_buffer().place_cursor(itr)
+            view.editor.scroll_to_iter(itr, 0.05, use_align=True)
 
     def set_path(self, path):
         pass
@@ -586,11 +604,19 @@ class Mooedit(EditorService):
 
     def _buffer_renamed(self, buffer, new_name, view):
         view.document.filename = new_name
-        ns = view.document.markup_title
+        ns = self._get_document_title(view.document)
         view.editor._label.set_markup(ns)
         view.editor._label._markup = ns
         view._exclam = False
         view._star = False
+
+    def _get_document_title(self, document):
+        dsp = self.opt('display_type')
+        if dsp == 'filename':
+            return document.get_markup(document.markup_string)
+        elif dsp == 'fullpath':
+            return document.get_markup(document.markup_string_fullpath)
+        return document.markup
 
     def _drag_motion_cb (self, widget, context, x, y, time):
         list = widget.drag_dest_get_target_list()
