@@ -18,6 +18,8 @@ from kiwi.utils import gsignal
 
 from kiwi.ui.objectlist import ObjectList, Column
 
+from pida.core.options import Color
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -110,12 +112,12 @@ class ProxyStringList(gtk.VBox):
         return [ProxyStringListItem(v) for v in value]
 
 
-def get_widget_for_type(type):
-    if type is bool:
+def get_widget_for_type(typ):
+    if typ is bool:
         return ProxyCheckButton()
-    elif type is list:
+    elif typ is list:
         return ProxyStringList()
-    elif type is file:
+    elif typ is file:
         w = ProxyFileChooserButton(_('Select File'))
         w.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
         return w
@@ -128,17 +130,22 @@ def get_widget_for_type(type):
     #    w = ProxyFileChooserButton(title='Select Directory')
     #    w.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
     #    return w
-    elif type is pango.Font:
+    elif typ is Color:
+        return CleverProxyColorButton()
+    elif typ is pango.Font:
         return ProxyFontButton()
     #elif type is types.color:
-    #    return CleverProxyColorButton()
-    elif type is int:
+    #    
+    elif typ is int:
         w = ProxySpinButton()
         w.set_adjustment(gtk.Adjustment(0, 0, 10000, 1))
         return w
-    elif issubclass(type, str) and type is not str:
+    elif issubclass(typ, str) and typ is not str:
         w = ProxyComboBox()
-        w.prefill([(v, v) for v in type.options])
+        if type(typ.options) is dict:
+            w.prefill([(l, v) for (v, l) in typ.options.iteritems()])
+        else:
+            w.prefill([(v, v) for v in typ.options])
         return w
         
     #elif type.__name__ is 'intrange':

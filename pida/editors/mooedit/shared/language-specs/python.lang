@@ -46,7 +46,7 @@
     <style id="builtin-constant"  _name="Builtin Constant"      map-to="def:special-constant"/>
     <style id="builtin-object"    _name="Builtin Object"        map-to="def:type"/>
     <style id="builtin-function"  _name="Builtin Function"      map-to="def:builtin"/>
-    <style id="stdlib-module"     _name="Stdlib module"         map-to="python:stdlib-module"/>
+    <style id="stdlib-module"     _name="Stdlib module"/>
   </styles>
 
   <definitions>
