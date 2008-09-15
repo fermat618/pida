@@ -36,6 +36,7 @@ class Service(object):
     commands_config = CommandsConfig
     features_config = FeaturesConfig
     actions_config = ActionsConfig
+    dbus_config = None
 
     def __init__(self, boss):
         self.boss = boss
@@ -52,6 +53,10 @@ class Service(object):
         self.commands = self.commands_config(self)
         self.features = self.features_config(self)
         self.actions = self.actions_config(self)
+        if self.dbus_config:
+            self.dbus = self.dbus_config(self)
+        else:
+            self.dbus = None
 
     def subscribe_all(self):
         self.events.subscribe_all_foreign()
