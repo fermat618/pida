@@ -8,7 +8,7 @@
         2007-2008 Ali Afshar
         2008      Ronny Pfannschmidt
 """
-import os
+import os, uuid
 
 # PIDA Imports
 from pida.core.environment import get_data_path
@@ -16,18 +16,21 @@ from pida.core.environment import get_data_path
 from pida.ui.views import PidaView
 
 from .embed import VimEmbedWidget
-from .com import VimCom
+#from .com import VimCom
+
+from .client import VimCom
 
 from pida.core.editors import EditorService, _
 
+UID = 'PIDA_EMBEDDED_%s' % uuid.uuid4().get_hex()
 
 class VimView(PidaView):
 
     def create_ui(self):
-        self._vim = VimEmbedWidget('gvim', self.svc.script_path)
+        self._vim = VimEmbedWidget('gvim', self.svc.script_path, UID)
         self.add_main_widget(self._vim)
 
-    def  run(self):
+    def run(self):
         return self._vim.run()
 
     def get_server_name(self):
@@ -42,21 +45,46 @@ class VimCallback(object):
     def __init__(self, svc):
         self.svc = svc
 
-    def vim_new_serverlist(self, servers):
-        if self.svc.server in servers:
-            self.svc.init_vim_server()
+    def vim_VimEnter(self):
+        self.svc._emit_editor_started()
 
-    def vim_bufferchange(self, server, cwd, file_name, bufnum):
-        if server == self.svc.server:
-            if file_name:
-                if os.path.abspath(file_name) != file_name:
-                    file_name = os.path.join(cwd, file_name)
-                if os.path.isdir(file_name):
-                    self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
-                    self.svc.boss.cmd('filemanager', 'present_view')
-                    self.svc.open_last()
-                else:
-                    self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
+    def vim_BufEnter(self):
+        fn = self.svc._com.get_current_buffer()
+        cwd = self.svc._com.get_cwd()
+        path = os.path.join(cwd, fn)
+        print path
+        self.svc.boss.cmd('buffer', 'open_file', file_name=path)
+
+    def vim_BufDelete(self, file_name):
+        if file_name == '':
+            return
+        self.svc.remove_file(file_name)
+        self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
+
+    def vim_VimLeave(self):
+        pass
+
+    def vim_BufWritePost(self):
+        pass
+
+    def vim_CursorMoved(self):
+        pass
+
+    #def vim_new_serverlist(self, servers):
+    #    if self.svc.server in servers:
+    #        self.svc.init_vim_server()
+
+    #def vim_bufferchange(self, server, cwd, file_name, bufnum):
+    #    if server == self.svc.server:
+    #        if file_name:
+    #            if os.path.abspath(file_name) != file_name:
+    #                file_name = os.path.join(cwd, file_name)
+    #            if os.path.isdir(file_name):
+    #                self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
+    #                self.svc.boss.cmd('filemanager', 'present_view')
+    #                self.svc.open_last()
+    #            else:
+    #                self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
 
     def vim_bufferunload(self, server, file_name):
         if server == self.svc.server:
@@ -99,7 +127,7 @@ class Vim(EditorService):
     ##### Vim Things
 
     def _create_initscript(self):
-        self.script_path = get_data_path('pida_vim_init.vim')
+        self.script_path = get_data_path('pida.vim')
 
     def init_vim_server(self):
         if self.started == False:
@@ -119,16 +147,16 @@ class Vim(EditorService):
         """Start the editor"""
         self.started = False
         self._create_initscript()
-        self._cb = VimCallback(self)
-        self._com = VimCom(self._cb)
         self._view = VimView(self)
         self.boss.window.add_view(paned='Editor', view=self._view)
+        success = self._view.run()
+        self._cb = VimCallback(self)
+        self._com = VimCom(self._cb, UID)
         self._documents = {}
         self._current = None
         self._sign_index = 0
         self._signs = {}
         self._current_line = 1
-        success = self._view.run()
         if not success:
             err = _( 'There was a problem running the "gvim" '
                      'executable. This is usually because it is not '
@@ -143,16 +171,17 @@ class Vim(EditorService):
         if document is not self._current:
             if document.unique_id in self._documents:
                 fn = document.filename
-                self._com.change_buffer(self.server, fn)
-                self._com.foreground(self.server)
+                self._com.open_buffer(fn)
+                #self._com.foreground(self.server)
             else:
-                self._com.open_file(self.server, document.filename)
+                self._com.open_file(document.filename)
                 self._documents[document.unique_id] = document
             self._current = document
 
 
-    def open_many(documents):
+    def open_many(self, documents):
         """Open a few documents"""
+        pass
 
     def open_last(self):
         self._com.change_buffer(self.server, '#')
@@ -160,7 +189,7 @@ class Vim(EditorService):
     def close(self, document):
         if document.unique_id in self._documents:
             self._remove_document(document)
-            self._com.close_buffer(self.server, document.filename)
+            self._com.close_buffer(document.filename)
         return True
 
     def remove_file(self, file_name):
@@ -181,10 +210,11 @@ class Vim(EditorService):
 
     def save(self):
         """Save the current document"""
-        self._com.save(self.server)
+        self._com.save_current_buffer()
 
-    def save_as(filename):
+    def save_as(self, filename):
         """Save the current document as another filename"""
+        self._com.save_as_current_buffer(filename)
 
     def revert():
         """Revert to the loaded version of the file"""
@@ -196,21 +226,21 @@ class Vim(EditorService):
 
     def cut(self):
         """Cut to the clipboard"""
-        self._com.cut(self.server)
+        self._com.cut()
 
     def copy(self):
         """Copy to the clipboard"""
-        self._com.copy(self.server)
+        self._com.copy()
 
     def paste(self):
         """Paste from the clipboard"""
-        self._com.paste(self.server)
+        self._com.paste()
 
     def undo(self):
-        self._com.undo(self.server)
+        self._com.undo()
 
     def redo(self):
-        self._com.redo(self.server)
+        self._com.redo()
 
     def grab_focus(self):
         """Grab the focus"""
@@ -263,7 +293,7 @@ class Vim(EditorService):
         return self._com.set_path(self.server, path)
 
     def stop(self):
-        self._com.quit(self.server)
+        self._com.quit()
 # Required Service attribute for service loading
 Service = Vim
 
