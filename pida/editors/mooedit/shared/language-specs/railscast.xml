@@ -5,7 +5,7 @@
 		Railscasts theme
 	</_description>
 	<style background="#2B2B2B" foreground="#E6E1DC" name="text"/>
-	<style background="#FFFFFF" foreground="#000000" name="cursor"/>
+	<style background="#000000" foreground="#FFFFFF" name="cursor"/>
     <style background="#333333" name="current-line"/>
 	<style foreground="#BC9458" italic="true" name="def:comment"/>
 	<style foreground="#6D9CBE" name="def:constant"/>
