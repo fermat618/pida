@@ -56,16 +56,12 @@ class VimEmbedWidget(gtk.EventBox):
         return False
 
     def run(self):
-        print 'running'
 
         xid = self._create_ui()
 
-        print 'xid', xid
         if not xid:
             return
-        print 'xid', self.pid
         if not self.pid:
-            print 'runn'
             try:
                 env = os.environ.copy()
                 env['PIDA_DBUS_UID'] = self.server_name
@@ -80,7 +76,6 @@ class VimEmbedWidget(gtk.EventBox):
                     env=env
                 )
                 self.pid = popen.pid
-                print popen
             except OSError:
                 raise
                 return False
