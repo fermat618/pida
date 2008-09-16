@@ -26,16 +26,16 @@
 
 
 import gtk
-import os
+import os, uuid
 
 
 import subprocess
 
 class VimEmbedWidget(gtk.EventBox):
 
-    def __init__(self, command, script_path, args=[]):
+    def __init__(self, command, script_path, uid, args=[]):
         gtk.EventBox.__init__(self)
-        self.server_name = 'PIDA_EMBEDDED_%s' % os.getpid()
+        self.server_name = uid
         self._command = command
         self._init_script = script_path
         self.pid = None
@@ -56,22 +56,33 @@ class VimEmbedWidget(gtk.EventBox):
         return False
 
     def run(self):
+        print 'running'
+
         xid = self._create_ui()
+
+        print 'xid', xid
         if not xid:
             return
+        print 'xid', self.pid
         if not self.pid:
+            print 'runn'
             try:
+                env = os.environ.copy()
+                env['PIDA_DBUS_UID'] = self.server_name
                 popen = subprocess.Popen(
                     [self._command,
                     '--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '-c', 'so %s' % self._init_script,
+                    '--cmd', 'so %s' % self._init_script,
                     '--socketid', str(xid),
                     ] + self.args,
-                    close_fds=True
+                    close_fds=True,
+                    env=env
                 )
                 self.pid = popen.pid
+                print popen
             except OSError:
+                raise
                 return False
         self.show_all()
         return True
