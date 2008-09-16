@@ -38,8 +38,6 @@ def clean_signal_args(args):
         if arg is None:
             args[i] = ''
     return args
-    
-
 
 class VimDBUSService(Object):
 
@@ -123,11 +121,11 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, out_signature='s')
     def get_current_buffer(self):
-        return vim.current.buffer.name
+        return vim.current.buffer.name or ''
 
     @method(DBUS_NS)
     def quit(self):
-        gobject.idle_add(lambda: vim.command('q!'))
+        vim.command('q!')
 
     @method(DBUS_NS)
     def get_current_line(self):
@@ -209,6 +207,10 @@ class VimDBUSService(Object):
     @method(DBUS_NS, in_signature='si')
     def set_font(self, name, size):
         vim.command('set guifont=%s\\ %s' % (name, size))
+
+    @method(DBUS_NS, in_signature='s')
+    def cd(self, path):
+        vim.command('cd %s' % path)
 
     # Signals
 

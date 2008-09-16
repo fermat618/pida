@@ -69,6 +69,7 @@ class Boss(object):
             # This causes pida-quit to be called on our Emacs and causes
             # a clean shutdown.
             self._sm.stop()
+            gtk.main_quit()
         else:
             return True
 
