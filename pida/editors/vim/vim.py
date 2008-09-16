@@ -217,7 +217,7 @@ class Vim(EditorService):
 
     def goto_line(self, line):
         """Goto a line"""
-        self._com.goto_line(self.server, line)
+        self._com.goto_line(line)
         self.grab_focus()
 
     def cut(self):

@@ -152,6 +152,11 @@ class VimDBUSService(Object):
     def append_at_lineend(DBUS_NS, text):
         vim.command("normal A%s" % text)
 
+    @method(DBUS_NS, in_signature='i')
+    def goto_line(self, linenumber):
+        vim.command('%s' % linenumber)
+        vim.command('normal zzzv')
+
     @method(DBUS_NS, out_signature='s')
     def get_current_word(self):
         return vim.eval('expand("<cword>")')
