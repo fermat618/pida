@@ -27,7 +27,7 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
 from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
-from pida.core.pdbus import DbusBase, EXPORT
+from pida.core.pdbus import DbusConfig, EXPORT
 
 # locale
 from pida.core.locale import Locale
@@ -267,7 +267,7 @@ class ProjectCommandsConfig(CommandsConfig):
     def get_project_for_document(self, document):
         return self.svc.get_project_for_document(document)
 
-class ProjectDbusConfig(DbusBase):
+class ProjectDbusConfig(DbusConfig):
     
     @EXPORT(in_signature='s')
     def add_directory(self, project_directory):

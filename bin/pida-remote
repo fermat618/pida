@@ -2,7 +2,7 @@
 
 import os, sys
 
-from pida.core.pdbus import BUS_NAME, DBUS_NS, DBUS_PATH_PREFIX, \
+from pida.utils.pdbus import BUS_NAME, DBUS_NS, DBUS_PATH_PREFIX, \
                             list_pida_instances, PidaRemote
 import dbus
 import dbus.service
@@ -33,10 +33,6 @@ def spawn():
 if len(lst) == 0:
     spawn()
     
-elif len(lst) == 1:
-    # only one instance exists. attach file to running one
-
-    sys.exit(0)
 else:
     from pida.ui.window import SessionWindow
     import gtk

@@ -33,7 +33,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.pdbus import DbusBase, EXPORT
+from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaGladeView
@@ -268,7 +268,7 @@ class BufferCommandsConfig(CommandsConfig):
     def get_documents(self):
         return self.svc.get_documents()
 
-class BufferDbusConfig(DbusBase):
+class BufferDbusConfig(DbusConfig):
     
     @EXPORT(in_signature='s')
     def open_file(self, file_name):
