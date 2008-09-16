@@ -11,7 +11,7 @@
         * 2007-2008 Ronny Pfannschmidt
 """
 
-
+import os
 import gtk
 
 from pida.core.environment import is_firstrun, firstrun_filename, is_safe_mode
@@ -20,7 +20,7 @@ from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
 
-from pida.utils.firstrun import FirstTimeWindow
+from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT
 
 # locale
 from pida.core.locale import Locale
@@ -28,16 +28,28 @@ locale = Locale('pida')
 _ = locale.gettext
 
 
+class BossDbus(DbusConfig):
+    
+    @EXPORT(out_signature="i")
+    def get_pid(self):
+        return os.getpid()
+    
+    @EXPORT(in_signature="b")
+    def kill(self, force=False):
+        self.svc.stop(force)
+
 class Boss(object):
 
     def __init__(self):
         self.show_splash()
+        self.dbus = BossDbus(self)
         self._sm = ServiceManager(self)
         self._run_first_time()
         self.window = PidaWindow(self)
 
     def _run_first_time(self):
         if is_firstrun():
+            from pida.utils.firstrun import FirstTimeWindow
             ft = FirstTimeWindow(self._sm.get_available_editors())
             success, editor = ft.run(firstrun_filename)
             self.override_editor = editor
@@ -113,4 +125,6 @@ class Boss(object):
     def hide_splash(self):
         self._splash.hide_splash()
 
+    def get_label(self):
+        return "boss"
 
