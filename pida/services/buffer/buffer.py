@@ -274,6 +274,18 @@ class BufferDbusConfig(DbusBase):
     def open_file(self, file_name):
         self.svc.open_file(file_name)
 
+    @EXPORT(in_signature='as')
+    def open_file(self, files):
+        self.svc.open_files(files)
+        
+    @EXPORT(in_signature='s')
+    def close_file(self, file_name):
+        self.svc.close_file(file_name)
+        
+    @EXPORT(out_signature='i')
+    def get_open_documents_count(self):
+        return len(self.svc._documents)
+
 # Service class
 class Buffer(Service):
     """

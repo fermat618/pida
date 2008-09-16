@@ -27,6 +27,7 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
 from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
+from pida.core.pdbus import DbusBase, EXPORT
 
 # locale
 from pida.core.locale import Locale
@@ -266,6 +267,24 @@ class ProjectCommandsConfig(CommandsConfig):
     def get_project_for_document(self, document):
         return self.svc.get_project_for_document(document)
 
+class ProjectDbusConfig(DbusBase):
+    
+    @EXPORT(in_signature='s')
+    def add_directory(self, project_directory):
+        self.svc.add_directory(project_directory)
+        
+    @EXPORT(out_signature='s')
+    def get_current_project_name(self):
+        if self.svc._current:
+            return self.svc._current.name
+        return None
+        
+    @EXPORT(out_signature='s')
+    def get_current_project_source_directory(self):
+        if self.svc._current:
+            return self.svc._current.source_directory
+        return None
+        
 
 # Service class
 class ProjectService(Service):
@@ -276,6 +295,7 @@ class ProjectService(Service):
     events_config = ProjectEventsConfig
     actions_config = ProjectActionsConfig
     options_config = ProjectOptions
+    dbus_config = ProjectDbusConfig
 
     def pre_start(self):
         self._projects = []

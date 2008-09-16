@@ -67,9 +67,18 @@ op.add_option('-P', '--profile', dest="profile_path",
 op.add_option('', '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
 
-opts, args = op.parse_args(sys.argv)
+
+opts, args = op.parse_args([])
+
 env = dict(os.environ)
 
+def parse_args(argv):
+    global opts, args
+    opts, args = op.parse_args(argv)
+
+    if opts.killsettings:
+        opts.firstrun = True
+ 
 def is_version():
     return opts.version
 
@@ -84,9 +93,6 @@ def is_firstrun():
 
 def is_safe_mode():
     return opts.safe_mode
-
-if opts.killsettings:
-    opts.firstrun = True
 
 def killsettings():
     return opts.killsettings

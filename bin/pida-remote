@@ -2,21 +2,50 @@
 
 import os, sys
 
-from pida.utils.grpc import LocalClientDispatcher
-from pida.utils.testing import refresh_gui
+from pida.core.pdbus import BUS_NAME, DBUS_NS, DBUS_PATH_PREFIX, \
+                            list_pida_instances, PidaRemote
+import dbus
+import dbus.service
+import re
 
-class PidaClientDispatcher(LocalClientDispatcher):
+session = dbus.SessionBus()
 
-    def remote_ok(self, command):
-        sys.exit(0)
+# check if pida is running
+lst = list_pida_instances()
 
-def main():
-    dispatcher = PidaClientDispatcher(9124)
-    file_name = os.path.abspath(sys.argv[-1])
-    dispatcher.call_server('open', (file_name,))
-    refresh_gui()
-    print 'Error: PIDA was not available'
-    sys.exit(1)
+file_name = os.path.abspath(sys.argv[-1])
 
-if __name__ == '__main__':
-    main()
+def call_open(pid):
+    pr = PidaRemote(pid)
+    pr.call_async('buffer', 'open_file', file_name)
+    sys.exit(0)
+    
+# FIXME: this is ugly. there should be a function in the core to spawn
+# a new process
+def spawn():
+    import subprocess
+    nargs = ['python', sys.argv[0].replace('-remote',''),] + sys.argv[1:]
+
+    subprocess.Popen(nargs, env=os.environ.copy()).pid
+    sys.exit(0)
+
+
+if len(lst) == 0:
+    spawn()
+    
+elif len(lst) == 1:
+    # only one instance exists. attach file to running one
+
+    sys.exit(0)
+else:
+    from pida.ui.window import SessionWindow
+    import gtk
+    #from kiwi.ui.delegates import GladeSlaveDelegate
+    
+    command = (('buffer', 'open_file', file_name), {})
+    
+    view = SessionWindow(fire_command=command, spawn_new=spawn)
+    view.show_all()
+    gtk.main()
+    sys.exit(0)
+

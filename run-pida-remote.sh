@@ -1,1 +1,1 @@
-PYTHONPATH='.' python bin/pida-remote
+PYTHONPATH='.' python bin/pida-remote $@
