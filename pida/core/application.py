@@ -108,6 +108,9 @@ def set_trace():
     sys.settrace(traceit)
 
 def main():
+    import pida.core.environment
+    pida.core.environment.parse_args(sys.argv)
+    
     if not opts.debug:
         warnings.filterwarnings("ignore")
 
@@ -144,6 +147,5 @@ def main():
         signal.signal(signal.SIGALRM, force_quit)
         signal.alarm(3)
         sys.exit(exit_val)
-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

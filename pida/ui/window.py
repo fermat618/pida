@@ -1,6 +1,7 @@
 import gtk
 
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
+from kiwi.ui.views import BaseView
 
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
@@ -115,7 +116,7 @@ class PidaWindow(Window):
 
     def remove_action_group(self, actiongroup):
         self._uim.remove_action_group(actiongroup)
-        
+
     def remove_uidef(self, ui_merge_id):
         if ui_merge_id is not None:
             self._uim.remove_ui(ui_merge_id)
@@ -164,3 +165,69 @@ class PidaWindow(Window):
         else:
             self._statusbar.hide_all()
 
+from kiwi.ui.delegates import GladeDelegate
+class SessionWindow(BaseView):
+    gladefile = 'session_select'
+
+    def __init__(self, sessions=None, fire_command=None, spawn_new=None):
+
+        self.sessions = sessions
+        self._fire_command = fire_command
+        self._spawn_new = spawn_new
+
+        BaseView.__init__(self) #, delete_handler=quit_if_last)
+        sigs = {
+            'on_new_session_clicked': self.on_new_session_clicked,
+            'on_use_session_clicked': self.on_use_session_clicked,
+            'gtk_main_quit': self.on_quit,
+            'on_session_view_row_activated': self.on_session_view_row_activated,
+        }
+        self._glade_adaptor.signal_autoconnect(sigs)
+        self.session_list = gtk.ListStore(str, str, str, int)
+        self.session_view.set_model(self.session_list)
+        cell = gtk.CellRendererText()
+        cell.set_property('xalign', 1.0)
+        self.session_view.append_column(gtk.TreeViewColumn('PID', cell, text=1))
+        self.session_view.append_column(gtk.TreeViewColumn('Project', cell, text=2))
+        self.session_view.append_column(gtk.TreeViewColumn('Open documents', cell, text=3))
+        #tvc.set_min_width(titles[n][1])
+
+        self.update_sessions()
+        #self.add_proxy(self.model, self.widgets)
+
+    def update_sessions(self):
+        from pida.utils.pdbus import list_pida_instances, PidaRemote
+
+        if not self.sessions:
+            self.sessions = list_pida_instances()
+
+        self.session_list.clear()
+        for s in self.sessions:
+            pr = PidaRemote(s)
+            name = pr.call('boss', 'get_pid')
+            project = pr.call('project', 'get_current_project_name')
+            count = pr.call('buffer', 'get_open_documents_count')
+            self.session_list.append((s, name, project, count))
+
+    def on_session_view_row_activated(self, widget, num, col):
+        if not self._fire_command:
+            return
+
+        from pida.utils.pdbus import PidaRemote
+
+        row = self.session_list[num]
+        pr = PidaRemote(row[0])
+        pr.call(*self._fire_command[0], **self._fire_command[1])
+
+        self.on_quit()
+
+    def on_new_session_clicked(self, widget):
+        if callable(self._spawn_new):
+            self._spawn_new()
+
+    def on_use_session_clicked(self, widget):
+        num = self.session_view.get_selection().get_selected_rows()[1][0][0]
+        self.on_session_view_row_activated(widget, num, None)
+
+    def on_quit(self, *args):
+        gtk.main_quit()

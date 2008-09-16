@@ -1,6 +1,5 @@
 
 import os
-import os
 from pida.core.document import Document as document_class
 from pida.core.document import DocumentException
 #from pida.core.testing import test, assert_equal, assert_notequal
