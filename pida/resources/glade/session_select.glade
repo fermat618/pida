@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Sep 16 07:34:49 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Sep 16 23:02:42 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="session_select">
     <property name="width_request">360</property>
@@ -10,6 +10,7 @@
     <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
     <property name="has_separator">False</property>
     <signal name="close" handler="gtk_main_quit"/>
+    <signal name="delete_event" handler="on_window_delete_event"/>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>

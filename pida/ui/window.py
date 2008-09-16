@@ -177,6 +177,7 @@ class SessionWindow(BaseView):
 
         BaseView.__init__(self) #, delete_handler=quit_if_last)
         sigs = {
+            'on_window_delete_event': self.on_quit,
             'on_new_session_clicked': self.on_new_session_clicked,
             'on_use_session_clicked': self.on_use_session_clicked,
             'gtk_main_quit': self.on_quit,
