@@ -9,3 +9,4 @@ moo/test
 ^docs/.build
 .ropeproject
 .*\.swp
+^.*\.pyc$
