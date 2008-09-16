@@ -150,7 +150,7 @@ class Vim(EditorService):
         self.boss.window.add_view(paned='Editor', view=self._view)
         success = self._view.run()
         self._cb = VimCallback(self)
-        self._com = VimCom(self._cb, UID)
+        self._com = VimCom(self._cb, os.environ['PIDA_DBUS_UUID'])
         self._documents = {}
         self._current = None
         self._sign_index = 0

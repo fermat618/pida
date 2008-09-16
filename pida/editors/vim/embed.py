@@ -26,7 +26,7 @@
 
 
 import gtk
-import os, uuid
+import os
 
 
 import subprocess
@@ -63,8 +63,6 @@ class VimEmbedWidget(gtk.EventBox):
             return
         if not self.pid:
             try:
-                env = os.environ.copy()
-                env['PIDA_DBUS_UID'] = self.server_name
                 popen = subprocess.Popen(
                     [self._command,
                     '--servername', self.server_name,
@@ -73,7 +71,6 @@ class VimEmbedWidget(gtk.EventBox):
                     '--socketid', str(xid),
                     ] + self.args,
                     close_fds=True,
-                    env=env
                 )
                 self.pid = popen.pid
             except OSError:

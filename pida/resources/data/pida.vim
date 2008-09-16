@@ -13,7 +13,12 @@ python << endpython
 Vim Integration for PIDA
 """
 
+# Do this before we even breath
+
+import os, sys
 import vim
+
+#sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
 
 import gtk, gobject
 
@@ -21,16 +26,16 @@ import dbus
 import dbus.service
 
 from dbus import SessionBus
-from dbus.mainloop.glib import DBusGMainLoop
 
 from dbus.service import Object, method, signal, BusName
 
+from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-DBUS_NS = 'uk.co.pida.vim'
+from pida.utils.pdbus import PidaRemote
 
-def create_path(uid):
-    return '/uk/co/pida/vim/%s' % uid
+
+DBUS_NS = 'uk.co.pida.vim'
 
 def clean_signal_args(args):
     args = list(args)
@@ -42,9 +47,9 @@ def clean_signal_args(args):
 class VimDBUSService(Object):
 
     def __init__(self, uid):
-        bus_name = BusName(DBUS_NS, bus=SessionBus())
+        bus_name = BusName('.'.join([DBUS_NS, uid]), bus=SessionBus())
         self.dbus_uid = uid
-        self.dbus_path = create_path(uid)
+        self.dbus_path = '/vim'
         dbus.service.Object.__init__(self, bus_name, self.dbus_path)
 
     # Basic interface
@@ -243,8 +248,11 @@ class VimDBUSService(Object):
     def CursorMoved(self):
         pass
 
-print vim.eval('$PIDA_DBUS_UID')
-service = VimDBUSService(vim.eval('$PIDA_DBUS_UID'))
+uid = vim.eval('$PIDA_DBUS_UUID')
+
+
+service = VimDBUSService(uid)
+client = PidaRemote(uid)
 
 endpython
 

@@ -13,15 +13,15 @@ mainloop = DBusGMainLoop(set_as_default=True)
 
 DBUS_NS = 'uk.co.pida.vim'
 
-def get_object_path(uid):
-    return '/uk/co/pida/vim/%s' % uid
+def get_bus_name(uid):
+    return '.'.join([DBUS_NS, uid])
 
 def get_vim(uid):
     session = dbus.SessionBus()
     proxy = None
     while proxy is None:
         try:
-            proxy = session.get_object(DBUS_NS, get_object_path(uid))
+            proxy = session.get_object(get_bus_name(uid), '/vim')
         except dbus.DBusException:
             proxy = None
             time.sleep(0.2)
