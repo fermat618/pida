@@ -52,7 +52,6 @@ class VimCallback(object):
         fn = self.svc._com.get_current_buffer()
         cwd = self.svc._com.get_cwd()
         path = os.path.join(cwd, fn)
-        print path
         self.svc.boss.cmd('buffer', 'open_file', file_name=path)
 
     def vim_BufDelete(self, file_name):
@@ -62,7 +61,7 @@ class VimCallback(object):
         self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
     def vim_VimLeave(self):
-        pass
+        print 'quitting vim'
 
     def vim_BufWritePost(self):
         pass
@@ -129,18 +128,18 @@ class Vim(EditorService):
     def _create_initscript(self):
         self.script_path = get_data_path('pida.vim')
 
-    def init_vim_server(self):
-        if self.started == False:
-            self._com.stop_fetching_serverlist()
-            self.started = True
-            self._emit_editor_started()
+    #def init_vim_server(self):
+    #    if self.started == False:
+    #        self._com.stop_fetching_serverlist()
+    #        self.started = True
+    #        self._emit_editor_started()
 
     def _emit_editor_started(self):
         self.boss.get_service('editor').emit('started')
 
-    @property
-    def server(self):
-        return self._view.get_server_name()
+    #@property
+    #def server(self):
+    #    return self._view.get_server_name()
 
 
     def pre_start(self):
@@ -182,9 +181,6 @@ class Vim(EditorService):
     def open_many(self, documents):
         """Open a few documents"""
         pass
-
-    def open_last(self):
-        self._com.change_buffer(self.server, '#')
 
     def close(self, document):
         if document.unique_id in self._documents:
@@ -290,10 +286,12 @@ class Vim(EditorService):
         return self._com.get_selection(self.server, callback)
 
     def set_path(self, path):
-        return self._com.set_path(self.server, path)
+        return self._com.cd(path)
 
     def stop(self):
-        self._com.quit()
+        self._com.quit(reply_handler=lambda *a: None,
+                       error_handler=lambda *a: None)
+        return
 # Required Service attribute for service loading
 Service = Vim
 
