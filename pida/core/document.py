@@ -31,7 +31,18 @@ _ = locale.gettext
 new_file_index = 1
 
 class Document(object):
-    """Represents a file on disk."""
+    """
+    Represents a document.
+    
+    A document can eighter be just a file. Or be opened by the editor component
+    and is then a life document (life is True).
+
+    A document can be accessed like a List object (list of lines). Each line
+    however does have its tailing newline character as it's supposed not
+    to alter data.
+
+    
+    """
 
     markup_prefix = ''
     markup_directory_color = '#0000c0'
@@ -58,6 +69,9 @@ class Document(object):
         self.boss = boss
         self.filename = filename
         self.project = project
+        self.editor = None
+        self._list = []
+        self._str = ""
         self._detect_encoding = DETECTOR_MANAGER
         self.creation_time = time.time()
 
@@ -102,7 +116,7 @@ class Document(object):
             stream.seek(0)
             stream = codecs.EncodedFile(stream, self._encoding)
             self._str = stream.read()
-            self._lines = self._str.splitlines()
+            self._lines = self._str.splitlines(True)
         except IOError:
             if stream is not None:
                 stream.close()
@@ -125,6 +139,7 @@ class Document(object):
 
     @cached_property
     def mimetype(self):
+        #FIXME: use doctypes
         typ, encoding = mimetypes.guess_type(self.filename)
         if typ is None:
             mimetype = ('', '')
@@ -182,14 +197,62 @@ class Document(object):
 
     @property
     def lines(self):
+        import warnings
+        warnings.warn("Deprecated. Access the document as a list")
         self._load()
         return self._lines
 
     @property
-    def content(self):
+    def life(self):
+        # life indicates that this object has a editor instance which get_content
+        #self.life = False
+        if self.editor and hasattr(self.editor, 'get_content'):
+            return True
+
+        return False
+
+    def get_content(self):
+        if hasattr(self.editor, 'get_content') and self.editor:
+            return self.boss.editor.get_content(self.editor)
         self._load()
         return self._str
 
+    def set_content(self, value, flush=True):
+        if hasattr(self.boss.editor, 'set_content') and self.editor:
+            return self.boss.editor.set_content(self.editor, value)
+
+        self._str = value
+        self._lines = self._str.splitlines(True)
+        
+        if flush:
+            self.flush()
+
+    content = property(get_content, set_content)
+
+    def flush(self):
+        if hasattr(self.editor, 'get_content') and self.editor:
+            value = self.boss.editor.get_content(self.editor)
+        else:
+            value = self._str
+
+        stream = None
+        try:
+            stream = open(self.filename, "wb")
+            stream.write(value)
+            stream.close()
+            # update the _last_mtime var, so the next access
+            # will not cause a file read
+            self._last_mtime = self.modified_time
+        except IOError:
+            if stream is not None:
+                stream.close()
+        
+    def _update_content_from_lines(self):
+        self._str = "".join(self._lines)
+        if hasattr(self.boss.editor, 'set_content') and self.editor:
+            return self.boss.editor.set_content(self.editor, value)
+        self.set_content(self._str, flush=False)
+        
     @property
     def directory(self):
         if self.is_new:
@@ -260,6 +323,33 @@ class Document(object):
     @property
     def is_new(self):
         return self.filename is None
+
+    # emulate a container element. this allows access to a document
+    # as a list of lines
+    def __len__(self):
+        return len(self._list)
+        
+    def __getitem__(self, key):
+        return self._list[key]
+        
+    def __setitem__(self, key, value):
+        self._list[key] = value
+        self._update_content_from_lines()
+
+    def __delitem__(self, key):
+        del self._list[key]
+        self._update_content_from_lines()
+
+    def __iter__(self):
+        return iter(self._list)
+        
+    def append(self, line):
+        self._list.append(line)
+        self._update_content_from_lines()
+        
+    def __nonzero__(self):
+        # documents are always True
+        return True
 
 
 class DocumentException(Exception):
