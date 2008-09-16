@@ -2,6 +2,10 @@
 
 import os, sys
 
+import pida
+
+os.environ['PIDA_PATH'] = os.path.dirname(os.path.abspath(pida.__file__))
+
 from pida.utils.pdbus import BUS_NAME, DBUS_NS, DBUS_PATH_PREFIX, \
                             list_pida_instances, PidaRemote
 import dbus
