@@ -18,12 +18,6 @@ import pida.plugins
 from kiwi.ui.objectlist import Column
 from kiwi.ui.objectlist import ObjectList
 
-#from pida.core.service import Service
-#from pida.core.events import EventsConfig
-#from pida.core.options import OptionsConfig
-#from pida.core.actions import ActionsConfig, TYPE_TOGGLE
-#from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
-from pida.core.servicemanager import ServiceLoader
 
 from pida.core.environment import plugins_dir
 
@@ -32,10 +26,11 @@ from pida.core.doctype import TypeManager
 
 # core
 from pida.core.service import Service
-#from pida.core.events import EventsConfig
+from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
+from pida.core.commands import CommandsConfig
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
@@ -53,7 +48,7 @@ def get_value(tab, key):
 
 
 class ValidatorView(PidaView):
-    
+
     icon_name = 'python-icon'
     label_text = _('Language Errors')
 
@@ -113,9 +108,6 @@ class BrowserView(PidaGladeView):
     def create_ui(self):
         self.source_tree.set_columns(
             [
-                #Column('linenumber'),
-                #Column('ctype_markup', use_markup=True),
-                #Column('nodename_markup', use_markup=True),
                 Column('icon_name', use_stock=True),
                 Column('rendered', use_markup=True, expand=True),
                 Column('type_markup', use_markup=True),
@@ -163,8 +155,6 @@ class BrowserView(PidaGladeView):
         self.browser.refresh_view()
 
 
-
-
 class LanguageActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
@@ -197,7 +187,7 @@ class LanguageActionsConfig(ActionsConfig):
         else:
             self.svc.hide_browser()
 
-"""
+
 class LanguageCommandsConfig(CommandsConfig):
 
     # Are either of these commands necessary?
@@ -209,40 +199,43 @@ class LanguageCommandsConfig(CommandsConfig):
     def present_browser_view(self):
         return self.svc.boss.cmd('window', 'present_view',
                                  view=self.svc.get_browser())
-"""
+
 
 class LanguageOptionsConfig(OptionsConfig):
-
-    def create_options(self):
-        self.create_option(
-            'autoload',
-            _('Autoload language support'),
-            bool,
-            True,
-            _('Automaticly load language support on opening files'))
+    pass
+    #def create_options(self):
+    #    self.create_option(
+    #        'autoload',
+    #        _('Autoload language support'),
+    #        bool,
+    #        True,
+    #        _('Automaticly load language support on opening files'))
 
 
 class LanguageFeatures(FeaturesConfig):
 
-    def subscribe_all_foreign(self):
-        #self.subscribe_foreign('buffer', 'document-changed', self.on_document_changed)
-        #self.subscribe_foreign('buffer', 'document-saved', self.on_document_changed)
+    def create(self):
         pass
 
-#    def subscribe_all_foreign(self):
-#        self.subscribe_foreign('buffer', 'document-changed',
-#            self.buffer_changed)
+    def subscribe_all_foreign(self):
+        pass
+
+
+class LanguageEvents(EventsConfig):
+
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('buffer', 'document-changed', self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-saved', self.on_document_changed)
+
+    def create(self):
+        self.publish('plugin_started', 'plugin_stopped')
 
     def on_document_changed(self, document):
-        print "buffer changed", document
         self.svc.on_buffer_changed(document)
 
 
-#class LanguageEvents(EventsConfig):
-#
-#    def create(self):
-#        self.publish('plugin_started', 'plugin_stopped')
-# taken from pygments _mappings.py
+
+#taken from pygments _mappings.py
 
 _DEFMAPPING = {
     'ActionScript': ('ActionScript', ('as', 'actionscript'), ('*.as',), ('application/x-actionscript', 'text/x-actionscript', 'text/actionscript')),
@@ -350,7 +343,7 @@ class Language(Service):
 
     actions_config = LanguageActionsConfig
     options_config = LanguageOptionsConfig
-    #events_config = LanguageEvents
+    events_config = LanguageEvents
     features_config = LanguageFeatures
 
     def pre_start(self):
@@ -359,14 +352,9 @@ class Language(Service):
         self._check = False
         self._check_notify = False
         self._check_event = False
-        self._loader = ServiceLoader(pida.plugins, test_file='language.pida')
         self._view_browser = BrowserView(self)
         self._view_validator = ValidatorView(self)
         self.task = None
-
-    def start(self):
-        self.autoload = self.opt('autoload')
-        #self.update_installed_plugins(start=True)
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -379,13 +367,15 @@ class Language(Service):
 
     def hide_browser(self):
         self.boss.cmd('window', 'remove_view', view=self._view_browser)
-    
+
     def on_buffer_changed(self, document):
-        print document
-        
+        doctypes = self.doctypes.types_by_filename(document.filename)
+        for type in doctypes:
+            print self.features[type.internal]
+
     def start_language(self, name):
         pass
-    
+
     def stop_language(self, name):
         pass
 
@@ -394,7 +384,7 @@ class Language(Service):
         if not action.get_active():
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
-    
+
 
 Service = Language
 

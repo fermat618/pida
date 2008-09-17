@@ -32,11 +32,11 @@ class ValidationError(object):
     type = UNKNOWN
     filename = None
     ineno = None
-    
+
     def __init__(self, filename, lineno):
         self.filename = filename
         self.lineno = lineno
-    
+
     def __str__(self):
         return '%s:%s: %s' % (self.filename, self.lineno, self.message % self.message_args)
 
@@ -45,6 +45,7 @@ class ValidationError(object):
         """Returns a new Message from a python exception"""
         # FIXME
         pass
+
 
 class Validator(object):
 
@@ -61,11 +62,11 @@ class Validator(object):
     def set_current_document(self, document):
         """Sets the current document on the Validator"""
         raise NotImplemented
-        
+
     def refresh_view(self):
         """Refreshes the current document"""
         raise NotImplemented
-        
+
     def check_current(self):
         """Checks the current document for errors"""
         return self.check(self._current)
@@ -79,34 +80,34 @@ class Validator(object):
         
         """
         return []
-        
+
     def set_view_items(self, items):
         self.view.set_items(items)
 
     def get_view(self):
         return self.view
-    
+
     def set_view(self, view):
         self.view = view
 
 
 class Outliner(object):
     """ An abstract interface for class parsers.
-    
+
     A class parser monitors gedit documents and provides a gtk.TreeModel
     that contains the browser tree. Elements in the browser tree are reffered
     to as 'tags'.
-    
+
     There is always only *one* active instance of each parser. They are created
     at startup (in __init__.py).
-    
+
     The best way to implement a new parser is probably to store custom python
     objects in a gtk.treestore or gtk.liststore, and to provide a cellrenderer
     to render them.
     """
-    
+
     #------------------------------------- methods that *have* to be implemented
-    
+
     def __init__(self, document):
         """
         Constructs a new Outliner object for a Document
@@ -114,30 +115,30 @@ class Outliner(object):
         document - pida.core.document.Document object
         """
         pass
-    
-    
+
+
     def parse(self): 
         """ 
         Parse a Document
         """
         pass        
-        
-        
+
+
     def cellrenderer(self, treeviewcolumn, cellrenderertext, treemodel, it):
         """ A cell renderer callback function that controls what the text label
         in the browser tree looks like.
         See gtk.TreeViewColumn.set_cell_data_func for more information. """
         pass
-        
+
     #------------------------------------------- methods that can be implemented
-   
+
     def pixbufrenderer(self, treeviewcolumn, cellrendererpixbuf, treemodel, it):
         """ A cell renderer callback function that controls what the pixmap next
         to the label in the browser tree looks like.
         See gtk.TreeViewColumn.set_cell_data_func for more information. """
         cellrendererpixbuf.set_property("pixbuf",None)
-        
-        
+
+
     def get_tag_position(self, path):
         """ Return the position of a tag in a file. This is used by the browser
         to jump to a symbol's position.
@@ -148,8 +149,8 @@ class Outliner(object):
         path -- a tuple containing the treepath
         """
         pass
-    
-        
+
+
     def get_menu(self, path):
         """ Return a list of gtk.Menu items for the specified tag. 
         Defaults to an empty list
@@ -158,7 +159,7 @@ class Outliner(object):
         """
         return []
 
-    
+
     def current_line_changed(self, line):
         """ Called when the cursor points to a different line in the document.
         Can be used to monitor changes in the document.
@@ -168,8 +169,8 @@ class Outliner(object):
         line -- int
         """
         pass
-  
-        
+
+
     def get_tag_at_line(self, linenumber):
         """ Return a treepath to the tag at the given line number, or None if a
         tag can't be found.
@@ -186,36 +187,36 @@ class Autocompleter(object):
     The Autocompleter class is used to send autocompletion informations
     to PIDA
     """
-    
+
     def __init__(self, document):
         """
         
         """
         self.document = document
-        
-    
+
+
     def parse(self)
         """
         Parse the document.
         """
         pass
-    
+
     def current_line_changed(self, line):
         """ Called when the cursor points to a different line in the document.
         Can be used to monitor changes in the document.
-        
+
         model -- a gtk.TreeModel (previously provided by parse())
         doc -- a gedit document
         line -- int
         """
         pass
-    
+
     def get_model(self):
         """
         Gets a gtk.TreeModel for the document valid on the line.
         """
         pass
-    
+
     def input_event(self, event):
         """
         Keystroke events get passed here.
@@ -223,13 +224,30 @@ class Autocompleter(object):
         types further.
         """
         pass
-    
+
     def cursor_changed(self, line, column, charcount):
         """
         Updates the internal model, most likely the visibilty function's state
         for the current cursor position.
-        
-        
         """
         pass
+
+
+from pida.core.service import Service
+
+
+class LanguageService(Service):
+    """
+    Base class for easily implementing a language service
+    """
+
+    language_name = None
+    autocompleter_factory = None
+    outliner_factory = None
+    validator_factory = None
+
+    def pre_start(self):
+        if self.language_name is None:
+            raise NotImplementedError('Language services must specify a language.')
+
 
