@@ -195,7 +195,7 @@ class Autocompleter(object):
         self.document = document
 
 
-    def parse(self)
+    def parse(self):
         """
         Parse the document.
         """
@@ -234,6 +234,52 @@ class Autocompleter(object):
 
 
 from pida.core.service import Service
+from pida.core.features import FeaturesConfig
+
+
+class BaseDocumentHandler(object):
+
+    def __init__(self, svc):
+        self.svc = svc
+        self.document = None
+
+    def set_document(self, document):
+        self.document = document
+
+
+class Outliner(BaseDocumentHandler):
+
+    def get_outline(self):
+        raise NotImplementedError('Outliner must define get_outline')
+
+class Validator(BaseDocumentHandler):
+
+    def get_validations(self):
+        raise NotImplementedError('Validator must define get_validations')
+
+class Completer(BaseDocumentHandler):
+
+    def get_completions(self, buffer, offset):
+        raise NotImplementedError('Validator must define get_completions')
+
+
+
+class LanguageServiceFeaturesConfig(FeaturesConfig):
+
+    def subscribe_all_foreign(self):
+        if self.svc.outliner_factory is not None:
+            outliner = self.svc.outliner_factory(self.svc)
+            self.subscribe_foreign('language',
+                (self.svc.language_name, 'outliner'), outliner)
+        if self.svc.validator_factory is not None:
+            validator = self.svc.validator_factory(self.svc)
+            self.subscribe_foreign('language',
+                (self.svc.language_name, 'validator'), validator)
+        if self.svc.completer_factory is not None:
+            completer = self.svc.completer_factory(self.svc)
+            self.subscribe_foreign('language',
+                (self.svc.language_name, 'completer'), completer)
+
 
 
 class LanguageService(Service):
@@ -242,9 +288,11 @@ class LanguageService(Service):
     """
 
     language_name = None
-    autocompleter_factory = None
+    completer_factory = None
     outliner_factory = None
     validator_factory = None
+
+    features_config = LanguageServiceFeaturesConfig
 
     def pre_start(self):
         if self.language_name is None:

@@ -47,7 +47,7 @@ class SubscriberConfig(BaseConfig):
         if `name` is not published raise a KeyError
         """
         if not self.strict and (name not in self.published):
-            self.publish([name])
+            self.publish(name)
         self.published[name].add(instance)
 
     def unsubscribe(self, name, instance):

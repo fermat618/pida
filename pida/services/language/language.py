@@ -23,6 +23,8 @@ from pida.core.environment import plugins_dir
 
 from pida.core.doctype import TypeManager
 
+from pida.utils.gthreads import GeneratorTask
+
 
 # core
 from pida.core.service import Service
@@ -52,6 +54,14 @@ class ValidatorView(PidaView):
     icon_name = 'python-icon'
     label_text = _('Language Errors')
 
+    def set_validator(self, validator):
+        self.clear_nodes()
+        task = GeneratorTask(validator.get_validations, self.add_node)
+        task.start()
+
+    def add_node(self, node):
+        self.errors_ol.append(self.decorate_pyflake_message(node))
+
     def create_ui(self):
         self.errors_ol = ObjectList(
             Column('markup', use_markup=True)
@@ -73,13 +83,8 @@ class ValidatorView(PidaView):
         self.sort_combo.show()
         self.add_main_widget(self.sort_combo, expand=False)
 
-    def clear_items(self):
+    def clear_nodes(self):
         self.errors_ol.clear()
-
-    def set_items(self, items):
-        self.clear_items()
-        for item in items:
-            self.errors_ol.append(self.decorate_pyflake_message(item))
 
     def decorate_pyflake_message(self, msg):
         args = [('<b>%s</b>' % arg) for arg in msg.message_args]
@@ -128,6 +133,12 @@ class BrowserView(PidaGladeView):
         self.sort_box.show()
         self.main_vbox.pack_start(self.sort_box, expand=False)
 
+    def set_outliner(self, outliner):
+        self.clear_items()
+        self.options = self.read_options()
+        task = GeneratorTask(outliner.get_outline, self.add_node)
+        task.start()
+
     def clear_items(self):
         self.source_tree.clear()
 
@@ -153,6 +164,13 @@ class BrowserView(PidaGladeView):
 
     def on_show_imports__toggled(self, but):
         self.browser.refresh_view()
+
+    def read_options(self):
+        return {
+            '(m)': self.show_super.get_active(),
+            '(b)': self.show_builtins.get_active(),
+            'imp': self.show_imports.get_active(),
+        }
 
 
 class LanguageActionsConfig(ActionsConfig):
@@ -192,6 +210,9 @@ class LanguageCommandsConfig(CommandsConfig):
 
     # Are either of these commands necessary?
 
+    def get_current_filetype(self):
+        return self.svc.current_type
+
     def present_validator_view(self):
         return self.svc.boss.cmd('window', 'present_view',
                                  view=self.svc.get_validator())
@@ -213,9 +234,6 @@ class LanguageOptionsConfig(OptionsConfig):
 
 
 class LanguageFeatures(FeaturesConfig):
-
-    def create(self):
-        pass
 
     def subscribe_all_foreign(self):
         pass
@@ -345,16 +363,14 @@ class Language(Service):
     options_config = LanguageOptionsConfig
     events_config = LanguageEvents
     features_config = LanguageFeatures
+    commands_config = LanguageCommandsConfig
 
     def pre_start(self):
         self.doctypes = TypeManager()
         self.doctypes._parse_map(_DEFMAPPING)
-        self._check = False
-        self._check_notify = False
-        self._check_event = False
-        self._view_browser = BrowserView(self)
+        self._view_outliner = BrowserView(self)
         self._view_validator = ValidatorView(self)
-        self.task = None
+        self.current_type = None
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -363,21 +379,29 @@ class Language(Service):
         self.boss.cmd('window', 'remove_view', view=self._view_validator)
 
     def show_browser(self):
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_browser)
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_outliner)
 
     def hide_browser(self):
-        self.boss.cmd('window', 'remove_view', view=self._view_browser)
+        self.boss.cmd('window', 'remove_view', view=self._view_outliner)
 
     def on_buffer_changed(self, document):
         doctypes = self.doctypes.types_by_filename(document.filename)
-        for type in doctypes:
-            print self.features[type.internal]
+        if not doctypes:
+            self.current_type = None
+            return
+        type = doctypes[0]
+        self.current_type = doctypes[0]
+        outliners = self.features[(type.internal, 'outliner')]
+        if outliners:
+            outliner = list(outliners)[0]
+            outliner.set_document(document)
+            self._view_outliner.set_outliner(outliner)
 
-    def start_language(self, name):
-        pass
-
-    def stop_language(self, name):
-        pass
+        validators = self.features[(type.internal, 'validator')]
+        if validators:
+            validator = list(validators)[0]
+            validator.set_document(document)
+            self._view_validator.set_validator(validator)
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
