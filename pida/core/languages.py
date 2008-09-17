@@ -179,7 +179,7 @@ class Outliner(object):
         linenumber -- int
         """
         pass
-        
+
 
 class Autocompleter(object):
     """
@@ -232,4 +232,4 @@ class Autocompleter(object):
         
         """
         pass
-        
+
