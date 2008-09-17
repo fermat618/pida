@@ -29,8 +29,9 @@ class SubscriberConfig(BaseConfig):
 
     foreign_name = None
 
-    def __init__(self, service):
+    def __init__(self, service, strict=True):
         self.published = {}
+        self.strict = strict
         self.foreign_subscriptions = []
         BaseConfig.__init__(self, service)
 
@@ -45,6 +46,8 @@ class SubscriberConfig(BaseConfig):
 
         if `name` is not published raise a KeyError
         """
+        if not self.strict and (name not in self.published):
+            self.publish([name])
         self.published[name].add(instance)
 
     def unsubscribe(self, name, instance):
@@ -92,7 +95,13 @@ class SubscriberConfig(BaseConfig):
                     for fservice, fname, i in self.foreign_subscriptions)
 
     def __getitem__(self, key):
-        return self.published[key]
+        try:
+            return self.published[key]
+        except KeyError:
+            if self.strict:
+                raise
+            else:
+                return set()
 
     def __iter__(self):
         return iter(self.published)
