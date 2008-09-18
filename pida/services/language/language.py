@@ -283,10 +283,9 @@ class LanguageDbusConfig(DbusConfig):
 
     @EXPORT(out_signature = 'as', in_signature = 'si')
     def get_completions(self, buffer, offset):
-        print len(buffer), offset
-        print [self.svc.current_completer]
-        if self.svc.current_completer is not None:
-            return self.svc.current_completer.get_completions(buffer, offset)
+        doc = self.svc.boss.cmd('buffer', 'get_current')
+        if doc._lng_completer is not None:
+            return doc._lng_completer.get_completions(buffer, offset)
         else:
             return []
 
@@ -300,7 +299,7 @@ class Language(Service):
     features_config = LanguageFeatures
     commands_config = LanguageCommandsConfig
     dbus_config = LanguageDbusConfig
-    
+
     def pre_start(self):
         self.doctypes = TypeManager()
         import deflang
@@ -308,8 +307,7 @@ class Language(Service):
         self._view_outliner = BrowserView(self)
         self._view_validator = ValidatorView(self)
         self.current_type = None
-        self.current_completer = None
-        
+
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
 
@@ -329,7 +327,7 @@ class Language(Service):
             return
         type = doctypes[0]
         self.current_type = type_ = document.doctype
-        
+
         if not getattr(document, "_lng_outliner", None):
             outliners = self.features[(type_.internal, 'outliner')]
             if outliners:
@@ -349,13 +347,13 @@ class Language(Service):
             self._view_validator.set_validator(document._lng_validator)
 
 
-        completers = self.features[(type.internal, 'completer')]
-        if completers:
-            completer = list(completers)[0]
-            completer.set_document(document)
-            self.current_completer = completer
-        else:
-            self.current_completer = None
+        if not getattr(document, "_lng_completer", None):
+            completers = self.features[(type.internal, 'completer')]
+            if completers:
+                completer = list(completers)[0](document)
+            else:
+                completer = None
+            document._lng_completer = completer
 
 
     def ensure_view_visible(self):
