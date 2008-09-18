@@ -265,11 +265,11 @@ def _position_to_offset(lineno, colno):
         result += len(line) + 1
     return result
 
-def get_completions():
+def get_completions(base):
     b = '\n'.join(vim.current.buffer)
     o = int(vim.eval("s:pida_completion_offset"))
     #o = get_offset()
-    c = client.call('language', 'get_completions', b, o)
+    c = client.call('language', 'get_completions', base, b, o)
     c = [str(i) for i in c]
     vim.command('let s:pida_completions = %r' % c)
 
@@ -338,7 +338,7 @@ silent function! Pida_Complete(findstart, base)
         python find_start()
 	    return s:pida_completion_start
     else
-        python get_completions()
+        python get_completions(vim.eval('a:base'))
         return s:pida_completions
     endif
 endfunction
