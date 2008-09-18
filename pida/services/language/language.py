@@ -390,18 +390,25 @@ class Language(Service):
             self.current_type = None
             return
         type = doctypes[0]
-        self.current_type = doctypes[0]
-        outliners = self.features[(type.internal, 'outliner')]
-        if outliners:
-            outliner = list(outliners)[0]
-            outliner.set_document(document)
-            self._view_outliner.set_outliner(outliner)
+        self.current_type = type_ = document.doctype
+        
+        if not getattr(document, "_lng_outliner", None):
+            outliners = self.features[(type_.internal, 'outliner')]
+            if outliners:
+                outliner = list(outliners)[0](document)
+                document._lng_outliner = outliner
+                self._view_outliner.set_outliner(outliner)
+        else:
+            self._view_outliner.set_outliner(document._lng_outliner)
 
-        validators = self.features[(type.internal, 'validator')]
-        if validators:
-            validator = list(validators)[0]
-            validator.set_document(document)
-            self._view_validator.set_validator(validator)
+        if not getattr(document, "_lng_validator", None):
+            validators = self.features[(type_.internal, 'validator')]
+            if validators:
+                validator = list(validators)[0](document)
+                document._lng_validator = validator
+                self._view_validator.set_validator(validator)
+        else:
+            self._view_validator.set_validator(document._lng_validator)
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')

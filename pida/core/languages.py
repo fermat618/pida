@@ -232,17 +232,19 @@ class Autocompleter(object):
         """
         pass
 
+from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 
 
+
 class BaseDocumentHandler(object):
 
-    def __init__(self, svc):
+    def __init__(self, svc, document=None):
         self.svc = svc
-        self.document = None
-
+        self.set_document(document)
+        
     def set_document(self, document):
         self.document = document
 
@@ -268,15 +270,15 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         if self.svc.outliner_factory is not None:
-            outliner = self.svc.outliner_factory(self.svc)
+            outliner = partial(self.svc.outliner_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'outliner'), outliner)
         if self.svc.validator_factory is not None:
-            validator = self.svc.validator_factory(self.svc)
+            validator = partial(self.svc.validator_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'validator'), validator)
         if self.svc.completer_factory is not None:
-            completer = self.svc.completer_factory(self.svc)
+            completer = partial(self.svc.completer_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'completer'), completer)
 

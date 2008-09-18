@@ -35,7 +35,7 @@ class Document(object):
     Represents a document.
     
     A document can eighter be just a file. Or be opened by the editor component
-    and is then a life document (life is True).
+    and is then a live document (live is True).
 
     A document can be accessed like a List object (list of lines). Each line
     however does have its tailing newline character as it's supposed not
@@ -130,6 +130,27 @@ class Document(object):
             log.warn(_('failed to open file %s'), self.filename)
 
 
+    def _get_doctype(self):
+        #FIXME: need a interface to pull doctype from the editor if 
+        # we are live
+        if hasattr(self, '_doctype'):
+            return self._doctype
+        elif self.boss:
+            lmn = self.boss.get_service('language')
+            if not lmn:
+                return None
+            self._doctype = lmn.doctypes.guess_doctype_for_document(self)
+            
+            return self._doctype
+
+        return None
+
+    def _set_doctype(self, doctype):
+        #FIXME: we need a interface setting the editors language here
+        self._doctype = doctype
+        
+    doctype = property(_get_doctype, _set_doctype)
+
     @property
     def stat(self):
         try:
@@ -203,9 +224,9 @@ class Document(object):
         return self._lines
 
     @property
-    def life(self):
-        # life indicates that this object has a editor instance which get_content
-        #self.life = False
+    def live(self):
+        # live indicates that this object has a editor instance which get_content
+        #self.live = False
         if self.editor and hasattr(self.editor, 'get_content'):
             return True
 

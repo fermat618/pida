@@ -104,6 +104,13 @@ class TypeManager(dict):
                          mimes=vars[3])
             self.add(nd)
 
+    def guess_doctype_for_document(self, document):
+        if not document.is_new:
+            return self.type_by_filename(document.filename)
+        # FIXME: need a setting for default language Type
+        # or detect filetype somehow
+        return None
+
     def types_by_filename(self, filename):
         """Returns a list of DocTypes matching for the given filename"""
         rv = []
@@ -117,6 +124,7 @@ class TypeManager(dict):
         """Tries to find only one, the best guess for the type."""
         best = None
         best_glob = ""
+        best_list = []
         for test in self._globs.keys():
             if fnmatch.fnmatch(filename, test):
                 if len(test) > len(best_glob):
