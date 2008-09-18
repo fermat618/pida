@@ -2,6 +2,7 @@
 " Vim Remote Communication
 " Requires +python PyGTK and Python DBUS
 
+set nocompatible
 
 silent function! VimSignal(name, ...)
     python getattr(service, vim.eval('a:name'))(*clean_signal_args(vim.eval('a:000')))
@@ -254,8 +255,111 @@ uid = vim.eval('$PIDA_DBUS_UUID')
 service = VimDBUSService(uid)
 client = PidaRemote(uid)
 
+def get_offset():
+    result = _position_to_offset(*vim.current.window.cursor)
+    return result
+
+def _position_to_offset(lineno, colno):
+    result = colno
+    for line in vim.current.buffer[:lineno-1]:
+        result += len(line) + 1
+    return result
+
+def get_completions():
+    b = '\n'.join(vim.current.buffer)
+    o = int(vim.eval("s:pida_completion_offset"))
+    #o = get_offset()
+    c = client.call('language', 'get_completions', b, o)
+    c = [str(i) for i in c]
+    vim.command('let s:pida_completions = %r' % c)
+
+def is_keyword_char(c):
+    return c.isalnum() or (c in '_')
+
+def set_start_var(col):
+    vim.command('let s:pida_completion_start = %r' % (col + 1))
+
+def find_start():
+    #o = int(vim.eval("line2byte('.') + col('.') - 2"))
+    o = get_offset()
+    vim.command('let s:pida_completion_offset = %r' % o)
+
+    # we have to find the start of the word to replace
+    # we could use rope, but we want an inclusive thing
+
+    # get the cursor position
+    row, col = vim.current.window.cursor
+
+    # now row is index 1, and column is index 0,
+    # But(!) column can be len(line)
+
+    # current line
+    l = vim.current.buffer[row - 1]
+
+    # we are on the first character of the line
+    if col == 0:
+        set_start_var(col)
+    else:
+        col = col - 1
+        c = l[col]
+        while is_keyword_char(c) and col > 0:
+            col -= 1
+            c = l[col]
+        set_start_var(col)
+
+
+    #vim.command('let s:pida_completion_start = %r' % (col + 1))
+
+
+
+
+
+
+
 endpython
 
+" Completion function
+
+silent function! Find_Start()
+" locate the start of the word
+    let line = getline('.')
+    let start = col('.') - 1
+    while start > 0 && line[start - 1] =~ '\a'
+        let start -= 1
+    endwhile
+    return start
+
+endfunction
+
+
+silent function! Pida_Complete(findstart, base)
+    " locate the start of the word
+    if a:findstart
+        python find_start()
+	    return s:pida_completion_start
+    else
+        python get_completions()
+        return s:pida_completions
+    endif
+endfunction
+set completefunc=Pida_Complete
+
+
+
+function! CleverTab()
+    if pumvisible()
+        return "\<C-N>"
+    endif
+    let col = col('.') - 1
+    if strpart( getline('.'), 0, col('.')-1 ) =~ '^\s*$'
+        return "\<Tab>"
+    elseif getline('.')[col - 1] !~ '\.'
+        return "\<C-N>"
+    else
+        return "\<C-X>\<C-U>"
+    endif
+endfunction
+inoremap <expr> <TAB> CleverTab()
 
 
 " Now the vim events

@@ -116,4 +116,24 @@ class DocumentTest(TestCase):
     def test_unicode_knows(self):
         doc = document(filename='test')
         self.assertEqual(unicode(doc), doc.filename)
+        
+    def test_content_nonlife(self):
+        import tempfile
+        name = tempfile.mkstemp(suffix="pida-test")[1]
+        d = document(filename=name)
+        STR1 = u'i write something'
+        STR2 = u'other text too'
+        d.content = STR1
+        self.assertEqual(d.content, STR1)
+        del d
+        d = document(filename=name)
+        self.assertEqual(d.content, STR1)
+        d.content = STR2
+        self.assertEqual(d.content, STR2)
+        d.content += STR1
+        self.assertEqual(d.content, "%s%s" %(STR2, STR1))
+        del d
+        d = document(filename=name)
+        self.assertEqual(d.content, "%s%s" %(STR2, STR1))
+        os.unlink(name)
 
