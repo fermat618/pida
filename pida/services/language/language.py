@@ -22,6 +22,7 @@ from kiwi.ui.objectlist import ObjectList
 from pida.core.environment import plugins_dir
 
 from pida.core.doctype import TypeManager
+from pida.utils.pdbus import EXPORT
 
 from pida.utils.gthreads import GeneratorTask
 
@@ -33,6 +34,7 @@ from pida.core.actions import ActionsConfig, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
+from pida.core.pdbus import DbusConfig
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
@@ -355,6 +357,17 @@ _DEFMAPPING = {
     'XmlSmarty': ('XML+Smarty', ('xml+smarty',), (), ('application/xml+smarty',))
 }
 
+class LanguageDbusConfig(DbusConfig):
+
+    @EXPORT(out_signature = 'as', in_signature = 'si')
+    def get_completions(self, buffer, offset):
+        print len(buffer), offset
+        print [self.svc.current_completer]
+        if self.svc.current_completer is not None:
+            return self.svc.current_completer.get_completions(buffer, offset)
+        else:
+            return []
+
 
 class Language(Service):
     """ Language manager service """
@@ -364,6 +377,7 @@ class Language(Service):
     events_config = LanguageEvents
     features_config = LanguageFeatures
     commands_config = LanguageCommandsConfig
+    dbus_config = LanguageDbusConfig
 
     def pre_start(self):
         self.doctypes = TypeManager()
@@ -371,6 +385,7 @@ class Language(Service):
         self._view_outliner = BrowserView(self)
         self._view_validator = ValidatorView(self)
         self.current_type = None
+        self.current_completer = None
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -403,11 +418,22 @@ class Language(Service):
             validator.set_document(document)
             self._view_validator.set_validator(validator)
 
+        completers = self.features[(type.internal, 'completer')]
+        if completers:
+            completer = list(completers)[0]
+            completer.set_document(document)
+            self.current_completer = completer
+        else:
+            self.current_completer = None
+
+
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
         if not action.get_active():
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
+
+
 
 
 Service = Language

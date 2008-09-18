@@ -13,7 +13,7 @@ targets(
     debug $ python bin/pida -D
 
     gen.api_doc $ pydoctor -c tools/pida-pydoctor.cfg
-    
+
     tests $ nosetests
 )
 

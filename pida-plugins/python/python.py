@@ -145,11 +145,34 @@ class PythonValidator(Validator):
             yield m
 
 
+class PythonCompleter(Completer):
+
+    def get_completions(self, buffer, offset):
+        mp = ModuleParser(self.document.filename)
+
+        from rope.contrib.codeassist import code_assist, sorted_proposals, \
+        starting_expression, starting_offset
+        #from rope.base.project import Project
+        #p = Project(self.svc.boss.cmd('buffer', 'get_current').directory)
+        co = code_assist(mp.project, buffer, offset)
+        print starting_expression(buffer, offset)
+        print starting_offset(buffer, offset)
+        print [offset]
+        #print co
+        #for comp in co:
+        #    self.svc._com.add_completion(server, comp.name)
+        # do this a few times
+        #self.svc._com.add_completion(server, 'banana')
+        so = sorted_proposals(co)
+        return [c.name for c in so]
+
+
 class Python(LanguageService):
 
     language_name = 'Python'
     outliner_factory = PythonOutliner
     validator_factory = PythonValidator
+    completer_factory = PythonCompleter
 
     features_config = PythonFeaturesConfig
     actions_config = PythonActionsConfig
