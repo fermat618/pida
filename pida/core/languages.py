@@ -232,19 +232,38 @@ class Autocompleter(object):
         """
         pass
 
+from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 
 
+PRIO_PERFECT = 100
+PRIO_VERY_GOOD = 50
+PRIO_GOOD = 10
+PRIO_DEFAULT = 0
+PRIO_LOW = -50
+PRIO_BAD = -100
+
+
 class BaseDocumentHandler(object):
 
-    def __init__(self, svc):
-        self.svc = svc
-        self.document = None
+    priority = PRIO_DEFAULT
 
+    def __init__(self, svc, document=None):
+        self.svc = svc
+        self.set_document(document)
+        
     def set_document(self, document):
         self.document = document
+
+    def __cmp__(self, other):
+        # We do a reverse default ordering. Higher the number lower the item
+        if isinstance(other, BaseDocumentHandler):
+            return -1 * self.priority.__cmp__(other.priority)
+        
+        # what to do, what to do...
+        return -1 * super(BaseDocumentHandler).__cmp__(other)
 
 
 class Outliner(BaseDocumentHandler):
@@ -268,15 +287,15 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         if self.svc.outliner_factory is not None:
-            outliner = self.svc.outliner_factory(self.svc)
+            outliner = partial(self.svc.outliner_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'outliner'), outliner)
         if self.svc.validator_factory is not None:
-            validator = self.svc.validator_factory(self.svc)
+            validator = partial(self.svc.validator_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'validator'), validator)
         if self.svc.completer_factory is not None:
-            completer = self.svc.completer_factory(self.svc)
+            completer = partial(self.svc.completer_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'completer'), completer)
 

@@ -30,7 +30,7 @@ from pida.utils.gthreads import GeneratorTask
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_TOGGLE
+from pida.core.actions import ActionsConfig, TYPE_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
@@ -178,6 +178,24 @@ class BrowserView(PidaGladeView):
 class LanguageActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
+            'language_type',
+            TYPE_MENUTOOL,
+            _('_Type'),
+            _('Select Document Type'),
+            'package_utilities',
+            self.on_type_change,
+        )
+
+        self.create_action(
+            'language_type_menu',
+            TYPE_NORMAL,
+            _('_Type'),
+            _('Select document type'),
+            gtk.STOCK_EXECUTE,
+            self.on_type_menu,
+        )
+
+        self.create_action(
             'show_validator',
             TYPE_TOGGLE,
             _('Validator'),
@@ -194,6 +212,14 @@ class LanguageActionsConfig(ActionsConfig):
             'info',
             self.on_show_browser,
         )
+
+    def on_type_change(self, action):
+        pass
+
+    def on_type_menu(self, action):
+        menuitem = action.get_proxies()[0]
+        menuitem.remove_submenu()
+        menuitem.set_submenu(self.svc.create_menu())
 
     def on_show_validator(self, action):
         if action.get_active():
@@ -253,110 +279,6 @@ class LanguageEvents(EventsConfig):
     def on_document_changed(self, document):
         self.svc.on_buffer_changed(document)
 
-
-
-#taken from pygments _mappings.py
-
-_DEFMAPPING = {
-    'ActionScript': ('ActionScript', ('as', 'actionscript'), ('*.as',), ('application/x-actionscript', 'text/x-actionscript', 'text/actionscript')),
-    'ApacheConf': ('ApacheConf', ('apacheconf', 'aconf', 'apache'), ('.htaccess', 'apache.conf', 'apache2.conf'), ('text/x-apacheconf',)),
-    'BBCode': ('BBCode', ('bbcode',), (), ('text/x-bbcode',)),
-    'Bash': ('Bash', ('bash', 'sh'), ('*.sh',), ('application/x-sh', 'application/x-shellscript')),
-    'Batch': ('Batchfile', ('bat',), ('*.bat', '*.cmd'), ('application/x-dos-batch',)),
-    'Befunge': ('Befunge', ('befunge',), ('*.befunge',), ('application/x-befunge',)),
-    'Boo': ('Boo', ('boo',), ('*.boo',), ('text/x-boo',)),
-    'Brainfuck': ('Brainfuck', ('brainfuck', 'bf'), ('*.bf', '*.b'), ('application/x-brainfuck',)),
-    'C': ('C', ('c',), ('*.c', '*.h'), ('text/x-chdr', 'text/x-csrc')),
-    'CObjdump': ('c-objdump', ('c-objdump',), ('*.c-objdump',), ('text/x-c-objdump',)),
-    'CSharp': ('C#', ('csharp', 'c#'), ('*.cs',), ('text/x-csharp',)),
-    'CommonLisp': ('Common Lisp', ('common-lisp', 'cl'), ('*.cl', '*.lisp', '*.el'), ('text/x-common-lisp',)),
-    'Cpp': ('C++', ('cpp', 'c++'), ('*.cpp', '*.hpp', '*.c++', '*.h++'), ('text/x-c++hdr', 'text/x-c++src')),
-    'CppObjdump': ('cpp-objdump', ('cpp-objdump', 'c++-objdumb', 'cxx-objdump'), ('*.cpp-objdump', '*.c++-objdump', '*.cxx-objdump'), ('text/x-cpp-objdump',)),
-    'CssDjango': ('CSS+Django/Jinja', ('css+django', 'css+jinja'), (), ('text/css+django', 'text/css+jinja')),
-    'CssErb': ('CSS+Ruby', ('css+erb', 'css+ruby'), (), ('text/css+ruby',)),
-    'CssGenshi': ('CSS+Genshi Text', ('css+genshitext', 'css+genshi'), (), ('text/css+genshi',)),
-    'Css': ('CSS', ('css',), ('*.css',), ('text/css',)),
-    'CssPhp': ('CSS+PHP', ('css+php',), (), ('text/css+php',)),
-    'CssSmarty': ('CSS+Smarty', ('css+smarty',), (), ('text/css+smarty',)),
-    'D': ('D', ('d',), ('*.d', '*.di'), ('text/x-dsrc',)),
-    'DObjdump': ('d-objdump', ('d-objdump',), ('*.d-objdump',), ('text/x-d-objdump',)),
-    'DebianControl': ('Debian Control file', ('control',), ('control',), ()),
-    'Delphi': ('Delphi', ('delphi', 'pas', 'pascal', 'objectpascal'), ('*.pas',), ('text/x-pascal',)),
-    'Diff': ('Diff', ('diff',), ('*.diff', '*.patch'), ('text/x-diff', 'text/x-patch')),
-    'Django': ('Django/Jinja', ('django', 'jinja'), (), ('application/x-django-templating', 'application/x-jinja')),
-    'Dylan': ('Dylan', ('dylan',), ('*.dylan',), ('text/x-dylan',)),
-    'Erb': ('ERB', ('erb',), (), ('application/x-ruby-templating',)),
-    'Erlang': ('Erlang', ('erlang',), ('*.erl', '*.hrl'), ('text/x-erlang',)),
-    'Gas': ('GAS', ('gas',), ('*.s', '*.S'), ('text/x-gas',)),
-    'Genshi': ('Genshi', ('genshi', 'kid', 'xml+genshi', 'xml+kid'), ('*.kid',), ('application/x-genshi', 'application/x-kid')),
-    'GenshiText': ('Genshi Text', ('genshitext',), (), ('application/x-genshi-text', 'text/x-genshi')),
-    'Gettext': ('Gettext Catalog', ('pot', 'po'), ('*.pot', '*.po'), ('application/x-gettext', 'text/x-gettext', 'text/gettext')),
-    'Groff': ('Groff', ('groff', 'nroff', 'man'), ('*.[1234567]', '*.man'), ('application/x-troff', 'text/troff')),
-    'Haskell': ('Haskell', ('haskell', 'hs'), ('*.hs',), ('text/x-haskell',)),
-    'HtmlDjango': ('HTML+Django/Jinja', ('html+django', 'html+jinja'), (), ('text/html+django', 'text/html+jinja')),
-    'HtmlGenshi': ('HTML+Genshi', ('html+genshi', 'html+kid'), (), ('text/html+genshi',)),
-    'Html': ('HTML', ('html',), ('*.html', '*.htm', '*.xhtml', '*.xslt'), ('text/html', 'application/xhtml+xml')),
-    'HtmlPhp': ('HTML+PHP', ('html+php',), ('*.phtml',), ('application/x-php', 'application/x-httpd-php', 'application/x-httpd-php3', 'application/x-httpd-php4', 'application/x-httpd-php5')),
-    'HtmlSmarty': ('HTML+Smarty', ('html+smarty',), (), ('text/html+smarty',)),
-    'Ini': ('INI', ('ini', 'cfg'), ('*.ini', '*.cfg'), ('text/x-ini',)),
-    'IrcLogs': ('IRC logs', ('irc',), ('*.weechatlog',), ('text/x-irclog',)),
-    'Java': ('Java', ('java',), ('*.java',), ('text/x-java',)),
-    'JavascriptDjango': ('JavaScript+Django/Jinja', ('js+django', 'javascript+django', 'js+jinja', 'javascript+jinja'), (), ('application/x-javascript+django', 'application/x-javascript+jinja', 'text/x-javascript+django', 'text/x-javascript+jinja', 'text/javascript+django', 'text/javascript+jinja')),
-    'JavascriptErb': ('JavaScript+Ruby', ('js+erb', 'javascript+erb', 'js+ruby', 'javascript+ruby'), (), ('application/x-javascript+ruby', 'text/x-javascript+ruby', 'text/javascript+ruby')),
-    'JavascriptGenshi': ('JavaScript+Genshi Text', ('js+genshitext', 'js+genshi', 'javascript+genshitext', 'javascript+genshi'), (), ('application/x-javascript+genshi', 'text/x-javascript+genshi', 'text/javascript+genshi')),
-    'Javascript': ('JavaScript', ('js', 'javascript'), ('*.js',), ('application/x-javascript', 'text/x-javascript', 'text/javascript')),
-    'JavascriptPhp': ('JavaScript+PHP', ('js+php', 'javascript+php'), (), ('application/x-javascript+php', 'text/x-javascript+php', 'text/javascript+php')),
-    'JavascriptSmarty': ('JavaScript+Smarty', ('js+smarty', 'javascript+smarty'), (), ('application/x-javascript+smarty', 'text/x-javascript+smarty', 'text/javascript+smarty')),
-    'Jsp': ('Java Server Page', ('jsp',), ('*.jsp',), ('application/x-jsp',)),
-    'LiterateHaskell': ('Literate Haskell', ('lhs', 'literate-haskell'), ('*.lhs',), ('text/x-literate-haskell',)),
-    'Llvm': ('LLVM', ('llvm',), ('*.ll',), ('text/x-llvm',)),
-    'Lua': ('Lua', ('lua',), ('*.lua',), ('text/x-lua', 'application/x-lua')),
-    'MOOCode': ('MOOCode', ('moocode',), ('*.moo',), ('text/x-moocode',)),
-    'Makefile': ('Makefile', ('make', 'makefile', 'mf'), ('*.mak', 'Makefile', 'makefile'), ('text/x-makefile',)),
-    'MakoCss': ('CSS+Mako', ('css+mako',), (), ('text/css+mako',)),
-    'MakoHtml': ('HTML+Mako', ('html+mako',), (), ('text/html+mako',)),
-    'MakoJavascript': ('JavaScript+Mako', ('js+mako', 'javascript+mako'), (), ('application/x-javascript+mako', 'text/x-javascript+mako', 'text/javascript+mako')),
-    'Mako': ('Mako', ('mako',), ('*.mao',), ('application/x-mako',)),
-    'MakoXml': ('XML+Mako', ('xml+mako',), (), ('application/xml+mako',)),
-    'MiniD': ('MiniD', ('minid',), ('*.md',), ('text/x-minidsrc',)),
-    'MoinWiki': ('MoinMoin/Trac Wiki markup', ('trac-wiki', 'moin'), (), ('text/x-trac-wiki',)),
-    'MuPAD': ('pygments.s.math', 'MuPAD', ('mupad',), ('*.mu',), ()),
-    'MySql': ('MySQL', ('mysql',), (), ('text/x-mysql',)),
-    'MyghtyCss': ('CSS+Myghty', ('css+myghty',), (), ('text/css+myghty',)),
-    'MyghtyHtml': ('HTML+Myghty', ('html+myghty',), (), ('text/html+myghty',)),
-    'MyghtyJavascript': ('JavaScript+Myghty', ('js+myghty', 'javascript+myghty'), (), ('application/x-javascript+myghty', 'text/x-javascript+myghty', 'text/javascript+mygthy')),
-    'Myghty': ('Myghty', ('myghty',), ('*.myt', 'autodelegate'), ('application/x-myghty',)),
-    'MyghtyXml': ('XML+Myghty', ('xml+myghty',), (), ('application/xml+myghty',)),
-    'Objdump': ('objdump', ('objdump',), ('*.objdump',), ('text/x-objdump',)),
-    'ObjectiveC': ('Objective-C', ('objective-c', 'objectivec', 'obj-c', 'objc'), ('*.m',), ('text/x-objective-c',)),
-    'Ocaml': ('OCaml', ('ocaml',), ('*.ml', '*.mli', '*.mll', '*.mly'), ('text/x-ocaml',)),
-    'Perl': ('Perl', ('perl', 'pl'), ('*.pl', '*.pm'), ('text/x-perl', 'application/x-perl')),
-    'Php': ('PHP', ('php', 'php3', 'php4', 'php5'), ('*.php', '*.php[345]'), ('text/x-php',)),
-    'PythonConsole': ('Python console session', ('pycon',), (), ('text/x-python-doctest',)),
-    'Python': ('Python', ('python', 'py'), ('*.py', '*.pyw', '*.sc', 'SConstruct', 'SConscript'), ('text/x-python', 'application/x-python')),
-    'PythonTraceback': ('Python Traceback', ('pytb',), ('*.pytb',), ('text/x-python-traceback',)),
-    'RawToken': ('Raw token data', ('raw',), ('*.raw',), ('application/x-pygments-tokens',)),
-    'Redcode': ('Redcode', ('redcode',), ('*.cw',), ()),
-    'Rhtml': ('RHTML', ('rhtml', 'html+erb', 'html+ruby'), ('*.rhtml',), ('text/html+ruby',)),
-    'Rst': ('reStructuredText', ('rst', 'rest', 'restructuredtext'), ('*.rst', '*.rest'), ('text/x-rst',)),
-    'RubyConsole': ('Ruby irb session', ('rbcon', 'irb'), (), ('text/x-ruby-shellsession',)),
-    'Ruby': ('Ruby', ('rb', 'ruby'), ('*.rb', '*.rbw', 'Rakefile', '*.rake', '*.gemspec', '*.rbx'), ('text/x-ruby', 'application/x-ruby')),
-    'Scheme': ('Scheme', ('scheme', 'scm'), ('*.scm',), ('text/x-scheme', 'application/x-scheme')),
-    'Smarty': ('Smarty', ('smarty',), ('*.tpl',), ('application/x-smarty',)),
-    'SourcesList': ('Debian Sourcelist', ('sourceslist', 'sources.list'), ('sources.list',), ()),
-    'Sql': ('SQL', ('sql',), ('*.sql',), ('text/x-sql',)),
-    'SquidConf': ('SquidConf', ('squidconf', 'squid.conf', 'squid'), ('squid.conf',), ('text/x-squidconf',)),
-    'Tex': ('TeX', ('tex', 'latex'), ('*.tex', '*.aux', '*.toc'), ('text/x-tex', 'text/x-latex')),
-    'Text': ('Text only', ('text',), ('*.txt',), ('text/plain',)),
-    'VbNet': ('VB.net', ('vb.net', 'vbnet'), ('*.vb', '*.bas'), ('text/x-vbnet', 'text/x-vba')),
-    'Vim': ('VimL', ('vim',), ('*.vim', '.vimrc'), ('text/x-vim',)),
-    'XmlDjango': ('XML+Django/Jinja', ('xml+django', 'xml+jinja'), (), ('application/xml+django', 'application/xml+jinja')),
-    'XmlErb': ('XML+Ruby', ('xml+erb', 'xml+ruby'), (), ('application/xml+ruby',)),
-    'Xml': ('XML', ('xml',), ('*.xml', '*.xsl', '*.rss', '*.xslt'), ('text/xml', 'application/xml', 'image/svg+xml', 'application/rss+xml', 'application/atom+xml', 'application/xsl+xml', 'application/xslt+xml')),
-    'XmlPhp': ('XML+PHP', ('xml+php',), (), ('application/xml+php',)),
-    'XmlSmarty': ('XML+Smarty', ('xml+smarty',), (), ('application/xml+smarty',))
-}
-
 class LanguageDbusConfig(DbusConfig):
 
     @EXPORT(out_signature = 'as', in_signature = 'si')
@@ -378,15 +300,16 @@ class Language(Service):
     features_config = LanguageFeatures
     commands_config = LanguageCommandsConfig
     dbus_config = LanguageDbusConfig
-
+    
     def pre_start(self):
         self.doctypes = TypeManager()
-        self.doctypes._parse_map(_DEFMAPPING)
+        import deflang
+        self.doctypes._parse_map(deflang.DEFMAPPING)
         self._view_outliner = BrowserView(self)
         self._view_validator = ValidatorView(self)
         self.current_type = None
         self.current_completer = None
-
+        
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
 
@@ -405,18 +328,26 @@ class Language(Service):
             self.current_type = None
             return
         type = doctypes[0]
-        self.current_type = doctypes[0]
-        outliners = self.features[(type.internal, 'outliner')]
-        if outliners:
-            outliner = list(outliners)[0]
-            outliner.set_document(document)
-            self._view_outliner.set_outliner(outliner)
+        self.current_type = type_ = document.doctype
+        
+        if not getattr(document, "_lng_outliner", None):
+            outliners = self.features[(type_.internal, 'outliner')]
+            if outliners:
+                outliner = list(outliners)[0](document)
+                document._lng_outliner = outliner
+                self._view_outliner.set_outliner(outliner)
+        else:
+            self._view_outliner.set_outliner(document._lng_outliner)
 
-        validators = self.features[(type.internal, 'validator')]
-        if validators:
-            validator = list(validators)[0]
-            validator.set_document(document)
-            self._view_validator.set_validator(validator)
+        if not getattr(document, "_lng_validator", None):
+            validators = self.features[(type_.internal, 'validator')]
+            if validators:
+                validator = list(validators)[0](document)
+                document._lng_validator = validator
+                self._view_validator.set_validator(validator)
+        else:
+            self._view_validator.set_validator(document._lng_validator)
+
 
         completers = self.features[(type.internal, 'completer')]
         if completers:
@@ -433,8 +364,33 @@ class Language(Service):
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
 
+    def create_menu(self):
+        sections = {}
+        menu = gtk.Menu()
+        a = gtk.Action('None',
+                'None',
+                'No specific document type',
+                gtk.STOCK_NEW)
+        menu.add(a.create_menu_item())
+        menu.add(gtk.SeparatorMenuItem())
 
-
+        for target in self.doctypes.itervalues():
+            act = gtk.Action(target.internal,
+                target.human or target.internal,
+                target.tooltip,
+                '')
+            #act.connect('activate', self.execute_target, target)
+            mi = act.create_menu_item()
+            if not sections.has_key(target.section):
+                sections[target.section] = gtk.Menu()
+                #menu.add(sections[target.section])
+                ms = gtk.MenuItem(target.section)
+                ms.set_submenu(sections[target.section])
+                menu.add(ms)
+                
+            sections[target.section].add(mi)
+        menu.show_all()
+        return menu
 
 Service = Language
 

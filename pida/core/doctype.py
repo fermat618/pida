@@ -12,68 +12,69 @@
 from glob import fnmatch
 
 
-
-PRIO_PERFECT = 100
-PRIO_VERY_GOOD = 50
-PRIO_GOOD = 10
-PRIO_DEFAULT = 0
-PRIO_LOW = -50
-PRIO_BAD = -100
-
 class DocType(object):
     """Represents a type of document. Like a python sourcecode file, a xml
     file, etc.
     """
     __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes', 
-                 'parsers', 'validators')
+                 'section', 'parsers', 'validators')
 
-    def __init__(self, internal, human, aliases = None, extensions = None, mimes = None):
+    def __init__(self, internal, human, aliases = None, extensions = None, 
+                 mimes = None, section = 'Others'):
         self.internal = internal
         self.human = human
         self.aliases = aliases and list(aliases) or []
         self.extensions = extensions and list(extensions) or []
         self.mimes = mimes and list(mimes) or []
+        self.section = section
         
         self.parsers = []
         self.validators = []
 
     
-    def _register(self, lst, prio, val):
-        self.parser.append((prio, val))
-        self.parser.sort(key=lambda x: x[0], reverse=True)
-    
-    def _unregister(self, lst, obj):
-        dlist = []
-        for i in lst:
-            if i[1] == obj:
-                dlist.append(i)
-        for i in dlist:
-            lst.remove(i)
-    
-        
-    def register_parser(self, parser, priority = PRIO_DEFAULT):
-        self._register(self.parsers, priority, parser)
-        
-    def unregister_parser(self, parser):
-        self._unregister(self.parsers, parser)
-    
-    def register_validator(self, validator, priority = PRIO_DEFAULT):
-        """
-        Register a Validator for this DocType.
-        """
-        self._register(self.validators, priority, validator)
-        
-    def unregister_validator(self, validator):
-        """
-        Unregister a validator
-        """
-        self._unregister(self.validators, validator)
-
-
-    def get_best_parser(self):
-        if self.parsers:
-            return self.parsers[0]
-        return None
+#    def _register(self, lst, prio, val):
+#        self.parser.append((prio, val))
+#        self.parser.sort(key=lambda x: x[0], reverse=True)
+#    
+#    def _unregister(self, lst, obj):
+#        dlist = []
+#        for i in lst:
+#            if i[1] == obj:
+#                dlist.append(i)
+#        for i in dlist:
+#            lst.remove(i)
+#    
+#        
+#    def register_parser(self, parser, priority = PRIO_DEFAULT):
+#        self._register(self.parsers, priority, parser)
+#        
+#    def unregister_parser(self, parser):
+#        self._unregister(self.parsers, parser)
+#    
+#    def register_validator(self, validator, priority = PRIO_DEFAULT):
+#        """
+#        Register a Validator for this DocType.
+#        """
+#        self._register(self.validators, priority, validator)
+#        
+#    def unregister_validator(self, validator):
+#        """
+#        Unregister a validator
+#        """
+#        self._unregister(self.validators, validator)
+#
+#
+#    def get_best_parser(self):
+#        if self.parsers:
+#            return self.parsers[0]
+#        return None
+#
+    @property
+    def tooltip(self):
+        rv = " ".join(self.aliases)
+        if self.extensions:
+            rv += " (%s)" % " ".join(self.extensions)
+        return rv
 
     def __unicode__(self):
         return self.human
@@ -82,11 +83,16 @@ class DocType(object):
         return '<DocType %s %s>' %(self.internal, self.human)
 
 class TypeManager(dict):
+    """
+    DocType Library
     
+    This class manages a list of DocType instances and features selection
+    """
+
     def __init__(self):
         self._globs = {}
         self._mimetypes = {}
-    
+
     def add(self, doctype):
         if self.has_key(doctype.internal):
             raise "doctype already registed"
@@ -96,13 +102,21 @@ class TypeManager(dict):
                 self._globs[ext].append(doctype)
             else:
                 self._globs[ext] = [doctype]
-        
-    
+
     def _parse_map(self, lst):
-        for intname, vars in lst.iteritems():
-            nd = DocType(intname, vars[0], aliases=vars[1], extensions=vars[2], 
-                         mimes=vars[3])
+        for intname, data in lst.iteritems():
+            nd = DocType(intname, data['human'], aliases=data['alias'], 
+                         extensions=data['glob'], mimes=data['mime'],
+                         section=data['section'])
+
             self.add(nd)
+
+    def guess_doctype_for_document(self, document):
+        if not document.is_new:
+            return self.type_by_filename(document.filename)
+        # FIXME: need a setting for default language Type
+        # or detect filetype somehow
+        return None
 
     def types_by_filename(self, filename):
         """Returns a list of DocTypes matching for the given filename"""
@@ -117,6 +131,7 @@ class TypeManager(dict):
         """Tries to find only one, the best guess for the type."""
         best = None
         best_glob = ""
+        best_list = []
         for test in self._globs.keys():
             if fnmatch.fnmatch(filename, test):
                 if len(test) > len(best_glob):
