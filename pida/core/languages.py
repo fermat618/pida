@@ -238,8 +238,17 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 
 
+PRIO_PERFECT = 100
+PRIO_VERY_GOOD = 50
+PRIO_GOOD = 10
+PRIO_DEFAULT = 0
+PRIO_LOW = -50
+PRIO_BAD = -100
+
 
 class BaseDocumentHandler(object):
+
+    priority = PRIO_DEFAULT
 
     def __init__(self, svc, document=None):
         self.svc = svc
@@ -247,6 +256,14 @@ class BaseDocumentHandler(object):
         
     def set_document(self, document):
         self.document = document
+
+    def __cmp__(self, other):
+        # We do a reverse default ordering. Higher the number lower the item
+        if isinstance(other, BaseDocumentHandler):
+            return -1 * self.priority.__cmp__(other.priority)
+        
+        # what to do, what to do...
+        return -1 * super(BaseDocumentHandler).__cmp__(other)
 
 
 class Outliner(BaseDocumentHandler):
