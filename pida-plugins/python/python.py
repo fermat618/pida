@@ -147,24 +147,14 @@ class PythonValidator(Validator):
 
 class PythonCompleter(Completer):
 
-    def get_completions(self, buffer, offset):
+    def get_completions(self, base, buffer, offset):
         mp = ModuleParser(self.document.filename)
+        buffer = buffer + ('\n' * 20)
 
-        from rope.contrib.codeassist import code_assist, sorted_proposals, \
-        starting_expression, starting_offset
-        #from rope.base.project import Project
-        #p = Project(self.svc.boss.cmd('buffer', 'get_current').directory)
+        from rope.contrib.codeassist import code_assist, sorted_proposals
         co = code_assist(mp.project, buffer, offset)
-        print starting_expression(buffer, offset)
-        print starting_offset(buffer, offset)
-        print [offset]
-        #print co
-        #for comp in co:
-        #    self.svc._com.add_completion(server, comp.name)
-        # do this a few times
-        #self.svc._com.add_completion(server, 'banana')
         so = sorted_proposals(co)
-        return [c.name for c in so]
+        return [c.name for c in so if c.name.startswith(base)]
 
 
 class Python(LanguageService):

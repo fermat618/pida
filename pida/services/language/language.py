@@ -281,11 +281,11 @@ class LanguageEvents(EventsConfig):
 
 class LanguageDbusConfig(DbusConfig):
 
-    @EXPORT(out_signature = 'as', in_signature = 'si')
-    def get_completions(self, buffer, offset):
+    @EXPORT(out_signature = 'as', in_signature = 'ssi')
+    def get_completions(self, base, buffer, offset):
         doc = self.svc.boss.cmd('buffer', 'get_current')
         if doc._lng_completer is not None:
-            return doc._lng_completer.get_completions(buffer, offset)
+            return doc._lng_completer.get_completions(base, buffer, offset)
         else:
             return []
 
