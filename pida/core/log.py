@@ -18,7 +18,7 @@ import logging.handlers
 
 from logging import getLogger as get_logger
 
-from pida.core.environment import opts
+from pida.core.environment import is_debug
 from pida.utils.descriptors import cached_property
 
 format_str = '%(levelname)s %(name)s: %(message)s'
@@ -29,11 +29,11 @@ handler = logging.StreamHandler()
 handler.setFormatter(format)
 log.addHandler(handler)
 
-
-if opts.debug:
-    get_logger().setLevel(logging.DEBUG)
-else:
-    get_logger().setLevel(logging.INFO)
+def setup():
+    if is_debug():
+        get_logger().setLevel(logging.DEBUG)
+    else:
+        get_logger().setLevel(logging.INFO)
     
 class Log(object):
     
