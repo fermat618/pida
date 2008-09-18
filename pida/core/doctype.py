@@ -129,6 +129,8 @@ class TypeManager(dict):
         
     def type_by_filename(self, filename):
         """Tries to find only one, the best guess for the type."""
+        if not filename:
+            return None
         best = None
         best_glob = ""
         best_list = []
@@ -156,7 +158,7 @@ class TypeManager(dict):
             else:
                 # use the first one as total fallback :(
                 best = best_list[0]
-        else:
+        elif len(best_list):
             best = best_list[0]
         
         return best

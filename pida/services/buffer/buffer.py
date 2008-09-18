@@ -45,6 +45,7 @@ from pida.core.locale import Locale
 locale = Locale('buffer')
 _ = locale.gettext
 
+import dbus
 
 
 LIST_COLUMNS = [
@@ -285,6 +286,15 @@ class BufferDbusConfig(DbusConfig):
     @EXPORT(out_signature='i')
     def get_open_documents_count(self):
         return len(self.svc._documents)
+
+    @EXPORT(out_signature='a(isii)')
+    def get_documents(self):
+        return dbus.Array(
+                 (dbus.Struct((x.unique_id, x.filename, id(x.doctype), 
+                               x.creation_time), signature="isii")
+                  for x in self.svc._documents.itervalues()
+                 )
+               )
 
 # Service class
 class Buffer(Service):
