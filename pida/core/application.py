@@ -108,8 +108,13 @@ def set_trace():
     sys.settrace(traceit)
 
 def main():
+    global opts
     import pida.core.environment
     pida.core.environment.parse_args(sys.argv)
+    opts = pida.core.environment.opts
+    
+    import pida.core.log
+    pida.core.log.setup()
     
     if not opts.debug:
         warnings.filterwarnings("ignore")
