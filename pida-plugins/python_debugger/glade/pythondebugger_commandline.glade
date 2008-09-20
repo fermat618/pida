@@ -10,8 +10,15 @@
                 <property name="spacing">6</property>
                 <property name="visible">True</property>
                 <child>
-                    <placeholder/>
-                    <packing/>
+                    <widget class="GtkLabel" id="label40">
+                        <property name="label" context="yes" translatable="yes">&lt;b&gt;Enter the command line to execute in the Python debugger.&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                        <property name="visible">True</property>
+                        <property name="xalign">0.0</property>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                    </packing>
                 </child>
                 <child>
                     <widget class="GtkHBox" id="hbox1">
@@ -42,6 +49,57 @@
                     </packing>
                 </child>
                 <child>
+                    <widget class="GtkHBox" id="hbox2">
+                        <property name="visible">True</property>
+                        <child>
+                            <placeholder/>
+                            <packing/>
+                        </child>
+                        <child>
+                            <widget class="GtkCheckButton" id="change_directory">
+                                <property name="label" context="yes" translatable="yes">Change working directory to script path</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="position">2</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkLabel" id="label1">
+                        <property name="label" context="yes" translatable="yes">&lt;i&gt;For environment variables use the "env" debugger command.&lt;/i&gt;</property>
+                        <property name="use_markup">True</property>
+                        <property name="visible">True</property>
+                        <property name="xalign">0.0</property>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="position">3</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkAlignment" id="alignment1">
+                        <property name="visible">True</property>
+                        <child>
+                            <placeholder/>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="position">4</property>
+                    </packing>
+                </child>
+                <child>
                     <widget class="GtkHButtonBox" id="hbuttonbox1">
                         <property name="layout_style">end</property>
                         <property name="visible">True</property>
@@ -65,7 +123,7 @@
                     </widget>
                     <packing>
                         <property name="expand">False</property>
-                        <property name="position">2</property>
+                        <property name="position">5</property>
                     </packing>
                 </child>
             </widget>

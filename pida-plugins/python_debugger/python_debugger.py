@@ -639,6 +639,9 @@ class BreakpointViewer(gtk.VBox):
 
 class PythonDebuggerView(PidaView):
 
+    icon_name = 'python-icon'
+    label_text = _('Python Debugger')
+
     def create_ui(self):
         self.manager = self.svc.debugger_manager
         self.create_toolbar()
@@ -665,6 +668,10 @@ class PythonDebuggerView(PidaView):
 
 class PythonDebuggerView2(PidaView):
 
+    icon_name = 'python-icon'
+    label_text = _('Python Debugger')
+
+
     def create_ui(self):
         self.manager = self.svc.debugger_manager
         nb2 = gtk.Notebook()
@@ -679,6 +686,11 @@ class PythonDebuggerView2(PidaView):
 class PythondebuggerCommandlineView(PidaView):
 
     gladefile = 'pythondebugger_commandline'
+
+    icon_name = 'gtk-execute'
+    label_text = _('Execute in Python Debugger')
+
+
 
     def on_exec_button__clicked(self, button):
         commandline = self.command_line.get_text()
