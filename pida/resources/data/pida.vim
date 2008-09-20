@@ -222,6 +222,24 @@ class VimDBUSService(Object):
     def cd(self, path):
         vim.command('cd %s' % path)
 
+    @method(DBUS_NS, in_signature='sssss')
+    def define_sign(self, name, icon, linehl, text, texthl):
+        cmd = ('sign define %s icon=%s linehl=%s text=%s texthl=%s '%
+                             (name, icon, linehl, text, texthl))
+        vim.command(cmd)
+
+    @method(DBUS_NS, in_signature='s')
+    def undefine_sign(self, name):
+        vim.command('sign undefine %s' % name)
+
+    @method(DBUS_NS, in_signature='issi')
+    def show_sign(self, index, type, filename, line):
+        vim.command('sign place %s line=%s name=%s file=%s' %
+                             (index + 1, line, type, filename))
+
+    @method(DBUS_NS, in_signature='is')
+    def hide_sign(self, index, filename):
+        vim.command('sign unplace %s' % (index + 1))
     # Signals
 
     @signal(DBUS_NS)
