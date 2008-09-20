@@ -18,7 +18,7 @@ VARIABLE = 7
 IMPORT = 8
 
 
-pixis = {
+_PIXMAPS = {
     UNKNOWN:     _load_pix('element-event-16.png'),
     ATTRIBUTE:   _load_pix('source-attribute.png'),
     CLASS:       _load_pix('source-class.png'),
@@ -34,38 +34,16 @@ pixis = {
 
 class SuggestionsList(gtk.ListStore):
     def __init__(self):
-        gtk.ListStore.__init__(self, int, str)
-        
+        gtk.ListStore.__init__(self, gtk.gdk.Pixbuf, str)
 
-class TypeRenderer(gtk.CellRendererPixbuf):
-    """
-    We use a special type renderer so we don't have to store the
-    pixbuffer images in the tree
-    """
-    __gproperties__ = {
-           'entrytyp' : (gobject.TYPE_INT,                        # type
-                     'type of entry',                         # nick name
-                     'number of pixmap to display', # description
-                     0,                                         # minimum value
-                     99,                                        # maximum value
-                     0,                                        # default value
-                     gobject.PARAM_READWRITE)                   # flags
-    }
-    
-    def __init__(self, *args, **kwargs):
-        gtk.CellRendererPixbuf.__init__(self, *args, **kwargs)
-        self._typ = 0
-    
-    def do_set_property(self, prop, value):
-        if prop.name == 'entrytyp':
-            if pixis.has_key(value):
-                self.set_property('pixbuf', pixis[value])
-
-    def do_get_property(self, name, value):
-        if name == 'entrytyp':
-            return self._typ
-
-gobject.type_register(TypeRenderer)
+    @staticmethod
+    def from_dbus(args):
+        rv = list(args)
+        if _PIXMAPS.has_key(args[0]):
+            rv[0] = _PIXMAPS[args[0]]
+        else:
+            rv[0] = _PIXMAPS[UNKNOWN]
+        return rv
 
 class PidaCompleter(gtk.Window):
 
@@ -197,7 +175,7 @@ class PidaCompleter(gtk.Window):
         self._tree.set_headers_visible(False)
         self._tree.set_enable_search(False)
         #self._tree.set_fixed_height_mode(True)
-        ic = gtk.TreeViewColumn('Typ', TypeRenderer(), entrytyp=0)
+        ic = gtk.TreeViewColumn('Typ', gtk.CellRendererPixbuf(), pixbuf=0)
         ic.set_resizable(False)
         ic.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
         ic.set_fixed_width(32)
@@ -229,7 +207,7 @@ if __name__ == "__main__":
     i = 0
     for x in ['ase', 'assdf', 'Asdf', 'zasd', 'Zase', 'form', 'in', 'of', 'BLA',
               'taT', 'tUt']:
-        l.append((i, x))
+        l.append(SuggestionsList.from_dbus((i, x)))
         i = i + 1%7
 
     p.set_model(l)

@@ -23,6 +23,7 @@
 # Standard Libs
 import os
 import gtk
+from gtk import gdk
 
 # UGLY UGLY workarround as suggested by muntyan_
 # this will be changed someday when there will be a correct 
@@ -52,6 +53,40 @@ from pida.core.options import OptionsConfig, choices
 from pida.core.locale import Locale
 locale = Locale('mooedit')
 _ = locale.gettext
+
+
+import gobject
+
+class PidaMooIndenter(moo.edit.Indenter):
+
+    def __init__(self, editor, document):
+        self.document = document
+        moo.edit.Indenter.__init__(self, editor)
+        self.props.tab_width = 1
+        self.props.use_tabs = 0
+        
+    def do_character(self, char, where):
+        print self, " ", char
+        # return moo.edit.Indenter.do_character(self, char, where)
+
+
+#    def __init__(self, editor, document):
+#        self.document = document
+#        moo.edit.Indenter.__init__(self, editor, 'pidaident')
+#        #editor.connect('char-inserted', self.on_character)
+#        #self.connect('character', self.on_character)
+#        self.props.tab_width = 1
+#        self.props.use_tabs = 1##
+#
+#    def do_character(self, *args, **kwargs):
+#        print args, kwargs
+
+    def do_tab(self, buf):
+        print self, buf
+        return super(PidaMooIndenter, self).tab(buf)
+        
+
+gobject.type_register(PidaMooIndenter)
 
 
 class MooeditMain(PidaView):
@@ -328,6 +363,35 @@ class MooeditActionsConfig(EditorActionsConfig):
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
 
+class PidaMooInput(object):
+    """
+    Handles all customizations in the input event handling of the editor.
+    It handles autocompletion and snippets for example
+    """
+    def __init__(self, editor, document):
+        self.editor = editor
+        self.document = document
+        self.completion = moo.edit.TextCompletion()
+        self.completion.set_doc(editor)
+        editor.connect("key-press-event", self.on_keypress)
+        
+    def on_keypress(self, editor, event):
+        if event.type == gdk.KEY_PRESS:
+            #tab 65289
+            if event.keyval == 65289:
+                return True
+            elif event.keyval == 65056:
+                return True
+            elif event.keyval == 65515:
+                # show 
+                return True
+            #shift tab 65056
+            print event.keyval, event.state
+            #if event.keyval == 
+        #print args, kwargs
+        #if event.
+        return
+
 
 # Service class
 class Mooedit(EditorService):
@@ -528,6 +592,10 @@ class Mooedit(EditorService):
             else:
                 editor = self._editor_instance.create_doc(document.filename)
             document.editor = editor
+            editor.inputter = PidaMooInput(editor, document)
+            #ind = PidaMooIndenter(editor, document)
+            #print ind
+            #editor.set_indenter(ind)
             view = MooeditView(document)
             view._star = False
             view._exclam = False
