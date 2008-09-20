@@ -120,6 +120,9 @@ class TypeManager(dict):
 
     def types_by_filename(self, filename):
         """Returns a list of DocTypes matching for the given filename"""
+        if not filename:
+            #FIXME: return default type
+            return []
         rv = []
         for test in self._globs.keys():
             if fnmatch.fnmatch(filename, test):
