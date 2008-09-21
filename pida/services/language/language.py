@@ -222,7 +222,7 @@ class LanguageActionsConfig(ActionsConfig):
             _('Goto the definition of current word'),
             'goto',
             self.on_goto_definition,
-            'F3'
+            'F5'
         )
 
     def on_type_change(self, action):
