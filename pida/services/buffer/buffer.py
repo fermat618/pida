@@ -236,7 +236,7 @@ class BufferFeaturesConfig(FeaturesConfig):
 class BufferEventsConfig(EventsConfig):
 
     def create(self):
-        self.publish('document-saved', 'document-changed')
+        self.publish('document-saved', 'document-changed', 'document-typchanged')
     
     def subscribe_all_foreign(self):
         self.subscribe_foreign('editor', 'document-exception',
