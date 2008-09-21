@@ -130,17 +130,11 @@ class DebuggerManager(object):
         self.terminal_view = PidaTerminal()
 
     def start_client(self, command_line, fAttach, fchdir, pwd, fAllowUnencrypted, fRemote, host):
-        print 'start_client', command_line, fAttach, pwd, fAllowUnencrypted, host
-        
-
         self.session_manager = SessionManager(self, pwd, fAllowUnencrypted, fRemote, host)
-        #self.session_manager = SessionManager(pwd, True, fRemote, host)
 
     def launch(self, commandline, change_directory=False):
-        
         t = AsyncTask(self.session_manager.launch)
         t.start(change_directory, commandline)
-        #self.session_manager.launch(change_directory, commandline)
 
     def connect_events(self):
         event_type_dict = {rpdb2.CEventState: {}}
