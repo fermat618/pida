@@ -56,6 +56,9 @@ _ = locale.gettext
 
 class SessionManagerInternal(rpdb2.CSessionManagerInternal):
 
+
+    
+
     def _spawn_server(self, fchdir, ExpandedFilename, args, rid):
         """
         Start an OS console to act as server.
@@ -79,6 +82,7 @@ class SessionManagerInternal(rpdb2.CSessionManagerInternal):
         cmdargs = baseargs + args.split()
         python_exec = sys.executable
         self.terminal.fork_command(python_exec, cmdargs)
+
 
 
 class SessionManager(rpdb2.CSessionManager):
@@ -107,7 +111,7 @@ class DebuggerManager(object):
     
     def __init__(self, svc):
         self.svc = svc
-        rpdb2.main(self.start_client, argv=[])
+        rpdb2.main(self.start_client)
         self.last_step = None
         self.connect_events()
         sm = self.session_manager
