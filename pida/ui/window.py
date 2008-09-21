@@ -205,9 +205,12 @@ class SessionWindow(BaseView):
         self.session_list.clear()
         for s in self.sessions:
             pr = PidaRemote(s)
-            name = pr.call('boss', 'get_pid')
-            project = pr.call('project', 'get_current_project_name')
-            count = pr.call('buffer', 'get_open_documents_count')
+            try:    name = pr.call('boss', 'get_pid')
+            except: name = "<error>"
+            try:    project = pr.call('project', 'get_current_project_name')
+            except: project = "<error>"
+            try:    count = pr.call('buffer', 'get_open_documents_count')
+            except: count = 0
             self.session_list.append((s, name, project, count))
 
     def on_session_view_row_activated(self, widget, num, col):
