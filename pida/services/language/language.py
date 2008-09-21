@@ -296,6 +296,7 @@ class LanguageDbusConfig(DbusConfig):
         if lst:
             l = lst[0]
             return l.to_dbus()
+        return {}
 
 def _get_best(lst, document):
     nlst = list(lst)
