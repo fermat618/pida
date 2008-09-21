@@ -243,10 +243,10 @@ class Vim(EditorService):
         self._view.grab_input_focus()
 
     def define_sign_type(self, name, icon, linehl, text, texthl):
-        self._com.define_sign(self.server, name, icon, linehl, text, texthl)
+        self._com.define_sign(name, icon, linehl, text, texthl)
 
     def undefine_sign_type(self, name):
-        self._com.undefine_sign(self.server, name)
+        self._com.undefine_sign(name)
 
     def _add_sign(self, type, filename, line):
         self._sign_index += 1
@@ -258,12 +258,12 @@ class Vim(EditorService):
 
     def show_sign(self, type, filename, line):
         index = self._add_sign(type, filename, line)
-        self._com.show_sign(self.server, index, type, filename, line)
+        self._com.show_sign(index, type, filename, line)
    
     def hide_sign(self, type, filename, line):
         try:
             index = self._del_sign(type, filename, line)
-            self._com.hide_sign(self.server, index, filename)
+            self._com.hide_sign(index, filename)
         except KeyError:
             self.window.error_dlg(_('Tried to remove non-existent sign'))
    

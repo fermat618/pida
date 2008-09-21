@@ -13,7 +13,7 @@
         <menu name="LanguageMenu" action="LanguageMenu">
             <placeholder name="tools">
             <menuitem action="show_pydebugger_view" name="show_pydebugger_view" />
-            <menuitem action="show_stack_view" name="show_stack_view" />
+            <menuitem action="execute_pythondebugger" name="execute_pythondebugger" />
             </placeholder>
             <separator />
             <placeholder name="panes"/>

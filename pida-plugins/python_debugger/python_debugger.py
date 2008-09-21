@@ -319,7 +319,6 @@ class NamespaceItem(object):
     pixbuf = property(get_pixbuf)
 
 
-
 class NamespaceViewer(gtk.VBox):
 
     def __init__(self, sm):
@@ -640,27 +639,21 @@ class BreakpointViewer(gtk.VBox):
 
 class PythonDebuggerView(PidaView):
 
+    icon_name = 'python-icon'
+    label_text = _('Python Debugger')
+
     def create_ui(self):
-        self.manager = DebuggerManager(self.svc)
+        self.manager = self.svc.debugger_manager
         self.create_toolbar()
-        hp = gtk.HPaned()
         nb1 = gtk.Notebook()
         nb1.append_page(self.manager.console_view, gtk.Label('Console'))
         nb1.append_page(self.manager.terminal_view, gtk.Label('Execution Output'))
         nb1.append_page(self.manager.breaks_view, gtk.Label('Break Points'))
-        hp.pack1(nb1)
         hb = gtk.HBox()
-        nb2 = gtk.Notebook()
-        nb2.append_page(self.manager.stack_view, gtk.Label('Stack'))
-        nb2.append_page(self.manager.threads_view, gtk.Label('Threads'))
-        nb2.append_page(self.manager.locals_view, gtk.Label('Locals'))
-        nb2.append_page(self.manager.globals_view, gtk.Label('Globals'))
-        hb.pack_start(nb2)
+        hb.pack_start(nb1)
         hb.pack_start(self._toolbar, expand=False)
-        hp.pack2(hb)
-        self.add_main_widget(hp)
-        hp.show_all()
-        
+        self.add_main_widget(hb)
+        hb.show_all()
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
@@ -672,6 +665,37 @@ class PythonDebuggerView(PidaView):
         self._toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self._toolbar.set_orientation(gtk.ORIENTATION_VERTICAL)
         self._toolbar.show_all()
+
+class PythonDebuggerView2(PidaView):
+
+    icon_name = 'python-icon'
+    label_text = _('Python Debugger')
+
+
+    def create_ui(self):
+        self.manager = self.svc.debugger_manager
+        nb2 = gtk.Notebook()
+        nb2.append_page(self.manager.stack_view, gtk.Label('Stack'))
+        nb2.append_page(self.manager.threads_view, gtk.Label('Threads'))
+        nb2.append_page(self.manager.locals_view, gtk.Label('Locals'))
+        nb2.append_page(self.manager.globals_view, gtk.Label('Globals'))
+        self.add_main_widget(nb2)
+        nb2.show_all()
+
+
+class PythondebuggerCommandlineView(PidaView):
+
+    gladefile = 'pythondebugger_commandline'
+
+    icon_name = 'gtk-execute'
+    label_text = _('Execute in Python Debugger')
+
+
+
+    def on_exec_button__clicked(self, button):
+        commandline = self.command_line.get_text()
+        if commandline:
+            self.svc.launch(commandline, True)
 
 
 
@@ -689,6 +713,16 @@ class DebuggerActionsConfig(ActionsConfig):
             'accessories-text-editor',
             self.on_show_debugger_view,
             '<Shift><Control>b',
+        )
+
+        self.create_action(
+            'execute_pythondebugger',
+            TYPE_NORMAL,
+            'Debug command line',
+            'Execute a command line in the python debugger',
+            'accessories-text-editor',
+            self.on_exec_commandline,
+            '<Shift><Control>6',
         )
         #self.create_action(
         #    'show_stack_view',
@@ -792,6 +826,8 @@ class DebuggerActionsConfig(ActionsConfig):
     def on_break(self, action):
         self.svc._view.manager.session_manager.request_break()
 
+    def on_exec_commandline(self, action):
+        self.svc.show_cmdline_dialog()
 
 class DebuggerCommands(CommandsConfig):
 
@@ -807,6 +843,7 @@ class DebuggerEventsConfig(EventsConfig):
         self.subscribe_foreign('editor', 'started',
                                      self.on_editor_startup)
 
+    # XXX Well, that's not gonna work
     def on_editor_startup(self):
         """
         Set the highlights in vim
@@ -831,14 +868,18 @@ class Python_debugger(Service):
     events_config = DebuggerEventsConfig
 
     def start(self):
+        self.debugger_manager = DebuggerManager(self)
         self._view = PythonDebuggerView(self)
+        self._view2 = PythonDebuggerView2(self)
         self.set_all_actions_insensitive()
 
     def show_debugger_view(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
+        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view2)
 
     def hide_debugger_view(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
+        self.boss.cmd('window', 'remove_view', view=self._view2)
 
     def ensure_view_visible(self):
         if not self.get_action('show_pydebugger_view').get_active():
@@ -882,6 +923,10 @@ class Python_debugger(Service):
             self._view.manager.session_manager.stop_debuggee()
         except:
             pass
+
+    def show_cmdline_dialog(self):
+        view = PythondebuggerCommandlineView(self)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=view)
 
 
 # Required Service attribute for service loading
