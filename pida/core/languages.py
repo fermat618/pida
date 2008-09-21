@@ -59,6 +59,7 @@ class BaseDocumentHandler(object):
 
     @classmethod
     def priorty_for_document(cls, document):
+        """Returns the priority this plugin will have for this document"""
         return cls.priority
 
 
@@ -96,6 +97,29 @@ class Validator(BaseDocumentHandler):
     def get_validations(self):
         raise NotImplementedError('Validator must define get_validations')
 
+class Definition(object):
+    """Returned by a Definer instance"""
+    def __init__(self, document=None, line=0, signature="", doc=""):
+        self.document = document
+        self.line = line
+        self.signature = signature
+        self.doc = doc
+
+class Definer(BaseDocumentHandler):
+    """
+    The definer class is used to allow the user to the definition of a
+    word.
+    """
+    def get_definition(self, offset):
+        """
+        Returns a Definition class pointing to document defining the word
+        searched for. The Definier has to find out which word the offset is on.
+        
+        @offset - nth char in the document point is on
+        """
+        raise NotImplementedError('Validator must define get_definition')
+
+
 class LanguageInfo(object):
     """
     LanguageInfo class stores and transports general informations.
@@ -121,6 +145,13 @@ class LanguageInfo(object):
                 'attributerefs': self.attributerefs,
                }
 
+class Suggestion(unicode):
+    """
+    Suggestions are returned by an Completer class
+    """
+    doc = ""
+    docpath = ""
+    signature = ""
 
 class Completer(BaseDocumentHandler):
 
@@ -138,6 +169,10 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
             outliner = partial(self.svc.outliner_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'outliner'), outliner)
+        if self.svc.definer_factory is not None:
+            definer = partial(self.svc.definer_factory,self.svc)
+            self.subscribe_foreign('language',
+                (self.svc.language_name, 'definer'), definer)
         if self.svc.validator_factory is not None:
             validator = partial(self.svc.validator_factory,self.svc)
             self.subscribe_foreign('language',
@@ -157,6 +192,7 @@ class LanguageService(Service):
     language_name = None
     language_info = None
     completer_factory = None
+    definer_factory = None
     outliner_factory = None
     validator_factory = None
 

@@ -58,8 +58,9 @@ class ValidatorView(PidaView):
 
     def set_validator(self, validator):
         self.clear_nodes()
-        task = GeneratorTask(validator.get_validations, self.add_node)
-        task.start()
+        if validator:
+            task = GeneratorTask(validator.get_validations, self.add_node)
+            task.start()
 
     def add_node(self, node):
         self.errors_ol.append(self.decorate_pyflake_message(node))
@@ -138,8 +139,9 @@ class BrowserView(PidaGladeView):
     def set_outliner(self, outliner):
         self.clear_items()
         self.options = self.read_options()
-        task = GeneratorTask(outliner.get_outline, self.add_node)
-        task.start()
+        if outliner:
+            task = GeneratorTask(outliner.get_outline, self.add_node)
+            task.start()
 
     def clear_items(self):
         self.source_tree.clear()
@@ -213,6 +215,16 @@ class LanguageActionsConfig(ActionsConfig):
             self.on_show_browser,
         )
 
+        self.create_action(
+            'goto_definition',
+            TYPE_NORMAL,
+            _('Goto Definition'),
+            _('Goto the definition of current word'),
+            'goto',
+            self.on_goto_definition,
+            'F5'
+        )
+
     def on_type_change(self, action):
         pass
 
@@ -232,6 +244,10 @@ class LanguageActionsConfig(ActionsConfig):
             self.svc.show_browser()
         else:
             self.svc.hide_browser()
+            
+    def on_goto_definition(self, action):
+        print "goto definition", action
+        
 
 
 class LanguageCommandsConfig(CommandsConfig):
@@ -272,12 +288,17 @@ class LanguageEvents(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('buffer', 'document-changed', self.on_document_changed)
         self.subscribe_foreign('buffer', 'document-saved', self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-typchanged', self.on_document_type)
 
     def create(self):
         self.publish('plugin_started', 'plugin_stopped')
 
     def on_document_changed(self, document):
         self.svc.on_buffer_changed(document)
+
+    def on_document_type(self, document):
+        self.svc.on_buffer_typechanged(document)
+
 
 class LanguageDbusConfig(DbusConfig):
 
@@ -296,6 +317,7 @@ class LanguageDbusConfig(DbusConfig):
         if lst:
             l = lst[0]
             return l.to_dbus()
+        return {}
 
 def _get_best(lst, document):
     nlst = list(lst)
@@ -336,6 +358,14 @@ class Language(Service):
     def hide_browser(self):
         self.boss.cmd('window', 'remove_view', view=self._view_outliner)
 
+    def on_buffer_typechanged(self, document):
+        for k in ("_lng_outliner", "_lng_validator", "_lng_completer",
+                 "_lng_definer"):
+            if hasattr(document, k):
+                delattr(document, k)
+
+        self.on_buffer_changed(document)
+
     def on_buffer_changed(self, document):
         doctypes = self.doctypes.types_by_filename(document.filename)
         if not doctypes:
@@ -344,45 +374,37 @@ class Language(Service):
         type = doctypes[0]
         self.current_type = type_ = document.doctype
 
-        if not getattr(document, "_lng_outliner", None):
-            outliners = self.features[(type_.internal, 'outliner')]
-            if not outliners:
-                outliners = self.features[(None, 'outliner')]
-            if outliners:
-                outliner = _get_best(outliners, document)(document)
-                document._lng_outliner = outliner
-                self._view_outliner.set_outliner(outliner)
-        else:
-            self._view_outliner.set_outliner(document._lng_outliner)
-
-        if not getattr(document, "_lng_validator", None):
-            validators = self.features[(type_.internal, 'validator')]
-            if not validators:
-                validators = self.features[(None, 'validator')]
-            if validators:
-                validator = _get_best(validators, document)(document)
-                document._lng_validator = validator
-                self._view_validator.set_validator(validator)
-        else:
-            self._view_validator.set_validator(document._lng_validator)
-
-
-        if not getattr(document, "_lng_completer", None):
-            completers = self.features[(type.internal, 'completer')]
-            if not completers:
-                completers = self.features[(None, 'completer')]
-            if completers:
-                completer = _get_best(completers, document)(document)
+        def setup(feature, name, do=None):
+            handler = getattr(document, name, None)
+            if not handler:
+                factories = self.features[(type_.internal, feature)]
+                if not factories:
+                    # get typ unspecific factories
+                    factories = self.features[(None, feature)]
+                if factories:
+                    handler = _get_best(factories, document)(document)
+                    setattr(document, name, handler)
+                    return handler
             else:
-                completer = None
-            document._lng_completer = completer
+                return handler
 
+        self._view_outliner.set_outliner(setup('outliner', '_lng_outliner'))
+
+        self._view_validator.set_validator(setup('validator', '_lng_validator'))
+
+        setup('completer', '_lng_completer')
+        setup('definer', '_lng_definer')
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
         if not action.get_active():
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
+
+    def change_doctype(self, widget, target):
+        doc = self.boss.cmd('buffer', 'get_current')
+        doc.doctype = target
+        self.boss.get_service('buffer').emit('document-typchanged', document=doc)
 
     def create_menu(self):
         sections = {}
@@ -399,7 +421,7 @@ class Language(Service):
                 target.human or target.internal,
                 target.tooltip,
                 '')
-            #act.connect('activate', self.execute_target, target)
+            act.connect('activate', self.change_doctype, target)
             mi = act.create_menu_item()
             if not sections.has_key(target.section):
                 sections[target.section] = gtk.Menu()
