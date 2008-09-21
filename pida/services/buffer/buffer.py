@@ -406,7 +406,7 @@ class Buffer(Service):
             except DocumentException, e:
                 # document can't be loaded. we have to remove the document from 
                 # the system
-                self._recover_loading_error(e)
+                self.recover_loading_error(e)
             self.emit('document-changed', document=document)
         if line is not None:
             self.boss.editor.goto_line(line)
