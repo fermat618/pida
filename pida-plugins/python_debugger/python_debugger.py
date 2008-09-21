@@ -42,8 +42,10 @@ from pida.core.environment import get_uidef_path, get_pixmap_path
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
+from pida.utils.gthreads import AsyncTask
 
-from pida.utils import rpdb2
+#from pida.utils import rpdb2
+import rpdb2
 
 # locale
 from pida.core.locale import Locale
@@ -70,8 +72,8 @@ class SessionManagerInternal(rpdb2.CSessionManagerInternal):
         baseargs = ['python', debugger, '--debugee', '--rid=%s' % rid]
         if fchdir:
             baseargs.append('--chdir')
-        if self.m_fAllowUnencrypted:
-            baseargs.append('--plaintext')
+        if not self.m_fAllowUnencrypted:
+            baseargs.append('--encrypted')
         #if self.m_fRemote:
         #    baseargs.append('--remote')
         if os.name == 'nt':
@@ -103,7 +105,10 @@ class SessionManager(rpdb2.CSessionManager):
         return view
 
     def fork_command(self, *args, **kw):
-        self.manager.terminal_view.fork_command(*args, **kw)
+        def _launch(commandargs=args[1]):
+            self.manager.svc.boss.cmd('commander', 'execute',
+                commandargs=commandargs)
+        gobject.idle_add(_launch)
 
 
 class DebuggerManager(object):
@@ -125,10 +130,17 @@ class DebuggerManager(object):
         self.terminal_view = PidaTerminal()
 
     def start_client(self, command_line, fAttach, fchdir, pwd, fAllowUnencrypted, fRemote, host):
+        print 'start_client', command_line, fAttach, pwd, fAllowUnencrypted, host
+        
+
         self.session_manager = SessionManager(self, pwd, fAllowUnencrypted, fRemote, host)
+        #self.session_manager = SessionManager(pwd, True, fRemote, host)
 
     def launch(self, commandline, change_directory=False):
-        gobject.idle_add(self.session_manager.launch, change_directory, commandline)
+        
+        t = AsyncTask(self.session_manager.launch)
+        t.start(change_directory, commandline)
+        #self.session_manager.launch(change_directory, commandline)
 
     def connect_events(self):
         event_type_dict = {rpdb2.CEventState: {}}
@@ -343,7 +355,7 @@ class NamespaceViewer(gtk.VBox):
             parent = None
             self._tree.clear()
         el = [(expr, True)]
-        filt = None
+        filt = 0
         ns = self.session_manager.get_namespace(el, filt)
         for sn in ns[0]['subnodes']:
             item = NamespaceItem(sn)
@@ -924,6 +936,7 @@ class Python_debugger(Service):
 
     def stop(self):
         try:
+            self._view.manager.session_manager.shutdown()
             self._view.manager.session_manager.stop_debuggee()
         except:
             pass
