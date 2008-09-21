@@ -38,7 +38,8 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
-    Completer, LanguageServiceFeaturesConfig)
+    Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
+    PRIO_GOOD)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -111,10 +112,22 @@ class PythonActionsConfig(ActionsConfig):
 
 class PythonOutliner(Outliner):
 
+    priority = PRIO_VERY_GOOD
+
     def get_outline(self):
         mp = ModuleParser(self.document.filename)
         for node, parent in mp.get_nodes():
             yield (node, parent)
+
+class PythonLanguage(LanguageInfo):
+    varchars = [chr(x) for x in xrange(97, 122)] + \
+               [chr(x) for x in xrange(65, 90)] + \
+               [chr(x) for x in xrange(48, 58)] + \
+               ['_',]
+    word = varchars
+
+    # . in python
+    attributerefs = ('.',)
 
 
 def _create_exception_validation(e):
@@ -130,6 +143,8 @@ def _create_exception_validation(e):
     return [msg]
 
 class PythonValidator(Validator):
+
+    priority = PRIO_GOOD
 
     def get_validations(self):
         code_string = self.document.content
@@ -147,6 +162,8 @@ class PythonValidator(Validator):
 
 class PythonCompleter(Completer):
 
+    priority = PRIO_VERY_GOOD
+
     def get_completions(self, base, buffer, offset):
         mp = ModuleParser(self.document.filename)
         buffer = buffer + ('\n' * 20)
@@ -160,6 +177,7 @@ class PythonCompleter(Completer):
 class Python(LanguageService):
 
     language_name = 'Python'
+    language_info = PythonLanguage
     outliner_factory = PythonOutliner
     validator_factory = PythonValidator
     completer_factory = PythonCompleter

@@ -289,6 +289,22 @@ class LanguageDbusConfig(DbusConfig):
         else:
             return []
 
+    @EXPORT(out_signature = 'a{s(as)}', in_signature = 's')
+    def get_info(self, lang):
+        """Returns language info"""
+        lst = self.svc.features[(lang, 'infos')]
+        if lst:
+            l = lst[0]
+            return l.to_dbus()
+
+def _get_best(lst, document):
+    nlst = list(lst)
+    nlst.sort(cmp=lambda x, y: -1*cmp(
+         x.func.priorty_for_document(document),
+         y.func.priorty_for_document(document))
+      )
+    return nlst[0]
+
 
 class Language(Service):
     """ Language manager service """
@@ -330,8 +346,10 @@ class Language(Service):
 
         if not getattr(document, "_lng_outliner", None):
             outliners = self.features[(type_.internal, 'outliner')]
+            if not outliners:
+                outliners = self.features[(None, 'outliner')]
             if outliners:
-                outliner = list(outliners)[0](document)
+                outliner = _get_best(outliners, document)(document)
                 document._lng_outliner = outliner
                 self._view_outliner.set_outliner(outliner)
         else:
@@ -339,8 +357,10 @@ class Language(Service):
 
         if not getattr(document, "_lng_validator", None):
             validators = self.features[(type_.internal, 'validator')]
+            if not validators:
+                validators = self.features[(None, 'validator')]
             if validators:
-                validator = list(validators)[0](document)
+                validator = _get_best(validators, document)(document)
                 document._lng_validator = validator
                 self._view_validator.set_validator(validator)
         else:
@@ -349,8 +369,10 @@ class Language(Service):
 
         if not getattr(document, "_lng_completer", None):
             completers = self.features[(type.internal, 'completer')]
+            if not completers:
+                completers = self.features[(None, 'completer')]
             if completers:
-                completer = list(completers)[0](document)
+                completer = _get_best(completers, document)(document)
             else:
                 completer = None
             document._lng_completer = completer
