@@ -10384,7 +10384,6 @@ class CSessionManagerInternal:
 
         try:
             try:
-                print fchdir, ExpandedFilename, args, rid
                 self._spawn_server(fchdir, ExpandedFilename, args, rid)            
                 server = self.__wait_for_debuggee(rid)
                 self.attach(server.m_rid, server.m_filename, fsupress_pwd_warning = True, fsetenv = True, ffirewall_test = False, server = server, fload_breakpoints = fload_breakpoints)

@@ -12,14 +12,14 @@
         
         <menu name="LanguageMenu" action="LanguageMenu">
             <placeholder name="tools">
-            <menuitem action="show_pydebugger_view" name="show_pydebugger_view" />
-            <menuitem action="execute_pythondebugger" name="execute_pythondebugger" />
             </placeholder>
             <separator />
             <placeholder name="panes"/>
         </menu>
 
         <menu name="DebugMenu" action="DebugMenu">
+            <menuitem action="execute_pythondebugger" name="execute_pythondebugger" />
+            <menuitem action="show_pydebugger_view" name="show_pydebugger_view" />
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">

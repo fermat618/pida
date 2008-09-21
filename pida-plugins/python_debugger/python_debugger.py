@@ -29,6 +29,7 @@ import gtk, gobject
 
 # kiwi imports
 from kiwi.ui.objectlist import ObjectList, ObjectTree, Column
+from kiwi.ui.dialogs import open as open_dlg
 
 # PIDA Imports
 from pida.core.service import Service
@@ -657,7 +658,7 @@ class PythonDebuggerView(PidaView):
         self.create_toolbar()
         nb1 = gtk.Notebook()
         nb1.append_page(self.manager.console_view, gtk.Label('Console'))
-        nb1.append_page(self.manager.terminal_view, gtk.Label('Execution Output'))
+        #nb1.append_page(self.manager.terminal_view, gtk.Label('Execution Output'))
         nb1.append_page(self.manager.breaks_view, gtk.Label('Break Points'))
         hb = gtk.HBox()
         hb.pack_start(nb1)
@@ -698,14 +699,19 @@ class PythondebuggerCommandlineView(PidaView):
     gladefile = 'pythondebugger_commandline'
 
     icon_name = 'gtk-execute'
-    label_text = _('Execute in Python Debugger')
+    label_text = _('Debug Python Script')
 
 
 
     def on_exec_button__clicked(self, button):
         commandline = self.command_line.get_text()
         if commandline:
-            self.svc.launch(commandline, True)
+            self.svc.launch(commandline, self.change_directory.get_active())
+
+    def on_open_button__clicked(self, button):
+        fn = open_dlg('Select a script to load.', parent=self.svc.boss.window)
+        if fn:
+            self.command_line.set_text(fn)
 
 
 
@@ -718,7 +724,7 @@ class DebuggerActionsConfig(ActionsConfig):
         self.create_action(
             'show_pydebugger_view',
             TYPE_TOGGLE,
-            'Python Debugger',
+            'Show Python Debugger',
             'Show the Python debugger',
             'accessories-text-editor',
             self.on_show_debugger_view,
@@ -728,9 +734,9 @@ class DebuggerActionsConfig(ActionsConfig):
         self.create_action(
             'execute_pythondebugger',
             TYPE_NORMAL,
-            'Debug command line',
-            'Execute a command line in the python debugger',
-            'accessories-text-editor',
+            'Debug Python Script',
+            'Load a python script into the debugger',
+            'gtk-execute',
             self.on_exec_commandline,
             '<Shift><Control>6',
         )

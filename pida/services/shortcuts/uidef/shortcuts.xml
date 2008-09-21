@@ -21,6 +21,10 @@
         
         <menu name="LanguageMenu" action="LanguageMenu">
         </menu>
+
+        <menu name="DebugMenu" action="DebugMenu">
+        </menu>
+
         
         <menu name="ToolsMenu" action="ToolsMenu">
         </menu>
