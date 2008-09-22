@@ -155,7 +155,14 @@ class Suggestion(unicode):
 
 class Completer(BaseDocumentHandler):
 
-    def get_completions(self, buffer, offset):
+    def get_completions(self, base, buffer, offset):
+        """
+        Gets a list of completitions.
+        
+        @base - string which starts completions
+        @buffer - document to parse
+        @offset - cursor position
+        """
         raise NotImplementedError('Validator must define get_completions')
 
 

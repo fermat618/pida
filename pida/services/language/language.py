@@ -366,34 +366,53 @@ class Language(Service):
 
         self.on_buffer_changed(document)
 
+    def _get_feature(self, document, feature, name, do=None):
+        handler = getattr(document, name, None)
+        print "handler", handler
+        if not handler:
+            type_ = document.doctype
+            print "type", type_
+            factories = ()
+            if type_:
+                factories = self.features[(type_.internal, feature)]
+            if not factories:
+                # get typ unspecific factories
+                factories = self.features[(None, feature)]
+            if factories:
+                handler = _get_best(factories, document)(document)
+                setattr(document, name, handler)
+                return handler
+        else:
+            return handler
+
+
     def on_buffer_changed(self, document):
         doctypes = self.doctypes.types_by_filename(document.filename)
         if not doctypes:
             self.current_type = None
             return
-        type = doctypes[0]
-        self.current_type = type_ = document.doctype
+        self.current_type = document.doctype
 
-        def setup(feature, name, do=None):
-            handler = getattr(document, name, None)
-            if not handler:
-                factories = self.features[(type_.internal, feature)]
-                if not factories:
-                    # get typ unspecific factories
-                    factories = self.features[(None, feature)]
-                if factories:
-                    handler = _get_best(factories, document)(document)
-                    setattr(document, name, handler)
-                    return handler
-            else:
-                return handler
+        self._view_outliner.set_outliner(
+            self._get_feature(document, 'outliner', '_lng_outliner'))
 
-        self._view_outliner.set_outliner(setup('outliner', '_lng_outliner'))
+        self._view_validator.set_validator(
+            self._get_feature(document, 'validator', '_lng_validator'))
 
-        self._view_validator.set_validator(setup('validator', '_lng_validator'))
+        self._get_feature(document, 'completer', '_lng_completer')
+        self._get_feature(document, 'definer', '_lng_definer')
 
-        setup('completer', '_lng_completer')
-        setup('definer', '_lng_definer')
+    def get_outliner(self, document):
+        return self._get_feature(document, 'outliner', '_lng_outliner')
+
+    def get_validator(self, document):
+        return self._get_feature(document, 'validator', '_lng_validator')
+
+    def get_completer(self, document):
+        return self._get_feature(document, 'completer', '_lng_completer')
+        
+    def get_definer(self, document):
+        return self._get_feature(document, 'definer', '_lng_definer')
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')

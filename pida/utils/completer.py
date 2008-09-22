@@ -45,7 +45,16 @@ class SuggestionsList(gtk.ListStore):
             rv[0] = _PIXMAPS[UNKNOWN]
         return rv
 
-class PidaCompleter(gtk.Window):
+class PidaCompleterWindow(gtk.Window):
+    def __init__(self, type_=gtk.WINDOW_TOPLEVEL):
+        super(PidaCompleterWindow, self).__init__(type_)
+        self.widget = PidaCompleter()
+        self.add(self.widget)
+        self.set_decorated(False)
+
+
+
+class PidaCompleter(gtk.HBox):
 
     __gsignals__ = {
         "user-abort" :   (gobject.SIGNAL_RUN_LAST, 
@@ -85,7 +94,7 @@ class PidaCompleter(gtk.Window):
         self.accept_keys = (65289,)
         # esc
         self.abort_keys = (65307,)
-    
+
     def filter_function(self, model, iter_):
         if not self._filter:
             return True
@@ -200,6 +209,7 @@ class PidaCompleter(gtk.Window):
         self._tree.set_model(self._model)
 
         #return self._tree.get_model()
+    model = property(get_model, set_model)
         
     def get_filter(self):
         """
@@ -223,7 +233,7 @@ class PidaCompleter(gtk.Window):
         #self._box = scrolled_window
         #self.add(scrolled_window)
         self.set_size_request(150, 300)
-        self.set_decorated(False)
+        #self.set_decorated(False)
         self._entry = gtk.Entry()
         #self._entry.connect("insert-text", self.on_entry_changed)
         #self._entry.connect("delete-text", self.on_entry_changed)
@@ -253,12 +263,17 @@ class PidaCompleter(gtk.Window):
         scrolled_window.add(self._tree)
         self._box.add(scrolled_window)
         self.add(self._box)
+        self.show_all()
+        self.hide()
 
     def get_show_icons(self):
         return self._tree_icons.get_visible()
 
     def set_show_icons(self, value):
         return self._tree_icons.set_visible(value)
+        
+    def add_str(self, line):
+        self._modelreal.append((None, line))
 
     show_icons = property(get_show_icons, set_show_icons)
 
@@ -271,7 +286,8 @@ if __name__ == "__main__":
     def abort(*args):
         print "user abort ", args
 
-    p = PidaCompleter()
+    w = PidaCompleterWindow()#gtk.WINDOW_POPUP)
+    p = w.widget
     l = SuggestionsList()
 
     i = 0
@@ -285,5 +301,6 @@ if __name__ == "__main__":
     p.connect("user-abort", abort)
     p.connect("user-accept", accepted)
 
-    p.show_all()
+    w.show_all()
+    w.grab_focus()
     gtk.main()

@@ -48,6 +48,8 @@ from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
+from pida.utils.completer import PidaCompleter, SuggestionsList
+from pida.utils.gthreads import GeneratorTask
 
 # locale
 from pida.core.locale import Locale
@@ -86,7 +88,7 @@ class PidaMooIndenter(moo.edit.Indenter):
         return super(PidaMooIndenter, self).tab(buf)
         
 
-gobject.type_register(PidaMooIndenter)
+#gobject.type_register(PidaMooIndenter)
 
 
 class MooeditMain(PidaView):
@@ -107,6 +109,9 @@ class MooeditMain(PidaView):
         self.svc.grab_focus()
         pass
 
+
+
+
 class MooeditOptionsConfig(OptionsConfig):
 
     def create_options(self):
@@ -118,7 +123,6 @@ class MooeditOptionsConfig(OptionsConfig):
             'project_or_filename',
             _('Text to display in the Notebook'),
         )
-
 
 
 class MooeditPreferences(PidaView):
@@ -363,30 +367,108 @@ class MooeditActionsConfig(EditorActionsConfig):
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
 
+class MooCompleter(PidaCompleter):
+    pass
+
+
 class PidaMooInput(object):
     """
     Handles all customizations in the input event handling of the editor.
     It handles autocompletion and snippets for example
     """
-    def __init__(self, editor, document):
+    def __init__(self, svc, editor, document):
+        self.svc = svc
         self.editor = editor
         self.document = document
         self.completion = moo.edit.TextCompletion()
         self.completion.set_doc(editor)
-        editor.connect("key-press-event", self.on_keypress)
+        self.completer = MooCompleter(show_input=False)
+        self.completer.connect("user-accept", self.accept)
+        self.model = SuggestionsList()
+        self.completer.set_model(self.model)
         
+        self.completer.hide_all()
+        self.completer_visible = False
+        self.completer_added = False
+        
+        editor.connect("key-press-event", self.on_keypress)
+
+    #def on_
+    
+    def toggle_popup(self):
+        
+        if self.completer_visible:
+            self.completer.hide_all()
+            self.completer_visible = False
+        else:
+            rec = self.editor.get_iter_location(
+                    self.editor.props.buffer.get_iter_at_offset(
+                        self.editor.props.buffer.props.cursor_position))
+            pos = self.editor.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET,
+                rec.x, rec.y + rec.height)
+
+            cmpl = self.svc.boss.get_service('language').get_completer(self.document)
+            print "completer", cmpl
+            if not cmpl:
+                return
+
+            if not self.completer_added:
+                self.editor.add_child_in_window(self.completer, 
+                                           gtk.TEXT_WINDOW_TOP, 
+                                           pos[0], 
+                                           pos[1])
+                self.completer_added = True
+            else:
+                self.editor.move_child(self.completer, pos[0], pos[1])
+            #self.boss.get_service('language').
+            self.model.clear()
+            task = GeneratorTask(
+                    cmpl.get_completions, 
+                    self.add_str)
+            task.start("", 
+                unicode(self.editor.get_text()), 
+                self.editor.props.buffer.props.cursor_position)
+
+            self.completer.show_all()
+            self.completer_visible = True
+            
+    def accept(self, widget, suggestion):
+        self.editor.get_buffer().insert_at_cursor(suggestion)
+        self.completer_visible = False
+
+    def add_str(self, line):
+        print "add line", line
+        self.completer.add_str(line)
+    
     def on_keypress(self, editor, event):
         if event.type == gdk.KEY_PRESS:
+            print event.keyval, event.state
             #tab 65289
-            if event.keyval == 65289:
+            if event.keyval == 65516:
+                #self.completion.present()
+                self.toggle_popup()
+                
+                
                 return True
+            if event.keyval == 65289:
+                self.completion.present()
+                return True
+            elif event.keyval in (65362, 65364, 65293): # key up
+                if self.completer_visible:
+                    self.completer.on_key_press_event(editor, event)
+                    return True
+                return
+                
             elif event.keyval == 65056:
                 return True
             elif event.keyval == 65515:
                 # show 
                 return True
+            else:
+                # we handle 
+                pass
+                
             #shift tab 65056
-            print event.keyval, event.state
             #if event.keyval == 
         #print args, kwargs
         #if event.
@@ -592,7 +674,7 @@ class Mooedit(EditorService):
             else:
                 editor = self._editor_instance.create_doc(document.filename)
             document.editor = editor
-            editor.inputter = PidaMooInput(editor, document)
+            editor.inputter = PidaMooInput(self, editor, document)
             #ind = PidaMooIndenter(editor, document)
             #print ind
             #editor.set_indenter(ind)
