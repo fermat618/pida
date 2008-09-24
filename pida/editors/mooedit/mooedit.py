@@ -49,7 +49,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import PidaCompleter, SuggestionsList
-from pida.utils.gthreads import GeneratorTask
+from pida.utils.gthreads import GeneratorTask, gcall
 
 # locale
 from pida.core.locale import Locale
@@ -58,38 +58,6 @@ _ = locale.gettext
 
 
 import gobject
-
-class PidaMooIndenter(moo.edit.Indenter):
-
-    def __init__(self, editor, document):
-        self.document = document
-        moo.edit.Indenter.__init__(self, editor)
-        self.props.tab_width = 1
-        self.props.use_tabs = 0
-        
-    def do_character(self, char, where):
-        print self, " ", char
-        # return moo.edit.Indenter.do_character(self, char, where)
-
-
-#    def __init__(self, editor, document):
-#        self.document = document
-#        moo.edit.Indenter.__init__(self, editor, 'pidaident')
-#        #editor.connect('char-inserted', self.on_character)
-#        #self.connect('character', self.on_character)
-#        self.props.tab_width = 1
-#        self.props.use_tabs = 1##
-#
-#    def do_character(self, *args, **kwargs):
-#        print args, kwargs
-
-    def do_tab(self, buf):
-        print self, buf
-        return super(PidaMooIndenter, self).tab(buf)
-        
-
-#gobject.type_register(PidaMooIndenter)
-
 
 class MooeditMain(PidaView):
     """Main Mooedit View.
@@ -122,6 +90,27 @@ class MooeditOptionsConfig(OptionsConfig):
                      'project_or_filename':_('Project relative path or filename')}),
             'project_or_filename',
             _('Text to display in the Notebook'),
+        )
+        self.create_option(
+            'autocomplete',
+            _('Enable Autocompleter'),
+            bool,
+            True,
+            _('Shall the Autocompleter be active'),
+        )
+        self.create_option(
+            'auto_chars',
+            _('Autocompleter chars'),
+            int,
+            3,
+            _('Open Autocompleter after howmany characters'),
+        )
+        self.create_option(
+            'auto_attr',
+            _('On attribute'),
+            bool,
+            True,
+            _('Open Autocompleter after attribute accessor'),
         )
 
 
@@ -384,88 +373,294 @@ class PidaMooInput(object):
         self.completion.set_doc(editor)
         self.completer = MooCompleter(show_input=False)
         self.completer.connect("user-accept", self.accept)
+        self.completer.connect("suggestion-selected", self.suggestion_selected)
         self.model = SuggestionsList()
         self.completer.set_model(self.model)
         
         self.completer.hide_all()
         self.completer_visible = False
         self.completer_added = False
+        self.completer_pos = 0
+        self.completer_pos_user = 0
+        # two markers are used to mark the text inserted by the completer
+        self.completer_start = None
+        self.completer_end = None
+        
         
         editor.connect("key-press-event", self.on_keypress)
 
     #def on_
     
     def toggle_popup(self):
-        
         if self.completer_visible:
-            self.completer.hide_all()
-            self.completer_visible = False
+            self.hide()
         else:
-            rec = self.editor.get_iter_location(
-                    self.editor.props.buffer.get_iter_at_offset(
-                        self.editor.props.buffer.props.cursor_position))
-            pos = self.editor.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET,
-                rec.x, rec.y + rec.height)
+            self.show()
 
-            cmpl = self.svc.boss.get_service('language').get_completer(self.document)
-            print "completer", cmpl
-            if not cmpl:
-                return
-
-            if not self.completer_added:
-                self.editor.add_child_in_window(self.completer, 
-                                           gtk.TEXT_WINDOW_TOP, 
-                                           pos[0], 
-                                           pos[1])
-                self.completer_added = True
-            else:
-                self.editor.move_child(self.completer, pos[0], pos[1])
-            #self.boss.get_service('language').
-            self.model.clear()
-            task = GeneratorTask(
-                    cmpl.get_completions, 
-                    self.add_str)
-            task.start("", 
-                unicode(self.editor.get_text()), 
-                self.editor.props.buffer.props.cursor_position)
-
-            self.completer.show_all()
-            self.completer_visible = True
-            
-    def accept(self, widget, suggestion):
-        self.editor.get_buffer().insert_at_cursor(suggestion)
+    def hide(self):
+        self.completer.hide_all()
         self.completer_visible = False
+        # delete markers
+        buf = self.editor.get_buffer()
+        self._delete_suggested()
+        if self.completer_start:
+            buf.delete_mark(self.completer_start)
+            self.completer_start = None
+        if self.completer_end:
+            buf.delete_mark(self.completer_end)
+            self.completer_end = None
+
+
+    def _get_start(self, i):
+        info = self.svc.boss.get_service('language').get_info(self.document)
+        while i.get_char() in info.word:
+            if not i.backward_char():
+                break
+        else:
+            i.forward_char()
+        return i
+
+    def show(self):
+        #self.completer_pos = self.completer_pos_user = \
+        #    self.editor.props.buffer.props.cursor_position
+
+        cmpl = self.svc.boss.get_service('language').get_completer(self.document)
+        if not cmpl:
+            return
+
+        buf = self.editor.get_buffer()
+        
+        cpos = buf.props.cursor_position
+        # we may already in a word. so we have to find the start as base
+        i = buf.get_iter_at_offset(cpos)
+        i.backward_char()
+        
+        self._get_start(i)
+            
+        start = i.get_offset()
+        
+        self.completer_pos = buf.create_mark('completer_pos', 
+                        buf.get_iter_at_offset(start),
+                        left_gravity=True)
+        self.completer_start = buf.create_mark('completer_start', 
+                        buf.get_iter_at_offset(cpos),
+                        left_gravity=True)
+        self.completer_end = buf.create_mark('completer_end', 
+                        buf.get_iter_at_offset(cpos))
+
+        rec = self.editor.get_iter_location(
+                self.editor.props.buffer.get_iter_at_offset(
+                    buf.props.cursor_position))
+        pos = self.editor.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET,
+            rec.x, rec.y + rec.height)
+
+        if not self.completer_added:
+            self.editor.add_child_in_window(self.completer, 
+                                       gtk.TEXT_WINDOW_TOP, 
+                                       pos[0], 
+                                       pos[1])
+            self.completer_added = True
+        else:
+            self.editor.move_child(self.completer, pos[0], pos[1])
+        #self.boss.get_service('language').
+        self.model.clear()
+        if start != pos:
+            self.completer.filter = buf.get_text(
+                buf.get_iter_at_offset(start),
+                buf.get_iter_at_offset(cpos))
+        else:
+            self.completer.filter = ""
+        task = GeneratorTask(
+                cmpl.get_completions, 
+                self.add_str)
+        task.start("", 
+            unicode(self.editor.get_text()), start)
+
+        self.completer.show_all()
+        self.completer_visible = True
+
+    def accept(self, widget, suggestion):
+        self._delete_typed()
+        self._insert_typed(suggestion)
+        self.hide()
+        
+    def _get_complete(self):
+        buf = self.editor.get_buffer()
+        i1 = buf.get_iter_at_mark(self.completer_pos)
+        i2 = buf.get_iter_at_mark(self.completer_end)
+        return buf.get_text(i1, i2)
+
+    def _get_typed(self):
+        buf = self.editor.get_buffer()
+        i1 = buf.get_iter_at_mark(self.completer_pos)
+        i2 = buf.get_iter_at_mark(self.completer_start)
+        return buf.get_text(i1, i2)
+
+    def _delete_typed(self):
+        buf = self.editor.props.buffer
+        i1 = buf.get_iter_at_mark(self.completer_pos)
+        i2 = buf.get_iter_at_mark(self.completer_start)
+        buf.delete(i1, i2)
+        
+    def _insert_typed(self, text):
+        buf = self.editor.props.buffer
+        i1 = buf.get_iter_at_mark(self.completer_pos)
+        buf.insert(i1, text)
+        buf.move_mark(self.completer_start, i1)
+        i1.backward_chars(len(text))
+        buf.move_mark(self.completer_pos, i1)
+
+    def _append_typed(self, char):
+        if not char:
+            return
+        self._replace_typed(self._get_typed() + char)
+
+    def _replace_typed(self, text):
+        buf = self.editor.props.buffer
+        i1 = buf.get_iter_at_mark(self.completer_pos)
+        i2 = buf.get_iter_at_mark(self.completer_start)
+        buf.delete(i1, i2)
+        buf.insert(i1, text)
+        #i1.backward_chars(len(text))
+        buf.move_mark(self.completer_start, i1)
+
+    def _get_suggested(self):
+        buf = self.editor.props.buffer
+        i1 = buf.get_iter_at_mark(self.completer_start)
+        i2 = buf.get_iter_at_mark(self.completer_end)
+        return buf.get_text(i1, i2)
+
+    def _delete_suggested(self):
+        buf = self.editor.props.buffer
+        i1 = buf.get_iter_at_mark(self.completer_start)
+        i2 = buf.get_iter_at_mark(self.completer_end)
+        buf.delete(i1, i2)
+
+    def d(self):
+        buf = self.editor.props.buffer
+        print "pos", buf.get_iter_at_mark(self.completer_pos).get_offset()
+        print "start", buf.get_iter_at_mark(self.completer_start).get_offset()
+        print "end", buf.get_iter_at_mark(self.completer_end).get_offset()
+
+
+    def _replace_suggested(self, text, mark=True):
+        buf = self.editor.props.buffer
+        i1 = buf.get_iter_at_mark(self.completer_start)
+        i2 = buf.get_iter_at_mark(self.completer_end)
+        buf.delete(i1, i2)
+        buf.insert(i1, text)
+        i2 = buf.get_iter_at_mark(self.completer_end)
+        if mark:
+            buf.select_range(
+                i2, 
+                i1)
+            
+
+    def _get_missing(self, word):
+        # returns the missing part of a suggestion that was already typed
+        return word[len(self._get_typed()):]
+
+        #buf.place_cursor(i1)
+        #return i
+
+    def suggestion_selected(self, widget, suggestion):
+        pos = self.completer_pos_user #editor.props.buffer.props.cursor_position
+        #buf.
+        #intext = self._get_missing(suggestion)
+        typed = self._get_typed()
+        self._delete_typed()
+        self._replace_typed(suggestion[:len(typed)])
+        self._replace_suggested(suggestion[len(typed):])
+        
+        #self.editor.get_buffer().insert_at_cursor(suggestion)
+        #self.completer_visible = False
+        
 
     def add_str(self, line):
-        print "add line", line
+        #print "add line", line
         self.completer.add_str(line)
     
     def on_keypress(self, editor, event):
-        if event.type == gdk.KEY_PRESS:
+        if event.type == gdk.KEY_PRESS and self.svc.opt('autocomplete'):
             print event.keyval, event.state
             #tab 65289
-            if event.keyval == 65516:
+            if event.keyval == 65516: # left win key
                 #self.completion.present()
                 self.toggle_popup()
-                
-                
                 return True
-            if event.keyval == 65289:
-                self.completion.present()
-                return True
-            elif event.keyval in (65362, 65364, 65293): # key up
+                           # enter tab
+            elif event.keyval in (65293, 65289):
+                if self.completer_visible:
+                    print "accept"
+                    print self._get_complete()
+                    self.accept(None, self._get_complete())
+                    return True
+                    # key up, key down, ?, pgup, pgdown
+            elif event.keyval in (65362, 65364, 65293, 65366, 65365): 
                 if self.completer_visible:
                     self.completer.on_key_press_event(editor, event)
                     return True
                 return
-                
-            elif event.keyval == 65056:
-                return True
-            elif event.keyval == 65515:
-                # show 
-                return True
+            elif event.keyval == 65307: # esc
+                if self.completer_visible:
+                    self.hide()
+                    return True
+            #elif event.keyval == 65056:
+            #    return True
+            #elif event.keyval == 65515:
+            #    # show 
+            #    return True
             else:
-                # we handle 
+                if self.completer_visible:
+                    if event.keyval == 65288: # delete
+                        if not len(self.completer.filter):
+                            self.hide()
+                        else:
+                            self.completer.filter = self.completer.filter[:-1]
+                    elif len(event.string):
+                        self._delete_suggested()
+                        self._append_typed(event.string)
+                        self.completer.filter = self._get_typed()
+                        return True
+                else:
+                    if self.svc.opt('auto_attr'):
+                        info = self.svc.boss.get_service('language').get_info(self.document)
+                        buf = self.editor.get_buffer()
+                        it = buf.get_iter_at_offset(buf.props.cursor_position)
+                        # we have to build a small buffer, because the character 
+                        # typed is not in the buffer yet
+                        it2 = buf.get_iter_at_offset(max(buf.props.cursor_position-10, 0))
+                        sbuf = buf.get_text(it, it2) + event.string
+                        print sbuf
+                        for x in info.attributerefs:
+                            if sbuf.rfind(x) == len(sbuf)-1 and \
+                               sbuf[-1] == event.string:
+                                gcall(self.show)
+                                return
+                    #if self.svc.opt('auto_char'):
+                    #    info = self.svc.boss.get_service('language').get_info(self.document)
+                    #    buf = self.editor.get_buffer()
+                    #    it = buf.get_iter_at_offset(buf.props.cursor_position)
+                    #    # we have to build a small buffer, because the character 
+                    #    # typed is not in the buffer yet
+                    #    it2 = buf.get_iter_at_offset(max(buf.props.cursor_position-self.svc.opt('auto_char'), 0))
+                    #    sbuf = buf.get_text(it, it2) + event.string
+                    #    print sbuf
+                    #    for x in info.attributerefs:
+                    #        if sbuf.rfind(x) == len(sbuf)-1 and \
+                    #           sbuf[-1] == event.string:
+                    #            gcall(self.show)
+                    #            return
+                        
+                        #res = it.backward_search(x, gtk.TEXT_SEARCH_TEXT_ONLY)
+                        #print res
+                        #print res[0].get_offset(), res[1].get_offset(), it.get_offset(), buf.props.cursor_position
+                        #if res and res[1].get_offset() == it.get_offset()+1:
+                        #    self.show()
+                        #    break
+                        #self.completer.filter += event.string
+                        #self.completer_pos_user += len(event.string)
+                # we handle
                 pass
                 
             #shift tab 65056

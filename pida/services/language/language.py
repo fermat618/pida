@@ -22,6 +22,7 @@ from kiwi.ui.objectlist import ObjectList
 from pida.core.environment import plugins_dir
 
 from pida.core.doctype import TypeManager
+from pida.core.languages import LanguageInfo
 from pida.utils.pdbus import EXPORT
 
 from pida.utils.gthreads import GeneratorTask
@@ -345,6 +346,8 @@ class Language(Service):
         self._view_outliner = BrowserView(self)
         self._view_validator = ValidatorView(self)
         self.current_type = None
+        # add default language info
+        self.features.subscribe((None, 'info'), LanguageInfo) 
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -401,6 +404,9 @@ class Language(Service):
 
         self._get_feature(document, 'completer', '_lng_completer')
         self._get_feature(document, 'definer', '_lng_definer')
+
+    def get_info(self, document):
+        return self._get_feature(document, 'info', '_lng_info')
 
     def get_outliner(self, document):
         return self._get_feature(document, 'outliner', '_lng_outliner')

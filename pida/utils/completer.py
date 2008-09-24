@@ -63,6 +63,9 @@ class PidaCompleter(gtk.HBox):
         "user-accept" :   (gobject.SIGNAL_RUN_LAST, 
                           gobject.TYPE_NONE, 
                           (gobject.TYPE_STRING,)),
+        "suggestion-selected" :   (gobject.SIGNAL_RUN_LAST, 
+                                   gobject.TYPE_NONE, 
+                                  (gobject.TYPE_STRING,)),
     }
 
 
@@ -99,11 +102,14 @@ class PidaCompleter(gtk.HBox):
         if not self._filter:
             return True
         if self.ignore_case:
-            var = self._modelreal.get_value(iter_, 1).lower()
+            var = self._modelreal.get_value(iter_, 1)
+            if var: var = var.lower()
             filter_ = self._filter.lower()
         else:
             var = self._modelreal.get_value(iter_, 1)
             filter_ = self._filter
+        if not var:
+            return False
         if var[:len(self._filter)] == filter_:
                 return True
         return False
@@ -133,6 +139,7 @@ class PidaCompleter(gtk.HBox):
         self._entry.set_position(op)
         self._entry.select_region(len(nt),op)
         self._ignore_change = False
+        self.emit("suggestion-selected", nt)
 
     def _get_non_sel(self):
         sel = self._entry.get_selection_bounds()
@@ -150,6 +157,9 @@ class PidaCompleter(gtk.HBox):
             elif event.keyval in self.abort_keys:
                 self._sig_clean("user-abort", self._filter)
                 return True
+            elif event.keyval in (65366, 65365):
+                # FIXME: pageup/down
+                pass
             elif event.keyval == 65364: #key down
                 s = self._tree.get_selection()
                 it = s.get_selected()[1]
