@@ -129,15 +129,23 @@ class LanguageInfo(object):
     @attributrefs - characters used to show char to access attributes of objects
     """
     # variable have usually only chars a-zA-Z0-9_
+    # the first character of variables have an own list
+    varchars_first = [chr(x) for x in xrange(97, 122)] + \
+                     [chr(x) for x in xrange(48, 58)] + \
+                     ['_',]
     varchars = [chr(x) for x in xrange(97, 122)] + \
                [chr(x) for x in xrange(65, 90)] + \
                [chr(x) for x in xrange(48, 58)] + \
                ['_',]
 
     word = varchars
+    word_first = varchars_first
 
-    # . in python
+    # . in python; -> in c, ...
     attributerefs = ()
+
+    def __init__(self, document):
+        self.document = document
 
     def to_dbus(self):
         return {'varchars':      self.varchars,
@@ -155,7 +163,14 @@ class Suggestion(unicode):
 
 class Completer(BaseDocumentHandler):
 
-    def get_completions(self, buffer, offset):
+    def get_completions(self, base, buffer, offset):
+        """
+        Gets a list of completitions.
+        
+        @base - string which starts completions
+        @buffer - document to parse
+        @offset - cursor position
+        """
         raise NotImplementedError('Validator must define get_completions')
 
 
