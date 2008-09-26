@@ -84,6 +84,8 @@ class ShortcutsView(PidaView):
         self._capture_entry.connect('key-press-event',
                                     self._on_capture_keypress)
         self._capture_entry.set_sensitive(False)
+        self._full_button = gtk.ToggleButton('Full')
+        hbox.pack_start(self._full_button)
         vbox.pack_start(self.shortcuts_list)
         vbox.pack_start(hbox, expand=False)
         vbox.show_all()
@@ -110,7 +112,7 @@ class ShortcutsView(PidaView):
         # svn.gnome.org/viewcvs/gazpacho/trunk/gazpacho/actioneditor.py
         # Tab must be handled as normal. Otherwise we can't move from
         # the entry.
-        if event.keyval == gtk.keysyms.Tab:
+        if event.keyval == gtk.keysyms.Tab and not self._full_button.get_active():
             return False
         modifiers = event.get_state() & gtk.accelerator_get_default_mod_mask()
         modifiers = int(modifiers)
@@ -118,12 +120,12 @@ class ShortcutsView(PidaView):
         clear_keys = [gtk.keysyms.Delete,
                       gtk.keysyms.KP_Delete,
                       gtk.keysyms.BackSpace]
-        if modifiers == 0:
+        if modifiers == 0 and not self._full_button.get_active():
             if event.keyval in clear_keys:
                 entry.set_text('')
             return True
         # Check if the accelerator is valid and add it to the entry
-        if gtk.accelerator_valid(event.keyval, modifiers):
+        if gtk.accelerator_valid(event.keyval, modifiers) or self._full_button.get_active():
             accelerator = gtk.accelerator_name(event.keyval, modifiers)
             entry.set_text(accelerator)
             self._current.value = accelerator
