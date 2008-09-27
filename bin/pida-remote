@@ -8,6 +8,7 @@ os.environ['PIDA_PATH'] = os.path.dirname(os.path.abspath(pida.__file__))
 
 from pida.utils.pdbus import BUS_NAME, DBUS_NS, DBUS_PATH_PREFIX, \
                             list_pida_instances, PidaRemote
+from pida.core import environment
 import dbus
 import dbus.service
 import re
@@ -17,35 +18,71 @@ session = dbus.SessionBus()
 # check if pida is running
 lst = list_pida_instances()
 
-file_name = os.path.abspath(sys.argv[-1])
+
+environment.parse_args(sys.argv)
+
+file_names = []
+
+for i in environment.get_args()[1:]:
+    file_names.append(os.path.abspath(i))
+
 
 def call_open(pid):
     pr = PidaRemote(pid)
-    pr.call_async('buffer', 'open_file', file_name)
+    pr.call_async('buffer', 'open_files', file_names)
     sys.exit(0)
     
 # FIXME: this is ugly. there should be a function in the core to spawn
 # a new process
-def spawn():
+def spawn(swin, session=None):
     import subprocess
-    nargs = ['python', sys.argv[0].replace('-remote',''),] + sys.argv[1:]
+    nargs = [sys.argv[0]] + file_names
+    for i in xrange(len(nargs)):
+        v = nargs[i]
+        if v[-11:] == "pida-remote":
+            nargs[i] = v[:-7]
+    if swin:
+        nargs += ['-s', swin.new_session]
+    elif session:
+        nargs += ['-s', session]
 
     subprocess.Popen(nargs, env=os.environ.copy()).pid
     sys.exit(0)
 
-
-if len(lst) == 0:
-    spawn()
-    
-else:
+def open_session():
     from pida.ui.window import SessionWindow
     import gtk
     #from kiwi.ui.delegates import GladeSlaveDelegate
-    
-    command = (('buffer', 'open_file', file_name), {})
-    
+
+    command = (('buffer', 'open_files', file_names), {})
+
     view = SessionWindow(fire_command=command, spawn_new=spawn)
     view.show_all()
     gtk.main()
     sys.exit(0)
 
+if environment.session_manager():
+    open_session()
+elif environment.session_set():
+    for i in lst:
+        pr = PidaRemote(i)
+        try:    name = pr.call('sessions', 'get_session_name')
+        except: name = "default"
+        if name == environment.session_name():
+            pr.call('buffer', 'open_files', file_names)
+            sys.exit(0)
+    spawn(None, session=environment.session_name()) 
+
+elif len(lst) == 0:
+    spawn(None)
+
+elif len(lst) == 1:
+    # check if we should always open the SessionWindow
+    #try: 
+        call_open(lst[0])
+    #except:
+    #    open_session()
+    #sys.exit(0)
+ 
+else:
+    open_session()

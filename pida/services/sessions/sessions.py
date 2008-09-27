@@ -19,7 +19,8 @@ import gobject
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.options import OptionsConfig
+from pida.core.options import OptionsConfig, manager
+from pida.core.pdbus import DbusConfig, EXPORT
 
 # locale
 from pida.core.locale import Locale
@@ -52,7 +53,8 @@ class SessionsOptionsConfig(OptionsConfig):
             list,
             [],
             _('The list of open files'),
-            safe=False
+            safe=False,
+            session=True
             )
 
     gladefile = 'sessions-properties'
@@ -66,12 +68,20 @@ class SessionsEventsConfig(EventsConfig):
         self.subscribe_foreign('editor', 'started', self.svc.load_session)
         self.subscribe_foreign('editor', 'document-exception', self.svc.on_document_exception)
 
+class SessionsDbus(DbusConfig):
+
+    @EXPORT(out_signature='s')
+    def get_session_name(self):
+        print "get_session"
+        return manager.session
+
 class Sessions(Service):
     """
     Store opened buffers for later use.
     """
     options_config = SessionsOptionsConfig
     events_config = SessionsEventsConfig
+    dbus_config = SessionsDbus
 
     def load_session(self):
         if self.opt('load_last_session'):

@@ -7,15 +7,36 @@ from pango import Font
 
 class OptionsManager(object):
 
-    def __init__(self, boss=None):
+    def __init__(self, session=None, boss=None):
         self._client = gconf.client_get_default()
         self.initialize_gconf()
+        self._session = None
+        if session:
+            self.session = session
         if killsettings():
             self.unset_directory()
 
     def initialize_gconf(self):
         self.add_directory()
         self.add_directory('keyboard_shortcuts')
+        self.add_directory('_sessions')
+
+    def initialize_session(self):
+        self.add_directory('_sessions', self.session)
+
+    def _set_session(self, value):
+        self._session = value
+        self.initialize_session()
+        
+    def _get_session(self):
+        if not self._session:
+            # we need this form of lazy loading because the default manager
+            # is created so early that the session name is not known then
+            import pida.core.environment
+            self.session = pida.core.environment.session_name()
+        return self._session
+        
+    session = property(_get_session, _set_session)
 
     def add_directory(self, *parts):
         self._client.add_dir(
@@ -25,10 +46,10 @@ class OptionsManager(object):
 
     def add_service_directory(self, service):
         self.add_directory(service.get_name())
-        
+
     def unset_directory(self, *parts):
         self._client.recursive_unset('/'.join(['/apps/pida'] + list(parts)), -1)
-        
+
     def register_option(self, option):
         val = self._client.get(option.key)
         if val is None:
@@ -93,14 +114,19 @@ class Color(str):
 
 class OptionItem(object):
 
-    def __init__(self, group, name, label, rtype, default, doc, callback):
+    def __init__(self, group, name, label, rtype, default, doc, callback, 
+                 session=None):
         self.group = group
         self.name = name
         self.label = label
         self.type = rtype
         self.doc = doc
         self.default = default
-        self.key = '/apps/pida/%s/%s' % (self.group, self.name)
+        if session:
+            self.key = '/apps/pida/_sessions/%s/%s/%s' % (
+                            manager.session, self.group, self.name)
+        else:
+            self.key = '/apps/pida/%s/%s' % (self.group, self.name)
         self.callback = callback
 
     def get_value(self):
@@ -113,7 +139,6 @@ class OptionItem(object):
 
     def add_notify(self, callback, *args):
         manager.add_notify(self, callback, *args)
-
 
 manager = OptionsManager()
 
@@ -133,9 +158,9 @@ class OptionsConfig(BaseConfig):
             manager.register_option(option)
 
     def create_option(self, name, label, type, default, doc, callback=None, 
-                      safe=True):
+                      safe=True, session=False):
         opt = OptionItem(self.svc.get_name(), name, label, type, default, doc,
-                         callback)
+                         callback, session)
         self.add_option(opt)
         # in safemode we reset all dangerouse variables so pida can start
         # even if there are some settings + pida bugs that cause problems

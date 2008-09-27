@@ -276,7 +276,7 @@ class BufferDbusConfig(DbusConfig):
         self.svc.open_file(file_name)
 
     @EXPORT(in_signature='as')
-    def open_file(self, files):
+    def open_files(self, files):
         self.svc.open_files(files)
         
     @EXPORT(in_signature='s')

@@ -174,6 +174,7 @@ class SessionWindow(BaseView):
         self.sessions = sessions
         self._fire_command = fire_command
         self._spawn_new = spawn_new
+        self.new_session = ""
 
         BaseView.__init__(self) #, delete_handler=quit_if_last)
         sigs = {
@@ -184,13 +185,14 @@ class SessionWindow(BaseView):
             'on_session_view_row_activated': self.on_session_view_row_activated,
         }
         self._glade_adaptor.signal_autoconnect(sigs)
-        self.session_list = gtk.ListStore(str, str, str, int)
+        self.session_list = gtk.ListStore(str, str, str, str, int)
         self.session_view.set_model(self.session_list)
         cell = gtk.CellRendererText()
         cell.set_property('xalign', 1.0)
-        self.session_view.append_column(gtk.TreeViewColumn('PID', cell, text=1))
-        self.session_view.append_column(gtk.TreeViewColumn('Project', cell, text=2))
-        self.session_view.append_column(gtk.TreeViewColumn('Open documents', cell, text=3))
+        self.session_view.append_column(gtk.TreeViewColumn(_('PID'), cell, text=1))
+        self.session_view.append_column(gtk.TreeViewColumn(_('Session'), cell, text=2))
+        self.session_view.append_column(gtk.TreeViewColumn(_('Project'), cell, text=3))
+        self.session_view.append_column(gtk.TreeViewColumn(_('Open'), cell, text=4))
         #tvc.set_min_width(titles[n][1])
 
         self.update_sessions()
@@ -205,13 +207,16 @@ class SessionWindow(BaseView):
         self.session_list.clear()
         for s in self.sessions:
             pr = PidaRemote(s)
-            try:    name = pr.call('boss', 'get_pid')
-            except: name = "<error>"
+            try:    pid = pr.call('boss', 'get_pid')
+            except: pid = "<error>"
+            session = pr.call('sessions', 'get_session_name')
+            try:    session = pr.call('sessions', 'get_session_name')
+            except: session = "default"
             try:    project = pr.call('project', 'get_current_project_name')
             except: project = "<error>"
             try:    count = pr.call('buffer', 'get_open_documents_count')
             except: count = 0
-            self.session_list.append((s, name, project, count))
+            self.session_list.append((s, pid, session, project, count))
 
     def on_session_view_row_activated(self, widget, num, col):
         if not self._fire_command:
@@ -226,8 +231,13 @@ class SessionWindow(BaseView):
         self.on_quit()
 
     def on_new_session_clicked(self, widget):
-        if callable(self._spawn_new):
-            self._spawn_new()
+        # ask for new session name
+        from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
+        opts = DialogOptions().add('name', label=_("Session name"), value="")
+        create_gtk_dialog(opts, parent=self.toplevel).run()
+        if opts.name and callable(self._spawn_new):
+            self.new_session = opts.name
+            self._spawn_new(self)
 
     def on_use_session_clicked(self, widget):
         num = self.session_view.get_selection().get_selected_rows()[1][0][0]

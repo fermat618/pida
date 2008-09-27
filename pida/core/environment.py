@@ -60,10 +60,14 @@ op.add_option('-T', '--trace', action='store_true',
     help=_('Run PIDA with tracing.'))
 op.add_option('-F', '--firstrun', action='store_true',
     help=_('Run the PIDA first run wizard.'))
-op.add_option('-S', '--safe_mode', action='store_true',
+op.add_option('--safe_mode', action='store_true',
     help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
 op.add_option('-P', '--profile', dest="profile_path",
     help=_('Generate profile data on path.'))
+op.add_option('-s', '--session', dest="session",
+    help=_('Use session name'))
+op.add_option('-m', '--manager', action='store_true',
+    help=_('Show Session Manager'))
 op.add_option('', '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
 
@@ -94,8 +98,21 @@ def is_firstrun():
 def is_safe_mode():
     return opts.safe_mode
 
+def session_name():
+    if not opts.session:
+        return "default"
+    return opts.session
+
+def session_set():
+    return opts.session is not None
+
+def session_manager():
+    return opts.manager
+
 def killsettings():
     return opts.killsettings
 
+def get_args():
+    return args
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

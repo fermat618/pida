@@ -76,6 +76,11 @@ except ImportError, e:
 def run_pida():
     b = Boss()
     handle_signals(b)
+    # handle start params
+    from pida.core import environment
+    if environment.get_args():
+        from pida.utils.gthreads import gcall
+        gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
     try:
         start_success = b.start()
         gdk.threads_enter()
@@ -111,8 +116,12 @@ def main():
     global opts
     import pida.core.environment
     pida.core.environment.parse_args(sys.argv)
+    print pida.core.environment.session_name()
     opts = pida.core.environment.opts
     
+    from pida.core import options
+
+    #options.create_default_manager(pida.core.environment.session_name())
     import pida.core.log
     pida.core.log.setup()
     
