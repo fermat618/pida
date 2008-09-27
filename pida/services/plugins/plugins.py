@@ -376,13 +376,14 @@ class PluginsOptionsConfig(OptionsConfig):
             self.on_check_for_updates)
 
         self.create_option(
-                'start_list', 
-                _('Start plugin list'),
-                list, 
-                [], 
-                _('List of plugin to start'),
-                safe=False
-                )
+            'start_list',
+            _('Start plugin list'),
+            list, 
+            [], 
+            _('List of plugin to start'),
+            safe=False,
+            session=True
+            )
 
     def on_rpc_url(self, client, id, entry, option):
         self.svc.rpc_url = option.get_value()
