@@ -1,21 +1,35 @@
+# -*- coding: utf-8 -*- 
+
+# Copyright (c) 2008 The PIDA Project
+
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+
 import gtk
 import gobject
 import os
+from const import UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE, PROPERTY, \
+    EXTRAMETHOD, VARIABLE, IMPORT
 
 def _load_pix(fn):
     return gtk.gdk.pixbuf_new_from_file(
         os.path.join(os.path.dirname(__file__),
         "..","services","language","pixmaps", fn))
-
-UNKNOWN = 0, 
-ATTRIBUTE = 1
-CLASS = 2
-METHOD = 3
-MODULE = 4
-PROPERTY = 5
-EXTRAMETHOD = 6
-VARIABLE = 7
-IMPORT = 8
 
 
 _PIXMAPS = {
@@ -29,7 +43,6 @@ _PIXMAPS = {
     VARIABLE:    _load_pix('element-event-16.png'),
     IMPORT:      _load_pix('source-import.png'),
 }
-
 
 
 class SuggestionsList(gtk.ListStore):

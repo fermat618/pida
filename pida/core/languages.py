@@ -28,6 +28,8 @@ from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
+from pida.utils.const import UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE, \
+    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT
 
 
 PRIO_PERFECT = 100
@@ -114,7 +116,7 @@ class Definer(BaseDocumentHandler):
         """
         Returns a Definition class pointing to document defining the word
         searched for. The Definier has to find out which word the offset is on.
-        
+
         @offset - nth char in the document point is on
         """
         raise NotImplementedError('Validator must define get_definition')
@@ -141,8 +143,11 @@ class LanguageInfo(object):
     word = varchars
     word_first = varchars_first
 
+    open_backets = ['[','(','{']
+    close_backets = [']',')','}']
+
     # . in python; -> in c, ...
-    attributerefs = ()
+    attributerefs = []
 
     def __init__(self, document):
         self.document = document

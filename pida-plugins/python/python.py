@@ -127,7 +127,7 @@ class PythonLanguage(LanguageInfo):
     word = varchars
 
     # . in python
-    attributerefs = ('.',)
+    attributerefs = ['.']
 
 
 def _create_exception_validation(e):

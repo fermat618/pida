@@ -160,6 +160,7 @@ class ActionsConfig(BaseConfig):
 
         if accel is not None:
             self._create_key_option(act, name, label, tooltip, accel)
+        return act
 
     def _create_key_option(self, act, name, label, tooltip, accel):
         opt = OptionItem('keyboard_shortcuts/%s' % self.svc.get_name(), name,
@@ -170,6 +171,7 @@ class ActionsConfig(BaseConfig):
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
         manager.register_option(opt)
+        act.opt = opt
         act.set_accel_group(self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
