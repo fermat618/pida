@@ -43,6 +43,9 @@
             <menuitem name="switch_prev_buffer" action="switch_prev_buffer" />
             <separator />
             </placeholder>
+            <placeholder name="perms">
+                <menuitem name="show_buffer_list" action="show_buffer_list" />
+            </placeholder>
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

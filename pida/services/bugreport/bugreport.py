@@ -113,8 +113,7 @@ class BugreportActions(ActionsConfig):
             _('Bug report'),
             _('Make a bug report'),
             'error',
-            self.on_report,
-            '<Shift><Control>b'
+            self.on_report
         )
 
     def on_report(self, action):

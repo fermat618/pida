@@ -191,6 +191,15 @@ class BufferActionsConfig(ActionsConfig):
             self.on_prev_buffer,
             '<Alt>Up',
         )
+        self.create_action(
+            'show_buffer_list',
+            TYPE_NORMAL,
+            _('Show buffer browser'),
+            _('Displays the buffer window'),
+            '',
+            self.on_show_buffer,
+            '<Shift><Control>b',
+        )
 
     def on_open_file(self, action):
         project = self.svc.boss.cmd('project', 'get_current_project')
@@ -225,6 +234,9 @@ class BufferActionsConfig(ActionsConfig):
 
     def on_prev_buffer(self, action):
         self.svc.get_view().prev_buffer()
+
+    def on_show_buffer(self, action):
+        self.svc.cmd('present_view')
 
 
 class BufferFeaturesConfig(FeaturesConfig):
@@ -268,6 +280,10 @@ class BufferCommandsConfig(CommandsConfig):
 
     def get_documents(self):
         return self.svc.get_documents()
+
+    def present_view(self):
+        return self.svc.boss.cmd('window', 'present_view',
+            view=self.svc.get_view())
 
 class BufferDbusConfig(DbusConfig):
     
