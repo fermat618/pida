@@ -319,7 +319,11 @@ class Document(object):
     def _build_markup_dict(self):
         markup_dict = {}
         for attr in self.markup_attributes:
-            markup_dict[attr] = escape(getattr(self, attr))
+            var = getattr(self, attr)
+            if var:
+                markup_dict[attr] = escape(var)
+            else:
+                markup_dict[attr] = None
         return markup_dict
 
     @property
