@@ -89,22 +89,27 @@ class BufferListView(PidaGladeView):
         if self.buffers_ol.get_selected() is not document:
             self.buffers_ol.select(document)
 
-    def on_buffers_ol__selection_changed(self, ol, item):
-        self.svc.view_document(item)
+    def view_document(self, document):
+        self.svc.view_document(document)
+        self.svc.boss.editor.cmd('grab_focus')
 
     def on_buffers_ol__double_click(self, ol, item):
-        self.svc.boss.editor.cmd('grab_focus')
+        self.view_document(item)
+
+    def on_buffers_ol__row_activated(self, ol, item):
+        self.view_document(item)
 
     def on_buffers_ol__right_click(self, ol, item, event=None):
         self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           event=event,
-                          file_name=self.svc.get_current().filename)
+                          file_name=item.filename)
 
     def get_current_buffer_index(self):
-        return self.buffers_ol.index(self.buffers_ol.get_selected())
+        return self.buffers_ol.index(self.svc.get_current())
 
     def select_buffer_by_index(self, index):
         self.buffers_ol.select(self.buffers_ol[index])
+        self.view_document(self.buffers_ol[index])
 
     def next_buffer(self):
         index = self.get_current_buffer_index()
@@ -132,7 +137,7 @@ class BufferActionsConfig(ActionsConfig):
             self.on_open_file,
             '<Shift><Control>O',
         )
-        
+
         self.create_action(
             'open-for-file',
             TYPE_NORMAL,
@@ -238,7 +243,6 @@ class BufferActionsConfig(ActionsConfig):
     def on_show_buffer(self, action):
         self.svc.cmd('present_view')
 
-
 class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
@@ -282,8 +286,10 @@ class BufferCommandsConfig(CommandsConfig):
         return self.svc.get_documents()
 
     def present_view(self):
+        view = self.svc.get_view()
         return self.svc.boss.cmd('window', 'present_view',
-            view=self.svc.get_view())
+            view=view)
+        view.buffers_ol.grab_focus()
 
 class BufferDbusConfig(DbusConfig):
     
