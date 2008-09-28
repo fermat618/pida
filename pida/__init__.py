@@ -23,7 +23,8 @@ PIDA_AUTHORS = [PIDA_AUTHOR] + [
     'Anders Conbere <aconbere@gmail.com>',
     'David Soulayrol <david.soulayrol@gmail.com>',
     'Alexander Gabriel <Alexander.Gabriel@TU-Harburg.de>',
-    'Tobias Eberle <info@tobiaseberle.de>'
+    'Tobias Eberle <info@tobiaseberle.de>',
+    'Daniel Poelzleithner <pida@poelzi.org>'
 ]
 
 PIDA_SHORT_DESCRIPTION = 'An integrated development environment that reuses tools such as Vim, and all version control systems.'
