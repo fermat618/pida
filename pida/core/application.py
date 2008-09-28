@@ -78,9 +78,7 @@ def run_pida():
     handle_signals(b)
     try:
         start_success = b.start()
-        gdk.threads_enter()
         b.loop_ui()
-        gdk.threads_leave()
         return 0
     except Exception, e:
         traceback.print_exc()
