@@ -209,7 +209,6 @@ class SessionWindow(BaseView):
             pr = PidaRemote(s)
             try:    pid = pr.call('boss', 'get_pid')
             except: pid = "<error>"
-            session = pr.call('sessions', 'get_session_name')
             try:    session = pr.call('sessions', 'get_session_name')
             except: session = "default"
             try:    project = pr.call('project', 'get_current_project_name')
