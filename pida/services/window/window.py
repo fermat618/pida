@@ -164,7 +164,7 @@ class WindowOptionsConfig(OptionsConfig):
             'window_title',
             _('Window title'),
             str,
-            'Pida - $session - $filename',
+            'Pida - $session - $filepath',
             _('Title template for the pida window.\n'
               '$basename : Filename of Document - $filepath : Full filepath \n'
               '$directory : Directory if file - $session : Session name \n'

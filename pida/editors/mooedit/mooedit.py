@@ -349,7 +349,7 @@ class MooeditActionsConfig(EditorActionsConfig):
             _('Toggels the autocompleter'),
             '',
             None,
-            'Tab',
+            '<Control>space',
         )
         act.disconnect_accelerator()
         act.opt.add_notify(self.on_completer_change)
@@ -385,7 +385,7 @@ class MooeditActionsConfig(EditorActionsConfig):
             _('Accept suggestion'),
             '',
             None,
-            'Return',
+            'Tab',
         )
         act.disconnect_accelerator()
         act.opt.add_notify(self.on_completer_change)
