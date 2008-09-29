@@ -65,7 +65,7 @@ class AttrSortCombo(gtk.HBox):
 
     def _on_order_toggled(self, button):
         self._sort()
-    
+
     def _sort(self):
         self._objectlist.sort_by_attribute(self._get_attribute(),
                                            self._get_order())
@@ -75,7 +75,7 @@ class AttrSortCombo(gtk.HBox):
             return gtk.SORT_DESCENDING
         else:
             return gtk.SORT_ASCENDING
-        
+
     def _get_attribute(self):
         return self._model[self._combo.get_active_iter()][0]
 

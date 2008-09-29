@@ -28,7 +28,6 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-
 new_file_index = 1
 
 class Document(object):
@@ -51,6 +50,11 @@ class Document(object):
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'markup_project_color', 'markup_directory_color', 
                          'filename', 'directory']
+
+    markup_string_tworow = (
+                     u'<b>%(basename)s</b>\n'
+                     u'<small>%(markup)s</small>')
+
     markup_string_project = (
                      u'<span color="%(markup_project_color)s">'
                      u'%(project_name)s</span><tt>:</tt>'
@@ -307,6 +311,7 @@ class Document(object):
                 markup_string = self.markup_string_project
             else:
                 markup_string = self.markup_string
+        
         prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
         if self.filename is not None:
             s = markup_string % self._build_markup_dict()
@@ -314,10 +319,18 @@ class Document(object):
             s = u'<b>%s</b>' % escape(self.__unicode__())
         return '%s%s' % (prefix, s)
 
+    @property
+    def markup_tworow(self):
+        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
+            'markup': self.markup
+            })
+        return rv
+
     markup = property(get_markup)
 
-    def _build_markup_dict(self):
-        markup_dict = {}
+    def _build_markup_dict(self, markup_dict=None):
+        if not markup_dict:
+            markup_dict = {}
         for attr in self.markup_attributes:
             var = getattr(self, attr)
             if var:
