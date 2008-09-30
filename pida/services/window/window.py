@@ -81,6 +81,16 @@ class WindowActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'fullscreen',
+            TYPE_TOGGLE,
+            _('Fullscreen'),
+            _('Toggle the fullscreen mode'),
+            gtk.STOCK_FULLSCREEN,
+            self.on_fullscreen,
+            'F11',
+        )
+
+        self.create_action(
             'switch_next_term',
             TYPE_NORMAL,
             _('Next terminal'),
@@ -118,6 +128,9 @@ class WindowActionsConfig(ActionsConfig):
 
     def on_switch_prev_term(self, action):
         self.svc.window.switch_prev_view('Terminal')
+
+    def on_fullscreen(self, action):
+        self.svc.set_fullscreen(action.get_active())
 
     def on_show_ui(self, action):
         val = action.get_active()
@@ -257,7 +270,11 @@ class Window(Service):
     def show_menubar(self, visibility):
         self.window.set_menubar_visibility(visibility)
 
+    def set_fullscreen(self, var):
+        self.window.set_fullscreen(var)
 
+    def get_fullscreen(self, var):
+        return self.window.get_fullscreen()
 
 # Required Service attribute for service loading
 Service = Window

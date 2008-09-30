@@ -143,6 +143,12 @@ class PidaWindow(Window):
     def switch_prev_view(self, bookname):
         self._paned.switch_prev_pane(bookname)
 
+    def set_fullscreen(self, fullscreen):
+        self._paned.set_fullscreen(fullscreen)
+
+    def get_fullscreen(self):
+        return self._paned.get_fullscreen()
+
     def get_statusbar(self):
         return self._statusbar
 

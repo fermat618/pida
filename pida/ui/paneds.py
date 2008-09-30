@@ -35,6 +35,8 @@ class PidaPaned(BigPaned):
 
     def __init__(self):
         BigPaned.__init__(self)
+        self._fullscreen = False
+        self._fullscreen_vis = {}
         self.set_property('enable-detaching', True)
         for pane in self.get_all_paneds():
             pane.set_pane_size(200)
@@ -132,4 +134,24 @@ class PidaPaned(BigPaned):
         cy = (ph - h) / 2
         gdkwindow.move_resize(cx, cy, w, h)
         #gdkwindow.resize(w, h)
+
+    def set_fullscreen(self, fullscreen):
+        if self._fullscreen == fullscreen:
+            return
+        if fullscreen:
+            for pos in self.get_all_pos():
+                paned = self.get_paned(pos)
+                self._fullscreen_vis[pos] = paned.get_open_pane()
+                paned.hide_pane()
+                #self.hide_pane(pan)
+        else:
+             for pos in self.get_all_pos():
+                paned = self.get_paned(pos)
+                if self._fullscreen_vis.has_key(pos) and \
+                    self._fullscreen_vis[pos]:
+                    paned.open_pane(self._fullscreen_vis[pos])
+        self._fullscreen = fullscreen
+
+    def get_fullscreen(self):
+        return self._fullscreen
 
