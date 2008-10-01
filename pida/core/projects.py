@@ -85,9 +85,9 @@ class Project(Log):
     def markup(self):
         return '<b>%s</b>\n%s' % (self.display_name, self.source_directory)
 
-    def get_meta_dir(self, mkdir=True, *args, **kwargs):
+    def get_meta_dir(self, *args, **kwargs):
         path = os.path.join(self.source_directory, DATA_DIR, *args)
-        if mkdir:
+        if kwargs.get('mkdir', True):
             self._mkdir(path)
         return path
 
@@ -99,6 +99,16 @@ class Project(Log):
 
     def get_relative_path_for(self, filename):
         return get_relative_path(self.source_directory, filename)
+
+    @staticmethod
+    def create_blank_project_file(name, project_directory):
+        file_path = os.path.join(project_directory, 'build.vel')
+        with open(file_path, 'w') as project_file:
+            project_file.write((
+                    'options(\n    name %r\n    )\n'
+                    'depends()\n'
+                    'targets()\n'
+                    )%name)
 
 
     def _mkdir(self, path):

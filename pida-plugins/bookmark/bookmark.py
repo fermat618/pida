@@ -139,8 +139,8 @@ class BookmarkView(PidaView):
         self._books = gtk.Notebook()
         self._books.set_border_width(6)
         self._list = {}
-        self._list['path'] = self.create_objectlist('stock_folder', _('Dirs'))
         self._list['file'] = self.create_objectlist('text-x-generic', _('Files'))
+        self._list['path'] = self.create_objectlist('stock_folder', _('Dirs'))
         """
         self._list_url = ObjectList([Column('markup', data_type=str, use_markup=True)])
         self._list_url.set_headers_visible(False)
@@ -199,7 +199,19 @@ class BookmarkActions(ActionsConfig):
             _('Bookmark current file'),
             'text-x-generic',
             self.on_bookmark_curfile,
+            ''
         )
+
+        self.create_action(
+            'bookmark_togglefile',
+            TYPE_NORMAL,
+            _('Toggle Bookmark on current file'),
+            _('Toggle Bookmark on current file'),
+            'text-x-generic',
+            self.on_bookmark_togglefile,
+            ''
+        )
+
 
         self.create_action(
             'bookmark_curdir',
@@ -208,6 +220,7 @@ class BookmarkActions(ActionsConfig):
             _('Bookmark current directory'),
             'stock_folder',
             self.on_bookmark_curdir,
+            ''
         )
 
         self.create_action(
@@ -217,6 +230,27 @@ class BookmarkActions(ActionsConfig):
             _('Delete selected item'),
             gtk.STOCK_DELETE,
             self.on_bookmark_delsel,
+            ''
+        )
+
+        self.create_action(
+            'bookmark_go_prev',
+            TYPE_NORMAL,
+            _('Goto previous bookmark'),
+            _('Goto previous bookmark'),
+            gtk.STOCK_GO_UP,
+            self.on_bookmark_go_prev,
+            ''
+        )
+
+        self.create_action(
+            'bookmark_go_next',
+            TYPE_NORMAL,
+            _('Goto next bookmark'),
+            _('Goto next bookmark'),
+            gtk.STOCK_GO_DOWN,
+            self.on_bookmark_go_next,
+            ''
         )
 
         self.create_action(
@@ -250,8 +284,17 @@ class BookmarkActions(ActionsConfig):
     def on_bookmark_curfile(self, action):
         self.svc.bookmark_file()
 
+    def on_bookmark_togglefile(self, action):
+        self.svc.bookmark_toggle_file()
+
     def on_bookmark_delsel(self, action):
         self.svc.remove_current()
+
+    def on_bookmark_go_next(self, action):
+        self.svc.goto_next()
+
+    def on_bookmark_go_prev(self, action):
+        self.svc.goto_prev()
 
     def on_bookmark_for_file(self, action):
         self.svc.bookmark_file(filename=action.contexts_kw['file_name'])
@@ -311,6 +354,12 @@ class Bookmark(Service):
         self._view.add_item(item)
         self.save()
 
+    def list_files(self):
+        return self._view._list['file']
+
+    def list_dirs(self):
+        return self._view._list['path']
+
     def remove_current(self):
         if self._current == None:
             return
@@ -333,7 +382,7 @@ class Bookmark(Service):
         item = BookmarkItemPath(title=title, data=path)
         self.add_item(item)
 
-    def bookmark_file(self, filename=None, line=None):
+    def _fill_file(self, filename, line):
         if filename == None:
             document = self.boss.cmd('buffer', 'get_current')
             if document == None:
@@ -341,11 +390,30 @@ class Bookmark(Service):
             filename = document.filename
         if line == None:
             line = self.boss.editor.cmd('get_current_line_number')
+        return (filename, line)
+
+    def bookmark_file(self, filename=None, line=None):
+        filename, line = self._fill_file(filename, line)
         filename_title = os.path.basename(filename)
         title = '%s:<span color="#000099">%d</span>' % (
                 cgi.escape(filename_title), int(line))
         item = BookmarkItemFile(title=title, data=filename, line=line)
         self.add_item(item)
+
+    def bookmark_toggle_file(self, filename=None, line=None):
+        """
+        Add/removed a bookmark depending if there is already one
+        """
+        filename, line = self._fill_file(filename, line)
+        for item in self.list_files():
+            if item.data == filename and item.line == line:
+                self._items.remove(item)
+                self._view.remove_item(item)
+                if self._current == item:
+                    self._current = None
+                break
+        else:
+            self.bookmark_file(filename, line)
 
     def on_project_switched(self, project):
         if project != self._project:
@@ -353,29 +421,27 @@ class Bookmark(Service):
             self.load()
 
     def _serialize(self):
-        #data = {}
-        #for t in self._items:
-        #    if not data.has_key(t.group):
-        #        data[t.group] = []
-        #    if t.group == 'file':
-        #        data[t.group].append('%s:%d' % (t.data, int(t.line)))
-        #    else:
-        #        data[t.group].append(t.data)
-        #return data
-        #return cPickle.dumps(
-        pass
+        data = {}
+        for t in self._items:
+            if not data.has_key(t.group):
+                data[t.group] = []
+            if t.group == 'file':
+                data[t.group].append('%s:%d' % (t.data, int(t.line)))
+            else:
+                data[t.group].append(t.data)
+        return data
 
     def _unserialize(self, data):
         if data == None:
             return
-        #for key in data:
-        #    items = data[key]
-        #    for item in items:
-        #        if key == 'file':
-        #            t = item.rsplit(':')
-        #            self.bookmark_file(filename=t[0], line=t[1])
-        #        elif key == 'path':
-        #            self.bookmark_dir(path=item)
+        for key in data:
+            items = data[key]
+            for item in items:
+                if key == 'file':
+                    t = item.rsplit(':')
+                    self.bookmark_file(filename=t[0], line=t[1])
+                elif key == 'path':
+                    self.bookmark_dir(path=item)
 
     def load(self):
         self._items = []
@@ -383,16 +449,15 @@ class Bookmark(Service):
         pro = self.boss.cmd('project', 'get_current_project')
         self._project = pro
         datadir = pro.get_meta_dir('bookmark')
-        datafile = os.path.join(datadir, 'bookmarks.pickle')
+        datafile = os.path.join(datadir, 'bookmark.pickle')
         if os.path.isfile(datafile):
             try:
                 fp = open(datafile, "r")
-                items = cPickle.load(fp)
+                data = cPickle.load(fp)
+                self._unserialize(data)
             except Exception, e:
                 self.log.exception(e)
                 return
-            for item in items:
-                self.add_item(item)
             
         #self._unserialize(data)
 
@@ -403,11 +468,11 @@ class Bookmark(Service):
             #FIXME: should we save it in the default settings ?
             return
         else:
-            datadir = pro.get_meta_dir('bookmark', 'bookmark')
+            datadir = pro.get_meta_dir('bookmark')
             datafile = os.path.join(datadir, 'bookmark.pickle')
         try:
             fp = open(datafile, "w")
-            cPickle.dump(self._items, fp)
+            cPickle.dump(data, fp)
         except Exception, e:
             self.log.exception(e)
             
@@ -419,6 +484,30 @@ class Bookmark(Service):
         if self.get_action('show_bookmark').get_active():
             self.hide_bookmark()
 
+    def _goto(self, direction):
+        if not self._view:
+            return
+        lst = self._view._list['file']
+        if not len(lst):
+            return
+        cur = lst.get_selected()
+        if not cur:
+            cur = lst.select_paths([0])
+            cur = lst.get_selected()
+        if direction > 0:
+            sel = lst.get_next(cur)
+        else:
+            sel = lst.get_previous(cur)
+        lst.select(sel)
+        self.set_current(sel)
+        sel.run(self)
+
+    def goto_next(self):
+        self._goto(1)
+    
+    def goto_prev(self):
+        self._goto(-1)
+        
 
 # Required Service attribute for service loading
 Service = Bookmark

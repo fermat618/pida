@@ -340,17 +340,8 @@ class ProjectService(Service):
 
     def create_project_file(self, project_directory):
         project_name = os.path.basename(project_directory)
-        path = os.path.join(project_directory, 'build.vel')
-        self._create_blank_project_file(project_name, path)
+        Project.create_blank_project_file(project_name, project_directory)
         self.load_and_set_project(project_directory)
-
-    def _create_blank_project_file(self, name, file_path):
-        with open(file_path, 'w') as project_file:
-            project_file.write((
-                    'options(\n    name %r\n    )\n'
-                    'depends()\n'
-                    'targets()\n'
-                    )%name)
 
     def set_current_project(self, project):
         self._current = project
