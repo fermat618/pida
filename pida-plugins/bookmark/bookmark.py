@@ -23,6 +23,7 @@
 import gtk
 import os
 import cgi
+import cPickle
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -61,8 +62,7 @@ class BookmarkItem(object):
         return hash(self._key())
 
     def __cmp__(self, other):
-        assert isinstance(other, BookmarkItem)
-        return cmp(self._key(), other._key())
+        return cmp(hash(self),hash(other))
 
 
 class BookmarkItemFile(BookmarkItem):
@@ -126,19 +126,19 @@ class BookmarkView(PidaView):
         return b
 
     def create_objectlist(self, icon_name, text):
-            l = ObjectList([Column('title')])
+            l = ObjectList([Column('title', use_markup=True)])
             l.connect('row-activated', self._on_item_activated)
             l.connect('selection-changed', self._on_item_selected)
             l.set_headers_visible(False)
             l.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            l._books.append_page(self._list_dirs,
+            self._books.append_page(l,
                     tab_label=self.create_tab_label(icon_name, text))
             return l
 
     def create_ui_list(self):
         self._books = gtk.Notebook()
         self._books.set_border_width(6)
-        self.list = {}
+        self._list = {}
         self._list['path'] = self.create_objectlist('stock_folder', _('Dirs'))
         self._list['file'] = self.create_objectlist('text-x-generic', _('Files'))
         """
@@ -289,7 +289,8 @@ class Bookmark(Service):
         self._items = []
         self._current = None
         self._project = None
-
+        self.load()
+        
     def show_bookmark(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         if not self._has_loaded:
@@ -304,7 +305,7 @@ class Bookmark(Service):
 
     def add_item(self, item):
         for t in self._items:
-            if t.key() == item.key():
+            if t == item:
                 return
         self._items.append(item)
         self._view.add_item(item)
@@ -337,7 +338,7 @@ class Bookmark(Service):
             document = self.boss.cmd('buffer', 'get_current')
             if document == None:
                 return
-            filename = document.get_filename()
+            filename = document.filename
         if line == None:
             line = self.boss.editor.cmd('get_current_line_number')
         filename_title = os.path.basename(filename)
@@ -352,39 +353,67 @@ class Bookmark(Service):
             self.load()
 
     def _serialize(self):
-        data = {}
-        for t in self._items:
-            if not data.has_key(t.group):
-                data[t.group] = []
-            if t.group == 'file':
-                data[t.group].append('%s:%d' % (t.data, int(t.line)))
-            else:
-                data[t.group].append(t.data)
-        return data
+        #data = {}
+        #for t in self._items:
+        #    if not data.has_key(t.group):
+        #        data[t.group] = []
+        #    if t.group == 'file':
+        #        data[t.group].append('%s:%d' % (t.data, int(t.line)))
+        #    else:
+        #        data[t.group].append(t.data)
+        #return data
+        #return cPickle.dumps(
+        pass
 
     def _unserialize(self, data):
         if data == None:
             return
-        for key in data:
-            items = data[key]
-            for item in items:
-                if key == 'file':
-                    t = item.rsplit(':')
-                    self.bookmark_file(filename=t[0], line=t[1])
-                elif key == 'path':
-                    self.bookmark_dir(path=item)
+        #for key in data:
+        #    items = data[key]
+        #    for item in items:
+        #        if key == 'file':
+        #            t = item.rsplit(':')
+        #            self.bookmark_file(filename=t[0], line=t[1])
+        #        elif key == 'path':
+        #            self.bookmark_dir(path=item)
 
     def load(self):
         self._items = []
         self._view.clear_all()
-        data = self.boss.cmd('project', 'get_current_project_data',
-                section_name='bookmark')
-        self._unserialize(data)
+        pro = self.boss.cmd('project', 'get_current_project')
+        self._project = pro
+        datadir = pro.get_meta_dir('bookmark')
+        datafile = os.path.join(datadir, 'bookmarks.pickle')
+        if os.path.isfile(datafile):
+            try:
+                fp = open(datafile, "r")
+                items = cPickle.load(fp)
+            except Exception, e:
+                self.log.exception(e)
+                return
+            for item in items:
+                self.add_item(item)
+            
+        #self._unserialize(data)
 
     def save(self):
         data = self._serialize()
-        self.boss.cmd('project', 'save_to_current_project',
-                section_name='bookmark', section_data=data)
+        pro = self.boss.cmd('project', 'get_current_project')
+        if not pro:
+            #FIXME: should we save it in the default settings ?
+            return
+        else:
+            datadir = pro.get_meta_dir('bookmark', 'bookmark')
+            datafile = os.path.join(datadir, 'bookmark.pickle')
+        try:
+            fp = open(datafile, "w")
+            cPickle.dump(self._items, fp)
+        except Exception, e:
+            self.log.exception(e)
+            
+        #FIXME: reimplement !!!
+        #self.boss.cmd('project', 'save_to_current_project',
+        #        section_name='bookmark', section_data=data)
 
     def stop(self):
         if self.get_action('show_bookmark').get_active():
