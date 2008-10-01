@@ -349,7 +349,7 @@ class MooeditActionsConfig(EditorActionsConfig):
             _('Toggels the autocompleter'),
             '',
             None,
-            'Tab',
+            '<Control>space',
         )
         act.disconnect_accelerator()
         act.opt.add_notify(self.on_completer_change)
@@ -385,7 +385,7 @@ class MooeditActionsConfig(EditorActionsConfig):
             _('Accept suggestion'),
             '',
             None,
-            'Return',
+            'Tab',
         )
         act.disconnect_accelerator()
         act.opt.add_notify(self.on_completer_change)
@@ -900,12 +900,18 @@ class Mooedit(EditorService):
             self.update_actions()
 
     def open_list(self, documents):
+        good = None
         for doc in documents:
             try:
-                self._load_file(doc)
+                if self._load_file(doc):
+                    good = doc
             except DocumentException, err:
                 self.log.exception(err)
                 self.boss.get_service('editor').emit('document-exception', error=err)
+        # we open the last good document now normally again to 
+        # make system consistent
+        if good:
+            self.open(doc)
 
     def close(self, document):
         """Close a document"""
@@ -1177,10 +1183,16 @@ class Mooedit(EditorService):
     def delete_current_word(self):
         start, end, txt = self._get_current_word_pos()
         buf = self._current.editor.get_buffer()
-        
+
         buf.delete(buf.get_iter_at_offset(start), 
                    buf.get_iter_at_offset(end))
-                   
+
+    def get_current_line(self):
+        buf = self._current.editor.get_buffer()
+        i = buf.get_iter_at_offset(buf.props.cursor_position)
+        print "moo cur line", i.get_line()+1
+        return i.get_line()+1
+
     def replace_line(self, editor, lineno, text):
         """
         Replace a line in the editor. lineno is index 0 based.
@@ -1192,7 +1204,6 @@ class Mooedit(EditorService):
         buf.delete(it1, it2)
         buf.insert(it1, text)
 
-    
 # Required Service attribute for service loading
 Service = Mooedit
 

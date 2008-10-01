@@ -24,7 +24,7 @@ _ = locale.gettext
 
 
 #FIXME: win32 fixup
-DATA_DIR = ".pida-project"
+DATA_DIR = ".pida-metadata"
 
 class Project(Log):
     """
@@ -85,9 +85,13 @@ class Project(Log):
     def markup(self):
         return '<b>%s</b>\n%s' % (self.display_name, self.source_directory)
 
-    @property
-    def data_dir(self):
-        return os.path.join(self.source_directory, DATA_DIR)
+    def get_meta_dir(self, *args, **kwargs):
+        path = os.path.join(self.source_directory, DATA_DIR, *args)
+        if kwargs.get('mkdir', True):
+            self._mkdir(path)
+        return path
+
+    data_dir = property(get_meta_dir)
 
     @property
     def display_name(self):
@@ -96,3 +100,21 @@ class Project(Log):
     def get_relative_path_for(self, filename):
         return get_relative_path(self.source_directory, filename)
 
+    @staticmethod
+    def create_blank_project_file(name, project_directory):
+        file_path = os.path.join(project_directory, 'build.vel')
+        with open(file_path, 'w') as project_file:
+            project_file.write((
+                    'options(\n    name %r\n    )\n'
+                    'depends()\n'
+                    'targets()\n'
+                    )%name)
+
+
+    def _mkdir(self, path):
+        pe = path.split(os.sep)
+        last = os.sep
+        for x in pe:
+            last = os.path.join(last, x)
+            if last and not os.path.isdir(last):
+                os.mkdir(last)

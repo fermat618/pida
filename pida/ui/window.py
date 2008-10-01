@@ -143,6 +143,12 @@ class PidaWindow(Window):
     def switch_prev_view(self, bookname):
         self._paned.switch_prev_pane(bookname)
 
+    def set_fullscreen(self, fullscreen):
+        self._paned.set_fullscreen(fullscreen)
+
+    def get_fullscreen(self):
+        return self._paned.get_fullscreen()
+
     def get_statusbar(self):
         return self._statusbar
 
@@ -207,14 +213,22 @@ class SessionWindow(BaseView):
         self.session_list.clear()
         for s in self.sessions:
             pr = PidaRemote(s)
-            try:    pid = pr.call('boss', 'get_pid')
-            except: pid = "<error>"
-            try:    session = pr.call('sessions', 'get_session_name')
-            except: session = "default"
-            try:    project = pr.call('project', 'get_current_project_name')
-            except: project = "<error>"
-            try:    count = pr.call('buffer', 'get_open_documents_count')
-            except: count = 0
+            try:
+                pid = pr.call('boss', 'get_pid')
+            except: 
+                pid = "<error>"
+            try:
+                session = pr.call('sessions', 'get_session_name')
+            except:
+                session = "default"
+            try:
+                project = pr.call('project', 'get_current_project_name')
+            except:
+                project = _("No project")
+            try:
+                count = pr.call('buffer', 'get_open_documents_count')
+            except:
+                count = 0
             self.session_list.append((s, pid, session, project, count))
 
     def on_session_view_row_activated(self, widget, num, col):

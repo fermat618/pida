@@ -40,13 +40,11 @@ class PidaPaned(BigPaned):
 
     def __init__(self):
         BigPaned.__init__(self)
+        self._fullscreen = False
+        self._fullscreen_vis = {}
         self.set_property('enable-detaching', True)
         self.connect('config-changed', self.on_config_changed)
         self.config_file = os.path.join(pida_home, 'paneconfig.txt')
-
-        #for pane in self.get_all_paneds():
-        #    pane.set_pane_size(200)
-            #pane.set_sticky_pane(True)
 
         self.init_config()
 
@@ -167,4 +165,24 @@ class PidaPaned(BigPaned):
         config = self.read_config()
         if config:
             self.set_config(config)
+
+    def set_fullscreen(self, fullscreen):
+        if self._fullscreen == fullscreen:
+            return
+        if fullscreen:
+            for pos in self.get_all_pos():
+                paned = self.get_paned(pos)
+                self._fullscreen_vis[pos] = paned.get_open_pane()
+                paned.hide_pane()
+                #self.hide_pane(pan)
+        else:
+             for pos in self.get_all_pos():
+                paned = self.get_paned(pos)
+                if self._fullscreen_vis.has_key(pos) and \
+                    self._fullscreen_vis[pos]:
+                    paned.open_pane(self._fullscreen_vis[pos])
+        self._fullscreen = fullscreen
+
+    def get_fullscreen(self):
+        return self._fullscreen
 

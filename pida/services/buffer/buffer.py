@@ -31,6 +31,7 @@ from kiwi.ui.objectlist import Column
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
+from pida.core.options import OptionsConfig, choices
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
@@ -47,11 +48,16 @@ _ = locale.gettext
 
 import dbus
 
-
-LIST_COLUMNS = [
-    Column('markup', use_markup=True),
-    Column("basename", visible=False, searchable=True),
-]
+LIST_COLUMNS = {
+'onerow': [
+            Column('markup', use_markup=True),
+            Column("basename", visible=False, searchable=True),
+          ],
+'tworow': [
+            Column('markup_tworow', use_markup=True),
+            Column("basename", visible=False, searchable=True),
+          ]
+}
 
 class BufferListView(PidaGladeView):
 
@@ -62,8 +68,11 @@ class BufferListView(PidaGladeView):
 
     label_text = _('Buffers')
 
+    list_columns = LIST_COLUMNS
+
     def create_ui(self):
-        self.buffers_ol.set_columns(LIST_COLUMNS)
+        val = self.svc.opt('display_type')
+        self.buffers_ol.set_columns(LIST_COLUMNS[val])
         self.buffers_ol.set_headers_visible(False)
         self._sort_combo = AttrSortCombo(self.buffers_ol,
             [
@@ -71,6 +80,7 @@ class BufferListView(PidaGladeView):
                 ('filename', _('File path')),
                 ('basename', _('File name')),
                 ('mimetype', _('Mime Type')),
+                ('doctype', _('Document Type')),
                 ('length', _('File Length')),
                 ('modified_time', _('Last Modified')),
                 #('Project', _('Project_name'))
@@ -90,22 +100,27 @@ class BufferListView(PidaGladeView):
         if self.buffers_ol.get_selected() is not document:
             self.buffers_ol.select(document)
 
-    def on_buffers_ol__selection_changed(self, ol, item):
-        self.svc.view_document(item)
+    def view_document(self, document):
+        self.svc.view_document(document)
+        self.svc.boss.editor.cmd('grab_focus')
 
     def on_buffers_ol__double_click(self, ol, item):
-        self.svc.boss.editor.cmd('grab_focus')
+        self.view_document(item)
+
+    def on_buffers_ol__row_activated(self, ol, item):
+        self.view_document(item)
 
     def on_buffers_ol__right_click(self, ol, item, event=None):
         self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           event=event,
-                          file_name=self.svc.get_current().filename)
+                          file_name=item.filename)
 
     def get_current_buffer_index(self):
-        return self.buffers_ol.index(self.buffers_ol.get_selected())
+        return self.buffers_ol.index(self.svc.get_current())
 
     def select_buffer_by_index(self, index):
         self.buffers_ol.select(self.buffers_ol[index])
+        self.view_document(self.buffers_ol[index])
 
     def next_buffer(self):
         index = self.get_current_buffer_index()
@@ -121,6 +136,9 @@ class BufferListView(PidaGladeView):
             newindex = len(self.buffers_ol) - 1
         self.select_buffer_by_index(newindex)
 
+    def sort(self):
+        self._sort_combo._sort()
+
 class BufferActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -133,7 +151,7 @@ class BufferActionsConfig(ActionsConfig):
             self.on_open_file,
             '<Shift><Control>O',
         )
-        
+
         self.create_action(
             'open-for-file',
             TYPE_NORMAL,
@@ -239,7 +257,6 @@ class BufferActionsConfig(ActionsConfig):
     def on_show_buffer(self, action):
         self.svc.cmd('present_view')
 
-
 class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
@@ -250,10 +267,31 @@ class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed', 'document-typchanged')
-    
-    def subscribe_all_foreign(self):
-        self.subscribe_foreign('editor', 'document-exception',
-                                     self.svc.recover_loading_error)
+        self.subscribe('document-saved', self.on_document_change)
+        self.subscribe('document-changed', self.on_document_change)
+        self.subscribe('document-typchanged', self.on_document_change)
+
+    def on_document_change(self, *args, **kwargs):
+        # we have to update the document buffer when one doc changes as
+        # the list should be sorted all the time
+        self.svc.get_view().sort()
+
+class BufferOptionsConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'display_type',
+            _('Display notebook title'),
+            choices({'onerow':_('One Row'), 
+                     'tworow':_('Filename and Path seperate ')}),
+            'onerow',
+            _('Type to display in the Buffer window'),
+            self.on_display_type_change
+        )
+
+    def on_display_type_change(self, client, id, entry, option):
+        self.svc.get_view().buffers_ol.set_columns(
+            LIST_COLUMNS[option.get_value()])
+
 
 class BufferCommandsConfig(CommandsConfig):
 
@@ -261,7 +299,7 @@ class BufferCommandsConfig(CommandsConfig):
         if not file_name and not document:
             return
         self.svc.open_file(file_name, document, line=line)
-    
+
     def open_files(self, files):
         self.svc.open_files(files)
 
@@ -283,8 +321,10 @@ class BufferCommandsConfig(CommandsConfig):
         return self.svc.get_documents()
 
     def present_view(self):
+        view = self.svc.get_view()
         return self.svc.boss.cmd('window', 'present_view',
-            view=self.svc.get_view())
+            view=view)
+        view.buffers_ol.grab_focus()
 
 class BufferDbusConfig(DbusConfig):
     
@@ -324,6 +364,7 @@ class Buffer(Service):
     events_config = BufferEventsConfig
     features_config = BufferFeaturesConfig
     dbus_config = BufferDbusConfig
+    options_config = BufferOptionsConfig
 
     def pre_start(self):
         self._documents = {}

@@ -8,6 +8,7 @@
     :copyright:
         * 2005 Ali Afshar
         * 2008 Ronny Pfannschmidt
+        * 2008 Daniel Poelzleithner
 """
 import os
 import mimetypes
@@ -26,7 +27,6 @@ from xml.sax.saxutils import escape
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
-
 
 new_file_index = 1
 
@@ -50,6 +50,11 @@ class Document(object):
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'markup_project_color', 'markup_directory_color', 
                          'filename', 'directory']
+
+    markup_string_tworow = (
+                     u'<b>%(basename)s</b>\n'
+                     u'<small>%(markup)s</small>')
+
     markup_string_project = (
                      u'<span color="%(markup_project_color)s">'
                      u'%(project_name)s</span><tt>:</tt>'
@@ -81,7 +86,7 @@ class Document(object):
             new_file_index = new_file_index + 1
         else:
             self.newfile_index = None
-            
+
         if project is None:
             self.project, self.project_relative_path = self.get_project_relative_path()
         else:
@@ -140,7 +145,7 @@ class Document(object):
             if not lmn:
                 return None
             self._doctype = lmn.doctypes.guess_doctype_for_document(self)
-            
+
             return self._doctype
 
         return None
@@ -148,7 +153,7 @@ class Document(object):
     def _set_doctype(self, doctype):
         #FIXME: we need a interface setting the editors language here
         self._doctype = doctype
-        
+
     doctype = property(_get_doctype, _set_doctype)
 
     @property
@@ -189,7 +194,7 @@ class Document(object):
                                      self.project_relative_path, self.basename)
             else:
                 return os.path.basename(self.filename)
-        
+
     @property
     def markup_title(self):
         """Returns a markup version of unicode"""
@@ -204,7 +209,7 @@ class Document(object):
                                      escape(self.basename))
             else:
                 return '<b>%s</b>' %escape(os.path.basename(self.filename))
-        
+
     @property
     def modified_time(self):
         return self.stat[stat.ST_MTIME]
@@ -244,7 +249,7 @@ class Document(object):
 
         self._str = value
         self._lines = self._str.splitlines(True)
-        
+
         if flush:
             self.flush()
 
@@ -267,13 +272,13 @@ class Document(object):
         except IOError:
             if stream is not None:
                 stream.close()
-        
+
     def _update_content_from_lines(self):
         self._str = "".join(self._lines)
         if hasattr(self.boss.editor, 'set_content') and self.editor:
             return self.boss.editor.set_content(self.editor, value)
         self.set_content(self._str, flush=False)
-        
+
     @property
     def directory(self):
         if self.is_new:
@@ -306,6 +311,7 @@ class Document(object):
                 markup_string = self.markup_string_project
             else:
                 markup_string = self.markup_string
+        
         prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
         if self.filename is not None:
             s = markup_string % self._build_markup_dict()
@@ -313,12 +319,24 @@ class Document(object):
             s = u'<b>%s</b>' % escape(self.__unicode__())
         return '%s%s' % (prefix, s)
 
+    @property
+    def markup_tworow(self):
+        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
+            'markup': self.markup
+            })
+        return rv
+
     markup = property(get_markup)
 
-    def _build_markup_dict(self):
-        markup_dict = {}
+    def _build_markup_dict(self, markup_dict=None):
+        if not markup_dict:
+            markup_dict = {}
         for attr in self.markup_attributes:
-            markup_dict[attr] = escape(getattr(self, attr))
+            var = getattr(self, attr)
+            if var:
+                markup_dict[attr] = escape(var)
+            else:
+                markup_dict[attr] = None
         return markup_dict
 
     @property
@@ -349,10 +367,10 @@ class Document(object):
     # as a list of lines
     def __len__(self):
         return len(self._list)
-        
+
     def __getitem__(self, key):
         return self._list[key]
-        
+
     def __setitem__(self, key, value):
         self._list[key] = value
         self._update_content_from_lines()
@@ -363,11 +381,11 @@ class Document(object):
 
     def __iter__(self):
         return iter(self._list)
-        
+
     def append(self, line):
         self._list.append(line)
         self._update_content_from_lines()
-        
+
     def __nonzero__(self):
         # documents are always True
         return True
