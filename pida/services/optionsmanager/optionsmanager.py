@@ -44,6 +44,8 @@ _ = locale.gettext
 
 class PidaOptionsView(PidaGladeView):
 
+    key = 'optionsmanager.editor'
+
     gladefile = 'options-editor'
     locale = locale
     label_text = 'Preferences'

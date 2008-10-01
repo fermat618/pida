@@ -84,6 +84,8 @@ class OpenWithItem(object):
 
 class OpenWithEditor(PidaGladeView):
 
+    key = 'openwith.editor'
+
     gladefile = 'openwith-editor'
     locale = locale
     icon_name = gtk.STOCK_OPEN

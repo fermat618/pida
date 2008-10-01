@@ -166,6 +166,8 @@ class TestResultGroup(object):
 
 class TestResultBrowser(PidaGladeView):
 
+    key = 'nosetests.results'
+
     gladefile = 'python-testresult-browser'
     locale = locale
     icon_name = 'python-icon'
@@ -278,6 +280,8 @@ class TestResultBrowser(PidaGladeView):
             self.svc.show_result(item)
 
 class TestOutputView(PidaView):
+
+    key = 'nosetests.output'
 
     locale = locale
     icon_name = 'python-icon'

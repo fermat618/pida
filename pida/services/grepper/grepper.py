@@ -139,6 +139,7 @@ class GrepperView(PidaGladeView):
     locale = locale
     label_text = _('Find in Files')
     icon_name = gtk.STOCK_FIND
+    key = 'grepper.form'
 
     def create_ui(self):
         self.grepper_dir = ''

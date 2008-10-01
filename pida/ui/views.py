@@ -82,6 +82,9 @@ class PidaViewWidget(PropertyObject, gtk.VBox):
 
 class PidaViewMixin(object):
 
+    # Set this to make your views memorable.
+    key = None
+
     icon_name = gtk.STOCK_INFO
     label_text = _('Pida View')
 

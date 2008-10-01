@@ -61,6 +61,7 @@ class ManholeActionsConfig(ActionsConfig):
 
 class ManholeView(PidaView):
 
+    key = 'manhole.shell'
     icon_name = 'face-monkey'
 
     label_text = _('Debug PIDA')

@@ -47,6 +47,8 @@ _ = locale.gettext
 
 class TracView(PidaGladeView):
 
+    key = 'trac.browser'
+
     gladefile = 'trac-browser'
     locale = locale
     icon_name = 'trac_logo'

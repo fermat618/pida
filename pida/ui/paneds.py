@@ -43,11 +43,12 @@ class PidaPaned(BigPaned):
         self.set_property('enable-detaching', True)
         self.connect('config-changed', self.on_config_changed)
         self.config_file = os.path.join(pida_home, 'paneconfig.txt')
-        self.init_config()
 
-        for pane in self.get_all_paneds():
-            pane.set_pane_size(200)
+        #for pane in self.get_all_paneds():
+        #    pane.set_pane_size(200)
             #pane.set_sticky_pane(True)
+
+        self.init_config()
 
     def get_all_pos(self):
         return [gtk.POS_BOTTOM, gtk.POS_LEFT, gtk.POS_RIGHT]
@@ -65,7 +66,7 @@ class PidaPaned(BigPaned):
             if use_old:
                 pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
             else:
-                pane = self.insert_pane(view.get_toplevel(), view.label_text, lab, POS, POS)
+                pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
             view.pane = pane
             if not removable:
                 pane.set_property('removable', False)

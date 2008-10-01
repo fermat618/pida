@@ -110,6 +110,8 @@ class PluginsEditItem(object):
 
 class PluginsEditView(PidaGladeView):
 
+    key = 'plugins.editor'
+
     gladefile = 'plugins-edit'
     locale = locale
     label_text = _('Edit a plugin')
@@ -156,6 +158,8 @@ class PluginsEditView(PidaGladeView):
 
 
 class PluginsView(PidaGladeView):
+
+    key = 'plugins.view'
 
     gladefile = 'plugins-manager'
     locale = locale

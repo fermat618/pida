@@ -62,6 +62,8 @@ def get_value(tab, key):
 
 class SnippetsManagerView(PidaGladeView):
 
+    key = 'snippets.editor'
+
     gladefile = 'snippets-manager'
     locale = locale
     label_text = _('Snippets manager')

@@ -53,6 +53,8 @@ class RfcItem(object):
 
 class RfcView(PidaView):
 
+    key = 'rfc.list'
+
     label_text = 'RFC'
 
     def create_ui(self):

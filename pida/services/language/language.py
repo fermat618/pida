@@ -54,6 +54,8 @@ def get_value(tab, key):
 
 class ValidatorView(PidaView):
 
+    key = 'language.validator'
+
     icon_name = 'python-icon'
     label_text = _('Language Errors')
 
@@ -108,6 +110,9 @@ class ValidatorView(PidaView):
 
 
 class BrowserView(PidaGladeView):
+
+    key = 'language.browser'
+
 
     gladefile = 'outline-browser'
     locale = locale

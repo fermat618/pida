@@ -56,6 +56,8 @@ class KodersItem(object):
 
 class KodersView(PidaView):
 
+    key = 'koders.list'
+
     label_text = 'Koders'
     icon_name = 'koders_logo'
 

@@ -157,6 +157,7 @@ class FilemanagerView(PidaView):
 
     label_text = _('Files')
     icon_name = 'file-manager'
+    key = 'filemanager.list'
 
     def create_ui(self):
         self._vbox = gtk.VBox()

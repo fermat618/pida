@@ -649,6 +649,7 @@ class BreakpointViewer(gtk.VBox):
 # PIDA View
 
 class PythonDebuggerView(PidaView):
+    key = 'pythondebugger.shell'
 
     icon_name = 'python-icon'
     label_text = _('Python Debugger')
@@ -678,6 +679,7 @@ class PythonDebuggerView(PidaView):
         self._toolbar.show_all()
 
 class PythonDebuggerView2(PidaView):
+    key = 'pythondebugger.stacks'
 
     icon_name = 'python-icon'
     label_text = _('Python Debugger')
@@ -695,6 +697,8 @@ class PythonDebuggerView2(PidaView):
 
 
 class PythondebuggerCommandlineView(PidaView):
+
+    key = 'pythondebugger.launcher'
 
     gladefile = 'pythondebugger_commandline'
 

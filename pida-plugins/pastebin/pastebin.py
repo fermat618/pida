@@ -209,6 +209,7 @@ class Twisted(Bin):
 
 class PastebinEditorView(PidaGladeView):
 
+    key = 'pastebin.editor'
     gladefile = 'paste-editor'
     locale = locale
     label_text = _('Paste Editor')
@@ -241,6 +242,8 @@ class PastebinEditorView(PidaGladeView):
         self.svc.cancel_paste()
 
 class PasteHistoryView(PidaView):
+
+    key = 'pastebin.history'
 
     label_text = _('Paste History')
     icon_name = gtk.STOCK_PASTE

@@ -58,6 +58,8 @@ class ManItem(object):
 
 class ManView(PidaView):
 
+    key = 'man.form'
+
     icon_name = 'gtk-library'
     label_text = 'Man'
 

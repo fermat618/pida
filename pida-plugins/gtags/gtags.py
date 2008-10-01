@@ -64,6 +64,8 @@ class GtagsItem(object):
 
 class GtagsView(PidaView):
 
+    key = 'gtags.list'
+
     label_text = _('Gtags')
 
     def create_ui(self):

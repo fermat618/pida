@@ -67,6 +67,8 @@ class ChecklistItem(object):
 
 
 class ChecklistView(PidaView):
+    
+    key = 'checklist.view'
 
     icon_name = 'gtk-todo'
     label_text = _('Check list')

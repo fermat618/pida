@@ -59,6 +59,8 @@ def open_directory_dialog(parent, title, folder=''):
 
 class ProjectListView(PidaGladeView):
 
+    key = 'project.list'
+
     gladefile = 'project_list'
     locale = locale
     label_text = _('Projects')
@@ -100,6 +102,8 @@ class ProjectListView(PidaGladeView):
         self.svc.get_action('project_properties').set_active(False)
 
 class ProjectSetupView(PidaView):
+
+    key = 'project.editor'
 
     label_text = _('Project Properties')
 

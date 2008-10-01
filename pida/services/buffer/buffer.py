@@ -55,6 +55,7 @@ LIST_COLUMNS = [
 
 class BufferListView(PidaGladeView):
 
+    key = 'buffer.list'
     gladefile = 'buffer_list'
     locale = locale
     icon_name = 'package_office'

@@ -37,6 +37,8 @@ _ = locale.gettext
 
 class SearchView(PidaGladeView):
 
+    key = 'filesearch.form'
+
     gladefile = 'search'
     locale = locale
     label_text = _('File Search')

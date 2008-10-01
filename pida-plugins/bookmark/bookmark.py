@@ -103,6 +103,8 @@ class BookmarkItemUrl(BookmarkItem):
 
 class BookmarkView(PidaView):
 
+    key = 'bookmark.view'
+
     icon_name = 'gtk-library'
     label_text = _('Bookmarks')
 

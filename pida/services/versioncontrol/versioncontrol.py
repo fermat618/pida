@@ -57,6 +57,8 @@ except ImportError:
 
 class DiffViewer(PidaView):
 
+    key = 'versioncontrol.diff'
+
     icon_name = gtk.STOCK_COPY
     label_text = _('Differences')
     
@@ -85,6 +87,8 @@ class DiffViewer(PidaView):
         return True
 
 class VersionControlLog(PidaGladeView):
+
+    key = 'versioncontrol.log'
 
     gladefile = 'version-control-log'
 
@@ -136,6 +140,8 @@ class VersionControlLog(PidaGladeView):
         self.svc.get_action('show_vc_log').set_active(False)
 
 class CommitViewer(PidaGladeView):
+
+    key = 'versioncontrol.commit'
 
     gladefile = 'commit-dialog'
     

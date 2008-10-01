@@ -51,6 +51,8 @@ locale = Locale('library')
 _ = locale.gettext
 
 class LibraryView(PidaGladeView):
+
+    key = 'library.list'
     
     _columns = [
         Column('title', expand=True, sorted=True)

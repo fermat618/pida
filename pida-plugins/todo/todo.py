@@ -49,6 +49,8 @@ class TodoItem(object):
 
 class TodoView(PidaView):
 
+    key = 'todo.list'
+
     label_text = _('TODO')
     icon_name =  'accessories-text-editor'
 

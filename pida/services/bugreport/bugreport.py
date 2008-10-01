@@ -47,6 +47,8 @@ locale = Locale('bugreport')
 _ = locale.gettext
 
 class BugreportView(PidaGladeView):
+
+    key = 'bugreport.form'
     
     gladefile = 'bugreport'
     locale = locale
