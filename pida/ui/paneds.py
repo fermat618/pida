@@ -15,6 +15,8 @@ try:
 except ImportError:
     use_old = True
 
+print use_old
+
 if use_old:
     from moo_stub import BigPaned, PaneLabel, PaneParams
 

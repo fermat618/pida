@@ -1,14 +1,16 @@
 /*
  *   moopaned.h
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *   This file is part of medit.  medit is free software; you can
+ *   redistribute it and/or modify it under the terms of the
+ *   GNU Lesser General Public License as published by the
+ *   Free Software Foundation; either version 2.1 of the License,
+ *   or (at your option) any later version.
  *
- *   See COPYING file that comes with this distribution.
+ *   You should have received a copy of the GNU Lesser General Public
+ *   License along with medit.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef MOO_PANED_H
@@ -59,7 +61,8 @@ struct _MooPanedClass
     void (*handle_drag_motion)  (MooPaned       *paned,
                                  GtkWidget      *pane_widget);
     void (*handle_drag_end)     (MooPaned       *paned,
-                                 GtkWidget      *pane_widget);
+                                 GtkWidget      *pane_widget,
+                                 gboolean        drop);
 
     void (*pane_params_changed) (MooPaned       *paned,
                                  guint           index_);
@@ -114,6 +117,18 @@ void            _moo_paned_attach_pane      (MooPaned       *paned,
 void            _moo_paned_insert_pane      (MooPaned       *paned,
                                              MooPane        *pane,
                                              int             position);
+void            _moo_paned_reorder_child    (MooPaned       *paned,
+                                             MooPane        *pane,
+                                             int             position);
+void            _moo_paned_get_button_position (MooPaned    *paned,
+                                             int             index,
+                                             GdkRectangle   *rect,
+                                             GdkWindow      *reference);
+int             _moo_paned_get_button       (MooPaned       *paned,
+                                             int             x,
+                                             int             y,
+                                             GdkWindow      *reference);
+int             _moo_paned_get_open_pane_index (MooPaned    *paned);
 
 
 G_END_DECLS

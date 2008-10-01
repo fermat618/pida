@@ -28,7 +28,7 @@ moo = Extension(
         'moopane.c',
         'moopaned.c',
         'moobigpaned.c',
-        'moomarshals.c',
+        'marshals.c',
         'moo-pygtk.c',
         'moo-stub.c',
     ]],

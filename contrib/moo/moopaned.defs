@@ -76,14 +76,14 @@
   (docstring "find_pane(pane_widget) -> (pane, paned) or None.")
 )
 
-(define-method set_pane_order
-  (of-object "MooBigPaned")
-  (c-name "moo_big_paned_set_pane_order")
-  (return-type "none")
-  (parameters
-    '("int*" "order")
-  )
-)
+; (define-method set_pane_order
+;   (of-object "MooBigPaned")
+;   (c-name "moo_big_paned_set_pane_order")
+;   (return-type "none")
+;   (parameters
+;     '("int*" "order")
+;   )
+; )
 
 (define-method add_child
   (of-object "MooBigPaned")
@@ -133,11 +133,12 @@
   (return-type "MooPane*")
   (parameters
     '("GtkWidget*" "pane_widget")
+    '("const-char*" "pane_id" (null-ok))
     '("MooPaneLabel*" "pane_label")
     '("MooPanePosition" "position")
     '("int" "index_")
   )
-  (docstring "insert_pane(pane_widget, pane_label, position, index) -> Pane.\n"
+  (docstring "insert_pane(pane_widget, pane_id, pane_label, position, index) -> Pane.\n"
              "\n"
              "Returns newly created pane object.")
 )
@@ -152,6 +153,41 @@
   (docstring "remove_pane(pane_widget) -> bool.\n"
              "\n"
              "Returns True if pane_widget was removed.")
+)
+
+(define-method lookup_pane
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_lookup_pane")
+  (return-type "MooPane*")
+  (parameters
+    '("const-char*" "pane_id")
+  )
+  (docstring "lookup_pane(pane_id) -> Pane.\n"
+             "\n"
+             "Finds the pane by its id.")
+)
+
+(define-method set_config
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_set_config")
+  (parameters
+    '("const-char*" "config")
+  )
+  (docstring "set_config(config) -> None.\n"
+             "\n"
+             "Loads config from a string returned by get_config.\n"
+             "NOTE: you may not call this after you added a pane;\n"
+             "call it once, after you created the paned widget.")
+)
+
+(define-method get_config
+  (of-object "MooBigPaned")
+  (c-name "moo_big_paned_get_config")
+  (return-type "char*")
+  (docstring "get_config(config) -> str.\n"
+             "\n"
+             "Saves paned config in a plain text, one-line string\n"
+             "suitable for storing in configuration files.")
 )
 
 (define-method get_pane
@@ -220,6 +256,7 @@
 
 ;; From ./moo/mooutils/moopaned.h
 
+(ifndef pygtk-2.6
 (define-function moo_paned_new
   (c-name "moo_paned_new")
   (is-constructor-of "MooPaned")
@@ -227,6 +264,7 @@
   (properties
     '("pane_position" (optional))
   )
+)
 )
 
 (define-method insert_pane
@@ -258,7 +296,7 @@
 (define-method list_panes
   (of-object "MooPaned")
   (c-name "moo_paned_list_panes")
-  (return-type "GSList*")
+  (return-type "no-ref-object-slist")
 )
 
 (define-method get_nth_pane
@@ -420,6 +458,24 @@
   (of-object "MooPane")
   (c-name "moo_pane_get_label")
   (return-type "MooPaneLabel*")
+)
+
+(define-method set_frame_markup
+  (of-object "MooPane")
+  (c-name "moo_pane_set_frame_markup")
+  (return-type "none")
+  (parameters
+    '("const-char*" "markup" (null-ok))
+  )
+)
+
+(define-method set_frame_text
+  (of-object "MooPane")
+  (c-name "moo_pane_set_frame_text")
+  (return-type "none")
+  (parameters
+    '("const-char*" "text" (null-ok))
+  )
 )
 
 (define-method set_params

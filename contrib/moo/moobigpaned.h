@@ -1,14 +1,16 @@
 /*
  *   moobigpaned.h
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *   This file is part of medit.  medit is free software; you can
+ *   redistribute it and/or modify it under the terms of the
+ *   GNU Lesser General Public License as published by the
+ *   Free Software Foundation; either version 2.1 of the License,
+ *   or (at your option) any later version.
  *
- *   See COPYING file that comes with this distribution.
+ *   You should have received a copy of the GNU Lesser General Public
+ *   License along with medit.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef MOO_BIG_PANED_H
@@ -28,30 +30,20 @@ G_BEGIN_DECLS
 #define MOO_BIG_PANED_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), MOO_TYPE_BIG_PANED, MooBigPanedClass))
 
 
-typedef struct _MooBigPaned         MooBigPaned;
-typedef struct _MooBigPanedPrivate  MooBigPanedPrivate;
-typedef struct _MooBigPanedClass    MooBigPanedClass;
+typedef struct MooBigPaned        MooBigPaned;
+typedef struct MooBigPanedPrivate MooBigPanedPrivate;
+typedef struct MooBigPanedClass   MooBigPanedClass;
 
-struct _MooBigPaned
+struct MooBigPaned
 {
-    GtkFrame     parent;
-
-    GtkWidget   *paned[4];  /* indexed by PanePos */
-    MooPanePosition order[4]; /* inner is paned[order[3]]*/
-    GtkWidget   *inner;
-    GtkWidget   *outer;
-
-    int          drop_pos;
-    GdkRectangle drop_rect;
-    GdkWindow   *drop_outline;
+    GtkFrame base;
+    MooBigPanedPrivate *priv;
+    GtkWidget *paned[4]; /* indexed by PanePos */
 };
 
-struct _MooBigPanedClass
+struct MooBigPanedClass
 {
-    GtkFrameClass parent_class;
-    void (*set_pane_size)       (MooBigPaned    *paned,
-                                 MooPanePosition position,
-                                 int             size);
+    GtkFrameClass base_class;
 };
 
 
@@ -61,6 +53,9 @@ GtkWidget      *moo_big_paned_new               (void);
 
 void            moo_big_paned_set_pane_order    (MooBigPaned    *paned,
                                                  int            *order);
+void            moo_big_paned_set_config        (MooBigPaned    *paned,
+                                                 const char     *config_string);
+char           *moo_big_paned_get_config        (MooBigPaned    *paned);
 
 MooPane        *moo_big_paned_find_pane         (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget,
@@ -73,15 +68,22 @@ GtkWidget      *moo_big_paned_get_child         (MooBigPaned    *paned);
 
 MooPane        *moo_big_paned_insert_pane       (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget,
+                                                 const char     *pane_id,
                                                  MooPaneLabel   *pane_label,
                                                  MooPanePosition position,
                                                  int             index_);
 gboolean        moo_big_paned_remove_pane       (MooBigPaned    *paned,
                                                  GtkWidget      *pane_widget);
+MooPane        *moo_big_paned_lookup_pane       (MooBigPaned    *paned,
+                                                 const char     *pane_id);
 
 GtkWidget      *moo_big_paned_get_pane          (MooBigPaned    *paned,
                                                  MooPanePosition position,
                                                  int             index_);
+void            moo_big_paned_reorder_pane      (MooBigPaned    *paned,
+                                                 GtkWidget      *pane_widget,
+                                                 MooPanePosition new_position,
+                                                 int             new_index);
 
 MooPaned       *moo_big_paned_get_paned         (MooBigPaned    *paned,
                                                  MooPanePosition position);
