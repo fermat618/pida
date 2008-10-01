@@ -57,8 +57,6 @@ except ImportError:
 
 class DiffViewer(PidaView):
 
-    key = 'versioncontrol.diff'
-
     icon_name = gtk.STOCK_COPY
     label_text = _('Differences')
     
