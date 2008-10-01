@@ -1,4 +1,8 @@
+import os
+
 import gtk
+
+from pida.core.environment import pida_home
 
 # Don't import moo twice from different locations when the full editor is
 # being used.
@@ -12,13 +16,12 @@ try:
         use_old = False
     else:
         use_old = True
+
 except ImportError:
-    use_old = True
-
-print use_old
-
-if use_old:
     from moo_stub import BigPaned, PaneLabel, PaneParams
+    use_old = False
+
+
 
 from pida.utils.gthreads import gcall
 
@@ -38,6 +41,10 @@ class PidaPaned(BigPaned):
     def __init__(self):
         BigPaned.__init__(self)
         self.set_property('enable-detaching', True)
+        self.connect('config-changed', self.on_config_changed)
+        self.config_file = os.path.join(pida_home, 'paneconfig.txt')
+        self.init_config()
+
         for pane in self.get_all_paneds():
             pane.set_pane_size(200)
             #pane.set_sticky_pane(True)
@@ -58,7 +65,7 @@ class PidaPaned(BigPaned):
             if use_old:
                 pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
             else:
-                pane = self.insert_pane(view.get_toplevel(), None, lab, POS, POS)
+                pane = self.insert_pane(view.get_toplevel(), view.label_text, lab, POS, POS)
             view.pane = pane
             if not removable:
                 pane.set_property('removable', False)
@@ -134,4 +141,29 @@ class PidaPaned(BigPaned):
         cy = (ph - h) / 2
         gdkwindow.move_resize(cx, cy, w, h)
         #gdkwindow.resize(w, h)
+
+    def on_config_changed(self, bigpaned):
+        self.write_config()
+
+    def write_config(self):
+        try:
+            f = open(self.config_file, 'w')
+            f.write(self.get_config())
+            f.close()
+        except IOError, OSError:
+            pass
+
+    def read_config(self):
+        try:
+            f = open(self.config_file, 'r')
+            config = f.read()
+            f.close()
+            return config
+        except IOError, OSError:
+            return None
+
+    def init_config(self):
+        config = self.read_config()
+        if config:
+            self.set_config(config)
 
