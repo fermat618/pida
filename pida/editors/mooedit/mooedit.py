@@ -1190,7 +1190,6 @@ class Mooedit(EditorService):
     def get_current_line(self):
         buf = self._current.editor.get_buffer()
         i = buf.get_iter_at_offset(buf.props.cursor_position)
-        print "moo cur line", i.get_line()+1
         return i.get_line()+1
 
     def replace_line(self, editor, lineno, text):

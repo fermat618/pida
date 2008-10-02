@@ -880,13 +880,14 @@ class Filemanager(Service):
 
     def pre_start(self):
         self.path = check_or_home(self.opt('last_browsed'))
+        self.current_project = None
+        self.file_view = FilemanagerView(self)
 
 
     def start(self):
-        self.file_view = FilemanagerView(self)
+        
+        self.on_project_switched(self.current_project)
         self.emit('browsed_path_changed', path=self.path)
-        self.on_project_switched(None)
-
         self.get_action('toolbar_toggle_hidden').set_active(
                 self.opt('show_hidden'))
 
@@ -928,9 +929,8 @@ class Filemanager(Service):
     def on_project_switched(self, project):
         self.current_project = project
         self.get_action('toolbar_projectroot').set_sensitive(project is not None)
-        self.get_view().refresh_file_hidden_check()
-
-
+        if self.file_view:
+            self.file_view.refresh_file_hidden_check()
 
 # Required Service attribute for service loading
 Service = Filemanager
