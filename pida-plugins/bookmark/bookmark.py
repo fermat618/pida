@@ -449,6 +449,8 @@ class Bookmark(Service):
         self._items = []
         self._view.clear_all()
         pro = self.boss.cmd('project', 'get_current_project')
+        if not pro:
+            return
         self._project = pro
         datadir = pro.get_meta_dir('bookmark')
         datafile = os.path.join(datadir, 'bookmark.pickle')

@@ -270,7 +270,7 @@ class TerminalView(PidaView):
     def _create_bar(self):
         self._bar = gtk.VBox(spacing=1)
         self._stick_button = create_mini_button(
-            gtk.STOCK_OPEN, _('Automatic change to the current buffer\'s directory'),
+            'pin', _('Automatic change to the current buffer\'s directory'),
             None, toggleButton=True)
         self._bar.pack_start(self._stick_button, expand=False)
         self._copy_button = create_mini_button(

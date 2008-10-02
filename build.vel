@@ -10,7 +10,7 @@ targets(
     build.ext $ python setup.py build_ext -i
 
     run $ python bin/pida
-    debug $ python bin/pida -D
+    debug $ python bin/pida -D -s testing
 
     gen.api_doc $ pydoctor -c tools/pida-pydoctor.cfg
 
