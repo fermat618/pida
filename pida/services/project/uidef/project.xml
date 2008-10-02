@@ -15,6 +15,7 @@
         <separator />
         <placeholder name="p2">
         <menuitem action="project_execute" name="project_execute" />
+        <menuitem action="project_execute_last" name="project_execute_last" />
         <menu action="project_execution_menu" name="project_execution_menu">
             <menuitem action="project_execute" name="project_execute" />
         </menu>

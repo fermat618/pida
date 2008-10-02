@@ -170,6 +170,17 @@ class ProjectActionsConfig(ActionsConfig):
             _('Execute the project'),
             'package_utilities',
             self.on_project_execute,
+            ''
+        )
+
+        self.create_action(
+            'project_execute_last',
+            TYPE_MENUTOOL,
+            _('Execute Last Controller'),
+            _('Execute Last Controller'),
+            'package_utilities',
+            self.on_project_execute_last,
+            ''
         )
 
         self.create_action(
@@ -217,6 +228,9 @@ class ProjectActionsConfig(ActionsConfig):
         else:
             self.svc.error_dlg(
                 _('This project has no default controller'))
+
+    def on_project_execute_last(self, action):
+        self.svc.execute_last()
 
     def on_project_properties(self, action):
         self.svc.show_properties(action.get_active())
@@ -362,6 +376,9 @@ class ProjectService(Service):
             self.get_action('project_execute').set_sensitive(bool(project.targets))
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
+            self._target_last = project.script.options.get('default')
+            self.actions.get_action('project_execute_last').props.label = \
+                _('Execute Last Controller')
 
     def set_last_project(self):
         last = self.opt('last_project')
@@ -397,12 +414,19 @@ class ProjectService(Service):
             self._save_options()
 
     def execute_target(self, action, target):
+        self.actions.get_action('project_execute_last').props.label = \
+            _('Execute: %s') %target
+        self._target_last = target
         project = self._current
         self.boss.cmd('commander', 'execute',
                 commandargs=['vellum', target],
                 cwd=project.source_directory,
                 title=_('Vellum %s -> %s') % (project.name, target), 
                 )
+
+    def execute_last(self):
+        if self._target_last:
+            self.execute_target(None, self._target_last)
 
     def create_menu(self):
         if self._current is not None:
