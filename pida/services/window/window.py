@@ -225,6 +225,7 @@ class Window(Service):
     
     def pre_start(self):
         self._title_template = None
+        self._last_focus = None
         super(Window, self).pre_start()
         self.update_colors()
 
@@ -271,7 +272,20 @@ class Window(Service):
         self.window.set_menubar_visibility(visibility)
 
     def set_fullscreen(self, var):
-        self.window.set_fullscreen(var)
+        if var:
+            # shall we do a weak ref here ?
+            self._last_focus = self.boss.window.get_focus()
+            self.window.set_fullscreen(var)
+            self.boss.editor.cmd('grab_focus')
+        else:
+            self.window.set_fullscreen(var)
+            if self._last_focus:
+                try:
+                    # this maight fail due various reasons, like
+                    # the window was destroyed etc
+                    self._last_focus.grab_focus()
+                except: 
+                    pass
 
     def get_fullscreen(self, var):
         return self.window.get_fullscreen()
