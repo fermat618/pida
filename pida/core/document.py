@@ -336,7 +336,7 @@ class Document(object):
             if var:
                 markup_dict[attr] = escape(var)
             else:
-                markup_dict[attr] = None
+                markup_dict[attr] = ''
         return markup_dict
 
     @property
