@@ -15,7 +15,6 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-from weakref import proxy
 
 class PidaViewWidget(PropertyObject, gtk.VBox):
 
@@ -128,7 +127,7 @@ class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
     def __init__(self, service, title=None, icon=None, *args, **kw):
         if hasattr(self, 'locale') and self.locale is not None:
             self.locale.bindglade()
-        self.svc = proxy(service) if type(service) is service.__class__ else service
+        self.svc = service
         GladeSlaveDelegate.__init__(self, *args, **kw)
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
@@ -137,7 +136,7 @@ class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
 class PidaView(SlaveDelegate, PidaViewMixin):
 
     def __init__(self, service, title=None, icon=None, *args, **kw):
-        self.svc = proxy(service) if type(service) is service.__class__ else service
+        self.svc = service
         self._main_widget = gtk.VBox()
         SlaveDelegate.__init__(self, toplevel=self._main_widget, *args, **kw)
         self.label_text = title or self.label_text
