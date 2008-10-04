@@ -9,6 +9,7 @@ from pida.core.environment import pida_home
 try:
     import moo
     from moo.utils import BigPaned, PaneLabel, PaneParams
+    from moo import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     version = moo.version.split('.')
     if ((int(version[0]) > 0) or
         ((int(version[1]) > 8) and (int(version[2]) > 0)) or
@@ -19,6 +20,7 @@ try:
 
 except ImportError:
     from moo_stub import BigPaned, PaneLabel, PaneParams
+    from moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
 
@@ -31,9 +33,9 @@ PANE_BUFFER = 'Buffer'
 PANE_PLUGIN = 'Plugin'
 
 POS_MAP = {
-    PANE_TERMINAL: gtk.POS_BOTTOM,
-    PANE_BUFFER: gtk.POS_LEFT,
-    PANE_PLUGIN: gtk.POS_RIGHT,
+    PANE_TERMINAL: PANE_POS_BOTTOM,
+    PANE_BUFFER: PANE_POS_LEFT,
+    PANE_PLUGIN: PANE_POS_RIGHT,
 }
 
 class PidaPaned(BigPaned):
@@ -50,7 +52,7 @@ class PidaPaned(BigPaned):
 
     def get_all_pos(self):
         return [gtk.POS_BOTTOM, gtk.POS_LEFT, gtk.POS_RIGHT]
-        
+
     def get_all_paneds(self):
         for pos in self.get_all_pos():
             yield self.get_paned(pos)
@@ -85,6 +87,7 @@ class PidaPaned(BigPaned):
     def present_view(self, view):
         pane, pos = self.find_pane(view.get_toplevel())
         pane.present()
+        print view.get_toplevel()
 
     def get_open_pane(self, name):
         POS = POS_MAP[name]
