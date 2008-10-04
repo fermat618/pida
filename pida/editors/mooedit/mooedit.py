@@ -43,6 +43,18 @@ MOO_DATA_DIRS=":".join((
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
 
 
+def _load_pix(fn):
+    return gtk.gdk.pixbuf_new_from_file(
+        os.path.join(os.path.dirname(__file__),
+        "pixmaps", fn))
+
+_PIXMAPS = {
+    'bookmark':              _load_pix('bookmark.png'),
+    'debugger_breakpoint':   _load_pix('breakpoint.png'),
+    'debugger_position':     _load_pix('breakpoint.png'),
+}
+
+
 # Moo Imports
 import moo
 
@@ -52,6 +64,7 @@ from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
+from pida.core.events import EventsConfig
 from pida.utils.completer import PidaCompleter, SuggestionsList
 from pida.utils.gthreads import GeneratorTask, gcall
 
@@ -78,8 +91,6 @@ class MooeditMain(PidaView):
         print "\n\ngrab_input_focus\n\n"
         self.svc.grab_focus()
         pass
-
-
 
 
 class MooeditOptionsConfig(OptionsConfig):
@@ -225,9 +236,45 @@ class MooeditView(gtk.ScrolledWindow):
         gtk.ScrolledWindow.__init__(self)
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.editor = document.editor
+        self.editor.props.buffer.connect('changed', self.on_changed)
         self.document = document
+        self.line_markers = []
         self.add(document.editor)
         self.show_all()
+
+    def on_changed(self, textbuffer):
+        #FIXME: this doesn't work, nor does connect_after work correctly. 
+        # this is always one changed event to late. as the markers line position 
+        # is updated after this event :(
+        self.editor.props.buffer.do_changed(textbuffer)
+        for lm in self.line_markers:
+            lm.update(lm._moo_marker.get_line()+1)
+        return True
+
+    def update_marker(self, marker):
+
+        if marker.line == -1:
+            # should be deleted
+            if marker in self.line_markers and hasattr(marker, '_moo_marker'):
+                marker._moo_marker.props.visible = False
+                self.editor.props.buffer.delete_line_mark(marker._moo_marker)
+                self.line_markers.remove(marker)
+                return 
+
+        if not hasattr(marker, '_moo_marker'):
+            lm = moo.edit.LineMark()
+            lm.set_pixbuf(_PIXMAPS.get(marker.type, 'bookmark'))
+            #lm.set_markup('BOO')
+            lm.props.visible = True
+            marker._moo_marker = lm
+
+        if marker not in self.line_markers:
+            self.line_markers.append(marker)
+            self.editor.props.buffer.add_line_mark(marker._moo_marker, 
+                int(marker.line)-1)
+        else:
+            self.editor.props.buffer.move_line_mark(marker._moo_marker, 
+                int(marker.line)-1)
 
 
 class MooeditActionsConfig(EditorActionsConfig):
@@ -775,6 +822,15 @@ class PidaMooInput(object):
                 #self.completer_pos_user += len(event.string)
         return True
 
+class MooeditEventsConfig(EventsConfig):
+
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('editor', 'marker-changed',
+            self.marker_changed)
+
+    def marker_changed(self, marker):
+        self.svc.on_marker_changed(marker)
+
 # Service class
 class Mooedit(EditorService):
     """Moo Editor Interface for PIDA
@@ -784,6 +840,7 @@ class Mooedit(EditorService):
     """
     options_config = MooeditOptionsConfig
     actions_config = MooeditActionsConfig
+    events_config = MooeditEventsConfig
     
     def pre_start(self):
         # mooedit is able to open empty documents
@@ -825,6 +882,13 @@ class Mooedit(EditorService):
         self.get_action('mooedit_last_edit').set_sensitive(False)
         self._update_keyvals()
         return True
+
+    def on_marker_changed(self, marker):
+        # called when a marker changed. update the editor
+        for view in self._documents.itervalues():
+            # we iterate over all markers so they 
+            if view.document.filename == marker.filename:
+                view.update_marker(marker)
 
     def save_moo_state(self):
         moo.utils.prefs_save(self.script_path, self._state_path)
@@ -993,6 +1057,10 @@ class Mooedit(EditorService):
                 editor = self._editor_instance.create_doc(document.filename)
             document.editor = editor
             editor.inputter = PidaMooInput(self, editor, document)
+            editor.props.show_line_marks = True
+            editor.props.enable_bookmarks = False
+            #FIXME: this should be implemented but needs some code and a pref
+            #editor.props.enable_folding = True
             #ind = PidaMooIndenter(editor, document)
             #print ind
             #editor.set_indenter(ind)

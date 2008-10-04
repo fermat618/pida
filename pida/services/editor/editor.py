@@ -51,7 +51,8 @@ class EditorOptionsConfig(OptionsConfig):
 class EditorEvents(EventsConfig):
 
     def create(self):
-        self.publish('started', 'document-exception')
+        self.publish('started', 'document-exception', 
+            'marker-changed')
 
 
 # Service class

@@ -36,6 +36,8 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.environment import get_uidef_path
 
+from pida.core.editors import LineMarker, MarkerInterface
+
 from pida.ui.views import PidaView
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
@@ -65,17 +67,42 @@ class BookmarkItem(object):
         return cmp(hash(self),hash(other))
 
 
-class BookmarkItemFile(BookmarkItem):
+class BookmarkItemFile(BookmarkItem, LineMarker):
     group = 'file'
     keys = BookmarkItem.keys + ('line',)
+    type = 'bookmark'
 
-    def __init__(self, title='no title', data=None, line=1):
-        self.line = line
-        BookmarkItem.__init__(self,  title=title, data=data)
+    def __init__(self, svc, data=None, line=1):
+        #self.line = line
+        self.svc = svc
+        BookmarkItem.__init__(self,  title='', data=data)
+        self._lineno = line
+        self.update_title()
+
+    def update_title(self):
+        self.title = '%s:<span color="#000099">%d</span>' % (
+                cgi.escape(os.path.basename(self.data)), int(self.line))
+
 
     def run(self, service):
-        service.boss.cmd('buffer', 'open_file', file_name=self.data)
-        service.boss.editor.goto_line(self.line)
+        service.boss.cmd('buffer', 'open_file', 
+                         file_name=self.data, line=self.line)
+
+    def _get_filename(self):
+        return self.data
+
+    def _set_filename(self, value):
+        self.data = value
+
+    filename = property(_get_filename, _set_filename)
+
+    def _do_set_line(self, newlineno):
+        self._lineno = newlineno
+        self.update_title()
+        self.svc._view._list['file'].update(self)
+
+    def update(self, newlineno):
+        gcall(self._do_set_line, newlineno)
 
 class BookmarkItemPath(BookmarkItem):
     group = 'path'
@@ -317,11 +344,16 @@ class BookmarkEvents(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('project', 'project_switched',
                                self.svc.on_project_switched)
+        self.subscribe_foreign('buffer', 'document-saved',
+            self.on_document_saved)
 
+    def on_document_saved(self, document=None):
+        # we have to save, because we can't detect removed bookmarks yet
+        return self.svc.save()
 
 
 # Service class
-class Bookmark(Service):
+class Bookmark(Service, MarkerInterface):
     """Manage bookmarks"""
 
     actions_config = BookmarkActions
@@ -397,9 +429,8 @@ class Bookmark(Service):
     def bookmark_file(self, filename=None, line=None):
         filename, line = self._fill_file(filename, line)
         filename_title = os.path.basename(filename)
-        title = '%s:<span color="#000099">%d</span>' % (
-                cgi.escape(filename_title), int(line))
-        item = BookmarkItemFile(title=title, data=filename, line=line)
+        item = BookmarkItemFile(self, data=filename, line=line)
+        self.boss.get_service('editor').emit('marker-changed', marker=item)
         self.add_item(item)
 
     def bookmark_toggle_file(self, filename=None, line=None):
@@ -409,6 +440,11 @@ class Bookmark(Service):
         filename, line = self._fill_file(filename, line)
         for item in self.list_files():
             if item.data == filename and item.line == line:
+                # change the line to -1 and fire the marker-changed so it's 
+                # known that the marker will be removed
+                item._lineno = -1
+                self.boss.get_service('editor'). \
+                    emit('marker-changed', marker=item)
                 self._items.remove(item)
                 self._view.remove_item(item)
                 if self._current == item:
@@ -511,6 +547,11 @@ class Bookmark(Service):
     
     def goto_prev(self):
         self._goto(-1)
+        
+    def get_line_markers(self, filename):
+        for i in self._list['file']:
+            if i.data == filename:
+                yield i
         
 
 # Required Service attribute for service loading
