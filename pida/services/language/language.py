@@ -311,8 +311,9 @@ class LanguageDbusConfig(DbusConfig):
     @EXPORT(out_signature = 'as', in_signature = 'ssi')
     def get_completions(self, base, buffer, offset):
         doc = self.svc.boss.cmd('buffer', 'get_current')
-        if doc._lng_completer is not None:
-            return doc._lng_completer.get_completions(base, buffer, offset)
+        completer = self.svc.get_completer(doc)
+        if completer is not None:
+            return completer.get_completions(base, buffer, offset)
         else:
             return []
 
@@ -376,10 +377,8 @@ class Language(Service):
 
     def _get_feature(self, document, feature, name, do=None):
         handler = getattr(document, name, None)
-        print "handler", handler
         if not handler:
             type_ = document.doctype
-            print "type", type_
             factories = ()
             if type_:
                 factories = self.features[(type_.internal, feature)]
