@@ -426,7 +426,6 @@ moo_pane_dispose (GObject *object)
     {
         GtkWidget *tmp = pane->child;
         pane->child = NULL;
-        gtk_widget_destroy (tmp);
         g_object_unref (tmp);
     }
 
