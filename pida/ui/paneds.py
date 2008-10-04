@@ -51,7 +51,7 @@ class PidaPaned(BigPaned):
         self.init_config()
 
     def get_all_pos(self):
-        return [gtk.POS_BOTTOM, gtk.POS_LEFT, gtk.POS_RIGHT]
+        return [PANE_POS_TOP, PANE_POS_LEFT, PANE_POS_RIGHT]
 
     def get_all_paneds(self):
         for pos in self.get_all_pos():
@@ -87,7 +87,6 @@ class PidaPaned(BigPaned):
     def present_view(self, view):
         pane, pos = self.find_pane(view.get_toplevel())
         pane.present()
-        print view.get_toplevel()
 
     def get_open_pane(self, name):
         POS = POS_MAP[name]
