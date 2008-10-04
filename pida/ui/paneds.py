@@ -9,7 +9,7 @@ from pida.core.environment import pida_home
 try:
     import moo
     from moo.utils import BigPaned, PaneLabel, PaneParams
-    from moo import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
+    from moo.utils import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     version = moo.version.split('.')
     if ((int(version[0]) > 0) or
         ((int(version[1]) > 8) and (int(version[2]) > 0)) or
