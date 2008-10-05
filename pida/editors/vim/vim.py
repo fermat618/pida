@@ -58,7 +58,7 @@ class VimCallback(object):
     def vim_BufEnter(self):
         fn = self.svc._com.get_current_buffer()
         cwd = self.svc._com.get_cwd()
-        path = os.path.join(cwd, fn)
+        path = os.path.realpath(os.path.join(cwd, fn))
         self.svc.boss.cmd('buffer', 'open_file', file_name=path)
 
     def vim_BufDelete(self, file_name):
