@@ -8,8 +8,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 mainloop = DBusGMainLoop(set_as_default=True)
 
 
-vim_script = os.path.abspath(os.path.join(os.path.dirname(__file__),
-    'pida.vim'))
+vim_script = os.path.abspath('pida/resources/data/pida.vim')
 
 
 def refresh_ui():
