@@ -4,6 +4,8 @@ moo/.*.o
 moo/moo-pygtk.c
 moo/moomarshals.c
 moo/moomarshals.h
+moo/marshals.c
+moo/marshals.h
 moo/stock-moo.h
 moo/test
 ^docs/.build
