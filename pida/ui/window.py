@@ -9,6 +9,7 @@ from pida.ui.paneds import PidaPaned
 from pida.core.log import log
 from pida.core.environment import get_uidef_path, get_pixmap_path
 from pida.core.actions import accelerator_group
+from pida.utils.gthreads import gcall
 
 # locale
 from pida.core.locale import Locale
@@ -175,86 +176,146 @@ from kiwi.ui.delegates import GladeDelegate
 class SessionWindow(BaseView):
     gladefile = 'session_select'
 
-    def __init__(self, sessions=None, fire_command=None, spawn_new=None):
+    def __init__(self, command=None):
+        """
+        The SessionWindow is displayed whenever the user should choose a 
+        session to run.
+        
+        @fire_command: dbus command to send to an already running 
+        @command: run command when one session is choosen
+        @spawn_new: on the default handle. spawn a new process
+        """
 
-        self.sessions = sessions
-        self._fire_command = fire_command
-        self._spawn_new = spawn_new
+        self.sessions = []
+        self.command = command
+        self.list_complete = False
+        #self._spawn_command = spawn_command
+        #self._fire_command = fire_command
+        #self._spawn_new = spawn_new
         self.new_session = ""
+        self.user_action = None
 
         BaseView.__init__(self) #, delete_handler=quit_if_last)
         sigs = {
             'on_window_delete_event': self.on_quit,
             'on_new_session_clicked': self.on_new_session_clicked,
             'on_use_session_clicked': self.on_use_session_clicked,
+            'on_session_view_popup_menu': self.on_session_view_popup_menu,
             'gtk_main_quit': self.on_quit,
             'on_session_view_row_activated': self.on_session_view_row_activated,
         }
+
+        from kiwi.environ import environ
+        self.pic_on = gtk.gdk.pixbuf_new_from_file(
+                    environ.find_resource('pixmaps', 'online.png'))
+        self.pic_off = gtk.gdk.pixbuf_new_from_file(
+                    environ.find_resource('pixmaps', 'offline.png'))
+
+
         self._glade_adaptor.signal_autoconnect(sigs)
-        self.session_list = gtk.ListStore(str, str, str, str, int)
+        # busname, pid, on/off pic, session, project, open files
+        self.session_list = gtk.ListStore(str, int, gtk.gdk.Pixbuf, str, str, int)
         self.session_view.set_model(self.session_list)
         cell = gtk.CellRendererText()
         cell.set_property('xalign', 1.0)
-        self.session_view.append_column(gtk.TreeViewColumn(_('PID'), cell, text=1))
-        self.session_view.append_column(gtk.TreeViewColumn(_('Session'), cell, text=2))
-        self.session_view.append_column(gtk.TreeViewColumn(_('Project'), cell, text=3))
-        self.session_view.append_column(gtk.TreeViewColumn(_('Open'), cell, text=4))
+        pcell = gtk.CellRendererPixbuf()
+        col = gtk.TreeViewColumn('', pcell, pixbuf=2)
+        col.set_spacing(40)
+        self.session_view.append_column(col)
+        col = gtk.TreeViewColumn(_('Session'), cell, text=3)
+        col.set_spacing(5)
+        col.set_resizable(True) 
+        self.session_view.append_column(col)
+        col = gtk.TreeViewColumn(_('Project'), cell, text=4)
+        col.set_spacing(5)
+        col.set_resizable(True)
+        self.session_view.append_column(col)
+        col = gtk.TreeViewColumn(_('Open files'), cell, text=5)
+        col.set_spacing(5)
+        col.set_resizable(True)
+        self.session_view.append_column(col)
+        self.session_view.append_column(gtk.TreeViewColumn('', gtk.CellRendererText()))
         #tvc.set_min_width(titles[n][1])
 
-        self.update_sessions()
+        #self.update_sessions()
+        gcall(self.update_sessions)
         #self.add_proxy(self.model, self.widgets)
+
+    def _rcv_pida_session(self, *args):
+        # this is the callback from the dbus signal call
+        import dbus
+        # list: busname, pid, on/off pic, session, project, open files
+        # args:  uid, pid, session, project, opened_files
+        if len(args) > 4 and not isinstance(args[0], dbus.lowlevel.ErrorMessage):
+            for row in self.session_list:
+                if row[3] == args[2]:
+                    row[0] = args[0]
+                    row[1] = args[1]
+                    row[2] = self.pic_on
+                    row[3] = args[2]
+                    row[4] = args[3]
+        elif len(args) and isinstance(args[0], dbus.lowlevel.ErrorMessage):
+            self.list_complete = True
 
     def update_sessions(self):
         from pida.utils.pdbus import list_pida_instances, PidaRemote
+    
+        from pida.core.options import OptionsManager
+        from pida.core import environment
+        # we need a new optionsmanager so the default manager does not session
+        # lookup yet
+        self.list_complete = False
+        om = OptionsManager(session="default")
 
-        if not self.sessions:
-            self.sessions = list_pida_instances()
+        lst = om.list_sessions()
+        #if not self.sessions:
+        #    print "list"
+        # start the dbus message so we will know which ones are running
+        list_pida_instances(callback=self._rcv_pida_session)
 
         self.session_list.clear()
-        for s in self.sessions:
-            pr = PidaRemote(s)
-            try:
-                pid = pr.call('boss', 'get_pid')
-            except: 
-                pid = "<error>"
-            try:
-                session = pr.call('sessions', 'get_session_name')
-            except:
-                session = "default"
-            try:
-                project = pr.call('project', 'get_current_project_name')
-            except:
-                project = _("No project")
-            try:
-                count = pr.call('buffer', 'get_open_documents_count')
-            except:
-                count = 0
-            self.session_list.append((s, pid, session, project, count))
+        for session in lst:
+
+            pid = 0
+            # we could find this things out of the config
+            project = ""
+            count = 0
+
+            self.session_list.append(("", pid, self.pic_off, session, project, count))
 
     def on_session_view_row_activated(self, widget, num, col):
-        if not self._fire_command:
-            return
-
-        from pida.utils.pdbus import PidaRemote
-
+        self.user_action = "select"
         row = self.session_list[num]
-        pr = PidaRemote(row[0])
-        pr.call(*self._fire_command[0], **self._fire_command[1])
 
-        self.on_quit()
+        self.new_session = row[1]
+
+        if self.command:
+            self.command(self, row)
+
 
     def on_new_session_clicked(self, widget):
         # ask for new session name
+        self.user_action = "new"
         from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
         opts = DialogOptions().add('name', label=_("Session name"), value="")
         create_gtk_dialog(opts, parent=self.toplevel).run()
-        if opts.name and callable(self._spawn_new):
+        if opts.name and self.command:
             self.new_session = opts.name
-            self._spawn_new(self)
+            self.command(self)
 
     def on_use_session_clicked(self, widget):
         num = self.session_view.get_selection().get_selected_rows()[1][0][0]
         self.on_session_view_row_activated(widget, num, None)
 
+    def on_session_view_popup_menu(self, widget):
+        print "popup"
+        self.list_menu.popup(None, None, None, 0, 0, None)
+
+    def on_menu_delete_session_activate(self, *args, **kwargs):
+        print "delete", args, kwargs
+
     def on_quit(self, *args):
-        gtk.main_quit()
+        self.user_action = "quit"
+        if self.command:
+            self.command(self)
+        #self.hide_and_quit()

@@ -461,8 +461,12 @@ class ProjectService(Service):
         else:
             shortest = min(matches, key=lambda x:len(x[1]))
             return shortest[0], os.sep.join(shortest[1][-3:-1])
-            
-
+    
+    def get_project_name(self):
+        if self._current:
+            return self._current.name
+        return None
+        
 
 
 # Required Service attribute for service loading

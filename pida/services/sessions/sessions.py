@@ -32,6 +32,14 @@ class SessionsOptionsConfig(OptionsConfig):
 
     def create_options(self):
         self.create_option(
+            'open_session_manager',
+            _('Always show session manager'),
+            bool,
+            False,
+            _('Always open the session manager when no session name is given'),
+        )
+
+        self.create_option(
             'load_last_session',
             _('Load last session on startup'),
             bool,
