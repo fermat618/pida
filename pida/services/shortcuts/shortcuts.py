@@ -26,8 +26,8 @@ from kiwi.ui.objectlist import ObjectTree, Column
 
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_TOGGLE
+from pida.core.actions import ActionsConfig, TYPE_TOGGLE
+from pida.core.events import  EventsConfig
 
 from pida.ui.views import PidaView
 
@@ -68,13 +68,7 @@ class ShortcutsView(PidaView):
         vbox = gtk.VBox(spacing=6)
         vbox.set_border_width(6)
         self.add_main_widget(vbox)
-        for service in self.svc.boss.get_services() + [
-                                self.svc.boss.editor]:
-            if len(service.get_keyboard_options()):
-                sli = ServiceListItem(service)
-                self.shortcuts_list.append(None, sli)
-                for opt in service.get_keyboard_options().values():
-                    self.shortcuts_list.append(sli, opt)
+        self.update()
         self.shortcuts_list.show_all()
         hbox = gtk.HBox(spacing=6)
         l = gtk.Label(_('Capture Shortcut'))
@@ -90,6 +84,16 @@ class ShortcutsView(PidaView):
         vbox.pack_start(hbox, expand=False)
         vbox.show_all()
         self.get_toplevel().set_size_request(350, 0)
+
+    def update(self):
+        self.shortcuts_list.clear()
+        for service in self.svc.boss.get_services() + [
+                                self.svc.boss.editor]:
+            if len(service.get_keyboard_options()):
+                sli = ServiceListItem(service)
+                self.shortcuts_list.append(None, sli)
+                for opt in service.get_keyboard_options().values():
+                    self.shortcuts_list.append(sli, opt)
 
     def decorate_service(self, service):
         return ServiceListItem(service)
@@ -135,6 +139,17 @@ class ShortcutsView(PidaView):
         self.svc.get_action('show_shortcuts').set_active(False)
 
 
+class ShortcutsEventConfig(EventsConfig):
+    
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('plugins', 'plugin_stoped', 
+                               self.on_plugin_changed)
+        self.subscribe_foreign('plugins', 'plugin_started', 
+                               self.on_plugin_changed)
+
+    def on_plugin_changed(self, event):
+        self.svc._view.update()
+
 class ShortcutsActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -169,7 +184,7 @@ class Shortcuts(Service):
 
     def hide_shortcuts(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
-        
+
 
 # Required Service attribute for service loading
 Service = Shortcuts
