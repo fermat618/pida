@@ -73,7 +73,7 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s')
     def open_file(self, path):
-        vim.command('e %s' % path)
+        vim.command('confirm e %s' % path)
 
     @method(DBUS_NS, in_signature='as')
     def open_files(self, paths):
@@ -267,6 +267,10 @@ class VimDBUSService(Object):
     def CursorMoved(self):
         pass
 
+    @signal(DBUS_NS)
+    def SwapExists(self):
+        pass
+
 uid = vim.eval('$PIDA_DBUS_UUID')
 
 
@@ -389,6 +393,7 @@ silent au VimCommsDBus VimLeave * silent call VimSignal('VimLeave')
 silent au VimCommsDBus VimEnter * silent call VimSignal('VimEnter')
 silent au VimCommsDBus BufWritePost * silent call VimSignal('BufWritePost')
 silent au VimCommsDBus CursorMovedI,CursorMoved * silent call VimSignal('CursorMoved')
+silent au VimCommsDBus SwapExists * silent call VimSignal('SwapExists')
 
 " Some UI Stuffs
 
