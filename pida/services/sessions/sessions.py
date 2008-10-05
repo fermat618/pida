@@ -35,24 +35,17 @@ class SessionsOptionsConfig(OptionsConfig):
             'open_session_manager',
             _('Always show session manager'),
             bool,
-            False,
+            True,
             _('Always open the session manager when no session name is given'),
         )
 
         self.create_option(
-            'load_last_session',
-            _('Load last session on startup'),
+            'load_last_files',
+            _('Load last opened files on startup'),
             bool,
             True,
-            _('Load last session on startup'),
-        )
-
-        self.create_option(
-            'clear_old_buffers',
-            _('Clear old buffers when loading session'),
-            bool,
-            False,
-            _('Clear old buffers when loading session'),
+            _('Load last opened files on startup'),
+            session=True
         )
 
         self.create_option(
@@ -72,8 +65,9 @@ class SessionsOptionsConfig(OptionsConfig):
 class SessionsEventsConfig(EventsConfig):
 
     def subscribe_all_foreign(self):    
-        self.subscribe_foreign('buffer', 'document-changed', self.svc.save_session)
-        self.subscribe_foreign('editor', 'started', self.svc.load_session)
+        self.subscribe_foreign('buffer', 'document-closed', self.svc.save_files)
+        self.subscribe_foreign('buffer', 'document-changed', self.svc.save_files)
+        self.subscribe_foreign('editor', 'started', self.svc.load_files)
         self.subscribe_foreign('editor', 'document-exception', self.svc.on_document_exception)
 
 class SessionsDbus(DbusConfig):
@@ -91,11 +85,11 @@ class Sessions(Service):
     events_config = SessionsEventsConfig
     dbus_config = SessionsDbus
 
-    def load_session(self):
-        if self.opt('load_last_session'):
+    def load_files(self):
+        if self.opt('load_last_files'):
             self.load_buffers(self.opt('open_files'))
 
-    def save_session(self, document=None):
+    def save_files(self, document=None):
         documents = self.boss.cmd('buffer', 'get_documents')
         files = [d.filename for d in documents.values() if d.filename]
         self.set_opt('open_files', files)

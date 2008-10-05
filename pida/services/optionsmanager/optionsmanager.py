@@ -113,7 +113,12 @@ class PidaOptionsView(PidaGladeView):
             hb = gtk.HBox(spacing=6)
             vb.pack_start(hb)
             optlabel = gtk.Label()
-            optlabel.set_text('\n'.join(wrap(opt.label, 20)))
+            lbl = opt.label
+            doc = opt.doc
+            if opt.session:
+                lbl += " *"
+                doc += "\n(bound to session)"
+            optlabel.set_text('\n'.join(wrap(lbl, 20)))
             optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
@@ -124,7 +129,7 @@ class PidaOptionsView(PidaGladeView):
             optwidget.update(value)
             optwidget.connect('content-changed', self._on_option_changed, opt)
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)
-            self._tips.set_tip(eb, opt.doc)
+            self._tips.set_tip(eb, doc)
         return mainvb
 
     def on_service_combo__content_changed(self, cmb):

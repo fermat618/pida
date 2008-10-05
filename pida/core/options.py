@@ -144,6 +144,7 @@ class OptionItem(object):
         self.type = rtype
         self.doc = doc
         self.default = default
+        self.session = session
         if session:
             self.key = '/apps/pida/_sessions/%s/%s/%s' % (
                             manager.session, self.group, self.name)

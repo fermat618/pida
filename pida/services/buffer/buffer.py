@@ -266,7 +266,8 @@ class BufferFeaturesConfig(FeaturesConfig):
 class BufferEventsConfig(EventsConfig):
 
     def create(self):
-        self.publish('document-saved', 'document-changed', 'document-typchanged')
+        self.publish('document-saved', 'document-changed', 
+            'document-typchanged', 'document-closed')
         self.subscribe('document-saved', self.on_document_change)
         self.subscribe('document-changed', self.on_document_change)
         self.subscribe('document-typchanged', self.on_document_change)
@@ -432,6 +433,7 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
+                self.emit('document-closed')
 
     def close_file(self, file_name = None, document = None):
         if not document:
@@ -439,6 +441,7 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
+                self.emit('document-closed')
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():
