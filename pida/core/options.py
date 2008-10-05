@@ -7,12 +7,14 @@ from pango import Font
 
 class OptionsManager(object):
 
-    def __init__(self, session=None, boss=None):
+    def __init__(self, user_session=None, session=None, boss=None):
         self._client = gconf.client_get_default()
         self.initialize_gconf()
         self._session = None
         if session:
             self.session = session
+        elif user_session:
+            self.user_session = user_session
         if killsettings():
             self.unset_directory()
 
@@ -24,6 +26,14 @@ class OptionsManager(object):
     def initialize_session(self):
         self.add_directory('_sessions', self.session)
 
+    def _get_user_session(self):
+        return gconf.unescape_key(self.session, len(self.session))
+        
+    def _set_user_session(self, value):
+        self.session = gconf.escape_key(value, len(value))
+        
+    user_session = property(_get_user_session, _set_user_session)
+
     def _set_session(self, value):
         self._session = value
         self.initialize_session()
@@ -33,10 +43,22 @@ class OptionsManager(object):
             # we need this form of lazy loading because the default manager
             # is created so early that the session name is not known then
             import pida.core.environment
-            self.session = pida.core.environment.session_name()
+            self.user_session = pida.core.environment.session_name()
         return self._session
         
     session = property(_get_session, _set_session)
+
+    def list_sessions(self):
+        """Returns a list with all session names """
+        return [gconf.unescape_key(x[21:], len(x[21:])) for x 
+                in self._client.all_dirs("/apps/pida/_sessions")]
+
+    def open_session_manager(self):
+        """Returns True if the user wants the session manager opened"""
+        #XXX: this is violation of DRY as this value is defined in 
+        # services.sessions.sessions but this is not initialized when this value
+        # is needed. but seems to be a good place to be
+        return self._client.get_bool('/apps/pida/sessions/open_session_manager')
 
     def add_directory(self, *parts):
         self._client.add_dir(

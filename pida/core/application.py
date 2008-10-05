@@ -112,10 +112,9 @@ def set_trace():
 
 def main():
     global opts
-    import pida.core.environment
-    pida.core.environment.parse_args(sys.argv)
-    print pida.core.environment.session_name()
-    opts = pida.core.environment.opts
+    from pida.core import environment
+    environment.parse_args(sys.argv)
+    opts = environment.opts
     
     from pida.core import options
 
@@ -128,6 +127,57 @@ def main():
 
     if opts.trace:
         set_trace()
+
+    # open session manager is asked for
+    from pida.core.options import OptionsManager
+    from pida.utils.pdbus import list_pida_instances
+    # we need a new optionsmanager so the default manager does not session
+    # lookup yet
+    om = OptionsManager(session="default")
+
+    if (om.open_session_manager() and not environment.session_set()) or \
+        environment.session_manager():
+        from pida.ui.window import SessionWindow
+
+        def kill(sm):
+            sm.hide_and_quit()
+
+        file_names = []
+
+        if len(environment.get_args()) > 1:
+            for i in environment.get_args()[1:]:
+                file_names.append(os.path.abspath(i))
+
+        def command(sw, row=None):
+            # command dispatcher for session window
+            opts.safe_mode = sw.safe_mode.get_active()
+            if sw.user_action == "quit":
+                sys.exit(0)
+            elif sw.user_action == "new" and sw.new_session:
+                opts.session = sw.new_session
+                sw.hide_and_quit()
+                gtk.main_quit()
+            elif sw.user_action == "select":
+                if row[0]:
+                    from pida.utils.pdbus import PidaRemote
+
+                    pr = PidaRemote(row[0])
+                    if file_names:
+                        pr.call('buffer', 'open_files', file_names)
+
+                    pr.call('boss', 'focus_window')
+
+                    sw.user_action = "quit"
+                    sys.exit(0)
+                else:
+                    opts.session = row[3]
+                    sw.hide_and_quit()
+                    gtk.main_quit()
+
+        sw = SessionWindow(command=command)
+        sw.show_all()
+        #this mainloop will exist when the sessionwindow is closes
+        gtk.main()
 
     if opts.version:
         print _('PIDA, version %s') % PIDA_VERSION

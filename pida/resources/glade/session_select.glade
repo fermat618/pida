@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Sep 16 23:02:42 2008 -->
+<!--Generated with glade3 3.4.5 on Sun Oct  5 21:36:11 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="session_select">
     <property name="width_request">360</property>
@@ -16,20 +16,68 @@
         <property name="visible">True</property>
         <property name="spacing">2</property>
         <child>
-          <widget class="GtkTreeView" id="session_view">
-            <property name="width_request">150</property>
+          <widget class="GtkScrolledWindow" id="scrolledwindow1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="headers_clickable">True</property>
-            <signal name="row_activated" handler="on_session_view_row_activated"/>
+            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+            <child>
+              <widget class="GtkTreeView" id="session_view">
+                <property name="width_request">150</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="headers_clickable">True</property>
+                <property name="reorderable">True</property>
+                <property name="rules_hint">True</property>
+                <property name="enable_tree_lines">True</property>
+                <signal name="popup_menu" handler="on_session_view_popup_menu"/>
+                <signal name="row_activated" handler="on_session_view_row_activated"/>
+              </widget>
+            </child>
           </widget>
           <packing>
             <property name="position">1</property>
           </packing>
         </child>
+        <child>
+          <widget class="GtkExpander" id="expander1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <widget class="GtkTable" id="table1">
+                <property name="visible">True</property>
+                <property name="n_rows">1</property>
+                <property name="n_columns">1</property>
+                <child>
+                  <widget class="GtkCheckButton" id="safe_mode">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">Safe Mode</property>
+                    <property name="response_id">0</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                </child>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Advanced Options</property>
+              </widget>
+              <packing>
+                <property name="type">label_item</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
+            <property name="homogeneous">True</property>
             <property name="layout_style">GTK_BUTTONBOX_END</property>
             <child>
               <widget class="GtkButton" id="new_session">
@@ -53,7 +101,7 @@
                 <signal name="clicked" handler="on_use_session_clicked"/>
               </widget>
               <packing>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -73,9 +121,37 @@
           </widget>
           <packing>
             <property name="expand">False</property>
+            <property name="padding">1</property>
             <property name="pack_type">GTK_PACK_END</property>
+            <property name="position">3</property>
           </packing>
         </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkMenu" id="list_menu">
+    <property name="visible">True</property>
+    <child>
+      <widget class="GtkMenuItem" id="menu_use_session">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Use</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_menu_use_session_activate"/>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkSeparatorMenuItem" id="-">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">menuitem1</property>
+        <property name="use_underline">True</property>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkMenuItem" id="menu_delete_session">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes">Delete</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_menu_delete_session_activate"/>
       </widget>
     </child>
   </widget>

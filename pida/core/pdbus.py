@@ -41,9 +41,9 @@ class DbusConfig(Object):
     def __init__(self, service):
         self.svc = service
         if hasattr(self, 'export_path'):
-            ns = DBUS_PATH(service.get_label().lower(), self.export_path)
+            ns = DBUS_PATH(service.get_name(), self.export_path)
         else:
-            ns = DBUS_PATH(service.get_label().lower())
+            ns = DBUS_PATH(service.get_name())
         Object.__init__(self, BUS_NAME, ns)
 
 

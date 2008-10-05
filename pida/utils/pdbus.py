@@ -43,24 +43,61 @@ BUS_NAME = BusName(DBUS_NS(UUID), bus=dbus.SessionBus())
 EXPORT = partial(dbus.service.method, DBUS_NS())
 SIGNAL = partial(dbus.service.signal, DBUS_NS())
 
+_ACTIVE_PIDAS = {}
+_CALLBACKS = {}
 
-def list_pida_instances(include_this=False):
+def rec_pida_pong(*args):
+    global _ACTIVE_PIDAS
+    _ACTIVE_PIDAS[str(args[0])] = args
+
+
+def list_pida_instances(include_this=False, callback=None, callback_done=None,
+                        ext=True, timeout=1, block=False):
     """
     Return a tuple of running pida session identifiers.
     Each of this identifiers can be used to connect to a remote Pida
     instance
     """
+    global _ACTIVE_PIDAS
+    if not callback:
+        callback = rec_pida_pong
+        _ACTIVE_PIDAS = {}
+    if ext:
+        pong = 'PONG_PIDA_INSTANCE_EXT'
+        ping = 'PING_PIDA_INSTANCE_EXT'
+    else:
+        pong = 'PONG_PIDA_INSTANCE'
+        ping = 'PING_PIDA_INSTANCE'
     session = dbus.SessionBus()
-    rv = []
-    for x in session.list_names(): 
-        if x[:len(DBUS_NS_PREFIX)] == DBUS_NS_PREFIX:
-            match = x[len(DBUS_NS_PREFIX)+1:]
-            if not len(match):
-                continue
-            if not include_this and match == UUID:
-                continue
-            rv.append(match)
-    return rv
+    
+    if not _CALLBACKS.has_key(rec_pida_pong):
+        _CALLBACKS[rec_pida_pong] = session.add_signal_receiver(
+            rec_pida_pong, pong, dbus_interface=DBUS_NS())
+    
+    if not _CALLBACKS.has_key(callback):
+        # this is ugly but needed to prevent multi registration
+        _CALLBACKS[callback] = session.add_signal_receiver(
+            callback, pong, dbus_interface=DBUS_NS())
+    m = dbus.lowlevel.SignalMessage('/', DBUS_NS(), ping)
+
+    if block:
+        # this is ugly, but blocking calls with send_message doesn't work
+        import gtk
+
+        def gq(rep):
+            gtk.main_quit()
+
+        session.send_message_with_reply(m, gq, timeout)
+
+        gtk.main()
+        return _ACTIVE_PIDAS.values()
+    if callback_done:
+        session.send_message_with_reply(m, callback_done, timeout)
+    else:
+        session.send_message(m)
+
+    return None
+
 
 class PidaRemote(object):
     """
@@ -77,12 +114,14 @@ class PidaRemote(object):
         if pid[0] == "p":
             pid = ":" + pid[1:].replace("_", ".")
             self._bus_name = pid
+        elif pid[0] == ":":
+            self._bus_name = pid
         else:
             if not bus_name:
                 self._bus_name=DBUS_NS(pid)
             else:
                 self._bus_name=bus_name
-            
+
         self._pid = pid
         self._conn = conn
 
