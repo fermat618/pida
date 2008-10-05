@@ -76,6 +76,7 @@ class Boss(object):
 
     def stop(self, force=False):
         if force:
+            self._sm.stop()
             gtk.main_quit()
         elif self.window.yesno_dlg(_('Are you sure you want to quit PIDA ?')):
             # This causes pida-quit to be called on our Emacs and causes

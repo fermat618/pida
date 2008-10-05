@@ -61,7 +61,7 @@ class VimCallback(object):
         self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
     def vim_VimLeave(self):
-        print 'quitting vim'
+        self.svc.boss.stop(force=True)
 
     def vim_BufWritePost(self):
         pass
