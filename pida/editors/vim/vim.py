@@ -24,6 +24,13 @@ from pida.core.editors import EditorService, _
 
 UID = 'PIDA_EMBEDDED_%s' % uuid.uuid4().get_hex()
 
+
+def _do_nothing(*args):
+    pass
+
+nothing_async = dict(reply_handler=_do_nothing,
+                error_handler=_do_nothing)
+
 class VimView(PidaView):
 
     def create_ui(self):
@@ -167,13 +174,14 @@ class Vim(EditorService):
 
     def open(self, document):
         """Open a document"""
+
+
         if document is not self._current:
+            fn = document.filename
             if document.unique_id in self._documents:
-                fn = document.filename
-                self._com.open_buffer(fn)
-                #self._com.foreground(self.server)
+                self._com.open_buffer(fn, **nothing_async)
             else:
-                self._com.open_file(document.filename)
+                self._com.open_file(fn, **nothing_async)
                 self._documents[document.unique_id] = document
             self._current = document
 
@@ -185,7 +193,7 @@ class Vim(EditorService):
     def close(self, document):
         if document.unique_id in self._documents:
             self._remove_document(document)
-            self._com.close_buffer(document.filename)
+            self._com.close_buffer(document.filename, **nothing_async)
         return True
 
     def remove_file(self, file_name):

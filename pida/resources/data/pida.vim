@@ -396,7 +396,7 @@ silent au VimCommsDBus CursorMovedI,CursorMoved * silent call VimSignal('CursorM
 silent au VimCommsDBus SwapExists * silent call VimSignal('SwapExists')
 
 " Some UI Stuffs
-
+set nomore
 set guioptions-=T
 set guioptions-=m
 
