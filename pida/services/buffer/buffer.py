@@ -397,7 +397,8 @@ class Buffer(Service):
             self.emit('document-changed', document=document)
 
     def open_file(self, file_name = None, document = None, line=None):
-        file_name = os.path.realpath(file_name)
+        if file_name:
+            file_name = os.path.realpath(file_name)
         if not document:
             document = self._get_document_for_filename(file_name)
         if document is None:
