@@ -267,7 +267,7 @@ class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed', 
-            'document-typchanged', 'document-closed')
+            'document-typchanged', 'document-closed', 'document-opened')
         self.subscribe('document-saved', self.on_document_change)
         self.subscribe('document-changed', self.on_document_change)
         self.subscribe('document-typchanged', self.on_document_change)
@@ -395,6 +395,7 @@ class Buffer(Service):
             self._view.set_document(document)
             self.boss.editor.cmd('open', document=document)
             self.emit('document-changed', document=document)
+            self.emit('document-opened', document=document)
 
     def open_file(self, file_name = None, document = None, line=None):
         if file_name:
@@ -407,6 +408,7 @@ class Buffer(Service):
             document = Document(self.boss, file_name)
             self._add_document(document)
         self.view_document(document, line=line)
+        self.emit('document-opened', document=document)
 
     def open_files(self, files):
         if not files:
@@ -418,6 +420,8 @@ class Buffer(Service):
             self._add_document(document)
             docs.append(document)
         self.boss.editor.cmd('open_list', documents=docs)
+        for document in docs:
+            self.emit('document-opened', document=document)
 
     def recover_loading_error(self, error):
         # recover from a loading exception

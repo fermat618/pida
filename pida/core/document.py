@@ -340,7 +340,6 @@ class Document(object):
         rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
             'markup_inc': mark
             })
-        print rv
         return rv
 
     markup = property(get_markup)

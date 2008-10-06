@@ -344,8 +344,10 @@ class BookmarkEvents(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('project', 'project_switched',
                                self.svc.on_project_switched)
+        self.subscribe_foreign('buffer', 'document-opened',
+                               self.svc.update_document)
         self.subscribe_foreign('buffer', 'document-saved',
-            self.on_document_saved)
+                               self.on_document_saved)
 
     def on_document_saved(self, document=None):
         # we have to save, because we can't detect removed bookmarks yet
@@ -430,8 +432,8 @@ class Bookmark(Service, MarkerInterface):
         filename, line = self._fill_file(filename, line)
         filename_title = os.path.basename(filename)
         item = BookmarkItemFile(self, data=filename, line=line)
-        self.boss.get_service('editor').emit('marker-changed', marker=item)
         self.add_item(item)
+        self.boss.get_service('editor').emit('marker-changed', marker=item)
 
     def bookmark_toggle_file(self, filename=None, line=None):
         """
@@ -452,6 +454,14 @@ class Bookmark(Service, MarkerInterface):
                 break
         else:
             self.bookmark_file(filename, line)
+
+    def update_document(self, document):
+        print "update document", document
+        for item in self.list_files():
+            if document.filename == item.data:
+                print "emit", item
+                self.boss.get_service('editor'). \
+                    emit('marker-changed', marker=item)
 
     def on_project_switched(self, project):
         if project != self._project:

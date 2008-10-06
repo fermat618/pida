@@ -251,8 +251,15 @@ class MooeditView(gtk.ScrolledWindow):
             lm.update(lm._moo_marker.get_line()+1)
         return True
 
-    def update_marker(self, marker):
+    def close(self):
+        buf = self.editor.get_buffer()
+        for lm in self.line_markers:
+            if hasattr(lm, '_moo_marker'):
+                lm._moo_marker.props.visible = False
+                buf.delete_line_mark(lm._moo_marker)
+                del lm._moo_marker
 
+    def update_marker(self, marker):
         if marker.line == -1:
             # should be deleted
             if marker in self.line_markers and hasattr(marker, '_moo_marker'):
@@ -272,6 +279,7 @@ class MooeditView(gtk.ScrolledWindow):
             self.line_markers.append(marker)
             self.editor.props.buffer.add_line_mark(marker._moo_marker, 
                 int(marker.line)-1)
+            marker._moo_marker.props.visible = True
         else:
             self.editor.props.buffer.move_line_mark(marker._moo_marker, 
                 int(marker.line)-1)
@@ -986,6 +994,7 @@ class Mooedit(EditorService):
 
         closing = self._documents[document.unique_id].editor.close()
         if closing:
+            self._documents[document.unique_id].close()
             self._embed.remove_page(self._embed.page_num(self._documents[document.unique_id]))
             del self._documents[document.unique_id]
             if self._embed.get_n_pages() == 0:
