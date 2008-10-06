@@ -51,10 +51,6 @@ class Document(object):
                          'markup_project_color', 'markup_directory_color', 
                          'filename', 'directory']
 
-    markup_string_tworow = (
-                     u'<b>%(basename)s</b>\n'
-                     u'<small>%(markup)s</small>')
-
     markup_string_project = (
                      u'<span color="%(markup_project_color)s">'
                      u'%(project_name)s</span><tt>:</tt>'
@@ -66,6 +62,22 @@ class Document(object):
                      u'<span color="%(markup_directory_color)s">'
                      u'%(directory)s/</span>'
                      u'<b>%(basename)s</b>')
+    
+    markup_string_tworow = (
+                     u'<b>%(basename)s</b>\n'
+                     u'<small>%(markup_inc)s</small>')
+
+    markup_string_tworow_project = (
+                     u'<span foreground="%(markup_project_color)s">'
+                     u'%(project_name)s</span><tt>:</tt>'
+                     u'<span foreground="%(markup_directory_color)s">'
+                     u'%(project_relative_path)s/</span>'
+                     u'%(basename)s')
+
+    markup_string_tworow_fullpath = (
+                     u'<span foreground="%(markup_directory_color)s">'
+                     u'%(directory)s/</span>'
+                     u'%(basename)s')
 
     markup_string = (u'<b>%(basename)s</b>')
 
@@ -321,9 +333,14 @@ class Document(object):
 
     @property
     def markup_tworow(self):
+        if self.project:
+            mark = self.get_markup(self.markup_string_tworow_project)
+        else:
+            mark = self.get_markup(self.markup_string_tworow_fullpath)
         rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
-            'markup': self.markup
+            'markup_inc': mark
             })
+        print rv
         return rv
 
     markup = property(get_markup)
