@@ -169,7 +169,12 @@ class PythonCompleter(Completer):
         buffer = buffer + ('\n' * 20)
 
         from rope.contrib.codeassist import code_assist, sorted_proposals
-        co = code_assist(mp.project, buffer, offset)
+        from rope.base.exceptions import RopeError
+        
+        try:
+            co = code_assist(mp.project, buffer, offset)
+        except RopeError:
+            return []
         so = sorted_proposals(co)
         return [c.name for c in so if c.name.startswith(base)]
 

@@ -23,6 +23,7 @@
 # Standard Libs
 import os
 import gtk
+import re
 from gtk import gdk
 
 # UGLY UGLY workarround as suggested by muntyan_
@@ -514,11 +515,18 @@ class PidaMooInput(object):
         self.show_auto = False
         
         editor.connect("key-press-event", self.on_keypress)
+        
+        # db stuff for the autocompleter
+        self.list_matcher = re.compile("""\w{3,100}""")
+        self.list_cache = {}
+        self.list_all = set()
+
         #editor.connect_after("key-press-event", self.on_after_keypress)
 
     #def on_
     
     def toggle_popup(self):
+        print "toggle", self.completer_visible
         if self.completer_visible:
             self.hide()
         else:
@@ -547,13 +555,25 @@ class PidaMooInput(object):
             i.forward_char()
         return i
 
+    def update_completer_and_add(self, cmpl, start):
+        if cmpl:
+            for i in cmpl.get_completions("", 
+                        unicode(self.editor.get_text()), start):
+                yield i
+
+        self.update_completer()
+        for i in self.list_all:
+            yield i
+
+
     def show(self, visible=True, show_auto=True):
         #self.completer_pos = self.completer_pos_user = \
         #    self.editor.props.buffer.props.cursor_position
 
         cmpl = self.svc.boss.get_service('language').get_completer(self.document)
-        if not cmpl:
-            return
+        print cmpl
+        #if not cmpl:
+        #    return
 
         buf = self.editor.get_buffer()
 
@@ -596,11 +616,21 @@ class PidaMooInput(object):
                 buf.get_iter_at_offset(cpos))
         else:
             self.completer.filter = ""
-        task = GeneratorTask(
-                cmpl.get_completions, 
-                self.add_str)
-        task.start("", 
-            unicode(self.editor.get_text()), start)
+        #if cmpl:
+        #    # we have a completer class.
+        #    # first their results come, after that the normal ones
+        #    task = GeneratorTask(cmpl.get_completions, 
+        #                         self.add_str)
+        #    task.start("", 
+        #        unicode(self.editor.get_text()), start)
+        #else:
+        #    task = GeneratorTask(self.update_completer_and_add, 
+        #                         self.add_str)
+        #    task.start("",
+        #        unicode(self.editor.get_text()), start)
+        task = GeneratorTask(self.update_completer_and_add, 
+                             self.add_str)
+        task.start(cmpl, start)
 
         self.show_auto = show_auto
 
@@ -725,6 +755,33 @@ class PidaMooInput(object):
             # in the suggestion range.
             self.hide()
 
+    def tokenize(self, text):
+        return self.list_matcher.findall(text)
+
+    def update_completer(self, full=False):
+        # update the state of simple internal completer
+        self.list_all.clear()
+        buf = self.editor.get_buffer()
+        
+        it = buf.get_iter_at_offset(buf.props.cursor_position)
+        
+        if buf.get_line_count() != len(self.list_cache) or full:
+            # full update of cache
+            lines = range(0, buf.get_line_count()+1)
+        else:
+            # incremental update. we update the current line + above and below
+            lines = range(max(it.get_line()-1, 0), 
+                          min(it.get_line()+1, buf.get_line_count())+1)
+
+        for line in lines:
+            its = buf.get_iter_at_line(line)
+            ite = its.copy()
+            ite.forward_to_line_end()
+            self.list_cache[line] = self.tokenize(buf.get_text(its, ite))
+
+        for val in self.list_cache.itervalues():
+            self.list_all.update(val)
+            
     def on_keypress(self, editor, event):
         #print event
         if event.type == gdk.KEY_PRESS and self.svc.opt('autocomplete'):
@@ -751,7 +808,7 @@ class PidaMooInput(object):
             elif etest(self.svc.key_accept):
                 if self.completer_visible:
                     print "accept"
-                    print self._get_complete()
+                    print self._get_complete() 
                     self.accept(None, self._get_complete())
                     return True
                     # key up, key down, ?, pgup, pgdown
@@ -772,7 +829,10 @@ class PidaMooInput(object):
         # and the code later should be a extra function
         # but doesn't work as this super function returns True
         # and stops the processing of connect_after functions
-        self.editor.do_key_press_event(editor, event)
+        modified = self.editor.do_key_press_event(editor, event)
+        
+        if modified:
+            self.update_completer()
 
         if self.completer_visible:
             if event.keyval in (gtk.keysyms.BackSpace, gtk.keysyms.Delete): # delete
