@@ -48,7 +48,8 @@ class GrepperItem(object):
     well as actual line of code that matched, and the matches data.
     """
 
-    def __init__(self, path, linenumber=None, line=None, matches=None):
+    def __init__(self, path, manager, linenumber=None, line=None, matches=None):
+        self._manager = manager
         self._path = path
         self._line = line
         self._matches = matches
@@ -57,8 +58,13 @@ class GrepperItem(object):
         self.line = self._format_line()
 
     def _markup_match(self, text):
-        return ('<span color="#c00000"><b>%s</b></span>' %
-                self._escape_text(text))
+        color = manager.style.lookup_color('pida-match')
+        if color:
+            color = color.to_string()
+        if not color:
+            color = "red"
+        return ('<span color="%s"><b>%s</b></span>' %
+                (color, self._escape_text(text)))
 
     def _escape_text(self, text):
         return cgi.escape(text)
@@ -393,7 +399,7 @@ class Grepper(Service):
 
                 if line_matches:
                     self._result_count += 1
-                    yield GrepperItem(filename, linenumber, line, line_matches)
+                    yield GrepperItem(filename, self, linenumber, line, line_matches)
         except IOError:
             pass
 

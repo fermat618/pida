@@ -132,6 +132,8 @@ class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
         self.create_ui()
+        if self.key:
+            self.toplevel.set_name(self.key.replace(".", "_"))
 
 class PidaView(SlaveDelegate, PidaViewMixin):
 
@@ -142,6 +144,8 @@ class PidaView(SlaveDelegate, PidaViewMixin):
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
         self.create_ui()
+        if self.key:
+            self.toplevel.set_name(self.key.replace(".", "_"))
 
     def add_main_widget(self, widget, *args, **kw):
         self._main_widget.pack_start(widget, *args, **kw)

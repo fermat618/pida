@@ -45,8 +45,8 @@ class Document(object):
     """
 
     markup_prefix = ''
-    markup_directory_color = '#0000c0'
-    markup_project_color = '#600060'
+    markup_directory_color = '#FFFF00'
+    markup_project_color = '#FF0000'
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'markup_project_color', 'markup_directory_color', 
                          'filename', 'directory']
@@ -317,34 +317,35 @@ class Document(object):
     def unique_id(self):
         return id(self)
 
-    def get_markup(self, markup_string=None):
+    def get_markup(self, markup_string=None, style=None):
         if markup_string is None:
             if self.project:
                 markup_string = self.markup_string_project
             else:
                 markup_string = self.markup_string
-        
+
         prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
         if self.filename is not None:
-            s = markup_string % self._build_markup_dict()
+            s = markup_string % self._build_markup_dict(style=style)
         else:
             s = u'<b>%s</b>' % escape(self.__unicode__())
         return '%s%s' % (prefix, s)
 
-    @property
-    def markup_tworow(self):
+    markup = property(get_markup)
+
+    def get_markup_tworow(self, style=None):
         if self.project:
             mark = self.get_markup(self.markup_string_tworow_project)
         else:
             mark = self.get_markup(self.markup_string_tworow_fullpath)
         rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
             'markup_inc': mark
-            })
+            }, style=style)
         return rv
 
-    markup = property(get_markup)
+    markup_tworow = property(get_markup_tworow)
 
-    def _build_markup_dict(self, markup_dict=None):
+    def _build_markup_dict(self, markup_dict=None, style=None):
         if not markup_dict:
             markup_dict = {}
         for attr in self.markup_attributes:

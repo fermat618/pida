@@ -47,7 +47,7 @@ class PidaPaned(BigPaned):
         self.set_property('enable-detaching', True)
         self.connect('config-changed', self.on_config_changed)
         self.config_file = os.path.join(pida_home, 'paneconfig.txt')
-
+        self.set_name('PidaBigPaned')
         self.init_config()
 
     def get_all_pos(self):
@@ -71,6 +71,7 @@ class PidaPaned(BigPaned):
             if not removable:
                 pane.set_property('removable', False)
             pane.connect('remove', view.on_remove_attempt)
+            view.toplevel.parent.set_name('PidaWindow')
             if present:
                 gcall(self.present_pane, view.get_toplevel())
             self.show_all()

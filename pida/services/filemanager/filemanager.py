@@ -78,21 +78,23 @@ state_text = dict(
         )
 
 state_style = dict( # tuples of (color, is_bold, is_italic)
-        hidden=('lightgrey', False, True),
-        ignored=('lightgrey', False, True),
+        unknown=('pida-fm-unknown', False, False),
+        hidden=('pida-fm-hidden', False, True),
+        ignored=('pida-fm-ignored', False, True),
         #TODO: better handling of normal directories
-        none=('#888888', False, True), 
-        normal=('black', False, False),
-        error=('darkred', True, True),
-        empty=('black', False, True),
-        modified=('darkred', True, False),
-        conflict=('darkred', True, True),
-        removed=('#c06060', True, True),
-        missing=('#00c0c0', True, False),
-        new=('blue', True, False),
-        max=('#c0c000', False, False),
-        external=('#333333', False, True),
+        none=('pida-fm-none', False, True), 
+        normal=('pida-fm-normal', False, False),
+        error=('pida-fm-error', True, True),
+        empty=('pida-fm-empty', False, True),
+        modified=('pida-fm-modified', True, False),
+        conflict=('pida-fm-conflict', True, True),
+        removed=('pida-fm-removed', True, True),
+        missing=('pida-fm-missing', True, False),
+        new=('pida-fm-new', True, False),
+        max=('pida-fm-max', False, False),
+        external=('pida-fm-external', False, True),
         )
+
 
 def check_or_home(path):
     if not os.path.isdir(path):
@@ -138,7 +140,11 @@ class FileEntry(object):
 
 
     def format(self, text):
-        color, b, i = state_style.get(self.state, ('black', False, False))
+        color, b, i = state_style.get(self.state, (None, False, False))
+        if color:
+            color = self._manager.file_list.style.lookup_color(color).to_string()
+        if not color:
+            color = "black"
         if b:
             text = '<b>%s</b>' % text
         if i:

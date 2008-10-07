@@ -39,6 +39,13 @@ for path in pida_home, plugins_dir:
     if not os.path.exists(path):
         os.mkdir(path)
 
+import gtk
+
+gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
+gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
+# we have to force reload the settings
+gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
+
 #XXX: development hack
 import pida
 buildin_plugins_dir = os.path.join(

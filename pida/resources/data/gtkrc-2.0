@@ -1,0 +1,49 @@
+style "pida"  {
+color["pida-project"] = "#FF0000"
+color["pida-project-path"] = "#FFFF00"
+
+# Filemanager color settings
+color["pida-fm-unknown"] = "black"
+color["pida-fm-hidden"] = "lightgrey"
+color["pida-fm-ignored"] = "lightgrey"
+color["pida-fm-none"] = "#888888"
+color["pida-fm-normal"] = "red"
+color["pida-fm-error"] = "darkred"
+color["pida-fm-empty"] = "black"
+color["pida-fm-modified"] = "darkred"
+color["pida-fm-conflict"] = "red"
+color["pida-fm-removed"] = "#c06060"
+color["pida-fm-missing"] = "#00c0c0"
+color["pida-fm-new"] = "blue"
+color["pida-fm-max"] = "#c0c000" 
+color["pida-fm-external"] = "#333333"
+
+# grepper
+color["pida-match"] = "#c00000"
+
+# bookmarks
+color["pida-lineno"] = "#000099"
+#base[NORMAL] = "white"
+#text[NORMAL]="#000000"
+#bg[NORMAL] = "white"
+#fg[NORMAL] = "white"
+
+#base[NORMAL]="#000000"
+#
+#	GtkIMHtml::hyperlink-color="#007FFF"
+#	GtkWidget::cursor-color="#60AFFE"
+#	GtkWidget::secondary-cursor-color="#A4D3EE"
+
+}
+
+style "pida-filebrowser" {
+bg[NORMAL] = "white"
+text[NORMAL]="#000000"
+fg[NORMAL] = "white"
+}
+
+widget_class "*" style "pida"
+
+#widget "filebrowser_list" style "pida-filebrowser"
+#widget "filebrowser_list" style "pida"
+

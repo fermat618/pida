@@ -76,13 +76,21 @@ class BookmarkItemFile(BookmarkItem, LineMarker):
         #self.line = line
         self.svc = svc
         BookmarkItem.__init__(self,  title='', data=data)
+        self.data = data
         self._lineno = line
-        self.update_title()
 
-    def update_title(self):
-        self.title = '%s:<span color="#000099">%d</span>' % (
-                cgi.escape(os.path.basename(self.data)), int(self.line))
+    def _get_title(self):
+        try:
+            color = self.svc._view._list['file'].style.lookup_color('pida-lineno').\
+                    to_string()
+        except:
+            color = "black"
+        return '%s:<span color="%s">%d</span>' % (
+                cgi.escape(os.path.basename(self.data)), color, int(self.line))
 
+    def _set_title(self, value): pass
+
+    title = property(_get_title, _set_title)
 
     def run(self, service):
         service.boss.cmd('buffer', 'open_file', 
@@ -98,7 +106,6 @@ class BookmarkItemFile(BookmarkItem, LineMarker):
 
     def _do_set_line(self, newlineno):
         self._lineno = newlineno
-        self.update_title()
         self.svc._view._list['file'].update(self)
 
     def update(self, newlineno):

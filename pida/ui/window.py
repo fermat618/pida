@@ -62,6 +62,8 @@ class PidaWindow(Window):
 
 
     def create_all(self):
+        self.set_role('Main')
+        self.set_name('PidaMain')
         self.set_title(_('PIDA Loves You!'))
         self._fix_paneds()
         self._create_ui()
@@ -185,6 +187,8 @@ class SessionWindow(BaseView):
         @command: run command when one session is choosen
         @spawn_new: on the default handle. spawn a new process
         """
+        #self.set_role('Session') 
+        #self.set_name('PidaSession')
 
         self.sessions = []
         self.command = command
