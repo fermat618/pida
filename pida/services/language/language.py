@@ -25,7 +25,7 @@ from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
 from pida.utils.pdbus import EXPORT
 
-from pida.utils.gthreads import GeneratorTask
+from pida.utils.gthreads import GeneratorTask, gcall
 
 
 # core
@@ -250,10 +250,9 @@ class LanguageActionsConfig(ActionsConfig):
             self.svc.show_browser()
         else:
             self.svc.hide_browser()
-            
+
     def on_goto_definition(self, action):
-        print "goto definition", action
-        
+        self.svc.goto_defintion()
 
 
 class LanguageCommandsConfig(CommandsConfig):
@@ -366,6 +365,30 @@ class Language(Service):
 
     def hide_browser(self):
         self.boss.cmd('window', 'remove_view', view=self._view_outliner)
+
+
+    def goto_defintion(self):
+        doc = self.boss.cmd('buffer', 'get_current')
+        definer = self.get_definer(doc)
+        res = definer.get_definition(doc.content, 
+                                      self.boss.editor.get_cursor_position())
+
+        if res:
+            ndoc = self.boss.cmd('buffer', 'open_file', file_name=res.file_name)
+            self.boss.get_service('buffer').view_document(ndoc)
+            # FIXME: we have a timeing problem here. so we have to use
+            # gcall which is ugly in my opinion
+            if res.offset is not None and \
+               hasattr(self.boss.editor, 'set_cursor_position'):
+                gcall(self.boss.editor.set_cursor_position, res.offset)
+
+            elif res.line is not None:
+                gcall(self.boss.editor.goto_line, res.line)
+        else:
+            self.boss.get_service('notify').notify(
+            data=_('No definition found'), timeout=2000)
+        #self.boss.cmd('window', 'remove_view', view=self._view_outliner)
+
 
     def on_buffer_typechanged(self, document):
         for k in ("_lng_outliner", "_lng_validator", "_lng_completer",

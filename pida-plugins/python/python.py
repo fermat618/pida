@@ -39,7 +39,7 @@ from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
-    PRIO_GOOD)
+    PRIO_GOOD, Definer, Definition)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -179,6 +179,30 @@ class PythonCompleter(Completer):
         return [c.name for c in so if c.name.startswith(base)]
 
 
+class PythonDefiner(Definer):
+    
+    def get_definition(self, buffer, offset):
+        mp = ModuleParser(self.document.filename)
+        buffer = buffer + ('\n' * 20)
+        
+        from rope.contrib.findit  import find_definition
+        from rope.base.exceptions import RopeError
+        
+        try:
+            dl = find_definition(mp.project, buffer, offset)
+        except RopeError:
+            return None
+        dl = find_definition(mp.project, buffer, offset)
+        if not dl:
+            return None
+
+        rv = Definition(file_name=dl.resource.path, offset=dl.offset, 
+                        line=dl.lineno, length=(dl.region[1]-dl.region[0]))
+
+        return rv
+            
+        #(project, code, offset, resource=None, maxfixes=1)
+
 class Python(LanguageService):
 
     language_name = 'Python'
@@ -186,6 +210,7 @@ class Python(LanguageService):
     outliner_factory = PythonOutliner
     validator_factory = PythonValidator
     completer_factory = PythonCompleter
+    definer_factory = PythonDefiner
 
     features_config = PythonFeaturesConfig
     actions_config = PythonActionsConfig

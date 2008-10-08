@@ -409,6 +409,7 @@ class Buffer(Service):
             self._add_document(document)
         self.view_document(document, line=line)
         self.emit('document-opened', document=document)
+        return document
 
     def open_files(self, files):
         if not files:

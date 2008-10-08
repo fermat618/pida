@@ -296,6 +296,14 @@ class Vim(EditorService):
     def set_path(self, path):
         return self._com.cd(path)
 
+    #def get_cursor_position(self):
+    #    #FIXME: return current position
+    #    return 0
+
+    #def set_cursor_position(self, position, scroll=True):
+    #    #FIXME: return current position
+    #    pass
+
     def stop(self):
         self._com.quit(reply_handler=lambda *a: None,
                        error_handler=lambda *a: None)

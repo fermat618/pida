@@ -1329,6 +1329,19 @@ class Mooedit(EditorService):
         i = buf.get_iter_at_offset(buf.props.cursor_position)
         return i.get_line()+1
 
+    def get_cursor_position(self):
+        buf = self._current.editor.get_buffer()
+        return buf.props.cursor_position
+
+    def set_cursor_position(self, position, scroll=True):
+        #FIXME: return current position
+        buf = self._current.editor.get_buffer()
+        itr = buf.get_iter_at_offset(position)
+        buf.place_cursor(itr)
+        if scroll:
+            itr = buf.get_iter_at_offset(position)
+            self._current.editor.scroll_to_iter(itr, 0.05, use_align=True)
+
     def replace_line(self, editor, lineno, text):
         """
         Replace a line in the editor. lineno is index 0 based.

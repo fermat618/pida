@@ -101,20 +101,31 @@ class Validator(BaseDocumentHandler):
 
 class Definition(object):
     """Returned by a Definer instance"""
-    def __init__(self, document=None, line=0, signature="", doc=""):
-        self.document = document
+    def __init__(self, file_name=None, offset=None, length=None, line=None,
+                 signature=None, doc=None):
+        self.file_name = file_name
+        self.offset = offset
+        self.length = length
         self.line = line
         self.signature = signature
         self.doc = doc
+        
+    def __repr__(self):
+        where = ""
+        if self.offset is not None:
+            where = " offset %s " %self.offset
+        elif self.line is not None:
+            where = " line %s " %self.line
+        return '<Definition %s%s>' %(self.file_name, where)
 
 class Definer(BaseDocumentHandler):
     """
     The definer class is used to allow the user to the definition of a
     word.
     """
-    def get_definition(self, offset):
+    def get_definition(self, buffer, offset):
         """
-        Returns a Definition class pointing to document defining the word
+        Returns the Definition class pointing to document defining the word
         searched for. The Definier has to find out which word the offset is on.
 
         @offset - nth char in the document point is on
