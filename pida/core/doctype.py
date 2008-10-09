@@ -4,9 +4,9 @@
     pida.core.doctype
     ~~~~~~~~~~~~~~~~~~
 
-    :license: GPL3 or later
-    :copyright:
-        * 2008 Daniel Poelzleithner
+    :license: GPL2 or later
+    :copyright: 2008 by The PIDA Project
+
 """
 
 from glob import fnmatch

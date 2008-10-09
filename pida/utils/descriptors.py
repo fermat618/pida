@@ -3,6 +3,9 @@
     ~~~~~~~~~~~~~~~~~~~~~~
 
     some utility descriptor classes
+
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
 class cached_property(object):

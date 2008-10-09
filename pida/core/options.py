@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
+#XXX: get rid of that ;P
 import gconf
 
 from pida.core.base import BaseConfig

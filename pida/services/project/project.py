@@ -5,10 +5,8 @@
 
     This service handles manging Projects and invoking vellum.
 
-    :license: GPL3
-    :copyright:
-        * 2007 Ali Afshar
-        * 2008 Ronny Pfannschmidt
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later
 """
 from __future__ import with_statement
 import os
