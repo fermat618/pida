@@ -59,11 +59,20 @@ class SuggestionsList(gtk.ListStore):
         return rv
 
 class PidaCompleterWindow(gtk.Window):
-    def __init__(self, type_=gtk.WINDOW_TOPLEVEL):
+    def __init__(self, type_=gtk.WINDOW_TOPLEVEL, 
+                    show_input=True, show_icons=True):
         super(PidaCompleterWindow, self).__init__(type_)
-        self.widget = PidaCompleter()
+        self.set_focus_on_map(False)
+        self.widget = PidaCompleter(show_input=show_input, show_icons=show_icons)
         self.add(self.widget)
         self.set_decorated(False)
+        self.set_keep_above(True)
+        self.set_role('completer')
+        self.set_property('accept-focus', False)
+        self.set_property('skip-pager-hint', True)
+        self.set_property('skip-taskbar-hint', True)
+        self.set_property('type-hint', gtk.gdk.WINDOW_TYPE_HINT_TOOLTIP)
+
 
 
 
@@ -103,7 +112,11 @@ class PidaCompleter(gtk.HBox):
             self._entry.grab_focus()
         
         # public vars
-
+        self.min_height = 130
+        self.max_height = 400
+        self.min_width = 200
+        self.max_width = 500
+        
         # ignore case does case insensetive filter
         self.ignore_case = True
         # tab
@@ -170,9 +183,6 @@ class PidaCompleter(gtk.HBox):
             elif event.keyval in self.abort_keys:
                 self._sig_clean("user-abort", self._filter)
                 return True
-            elif event.keyval in (65366, 65365):
-                # FIXME: pageup/down
-                pass
             elif event.keyval == 65364: #key down
                 s = self._tree.get_selection()
                 it = s.get_selected()[1]
@@ -202,10 +212,27 @@ class PidaCompleter(gtk.HBox):
                 print self.filter
                 nt = self._model.get_value(self._model.get_iter(np), 1)
                 self._update_sel(nt)
-                #ov = self._entry.get_text()
-                #self._entry.set_text(nt)
-                #self._entry.select_region(
-                #self._entry.set_inline_completion(inline_completion)
+                return True
+            elif event.keyval == gtk.gdk.keyval_from_name('Page_Up'):
+                s = self._tree.get_selection()
+                vr = self._tree.get_visible_range()
+                diff = vr[1][0]-vr[0][0]
+                np = (max(vr[0][0]-diff,0),)
+                s.select_path(np)
+                self._tree.scroll_to_cell(np, use_align=False, row_align=0.0, col_align=0.0)
+                nt = self._model.get_value(self._model.get_iter(np), 1)
+                self._update_sel(nt)
+                return True
+                
+            elif event.keyval == gtk.gdk.keyval_from_name('Page_Down'):
+                s = self._tree.get_selection()
+                vr = self._tree.get_visible_range()
+                diff = vr[1][0]-vr[0][0]
+                np = (vr[0][0]+diff,)
+                s.select_path(np)
+                self._tree.scroll_to_cell(np, use_align=True, row_align=0.0, col_align=0.0)
+                nt = self._model.get_value(self._model.get_iter(np), 1)
+                self._update_sel(nt)
                 return True
             elif event.keyval == 65293: # enter
                 self._sig_clean("user-accept", self._entry.get_text())
@@ -255,7 +282,7 @@ class PidaCompleter(gtk.HBox):
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         #self._box = scrolled_window
         #self.add(scrolled_window)
-        self.set_size_request(150, 300)
+        #self.set_size_request(150, 300)
         #self.set_decorated(False)
         self._entry = gtk.Entry()
         #self._entry.connect("insert-text", self.on_entry_changed)
@@ -266,7 +293,7 @@ class PidaCompleter(gtk.HBox):
             self._box.pack_start(self._entry, False, False)
         #self._entry.set_size_request(0, 0)
         self._tree = gtk.TreeView()
-        self._tree.set_size_request(100, 100)
+        #self._tree.set_size_request(100, 100)
         self._tree.set_headers_visible(False)
         self._tree.set_enable_search(False)
         #self._tree.set_fixed_height_mode(True)
@@ -289,12 +316,49 @@ class PidaCompleter(gtk.HBox):
         self.show_all()
         self.hide()
 
+    def place(self, x, y, height, below=True):
+        """
+        Try to place the completer optimal on the window.
+        x, y is top left corner of the position the window should be placed
+        and height the hight of the line.The line will not be overlapped.
+        """
+        swid = gtk.gdk.screen_width()
+        shei = gtk.gdk.screen_height()
+
+        BELOW = 1
+        ABOVE = 2
+
+        pos = below and BELOW or ABOVE
+
+        tar_x, tar_y = 0, 0
+        tar_height, tar_widht = self.max_height, self.min_width
+
+        if self.min_height + height + y > shei:
+            pos = ABOVE
+
+        if pos == ABOVE and y - self.min_height < 0:
+            pos = BELOW
+
+        if pos == BELOW:
+            tar_x = x 
+            tar_y = y + height
+            tar_height = min(shei - y - height, tar_height)
+        else:
+            tar_height = min(y, tar_height)
+            tar_x = x
+            tar_y = y - tar_height
+
+        self.parent.set_size_request(tar_widht, tar_height)
+        self.parent.resize(tar_widht, tar_height)
+        self.parent.move(tar_x, tar_y)
+
+
     def get_show_icons(self):
         return self._tree_icons.get_visible()
 
     def set_show_icons(self, value):
         return self._tree_icons.set_visible(value)
-        
+
     def add_str(self, line):
         self._modelreal.append((None, line))
 

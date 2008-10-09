@@ -369,6 +369,10 @@ class Language(Service):
     def goto_defintion(self):
         doc = self.boss.cmd('buffer', 'get_current')
         definer = self.get_definer(doc)
+        if not definer:
+            self.boss.get_service('notify').notify(
+            data=_('No support found'), timeout=2000)
+            return
         res = definer.get_definition(doc.content, 
                                       self.boss.editor.get_cursor_position())
 
