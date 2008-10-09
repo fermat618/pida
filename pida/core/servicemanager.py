@@ -111,9 +111,9 @@ class ServiceManager(object):
     def __init__(self, boss):
         from pida import plugins, services, editors
         self._boss = boss
-        self._services = ServiceLoader(services)
+        self._services = ServiceLoader(services, '__init__.py')
         self._plugins = ServiceLoader(plugins)
-        self._editors = ServiceLoader(editors)
+        self._editors = ServiceLoader(editors, '__init__.py')
         self._reg = {}
 
     def get_service(self, name):
