@@ -180,28 +180,33 @@ class PythonCompleter(Completer):
 
 
 class PythonDefiner(Definer):
-    
+
     def get_definition(self, buffer, offset):
         mp = ModuleParser(self.document.filename)
         buffer = buffer + ('\n' * 20)
-        
+
         from rope.contrib.findit  import find_definition
         from rope.base.exceptions import RopeError
-        
+
         try:
             dl = find_definition(mp.project, buffer, offset)
         except RopeError:
             return None
-        dl = find_definition(mp.project, buffer, offset)
+
         if not dl:
             return None
 
-        rv = Definition(file_name=dl.resource.path, offset=dl.offset, 
+        if dl.resource is not None:
+            file_name = dl.resource.path
+        else:
+            file_name = self.document.filename
+
+
+        rv = Definition(file_name=file_name, offset=dl.offset,
                         line=dl.lineno, length=(dl.region[1]-dl.region[0]))
 
         return rv
-            
-        #(project, code, offset, resource=None, maxfixes=1)
+
 
 class Python(LanguageService):
 

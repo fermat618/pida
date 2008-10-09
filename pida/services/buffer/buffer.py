@@ -41,6 +41,8 @@ from pida.ui.views import PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document, DocumentException
 
+from pida.utils.gthreads import gcall
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('buffer')
@@ -296,10 +298,10 @@ class BufferOptionsConfig(OptionsConfig):
 
 class BufferCommandsConfig(CommandsConfig):
 
-    def open_file(self, file_name=None, document=None, line=None):
+    def open_file(self, file_name=None, document=None, line=None, offset=None):
         if not file_name and not document:
             return
-        self.svc.open_file(file_name, document, line=line)
+        self.svc.open_file(file_name, document, line=line, offset=offset)
 
     def open_files(self, files):
         self.svc.open_files(files)
@@ -397,7 +399,7 @@ class Buffer(Service):
             self.emit('document-changed', document=document)
             self.emit('document-opened', document=document)
 
-    def open_file(self, file_name = None, document = None, line=None):
+    def open_file(self, file_name=None, document=None, line=None, offset=None):
         if file_name:
             file_name = os.path.realpath(file_name)
         if not document:
@@ -407,7 +409,7 @@ class Buffer(Service):
                 return False
             document = Document(self.boss, file_name)
             self._add_document(document)
-        self.view_document(document, line=line)
+        self.view_document(document, line=line, offset=offset)
         self.emit('document-opened', document=document)
         return document
 
@@ -465,7 +467,7 @@ class Buffer(Service):
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
-    def view_document(self, document, line=None):
+    def view_document(self, document, line=None, offset=None):
         if document is not None and self._current != document:
             self._current = document
             self._view.set_document(document)
@@ -476,8 +478,13 @@ class Buffer(Service):
                 # the system
                 self.recover_loading_error(e)
             self.emit('document-changed', document=document)
-        if line is not None:
-            self.boss.editor.goto_line(line)
+        if offset is not None:
+            if line is not None:
+                raise ValueError('Cannot pass offset and line')
+            else:
+                gcall(self.boss.editor.set_cursor_position, offset)
+        elif line is not None:
+            gcall(self.boss.editor.goto_line, line)
         self.get_action('close').set_sensitive(document is not None)
 
     def file_saved(self):

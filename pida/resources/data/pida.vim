@@ -241,6 +241,14 @@ class VimDBUSService(Object):
     @method(DBUS_NS, in_signature='is')
     def hide_sign(self, index, filename):
         vim.command('sign unplace %s' % (index + 1))
+
+    @method(DBUS_NS, in_signature='i')
+    def set_cursor_offset(self, offset):
+        vim.current.window.cursor = _offset_to_position(offset)
+
+    @method(DBUS_NS, out_signature='i')
+    def get_cursor_offset(self):
+        return get_offset()
     # Signals
 
     @signal(DBUS_NS)
@@ -287,10 +295,19 @@ def _position_to_offset(lineno, colno):
         result += len(line) + 1
     return result
 
+def _offset_to_position(offset):
+    text = '\n'.join(vim.current.buffer) + '\n'
+    lineno = text.count('\n', 0, offset) + 1
+    try:
+        colno = offset - text.rindex('\n', 0, offset) - 1
+    except ValueError:
+        colno = offset
+    return lineno, colno
+
+
 def get_completions(base):
     b = '\n'.join(vim.current.buffer)
     o = int(vim.eval("s:pida_completion_offset"))
-    #o = get_offset()
     c = client.call('language', 'get_completions', base, b, o)
     c = [str(i) for i in c]
     vim.command('let s:pida_completions = %r' % c)
@@ -302,7 +319,6 @@ def set_start_var(col):
     vim.command('let s:pida_completion_start = %r' % (col + 1))
 
 def find_start():
-    #o = int(vim.eval("line2byte('.') + col('.') - 2"))
     o = get_offset()
     vim.command('let s:pida_completion_offset = %r' % o)
 
