@@ -21,68 +21,17 @@ from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
 
-from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT
-from pida.utils.pdbus import BUS, DBUS_NS
-
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
 
-class BossDbus(DbusConfig):
-    
-    def __init__(self, *args, **kwargs):
-        super(BossDbus, self).__init__(*args, **kwargs)
-        BUS.add_signal_receiver(self.on_ping, 'PING_PIDA_INSTANCE', 
-                                DBUS_NS())
-        BUS.add_signal_receiver(self.on_ping_ext, 'PING_PIDA_INSTANCE_EXT', 
-                                DBUS_NS())
-        BUS.add_signal_receiver(self.on_ping_session, 'PING_PIDA_SESSION', 
-                                DBUS_NS())
-
-    @EXPORT(out_signature="i")
-    def get_pid(self):
-        return os.getpid()
-
-    @EXPORT()
-    def focus_window(self):
-        self.svc.window.present()
-
-    @EXPORT(in_signature="b")
-    def kill(self, force=False):
-        self.svc.stop(force)
-
-    def on_ping_session(self, session):
-        if session == session_name():
-            self.on_ping()
-
-    def on_ping(self):
-        self.PONG_PIDA_INSTANCE(BUS.get_unique_name())
-
-    def on_ping_ext(self):
-        self.PONG_PIDA_INSTANCE_EXT(
-            BUS.get_unique_name(),
-            os.getpid(),
-            session_name(),
-            self.svc.get_service('project').get_project_name() or '',
-            len(self.svc.get_service('buffer').get_documents())
-            )
-
-    @SIGNAL(signature="s")
-    def PONG_PIDA_INSTANCE(self, uid):
-        pass
-
-
-    @SIGNAL(signature="sissi")
-    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, session, project, opened_files):
-        pass
 
 class Boss(object):
 
     def __init__(self):
         self.show_splash()
-        self.dbus = BossDbus(self)
         self._sm = ServiceManager(self)
         self._run_first_time()
         self.window = PidaWindow(self)
@@ -165,7 +114,4 @@ class Boss(object):
 
     def hide_splash(self):
         self._splash.hide_splash()
-
-    def get_name(self):
-        return "boss"
 

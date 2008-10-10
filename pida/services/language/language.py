@@ -23,7 +23,6 @@ from pida.core.environment import plugins_dir
 
 from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
-from pida.utils.pdbus import EXPORT
 
 from pida.utils.gthreads import GeneratorTask, gcall
 
@@ -35,7 +34,7 @@ from pida.core.actions import ActionsConfig, TYPE_TOGGLE, TYPE_MENUTOOL, TYPE_NO
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
-from pida.core.pdbus import DbusConfig
+from pida.core.pdbus import DbusConfig, EXPORT
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
