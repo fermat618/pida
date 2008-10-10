@@ -168,7 +168,7 @@ def main():
                     if file_names:
                         pr.call('buffer', 'open_files', file_names)
 
-                    pr.call('boss', 'focus_window')
+                    pr.call('rpc', 'focus_window')
 
                     sw.user_action = "quit"
                     sys.exit(0)
