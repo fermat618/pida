@@ -5,6 +5,8 @@ import gtk, dbus
 
 from dbus.mainloop.glib import DBusGMainLoop
 
+from client import get_vim
+
 mainloop = DBusGMainLoop(set_as_default=True)
 
 
@@ -18,7 +20,7 @@ def refresh_ui():
 
 def _start_vim():
     env = os.environ.copy()
-    env['PIDA_DBUS_UID'] = 'pidatest'
+    env['PIDA_DBUS_UUID'] = 'pidatest'
     p = subprocess.Popen(['gvim', '-geom', '40x40', '-f', '--cmd', 'so %s' % vim_script],
                          env=env)
     return p
@@ -36,8 +38,7 @@ class TestVim(object):
     def setUp(self):
         self.vim_process = _start_vim()
         time.sleep(1)
-        self.vim_session = dbus.SessionBus()
-        self.vim = self.vim_session.get_object('uk.co.pida.vim', '/uk/co/pida/vim/pidatest')
+        self.vim = get_vim('pidatest')
         refresh_ui()
 
         self.files = [_make_test_file() for i in range(5)]
