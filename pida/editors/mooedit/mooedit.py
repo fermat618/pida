@@ -23,6 +23,7 @@
 # Standard Libs
 import os
 import gtk
+import re
 from gtk import gdk
 
 # UGLY UGLY workarround as suggested by muntyan_
@@ -42,6 +43,18 @@ MOO_DATA_DIRS=":".join((
                 ))
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
 
+from kiwi.environ import environ
+
+environ.add_resource('pixmaps', os.path.join(os.path.dirname(__file__), 'pixmaps'))
+
+def _load_pix(fn):
+    return gtk.gdk.pixbuf_new_from_file(environ.find_resource('pixmaps', fn))
+
+_PIXMAPS = {
+    'bookmark':              _load_pix('bookmark.png'),
+    'debugger_breakpoint':   _load_pix('breakpoint.png'),
+    'debugger_position':     _load_pix('breakpoint.png'),
+}
 
 # Moo Imports
 import moo
@@ -50,6 +63,7 @@ import moo
 from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.events import EventsConfig
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
@@ -226,9 +240,53 @@ class MooeditView(gtk.ScrolledWindow):
         gtk.ScrolledWindow.__init__(self)
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.editor = document.editor
+        self.editor.props.buffer.connect('changed', self.on_changed)
         self.document = document
+        self.line_markers = []
         self.add(document.editor)
         self.show_all()
+
+    def on_changed(self, textbuffer):
+        #FIXME: this doesn't work, nor does connect_after work correctly. 
+        # this is always one changed event to late. as the markers line position 
+        # is updated after this event :(
+        self.editor.props.buffer.do_changed(textbuffer)
+        for lm in self.line_markers:
+            lm.update(lm._moo_marker.get_line()+1)
+        return True
+
+    def close(self):
+        buf = self.editor.get_buffer()
+        for lm in self.line_markers:
+            if hasattr(lm, '_moo_marker'):
+                lm._moo_marker.props.visible = False
+                buf.delete_line_mark(lm._moo_marker)
+                del lm._moo_marker
+
+    def update_marker(self, marker):
+        if marker.line == -1:
+            # should be deleted
+            if marker in self.line_markers and hasattr(marker, '_moo_marker'):
+                marker._moo_marker.props.visible = False
+                self.editor.props.buffer.delete_line_mark(marker._moo_marker)
+                self.line_markers.remove(marker)
+                return 
+
+        if not hasattr(marker, '_moo_marker'):
+            lm = moo.edit.LineMark()
+            lm.set_pixbuf(_PIXMAPS.get(marker.type, 'bookmark'))
+            #lm.set_markup('BOO')
+            lm.props.visible = True
+            marker._moo_marker = lm
+
+        if marker not in self.line_markers:
+            self.line_markers.append(marker)
+            self.editor.props.buffer.add_line_mark(marker._moo_marker, 
+                int(marker.line)-1)
+            marker._moo_marker.props.visible = True
+        else:
+            self.editor.props.buffer.move_line_mark(marker._moo_marker, 
+                int(marker.line)-1)
 
 
 class MooeditActionsConfig(EditorActionsConfig):
@@ -427,17 +485,6 @@ class MooeditActionsConfig(EditorActionsConfig):
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
 
-class MooCompleter(PidaCompleter):
-    def __init__(self, *args, **kwargs):
-        super(MooCompleter, self).__init__(*args, **kwargs)
-        self.connect('focus', self.on_focus)
-        
-    def on_focus(self, *args, **kwargs):
-        print args, kwargs
-        print "on focus"
-        return True
-
-
 class PidaMooInput(object):
     """
     Handles all customizations in the input event handling of the editor.
@@ -451,7 +498,7 @@ class PidaMooInput(object):
         self.completion.set_doc(editor)
         self.completer_window = PidaCompleterWindow(type_=gtk.WINDOW_POPUP,
             show_input=False)
-        self.completer = self.completer_window.widget # MooCompleter(show_input=False)
+        self.completer = self.completer_window.widget
         self.completer.connect("user-accept", self.accept)
         self.completer.connect("suggestion-selected", self.suggestion_selected)
         self.editor.connect("cursor-moved", self.on_cursor_moved)
@@ -467,18 +514,35 @@ class PidaMooInput(object):
         self.completer_start = None
         self.completer_end = None
         self.show_auto = False
-        
+
+        # db stuff for the autocompleter
+        self.list_matcher = re.compile("""\w{3,100}""")
+        self.list_cache = {}
+        self.list_all = set()
+
         editor.connect("key-press-event", self.on_keypress)
         editor.connect("focus-out-event", self.on_do_hide)
         #editor.connect_after("key-press-event", self.on_after_keypress)
 
     #def on_
+
+    def update_completer_and_add(self, cmpl, start):
+        # we run the language completer first and the we add our own results
+        # to the completer list
+        if cmpl:
+            for i in cmpl.get_completions("", 
+                        unicode(self.editor.get_text()), start):
+                yield i
+
+        self.update_completer()
+        for i in self.list_all:
+            yield i
+
     
     def on_do_hide(self, *args, **kwargs):
         self.hide()
     
     def toggle_popup(self):
-        print "toggle"
         if self.completer_visible:
             self.hide()
         else:
@@ -511,10 +575,8 @@ class PidaMooInput(object):
     def show(self, visible=True, show_auto=True):
         #self.completer_pos = self.completer_pos_user = \
         #    self.editor.props.buffer.props.cursor_position
-        print 
+
         cmpl = self.svc.boss.get_service('language').get_completer(self.document)
-        if not cmpl:
-            return
 
         buf = self.editor.get_buffer()
 
@@ -581,11 +643,10 @@ class PidaMooInput(object):
                 buf.get_iter_at_offset(cpos))
         else:
             self.completer.filter = ""
-        task = GeneratorTask(
-                cmpl.get_completions, 
-                self.add_str)
-        task.start("", 
-            unicode(self.editor.get_text()), start)
+
+        task = GeneratorTask(self.update_completer_and_add, 
+                             self.add_str)
+        task.start(cmpl, start)
 
         self.show_auto = show_auto
 
@@ -685,10 +746,38 @@ class PidaMooInput(object):
         self._delete_typed()
         self._replace_typed(suggestion[:len(typed)])
         self._replace_suggested(suggestion[len(typed):])
-        
+
         #self.editor.get_buffer().insert_at_cursor(suggestion)
         #self.completer_visible = False
-    
+
+    def tokenize(self, text):
+        #tokenize the text into usable autocompleter chunks
+        return self.list_matcher.findall(text)
+
+    def update_completer(self, full=False):
+        #update the state of simple internal completer
+        self.list_all.clear()
+        buf = self.editor.get_buffer()
+
+        it = buf.get_iter_at_offset(buf.props.cursor_position)
+
+        if buf.get_line_count() != len(self.list_cache) or full:
+            # full update of cache
+            lines = range(0, buf.get_line_count()+1)
+        else:
+            # incremental update. we update the current line + above and below
+            lines = range(max(it.get_line()-1, 0), 
+                          min(it.get_line()+1, buf.get_line_count())+1)
+
+        for line in lines:
+            its = buf.get_iter_at_line(line)
+            ite = its.copy()
+            ite.forward_to_line_end()
+            self.list_cache[line] = self.tokenize(buf.get_text(its, ite))
+
+        for val in self.list_cache.itervalues():
+            self.list_all.update(val)
+
     def add_str(self, line):
         #print "add line", line
         self.completer.add_str(line)
@@ -759,7 +848,10 @@ class PidaMooInput(object):
         # and the code later should be a extra function
         # but doesn't work as this super function returns True
         # and stops the processing of connect_after functions
-        self.editor.do_key_press_event(editor, event)
+        modified = self.editor.do_key_press_event(editor, event)
+
+        if modified:
+            self.update_completer()
 
         if self.completer_visible:
             if event.keyval in (gtk.keysyms.BackSpace, gtk.keysyms.Delete): # delete
@@ -817,6 +909,15 @@ class PidaMooInput(object):
                 #self.completer_pos_user += len(event.string)
         return True
 
+class MooeditEventsConfig(EventsConfig):
+
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('editor', 'marker-changed',
+            self.marker_changed)
+
+    def marker_changed(self, marker):
+        self.svc.on_marker_changed(marker)
+
 # Service class
 class Mooedit(EditorService):
     """Moo Editor Interface for PIDA
@@ -826,6 +927,7 @@ class Mooedit(EditorService):
     """
     options_config = MooeditOptionsConfig
     actions_config = MooeditActionsConfig
+    events_config = MooeditEventsConfig
     
     def pre_start(self):
         # mooedit is able to open empty documents
@@ -867,6 +969,13 @@ class Mooedit(EditorService):
         self.get_action('mooedit_last_edit').set_sensitive(False)
         self._update_keyvals()
         return True
+
+    def on_marker_changed(self, marker):
+        # called when a marker changed. update the editor
+        for view in self._documents.itervalues():
+            # we iterate over all markers so they 
+            if view.document.filename == marker.filename:
+                view.update_marker(marker)
 
     def save_moo_state(self):
         moo.utils.prefs_save(self.script_path, self._state_path)
@@ -964,6 +1073,7 @@ class Mooedit(EditorService):
 
         closing = self._documents[document.unique_id].editor.close()
         if closing:
+            self._documents[document.unique_id].close()
             self._embed.remove_page(self._embed.page_num(self._documents[document.unique_id]))
             del self._documents[document.unique_id]
             if self._embed.get_n_pages() == 0:
@@ -1035,6 +1145,10 @@ class Mooedit(EditorService):
                 editor = self._editor_instance.create_doc(document.filename)
             document.editor = editor
             editor.inputter = PidaMooInput(self, editor, document)
+            editor.props.show_line_marks = True
+            editor.props.enable_bookmarks = False
+            #FIXME: this should be implemented but needs some code and a pref
+            #editor.props.enable_folding = True
             #ind = PidaMooIndenter(editor, document)
             #print ind
             #editor.set_indenter(ind)
@@ -1244,6 +1358,19 @@ class Mooedit(EditorService):
         it2.forward_to_line_end()
         buf.delete(it1, it2)
         buf.insert(it1, text)
+
+    def get_cursor_position(self):
+        buf = self._current.editor.get_buffer()
+        return buf.props.cursor_position
+
+    def set_cursor_position(self, position, scroll=True):
+        #FIXME: return current position
+        buf = self._current.editor.get_buffer()
+        itr = buf.get_iter_at_offset(position)
+        buf.place_cursor(itr)
+        if scroll:
+            itr = buf.get_iter_at_offset(position)
+            self._current.editor.scroll_to_iter(itr, 0.05, use_align=True)
 
 # Required Service attribute for service loading
 Service = Mooedit
