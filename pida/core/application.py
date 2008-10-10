@@ -18,6 +18,7 @@ import signal
 import warnings
 import traceback
 
+
 from pida.core.signalhandler import handle_signals
 
 # locale
@@ -69,9 +70,12 @@ try:
     from pida.core.environment import opts
     from pida.core.boss import Boss
     from pida import PIDA_VERSION
+
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
+# we have to import pdbus here so it gets initialized very early
+import pida.core.pdbus
 
 def run_pida():
     b = Boss()
@@ -130,13 +134,12 @@ def main():
 
     # open session manager is asked for
     from pida.core.options import OptionsManager
-    from pida.utils.pdbus import list_pida_instances
     # we need a new optionsmanager so the default manager does not session
     # lookup yet
     om = OptionsManager(session="default")
 
-    if (om.open_session_manager() and not environment.session_set()) or \
-        environment.session_manager():
+    def do_session_manager():
+        from pida.utils.pdbus import list_pida_instances
         from pida.ui.window import SessionWindow
 
         def kill(sm):
@@ -179,6 +182,15 @@ def main():
         #this mainloop will exist when the sessionwindow is closes
         gtk.main()
 
+
+    if (om.open_session_manager() and not environment.session_set()) or \
+        environment.session_manager():
+        try:
+            do_session_manager()
+        except ImportError:
+            warnings.warn_explicit('python DBus bindings not available. '
+            'Not all functions available.', Warning, 'pida', '')
+        
     if opts.version:
         print _('PIDA, version %s') % PIDA_VERSION
     elif opts.profile_path:
