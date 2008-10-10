@@ -367,24 +367,18 @@ class Language(Service):
     def goto_defintion(self):
         doc = self.boss.cmd('buffer', 'get_current')
         definer = self.get_definer(doc)
-        res = definer.get_definition(doc.content, 
-                                      self.boss.editor.get_cursor_position())
+        res = definer.get_definition(doc.content,
+                                     self.boss.editor.get_cursor_position())
 
-        if res:
-            ndoc = self.boss.cmd('buffer', 'open_file', file_name=res.file_name)
-            self.boss.get_service('buffer').view_document(ndoc)
-            # FIXME: we have a timeing problem here. so we have to use
-            # gcall which is ugly in my opinion
-            if res.offset is not None and \
-               hasattr(self.boss.editor, 'set_cursor_position'):
-                gcall(self.boss.editor.set_cursor_position, res.offset)
-
-            elif res.line is not None:
-                gcall(self.boss.editor.goto_line, res.line)
+        if res and res.offset is not None:
+            if res.file_name == doc.filename:
+                self.boss.editor.set_cursor_position(res.offset)
+            else:
+                self.boss.cmd('buffer', 'open_file', file_name=res.file_name, offset=res.offset)
+            gcall(self.boss.editor.grab_focus)
         else:
             self.boss.get_service('notify').notify(
             data=_('No definition found'), timeout=2000)
-        #self.boss.cmd('window', 'remove_view', view=self._view_outliner)
 
 
     def on_buffer_typechanged(self, document):

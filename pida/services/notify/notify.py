@@ -100,6 +100,7 @@ class NotifyView(PidaView):
 class NotifyPopupView(object):
 
     def __init__(self, svc):
+        self.on_pida_window = False
         self.svc = svc
         self.win = gtk.Window(gtk.WINDOW_POPUP)
         self.win.set_border_width(3)
@@ -139,12 +140,22 @@ class NotifyPopupView(object):
     def on_size_request(self, widget, requisition):
         width, height = self.win.get_size()
         gravity = self.win.get_gravity()
-        x = 0
-        y = 0
-        if gravity == gtk.gdk.GRAVITY_NORTH_EAST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
-                    x = gtk.gdk.screen_width() - width
-        if gravity == gtk.gdk.GRAVITY_SOUTH_WEST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
-                    y = gtk.gdk.screen_height() - height
+
+        if self.on_pida_window:
+            twin = self.svc.boss.window.window
+            x, y = twin.get_position()
+            if gravity == gtk.gdk.GRAVITY_NORTH_EAST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
+                        x = twin.get_position()[0] + twin.get_size()[0] - width
+            if gravity == gtk.gdk.GRAVITY_SOUTH_WEST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
+                        y = twin.get_position()[1] + twin.get_size()[1] - height
+
+        else:
+            x = 0
+            y = 0
+            if gravity == gtk.gdk.GRAVITY_NORTH_EAST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
+                        x = gtk.gdk.screen_width() - width
+            if gravity == gtk.gdk.GRAVITY_SOUTH_WEST or gravity == gtk.gdk.GRAVITY_SOUTH_EAST:
+                        y = gtk.gdk.screen_height() - height
         self.win.move(x, y)
 
     def add_item(self, item):
@@ -219,6 +230,16 @@ class NotifyOptionsConfig(OptionsConfig):
             self.on_gravity_change
            )
 
+        self.create_option(
+            'pidawindow',
+            _('On pida window'),
+            bool,
+            False,
+            _('Attach notifications on pida window'),
+            self.on_pida_window_change
+        )
+
+
     def on_show_notify(self, client, id, entry, option):
         self.svc._show_notify = option.get_value()
 
@@ -227,6 +248,9 @@ class NotifyOptionsConfig(OptionsConfig):
 
     def on_gravity_change(self, client, id, entry, option):
         self.svc._popup.set_gravity(option.get_value())
+
+    def on_pida_window_change(self, client, id, entry, option):
+        self.svc._popup.on_pida_window = option.get_value()
 
 
 class NotifyActionsConfig(ActionsConfig):
@@ -266,6 +290,7 @@ class Notify(Service):
     def start(self):
         self._view = NotifyView(self)
         self._popup = NotifyPopupView(self)
+        self._popup.on_pida_window = self.opt('pidawindow')
         self._has_loaded = False
         self._show_notify = self.opt('show_notify')
         self._timeout = self.opt('timeout')
