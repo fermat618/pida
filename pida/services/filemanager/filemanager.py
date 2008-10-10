@@ -47,7 +47,8 @@ _ = locale.gettext
 state_text = dict(
         hidden=' ',
         none='?',
-        new='A',
+        new='A', #XXX
+        added='A',
         modified='M',
         ignored=' ',
         normal=' ',
@@ -74,6 +75,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         removed=('pida-fm-removed', True, True),
         missing=('pida-fm-missing', True, False),
         new=('pida-fm-new', True, False),
+        added=('pida-fm-new', True, False),
         max=('pida-fm-max', False, False),
         external=('pida-fm-external', False, True),
         )

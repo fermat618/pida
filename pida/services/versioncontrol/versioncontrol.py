@@ -36,13 +36,15 @@ try:
     from pygments.lexers import DiffLexer
     from pygments.formatters import HtmlFormatter
 except ImportError:
-    highlight = None
+    DiffLexer = HtmlFormatter = lambda: None
+    def highlight(diff, *k): # dummy in case of missing pygments
+         return '<pre>\n%s</pre>\n' % escape(diff)
 
 class DiffViewer(PidaView):
 
     icon_name = gtk.STOCK_COPY
     label_text = _('Differences')
-    
+
     def create_ui(self):
         hb = gtk.HBox()
         self.add_main_widget(hb)
@@ -58,14 +60,11 @@ class DiffViewer(PidaView):
         hb.show_all()
 
     def set_diff(self, diff):
-        if highlight is None:
-            data = '<pre>\n%s</pre>\n' % escape(diff)
-        else:
-            data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
+        data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
         self._html.display_html(data)
 
     def can_be_closed(self):
-        return True
+         return True
 
 class VersionControlLog(PidaGladeView):
 
@@ -211,8 +210,16 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
 
     def create(self):
         self.publish('workdir-manager')
-        from pida.utils.anyvc import all_known
-
+        try:
+            #XXX: packing a s/bdist should include anyvc
+            from pida.utils.anyvc import all_known
+        except ImportError:
+            try:
+                from anyvc import all_known
+            except:
+                self.svc.window.error_dlg(_("Couldn't find anyvc"))
+                self.svc.log.error('Cant find anyvc')
+                all_known = ()
         for mgr in all_known:
             self.subscribe('workdir-manager', mgr)
 
@@ -616,10 +623,10 @@ class Versioncontrol(Service):
     def start(self):
         self._log = VersionControlLog(self)
         self._commit = CommitViewer(self)
-    
+
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
-   
+
     def get_workdir_manager_for_path(self, path):
         found_vcm = None
         for vcm in self.features['workdir-manager']:
@@ -662,25 +669,24 @@ class Versioncontrol(Service):
 
     def execute(self, action, path, stock_id, **kw):
         vc = self.get_workdir_manager_for_path(path)
+        self.log(str(locals()))
         if vc is None:
             return self.error_dlg(_('File or directory is not versioned.'))
-        commandargs = [vc.cmd] + getattr(vc, 'get_%s_args' % action)(paths=[path], **kw)
         self._log.append_action(action.capitalize(), path, stock_id)
-        def _executed(term):
-            self._executed(action, path, stock_id, term)
-        self.boss.cmd('commander', 'execute', commandargs=commandargs,
-                      cwd=vc.base_path, eof_handler=_executed,
-                      use_python_fork=True, title=action.capitalize(),
-                      icon=stock_id)
+        act = getattr(vc, action)
 
-    def _executed(self, action, path, stock_id, term):
-        self._log.append_result(term.get_all_text())
-        self.boss.cmd('window', 'remove_view', view=term.parent_view)
-        self.boss.cmd('notify', 'notify',
-            title=_('Version Control %(action)s Completed') % {'action': action.capitalize()},
-            data=path,
-            stock=stock_id)
-        self.boss.cmd('filemanager', 'refresh')
+        def do():
+            return act(paths=[path], **kw)
+
+        def done(output):
+            self._log.append_result(output)
+            self.boss.cmd('notify', 'notify',
+                title=_('Version Control %(action)s Completed') % {'action': action.capitalize()},
+                data=path,
+                stock=stock_id)
+            self.boss.cmd('filemanager', 'refresh')
+        AsyncTask(do, done).start()
+
 
     def update_path(self, path):
         self.execute('update', path, gtk.STOCK_GO_DOWN)
@@ -741,8 +747,8 @@ class Versioncontrol(Service):
             action.set_active(True)
         else:
             self.boss.cmd('window', 'present_view', view=self._commit)
-        
-        
+
+
 
 
 
