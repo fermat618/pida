@@ -73,7 +73,8 @@ class PuilderView(GladeSlaveDelegate):
 
         m = self._create_menu(self.TargetMenu, self.AddTarget,
                               None, self.AddShellTarget,
-                              self.AddPythonTarget)
+                              self.AddPythonTarget, None,
+                              self.ExecuteTargets)
         self.menu.add(m)
         m = self._create_menu(self.ActsMenu, self.AddActs)
         self.menu.add(m)
@@ -119,7 +120,7 @@ class PuilderView(GladeSlaveDelegate):
     def on_ExecuteTargets__activate(self, action):
         t = self.targets_list.get_selected()
         if t is not None:
-            self.execute_method(target, self.project)
+            self.execute_method(t, self.project)
 
 
     def _create_menu(self, base_act, *actions):
@@ -155,7 +156,8 @@ class PuilderView(GladeSlaveDelegate):
 
 
     def on_targets_list__right_click(self, ol, target, event):
-        self._create_popup(event, self.AddTarget, None, self.DelCurrentTarget)
+        self._create_popup(event, self.AddTarget, None, self.ExecuteTargets,
+                           None, self.DelCurrentTarget)
 
     def on_acts_list__right_click(self, ol, action, event):
         self._create_popup(event, self.AddActs, None, self.DelCurrentActs)
