@@ -105,6 +105,9 @@ class Project(Log):
     def display_name(self):
         return self.options.get('name', self.name)
 
+    def set_display_name(self, name):
+        self.options['name'] = name
+
     def get_relative_path_for(self, filename):
         return get_relative_path(self.source_directory, filename)
 

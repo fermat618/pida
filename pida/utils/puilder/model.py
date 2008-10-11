@@ -21,6 +21,7 @@ class Build(object):
         b = Build()
         for d in data['targets']:
             b.targets.append(Target.from_serialize(d))
+        b.options.update(data['options'])
         return b
 
     @classmethod

@@ -12,11 +12,28 @@ from kiwi.ui.objectlist import Column
 from kiwi.ui.dialogs import yesno
 
 from pida.utils.puilder.model import action_types
+from pida.utils.gthreads import gcall
 
 def start_editing_tv(tv):
-    v = tv.get_treeview()
-    path, col = v.get_cursor()
-    v.set_cursor(path, col, start_editing=True)
+    def _start(tv=tv):
+        v = tv.get_treeview()
+        path, col = v.get_cursor()
+        v.set_cursor(path, col, start_editing=True)
+    gcall(_start)
+
+def create_source_tv(tv):
+    b = tv.get_buffer()
+
+    tt = b.create_tag('tt', family='Monospace')
+
+    def on_changed(tv):
+        b.remove_all_tags(b.get_start_iter(), b.get_end_iter())
+        b.apply_tag(tt, b.get_start_iter(), b.get_end_iter())
+
+    tv.connect('content-changed', on_changed)
+
+
+
 
 class PuilderView(GladeSlaveDelegate):
 
@@ -33,15 +50,18 @@ class PuilderView(GladeSlaveDelegate):
             Column('name', editable=True, expand=True),
             Column('action_count', title='Actions'),
         ])
+        self.targets_list.set_headers_visible(False)
 
         self.acts_list.set_columns([
             Column('type', width=50),
             Column('one_liner', title='Content', expand=True),
         ])
+        self.acts_list.set_headers_visible(False)
 
         self.deps_list.set_columns([
             Column('name', title='Target name', expand=True, editable=True),
         ])
+        self.deps_list.set_headers_visible(False)
 
         self.acts_type.prefill(action_types)
 
@@ -50,6 +70,91 @@ class PuilderView(GladeSlaveDelegate):
 
         self.action_views = {}
         self.create_action_views()
+
+        m = self._create_menu(self.TargetMenu, self.AddShellTarget,
+                              self.AddPythonTarget, self.AddTarget)
+        self.menu.add(m)
+        m = self._create_menu(self.ActsMenu, self.AddActs)
+        self.menu.add(m)
+
+        m = self._create_menu(self.DepsMenu, self.AddNamedDeps, self.AddDeps)
+
+        self.menu.add(m)
+
+        dummy = gtk.Menu()
+        m = gtk.MenuItem('No Targets')
+        dummy.add(m)
+        dummy.show_all()
+
+        for mi in self.AddNamedDeps.get_proxies():
+            mi.set_submenu(dummy)
+
+        self.menu.show_all()
+
+    def on_AddNamedDeps__activate(self, action):
+
+        def on_menu(mi, mtarg):
+            t = self.targets_list.get_selected()
+            dep = t.create_new_dependency(mtarg.name)
+            self.deps_list.append(dep, select=True)
+
+        menu = gtk.Menu()
+
+        for target in self.build.targets:
+            m = gtk.MenuItem(target.name)
+            m.connect('activate', on_menu, target)
+            m.show()
+            menu.add(m)
+
+        menu.show_all()
+
+        for proxy in self.AddNamedDeps.get_proxies():
+            proxy.set_submenu(menu)
+
+
+
+
+    def _create_menu(self, base_act, *actions):
+        newitem = base_act.create_menu_item()
+        newitem.show()
+
+        newmenu = gtk.Menu()
+        newmenu.show()
+
+        for act in actions:
+            if act is None:
+                m = gtk.SeparatorMenuItem()
+            else:
+                m = act.create_menu_item()
+            m.show_all()
+            newmenu.add(m)
+
+        newitem.set_submenu(newmenu)
+
+        return newitem
+
+
+    def _create_popup(self, event, *actions):
+        menu = gtk.Menu()
+        for act in actions:
+            if act is not None:
+                mi = act.create_menu_item()
+            else:
+                mi = gtk.SeparatorMenuItem()
+            menu.add(mi)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
+
+
+    def on_targets_list__right_click(self, ol, target, event):
+        self._create_popup(event, self.AddTarget, None, self.DelCurrentTarget)
+
+    def on_acts_list__right_click(self, ol, action, event):
+        self._create_popup(event, self.AddActs, None, self.DelCurrentActs)
+
+    def on_deps_list__right_click(self, ol, dep, event):
+        self._create_popup(event, self.AddDeps, None, self.DelCurrentDeps)
+
 
     def create_action_views(self):
         for name in action_views:
@@ -63,6 +168,7 @@ class PuilderView(GladeSlaveDelegate):
     def switch_action_view(self, name):
         n = self.acts_holder.page_num(self.action_views[name].get_toplevel())
         self.acts_holder.set_current_page(n)
+        self.acts_type.update(name)
 
     def set_build(self, build):
         self.build = build
@@ -72,16 +178,17 @@ class PuilderView(GladeSlaveDelegate):
 
     def set_project(self, project):
         self.project = project
+        self.project_label.set_markup(project.markup)
+        self.project_name_entry.set_text(project.display_name)
 
     def target_changed(self, target):
         selected = target is not None
-        self.up_target.set_sensitive(selected)
-        self.down_target.set_sensitive(selected)
-        self.del_target.set_sensitive(selected)
-        self.acts_book.set_sensitive(selected)
+        #self.up_target.set_sensitive(selected)
+        #self.down_target.set_sensitive(selected)
+        self.DelCurrentTarget.set_sensitive(selected)
+        self.action_holder.set_sensitive(selected)
 
         if selected:
-            self.target_label.set_text(target.name)
             self.acts_list.add_list(target.actions, clear=True)
             self.deps_list.add_list(target.dependencies, clear=True)
 
@@ -89,16 +196,15 @@ class PuilderView(GladeSlaveDelegate):
                 self.acts_list.select(self.acts_list[0])
 
         else:
-            self.target_label.set_text('None Selected')
             self.acts_list.clear()
             self.deps_list.clear()
 
     def action_changed(self, action):
         selected = action is not None
         self.action_holder.set_sensitive(selected)
-        self.del_acts.set_sensitive(selected)
-        self.up_acts.set_sensitive(selected)
-        self.down_acts.set_sensitive(selected)
+        self.DelCurrentActs.set_sensitive(selected)
+        #self.up_ac.set_sensitive(selected)
+        #self.down_acts.set_sensitive(selected)
 
         if selected:
             self.action_type_changed(action)
@@ -123,25 +229,25 @@ class PuilderView(GladeSlaveDelegate):
     def on_targets_list__selection_changed(self, ol, target):
         self.target_changed(target)
 
-    def on_add_target__clicked(self, button):
+    def on_AddTarget__activate(self, button):
         t = self.build.create_new_target('New Target')
         self.targets_list.append(t, select=True)
         start_editing_tv(self.targets_list)
 
-    def on_del_target__clicked(self, button):
+    def on_DelCurrentTarget__activate(self, button):
         t = self.targets_list.get_selected()
         if self.confirm('Are you sure you want to delete target "%s"' % t.name):
             self.build.targets.remove(t)
             self.targets_list.remove(t)
 
-    def on_add_acts__clicked(self, button):
+    def on_AddActs__activate(self, button):
         target = self.targets_list.get_selected()
         if target is None:
             return
         act = target.create_new_action()
         self.acts_list.append(act, select=True)
 
-    def on_del_acts__clicked(self, button):
+    def on_DelCurrentActs__activate(self, button):
         act = self.acts_list.get_selected()
         target = self.targets_list.get_selected()
         if act is None or target is None:
@@ -161,11 +267,31 @@ class PuilderView(GladeSlaveDelegate):
         act.type = name
         self.action_type_changed(act)
 
-    def on_add_deps__clicked(self, button):
+    def on_AddDeps__activate(self, button):
         t = self.targets_list.get_selected()
         dep = t.create_new_dependency('New Dependency')
         self.deps_list.append(dep, select=True)
         start_editing_tv(self.deps_list)
+
+    def on_name_edit_button__clicked(self, button):
+        if self.project is None:
+            return
+        if button.get_label() == gtk.STOCK_EDIT:
+            self.project_name_entry.set_sensitive(True)
+            button.set_label(gtk.STOCK_OK)
+            self.project_name_entry.grab_focus()
+        else:
+            display_name = self.project_name_entry.get_text()
+            if display_name:
+                self.project.set_display_name(display_name)
+                self.project_label.set_markup(self.project.markup)
+                self.project_name_entry.set_sensitive(False)
+                button.set_label(gtk.STOCK_EDIT)
+            else:
+                self.project_name_entry.set_text(self.project.display_name)
+                self.project_name_entry.grab_focus()
+                self.svc.error_dlg(_('Do not set empty project names'))
+
 
     def confirm(self, question):
         return yesno(question, parent=self.parent_window)
@@ -175,6 +301,7 @@ class ActionView(GladeSlaveDelegate):
 
     def __init__(self, *args, **kw):
         GladeSlaveDelegate.__init__(self)
+        self.create_ui()
 
     def _set_action(self, action):
         self.action = action
@@ -204,7 +331,6 @@ class ShellActionView(ActionView):
 
     def on_command__changed(self, entry):
         t = entry.get_text()
-        print t
         if self.action.value != t:
             self.action.value = t
 
@@ -213,7 +339,7 @@ class PythonActionView(ActionView):
     gladefile = 'action_python'
 
     def create_ui(self):
-        pass
+        create_source_tv(self.text)
 
     def set_action(self, action):
         self.text.update(action.value)
