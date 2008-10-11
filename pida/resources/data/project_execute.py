@@ -20,7 +20,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print 'Executing'
-    
     sys.exit(main())
 

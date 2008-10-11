@@ -56,18 +56,18 @@ def execute_target(project, path, target, indent=0):
         for act in t.actions:
             indent_print('[ %s ]' % act.type, indent)
             indent_print(act.value, indent)
-            print
             print '-' * 10 + ' +++  Output +++'
             execute_action(project, b, act)
             print "-" * 10
-            print
     else:
         indent_print('Target missing: %s' % target, indent)
 
 def execute(project, target):
     print 'Working dir: %s' % project
+    print "=" * 10
     path = Project.data_dir_path(project, 'project.json')
     print 'Build file path: %s' % path
+    print "=" * 10
     execute_target(project, path, target)
 
 if __name__ == '__main__':
