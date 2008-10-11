@@ -3,9 +3,6 @@
 <glade-interface>
     <widget class="GtkUIManager" id="uimanager">
         <child>
-            <widget class="GtkActionGroup" id="DefaultActions"/>
-        </child>
-        <child>
             <widget class="GtkActionGroup" id="default">
                 <child>
                     <widget class="GtkAction" id="ActsMenu">
@@ -85,6 +82,13 @@
                     </widget>
                 </child>
                 <child>
+                    <widget class="GtkAction" id="ExecuteTargets">
+                        <property name="name">ExecuteTargets</property>
+                        <property name="label" translatable="yes">Test Execute Selected Target</property>
+                        <property name="stock_id">gtk-execute</property>
+                    </widget>
+                </child>
+                <child>
                     <widget class="GtkAction" id="NewMenu">
                         <property name="name">NewMenu</property>
                         <property name="label" translatable="yes">Create _New</property>
@@ -105,6 +109,9 @@
                     </widget>
                 </child>
             </widget>
+        </child>
+        <child>
+            <widget class="GtkActionGroup" id="DefaultActions"/>
         </child>
         <ui id="initial-state"><![CDATA[<ui>
 <menubar action="menu" name="menu"/>

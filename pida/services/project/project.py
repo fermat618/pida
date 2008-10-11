@@ -116,7 +116,11 @@ class ProjectSetupView(PidaView):
         from pida.utils.puilder.view import PuilderView
         self.script_view = PuilderView()
         self.script_view.show()
+        self.script_view.set_execute_method(self.test_execute)
         self.add_main_widget(self.script_view.get_toplevel())
+
+    def test_execute(self, target, project):
+        self.svc.execute_target(None, target, project)
 
     def set_project(self, project):
         #XXX: should we have more than one project viev ?
@@ -420,11 +424,14 @@ class ProjectService(Service):
             self.project_list.project_ol.remove(project, select=True)
             self._save_options()
 
-    def execute_target(self, action, target):
-        self.actions.get_action('project_execute_last').props.label = \
-            _('Execute: %s') %target
-        self._target_last = target
-        project = self._current
+    def execute_target(self, action, target, project=None):
+
+        if project is None:
+            project = self._current
+        else:
+            self.actions.get_action('project_execute_last').props.label = \
+                _('Execute: %s') %target
+            self._target_last = target
 
         script = get_data_path('project_execute.py')
 
@@ -437,7 +444,7 @@ class ProjectService(Service):
                     '--target', target.name
                 ],
                 cwd=project.source_directory,
-                title=_('%s:%s') % (project.name, target),
+                title=_('%s:%s') % (project.name, target.name),
                 env=env,
                 )
 

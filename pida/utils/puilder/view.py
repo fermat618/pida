@@ -71,8 +71,9 @@ class PuilderView(GladeSlaveDelegate):
         self.action_views = {}
         self.create_action_views()
 
-        m = self._create_menu(self.TargetMenu, self.AddShellTarget,
-                              self.AddPythonTarget, self.AddTarget)
+        m = self._create_menu(self.TargetMenu, self.AddTarget,
+                              None, self.AddShellTarget,
+                              self.AddPythonTarget)
         self.menu.add(m)
         m = self._create_menu(self.ActsMenu, self.AddActs)
         self.menu.add(m)
@@ -112,6 +113,13 @@ class PuilderView(GladeSlaveDelegate):
             proxy.set_submenu(menu)
 
 
+    def set_execute_method(self, f):
+        self.execute_method = f
+
+    def on_ExecuteTargets__activate(self, action):
+        t = self.targets_list.get_selected()
+        if t is not None:
+            self.execute_method(target, self.project)
 
 
     def _create_menu(self, base_act, *actions):
@@ -234,11 +242,33 @@ class PuilderView(GladeSlaveDelegate):
         self.targets_list.append(t, select=True)
         start_editing_tv(self.targets_list)
 
+    def on_AddPythonTarget__activate(self, action):
+        t = self.build.create_new_target('New Target')
+        self.targets_list.append(t, select=True)
+        a = t.create_new_action()
+        a.type = 'python'
+        self.acts_list.append(a, select=True)
+
+    def on_AddShellTarget__activate(self, action):
+        t = self.build.create_new_target('New Target')
+        self.targets_list.append(t, select=True)
+        a = t.create_new_action()
+        self.acts_list.append(a, select=True)
+
     def on_DelCurrentTarget__activate(self, button):
         t = self.targets_list.get_selected()
         if self.confirm('Are you sure you want to delete target "%s"' % t.name):
             self.build.targets.remove(t)
             self.targets_list.remove(t)
+
+    def on_DelCurrentDeps__activate(self, action):
+        t = self.targets_list.get_selected()
+        d = self.deps_list.get_selected()
+        if self.confirm('Are you sure you want to delete dependency "%s"' % d.name):
+            t.dependencies.remove(d)
+            self.deps_list.remove(d)
+        
+
 
     def on_AddActs__activate(self, button):
         target = self.targets_list.get_selected()
