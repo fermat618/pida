@@ -460,7 +460,7 @@ class ProjectService(Service):
 
     def show_properties(self, visible):
         if visible:
-            self.boss.cmd('window', 'add_view', paned='Plugin',
+            self.boss.cmd('window', 'add_detached_view', paned='Plugin',
                 view=self.project_properties_view)
         else:
             self.boss.cmd('window', 'remove_view',

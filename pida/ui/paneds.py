@@ -82,7 +82,7 @@ class PidaPaned(BigPaned):
 
     def detach_view(self, view, size=(400,300)):
         paned, pos = self.find_pane(view.get_toplevel())
-        paned.detach_pane(pos)
+        paned.detach()
         self._center_on_parent(view, size)
 
     def present_view(self, view):
