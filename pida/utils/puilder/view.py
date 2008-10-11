@@ -40,7 +40,7 @@ class PuilderView(GladeSlaveDelegate):
         ])
 
         self.deps_list.set_columns([
-            Column('name', title='Target name', expand=True),
+            Column('name', title='Target name', expand=True, editable=True),
         ])
 
         self.acts_type.prefill(action_types)
@@ -118,7 +118,7 @@ class PuilderView(GladeSlaveDelegate):
         f.write(self.build.dumps())
         f.close()
         print 'saved'
-        print self.build.dumpf(self.project.project_file)
+        self.build.dumpf(self.project.project_file)
 
     def on_targets_list__selection_changed(self, ol, target):
         self.target_changed(target)
@@ -160,6 +160,12 @@ class PuilderView(GladeSlaveDelegate):
         name = cmb.read()
         act.type = name
         self.action_type_changed(act)
+
+    def on_add_deps__clicked(self, button):
+        t = self.targets_list.get_selected()
+        dep = t.create_new_dependency('New Dependency')
+        self.deps_list.append(dep, select=True)
+        start_editing_tv(self.deps_list)
 
     def confirm(self, question):
         return yesno(question, parent=self.parent_window)

@@ -50,6 +50,20 @@ class Build(object):
         self.targets.append(t)
         return t
 
+class Dependency(object):
+
+    def __init__(self):
+        self.name = ''
+
+    def for_serialize(self):
+        return self.name
+
+    @classmethod
+    def from_serialize(cls, s):
+        d = Dependency()
+        d.name = s
+        return d
+
 class Target(object):
     """A single target"""
 
@@ -61,7 +75,7 @@ class Target(object):
     def for_serialize(self):
         return {
             'actions': [a.for_serialize() for a in self.actions],
-            'dependencies': self.dependencies,
+            'dependencies': [d.for_serialize() for d in self.dependencies],
             'name': self.name,
         }
 
@@ -71,6 +85,8 @@ class Target(object):
         t.name = data['name']
         for act in data['actions']:
             t.actions.append(Action.from_serialize(act))
+        for dep in data['dependencies']:
+            t.dependencies.append(Dependency.from_serialize(dep))
         return t
 
     def create_new_action(self):
@@ -78,6 +94,13 @@ class Target(object):
         act.type = 'shell'
         self.actions.append(act)
         return act
+
+    def create_new_dependency(self, name):
+        dep = Dependency()
+        dep.name = name
+        self.dependencies.append(dep)
+        return dep
+
 
     @property
     def action_count(self):
@@ -121,7 +144,7 @@ t = dict(
             actions = [
                 dict(type='shell', value='blah', options={})
             ],
-            dependencies = [],
+            dependencies = ['moo'],
         )
     ],
     options = {}
@@ -140,4 +163,7 @@ def test_basic():
     raise
 
 if __name__ == '__main__':
-    b = Build()
+    b = get_test_build()
+    b.options['name'] = 'foo'
+    b.targets[0].create_new_dependency('moo')
+    print b.dumps()

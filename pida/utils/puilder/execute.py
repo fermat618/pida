@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+import sys
 from subprocess import Popen, call
 
 from pida.core.projects import Project
@@ -9,17 +9,11 @@ from pida.utils.puilder.model import Build
 
 
 def execute_shell_action(project, build, action):
-    print 'Shell Action: %s' % action.value
-    print '--'
     p = Popen(action.value, shell=True, cwd=project)
     p.wait()
-    print '--'
 
 def _execute_python(source_directory, build, value):
-    import sys
-    print sys.path
-    import os
-    print os.environ['PYTHONPATH']
+    sys.path.insert(0, source_directory)
     code = compile(value + '\n', '<string>', 'exec')
     elocals = {
         'source_directory': source_directory,
@@ -28,10 +22,7 @@ def _execute_python(source_directory, build, value):
     exec code in elocals, globals()
 
 def execute_python_action(project, build, action):
-    print 'Python action'
-    print '--'
     _execute_python(project, build, action.value)
-    print '--'
 
 executors = {
     'shell': execute_shell_action,
@@ -48,26 +39,36 @@ def _load_build(path):
 def execute_action(project, build, action):
     executors[action.type](project, build, action)
 
-def execute_target(project, path, target):
-    print 'Target: %s' % target
-    print 'Working dir : %s' % project
-    print 'Build file path: %s' % path
-    print '--'
+def indent_print(s, indent):
+    for line in s.splitlines():
+        print '%s%s' % ('   .' * indent, line)
+
+def execute_target(project, path, target, indent=0):
+    indent_print('Target: %s' % target, indent)
     b = _load_build(path)
     targets = [t for t in b.targets if t.name == target]
     if targets:
         t = targets[0]
-        print 'Actions: %s' % len(t.actions)
-        print '--'
+        indent_print('Dependencies: %s' % len(t.dependencies), indent)
+        for dep in t.dependencies:
+            execute_target(project, path, dep.name, indent + 1)
+        indent_print('Actions: %s' % len(t.actions), indent)
         for act in t.actions:
+            indent_print('[ %s ]' % act.type, indent)
+            indent_print(act.value, indent)
+            print
+            print '-' * 10 + ' +++  Output +++'
             execute_action(project, b, act)
+            print "-" * 10
+            print
     else:
-        raise RuntimeError('Target not found')
+        indent_print('Target missing: %s' % target, indent)
 
 def execute(project, target):
-    execute_target(project,
-        Project.data_dir_path(project, 'project.json'),
-        target)
+    print 'Working dir: %s' % project
+    path = Project.data_dir_path(project, 'project.json')
+    print 'Build file path: %s' % path
+    execute_target(project, path, target)
 
 if __name__ == '__main__':
     execute_target('.', 'test', 'testi')
