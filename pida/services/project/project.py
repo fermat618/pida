@@ -11,7 +11,7 @@
         * 2008 Ronny Pfannschmidt
 """
 from __future__ import with_statement
-import os
+import os, sys
 
 import gtk
 
@@ -28,6 +28,7 @@ from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
+from pida.core.environment import get_data_path
 
 # locale
 from pida.core.locale import Locale
@@ -108,8 +109,12 @@ class ProjectSetupView(PidaView):
     label_text = _('Project Properties')
 
     def create_ui(self):
-        from vellumui.view import ScriptView
-        self.script_view = ScriptView()
+        #from vellumui.view import ScriptView
+        #self.script_view = ScriptView()
+        #self.script_view.show()
+        #self.add_main_widget(self.script_view.get_toplevel())
+        from pida.utils.puilder.view import PuilderView
+        self.script_view = PuilderView()
         self.script_view.show()
         self.add_main_widget(self.script_view.get_toplevel())
 
@@ -118,12 +123,14 @@ class ProjectSetupView(PidaView):
         #     for different projects each
         #XXX: ask on case of unsaved changes?
         self.project = project
-        self.script_view.load_script(
-                os.path.join(
-                    project.source_directory,
-                    'build.vel'
-                    )
-                )
+        #self.script_view.load_script(
+        #        os.path.join(
+        #            project.source_directory,
+        #            'build.vel'
+        #            )
+        #        )
+        self.script_view.set_build(project.build)
+        self.script_view.set_project(project)
 
 
 class ProjectEventsConfig(EventsConfig):
@@ -340,7 +347,7 @@ class ProjectService(Service):
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
-        project_file = os.path.join(project_directory, 'build.vel')
+        project_file = Project.data_dir_path(project_directory, 'project.json')
         if os.path.exists(project_file):
             self._load_project(project_directory)
             self._save_options()
@@ -376,7 +383,7 @@ class ProjectService(Service):
             self.get_action('project_execute').set_sensitive(bool(project.targets))
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
-            self._target_last = project.script.options.get('default')
+            self._target_last = project.options.get('default')
             self.actions.get_action('project_execute_last').props.label = \
                 _('Execute Last Controller')
 
@@ -418,10 +425,20 @@ class ProjectService(Service):
             _('Execute: %s') %target
         self._target_last = target
         project = self._current
+
+        script = get_data_path('project_execute.py')
+
+        env = ['PYTHONPATH=%s' % sys.path[0]]
+
         self.boss.cmd('commander', 'execute',
-                commandargs=['vellum', target],
+                commandargs=[
+                    'python', script,
+                    '--directory', project.source_directory,
+                    '--target', target.name
+                ],
                 cwd=project.source_directory,
-                title=_('Vellum %s -> %s') % (project.name, target), 
+                title=_('%s:%s') % (project.name, target),
+                env=env,
                 )
 
     def execute_last(self):
