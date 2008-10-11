@@ -3,6 +3,9 @@
 <glade-interface>
     <widget class="GtkUIManager" id="uimanager">
         <child>
+            <widget class="GtkActionGroup" id="DefaultActions"/>
+        </child>
+        <child>
             <widget class="GtkActionGroup" id="default">
                 <child>
                     <widget class="GtkAction" id="ActsMenu">
@@ -22,6 +25,13 @@
                         <property name="name">AddDeps</property>
                         <property name="label" translatable="yes">_Empty Dependency</property>
                         <property name="stock_id">gtk-add</property>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkAction" id="AddImportTarget">
+                        <property name="name">AddImportTarget</property>
+                        <property name="label" translatable="yes">Import External Build</property>
+                        <property name="stock_id">gtk-convert</property>
                     </widget>
                 </child>
                 <child>
@@ -109,9 +119,6 @@
                     </widget>
                 </child>
             </widget>
-        </child>
-        <child>
-            <widget class="GtkActionGroup" id="DefaultActions"/>
         </child>
         <ui id="initial-state"><![CDATA[<ui>
 <menubar action="menu" name="menu"/>

@@ -53,8 +53,8 @@ class PuilderView(GladeSlaveDelegate):
         self.targets_list.set_headers_visible(False)
 
         self.acts_list.set_columns([
-            Column('type', width=50),
-            Column('one_liner', title='Content', expand=True),
+            Column('type', expand=True),
+            Column('value', expand=True, ellipsize=True),
         ])
         self.acts_list.set_headers_visible(False)
 
@@ -74,8 +74,21 @@ class PuilderView(GladeSlaveDelegate):
         m = self._create_menu(self.TargetMenu, self.AddTarget,
                               None, self.AddShellTarget,
                               self.AddPythonTarget, None,
+                              self.AddImportTarget, None,
                               self.ExecuteTargets)
         self.menu.add(m)
+
+
+        for mi in self.AddImportTarget.get_proxies():
+            menu = gtk.Menu()
+            for (name, key) in external_system_types:
+                m = gtk.MenuItem(name)
+                menu.append(m)
+                m.connect('activate', self._on_import_target_activate, key)
+            menu.show_all()
+            mi.set_submenu(menu)
+
+
         m = self._create_menu(self.ActsMenu, self.AddActs)
         self.menu.add(m)
 
@@ -92,6 +105,16 @@ class PuilderView(GladeSlaveDelegate):
             mi.set_submenu(dummy)
 
         self.menu.show_all()
+
+    def _on_import_target_activate(self, menuitem, type):
+        t = self.build.create_new_target()
+        t.name = 'External Build'
+        self.targets_list.append(t, select=True)
+        a = t.create_new_action()
+        a.type = 'external'
+        a.options['system'] = type
+        self.acts_list.append(a, select=True)
+
 
     def on_AddNamedDeps__activate(self, action):
 
@@ -337,7 +360,8 @@ class ActionView(GladeSlaveDelegate):
 
     def _set_action(self, action):
         self.action = action
-        self.set_action(action)
+        if action is not None:
+            self.set_action(action)
 
     def set_action(self, action):
         raise NotImplementedError
@@ -379,9 +403,41 @@ class PythonActionView(ActionView):
     def on_text__content_changed(self, textview):
         self.action.value = self.text.read()
 
+
+external_system_types = [
+    ('Make', 'make'),
+    ('Vellum', 'vellum'),
+]
+
+class ExternalActionView(ActionView):
+
+    gladefile = 'action_external'
+
+    def create_ui(self):
+        self.action = None
+        self.system_types.prefill(external_system_types)
+
+    def set_action(self, action):
+        self.system_types.update(action.options.get('system', 'make'))
+        self.external_name.set_text(action.value)
+        self.build_args.set_text(action.options.get('build_args', ''))
+
+    def on_system_types__content_changed(self, cmb):
+        if self.action is None:
+            return
+        self.action.options['system'] = cmb.read()
+
+    def on_external_name__changed(self, entry):
+        self.action.value = entry.get_text()
+
+    def on_build_args__changed(self, entry):
+        self.action.options['build_args'] = entry.get_text()
+
+
 action_views = {
     'shell': ShellActionView,
     'python': PythonActionView,
+    'external': ExternalActionView,
 }
 
 if __name__ == '__main__':

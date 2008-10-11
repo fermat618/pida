@@ -24,9 +24,20 @@ def _execute_python(source_directory, build, value):
 def execute_python_action(project, build, action):
     _execute_python(project, build, action.value)
 
+def execute_external_action(project, build, action):
+    cmd = '%s %s %s' % (
+        action.options.get('system', 'make'),
+        action.options.get('build_args', ''),
+        action.value,
+    )
+    p = Popen(cmd, shell=True, close_fds=True)
+    p.wait()
+
+
 executors = {
     'shell': execute_shell_action,
     'python': execute_python_action,
+    'external': execute_external_action,
 }
 
 def _load_build(path):

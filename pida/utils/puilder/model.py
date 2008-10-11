@@ -135,7 +135,11 @@ class Action(object):
         return a
 
 
-action_types = [('Shell Command', 'shell'), ('Python Script', 'python')]
+action_types = [
+    ('Shell Command', 'shell'),
+    ('Python Script', 'python'),
+    ('External Build', 'external')
+]
 
 
 t = dict(
