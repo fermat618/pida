@@ -173,9 +173,12 @@ class Suggestion(unicode):
     """
     Suggestions are returned by an Completer class
     """
-    doc = ""
-    docpath = ""
-    signature = ""
+    type_ = UNKNOWN
+    doc = None
+    docpath = None
+    signature = None
+    # content is the full text of snippet for example
+    content = None
 
 class Completer(BaseDocumentHandler):
 
