@@ -275,7 +275,7 @@ class NotifyActionsConfig(ActionsConfig):
         self.create_action(
             'show_notify',
             TYPE_TOGGLE,
-            _('Show notification history'),
+            _('Show notification _history'),
             _('Show the notifications history'),
             '',
             self.on_show_notify,

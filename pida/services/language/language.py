@@ -205,7 +205,7 @@ class LanguageActionsConfig(ActionsConfig):
         self.create_action(
             'show_validator',
             TYPE_TOGGLE,
-            _('Validator'),
+            _('_Validator'),
             _('Show the language validator'),
             'error',
             self.on_show_validator,
@@ -214,7 +214,7 @@ class LanguageActionsConfig(ActionsConfig):
         self.create_action(
             'show_browser',
             TYPE_TOGGLE,
-            _('Outliner'),
+            _('_Outliner'),
             _('Show the language browser'),
             'info',
             self.on_show_browser,
@@ -223,7 +223,7 @@ class LanguageActionsConfig(ActionsConfig):
         self.create_action(
             'goto_definition',
             TYPE_NORMAL,
-            _('Goto Definition'),
+            _('Goto _Definition'),
             _('Goto the definition of current word'),
             'goto',
             self.on_goto_definition,

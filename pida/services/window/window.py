@@ -73,7 +73,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'show_menubar',
             TYPE_TOGGLE,
-            _('Show Menubar'),
+            _('Show _Menubar'),
             _('Toggle the visible state of the menubar'),
             'face-glasses',
             self.on_show_ui,
@@ -83,7 +83,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'fullscreen',
             TYPE_TOGGLE,
-            _('Fullscreen'),
+            _('F_ullscreen'),
             _('Toggle the fullscreen mode'),
             gtk.STOCK_FULLSCREEN,
             self.on_fullscreen,
@@ -93,7 +93,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'switch_next_term',
             TYPE_NORMAL,
-            _('Next terminal'),
+            _('Next _terminal'),
             _('Switch to the next terminal'),
             gtk.STOCK_GO_FORWARD,
             self.on_switch_next_term,
@@ -103,7 +103,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'switch_prev_term',
             TYPE_NORMAL,
-            _('Previous terminal'),
+            _('Previous te_rminal'),
             _('Switch to the previous terminal'),
             gtk.STOCK_GO_BACK,
             self.on_switch_prev_term,
@@ -113,7 +113,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'focus_terminal',
             TYPE_NORMAL,
-            _('Focus terminal'),
+            _('F_ocus terminal'),
             _('Focus terminal pane terminal'),
             'terminal',
             self.on_focus_terminal,

@@ -199,6 +199,7 @@ class MooeditEmbed(gtk.Notebook):
     def __init__(self, mooedit):
         gtk.Notebook.__init__(self)
         self.set_scrollable(True)
+        self.popup_enable()
         self._mooedit = mooedit
         self.show_all()
 
@@ -300,7 +301,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_save_as',
             TYPE_NORMAL,
-            _('Save as'),
+            _('Save _as'),
             _('Save file as'),
             gtk.STOCK_SAVE_AS,
             self.on_save_as,
@@ -317,7 +318,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_find',
             TYPE_NORMAL,
-            _('Find in buffer'),
+            _('_Find in buffer'),
             _('Find'),
             gtk.STOCK_FIND,
             self.on_find,
@@ -326,7 +327,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_find_next',
             TYPE_NORMAL,
-            _('Find next in buffer'),
+            _('Find _next in buffer'),
             _(''),
             gtk.STOCK_GO_FORWARD,
             self.on_find_next,
@@ -344,7 +345,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_replace',
             TYPE_NORMAL,
-            _('Find and replace'),
+            _('Find and _replace'),
             _('Find & replace'),
             gtk.STOCK_FIND_AND_REPLACE,
             self.on_replace,
@@ -362,7 +363,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_find_word_prev',
             TYPE_NORMAL,
-            _('Find current word up'),
+            _('Find _current word up'),
             _(''),
             gtk.STOCK_GO_FORWARD,
             self.on_find_word_prev,
@@ -371,7 +372,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_goto',
             TYPE_NORMAL,
-            _('Goto line'),
+            _('_Goto line'),
             _('Goto line'),
             gtk.STOCK_GO_DOWN,
             self.on_goto,
@@ -380,7 +381,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_last_edit',
             TYPE_NORMAL,
-            _('Goto last edit place'),
+            _('Goto _last edit place'),
             _('Goto last edit place'),
             gtk.STOCK_JUMP_TO,
             self.on_last_edit,

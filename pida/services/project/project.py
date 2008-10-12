@@ -157,7 +157,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_add',
             TYPE_NORMAL,
-            _('Add Project'),
+            _('_Add Project'),
             _('Adds a new project'),
             gtk.STOCK_ADD,
             self.on_project_add,
@@ -166,7 +166,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execute',
             TYPE_MENUTOOL,
-            _('Execute Default'),
+            _('_Execute Default'),
             _('Execute the project'),
             'package_utilities',
             self.on_project_execute,
@@ -176,8 +176,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_execute_last',
             TYPE_MENUTOOL,
-            _('Execute Last Controller'),
-            _('Execute Last Controller'),
+            _('Execute _last Controller'),
+            _('Execute last Controller'),
             'package_utilities',
             self.on_project_execute_last,
             ''
@@ -195,7 +195,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_properties',
             TYPE_TOGGLE,
-            _('Project Properties'),
+            _('Project _Properties'),
             _('Show the project property editor'),
             'settings',
             self.on_project_properties,
