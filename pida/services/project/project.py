@@ -3,7 +3,7 @@
     Service project
     ~~~~~~~~~~~~~~~
 
-    This service handles manging Projects and invoking vellum.
+    This service handles manging Projects
 
     :license: GPL3
     :copyright:
