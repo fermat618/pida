@@ -20,10 +20,12 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
 
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 # PIDA Imports
 from pida.core.service import Service
+from pida.core.environment import session_name
 
 from pida.core.locale import Locale
 locale = Locale('plugins')
@@ -50,11 +52,11 @@ class RpcDbus(DbusConfig):
 
     @EXPORT()
     def focus_window(self):
-        self.svc.window.present()
+        self.svc.boss.window.present()
 
     @EXPORT(in_signature="b")
     def kill(self, force=False):
-        self.svc.stop(force)
+        self.svc.boss.stop(force)
 
     def on_ping_session(self, session):
         if session == session_name():
@@ -68,8 +70,8 @@ class RpcDbus(DbusConfig):
             BUS.get_unique_name(),
             os.getpid(),
             session_name(),
-            self.svc.get_service('project').get_project_name() or '',
-            len(self.svc.get_service('buffer').get_documents())
+            self.svc.boss.get_service('project').get_project_name() or '',
+            len(self.svc.boss.get_service('buffer').get_documents())
             )
 
     @SIGNAL(signature="s")

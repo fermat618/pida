@@ -58,7 +58,11 @@ class GrepperItem(object):
         self.line = self._format_line()
 
     def _markup_match(self, text):
-        color = manager.style.lookup_color('pida-match')
+        if len(self._manager._views):
+            color = self._manager._views[0].matches_list.\
+                        style.lookup_color('pida-match')
+        else:
+            color = None
         if color:
             color = color.to_string()
         if not color:

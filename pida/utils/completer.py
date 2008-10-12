@@ -23,8 +23,8 @@
 import gtk
 import gobject
 import os
-from const import UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE, PROPERTY, \
-    EXTRAMETHOD, VARIABLE, IMPORT
+from const import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION, MODULE, 
+    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD)
 
 def _load_pix(fn):
     return gtk.gdk.pixbuf_new_from_file(
@@ -36,12 +36,16 @@ _PIXMAPS = {
     UNKNOWN:     _load_pix('element-event-16.png'),
     ATTRIBUTE:   _load_pix('source-attribute.png'),
     CLASS:       _load_pix('source-class.png'),
+    FUNCTION:    _load_pix('source-attribute.png'), # FIXME
     METHOD:      _load_pix('source-attribute.png'),
     MODULE:      _load_pix('source-method.png'),
     PROPERTY:    _load_pix('source-property.png'),
     EXTRAMETHOD: _load_pix('source-extramethod.png'),
-    VARIABLE:    _load_pix('element-event-16.png'),
+    VARIABLE:    _load_pix('source-attribute.png'), # FIXME
     IMPORT:      _load_pix('source-import.png'),
+    PARAMETER:   _load_pix('source-attribute.png'), # FIXME
+    BUILTIN:     _load_pix('source-attribute.png'), # FIXME
+    KEYWORD:     _load_pix('source-attribute.png'), # FIXME
 }
 
 
@@ -359,8 +363,9 @@ class PidaCompleter(gtk.HBox):
     def set_show_icons(self, value):
         return self._tree_icons.set_visible(value)
 
-    def add_str(self, line):
-        self._modelreal.append((None, line))
+    def add_str(self, line, type_=None):
+        bt = _PIXMAPS.get(type_, None)
+        self._modelreal.append((bt, line))
 
     show_icons = property(get_show_icons, set_show_icons)
 

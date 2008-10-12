@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 # stdlib
-import sys, compiler, os.path
+import sys, compiler, os.path, keyword
 
 # gtk
 import gtk
@@ -39,7 +39,10 @@ from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
-    PRIO_GOOD, Definer, Definition)
+    PRIO_GOOD, Definer, Definition, Suggestion)
+
+from pida.utils.const import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION,
+    MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -172,11 +175,34 @@ class PythonCompleter(Completer):
         from rope.base.exceptions import RopeError
         
         try:
-            co = code_assist(mp.project, buffer, offset)
+            co = code_assist(mp.project, buffer, offset, maxfixes=4)
         except RopeError:
             return []
         so = sorted_proposals(co)
-        return [c.name for c in so if c.name.startswith(base)]
+        rv = []
+        for c in so:
+            if c.name.startswith(base):
+                r = Suggestion(c.name)
+                #'variable', 'class', 'function', 'imported' , 'paramter'
+                if keyword.iskeyword(c.name):
+                    r.type_ = KEYWORD
+                elif c.type == 'variable':
+                    r.type_ = VARIABLE
+                elif c.type == 'class':
+                    r.type_ = CLASS
+                elif c.type == 'builtin':
+                    r.type_ = BUILTIN
+                elif c.type == 'function':
+                    r.type_ = FUNCTION
+                elif c.type == 'parameter':
+                    r.type_ = PARAMETER
+                elif c.type == None:
+                    if c.kind == "parameter_keyword":
+                        r.type_ = PARAMETER
+                else:
+                    r.type_ = UNKNOWN
+                rv.append(r)
+        return rv
 
 
 class PythonDefiner(Definer):

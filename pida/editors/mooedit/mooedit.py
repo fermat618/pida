@@ -69,6 +69,7 @@ from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
     SuggestionsList)
 from pida.utils.gthreads import GeneratorTask, gcall
+from pida.core.languages import Suggestion
 
 # locale
 from pida.core.locale import Locale
@@ -781,7 +782,10 @@ class PidaMooInput(object):
 
     def add_str(self, line):
         #print "add line", line
-        self.completer.add_str(line)
+        if isinstance(line, Suggestion):
+            self.completer.add_str(line, type_=line.type_)
+        else:
+            self.completer.add_str(line)
         # if we are in show_auto mode, the completion window
         # is delayed until we have the first visible item.
         if not self.completer_visible and self.show_auto:
@@ -823,6 +827,11 @@ class PidaMooInput(object):
                 self.toggle_popup()
                 return True
                            # enter tab
+            elif etest((gtk.keysyms.Return, 0)):
+                if self.completer_visible and \
+                    len(self._get_suggested()):
+                        self.accept(None, self._get_complete())
+                        return True
             elif etest(self.svc.key_accept):
                 if self.completer_visible:
                     print "accept"
@@ -831,8 +840,8 @@ class PidaMooInput(object):
                     return True
                     # key up, key down, ?, pgup, pgdown
             elif any((etest(self.svc.key_next), etest(self.svc.key_prev),
-                      etest((gtk.gdk.keyval_from_name('Page_Up'),0)),
-                      etest((gtk.gdk.keyval_from_name('Page_Down'),0)))):
+                      etest((gtk.keysyms.Page_Up,0)),
+                      etest((gtk.keysyms.Page_Down,0)))):
                 #(65362, 65364, 65293, 65366, 65365): 
                 if self.completer_visible:
                     self.completer.on_key_press_event(editor, event)
