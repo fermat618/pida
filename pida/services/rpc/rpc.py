@@ -21,27 +21,77 @@
 #SOFTWARE.
 
 
-
-
+from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 # PIDA Imports
 from pida.core.service import Service
-from pida.utils.grpc import LocalServerDispatcher
 
-class PidaDispatcher(LocalServerDispatcher):
+from pida.core.locale import Locale
+locale = Locale('plugins')
+_ = locale.gettext
 
-    def __init__(self, svc):
-        self.svc = svc
-        LocalServerDispatcher.__init__(self, 9124)
+class RpcDbus(DbusConfig):
+    
+    def __init__(self, *args, **kwargs):
+        super(RpcDbus, self).__init__(*args, **kwargs)
 
-    def remote_open(self, file_name):
-        self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
+        if BUS is None:
+            return
+            
+        BUS.add_signal_receiver(self.on_ping, 'PING_PIDA_INSTANCE', 
+                                DBUS_NS())
+        BUS.add_signal_receiver(self.on_ping_ext, 'PING_PIDA_INSTANCE_EXT', 
+                                DBUS_NS())
+        BUS.add_signal_receiver(self.on_ping_session, 'PING_PIDA_SESSION', 
+                                DBUS_NS())
+
+    @EXPORT(out_signature="i")
+    def get_pid(self):
+        return os.getpid()
+
+    @EXPORT()
+    def focus_window(self):
+        self.svc.window.present()
+
+    @EXPORT(in_signature="b")
+    def kill(self, force=False):
+        self.svc.stop(force)
+
+    def on_ping_session(self, session):
+        if session == session_name():
+            self.on_ping()
+
+    def on_ping(self):
+        self.PONG_PIDA_INSTANCE(BUS.get_unique_name())
+
+    def on_ping_ext(self):
+        self.PONG_PIDA_INSTANCE_EXT(
+            BUS.get_unique_name(),
+            os.getpid(),
+            session_name(),
+            self.svc.get_service('project').get_project_name() or '',
+            len(self.svc.get_service('buffer').get_documents())
+            )
+
+    @SIGNAL(signature="s")
+    def PONG_PIDA_INSTANCE(self, uid):
+        pass
+
+
+    @SIGNAL(signature="sissi")
+    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, session, project, opened_files):
+        pass
 
 # Service class
 class Rpc(Service):
-    """Describe your Service Here""" 
+    """DBus RPC Service""" 
+
+    dbus_config = RpcDbus
 
     def start(self):
-        self._dispatcher = PidaDispatcher(self)
+        if not BUS:
+            self.boss.get_service('notify').notify(
+                _('DBus python bindings are missing. Limited functionality.'),
+                title=_('Modules missing'))
 
 # Required Service attribute for service loading
 Service = Rpc

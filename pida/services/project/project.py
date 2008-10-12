@@ -3,7 +3,7 @@
     Service project
     ~~~~~~~~~~~~~~~
 
-    This service handles manging Projects and invoking vellum.
+    This service handles manging Projects
 
     :license: GPL3
     :copyright:
@@ -11,7 +11,7 @@
         * 2008 Ronny Pfannschmidt
 """
 from __future__ import with_statement
-import os
+import os, sys
 
 import gtk
 
@@ -28,6 +28,9 @@ from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
+from pida.core.environment import get_data_path
+
+from pida.utils.puilder.view import PuilderView
 
 # locale
 from pida.core.locale import Locale
@@ -108,22 +111,27 @@ class ProjectSetupView(PidaView):
     label_text = _('Project Properties')
 
     def create_ui(self):
-        from vellumui.view import ScriptView
-        self.script_view = ScriptView()
+        self.script_view = PuilderView()
         self.script_view.show()
+        self.script_view.set_execute_method(self.test_execute)
         self.add_main_widget(self.script_view.get_toplevel())
+
+    def test_execute(self, target, project):
+        self.svc.execute_target(None, target, project)
 
     def set_project(self, project):
         #XXX: should we have more than one project viev ?
         #     for different projects each
         #XXX: ask on case of unsaved changes?
         self.project = project
-        self.script_view.load_script(
-                os.path.join(
-                    project.source_directory,
-                    'build.vel'
-                    )
-                )
+        #self.script_view.load_script(
+        #        os.path.join(
+        #            project.source_directory,
+        #            'build.vel'
+        #            )
+        #        )
+        self.script_view.set_build(project.build)
+        self.script_view.set_project(project)
 
 
 class ProjectEventsConfig(EventsConfig):
@@ -287,7 +295,7 @@ class ProjectCommandsConfig(CommandsConfig):
         return self.svc.get_project_for_document(document)
 
 class ProjectDbusConfig(DbusConfig):
-    
+
     @EXPORT(in_signature='s')
     def add_directory(self, project_directory):
         self.svc.add_directory(project_directory)
@@ -303,7 +311,7 @@ class ProjectDbusConfig(DbusConfig):
         if self.svc._current:
             return self.svc._current.source_directory
         return None
-        
+
 
 # Service class
 class ProjectService(Service):
@@ -340,26 +348,24 @@ class ProjectService(Service):
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
-        project_file = os.path.join(project_directory, 'build.vel')
-        if os.path.exists(project_file):
-            self._load_project(project_directory)
-            self._save_options()
-            return
+        project_file = Project.data_dir_path(project_directory, 'project.json')
+        if not os.path.exists(project_file):
 
         #XXX: this should ask for the project name
         #     and a way to figure the branch name
-        if self.boss.window.yesno_dlg(
-            _('The directory does not contain a project file, ') +
-            _('do you want to create one?')
-        ):
-            self.create_project_file(project_directory)
-            self._load_project(project_directory)
-            self._save_options()
+            if self.boss.window.yesno_dlg(
+                _('The directory does not contain a project file, ') +
+                _('do you want to create one?')
+            ):
+                self.create_project_file(project_directory)
+            else:
+                return
+        self.load_and_set_project(project_directory)
+        self._save_options()
 
     def create_project_file(self, project_directory):
         project_name = os.path.basename(project_directory)
         Project.create_blank_project_file(project_name, project_directory)
-        self.load_and_set_project(project_directory)
 
     def set_current_project(self, project):
         self._current = project
@@ -376,7 +382,7 @@ class ProjectService(Service):
             self.get_action('project_execute').set_sensitive(bool(project.targets))
             self.set_opt('last_project', project.source_directory)
             self.boss.editor.set_path(project.source_directory)
-            self._target_last = project.script.options.get('default')
+            self._target_last = project.options.get('default')
             self.actions.get_action('project_execute_last').props.label = \
                 _('Execute Last Controller')
 
@@ -395,8 +401,9 @@ class ProjectService(Service):
             self.log(_("Can't load project. Path does not exist: %s") %project_path)
             return None
         project = Project(project_path)
-        self._projects.append(project)
-        self.project_list.project_ol.append(project)
+        if project not in self._projects:
+            self._projects.append(project)
+            self.project_list.project_ol.append(project)
         self.emit('loaded', project=project)
         return project
 
@@ -413,15 +420,28 @@ class ProjectService(Service):
             self.project_list.project_ol.remove(project, select=True)
             self._save_options()
 
-    def execute_target(self, action, target):
-        self.actions.get_action('project_execute_last').props.label = \
-            _('Execute: %s') %target
-        self._target_last = target
-        project = self._current
+    def execute_target(self, action, target, project=None):
+
+        if project is None:
+            project = self._current
+        else:
+            self.actions.get_action('project_execute_last').props.label = \
+                _('Execute: %s') %target
+            self._target_last = target
+
+        script = get_data_path('project_execute.py')
+
+        env = ['PYTHONPATH=%s' % sys.path[0]]
+
         self.boss.cmd('commander', 'execute',
-                commandargs=['vellum', target],
+                commandargs=[
+                    'python', script,
+                    '--directory', project.source_directory,
+                    '--target', target.name
+                ],
                 cwd=project.source_directory,
-                title=_('Vellum %s -> %s') % (project.name, target), 
+                title=_('%s:%s') % (project.name, target.name),
+                env=env,
                 )
 
     def execute_last(self):
@@ -443,7 +463,7 @@ class ProjectService(Service):
 
     def show_properties(self, visible):
         if visible:
-            self.boss.cmd('window', 'add_view', paned='Plugin',
+            self.boss.cmd('window', 'add_detached_view', paned='Plugin',
                 view=self.project_properties_view)
         else:
             self.boss.cmd('window', 'remove_view',
