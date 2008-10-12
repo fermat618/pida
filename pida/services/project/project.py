@@ -30,6 +30,8 @@ from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.environment import get_data_path
 
+from pida.utils.puilder.view import PuilderView
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('project')
@@ -109,11 +111,6 @@ class ProjectSetupView(PidaView):
     label_text = _('Project Properties')
 
     def create_ui(self):
-        #from vellumui.view import ScriptView
-        #self.script_view = ScriptView()
-        #self.script_view.show()
-        #self.add_main_widget(self.script_view.get_toplevel())
-        from pida.utils.puilder.view import PuilderView
         self.script_view = PuilderView()
         self.script_view.show()
         self.script_view.set_execute_method(self.test_execute)

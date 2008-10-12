@@ -29,11 +29,10 @@ _ = locale.gettext
 DATA_DIR = ".pida-metadata"
 
 class Project(Log):
-    """
+    "
     A PIDA project.
 
     Functions:
-     * wrap vellum
      * dict-alike api (but it is NOT a dict
 
     """
@@ -60,10 +59,6 @@ class Project(Log):
         """Loads the project file"""
         self.build = Build.loadf(self.project_file)
 
-        #from vellum.script import Script
-        #self.script = Script(
-        #        os.path.join(self.source_directory, 'build')
-        #        )
 
         # every project has a cache directory, we ensure it exists
         if not os.path.isdir(self.data_dir):
