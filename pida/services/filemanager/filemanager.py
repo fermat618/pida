@@ -696,7 +696,7 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'show_filebrowser',
             TYPE_NORMAL,
-            _('Show file browser'),
+            _('Show _file browser'),
             _('Show the file browser view'),
             'file-manager',
             self.on_show_filebrowser,

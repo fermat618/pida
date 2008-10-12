@@ -159,7 +159,7 @@ class CommanderActionsConfig(ActionsConfig):
         self.create_action(
             'shell',
             TYPE_NORMAL,
-            _('Run Shell'),
+            _('_Run Shell'),
             _('Open a shell prompt'),
             'terminal',
             self.execute_shell,
