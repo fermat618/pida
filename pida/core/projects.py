@@ -29,7 +29,7 @@ _ = locale.gettext
 DATA_DIR = ".pida-metadata"
 
 class Project(Log):
-    "
+    """
     A PIDA project.
 
     Functions:

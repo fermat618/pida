@@ -295,7 +295,7 @@ class ProjectCommandsConfig(CommandsConfig):
         return self.svc.get_project_for_document(document)
 
 class ProjectDbusConfig(DbusConfig):
-    
+
     @EXPORT(in_signature='s')
     def add_directory(self, project_directory):
         self.svc.add_directory(project_directory)
@@ -311,7 +311,7 @@ class ProjectDbusConfig(DbusConfig):
         if self.svc._current:
             return self.svc._current.source_directory
         return None
-        
+
 
 # Service class
 class ProjectService(Service):
@@ -349,25 +349,23 @@ class ProjectService(Service):
     def add_directory(self, project_directory):
         # Add a directory to the project list
         project_file = Project.data_dir_path(project_directory, 'project.json')
-        if os.path.exists(project_file):
-            self._load_project(project_directory)
-            self._save_options()
-            return
+        if not os.path.exists(project_file):
 
         #XXX: this should ask for the project name
         #     and a way to figure the branch name
-        if self.boss.window.yesno_dlg(
-            _('The directory does not contain a project file, ') +
-            _('do you want to create one?')
-        ):
-            self.create_project_file(project_directory)
-            self._load_project(project_directory)
-            self._save_options()
+            if self.boss.window.yesno_dlg(
+                _('The directory does not contain a project file, ') +
+                _('do you want to create one?')
+            ):
+                self.create_project_file(project_directory)
+            else:
+                return
+        self.load_and_set_project(project_directory)
+        self._save_options()
 
     def create_project_file(self, project_directory):
         project_name = os.path.basename(project_directory)
         Project.create_blank_project_file(project_name, project_directory)
-        self.load_and_set_project(project_directory)
 
     def set_current_project(self, project):
         self._current = project
@@ -403,8 +401,9 @@ class ProjectService(Service):
             self.log(_("Can't load project. Path does not exist: %s") %project_path)
             return None
         project = Project(project_path)
-        self._projects.append(project)
-        self.project_list.project_ol.append(project)
+        if project not in self._projects:
+            self._projects.append(project)
+            self.project_list.project_ol.append(project)
         self.emit('loaded', project=project)
         return project
 
