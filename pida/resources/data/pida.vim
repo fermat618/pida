@@ -415,5 +415,6 @@ silent au VimCommsDBus SwapExists * silent call VimSignal('SwapExists')
 set nomore
 set guioptions-=T
 set guioptions-=m
+set guioptions+=c
 
 
