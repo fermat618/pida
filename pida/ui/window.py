@@ -79,7 +79,7 @@ class PidaWindow(Window):
         self.bottom_box = gtk.VBox()
         self._create_statusbar()
         self.main_box.pack_start(self.top_box, expand=False)
-        self.main_box.pack_start(self._paned)
+        self.main_box.pack_start(self.paned)
         self.main_box.pack_start(self.bottom_box, expand=False)
         self.main_box.pack_start(self._status_holder, expand=False)
         self.add(self.main_box)
@@ -103,7 +103,7 @@ class PidaWindow(Window):
         self._statusbar.show_all()
 
     def _fix_paneds(self):
-        self._paned = PidaPaned()
+        self.paned = PidaPaned()
 
     # Action group API
     def add_action_group(self, actiongroup):
@@ -126,34 +126,37 @@ class PidaWindow(Window):
 
     # View API
     def add_view(self, paned, view, removable=True, present=False):
-        self._paned.add_view(paned, view, removable, present)
+        self.paned.add_view(paned, view, removable, present)
 
     def remove_view(self, view):
-        self._paned.remove_view(view)
+        self.paned.remove_view(view)
 
     def detach_view(self, view, size):
-        self._paned.detach_view(view, size)
+        self.paned.detach_view(view, size)
 
     def present_view(self, view):
-        self._paned.present_view(view)
+        self.paned.present_view(view)
 
     def present_paned(self, bookname):
-        self._paned.present_paned(bookname)
+        self.paned.present_paned(bookname)
 
     def switch_next_view(self, bookname):
-        self._paned.switch_next_pane(bookname)
+        self.paned.switch_next_pane(bookname)
 
     def switch_prev_view(self, bookname):
-        self._paned.switch_prev_pane(bookname)
+        self.paned.switch_prev_pane(bookname)
 
     def set_fullscreen(self, fullscreen):
-        self._paned.set_fullscreen(fullscreen)
+        self.paned.set_fullscreen(fullscreen)
 
     def get_fullscreen(self):
-        return self._paned.get_fullscreen()
+        return self.paned.get_fullscreen()
 
     def get_statusbar(self):
         return self._statusbar
+
+    def create_merge_id(self):
+        return self._uim._uim.new_merge_id()
 
     # UI hiding API
     def set_toolbar_visibility(self, visibility):

@@ -47,7 +47,9 @@
                 <menuitem name="show_buffer_list" action="show_buffer_list" />
             </placeholder>
         </menu>
-        
+
+        <placeholder name="AddMenu" /> 
+
         <menu name="HelpMenu" action="HelpMenu">
         </menu>
     

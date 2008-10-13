@@ -29,7 +29,9 @@
             <separator />
             <placeholder name="panes" />
         </menu>
-        
+
+        <placeholder name="AddMenu" />
+
         <menu name="HelpMenu" action="HelpMenu">
         </menu>
     

@@ -14,7 +14,7 @@ base_menu_actions = [
     ('EditMenu', None, _('_Edit'), '<Alt>e', _('Edit Menu'), None),
     ('ProjectMenu', None, _('_Project'), '<Alt>p', _('Project Menu'), None),
     ('LanguageMenu', None, _('_Language'), '<Alt>l', _('Language Menu'), None),
-    ('DebugMenu', None, _('_Debug'), '<Alt>l', _('Debug Menu'), None),
+    ('DebugMenu', None, _('_Debug'), '<Alt>d', _('Debug Menu'), None),
     ('ToolsMenu', None, _('_Tools'), '<Alt>t', _('Tools Menu'), None),
     ('ToolsDebug', None, _('Debug Pida'), '', _('Debug Pida Menu'), None),
     ('ViewMenu', None, _('_View'), '<Alt>v', _('View Menu'), None),
