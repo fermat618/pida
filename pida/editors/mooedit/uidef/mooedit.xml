@@ -30,6 +30,9 @@
             <separator />
             <menuitem name="mooedit_goto" action="mooedit_goto" />
             <menuitem name="mooedit_last_edit" action="mooedit_last_edit" />    
+            <separator />
+            <menuitem name="mooedit_comment" action="mooedit_comment" />
+            <menuitem name="mooedit_uncomment" action="mooedit_uncomment" />
             </placeholder>
             <separator />
             <placeholder name="find" />

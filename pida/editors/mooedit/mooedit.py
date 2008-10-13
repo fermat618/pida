@@ -388,7 +388,24 @@ class MooeditActionsConfig(EditorActionsConfig):
             self.on_last_edit,
             '<Control>q',
         )
-
+        self.create_action(
+            'mooedit_comment',
+            TYPE_NORMAL,
+            _('Comment'),
+            _('Comment current selection'),
+            '',
+            self.on_comment,
+            '',
+        )
+        self.create_action(
+            'mooedit_uncomment',
+            TYPE_NORMAL,
+            _('Uncomment'),
+            _('Uncomment current selection'),
+            '',
+            self.on_uncomment,
+            '',
+        )
         act = self.create_action(
             'mooedit_completer_close',
             TYPE_NORMAL,
@@ -486,6 +503,12 @@ class MooeditActionsConfig(EditorActionsConfig):
 
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
+
+    def on_comment(self, action):
+        self.svc._current.editor.emit('comment')
+
+    def on_uncomment(self, action):
+        self.svc._current.editor.emit('uncomment')
 
 class PidaMooInput(object):
     """
