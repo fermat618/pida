@@ -11,9 +11,6 @@
             <separator />
             <placeholder name="find" />
             <separator />
-            <placeholder name="prefs">
-            <menuitem action="show_options" name="show_options" />
-            </placeholder>
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
@@ -29,6 +26,9 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="prefs">
+            <menuitem action="show_options" name="show_options" />
+            </placeholder>
         </menu>
 
         <placeholder name="AddMenu" /> 

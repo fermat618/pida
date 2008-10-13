@@ -37,9 +37,6 @@
             <separator />
             <placeholder name="find" />
             <separator />
-            <placeholder name="prefs">
-            <menuitem name="mooedit_preferences" action="mooedit_preferences" />
-            </placeholder>
         </menu>
 
         <menu name="ProjectMenu" action="ProjectMenu">
@@ -58,6 +55,9 @@
             <separator />
             <menuitem action="focus_editor" name="focus_editor" />
             <separator />
+            </placeholder>
+            <placeholder name="prefs">
+            <menuitem name="mooedit_preferences" action="mooedit_preferences" />
             </placeholder>
         </menu>
 
