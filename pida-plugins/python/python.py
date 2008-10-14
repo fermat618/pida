@@ -26,23 +26,20 @@ import sys, compiler, os.path, keyword, re
 # gtk
 import gtk
 
-# kiwi
-from kiwi.ui.objectlist import ObjectList, Column
-
 # PIDA Imports
 
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
-from pida.core.features import FeaturesConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
-    PRIO_GOOD, Definer, Definition, Suggestion)
+    PRIO_GOOD, Definer )
 
-from pida.utils.const import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION,
-    MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD)
+from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION,
+   MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD,
+   Definition, Suggestion)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck

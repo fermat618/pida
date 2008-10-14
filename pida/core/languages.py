@@ -28,9 +28,9 @@ from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
-from pida.utils.const import UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE, \
-    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT
-
+from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE,
+    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT,
+    Suggestion, Definition, ValidationError)
 
 PRIO_PERFECT = 100
 PRIO_VERY_GOOD = 50
@@ -70,53 +70,11 @@ class Outliner(BaseDocumentHandler):
     def get_outline(self):
         raise NotImplementedError('Outliner must define get_outline')
 
-UNKNOWN, INFO, WARNING, ERROR = 0, 1, 2, 3
-
-class ValidationError(object):
-    """Message a Validator should return"""
-    message = ''
-    message_args = ()
-    type = UNKNOWN
-    filename = None
-    ineno = None
-
-    def __init__(self, filename, lineno):
-        self.filename = filename
-        self.lineno = lineno
-
-    def __str__(self):
-        return '%s:%s: %s' % (self.filename, self.lineno, self.message % self.message_args)
-
-    @staticmethod
-    def from_exception(exc):
-        """Returns a new Message from a python exception"""
-        # FIXME
-        pass
-
 
 class Validator(BaseDocumentHandler):
 
     def get_validations(self):
         raise NotImplementedError('Validator must define get_validations')
-
-class Definition(object):
-    """Returned by a Definer instance"""
-    def __init__(self, file_name=None, offset=None, length=None, line=None,
-                 signature=None, doc=None):
-        self.file_name = file_name
-        self.offset = offset
-        self.length = length
-        self.line = line
-        self.signature = signature
-        self.doc = doc
-        
-    def __repr__(self):
-        where = ""
-        if self.offset is not None:
-            where = " offset %s " %self.offset
-        elif self.line is not None:
-            where = " line %s " %self.line
-        return '<Definition %s%s>' %(self.file_name, where)
 
 class Definer(BaseDocumentHandler):
     """
@@ -168,17 +126,6 @@ class LanguageInfo(object):
                 'word':          self.word,
                 'attributerefs': self.attributerefs,
                }
-
-class Suggestion(unicode):
-    """
-    Suggestions are returned by an Completer class
-    """
-    type_ = UNKNOWN
-    doc = None
-    docpath = None
-    signature = None
-    # content is the full text of snippet for example
-    content = None
 
 class Completer(BaseDocumentHandler):
 

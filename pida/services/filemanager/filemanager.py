@@ -21,7 +21,6 @@
 #SOFTWARE.
 
 
-from weakref import proxy
 import gtk
 
 from os import listdir, path

@@ -23,8 +23,8 @@
 import gtk
 import gobject
 import os
-from const import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION, MODULE, 
-    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD)
+from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION, 
+   MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD)
 
 def _load_pix(fn):
     return gtk.gdk.pixbuf_new_from_file(
