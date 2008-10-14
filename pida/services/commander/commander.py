@@ -20,7 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import os, subprocess
+import os, subprocess, re
 
 import gtk
 import gtk.gdk
@@ -57,8 +57,39 @@ RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
               r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
              )
 
-def get_default_system_shell():
-    return os.environ.get('SHELL', 'bash')
+class System(object):
+    @classmethod
+    def get_default_system_shell(cls):
+        return ""
+
+    @classmethod
+    def get_absolute_path(cls, path, pid):
+        return path
+
+class UnixSystem(System):
+    # is this universal ?
+    PROC_MATCH = re.compile('PWD=(.*)')
+    
+    @classmethod
+    def get_default_system_shell(cls):
+        return os.environ.get('SHELL', 'bash')
+    
+    @classmethod
+    def get_absolute_path(cls, path, pid):
+        try:
+            fp = open('/proc/%s/environ' %pid, 'r')
+        except OSError:
+            return path
+        cont = fp.read()
+        lines = cont.split('\x00')
+        for line in lines:
+            res = cls.PROC_MATCH.match(line)
+            if res:
+                return os.path.abspath(os.path.join(res.groups()[0], path))
+        return path
+
+# FIXME: windows port
+CurrentSystem = UnixSystem
 
 class CommanderOptionsConfig(OptionsConfig):
 
@@ -141,7 +172,7 @@ class CommanderOptionsConfig(OptionsConfig):
             'shell_command',
             _('The shell command'),
             str,
-            get_default_system_shell(),
+            CurrentSystem.get_default_system_shell(),
             _('The command that will be used for shells')
         )
 
@@ -244,9 +275,13 @@ class TerminalView(PidaView):
         self._hb.show()
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
-        for match in RE_MATCHES:
+        self._matchids = {}
+        for match, callback in self.svc.list_matches():
             i = self._term.match_add(match)
+            if i < 0:
+                continue
             self._term.match_set_cursor_type(i, gtk.gdk.HAND2)
+            self._matchids[i] = match
         self._term.parent_view = self
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
@@ -402,25 +437,16 @@ class TerminalView(PidaView):
             return
         line = int(event.y/self._term.get_char_height())
         col = int(event.x/self._term.get_char_width())
-        match = self._term.match_check(col, line)
-        if match:
-            match = os.path.expanduser(match[0])
-            if match.find(":") != -1:
-                
-                file_name, line = match.rsplit(":", 1)
-                if os.path.isfile(file_name):
-                    self.svc.boss.cmd('buffer', 'open_file', file_name=file_name,
-                                         line=int(line))
-                else:
-                    self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
-                    self.svc.boss.cmd('filemanager', 'present_view')
-                    
-            else:
-                if os.path.isfile(match):
-                    self.svc.boss.cmd('buffer', 'open_file', file_name=match)
-                else:
-                    self.svc.boss.cmd('filemanager', 'browse', new_path=match)
-                    self.svc.boss.cmd('filemanager', 'present_view')
+        chk = self._term.match_check(col, line)
+        if not chk:
+            return
+
+        (match, matchfun) = chk
+        if match and self._matchids.has_key(matchfun):
+            callbacks = self.svc.get_match_callbacks(self._matchids[matchfun])
+            for call in callbacks:
+                if call(self, event, match):
+                    return
 
     def on_selection_changed(self, term):
         self._copy_button.set_sensitive(self._term.get_has_selection())
@@ -478,6 +504,9 @@ class TerminalView(PidaView):
         self._term.feed_child(u'cd %s\n' %path)
         self._pwd = path
 
+    def get_absolute_path(self, path):
+        return CurrentSystem.get_absolute_path(path, self._pid)
+
 # Service class
 class Commander(Service):
     """Describe your Service Here""" 
@@ -490,6 +519,7 @@ class Commander(Service):
 
     def start(self):
         self._terminals = []
+        self._matches = {}
         self.current_project = None
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
@@ -538,6 +568,56 @@ class Commander(Service):
             if term._stick_button.child.get_active() and \
                term._term.window.is_visible():
                 term.chdir(document.directory)
+
+    def register_matcher(self, match, callback):
+        if self._matches.has_key(match):
+            self._matches[match].append(callback)
+        else:
+            self._matches[match] = [callback]
+    
+    def unregister_matcher(self, match, callback):
+        if not self._matches.has_key(match):
+            return
+        self._matches[match].remove(callback)
+    
+    def list_matches(self):
+        # we use this so the default matchers are always the latest
+        # added to a terminal. this was the more specific ones are matching 
+        # first
+        for match in self._matches:
+            for call in self._matches[match]:
+                yield (match, call)
+        for match in RE_MATCHES:
+            yield (match, self.default_match)
+
+    def get_match_callbacks(self, match):
+        if match in RE_MATCHES:
+            return [self.default_match]
+        else:
+            return self._matches.get(match, [])
+
+    def default_match(self, term, event, match):
+        match = os.path.expanduser(match)
+
+        if match.find(":") != -1:
+            file_name, line = match.rsplit(":", 1)
+            file_name = term.get_absolute_path(file_name)
+            if os.path.isfile(file_name):
+                self.boss.cmd('buffer', 'open_file', 
+                                    file_name=file_name,
+                                    line=int(line))
+            else:
+                self.boss.cmd('filemanager', 'browse', 
+                            new_path=file_name)
+                self.boss.cmd('filemanager', 'present_view')
+        else:
+            file_name = term.get_absolute_path(match)
+            if os.path.isfile(match):
+                self.boss.cmd('buffer', 'open_file', file_name=file_name)
+            else:
+                self.boss.cmd('filemanager', 'browse', new_path=file_name)
+                self.boss.cmd('filemanager', 'present_view')
+
 
 
 # Required Service attribute for service loading

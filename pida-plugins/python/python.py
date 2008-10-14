@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 # stdlib
-import sys, compiler, os.path, keyword
+import sys, compiler, os.path, keyword, re
 
 # gtk
 import gtk
@@ -42,18 +42,13 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
     PRIO_GOOD, Definer, Definition, Suggestion)
 
 from pida.utils.const import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION,
-    MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN)
+    MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
 
-# ui
-from pida.ui.views import PidaView, PidaGladeView
-from pida.ui.objectlist import AttrSortCombo
-
 # utils
 from . import pyflakes
-from pida.utils.gthreads import AsyncTask, GeneratorTask
 
 # locale
 from pida.core.locale import Locale
@@ -234,6 +229,15 @@ class PythonDefiner(Definer):
         return rv
 
 
+RE_MATCHES = (
+    # traceback match
+    (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
+    # internal
+     re.compile(r'\s*File\s*\"(?P<file>[^"]+)\",\s*line\s*(?P<line>\d+).*'))
+    ,
+    #FIXME: how to handle localisation of this ???
+)
+
 class Python(LanguageService):
 
     language_name = 'Python'
@@ -251,6 +255,25 @@ class Python(LanguageService):
     def pre_start(self):
         self.execute_action = self.get_action('execute_python')
         self.execute_action.set_sensitive(False)
+
+    def start(self):
+        for match in RE_MATCHES:
+            self.boss.get_service('commander').register_matcher(
+                match[0], self.match_call)
+
+    def stop(self):
+        for match in RE_MATCHES:
+            self.boss.get_service('commander').unregister_matcher(
+                match[0], self.match_call)
+
+    def match_call(self, term, event, match):
+        for pattern in RE_MATCHES:
+            test = pattern[1].match(match)
+            if test:
+                print test.groups()
+                self.boss.get_service('buffer').open_file(
+                    term.get_absolute_path(test.groups()[0]),
+                    line=int(test.groups()[1]))
 
     def execute_current_document(self):
         python_ex = self.opt('python_for_executing')
