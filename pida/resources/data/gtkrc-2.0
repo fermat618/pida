@@ -44,6 +44,26 @@ fg[NORMAL] = "white"
 
 widget_class "*" style "pida"
 
+style "docwindow" { 
+    bg[NORMAL] = "#FFFFDC" 
+    fg[NORMAL] = "#000000" 
+}
+
+style "docwindow-long" = "docwindow" { 
+    fg[NORMAL] = "#888888" 
+}
+
+style "docwindow-path" = "docwindow" { 
+    fg[NORMAL] = "red" 
+}
+
+
+widget "pida-docwindow" style "docwindow"
+#widget "pida-docwindow.*" style "docwindow"
+widget "pida-docwindow.*.long" style "docwindow-long"
+widget "pida-docwindow.*.short" style "docwindow"
+widget "pida-docwindow.*.path" style "docwindow-path"
+
 #widget "filebrowser_list" style "pida-filebrowser"
 #widget "filebrowser_list" style "pida"
 

@@ -35,11 +35,11 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
-    PRIO_GOOD, Definer )
+    PRIO_GOOD, Definer, Documentator)
 
 from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION,
    MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD,
-   Definition, Suggestion)
+   Definition, Suggestion, Documentation)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -114,6 +114,31 @@ class PythonOutliner(Outliner):
         for node, parent in mp.get_nodes():
             yield (node, parent)
 
+class PythonDocumentator(Documentator):
+
+    def get_documentation(self, buffer, offset):
+        mp = ModuleParser(self.document.filename)
+        buffer = buffer + ('\n' * 20)
+        
+        from rope.contrib.codeassist import PyDocExtractor
+        from rope.base.exceptions import RopeError
+        from rope.contrib import fixsyntax
+        try:
+            pymodule = fixsyntax.get_pymodule(mp.project.pycore, buffer,
+                                               None, 4)
+            pyname = fixsyntax.find_pyname_at(mp.project, buffer,
+                                               offset, pymodule, 4)
+        except RopeError:
+            return None
+        if pyname is None:
+            return None
+        pyobject = pyname.get_object()
+        rv = Documentation(
+            short=PyDocExtractor().get_calltip(pyobject, False, False),
+            long_=PyDocExtractor().get_doc(pyobject)
+            )
+        return rv
+        
 class PythonLanguage(LanguageInfo):
     varchars = [chr(x) for x in xrange(97, 122)] + \
                [chr(x) for x in xrange(65, 90)] + \
@@ -243,6 +268,7 @@ class Python(LanguageService):
     validator_factory = PythonValidator
     completer_factory = PythonCompleter
     definer_factory = PythonDefiner
+    documentator_factory = PythonDocumentator
 
     features_config = PythonFeaturesConfig
     actions_config = PythonActionsConfig
@@ -267,7 +293,6 @@ class Python(LanguageService):
         for pattern in RE_MATCHES:
             test = pattern[1].match(match)
             if test:
-                print test.groups()
                 self.boss.get_service('buffer').open_file(
                     term.get_absolute_path(test.groups()[0]),
                     line=int(test.groups()[1]))
@@ -281,7 +306,6 @@ class Python(LanguageService):
 
     def is_current_python(self):
         t = self.boss.cmd('language', 'get_current_filetype')
-        print t
         if t and (t.internal == self.language_name):
             return True
         return False

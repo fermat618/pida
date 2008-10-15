@@ -20,6 +20,7 @@
         <menuitem name="show_validator" action="show_validator" />
         <menuitem name="show_browser" action="show_browser" />
         <separator />
+        <menuitem name="show_documentation" action="show_documentation" />
         <menuitem name="goto_definition" action="goto_definition" />
         <separator />
         </menu>

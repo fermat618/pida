@@ -23,14 +23,13 @@ Language Support Superclasses
     * 2008 Daniel Poelzleithner
     * 2006 Frederic Back (fredericback@gmail.com)
 """
-
 from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE,
     PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT,
-    Suggestion, Definition, ValidationError)
+    Suggestion, Definition, ValidationError, Documentation)
 
 PRIO_PERFECT = 100
 PRIO_VERY_GOOD = 50
@@ -86,10 +85,24 @@ class Definer(BaseDocumentHandler):
         Returns the Definition class pointing to document defining the word
         searched for. The Definier has to find out which word the offset is on.
 
+        @buffer - the text to search in
         @offset - nth char in the document point is on
         """
         raise NotImplementedError('Validator must define get_definition')
 
+class Documentator(BaseDocumentHandler):
+    """
+    Documentation receiver returns a Documentation object
+    """
+
+    def get_documentation(self, buffer, offset):
+        """
+        Returns the Documentation object for a offset of an file.
+
+        @buffer - the text to search in
+        @offset - nth char in the document point is on
+        """
+        raise NotImplementedError('Validator must define get_definition')
 
 class LanguageInfo(object):
     """
@@ -162,6 +175,10 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
             completer = partial(self.svc.completer_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'completer'), completer)
+        if self.svc.documentator_factory is not None:
+            documentator = partial(self.svc.documentator_factory,self.svc)
+            self.subscribe_foreign('language',
+                (self.svc.language_name, 'documentator'), documentator)
 
 
 
@@ -176,6 +193,7 @@ class LanguageService(Service):
     definer_factory = None
     outliner_factory = None
     validator_factory = None
+    documentator_factory = None
 
     features_config = LanguageServiceFeaturesConfig
 

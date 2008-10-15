@@ -26,7 +26,6 @@ from pida.core.languages import LanguageInfo
 
 from pida.utils.gthreads import GeneratorTask, gcall
 
-
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
@@ -227,7 +226,16 @@ class LanguageActionsConfig(ActionsConfig):
             _('Goto the definition of current word'),
             'goto',
             self.on_goto_definition,
-            'F5'
+            '<Control>F5'
+        )
+        self.create_action(
+            'show_documentation',
+            TYPE_NORMAL,
+            _('Show Documentation'),
+            _('Show the documentation of cursor position'),
+            'help',
+            self.on_documentation,
+            '<Control>F1'
         )
 
     def on_type_change(self, action):
@@ -252,6 +260,9 @@ class LanguageActionsConfig(ActionsConfig):
 
     def on_goto_definition(self, action):
         self.svc.goto_defintion()
+    
+    def on_documentation(self, action):
+        self.svc.show_documentation()
 
 
 class LanguageCommandsConfig(CommandsConfig):
@@ -386,6 +397,11 @@ class Language(Service):
             self.boss.get_service('notify').notify(
             data=_('No definition found'), timeout=2000)
 
+    def show_documentation(self):
+        if hasattr(self.boss.editor, 'show_documentation'):
+            self.boss.editor.show_documentation()
+        
+
 
     def on_buffer_typechanged(self, document):
         for k in ("_lng_outliner", "_lng_validator", "_lng_completer",
@@ -443,6 +459,9 @@ class Language(Service):
         
     def get_definer(self, document):
         return self._get_feature(document, 'definer', '_lng_definer')
+
+    def get_documentator(self, document):
+        return self._get_feature(document, 'documentator', '_lnd_documentator')
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
