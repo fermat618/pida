@@ -422,7 +422,7 @@ class Plugins(Service):
     def start(self):
         self.rpc_url = self.opt('rpc_url')
         self.update_installed_plugins(start=True)
-        self.check_for_updates(self.get_option('check_for_updates').get_value())
+        self.check_for_updates(self.opt('check_for_updates'))
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

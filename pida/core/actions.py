@@ -12,7 +12,7 @@ import gtk
 
 # pida core import(s)
 from pida.core.base import BaseConfig
-from pida.core.options import OptionItem, manager
+from pida.core.options import OptionsConfig
 import warnings
 
 # kiwi imports
@@ -62,7 +62,7 @@ TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
 
 accelerator_group = gtk.AccelGroup()
 
-class ActionsConfig(BaseConfig):
+class ActionsConfig(OptionsConfig):
     """
     The base action configurator.
 
@@ -72,7 +72,7 @@ class ActionsConfig(BaseConfig):
     service will be available as the svc attribute in the configurator
     instance.
     """
-
+    name = '%s.keys.json'
     accelerator_group = accelerator_group
 
     def create(self):
@@ -82,9 +82,12 @@ class ActionsConfig(BaseConfig):
         Will initialise attributes, call create_actions, then register the
         actions and the ui definitions with the Boss.
         """
+        OptionsConfig.create(self)
         self._actions = gtk.ActionGroup(self.svc.get_name())
         self._keyboard_options = {}
         self.create_actions()
+        # call the real register_options after creating all actions
+        OptionsConfig.register_options(self)
         if self.svc.boss is not None:
             self.ui_merge_id = self.svc.boss.add_action_group_and_ui(
                 self._actions,
@@ -103,6 +106,8 @@ class ActionsConfig(BaseConfig):
     def remove_actions(self):
         self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
 
+    def register_options(self):
+        pass #override this one to call it somewhere else
     def create_action(self, name, atype, label, tooltip, stock_id,
                       callback=None, accel=None):
         """
@@ -145,14 +150,13 @@ class ActionsConfig(BaseConfig):
         return act
 
     def _create_key_option(self, act, name, label, tooltip, accel):
-        opt = OptionItem('keyboard_shortcuts/%s' % self.svc.get_name(), name,
+        opt = self.create_option(name,
                          label, str,
                          accel, tooltip, 
                          self._on_shortcut_notify)
         opt.action = act
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
-        manager.register_option(opt)
         act.opt = opt
         act.set_accel_group(self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
@@ -194,7 +198,7 @@ class ActionsConfig(BaseConfig):
             keyval, modmask, True)
 
     def _set_action_keypress_from_option(self, option):
-        self._set_action_keypress(option.name, manager.get(option))
+        self._set_action_keypress(option.name, option.value)
 
     def _on_shortcut_notify(self, client, id, entry, option, *args):
         self._set_action_keypress_from_option(option)
@@ -204,6 +208,7 @@ class ActionsConfig(BaseConfig):
         Set the keyboard shortcuts for the actions with keyboard shortcuts
         enabled.
         """
+        self.register_options() #XXX: hack
         for name, opt in self._keyboard_options.items():
             self._set_action_keypress_from_option(opt)
 

@@ -109,7 +109,7 @@ class PidaOptionsView(PidaGladeView):
             optwidget = get_widget_for_type(opt.type)
             widgetsizer.add_widget(optwidget)
             hb.pack_start(optwidget, expand=True)
-            value = opt.get_value()
+            value = opt.group.get_value(opt.name)
             optwidget.update(value)
             optwidget.connect('content-changed', self._on_option_changed, opt)
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)

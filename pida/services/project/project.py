@@ -314,7 +314,7 @@ class ProjectService(Service):
     options_config = ProjectOptions
     dbus_config = ProjectDbusConfig
 
-    def pre_start(self):
+    def start(self):
         self._projects = []
         self.set_current_project(None)
         ###
