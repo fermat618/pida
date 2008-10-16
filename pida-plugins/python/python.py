@@ -37,9 +37,9 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
     PRIO_GOOD, Definer, Documentator)
 
-from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION,
-   MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD,
-   Definition, Suggestion, Documentation)
+from pida.utils.languages import (LANG_COMPLETER_TYPES,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
+   Definition, Suggestion, Documentation, ValidationError)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -110,7 +110,11 @@ class PythonOutliner(Outliner):
     priority = PRIO_VERY_GOOD
 
     def get_outline(self):
-        mp = ModuleParser(self.document.filename)
+        from rope.base.exceptions import RopeError
+        try:
+            mp = ModuleParser(self.document.filename)
+        except RopeError:
+            return
         for node, parent in mp.get_nodes():
             yield (node, parent)
 
@@ -160,7 +164,39 @@ def _create_exception_validation(e):
     msg.lineno = lineno
     msg.message_args = (line,)
     msg.message = '<tt>%%s</tt>\n<tt>%s^</tt>' % (' ' * (offset - 2))
+    msg.type_ = LANG_VALIDATOR_TYPES.ERROR
+    if isinstance(e, SyntaxError):
+        msg.subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
+    else:
+        msg.subtype = LANG_VALIDATOR_SUBTYPES.INDENTATION
     return [msg]
+
+class PythonError(ValidationError):
+    def get_markup(self):
+        args = [('<b>%s</b>' % arg) for arg in self.message_args]
+        message_string = self.message % tuple(args)
+        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
+            typec = self.lookup_color('pida-val-error')
+        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
+            typec = self.lookup_color('pida-val-info')
+        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
+            typec = self.lookup_color('pida-val-warning')
+        else:
+            typec = self.lookup_color('pida-val-def')
+        
+        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
+    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
+    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
+                      {'lineno':self.lineno, 
+                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
+                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
+                                    self.subtype).capitalize()),
+                      'message':message_string,
+                      'linecolor': self.lookup_color('pida-lineno').to_string(),
+                      'typec': typec.to_string(),
+                      })
+        return markup
+    markup = property(get_markup)
 
 class PythonValidator(Validator):
 
@@ -177,7 +213,34 @@ class PythonValidator(Validator):
             w = pyflakes.Checker(tree, filename)
             messages = w.messages
         for m in messages:
-            yield m
+            type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
+            subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
+
+            if isinstance(m, pyflakes.messages.UnusedImport):
+                type_ = LANG_VALIDATOR_TYPES.INFO
+                subtype = LANG_VALIDATOR_SUBTYPES.UNUSED
+            elif isinstance(m, pyflakes.messages.RedefinedWhileUnused):
+                type_ = LANG_VALIDATOR_TYPES.WARNING
+                subtype = LANG_VALIDATOR_SUBTYPES.REDEFINED
+            elif isinstance(m, pyflakes.messages.ImportStarUsed):
+                type_ = LANG_VALIDATOR_TYPES.WARNING
+                subtype = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+            elif isinstance(m, pyflakes.messages.UndefinedName):
+                type_ = LANG_VALIDATOR_TYPES.ERROR
+                subtype = LANG_VALIDATOR_SUBTYPES.UNDEFINED
+            elif isinstance(m, pyflakes.messages.DuplicateArgument):
+                type_ = LANG_VALIDATOR_TYPES.ERROR
+                subtype = LANG_VALIDATOR_SUBTYPES.DUPLICATE
+
+            ve = PythonError(
+                message=m.message,
+                message_args=m.message_args,
+                lineno=m.lineno,
+                type_=type_,
+                subtype=subtype,
+                filename=filename
+                )
+            yield ve
 
 
 class PythonCompleter(Completer):
@@ -185,13 +248,13 @@ class PythonCompleter(Completer):
     priority = PRIO_VERY_GOOD
 
     def get_completions(self, base, buffer, offset):
-        mp = ModuleParser(self.document.filename)
-        buffer = buffer + ('\n' * 20)
 
         from rope.contrib.codeassist import code_assist, sorted_proposals
         from rope.base.exceptions import RopeError
-        
+
         try:
+            mp = ModuleParser(self.document.filename)
+            buffer = buffer + ('\n' * 20)
             co = code_assist(mp.project, buffer, offset, maxfixes=4)
         except RopeError:
             return []
@@ -202,22 +265,22 @@ class PythonCompleter(Completer):
                 r = Suggestion(c.name)
                 #'variable', 'class', 'function', 'imported' , 'paramter'
                 if keyword.iskeyword(c.name):
-                    r.type_ = KEYWORD
+                    r.type_ = LANG_COMPLETER_TYPES.KEYWORD
                 elif c.type == 'variable':
-                    r.type_ = VARIABLE
+                    r.type_ = LANG_COMPLETER_TYPES.VARIABLE
                 elif c.type == 'class':
-                    r.type_ = CLASS
+                    r.type_ = LANG_COMPLETER_TYPES.CLASS
                 elif c.type == 'builtin':
-                    r.type_ = BUILTIN
+                    r.type_ = LANG_COMPLETER_TYPES.BUILTIN
                 elif c.type == 'function':
-                    r.type_ = FUNCTION
+                    r.type_ = LANG_COMPLETER_TYPES.FUNCTION
                 elif c.type == 'parameter':
-                    r.type_ = PARAMETER
+                    r.type_ = LANG_COMPLETER_TYPES.PARAMETER
                 elif c.type == None:
                     if c.kind == "parameter_keyword":
-                        r.type_ = PARAMETER
+                        r.type_ = LANG_COMPLETER_TYPES.PARAMETER
                 else:
-                    r.type_ = UNKNOWN
+                    r.type_ = LANG_COMPLETER_TYPES.UNKNOWN
                 rv.append(r)
         return rv
 

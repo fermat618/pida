@@ -7,22 +7,25 @@
 List of general Language classes.
 
 """
+from .addtypes import Enumeration
 
-UNKNOWN, INFO, WARNING, ERROR = 0, 1, 2, 3
+# completer types
+LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
+    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 'PROPERTY',
+    'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
+    'KEYWORD', 'SNIPPET'))
 
-UNKNOWN = 0
-ATTRIBUTE = 1
-CLASS = 2
-METHOD = 3
-FUNCTION = 4
-MODULE = 5
-PROPERTY = 6
-EXTRAMETHOD = 7
-VARIABLE = 8
-IMPORT = 9
-PARAMETER = 10
-BUILTIN = 11
-KEYWORD = 12
+
+# main types
+LANG_VALIDATOR_TYPES = Enumeration('LANG_TYPES',
+    ('UNKNOWN', 'INFO', 'WARNING', 'ERROR'))
+
+# validation sub types
+LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
+    ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
+     'DUPLICATE', 'UNUSED'))
+
+
 
 class InitObject(object):
     def __init__(self, **kwargs):
@@ -34,13 +37,16 @@ class InitObject(object):
 class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
-    message_args = ()
-    type = UNKNOWN
+    type = LANG_VALIDATOR_TYPES.UNKNOWN
+    subtype = LANG_VALIDATOR_SUBTYPES.UNKNOWN
     filename = None
-    ineno = None
+    lineno = None
 
     def __str__(self):
-        return '%s:%s: %s' % (self.filename, self.lineno, self.message % self.message_args)
+        return '%s:%s: %s' % (self.filename, self.lineno, self.message)
+
+    def lookup_color(self, color):
+        return "#000000"
 
     @staticmethod
     def from_exception(exc):
@@ -48,6 +54,41 @@ class ValidationError(InitObject):
         # FIXME
         pass
 
+    def get_markup(self):
+        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
+            typec = self.lookup_color('pida-val-error')
+        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
+            typec = self.lookup_color('pida-val-info')
+        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
+            typec = self.lookup_color('pida-val-warning')
+        else:
+            typec = self.lookup_color('pida-val-def')
+        
+        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
+    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
+    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
+                      {'lineno':self.lineno, 
+                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
+                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
+                                    self.subtype).capitalize()),
+                      'message':self.message,
+                      'linecolor': self.lookup_color('pida-lineno').to_string(),
+                      'typec': typec.to_string(),
+                      })
+        return markup
+    markup = property(get_markup)
+    def get_markup(self):
+        #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
+        #message_string = self.message % tuple(args)
+        #msg.name = msg.__class__.__name__
+        markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
+                      (self.lineno, 
+                      LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
+                      LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
+                      self.message))
+        return markup
+    
+    markup = property(get_markup)
 
 class Definition(InitObject):
     """Returned by a Definer instance"""
@@ -71,7 +112,7 @@ class Suggestion(unicode):
     """
     Suggestions are returned by an Completer class
     """
-    type_ = UNKNOWN
+    type_ = LANG_COMPLETER_TYPES.UNKNOWN
     doc = None
     docpath = None
     signature = None

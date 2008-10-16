@@ -690,7 +690,7 @@ class PidaMooInput(object):
 
         if visible:
             self.completer.show_all()
-            self.completer_visible = True
+            #self.completer_visible = True
 
     def accept(self, widget, suggestion):
         self._delete_typed()
@@ -825,9 +825,9 @@ class PidaMooInput(object):
         # if we are in show_auto mode, the completion window
         # is delayed until we have the first visible item.
         if not self.completer_visible and self.show_auto:
+            print "len compl model", len(self.completer.model)
             if len(self.completer.model):
                 self.completer.show_all()
-                self.completer_visible = True
 
     def on_cursor_moved(self, widget, itr):
         buf = self.editor.get_buffer()

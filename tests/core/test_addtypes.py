@@ -1,0 +1,31 @@
+
+import os
+import os
+from pida.utils.addtypes import Enumeration
+#from pida.core.testing import test, assert_equal, assert_notequal
+
+from pida.utils.testing.mock import Mock
+
+from unittest import TestCase
+from tempfile import mktemp
+
+class EnumerationTest(TestCase):
+
+    def test_enum(self):
+        test = Enumeration('test', ('A', 'B', 'C'))
+        self.assertEqual(test.A, 0)
+        self.assertEqual(test.B, 1)
+        self.assertEqual(test.C, 2)
+    
+    def test_tupel(self):
+        test = Enumeration('test', (('A', 1), ('B', 0), ('C', 10)))
+        self.assertEqual(test.A, 1)
+        self.assertEqual(test.B, 0)
+        self.assertEqual(test.C, 10)
+
+    def test_change(self):
+        test = Enumeration('test', ('A', 'B', 'C'))
+        self.assertEqual(test.A, 0)
+        self.assertRaises(ValueError, setattr, test, 'A', 5)
+        self.assertRaises(ValueError, setattr, test, 'X', 9)
+

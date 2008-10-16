@@ -64,7 +64,8 @@ class ValidatorView(PidaView):
             task.start()
 
     def add_node(self, node):
-        self.errors_ol.append(self.decorate_pyflake_message(node))
+        node.lookup_color = self.errors_ol.style.lookup_color
+        self.errors_ol.append(node)
 
     def create_ui(self):
         self.errors_ol = ObjectList(
@@ -79,8 +80,8 @@ class ValidatorView(PidaView):
             self.errors_ol,
             [
                 ('lineno', _('Line Number')),
-                ('message_string', _('Message')),
-                ('name', _('Type')),
+                ('message', _('Message')),
+                ('type_', _('Type')),
             ],
             'lineno',
         )
@@ -89,14 +90,6 @@ class ValidatorView(PidaView):
 
     def clear_nodes(self):
         self.errors_ol.clear()
-
-    def decorate_pyflake_message(self, msg):
-        args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-        msg.message_string = msg.message % tuple(args)
-        msg.name = msg.__class__.__name__
-        msg.markup = ('<tt>%s </tt><i>%s</i>\n%s' % 
-                      (msg.lineno, msg.name, msg.message_string))
-        return msg
 
     def _on_errors_double_clicked(self, ol, item):
         self.svc.boss.editor.cmd('goto_line', line=item.lineno)

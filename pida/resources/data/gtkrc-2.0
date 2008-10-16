@@ -18,11 +18,15 @@ color["pida-fm-new"] = "blue"
 color["pida-fm-max"] = "#c0c000" 
 color["pida-fm-external"] = "#333333"
 
-# grepper
+# general colors
 color["pida-match"] = "#c00000"
-
-# bookmarks
 color["pida-lineno"] = "#000099"
+
+# validator colors
+color["pida-val-def"] = "#000000"
+color["pida-val-info"] = "#0E8903"
+color["pida-val-warning"] = "#630389"
+color["pida-val-error"] = "#CC1D06"
 #base[NORMAL] = "white"
 #text[NORMAL]="#000000"
 #bg[NORMAL] = "white"

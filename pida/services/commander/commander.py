@@ -76,9 +76,11 @@ class UnixSystem(System):
     
     @classmethod
     def get_absolute_path(cls, path, pid):
+        if os.path.isabs(path):
+            return path
         try:
             fp = open('/proc/%s/environ' %pid, 'r')
-        except OSError:
+        except IOError:
             return path
         cont = fp.read()
         lines = cont.split('\x00')

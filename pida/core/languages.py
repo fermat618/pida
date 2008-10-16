@@ -27,8 +27,8 @@ from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
-from pida.utils.languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE,
-    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT,
+from pida.utils.languages import (LANG_COMPLETER_TYPES,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
     Suggestion, Definition, ValidationError, Documentation)
 
 PRIO_PERFECT = 100

@@ -23,8 +23,7 @@
 import gtk
 import gobject
 import os
-from languages import (UNKNOWN, ATTRIBUTE, CLASS, METHOD, FUNCTION, 
-   MODULE, PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT, PARAMETER, BUILTIN, KEYWORD)
+from languages import LANG_COMPLETER_TYPES
 
 def _load_pix(fn):
     return gtk.gdk.pixbuf_new_from_file(
@@ -33,19 +32,19 @@ def _load_pix(fn):
 
 
 _PIXMAPS = {
-    UNKNOWN:     _load_pix('element-event-16.png'),
-    ATTRIBUTE:   _load_pix('source-attribute.png'),
-    CLASS:       _load_pix('source-class.png'),
-    FUNCTION:    _load_pix('source-attribute.png'), # FIXME
-    METHOD:      _load_pix('source-attribute.png'),
-    MODULE:      _load_pix('source-method.png'),
-    PROPERTY:    _load_pix('source-property.png'),
-    EXTRAMETHOD: _load_pix('source-extramethod.png'),
-    VARIABLE:    _load_pix('source-attribute.png'), # FIXME
-    IMPORT:      _load_pix('source-import.png'),
-    PARAMETER:   _load_pix('source-attribute.png'), # FIXME
-    BUILTIN:     _load_pix('source-attribute.png'), # FIXME
-    KEYWORD:     _load_pix('source-attribute.png'), # FIXME
+    LANG_COMPLETER_TYPES.UNKNOWN:     _load_pix('element-event-16.png'),
+    LANG_COMPLETER_TYPES.ATTRIBUTE:   _load_pix('source-attribute.png'),
+    LANG_COMPLETER_TYPES.CLASS:       _load_pix('source-class.png'),
+    LANG_COMPLETER_TYPES.FUNCTION:    _load_pix('source-attribute.png'), # FIXME
+    LANG_COMPLETER_TYPES.METHOD:      _load_pix('source-attribute.png'),
+    LANG_COMPLETER_TYPES.MODULE:      _load_pix('source-method.png'),
+    LANG_COMPLETER_TYPES.PROPERTY:    _load_pix('source-property.png'),
+    LANG_COMPLETER_TYPES.EXTRAMETHOD: _load_pix('source-extramethod.png'),
+    LANG_COMPLETER_TYPES.VARIABLE:    _load_pix('source-attribute.png'), # FIXME
+    LANG_COMPLETER_TYPES.IMPORT:      _load_pix('source-import.png'),
+    LANG_COMPLETER_TYPES.PARAMETER:   _load_pix('source-attribute.png'), # FIXME
+    LANG_COMPLETER_TYPES.BUILTIN:     _load_pix('source-attribute.png'), # FIXME
+    LANG_COMPLETER_TYPES.KEYWORD:     _load_pix('source-attribute.png'), # FIXME
 }
 
 
@@ -59,7 +58,7 @@ class SuggestionsList(gtk.ListStore):
         if _PIXMAPS.has_key(args[0]):
             rv[0] = _PIXMAPS[args[0]]
         else:
-            rv[0] = _PIXMAPS[UNKNOWN]
+            rv[0] = _PIXMAPS[LANG_COMPLETER_TYPES.UNKNOWN]
         return rv
 
 class PidaCompleterWindow(gtk.Window):
@@ -389,7 +388,7 @@ class PidaDocWindow(gtk.Window):
         self.build_ui()
 
     def on_keypress(self, event):
-        if event.type == gdk.KEY_PRESS and \
+        if event.type == gtk.gdk.KEY_PRESS and \
             event.keyval == gtk.keysyms.Escape:
                 self.destroy()
 

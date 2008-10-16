@@ -93,7 +93,7 @@ class FunctionOptions(TreeOptions):
         for dec in self.item.object.decorators:
             if hasattr(dec, 'id'):
                 decs.append('@' + dec.id)
-            elif hasattr(dec, 'func'):
+            elif hasattr(dec, 'func') and hasattr(dec.func, 'id'):
                 decs.append('@' + dec.func.id + '()')
         decs = ', '.join(decs)
         if decs:
