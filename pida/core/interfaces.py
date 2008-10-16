@@ -1,4 +1,4 @@
-
+#XXX: deprecated ?
 try:
     from protocols import Interface
 except ImportError:

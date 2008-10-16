@@ -6,7 +6,7 @@
 
     sets up the core logging
 
-    :copyright: 2007 Ronny Pfannschmidt
+    :copyright: 2007 the Pida Project
     :license: GPL2 or later
 """
 

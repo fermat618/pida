@@ -4,9 +4,7 @@
     ~~~~~~~~~~~~~~~~~~~~
 
     :license: GPL 2 or later
-    :copyright:
-        2007-2008 Ali Afshar
-        2008      Ronny Pfannschmidt
+    :copyright: 2007-2008 the Pida Project
 """
 import os, uuid
 

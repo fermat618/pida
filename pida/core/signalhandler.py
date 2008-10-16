@@ -1,4 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    Posix Signal Handlers
+    ~~~~~~~~~~~~~~~~~~~~~
 
+    This is a crude hack for propper exiting.
+
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
 
 import signal
 

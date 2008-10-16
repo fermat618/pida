@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*- 
-
-# Copyright (c) 2007 The PIDA Project
-
 """
     pida.services.languages
     ~~~~~~~~~~~~~~~~~~~~~
 
     Supplies support for languages
 
-
+    :copyright: 2005-2008 by The PIDA Project
     :license: GPL2 or later
 """
 

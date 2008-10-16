@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 """
-    :copyright: 2008 by Ronny Pfannschmidt
-    :license: GPL3 or later
+    :copyright: 2008 by the Pida Project
+    :license: GPL2 or later
 """
 
 import os

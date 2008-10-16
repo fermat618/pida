@@ -4,10 +4,7 @@
 
     Base classes for services/plugins.
 
-    :copyright:
-        * 2007-2008 Ali Afshar
-        * 2007-2008 Ronny Pfannschmidt
-
+    :copyright: 2005-2008 by The PIDA Project
     :license: GPL2 or later
 """
 
