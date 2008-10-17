@@ -1,17 +1,7 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """
-    Sessions Service
-    ~~~~~~~~~~~~~~~~
-
-    currently this saves the open files to a gconf list
-
-    .. todo::
-        * window/sudebar/paned positions
-
-    :license: GPL2 or later
-    :copyright:
-        * 2007 Ali Afshar
-        * 2008 Ronny Pfannschmidt
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
 
@@ -25,50 +15,6 @@ from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.locale import Locale
 locale = Locale('sessions')
 _ = locale.gettext
-
-#
-# class SessionsOptionsConfig(OptionsConfig):
-#
-#     def create_options(self):
-#         self.create_option(
-#             'open_session_manager',
-#             _('Always show session manager'),
-#             bool,
-#             True,
-#             _('Always open the session manager when no session name is given'),
-#         )
-#
-#         self.create_option(
-#             'load_last_files',
-#             _('Load last opened files on startup'),
-#             bool,
-#             True,
-#             _('Load last opened files on startup'),
-#             session=True
-#         )
-#
-#         self.create_option(
-#             'open_files',
-#             _('Open Files'),
-#             list,
-#             [],
-#             _('The list of open files'),
-#             safe=False,
-#             session=True
-#             )
-#
-#     gladefile = 'sessions-properties'
-#     label_text = _('Sessions Properties')
-#     icon_name = 'package_utilities'
-#
-# class SessionsEventsConfig(EventsConfig):
-#
-#     def subscribe_all_foreign(self):    
-#         self.subscribe_foreign('buffer', 'document-closed', self.svc.save_files)
-#         self.subscribe_foreign('buffer', 'document-changed', self.svc.save_files)
-#         self.subscribe_foreign('editor', 'started', self.svc.load_files)
-#         self.subscribe_foreign('editor', 'document-exception', self.svc.on_document_exception)
-#
 
 
 class TabStop(object):
