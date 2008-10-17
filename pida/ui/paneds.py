@@ -56,11 +56,13 @@ class PidaPaned(BigPaned):
         self.set_name('PidaBigPaned')
         self.init_config()
 
-    def get_all_pos(self):
+    def get_all_pos(self, every=False):
+        if every:
+            return [PANE_POS_TOP, PANE_POS_BOTTOM, PANE_POS_LEFT, PANE_POS_RIGHT]
         return [PANE_POS_TOP, PANE_POS_LEFT, PANE_POS_RIGHT]
 
-    def get_all_paneds(self):
-        for pos in self.get_all_pos():
+    def get_all_paneds(self, every=False):
+        for pos in self.get_all_pos(every):
             yield self.get_paned(pos)
 
     def add_view(self, name, view, removable=True, present=True):
@@ -74,6 +76,7 @@ class PidaPaned(BigPaned):
             else:
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
             view.pane = pane
+            pane.view = view
             if not removable:
                 pane.set_property('removable', False)
             pane.connect('remove', view.on_remove_attempt)
@@ -94,6 +97,12 @@ class PidaPaned(BigPaned):
     def present_view(self, view):
         pane, pos = self.find_pane(view.get_toplevel())
         pane.present()
+
+
+    def list_panes(self, every=False):
+        for paned in self.get_all_paneds(every):
+            for pane in paned.list_panes():
+                yield pane.view
 
     def get_open_pane(self, name):
         POS = POS_MAP[name]

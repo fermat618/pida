@@ -27,7 +27,9 @@
         
         <menu name="ViewMenu" action="ViewMenu">
         </menu>
-        
+
+        <placeholder name="AddMenu" />
+
         <menu name="HelpMenu" action="HelpMenu">
         </menu>
     

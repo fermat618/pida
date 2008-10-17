@@ -4,7 +4,6 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-from weakref import proxy
 import gtk
 
 from os import listdir, path
@@ -681,7 +680,7 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'show_filebrowser',
             TYPE_NORMAL,
-            _('Show file browser'),
+            _('Show _file browser'),
             _('Show the file browser view'),
             'file-manager',
             self.on_show_filebrowser,
