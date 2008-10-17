@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+    Environment
+    ~~~~~~~~~~~
+
+    This module provides some basic environment informations and
+    the kiwi resource libraries.
+
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
+
 import os
 import sys
 from optparse import OptionParser

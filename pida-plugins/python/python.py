@@ -21,36 +21,31 @@
 #SOFTWARE.
 
 # stdlib
-import sys, compiler, os.path
+import sys, compiler, os.path, keyword, re
 
 # gtk
 import gtk
-
-# kiwi
-from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
-from pida.core.features import FeaturesConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
-    PRIO_GOOD, Definer, Definition)
+    PRIO_GOOD, Definer, Documentator)
+
+from pida.utils.languages import (LANG_COMPLETER_TYPES,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
+   Definition, Suggestion, Documentation, ValidationError)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
 
-# ui
-from pida.ui.views import PidaView, PidaGladeView
-from pida.ui.objectlist import AttrSortCombo
-
 # utils
 from . import pyflakes
-from pida.utils.gthreads import AsyncTask, GeneratorTask
 
 # locale
 from pida.core.locale import Locale
@@ -115,10 +110,39 @@ class PythonOutliner(Outliner):
     priority = PRIO_VERY_GOOD
 
     def get_outline(self):
-        mp = ModuleParser(self.document.filename)
+        from rope.base.exceptions import RopeError
+        try:
+            mp = ModuleParser(self.document.filename)
+        except RopeError:
+            return
         for node, parent in mp.get_nodes():
             yield (node, parent)
 
+class PythonDocumentator(Documentator):
+
+    def get_documentation(self, buffer, offset):
+        mp = ModuleParser(self.document.filename)
+        buffer = buffer + ('\n' * 20)
+        
+        from rope.contrib.codeassist import PyDocExtractor
+        from rope.base.exceptions import RopeError
+        from rope.contrib import fixsyntax
+        try:
+            pymodule = fixsyntax.get_pymodule(mp.project.pycore, buffer,
+                                               None, 4)
+            pyname = fixsyntax.find_pyname_at(mp.project, buffer,
+                                               offset, pymodule, 4)
+        except RopeError:
+            return None
+        if pyname is None:
+            return None
+        pyobject = pyname.get_object()
+        rv = Documentation(
+            short=PyDocExtractor().get_calltip(pyobject, False, False),
+            long_=PyDocExtractor().get_doc(pyobject)
+            )
+        return rv
+        
 class PythonLanguage(LanguageInfo):
     varchars = [chr(x) for x in xrange(97, 122)] + \
                [chr(x) for x in xrange(65, 90)] + \
@@ -140,7 +164,39 @@ def _create_exception_validation(e):
     msg.lineno = lineno
     msg.message_args = (line,)
     msg.message = '<tt>%%s</tt>\n<tt>%s^</tt>' % (' ' * (offset - 2))
+    msg.type_ = LANG_VALIDATOR_TYPES.ERROR
+    if isinstance(e, SyntaxError):
+        msg.subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
+    else:
+        msg.subtype = LANG_VALIDATOR_SUBTYPES.INDENTATION
     return [msg]
+
+class PythonError(ValidationError):
+    def get_markup(self):
+        args = [('<b>%s</b>' % arg) for arg in self.message_args]
+        message_string = self.message % tuple(args)
+        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
+            typec = self.lookup_color('pida-val-error')
+        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
+            typec = self.lookup_color('pida-val-info')
+        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
+            typec = self.lookup_color('pida-val-warning')
+        else:
+            typec = self.lookup_color('pida-val-def')
+        
+        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
+    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
+    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
+                      {'lineno':self.lineno, 
+                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
+                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
+                                    self.subtype).capitalize()),
+                      'message':message_string,
+                      'linecolor': self.lookup_color('pida-lineno').to_string(),
+                      'typec': typec.to_string(),
+                      })
+        return markup
+    markup = property(get_markup)
 
 class PythonValidator(Validator):
 
@@ -157,7 +213,34 @@ class PythonValidator(Validator):
             w = pyflakes.Checker(tree, filename)
             messages = w.messages
         for m in messages:
-            yield m
+            type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
+            subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
+
+            if isinstance(m, pyflakes.messages.UnusedImport):
+                type_ = LANG_VALIDATOR_TYPES.INFO
+                subtype = LANG_VALIDATOR_SUBTYPES.UNUSED
+            elif isinstance(m, pyflakes.messages.RedefinedWhileUnused):
+                type_ = LANG_VALIDATOR_TYPES.WARNING
+                subtype = LANG_VALIDATOR_SUBTYPES.REDEFINED
+            elif isinstance(m, pyflakes.messages.ImportStarUsed):
+                type_ = LANG_VALIDATOR_TYPES.WARNING
+                subtype = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+            elif isinstance(m, pyflakes.messages.UndefinedName):
+                type_ = LANG_VALIDATOR_TYPES.ERROR
+                subtype = LANG_VALIDATOR_SUBTYPES.UNDEFINED
+            elif isinstance(m, pyflakes.messages.DuplicateArgument):
+                type_ = LANG_VALIDATOR_TYPES.ERROR
+                subtype = LANG_VALIDATOR_SUBTYPES.DUPLICATE
+
+            ve = PythonError(
+                message=m.message,
+                message_args=m.message_args,
+                lineno=m.lineno,
+                type_=type_,
+                subtype=subtype,
+                filename=filename
+                )
+            yield ve
 
 
 class PythonCompleter(Completer):
@@ -165,18 +248,41 @@ class PythonCompleter(Completer):
     priority = PRIO_VERY_GOOD
 
     def get_completions(self, base, buffer, offset):
-        mp = ModuleParser(self.document.filename)
-        buffer = buffer + ('\n' * 20)
 
         from rope.contrib.codeassist import code_assist, sorted_proposals
         from rope.base.exceptions import RopeError
-        
+
         try:
-            co = code_assist(mp.project, buffer, offset)
+            mp = ModuleParser(self.document.filename)
+            buffer = buffer + ('\n' * 20)
+            co = code_assist(mp.project, buffer, offset, maxfixes=4)
         except RopeError:
             return []
         so = sorted_proposals(co)
-        return [c.name for c in so if c.name.startswith(base)]
+        rv = []
+        for c in so:
+            if c.name.startswith(base):
+                r = Suggestion(c.name)
+                #'variable', 'class', 'function', 'imported' , 'paramter'
+                if keyword.iskeyword(c.name):
+                    r.type_ = LANG_COMPLETER_TYPES.KEYWORD
+                elif c.type == 'variable':
+                    r.type_ = LANG_COMPLETER_TYPES.VARIABLE
+                elif c.type == 'class':
+                    r.type_ = LANG_COMPLETER_TYPES.CLASS
+                elif c.type == 'builtin':
+                    r.type_ = LANG_COMPLETER_TYPES.BUILTIN
+                elif c.type == 'function':
+                    r.type_ = LANG_COMPLETER_TYPES.FUNCTION
+                elif c.type == 'parameter':
+                    r.type_ = LANG_COMPLETER_TYPES.PARAMETER
+                elif c.type == None:
+                    if c.kind == "parameter_keyword":
+                        r.type_ = LANG_COMPLETER_TYPES.PARAMETER
+                else:
+                    r.type_ = LANG_COMPLETER_TYPES.UNKNOWN
+                rv.append(r)
+        return rv
 
 
 class PythonDefiner(Definer):
@@ -208,6 +314,15 @@ class PythonDefiner(Definer):
         return rv
 
 
+RE_MATCHES = (
+    # traceback match
+    (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
+    # internal
+     re.compile(r'\s*File\s*\"(?P<file>[^"]+)\",\s*line\s*(?P<line>\d+).*'))
+    ,
+    #FIXME: how to handle localisation of this ???
+)
+
 class Python(LanguageService):
 
     language_name = 'Python'
@@ -216,6 +331,7 @@ class Python(LanguageService):
     validator_factory = PythonValidator
     completer_factory = PythonCompleter
     definer_factory = PythonDefiner
+    documentator_factory = PythonDocumentator
 
     features_config = PythonFeaturesConfig
     actions_config = PythonActionsConfig
@@ -226,6 +342,24 @@ class Python(LanguageService):
         self.execute_action = self.get_action('execute_python')
         self.execute_action.set_sensitive(False)
 
+    def start(self):
+        for match in RE_MATCHES:
+            self.boss.get_service('commander').register_matcher(
+                match[0], self.match_call)
+
+    def stop(self):
+        for match in RE_MATCHES:
+            self.boss.get_service('commander').unregister_matcher(
+                match[0], self.match_call)
+
+    def match_call(self, term, event, match):
+        for pattern in RE_MATCHES:
+            test = pattern[1].match(match)
+            if test:
+                self.boss.get_service('buffer').open_file(
+                    term.get_absolute_path(test.groups()[0]),
+                    line=int(test.groups()[1]))
+
     def execute_current_document(self):
         python_ex = self.opt('python_for_executing')
         self.boss.cmd('commander', 'execute',
@@ -235,7 +369,6 @@ class Python(LanguageService):
 
     def is_current_python(self):
         t = self.boss.cmd('language', 'get_current_filetype')
-        print t
         if t and (t.internal == self.language_name):
             return True
         return False

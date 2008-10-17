@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+    The moo Editor
+    ~~~~~~~~~~~~~~
 
-# Copyright (c) 2007 Alexander Gabriel
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+"""
 
 # Standard Libs
 import os
@@ -67,8 +55,9 @@ from pida.core.events import EventsConfig
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
-    SuggestionsList)
+    SuggestionsList, PidaDocWindow)
 from pida.utils.gthreads import GeneratorTask, gcall
+from pida.core.languages import Suggestion
 
 # locale
 from pida.core.locale import Locale
@@ -199,6 +188,7 @@ class MooeditEmbed(gtk.Notebook):
     def __init__(self, mooedit):
         gtk.Notebook.__init__(self)
         self.set_scrollable(True)
+        self.popup_enable()
         self._mooedit = mooedit
         self.show_all()
 
@@ -280,9 +270,10 @@ class MooeditView(gtk.ScrolledWindow):
             marker._moo_marker = lm
 
         if marker not in self.line_markers:
+            buf = self.editor.props.buffer
             self.line_markers.append(marker)
-            self.editor.props.buffer.add_line_mark(marker._moo_marker, 
-                int(marker.line)-1)
+            buf.add_line_mark(marker._moo_marker, 
+                min(max(0, int(marker.line)-1),buf.get_line_count()))
             marker._moo_marker.props.visible = True
         else:
             self.editor.props.buffer.move_line_mark(marker._moo_marker, 
@@ -300,7 +291,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_save_as',
             TYPE_NORMAL,
-            _('Save as'),
+            _('Save _as'),
             _('Save file as'),
             gtk.STOCK_SAVE_AS,
             self.on_save_as,
@@ -317,7 +308,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_find',
             TYPE_NORMAL,
-            _('Find in buffer'),
+            _('_Find in buffer'),
             _('Find'),
             gtk.STOCK_FIND,
             self.on_find,
@@ -326,7 +317,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_find_next',
             TYPE_NORMAL,
-            _('Find next in buffer'),
+            _('Find _next in buffer'),
             _(''),
             gtk.STOCK_GO_FORWARD,
             self.on_find_next,
@@ -344,7 +335,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_replace',
             TYPE_NORMAL,
-            _('Find and replace'),
+            _('Find and _replace'),
             _('Find & replace'),
             gtk.STOCK_FIND_AND_REPLACE,
             self.on_replace,
@@ -362,7 +353,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_find_word_prev',
             TYPE_NORMAL,
-            _('Find current word up'),
+            _('Find _current word up'),
             _(''),
             gtk.STOCK_GO_FORWARD,
             self.on_find_word_prev,
@@ -371,7 +362,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_goto',
             TYPE_NORMAL,
-            _('Goto line'),
+            _('_Goto line'),
             _('Goto line'),
             gtk.STOCK_GO_DOWN,
             self.on_goto,
@@ -380,13 +371,30 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.create_action(
             'mooedit_last_edit',
             TYPE_NORMAL,
-            _('Goto last edit place'),
+            _('Goto _last edit place'),
             _('Goto last edit place'),
             gtk.STOCK_JUMP_TO,
             self.on_last_edit,
             '<Control>q',
         )
-
+        self.create_action(
+            'mooedit_comment',
+            TYPE_NORMAL,
+            _('Comment'),
+            _('Comment current selection'),
+            '',
+            self.on_comment,
+            '',
+        )
+        self.create_action(
+            'mooedit_uncomment',
+            TYPE_NORMAL,
+            _('Uncomment'),
+            _('Uncomment current selection'),
+            '',
+            self.on_uncomment,
+            '',
+        )
         act = self.create_action(
             'mooedit_completer_close',
             TYPE_NORMAL,
@@ -485,6 +493,12 @@ class MooeditActionsConfig(EditorActionsConfig):
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
 
+    def on_comment(self, action):
+        self.svc._current.editor.emit('comment')
+
+    def on_uncomment(self, action):
+        self.svc._current.editor.emit('uncomment')
+
 class PidaMooInput(object):
     """
     Handles all customizations in the input event handling of the editor.
@@ -506,7 +520,7 @@ class PidaMooInput(object):
         self.completer.set_model(self.model)
         
         self.completer.hide_all()
-        self.completer_visible = False
+        #self.completer_visible = False
         self.completer_added = False
         self.completer_pos = 0
         self.completer_pos_user = 0
@@ -538,6 +552,16 @@ class PidaMooInput(object):
         for i in self.list_all:
             yield i
 
+    def get_completer_visible(self):
+        if self.completer_window and self.completer_window.window and \
+            self.completer_window.window.is_visible():
+                return True
+        return False
+    
+    def set_completer_visible(self, value):
+        pass
+    
+    completer_visible = property(get_completer_visible, set_completer_visible)
     
     def on_do_hide(self, *args, **kwargs):
         self.hide()
@@ -549,6 +573,8 @@ class PidaMooInput(object):
             self.show()
 
     def hide(self):
+        if not self.completer_visible:
+            return
         self.completer_window.hide()
         #self.completer.hide_all()
         self.completer_visible = False
@@ -652,7 +678,7 @@ class PidaMooInput(object):
 
         if visible:
             self.completer.show_all()
-            self.completer_visible = True
+            #self.completer_visible = True
 
     def accept(self, widget, suggestion):
         self._delete_typed()
@@ -780,13 +806,16 @@ class PidaMooInput(object):
 
     def add_str(self, line):
         #print "add line", line
-        self.completer.add_str(line)
+        if isinstance(line, Suggestion):
+            self.completer.add_str(line, type_=line.type_)
+        else:
+            self.completer.add_str(line)
         # if we are in show_auto mode, the completion window
         # is delayed until we have the first visible item.
         if not self.completer_visible and self.show_auto:
+            print "len compl model", len(self.completer.model)
             if len(self.completer.model):
                 self.completer.show_all()
-                self.completer_visible = True
 
     def on_cursor_moved(self, widget, itr):
         buf = self.editor.get_buffer()
@@ -822,6 +851,11 @@ class PidaMooInput(object):
                 self.toggle_popup()
                 return True
                            # enter tab
+            elif etest((gtk.keysyms.Return, 0)):
+                if self.completer_visible and \
+                    len(self._get_suggested()):
+                        self.accept(None, self._get_complete())
+                        return True
             elif etest(self.svc.key_accept):
                 if self.completer_visible:
                     print "accept"
@@ -830,8 +864,8 @@ class PidaMooInput(object):
                     return True
                     # key up, key down, ?, pgup, pgdown
             elif any((etest(self.svc.key_next), etest(self.svc.key_prev),
-                      etest((gtk.gdk.keyval_from_name('Page_Up'),0)),
-                      etest((gtk.gdk.keyval_from_name('Page_Down'),0)))):
+                      etest((gtk.keysyms.Page_Up,0)),
+                      etest((gtk.keysyms.Page_Down,0)))):
                 #(65362, 65364, 65293, 65366, 65365): 
                 if self.completer_visible:
                     self.completer.on_key_press_event(editor, event)
@@ -870,11 +904,13 @@ class PidaMooInput(object):
                     self._append_typed(event.string)
                     self.completer.filter = self._get_typed()
                 return True
-        else:
+        # we have to retest as the completer could just have been closed by
+        # a non word character but an attrib char should open it again
+        if not self.completer_visible:
+            info = self.svc.boss.get_service('language').get_info(self.document)
+            buf = self.editor.get_buffer()
+            it = buf.get_iter_at_offset(buf.props.cursor_position)
             if self.svc.opt('auto_attr'):
-                info = self.svc.boss.get_service('language').get_info(self.document)
-                buf = self.editor.get_buffer()
-                it = buf.get_iter_at_offset(buf.props.cursor_position)
                 # we have to build a small buffer, because the character 
                 # typed is not in the buffer yet
                 for x in info.attributerefs + info.open_backets:
@@ -884,6 +920,13 @@ class PidaMooInput(object):
                     if rv and x[-1] == event.string:
                         gcall(self.show, visible=False, show_auto=True)
                         break
+            if self.show_auto:
+                # the completer should be shown, but the user typed a non word
+                # character so break up
+                if len(event.string) and event.string not in info.word:
+                    self.show_auto = False
+
+            
             #if self.svc.opt('auto_char'):
             #    info = self.svc.boss.get_service('language').get_info(self.document)
             #    buf = self.editor.get_buffer()
@@ -932,6 +975,7 @@ class Mooedit(EditorService):
     def pre_start(self):
         # mooedit is able to open empty documents
         self._last_modified = None
+        self._docwin = None
         self.features.publish('new_file')
         
         try:
@@ -949,6 +993,8 @@ class Mooedit(EditorService):
             self._embed.connect("drag_drop", self._drag_drop_cb)
             self._embed.connect("drag_motion", self._drag_motion_cb)
             self._embed.connect ("drag_data_received", self._drag_data_recv)
+            self._embed.connect('focus-out-event', self.do_doc_destroy)
+            self.boss.window.connect('focus-out-event', self.do_doc_destroy)
             self._embed.drag_dest_set(0, [
                                     ("GTK_NOTEBOOK_TAB", gtk.TARGET_SAME_APP, 1),
                                     ("text/uri-list", 0, 2)],
@@ -1371,6 +1417,47 @@ class Mooedit(EditorService):
         if scroll:
             itr = buf.get_iter_at_offset(position)
             self._current.editor.scroll_to_iter(itr, 0.05, use_align=True)
+
+    def do_doc_destroy(self, *args):
+        if self._docwin:
+            self._docwin.destroy()
+            self._docwin = None
+
+    def on_doc_destroy(self, *args):
+        self._current.editor.props.buffer.disconnect(self._editor_mi)
+
+
+    def show_documentation(self):
+        buf = self._current.editor.props.buffer
+        rec = self._current.editor.get_iter_location(
+                buf.get_iter_at_offset(
+                    buf.props.cursor_position))
+        pos = self._current.editor.buffer_to_window_coords(
+            gtk.TEXT_WINDOW_WIDGET,
+            rec.x, rec.y)
+        abspos = self._current.editor.window.get_origin()
+        rpos = (pos[0]+abspos[0], pos[1]+abspos[1])
+        dm = self.boss.get_service('language').get_documentator(
+            self._current.document)
+        if not dm:
+            return
+        docu = dm.get_documentation(buf.props.text,
+            buf.props.cursor_position)
+        #print docus
+        if self._docwin:
+            self._docwin.destroy()
+        if not docu:
+            self.boss.get_service('notify').notify(
+                data=_('No documentation found'), timeout=2000)
+            return
+        pd = PidaDocWindow(documentation=docu)
+        pd.connect("destroy-event", self.on_doc_destroy)
+        self._current.editor.props.buffer.connect(
+            'cursor-moved', self.do_doc_destroy)
+        pd.move(rpos[0], rpos[1] + rec.height)
+        self._docwin = pd
+        pd.present()
+
 
 # Required Service attribute for service loading
 Service = Mooedit

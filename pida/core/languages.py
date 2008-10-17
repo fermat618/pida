@@ -1,36 +1,18 @@
 # -*- coding: utf-8 -*- 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, 
-# Boston, MA 02111-1307, USA.
 """
 Language Support Superclasses
 
-:license: GPL3 or later
-:copyright:
-    * 2008 Daniel Poelzleithner
-    * 2006 Frederic Back (fredericback@gmail.com)
+:license: GPL2 or later
+:copyright: 2008 the Pida Project
 """
-
 from functools import partial
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
-from pida.utils.const import UNKNOWN, ATTRIBUTE, CLASS, METHOD, MODULE, \
-    PROPERTY, EXTRAMETHOD, VARIABLE, IMPORT
-
+from pida.utils.languages import (LANG_COMPLETER_TYPES,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
+    Suggestion, Definition, ValidationError, Documentation)
 
 PRIO_PERFECT = 100
 PRIO_VERY_GOOD = 50
@@ -70,53 +52,11 @@ class Outliner(BaseDocumentHandler):
     def get_outline(self):
         raise NotImplementedError('Outliner must define get_outline')
 
-UNKNOWN, INFO, WARNING, ERROR = 0, 1, 2, 3
-
-class ValidationError(object):
-    """Message a Validator should return"""
-    message = ''
-    message_args = ()
-    type = UNKNOWN
-    filename = None
-    ineno = None
-
-    def __init__(self, filename, lineno):
-        self.filename = filename
-        self.lineno = lineno
-
-    def __str__(self):
-        return '%s:%s: %s' % (self.filename, self.lineno, self.message % self.message_args)
-
-    @staticmethod
-    def from_exception(exc):
-        """Returns a new Message from a python exception"""
-        # FIXME
-        pass
-
 
 class Validator(BaseDocumentHandler):
 
     def get_validations(self):
         raise NotImplementedError('Validator must define get_validations')
-
-class Definition(object):
-    """Returned by a Definer instance"""
-    def __init__(self, file_name=None, offset=None, length=None, line=None,
-                 signature=None, doc=None):
-        self.file_name = file_name
-        self.offset = offset
-        self.length = length
-        self.line = line
-        self.signature = signature
-        self.doc = doc
-        
-    def __repr__(self):
-        where = ""
-        if self.offset is not None:
-            where = " offset %s " %self.offset
-        elif self.line is not None:
-            where = " line %s " %self.line
-        return '<Definition %s%s>' %(self.file_name, where)
 
 class Definer(BaseDocumentHandler):
     """
@@ -128,10 +68,24 @@ class Definer(BaseDocumentHandler):
         Returns the Definition class pointing to document defining the word
         searched for. The Definier has to find out which word the offset is on.
 
+        @buffer - the text to search in
         @offset - nth char in the document point is on
         """
         raise NotImplementedError('Validator must define get_definition')
 
+class Documentator(BaseDocumentHandler):
+    """
+    Documentation receiver returns a Documentation object
+    """
+
+    def get_documentation(self, buffer, offset):
+        """
+        Returns the Documentation object for a offset of an file.
+
+        @buffer - the text to search in
+        @offset - nth char in the document point is on
+        """
+        raise NotImplementedError('Validator must define get_definition')
 
 class LanguageInfo(object):
     """
@@ -169,14 +123,6 @@ class LanguageInfo(object):
                 'attributerefs': self.attributerefs,
                }
 
-class Suggestion(unicode):
-    """
-    Suggestions are returned by an Completer class
-    """
-    doc = ""
-    docpath = ""
-    signature = ""
-
 class Completer(BaseDocumentHandler):
 
     def get_completions(self, base, buffer, offset):
@@ -212,6 +158,10 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
             completer = partial(self.svc.completer_factory,self.svc)
             self.subscribe_foreign('language',
                 (self.svc.language_name, 'completer'), completer)
+        if self.svc.documentator_factory is not None:
+            documentator = partial(self.svc.documentator_factory,self.svc)
+            self.subscribe_foreign('language',
+                (self.svc.language_name, 'documentator'), documentator)
 
 
 
@@ -226,6 +176,7 @@ class LanguageService(Service):
     definer_factory = None
     outliner_factory = None
     validator_factory = None
+    documentator_factory = None
 
     features_config = LanguageServiceFeaturesConfig
 

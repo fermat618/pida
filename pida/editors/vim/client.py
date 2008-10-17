@@ -1,7 +1,11 @@
-
-
+# -*- coding: utf-8 -*-
 """
-New vim client.
+    New vim client
+    ~~~~~~~~~~~~~~
+
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+
 """
 import os, time
 

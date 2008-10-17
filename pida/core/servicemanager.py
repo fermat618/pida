@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    Service Loader
+    ~~~~~~~~~~~~~~
+
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
+
 import os
 import sys
 
@@ -24,6 +33,7 @@ class ServiceDependencyError(ServiceLoadingError):
 
 
 class ServiceLoader(object):
+    """Manages loading plugin packages from within a given package"""
 
     def __init__(self, package, test_file='service.pida'):
         self._test_file = test_file
@@ -101,9 +111,9 @@ class ServiceManager(object):
     def __init__(self, boss):
         from pida import plugins, services, editors
         self._boss = boss
-        self._services = ServiceLoader(services)
+        self._services = ServiceLoader(services, '__init__.py')
         self._plugins = ServiceLoader(plugins)
-        self._editors = ServiceLoader(editors)
+        self._editors = ServiceLoader(editors, '__init__.py')
         self._reg = {}
 
     def get_service(self, name):

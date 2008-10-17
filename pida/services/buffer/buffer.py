@@ -1,25 +1,8 @@
-# -*- coding: utf-8 -*- 
-
-# Copyright (c) 2007 The PIDA Project
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
+# -*- coding: utf-8 -*-
+"""
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
 import os
 from tempfile import mkstemp
 
@@ -147,7 +130,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'open_file',
             TYPE_NORMAL,
-            _('Open File'),
+            _('_Open File'),
             _('Open a file with a graphical file browser'),
             gtk.STOCK_OPEN,
             self.on_open_file,
@@ -166,7 +149,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'new_file',
             TYPE_NORMAL,
-            _('New File'),
+            _('_New File'),
             _('Create a new file'),
             gtk.STOCK_NEW,
             self.on_new_file,
@@ -176,7 +159,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'create_file',
             TYPE_NORMAL,
-            _('Create File'),
+            _('Cr_eate File'),
             _('Create a new file'),
             gtk.STOCK_ADD,
             self.on_add_file,
@@ -186,7 +169,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'close',
             TYPE_NORMAL,
-            _('Close Document'),
+            _('_Close Document'),
             _('Close the current document'),
             gtk.STOCK_CLOSE,
             self.on_close,
@@ -196,7 +179,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'switch_next_buffer',
             TYPE_NORMAL,
-            _('Next Buffer'),
+            _('_Next Buffer'),
             _('Switch to the next buffer'),
             gtk.STOCK_GO_DOWN,
             self.on_next_buffer,
@@ -206,7 +189,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'switch_prev_buffer',
             TYPE_NORMAL,
-            _('Previous Buffer'),
+            _('_Previous Buffer'),
             _('Switch to the previous buffer'),
             gtk.STOCK_GO_UP,
             self.on_prev_buffer,
@@ -215,7 +198,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'show_buffer_list',
             TYPE_NORMAL,
-            _('Show buffer browser'),
+            _('Show _buffer browser'),
             _('Displays the buffer window'),
             '',
             self.on_show_buffer,

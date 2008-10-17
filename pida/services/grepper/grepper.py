@@ -1,24 +1,8 @@
-# -*- coding: utf-8 -*- 
-
-# Copyright (c) 2007 The PIDA Project
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+# -*- coding: utf-8 -*-
+"""
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
 
 import os, re, cgi
 import gtk, gobject
@@ -58,7 +42,11 @@ class GrepperItem(object):
         self.line = self._format_line()
 
     def _markup_match(self, text):
-        color = manager.style.lookup_color('pida-match')
+        if len(self._manager._views):
+            color = self._manager._views[0].matches_list.\
+                        style.lookup_color('pida-match')
+        else:
+            color = None
         if color:
             color = color.to_string()
         if not color:
@@ -99,7 +87,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'show_grepper',
             TYPE_NORMAL,
-            _('Find in files'),
+            _('Find _in files'),
             _('Show the grepper view'),
             gtk.STOCK_FIND,
             self.on_show_grepper,
@@ -109,7 +97,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word',
             TYPE_NORMAL,
-            _('Find word in project'),
+            _('Find word in _project'),
             _('Find the current word in the current project'),
             gtk.STOCK_FIND,
             self.on_grep_current_word,
@@ -119,7 +107,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word_file',
             TYPE_NORMAL,
-            _('Find word in document directory'),
+            _('Find word in document _directory'),
             _('Find the current word in current document directory'),
             gtk.STOCK_FIND,
             self.on_grep_current_word_file,

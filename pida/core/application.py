@@ -3,12 +3,9 @@
     pida.core.application
     ~~~~~~~~~~~~~~~~~~~~~
 
-    this module handle starting up pida
+    This module handles starting up Pida..
 
-    :copyright: 
-        * 2007      Ali Afshar
-        * 2007-2008 Ronny Pfannschmidt
-
+    :copyright: 2007-2008 the Pida Project
     :license: GPL2 or later
 """
 # system import(s)
@@ -168,7 +165,7 @@ def main():
                     if file_names:
                         pr.call('buffer', 'open_files', file_names)
 
-                    pr.call('boss', 'focus_window')
+                    pr.call('rpc', 'focus_window')
 
                     sw.user_action = "quit"
                     sys.exit(0)

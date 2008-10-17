@@ -1,29 +1,14 @@
-# -*- coding: utf-8 -*- 
-
-# Copyright (c) 2007 The PIDA Project
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
+# -*- coding: utf-8 -*-
+"""
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
+import os
 
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 # PIDA Imports
 from pida.core.service import Service
+from pida.core.environment import session_name
 
 from pida.core.locale import Locale
 locale = Locale('plugins')
@@ -50,11 +35,11 @@ class RpcDbus(DbusConfig):
 
     @EXPORT()
     def focus_window(self):
-        self.svc.window.present()
+        self.svc.boss.window.present()
 
     @EXPORT(in_signature="b")
     def kill(self, force=False):
-        self.svc.stop(force)
+        self.svc.boss.stop(force)
 
     def on_ping_session(self, session):
         if session == session_name():
@@ -68,8 +53,8 @@ class RpcDbus(DbusConfig):
             BUS.get_unique_name(),
             os.getpid(),
             session_name(),
-            self.svc.get_service('project').get_project_name() or '',
-            len(self.svc.get_service('buffer').get_documents())
+            self.svc.boss.get_service('project').get_project_name() or '',
+            len(self.svc.boss.get_service('buffer').get_documents())
             )
 
     @SIGNAL(signature="s")

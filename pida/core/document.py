@@ -4,11 +4,9 @@
     pida.core.document
     ~~~~~~~~~~~~~~~~~~
 
-    :license: GPL3 or later
-    :copyright:
-        * 2005 Ali Afshar
-        * 2008 Ronny Pfannschmidt
-        * 2008 Daniel Poelzleithner
+    :license: GPL2 or later
+    :copyright: 2005-2008 by The PIDA Project
+
 """
 import os
 import mimetypes

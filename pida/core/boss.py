@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     pida.core.boss
     ~~~~~~~~~~~~~~
@@ -6,9 +7,7 @@
     it manages glueing together the rest
 
     :license: GPL2 or later
-    :copyright:
-        * 2007-2008 Ali Afshar
-        * 2007-2008 Ronny Pfannschmidt
+    :copyright: 2005-2008 by The PIDA Project
 """
 
 import os

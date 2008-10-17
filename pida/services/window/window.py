@@ -1,24 +1,8 @@
-# -*- coding: utf-8 -*- 
-
-# Copyright (c) 2007 The PIDA Project
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+# -*- coding: utf-8 -*-
+"""
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
 
 import gtk
 import string
@@ -29,7 +13,7 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, Color
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_MENUTOOL
 from pida.core.document import Document
 from pida.core.environment import session_name
 
@@ -73,7 +57,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'show_menubar',
             TYPE_TOGGLE,
-            _('Show Menubar'),
+            _('Show _Menubar'),
             _('Toggle the visible state of the menubar'),
             'face-glasses',
             self.on_show_ui,
@@ -83,7 +67,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'fullscreen',
             TYPE_TOGGLE,
-            _('Fullscreen'),
+            _('F_ullscreen'),
             _('Toggle the fullscreen mode'),
             gtk.STOCK_FULLSCREEN,
             self.on_fullscreen,
@@ -93,7 +77,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'switch_next_term',
             TYPE_NORMAL,
-            _('Next terminal'),
+            _('Next _terminal'),
             _('Switch to the next terminal'),
             gtk.STOCK_GO_FORWARD,
             self.on_switch_next_term,
@@ -103,7 +87,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'switch_prev_term',
             TYPE_NORMAL,
-            _('Previous terminal'),
+            _('Previous te_rminal'),
             _('Switch to the previous terminal'),
             gtk.STOCK_GO_BACK,
             self.on_switch_prev_term,
@@ -113,12 +97,24 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'focus_terminal',
             TYPE_NORMAL,
-            _('Focus terminal'),
+            _('F_ocus terminal'),
             _('Focus terminal pane terminal'),
             'terminal',
             self.on_focus_terminal,
             '<Shift><Control>i',
         )
+
+        self.create_action(
+            'WindowMenu',
+            TYPE_MENUTOOL,
+            _('_Windows'),
+            _('Show window list'),
+            'package_utilities',
+            self.on_windows,
+        )
+
+    def on_windows(self, action):
+        self.svc.create_window_list()
 
     def on_focus_terminal(self, action):
         self.svc.window.present_paned('Terminal')
@@ -236,6 +232,9 @@ class Window(Service):
             self.cmd('add_view', paned='Buffer', view=view, removable=False, present=False)
         self._fix_visibilities()
         self.update_colors()
+        self._window_list_id = self.boss.window.create_merge_id()
+        self._action_group = gtk.ActionGroup('window_list')
+        self.boss.window._uim._uim.insert_action_group(self._action_group, -1)
         
     def update_colors(self):
         # set the colors of Document
@@ -289,6 +288,60 @@ class Window(Service):
 
     def get_fullscreen(self, var):
         return self.window.get_fullscreen()
+
+    def _on_window_action(self, action, view):
+        self.boss.window.present_view(view)
+
+    def _on_doc_action(self, action, doc):
+        self.boss.get_service('buffer').view_document(doc)
+
+    def create_window_list(self):
+        # update the window menu list
+        # clean up the old list
+        self.boss.window.remove_uidef(self._window_list_id)
+        for action in self._action_group.list_actions():
+            self._action_group.remove_action(action)
+
+        i = 0
+        # add panels to list. they are sorted after the paned positions and
+        # therefor good
+        for pane in self.boss.window.paned.list_panes(every=True):
+            action_name = "show_window_%s" %i
+            act = gtk.Action(action_name,
+                "_%s" %pane.view.label_text,
+                '',
+                '')
+            act.connect('activate', self._on_window_action, pane.view)
+            self._action_group.add_action(act)
+            self.boss.window._uim._uim.add_ui(
+                self._window_list_id,
+                "ui/menubar/AddMenu/WindowMenu/window_list", 
+                "_%s" %pane.view.label_text, 
+                action_name, 
+                gtk.UI_MANAGER_MENUITEM, 
+                False)            #mi = act.create_menu_item()
+            i += 1
+        # add documents to list
+        docs = list(self.boss.get_service('buffer').get_documents().itervalues())
+        # we sort the docs list alphabeticly as its easier for the eye to navigate
+        docs.sort(lambda x,y: cmp(unicode(x).lower(), unicode(y).lower()))
+        for doc in docs:
+            action_name = "show_window_%s" %i
+            act = gtk.Action(action_name,
+                unicode(doc),
+                '',
+                '')
+            act.connect('activate', self._on_doc_action, doc)
+            self._action_group.add_action(act)
+            self.boss.window._uim._uim.add_ui(
+                self._window_list_id,
+                "ui/menubar/AddMenu/WindowMenu/buffer_list", 
+                unicode(doc), 
+                action_name, 
+                gtk.UI_MANAGER_MENUITEM, 
+                False)
+            i += 1
+        return None
 
 # Required Service attribute for service loading
 Service = Window

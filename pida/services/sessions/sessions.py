@@ -9,9 +9,7 @@
         * window/sudebar/paned positions
 
     :license: GPL2 or later
-    :copyright:
-        * 2007 Ali Afshar
-        * 2008 Ronny Pfannschmidt
+    :copyright: 2005-2008 by The PIDA Project
 """
 
 import gobject
