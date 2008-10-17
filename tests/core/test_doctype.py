@@ -1,7 +1,7 @@
 
 import os
 import os
-from pida.core.doctype import Manager, DocType
+from pida.core.doctype import DocType
 #from pida.core.testing import test, assert_equal, assert_notequal
 
 from pida.utils.testing.mock import Mock

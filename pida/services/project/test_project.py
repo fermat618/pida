@@ -4,7 +4,7 @@
     :license: GPL2 or later
 """
 
-import os
+import os, os.path
 from pida.core.projects import Project
 from .project import ProjectService
 from pida.utils.testing.mock import Mock
@@ -26,7 +26,11 @@ def test_loaded_event():
     project_service.events.subscribe('loaded', 
             lambda project:caught.append(project)
             )
-    got = project_service._load_project('.') #XXX: hack
+    # 
+    # HACK: we assum the pida dev path, so we have a project to load :)
+    DEVPATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 
+                                os.path.pardir, os.path.pardir, os.path.pardir)) 
+    got = project_service._load_project(DEVPATH) #XXX: hack
     assert got is caught[0]
 
 
