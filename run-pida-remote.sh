@@ -1,1 +1,2 @@
-PYTHONPATH='.' python bin/pida-remote $@
+export PYTHONPATH=`pwd`:`pwd`/externals:$PYTHONPATH 
+python bin/pida-remote $@
