@@ -119,7 +119,7 @@ class OptionsConfig(BaseConfig):
     name='%s.json'
 
     def create(self):
-        self.name = self.name%self.svc.get_name()
+        self.name = self.__class__.name%self.svc.get_name()
         self.workspace_path = get_settings_path('workspaces', manager.session, self.name)
         self.global_path = get_settings_path(self.name)
         self._options = {}
