@@ -23,7 +23,6 @@
 import gtk
 import os
 import cgi
-import cPickle
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -41,6 +40,8 @@ from pida.core.editors import LineMarker, MarkerInterface
 from pida.ui.views import PidaView
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+
+import simplejson
 
 # locale
 from pida.core.locale import Locale
@@ -85,8 +86,12 @@ class BookmarkItemFile(BookmarkItem, LineMarker):
                     to_string()
         except:
             color = "black"
+        try:
+            line = int(self.line)
+        except ValueError:
+            line = 1
         return '%s:<span color="%s">%d</span>' % (
-                cgi.escape(os.path.basename(self.data)), color, int(self.line))
+                cgi.escape(os.path.basename(self.data)), color, line)
 
     def _set_title(self, value): pass
 
@@ -481,7 +486,13 @@ class Bookmark(Service, MarkerInterface):
             if not data.has_key(t.group):
                 data[t.group] = []
             if t.group == 'file':
-                data[t.group].append('%s:%d' % (t.data, int(t.line)))
+                path = self._project.get_relative_path_for(t.data)
+                if path:
+                    path = os.path.sep.join(path)
+                else:
+                    path = t.data
+                data[t.group].append((path, 
+                    int(t.line)))
             else:
                 data[t.group].append(t.data)
         return data
@@ -493,8 +504,8 @@ class Bookmark(Service, MarkerInterface):
             items = data[key]
             for item in items:
                 if key == 'file':
-                    t = item.rsplit(':')
-                    self.bookmark_file(filename=t[0], line=t[1])
+                    path = os.path.join(self._project.source_directory,  item[0])
+                    self.bookmark_file(filename=path, line=item[1])
                 elif key == 'path':
                     self.bookmark_dir(path=item)
 
@@ -506,11 +517,11 @@ class Bookmark(Service, MarkerInterface):
             return
         self._project = pro
         datadir = pro.get_meta_dir('bookmark')
-        datafile = os.path.join(datadir, 'bookmark.pickle')
+        datafile = os.path.join(datadir, 'bookmark.json')
         if os.path.isfile(datafile):
             try:
                 fp = open(datafile, "r")
-                data = cPickle.load(fp)
+                data = simplejson.load(fp)
                 self._unserialize(data)
             except Exception, e:
                 self.log.exception(e)
@@ -526,10 +537,10 @@ class Bookmark(Service, MarkerInterface):
             return
         else:
             datadir = pro.get_meta_dir('bookmark')
-            datafile = os.path.join(datadir, 'bookmark.pickle')
+            datafile = os.path.join(datadir, 'bookmark.json')
         try:
             fp = open(datafile, "w")
-            cPickle.dump(data, fp)
+            simplejson.dump(data, fp, indent=1)
         except Exception, e:
             self.log.exception(e)
             
