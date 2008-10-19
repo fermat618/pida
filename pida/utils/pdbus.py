@@ -162,4 +162,3 @@ class PidaRemote(object):
                                  reply_handler,
                                  error_handler,
                                  **kwargs)
-

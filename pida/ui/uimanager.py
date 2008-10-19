@@ -10,15 +10,15 @@ _ = locale.gettext
 
 
 base_menu_actions = [
-    ('FileMenu', None, _('File'), '<Alt>f', _('File Menu'), None),
-    ('EditMenu', None, _('Edit'), '<Alt>e', _('Edit Menu'), None),
-    ('ProjectMenu', None, _('Project'), '<Alt>p', _('Project Menu'), None),
-    ('LanguageMenu', None, _('Language'), '<Alt>l', _('Language Menu'), None),
-    ('DebugMenu', None, _('Debug'), '<Alt>l', _('Debug Menu'), None),
-    ('ToolsMenu', None, _('Tools'), '<Alt>t', _('Tools Menu'), None),
+    ('FileMenu', None, _('_File'), '<Alt>f', _('File Menu'), None),
+    ('EditMenu', None, _('_Edit'), '<Alt>e', _('Edit Menu'), None),
+    ('ProjectMenu', None, _('_Project'), '<Alt>p', _('Project Menu'), None),
+    ('LanguageMenu', None, _('_Language'), '<Alt>l', _('Language Menu'), None),
+    ('DebugMenu', None, _('_Debug'), '<Alt>d', _('Debug Menu'), None),
+    ('ToolsMenu', None, _('_Tools'), '<Alt>t', _('Tools Menu'), None),
     ('ToolsDebug', None, _('Debug Pida'), '', _('Debug Pida Menu'), None),
-    ('ViewMenu', None, _('View'), '<Alt>v', _('View Menu'), None),
-    ('HelpMenu', None, _('Help'), '<Alt>h', _('Help Menu'), None),
+    ('ViewMenu', None, _('_View'), '<Alt>v', _('View Menu'), None),
+    ('HelpMenu', None, _('_Help'), '<Alt>h', _('Help Menu'), None),
 ]
 
 

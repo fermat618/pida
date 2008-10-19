@@ -42,7 +42,11 @@ class GrepperItem(object):
         self.line = self._format_line()
 
     def _markup_match(self, text):
-        color = manager.style.lookup_color('pida-match')
+        if len(self._manager._views):
+            color = self._manager._views[0].matches_list.\
+                        style.lookup_color('pida-match')
+        else:
+            color = None
         if color:
             color = color.to_string()
         if not color:
@@ -83,7 +87,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'show_grepper',
             TYPE_NORMAL,
-            _('Find in files'),
+            _('Find _in files'),
             _('Show the grepper view'),
             gtk.STOCK_FIND,
             self.on_show_grepper,
@@ -93,7 +97,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word',
             TYPE_NORMAL,
-            _('Find word in project'),
+            _('Find word in _project'),
             _('Find the current word in the current project'),
             gtk.STOCK_FIND,
             self.on_grep_current_word,
@@ -103,7 +107,7 @@ class GrepperActionsConfig(ActionsConfig):
         self.create_action(
             'grep_current_word_file',
             TYPE_NORMAL,
-            _('Find word in document directory'),
+            _('Find word in document _directory'),
             _('Find the current word in current document directory'),
             gtk.STOCK_FIND,
             self.on_grep_current_word_file,

@@ -34,7 +34,17 @@
             </placeholder>
         </menu>
         
-        <menu name="HelpMenu" action="HelpMenu">
+        <placeholder name="AddMenu">
+            <menu action="WindowMenu" name="WindowMenu">
+                <menuitem action="focus_editor" name="focus_editor" />
+                <separator />
+                <placeholder name="window_list" />
+                <separator />
+                <placeholder name="buffer_list" />
+            </menu>
+        </placeholder>
+                
+        <menu name="HelpMenu" action="HelpMenu" position="bot">
         </menu>
     
     </menubar>

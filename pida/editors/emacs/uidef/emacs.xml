@@ -17,8 +17,6 @@
             </placeholder>
             <separator />
             <placeholder name="find" />
-            <separator />
-            <placeholder name="prefs" />
         </menu>
         
         <menu name="ProjectMenu" action="ProjectMenu">
@@ -38,6 +36,8 @@
             <menuitem action="focus_editor" name="focus_editor" />
             <separator />
             </placeholder>
+            <separator />
+            <placeholder name="prefs" />
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

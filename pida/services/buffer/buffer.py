@@ -130,7 +130,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'open_file',
             TYPE_NORMAL,
-            _('Open File'),
+            _('_Open File'),
             _('Open a file with a graphical file browser'),
             gtk.STOCK_OPEN,
             self.on_open_file,
@@ -149,7 +149,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'new_file',
             TYPE_NORMAL,
-            _('New File'),
+            _('_New File'),
             _('Create a new file'),
             gtk.STOCK_NEW,
             self.on_new_file,
@@ -159,7 +159,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'create_file',
             TYPE_NORMAL,
-            _('Create File'),
+            _('Cr_eate File'),
             _('Create a new file'),
             gtk.STOCK_ADD,
             self.on_add_file,
@@ -169,7 +169,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'close',
             TYPE_NORMAL,
-            _('Close Document'),
+            _('_Close Document'),
             _('Close the current document'),
             gtk.STOCK_CLOSE,
             self.on_close,
@@ -179,7 +179,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'switch_next_buffer',
             TYPE_NORMAL,
-            _('Next Buffer'),
+            _('_Next Buffer'),
             _('Switch to the next buffer'),
             gtk.STOCK_GO_DOWN,
             self.on_next_buffer,
@@ -189,7 +189,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'switch_prev_buffer',
             TYPE_NORMAL,
-            _('Previous Buffer'),
+            _('_Previous Buffer'),
             _('Switch to the previous buffer'),
             gtk.STOCK_GO_UP,
             self.on_prev_buffer,
@@ -198,7 +198,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'show_buffer_list',
             TYPE_NORMAL,
-            _('Show buffer browser'),
+            _('Show _buffer browser'),
             _('Displays the buffer window'),
             '',
             self.on_show_buffer,

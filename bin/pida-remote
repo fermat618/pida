@@ -49,7 +49,7 @@ def call_open(pid):
     if file_names:
         pr.call('buffer', 'open_files', file_names)
 
-    pr.call('boss', 'focus_window')
+    pr.call('rpc', 'focus_window')
 
     sys.exit(0)
 
