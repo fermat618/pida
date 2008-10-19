@@ -4,9 +4,9 @@ color["pida-project-path"] = "#FFFF00"
 
 # Filemanager color settings
 color["pida-fm-unknown"] = "#242424"
-color["pida-fm-hidden"] = "lightgrey"
-color["pida-fm-ignored"] = "lightgrey"
-color["pida-fm-none"] = "#888888"
+color["pida-fm-hidden"] = "#888888"
+color["pida-fm-ignored"] = "#888888"
+color["pida-fm-none"] = "#757575"
 color["pida-fm-normal"] = "black"
 color["pida-fm-error"] = "#FF0080"
 color["pida-fm-empty"] = "black"

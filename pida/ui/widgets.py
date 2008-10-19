@@ -35,7 +35,11 @@ class CleverProxyColorButton(ProxyColorButton):
 
     def update(self, val):
         col = gtk.gdk.color_parse(val)
-        super(CleverProxyColorButton, self).update(col)
+        # kiwi api seems incompatible so we have to try :(
+        try:
+            super(CleverProxyColorButton, self).update(col)
+        except TypeError:
+            super(CleverProxyColorButton, self).update(col.to_string())
 
     def read(self):
         col = super(CleverProxyColorButton, self).read()
