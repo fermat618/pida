@@ -1,0 +1,106 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="action_external">
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <child>
+            <widget class="GtkVBox" id="vbox1">
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkTable" id="table1">
+                        <property name="column_spacing">12</property>
+                        <property name="n_columns">2</property>
+                        <property name="n_rows">3</property>
+                        <property name="row_spacing">6</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkLabel" id="label1">
+                                <property name="label" context="yes" translatable="yes">External Build System</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">1.0</property>
+                            </widget>
+                            <packing>
+                                <property name="x_options">fill</property>
+                                <property name="y_options">fill</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label777">
+                                <property name="label" context="yes" translatable="yes">Target Name</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">1.0</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="x_options">fill</property>
+                                <property name="y_options">fill</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label3">
+                                <property name="label" context="yes" translatable="yes">Build Arguments</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">1.0</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">3</property>
+                                <property name="top_attach">2</property>
+                                <property name="x_options">fill</property>
+                                <property name="y_options">fill</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="ProxyComboBox" id="system_types">
+                                <property name="model_attribute">system_types</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="y_options">fill</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkEntry" id="external_name">
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">2</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="y_options">fill</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkEntry" id="build_args">
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">3</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                                <property name="y_options">fill</property>
+                            </packing>
+                        </child>
+                    </widget>
+                </child>
+                <child>
+                    <placeholder/>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+                <child>
+                    <placeholder/>
+                    <packing>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>
