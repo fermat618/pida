@@ -383,7 +383,7 @@ class ShellActionView(ActionView):
 
     def set_action(self, action):
         self.command.set_text(action.value)
-        if action.options.has_key('cwd'):
+        if action.options.has_key('cwd') and action.options['cwd']:
             self.cwd.set_current_folder(action.options['cwd'])
             self.cwd_on.props.active = True
         else:
