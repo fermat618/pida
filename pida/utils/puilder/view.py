@@ -347,7 +347,6 @@ class PuilderView(GladeSlaveDelegate):
                 self.project_name_entry.grab_focus()
                 self.svc.error_dlg(_('Do not set empty project names'))
 
-
     def confirm(self, question):
         return yesno(question, parent=self.parent_window)
 
@@ -384,6 +383,22 @@ class ShellActionView(ActionView):
 
     def set_action(self, action):
         self.command.set_text(action.value)
+        if action.options.has_key('cwd'):
+            self.cwd.set_current_folder(action.options['cwd'])
+            self.cwd_on.props.active = True
+        else:
+            self.cwd_on.props.active = False
+
+    def on_cwd_on__toggled(self, entry):
+        self.cwd.props.sensitive = entry.props.active
+        if not entry.props.active:
+            del self.action.options['cwd']
+        else:
+            self.action.options['cwd'] = self.cwd.get_current_folder()
+
+    def on_cwd__file_set(self, entry):
+        #FIXME: use uri here when gio lands
+        self.action.options['cwd'] = self.cwd.get_current_folder()
 
     def on_command__changed(self, entry):
         t = entry.get_text()

@@ -26,7 +26,7 @@ from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
-from pida.core.environment import get_data_path
+from pida.core import environment
 
 from pida.utils.puilder.view import PuilderView
 
@@ -427,9 +427,10 @@ class ProjectService(Service):
                 _('Execute: %s') %target
             self._target_last = target
 
-        script = get_data_path('project_execute.py')
+        script = environment.get_data_path('project_execute.py')
 
-        env = ['PYTHONPATH=%s' % sys.path[0]]
+        env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
+                                    os.environ.get('PYTHONPATH', sys.path[0]))]
 
         self.boss.cmd('commander', 'execute',
                 commandargs=[

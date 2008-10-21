@@ -9,7 +9,8 @@ from pida.utils.puilder.model import Build
 
 
 def execute_shell_action(project, build, action):
-    p = Popen(action.value, shell=True, cwd=project)
+    cwd = action.options.get('cwd', project)
+    p = Popen(action.value, shell=True, cwd=cwd)
     p.wait()
 
 def _execute_python(source_directory, build, value):
