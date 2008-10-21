@@ -212,9 +212,12 @@ class ServiceManager(object):
         self.editor = editor(self._boss)
         return self.editor
 
-    def stop(self):
+    def stop(self, force=False):
         for svc in self:
-            svc.stop()
+            # in force mode we down't care about the return value.
+            if svc.stop() and not force:
+                return True
+        return False
 
 
 

@@ -34,7 +34,7 @@ class Window(gtk.Window):
         self.create_all()
 
     def _on_delete_event(self, window, event):
-        return self._boss.stop()
+        return not self._boss.stop()
 
     def create_all(self):
         pass

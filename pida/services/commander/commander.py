@@ -564,7 +564,10 @@ class Commander(Service):
     def unregister_matcher(self, match, callback):
         if not self._matches.has_key(match):
             return
-        self._matches[match].remove(callback)
+        try:
+            self._matches[match].remove(callback)
+        except ValueError:
+            pass
     
     def list_matches(self):
         # we use this so the default matchers are always the latest

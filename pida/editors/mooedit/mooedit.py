@@ -1036,13 +1036,15 @@ class Mooedit(EditorService):
 
     def stop(self):
         views = [view for view in self._documents.values()]
-        close = True
+        rv = False
         for view in views:
             editor_close = view.editor.close()
-            self._embed.remove_page(self._embed.page_num(view))
-            close = close & editor_close
-        self.boss.stop(force=True)
-        return close
+            if not editor_close:
+                rv = True
+            else:
+                self._embed.remove_page(self._embed.page_num(view))
+        return rv
+        #self.boss.stop(force=True)
 
     def update_actions(self, enabled=True):
         all = True

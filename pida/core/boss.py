@@ -62,15 +62,23 @@ class Boss(object):
             self._sm.start_editor()
             return True
 
-    def stop(self, force=False):
+    def stop(self, force=False, kill=False):
+        """
+        Stop pida.
+        @force: on True: doesn't ask the user to quite, but a service may ask
+        @kill: on True: kill pida hard, nothing is informed or saved
+        """
+        if kill:
+            gtk.main_quit()
         if force:
-            self._sm.stop()
+            self._sm.stop(force=force)
             gtk.main_quit()
         elif self.window.yesno_dlg(_('Are you sure you want to quit PIDA ?')):
-            # This causes pida-quit to be called on our Emacs and causes
-            # a clean shutdown.
-            self._sm.stop()
-            gtk.main_quit()
+            # test if all services are ok with shutting down.
+            # If any service returned a true value, to shutdown process is 
+            # interrupted. sm.stop returns True on interrupt
+            if not self._sm.stop():
+                gtk.main_quit()
         else:
             return True
 
