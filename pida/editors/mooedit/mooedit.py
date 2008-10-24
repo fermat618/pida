@@ -269,15 +269,15 @@ class MooeditView(gtk.ScrolledWindow):
             lm.props.visible = True
             marker._moo_marker = lm
 
+        buf = self.editor.props.buffer
         if marker not in self.line_markers:
-            buf = self.editor.props.buffer
             self.line_markers.append(marker)
             buf.add_line_mark(marker._moo_marker, 
                 min(max(0, int(marker.line)-1),buf.get_line_count()))
             marker._moo_marker.props.visible = True
         else:
             self.editor.props.buffer.move_line_mark(marker._moo_marker, 
-                int(marker.line)-1)
+                min(max(0, int(marker.line)-1),buf.get_line_count()))
 
 
 class MooeditActionsConfig(EditorActionsConfig):

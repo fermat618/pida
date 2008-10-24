@@ -1,0 +1,42 @@
+{
+  "targets": [
+    {
+      "dependencies": [], 
+      "name": "debug", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {
+            "cwd": null
+          }, 
+          "value": ".\/run-pida.py -D -s testing"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "run", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": ".\/run-pida.py"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "genapi", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "pydoctor -c tools\/pida-pydoctor.cfg"
+        }
+      ]
+    }
+  ], 
+  "options": {
+    "name": "Pida"
+  }
+}
