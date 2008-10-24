@@ -34,6 +34,17 @@
           "value": "pydoctor -c tools\/pida-pydoctor.cfg"
         }
       ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "tests", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "nosetests"
+        }
+      ]
     }
   ], 
   "options": {
