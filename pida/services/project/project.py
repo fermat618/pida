@@ -422,10 +422,10 @@ class ProjectService(Service):
 
         if project is None:
             project = self._current
-        else:
-            self.actions.get_action('project_execute_last').props.label = \
-                _('Execute: %s') %target
-            self._target_last = target
+
+        self.actions.get_action('project_execute_last').props.label = \
+            _('Execute: %s') %target.name
+        self._target_last = target
 
         script = environment.get_data_path('project_execute.py')
 
