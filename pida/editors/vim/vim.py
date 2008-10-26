@@ -69,7 +69,7 @@ class VimCallback(object):
         self.svc.boss.stop(force=True)
 
     def vim_BufWritePost(self):
-        pass
+        self.svc.boss.cmd('buffer', 'current_file_saved')
 
     def vim_CursorMoved(self):
         pass
