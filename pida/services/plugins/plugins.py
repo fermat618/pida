@@ -676,19 +676,19 @@ class Plugins(Service):
 
     def _get_item_markup(self, item):
         markup = '<b>%s</b>' % cgi.escape(item.name)
-        if item.version != '':
+        if item.version:
             markup += '\n<b>%s</b> : %s' % (_('Version'),
                     cgi.escape(item.version))
-        if item.author != '':
+        if item.author:
             markup += '\n<b>%s</b> : %s' % (_('Author'),
                     cgi.escape(item.author))
-        if item.category != '':
+        if item.category:
             markup += '\n<b>%s</b> : %s' % (_('Category'),
                     cgi.escape(item.category))
-        if item.depends != '':
+        if item.depends:
             markup += '\n<b>%s</b> : %s' % (_('Depends'),
                     cgi.escape(item.depends))
-        if item.require_pida != '':
+        if item.require_pida:
             markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
                     cgi.escape(item.require_pida))
         return markup
