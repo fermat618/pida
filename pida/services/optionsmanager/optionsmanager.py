@@ -57,45 +57,60 @@ class PidaOptionsView(PidaGladeView):
                 self._services_display.append(
                     (svc.get_label(), svc),
                 )
+
         self._services.sort(key=Service.sort_key)
+
         self._tips = gtk.Tooltips()
+
         self.service_combo.prefill(self._services_display)
+
         if current is not None:
             try:
                 self.service_combo.update(current)
             except KeyError:
                 self.service_combo.update(self.current)
-                
+
 
     def _add_service(self, svc):
         self._service_pages[svc.get_name()] = self.options_book.get_n_pages()
         self.options_book.append_page(self._create_page(svc))
         self.options_book.show_all()
-        
+
     def _create_page(self, svc):
         mainvb = gtk.VBox(spacing=0)
         mainvb.set_border_width(6)
+
         label = gtk.Label()
         label.set_markup('<big><b>%s</b></big>' % svc.get_label())
         label.set_alignment(0, 0.5)
+
         mainvb.pack_start(label, expand=False)
-        optvb = gtk.VBox()
+
         optsw = gtk.ScrolledWindow()
         optsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
+        optvb = gtk.VBox()
         optvb.set_border_width(6)
+
         optsw.add_with_viewport(optvb)
+
         mainvb.pack_start(optsw)
+
         labelsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         widgetsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
 
         for opt in sorted(svc.options):
             vb = gtk.VBox(spacing=2)
             vb.set_border_width(6)
+
             eb = gtk.EventBox()
             eb.add(vb)
+
             optvb.pack_start(eb, expand=False)
+
             hb = gtk.HBox(spacing=6)
             vb.pack_start(hb)
+
             optlabel = gtk.Label()
             lbl = opt.label
             doc = opt.doc
@@ -112,6 +127,7 @@ class PidaOptionsView(PidaGladeView):
             value = opt.group.get_value(opt.name)
             optwidget.update(value)
             optwidget.connect('content-changed', self._on_option_changed, opt)
+            #XXX: this leaks references
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)
             self._tips.set_tip(eb, doc)
         return mainvb
