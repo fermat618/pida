@@ -15,6 +15,7 @@ import pida.plugins
 from kiwi.ui.objectlist import Column
 from kiwi.ui.objectlist import ObjectList
 
+from outlinefilter import FILTERMAP
 
 from pida.core.environment import plugins_dir
 
@@ -35,7 +36,6 @@ from pida.core.pdbus import DbusConfig, EXPORT
 # ui
 from pida.ui.views import PidaView, PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
-
 
 # locale
 from pida.core.locale import Locale
@@ -108,6 +108,7 @@ class BrowserView(PidaGladeView):
     label_text = _('Outliner')
 
     def create_ui(self):
+        self.task = None
         self.source_tree.set_columns(
             [
                 Column('icon_name', use_stock=True),
@@ -128,14 +129,15 @@ class BrowserView(PidaGladeView):
             'sort_hack'
         )
         self.sort_box.show()
-        self.main_vbox.pack_start(self.sort_box, expand=False)
+        self.sort_vbox.pack_start(self.sort_box, expand=False)
 
     def set_outliner(self, outliner):
         self.clear_items()
-        self.options = self.read_options()
         if outliner:
-            task = GeneratorTask(outliner.get_outline, self.add_node)
-            task.start()
+            if self.task:
+                self.task.stop()
+            self.task = GeneratorTask(outliner.get_outline_filtered, self.add_node)
+            self.task.start()
 
     def clear_items(self):
         self.source_tree.clear()
@@ -154,21 +156,38 @@ class BrowserView(PidaGladeView):
         self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
-    def on_show_super__toggled(self, but):
-        self.browser.refresh_view()
+    def update_filterview(self,outliner):
+        
+        self.options_expander.remove(self.filter_vbox)
+        self.filter_vbox = gtk.VBox(spacing=1)
 
-    def on_show_builtins__toggled(self, but):
-        self.browser.refresh_view()
+        if outliner:
+            for f in outliner.filter:
+                checkbox = gtk.CheckButton()
+                checkbox.set_name(f)
+                checkbox.set_active(outliner.filter[f])
+                checkbox.connect("toggled",self.on_filter_toggled,outliner)
+                hbox =  gtk.HBox(spacing=4)
+                im = gtk.Image()
+                im.set_from_file(FILTERMAP[f]['icon'])
+                hbox.pack_start(im)
+                hbox.pack_start(gtk.Label(FILTERMAP[f]['display']))
+                align = gtk.Alignment()
+                align.add(hbox) 
+                checkbox.add(align)
+                self.filter_vbox.pack_end(checkbox)
+        self.options_expander.add(self.filter_vbox)
+        self.options_expander.show_all()
 
-    def on_show_imports__toggled(self, but):
-        self.browser.refresh_view()
+    def on_filter_toggled(self, but, outliner):
+        outliner.switch_filter(but.get_name())
+        self.set_outliner(outliner)
 
-    def read_options(self):
-        return {
-            '(m)': self.show_super.get_active(),
-            '(b)': self.show_builtins.get_active(),
-            'imp': self.show_imports.get_active(),
-        }
+    def on_type_changed(self):
+        pass
+        
+#    def read_options(self):
+#        return {}
 
 
 class LanguageActionsConfig(ActionsConfig):
@@ -398,8 +417,7 @@ class Language(Service):
                  "_lng_definer"):
             if hasattr(document, k):
                 delattr(document, k)
-
-        self.on_buffer_changed(document)
+        self._view_outliner.on_type_changed()
 
     def _get_feature(self, document, feature, name, do=None):
         handler = getattr(document, name, None)
@@ -424,7 +442,11 @@ class Language(Service):
         if not doctypes:
             self.current_type = None
             return
-        self.current_type = document.doctype
+        if self.current_type != document.doctype:
+            self.boss.get_service('buffer').emit('document-typchanged', document=document)
+            self.current_type = document.doctype
+            self._view_outliner.update_filterview(
+                self._get_feature(document, 'outliner', '_lng_outliner'))
 
         self._view_outliner.set_outliner(
             self._get_feature(document, 'outliner', '_lng_outliner'))

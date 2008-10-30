@@ -49,6 +49,24 @@ class BaseDocumentHandler(object):
 
 class Outliner(BaseDocumentHandler):
 
+    def __init__(self,svc,document=None):
+        BaseDocumentHandler.__init__(self,svc,document)
+        self.filter = {}
+
+    def switch_filter(self,f):
+        self.filter[f] = not self.filter[f]
+
+    def get_outline_filtered(self):
+        for (node,parent) in self.get_outline():
+            if node.filter_type in self.filter:
+                if self.filter[node.filter_type]:
+                    yield (node,parent)
+                else:
+                    pass
+            else:
+                yield (node,parent)
+
+    
     def get_outline(self):
         raise NotImplementedError('Outliner must define get_outline')
 
