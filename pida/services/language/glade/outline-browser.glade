@@ -33,7 +33,7 @@
                         <property name="label" context="yes" translatable="yes">Display Options</property>
                         <property name="visible">True</property>
                         <child>
-                            <widget class="GtkVBox" id="filter_vbox">
+                            <widget class="GtkToolbar" id="filter_toolbar">
                                 <property name="visible">True</property>
                             </widget>
                         </child>
