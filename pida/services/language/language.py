@@ -159,7 +159,7 @@ class BrowserView(PidaGladeView):
 
     def update_filterview(self,outliner):
         
-        self.options_expander.remove(self.filter_toolbar)
+        self.options_vbox.remove(self.filter_toolbar)
         self.filter_toolbar = gtk.Toolbar()
 
         if outliner:
@@ -167,13 +167,14 @@ class BrowserView(PidaGladeView):
                 tool_button = gtk.ToggleToolButton()
                 tool_button.set_name(f)
                 tool_button.set_active(outliner.filter_type[f])
+                tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled",self.on_filter_toggled,outliner)
                 im = gtk.Image()
                 im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
                 tool_button.set_icon_widget(im)
                 self.filter_toolbar.insert(tool_button,0)
-        self.options_expander.add(self.filter_toolbar)
-        self.options_expander.show_all()
+        self.options_vbox.add(self.filter_toolbar)
+        self.options_vbox.show_all()
 
     def on_filter_toggled(self, but, outliner):
         outliner.switch_filter(but.get_name())

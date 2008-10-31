@@ -28,9 +28,7 @@
                     </packing>
                 </child>
                 <child>
-                    <widget class="GtkExpander" id="options_expander">
-                        <property name="is_focus">True</property>
-                        <property name="label" context="yes" translatable="yes">Display Options</property>
+                    <widget class="GtkVBox" id="options_vbox">
                         <property name="visible">True</property>
                         <child>
                             <widget class="GtkToolbar" id="filter_toolbar">
