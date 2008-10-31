@@ -18,6 +18,7 @@ from kiwi.ui.objectlist import ObjectList
 from outlinefilter import FILTERMAP
 
 from pida.core.environment import plugins_dir
+from pida.core.environment import get_pixmap_path
 
 from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
@@ -162,14 +163,14 @@ class BrowserView(PidaGladeView):
         self.filter_vbox = gtk.VBox(spacing=1)
 
         if outliner:
-            for f in outliner.filter:
+            for f in outliner.filter_type:
                 checkbox = gtk.CheckButton()
                 checkbox.set_name(f)
-                checkbox.set_active(outliner.filter[f])
+                checkbox.set_active(outliner.filter_type[f])
                 checkbox.connect("toggled",self.on_filter_toggled,outliner)
                 hbox =  gtk.HBox(spacing=4)
                 im = gtk.Image()
-                im.set_from_file(FILTERMAP[f]['icon'])
+                im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
                 hbox.pack_start(im)
                 hbox.pack_start(gtk.Label(FILTERMAP[f]['display']))
                 align = gtk.Alignment()

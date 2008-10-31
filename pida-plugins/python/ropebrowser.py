@@ -83,7 +83,7 @@ class FunctionOptions(TreeOptions):
     """Describe how functions are shown"""
 
     type_name = 'f'
-    icon_name = 'source-method'
+    icon_name = 'source-function'
     type_color = '#900000'
     position = 2
     filter_type = 'function'

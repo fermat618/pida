@@ -51,15 +51,15 @@ class Outliner(BaseDocumentHandler):
 
     def __init__(self,svc,document=None):
         BaseDocumentHandler.__init__(self,svc,document)
-        self.filter = {}
+        self.filter_type = {}
 
     def switch_filter(self,f):
-        self.filter[f] = not self.filter[f]
+        self.filter_type[f] = not self.filter_type[f]
 
     def get_outline_filtered(self):
         for (node,parent) in self.get_outline():
-            if node.filter_type in self.filter:
-                if self.filter[node.filter_type]:
+            if node.filter_type in self.filter_type:
+                if self.filter_type[node.filter_type]:
                     yield (node,parent)
                 else:
                     pass

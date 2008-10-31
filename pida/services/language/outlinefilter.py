@@ -3,38 +3,38 @@ FILTERMAP = {
         "name" : "import",
         "alias": "include",
         "display" : "Imports",
-        "icon" : "pida/services/language/pixmaps/source-import.png",
+        "icon" : "source-import.png",
         "default" : "filter"
     },
     "builtin" : {
         "name" : "builtin",
         "alias": "",
         "display" : "Builtins",
-        "icon" : "pida/services/language/pixmaps/source-module.png",
+        "icon" : "source-module.png",
         "default" : "filter"
     },
     "attribute" : {
         "name" : "attribute",
         "alias": "",
         "display" : "Attributes",
-        "icon" : "pida/services/language/pixmaps/source-attribute.png",
+        "icon" : "source-attribute.png",
     },
     "method" : {
         "name" : "method",
         "alias": "",
         "display" : "Methods",
-        "icon" : "pida/services/language/pixmaps/source-method.png",
+        "icon" : "source-method.png",
     },
     "property" : {
         "name" : "property",
         "alias": "",
         "display" : "Properties",
-        "icon" : "pida/services/language/pixmaps/source-property.png",
+        "icon" : "source-property.png",
     },
     "function" : {
         "name" : "function",
         "alias": "",
         "display" : "Functions",
-        "icon" : "pida/services/language/pixmaps/source-function.png",
+        "icon" : "source-function.png",
     },
 } 

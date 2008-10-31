@@ -111,12 +111,12 @@ class PythonOutliner(Outliner):
 
     def __init__(self,svc,document=None):
         Outliner.__init__(self,svc,document)
-        self.filter['import'] = 1 
-        self.filter['builtin'] = 1
-        self.filter['method'] = 1
-        self.filter['function'] = 1
-        self.filter['property'] = 1
-        self.filter['attribute'] = 1
+        self.filter_type['import'] = 1 
+        self.filter_type['builtin'] = 1
+        self.filter_type['method'] = 1
+        self.filter_type['function'] = 1
+        self.filter_type['property'] = 1
+        self.filter_type['attribute'] = 1
 
 
 
