@@ -274,9 +274,9 @@ class BufferOptionsConfig(OptionsConfig):
             self.on_display_type_change
         )
 
-    def on_display_type_change(self, client, id, entry, option):
+    def on_display_type_change(self, option):
         self.svc.get_view().buffers_ol.set_columns(
-            LIST_COLUMNS[option.get_value()])
+            LIST_COLUMNS[option.value])
 
 
 class BufferCommandsConfig(CommandsConfig):

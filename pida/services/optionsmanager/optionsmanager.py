@@ -124,10 +124,10 @@ class PidaOptionsView(PidaGladeView):
             optwidget = get_widget_for_type(opt.type)
             widgetsizer.add_widget(optwidget)
             hb.pack_start(optwidget, expand=True)
-            value = opt.group.get_value(opt.name)
-            optwidget.update(value)
+            optwidget.update(opt.value)
             optwidget.connect('content-changed', self._on_option_changed, opt)
             #XXX: this leaks references
+            #XXX: broken from options_refactor
             opt.add_notify(self._on_option_changed_elsewhere, optwidget)
             self._tips.set_tip(eb, doc)
         return mainvb
@@ -143,7 +143,7 @@ class PidaOptionsView(PidaGladeView):
 
     def _on_option_changed(self, widget, option):
         widgval = widget.read()
-        optval = option.get_value()
+        optval = option.value
         # various hacks
         if widgval is None:
             return
@@ -153,6 +153,7 @@ class PidaOptionsView(PidaGladeView):
             option.set_value(widgval)
 
     def _on_option_changed_elsewhere(self, client, id, entry, (option, widget)):
+        #XXX: broken
         widgval = widget.read()
         optval = option.get_value()
         if optval != widgval:
@@ -182,6 +183,9 @@ class OptionsActions(ActionsConfig):
             self.svc.hide_options()
 
 class OptionsEvents(EventsConfig):
+
+    def create(self):
+        self.publish('option_changed')
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('plugins', 'plugin_started',

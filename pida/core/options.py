@@ -173,7 +173,14 @@ class OptionsConfig(BaseConfig):
     def set_value(self, name, value):
         option = self._options[name]
         option.value = value
+        self._on_change(option)
         self.dump(option.session)
+
+    def _on_change(self, option):
+        if option.callback:
+            option.callback(option)
+        manager.on_change(option)
+
 
     def read(self):
         data = {}

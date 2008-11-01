@@ -152,8 +152,8 @@ class ActionsConfig(OptionsConfig):
     def _create_key_option(self, act, name, label, tooltip, accel):
         opt = self.create_option(name,
                          label, str,
-                         accel, tooltip, 
-                         self._on_shortcut_notify)
+                         accel, tooltip,
+                         self._set_action_keypress_from_option)
         opt.action = act
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
@@ -161,10 +161,6 @@ class ActionsConfig(OptionsConfig):
         act.set_accel_group(self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
-
-    def _get_shortcut_gconf_key(self, name):
-        return '/app/pida/keyboard_shortcuts/%s/%s' % (self.svc.get_name(),
-                                                       name)
 
     def get_action(self, name):
         """
@@ -181,11 +177,6 @@ class ActionsConfig(OptionsConfig):
     def get_keyboard_options(self):
         """
         Get the keyboard options.
-
-        The keyboard options are a dict which stores the GConf directory
-        containing the values for the keyboard shortcuts for the actions that
-        do not have NOACCEL set. These are persisted on first run, and then
-        loaded from GConf to maintian user preferences.
         """
         return self._keyboard_options
 
@@ -200,15 +191,12 @@ class ActionsConfig(OptionsConfig):
     def _set_action_keypress_from_option(self, option):
         self._set_action_keypress(option.name, option.value)
 
-    def _on_shortcut_notify(self, client, id, entry, option, *args):
-        self._set_action_keypress_from_option(option)
-
     def subscribe_keyboard_shortcuts(self):
         """
         Set the keyboard shortcuts for the actions with keyboard shortcuts
         enabled.
         """
         self.register_options() #XXX: hack
-        for name, opt in self._keyboard_options.items():
+        for opt in self:
             self._set_action_keypress_from_option(opt)
 

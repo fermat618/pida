@@ -198,14 +198,14 @@ class WindowOptionsConfig(OptionsConfig):
             _('The color directories shall have in PIDA'),
             self.on_color_change,
         )
-        
 
-    def on_show_ui(self, client, id, entry, option):
-        self.svc.get_action(option.name).set_active(option.get_value())
+
+    def on_show_ui(self, option):
+        self.svc.get_action(option.name).set_active(option.value)
 
     def on_color_change(self, client, id, entry, option):
         self.svc.update_colors()
-        
+
     def on_title_change(self, client, id, entry, option):
         self.svc._title_template = None
         self.svc.update_title()

@@ -389,11 +389,11 @@ class PluginsOptionsConfig(OptionsConfig):
             session=True
             )
 
-    def on_rpc_url(self, client, id, entry, option):
-        self.svc.rpc_url = option.get_value()
+    def on_rpc_url(self, option):
+        self.svc.rpc_url = option.value
 
     def on_check_for_updates(self, client, id, entry, option):
-        self.svc.check_for_updates(option.get_value())
+        self.svc.check_for_updates(option.value)
 
 
 class PluginsEvents(EventsConfig):
