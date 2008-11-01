@@ -109,16 +109,8 @@ class PythonOutliner(Outliner):
 
     priority = PRIO_VERY_GOOD
 
-    def __init__(self,svc,document=None):
-        Outliner.__init__(self,svc,document)
-        self.filter_type['import'] = 1 
-        self.filter_type['builtin'] = 1
-        self.filter_type['method'] = 1
-        self.filter_type['function'] = 1
-        self.filter_type['property'] = 1
-        self.filter_type['attribute'] = 1
-
-
+    filter_type = ('import', 'builtin', 'method', 'function', 
+                'property', 'attribute',)
 
     def get_outline(self):
         from rope.base.exceptions import RopeError

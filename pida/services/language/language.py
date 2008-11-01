@@ -137,14 +137,21 @@ class BrowserView(PidaGladeView):
         if outliner:
             if self.task:
                 self.task.stop()
-            self.task = GeneratorTask(outliner.get_outline_filtered, self.add_node)
+            self.task = GeneratorTask(outliner.get_outline, self.add_node)
             self.task.start()
 
     def clear_items(self):
         self.source_tree.clear()
 
     def add_node(self, node, parent):
-        self.source_tree.append(parent, node)
+        if node.filter_type in self.filter_map:
+            if self.filter_map[node.filter_type]:
+                self.source_tree.append(parent, node)
+            else:
+                pass
+        else:
+             self.source_tree.append(parent, node)
+
 
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
@@ -157,27 +164,28 @@ class BrowserView(PidaGladeView):
         self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
-    def update_filterview(self,outliner):
-        
+    def update_filterview(self, outliner):
         self.options_vbox.remove(self.filter_toolbar)
         self.filter_toolbar = gtk.Toolbar()
-
+        self.filter_map = dict(
+            [(f, FILTERMAP[f]['default']) for f in outliner.filter_type]
+            )
         if outliner:
-            for f in outliner.filter_type:
+            for f in self.filter_map:
                 tool_button = gtk.ToggleToolButton()
                 tool_button.set_name(f)
-                tool_button.set_active(outliner.filter_type[f])
+                tool_button.set_active(self.filter_map[f])
                 tool_button.set_tooltip_text(FILTERMAP[f]['display'])
-                tool_button.connect("toggled",self.on_filter_toggled,outliner)
+                tool_button.connect("toggled", self.on_filter_toggled,outliner)
                 im = gtk.Image()
                 im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
                 tool_button.set_icon_widget(im)
-                self.filter_toolbar.insert(tool_button,0)
+                self.filter_toolbar.insert(tool_button, 0)
         self.options_vbox.add(self.filter_toolbar)
         self.options_vbox.show_all()
 
     def on_filter_toggled(self, but, outliner):
-        outliner.switch_filter(but.get_name())
+        self.filter_map[but.get_name()] = not self.filter_map[but.get_name()]
         self.set_outliner(outliner)
 
     def on_type_changed(self):
