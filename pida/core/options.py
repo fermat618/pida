@@ -7,7 +7,7 @@
     There are 3 semantical locations of configuration data:
     * global
     * workspace
-    * project
+    * project *todo*
 
 
     :copyright: 2005-2008 by The PIDA Project
@@ -26,33 +26,41 @@ from os import path
 import os
 get_settings_path = partial(os.path.join, settings_dir)
 
+def add_directory(*parts):
+    dir = get_settings_path(*parts)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+def unset_directory(*parts):
+    #XXX: reload=!
+    rmtree(get_settings_path(*parts))
+
+def initialize():
+    add_directory('keyboard_shortcuts')
+    add_directory('workspaces')
+
+def list_sessions(self):
+    """Returns a list with all session names """
+    workspaces = get_settings_path('workspaces')
+    return [ x for x in os.listdir(workspaces)
+                if path.isdir(
+                    path.join(workspaces, x)
+                )
+            ]
+
 class OptionsManager(object):
 
     def __init__(self, session=None):
 
-        self.initialize()
+        initialize()
         self._session = None
         if session:
             self.session = session
         if killsettings():
-            self.unset_directory()
-
-    def initialize(self):
-        self.add_directory()
-        self.add_directory('keyboard_shortcuts')
-        self.add_directory('workspaces')
-
-    def add_directory(self, *parts):
-        dir = get_settings_path(*parts)
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-
-    def unset_directory(self, *parts):
-        #XXX: reload=!
-        rmtree(get_settings_path(*parts))
+            unset_directory()
 
     def initialize_session(self):
-        self.add_directory('workspaces', self.session)
+        add_directory('workspaces', self.session)
 
     def open_session_manager(self):
         pass #XXX: get this from the options somehow
@@ -71,17 +79,8 @@ class OptionsManager(object):
 
     session = property(_get_session, _set_session)
 
-    def list_sessions(self):
-        """Returns a list with all session names """
-        workspaces = get_settings_path('workspaces')
-        return [ x for x in os.listdir(workspaces)
-                    if path.isdir(
-                        path.join(workspaces, x)
-                    )
-                ]
-
-    def add_notify(self, *k):
-        pass #XXX: FIX IT!!!
+    def on_change(self, option):
+        pass #XXX: implement
 
 
 def choices(choices):
@@ -109,7 +108,8 @@ class OptionItem(object):
         self.value = None
 
     def add_notify(self, callback, *args):
-        manager.add_notify(self, callback, *args)
+        pass #XXX: reimplement ?!
+
 
 manager = OptionsManager()
 
@@ -137,7 +137,10 @@ class OptionsConfig(BaseConfig):
         self.svc.log(self._options.keys())
         for name, value in self.read().items():
             self.svc.log("%s %r", name, value)
-            self._options[name].value = value
+
+            # ignore removed options that might have config entries
+            if name in self._options:
+                self._options[name].value = value
 
         if is_safe_mode() and False:#XXX: disabled
             for opt in self:
@@ -198,8 +201,14 @@ class OptionsConfig(BaseConfig):
         return len(self._options)
 
     def __iter__(self):
+        """
+        iterate the optionsitems
+        """
         return self._options.itervalues()
 
     def __nonzero__(self):
+        """
+        shows if there are actually options defined for this config
+        """
         return bool(self._options)
 

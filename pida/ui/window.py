@@ -273,14 +273,12 @@ class SessionWindow(BaseView):
     def update_sessions(self):
         from pida.utils.pdbus import list_pida_instances, PidaRemote
     
-        from pida.core.options import OptionsManager
+        from pida.core.options import OptionsManager, list_sessions
         from pida.core import environment
         # we need a new optionsmanager so the default manager does not session
         # lookup yet
         self.list_complete = False
-        om = OptionsManager(session="default")
-
-        lst = om.list_sessions()
+        lst = list_sessions()
         #if not self.sessions:
         #    print "list"
         # start the dbus message so we will know which ones are running
