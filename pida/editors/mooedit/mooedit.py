@@ -1034,17 +1034,16 @@ class Mooedit(EditorService):
             self.boss.cmd('window', 'remove_view',
                           view=self._preferences)
 
-    def stop(self):
+    def pre_stop(self):
         views = [view for view in self._documents.values()]
-        rv = False
+        rv = True
         for view in views:
             editor_close = view.editor.close()
             if not editor_close:
-                rv = True
+                rv = False
             else:
                 self._embed.remove_page(self._embed.page_num(view))
         return rv
-        #self.boss.stop(force=True)
 
     def update_actions(self, enabled=True):
         all = True
