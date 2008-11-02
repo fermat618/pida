@@ -389,6 +389,7 @@ class ProjectService(Service):
         if last:
             for project in self._projects:
                 if project.source_directory == last:
+                    self.set_current_project(project)
                     self.project_list.set_current_project(project)
 
     def load_and_set_project(self, project_file):
