@@ -45,6 +45,17 @@
           "value": "nosetests"
         }
       ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "pida-shell", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": ".\/run-pida-pyshell.py --ipython"
+        }
+      ]
     }
   ], 
   "options": {
