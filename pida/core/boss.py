@@ -65,7 +65,8 @@ class Boss(object):
     def stop(self, force=False, kill=False):
         """
         Stop pida.
-        @force: on True: doesn't ask the user to quite, but a service may ask
+        @force: on True: doesn't ask the user to quite, but a service may ask 
+                for actions. Services can't stop the shutdown process
         @kill: on True: kill pida hard, nothing is informed or saved
         """
         if kill:
@@ -74,10 +75,9 @@ class Boss(object):
             self._sm.stop(force=force)
             gtk.main_quit()
         elif self.window.yesno_dlg(_('Are you sure you want to quit PIDA ?')):
-            # test if all services are ok with shutting down.
-            # If any service returned a true value, to shutdown process is 
-            # interrupted. sm.stop returns True on interrupt
-            if not self._sm.stop():
+            # in non force mode we only kill ourself if service manager
+            # returns True
+            if self._sm.stop():
                 gtk.main_quit()
         else:
             return True
