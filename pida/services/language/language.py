@@ -165,12 +165,12 @@ class BrowserView(PidaGladeView):
         self.svc.boss.editor.cmd('grab_focus')
 
     def update_filterview(self, outliner):
-        self.options_vbox.remove(self.filter_toolbar)
-        self.filter_toolbar = gtk.Toolbar()
-        self.filter_map = dict(
-            [(f, FILTERMAP[f]['default']) for f in outliner.filter_type]
-            )
         if outliner:
+            self.options_vbox.remove(self.filter_toolbar)
+            self.filter_toolbar = gtk.Toolbar()
+            self.filter_map = dict(
+                [(f, FILTERMAP[f]['default']) for f in outliner.filter_type]
+                )
             for f in self.filter_map:
                 tool_button = gtk.ToggleToolButton()
                 tool_button.set_name(f)
@@ -441,7 +441,6 @@ class Language(Service):
         else:
             return handler
 
-
     def on_buffer_changed(self, document):
         doctypes = self.doctypes.types_by_filename(document.filename)
         if not doctypes:
@@ -452,13 +451,10 @@ class Language(Service):
             self.current_type = document.doctype
             self._view_outliner.update_filterview(
                 self._get_feature(document, 'outliner', '_lng_outliner'))
-
         self._view_outliner.set_outliner(
             self._get_feature(document, 'outliner', '_lng_outliner'))
-
         self._view_validator.set_validator(
             self._get_feature(document, 'validator', '_lng_validator'))
-
         self._get_feature(document, 'completer', '_lng_completer')
         self._get_feature(document, 'definer', '_lng_definer')
 
