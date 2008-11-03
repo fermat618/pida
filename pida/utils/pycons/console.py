@@ -143,8 +143,7 @@ class ConsoleIn:
 class Console (gtk.ScrolledWindow):
     """ GTK python console """
 
-    def __init__(self, argv=[], shelltype='python', banner=[],
-                 filename=None, size=100):
+    def __init__(self):
 
         """ Console interface building + initialization"""
 
@@ -162,17 +161,17 @@ class Console (gtk.ScrolledWindow):
         self.view.set_wrap_mode(True)
         self.view.set_left_margin(0)
         self.view.set_right_margin(0)
+        self.view.props.editable = False
         self.buffer = self.view.get_buffer()
+
+    def setup(self, argv=[], shelltype='python', banner=[],
+                 filename=None, size=100):
 
         def col(name, default):
             fg = self.style.lookup_color("%s-fg" %name)
-            print "%s-fg" %name
-            print fg
             if fg:
-                print "return ", fg.to_string()
                 return fg.to_string()
             else:
-                print "return ", default
                 return default
 
         self.buffer.create_tag ('title',
@@ -213,7 +212,12 @@ class Console (gtk.ScrolledWindow):
         self.buffer.create_mark ('linestart', iter, True)
         self.buffer.create_mark ('suggeststart', iter, True)
         self.view.add_events(gtk.gdk.KEY_PRESS_MASK)
+        self.view.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.view.connect ('key-press-event', self.key_press_event)
+        self.view.connect ('cut-clipboard', self.cut_clipboard_event)
+        #self.view.connect ('cut-clipboard', self.cut_clipboard_event)
+        self.view.connect('button_press_event', self.button_press_event)
+        self.view.connect('move-cursor', self.move_cursor_event)
         self.add(self.view)
         self.show_all()
         self.killbuffer = None
@@ -356,10 +360,25 @@ class Console (gtk.ScrolledWindow):
         while gtk.events_pending():
             gtk.main_iteration()
 
+    def stop_event(self, *args):
+        return True
+
+    def move_cursor_event(self, *args):
+        print args
+        return True
+
+    def cut_clipboard_event(self, widget):
+        return True
+
     def key_press_event (self, widget, event):
         """ Handle key press event """
 
         keyname = gtk.gdk.keyval_name (event.keyval)
+
+        def do_super():
+            self.view.props.editable = True
+            self.view.do_key_press_event(widget, event)
+            self.view.props.editable = False
 
         # New command
         if keyname in ['Return', 'KP_Enter']:
@@ -380,6 +399,8 @@ class Console (gtk.ScrolledWindow):
             iter = self.buffer.get_iter_at_mark(self.buffer.get_insert())
             if iter.compare(linestart) <= 0:
                 return True
+            else:
+                do_super()
 
         elif keyname == 'Right':
             return False
@@ -403,6 +424,7 @@ class Console (gtk.ScrolledWindow):
                     #self.buffer.insert(start, hist[len(cur):])
                     self.replace_suggestion(hist[len(cur):])
                     return True
+            return True
 
         # Previous history item
         elif keyname == 'Up':
@@ -508,8 +530,9 @@ class Console (gtk.ScrolledWindow):
             iter2.forward_char()
             print iter2.get_offset()
             self.buffer.move_mark(mark, iter2)
-
-        return False
+            
+            do_super()
+        return True
 
 
     def execute (self):

@@ -286,9 +286,9 @@ def show (console):
 class Console (cons.Console):
     """ GTK python console """
 
-    def __init__(self, argv=[], shelltype='python', banner=[],
+    def setup(self, argv=[], shelltype='python', banner=[],
                  filename=None, size=100):
-        cons.Console.__init__(self, argv, shelltype, banner, filename, size)
+        cons.Console.setup(self, argv, shelltype, banner, filename, size)
         self.buffer.create_tag('center',
                                justification=gtk.JUSTIFY_CENTER,
                                font='Mono 4')
@@ -355,7 +355,7 @@ def main(args=()):
         )
     gtk.rc_add_default_file(os.path.join(os.path.expanduser("~/.pida2"), "gtkrc-2.0"))
     # we have to force reload the settings
-    gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
+    print "parsed", gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
     p = 'Python %s' % sys.version.split(' ')[0]
     #l = 'matplotlib %s' % matplotlib.__version__
@@ -379,8 +379,7 @@ def main(args=()):
             ]
 
 
-    console = Console(argv=args, shelltype=shelltype,
-                      banner=banner, filename=filename, size=100)
+    console = Console()
     if options.toolbar:
         console.use_toolbar = True
     else:
@@ -396,6 +395,10 @@ def main(args=()):
     window.set_default_size(800,600)
     window.set_border_width(0)
     window.add (console)
+    console.show()
+    window.show()
+    console.setup(argv=args, shelltype=shelltype,
+                      banner=banner, filename=filename, size=100)
     window.connect('destroy-event', console.quit)
     window.connect('delete-event', console.quit)
     window.show_all()
