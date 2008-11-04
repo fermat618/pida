@@ -306,9 +306,11 @@ class Console (gtk.ScrolledWindow):
         if segments:
             ansi_tags = self.color_pat.findall(text)
             for tag in ansi_tags:
+                if not tag:
+                    continue
                 i = segments.index(tag)
                 self.buffer.insert_with_tags_by_name(self.buffer.get_end_iter(),
-                                                     segments[i+1], tag)
+                                                     segments[i+1],  ntag)
                 segments.pop(i)
         self.view.scroll_mark_onscreen(self.buffer.get_insert())
 
