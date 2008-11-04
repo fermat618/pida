@@ -4,7 +4,7 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-import os, subprocess, re
+import os, subprocess, re, sys
 
 import gtk
 import gtk.gdk
@@ -12,6 +12,7 @@ import gobject
 import pango
 
 # PIDA Imports
+from pida.core import environment
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
@@ -170,6 +171,23 @@ class CommanderOptionsConfig(OptionsConfig):
             _('The arguments to pass to the shell command'),
         )
 
+        self.create_option(
+            'python_path',
+            _('Python Path'),
+            str,
+            sys.executable,
+            _('Python executable to use'),
+        )
+
+        self.create_option(
+            'use_ipython',
+            _('Use IPython'),
+            bool,
+            False,
+            _('Use IPython in python shell'),
+        )
+
+
 class CommanderActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -181,6 +199,26 @@ class CommanderActionsConfig(ActionsConfig):
             'terminal',
             self.execute_shell,
             '<Shift><Control>T',
+        )
+
+        self.create_action(
+            'python_shell',
+            TYPE_NORMAL,
+            _('_Run Python Shell'),
+            _('Open a python shell'),
+            'terminal',
+            self.execute_python_shell,
+            '<Shift><Control>P',
+        )
+
+        self.create_action(
+            'python_shell_extern',
+            TYPE_NORMAL,
+            _('_Run Extern Python Shell'),
+            _('Open a python shell as extra window'),
+            'terminal',
+            self.execute_python_shell_extern,
+            '',
         )
 
         self.create_action(
@@ -205,13 +243,20 @@ class CommanderActionsConfig(ActionsConfig):
         self.svc.cmd('execute_shell',
                      cwd=self.svc.get_current_project_directory())
 
+    def execute_python_shell(self, action):
+        self.svc.cmd('execute_python_shell',
+                     cwd=self.svc.get_current_project_directory())
+
+    def execute_python_shell_extern(self, action):
+        self.svc.execute_python_extern()
+
     def on_terminal_for_file(self, action):
         cwd = os.path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('execute_shell', cwd=cwd)
 
     def on_terminal_for_dir(self, action):
         cwd = action.contexts_kw['dir_name']
-        self.svc .cmd('execute_shell', cwd=cwd)
+        self.svc.cmd('execute_shell', cwd=cwd)
 
 
 class CommanderCommandsConfig(CommandsConfig):
@@ -227,6 +272,11 @@ class CommanderCommandsConfig(CommandsConfig):
         shell_args = self.svc.opt('shell_command_args')
         commandargs = [shell_command] + shell_args
         return self.svc.execute(commandargs, env=env, cwd=cwd, title=title, icon=None)
+
+    def execute_python_shell(self, file_=None, cwd=os.getcwd(), ipython=None, title='Python'):
+        if ipython is None:
+            ipython = self.svc.opt('use_ipython')
+        return self.svc.execute_python(file_=file_, cwd=cwd, title=title, icon=None)
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
@@ -249,7 +299,7 @@ class CommanderEvents(EventsConfig):
     def on_contexts__show_menu(self, menu, context, **kw):
         if (context == 'file-menu'):
             self.svc.get_action('terminal-for-file').set_visible(kw['file_name'] is not None)
-            
+
 class TerminalView(PidaView):
 
     icon_name = 'terminal'
@@ -493,6 +543,43 @@ class TerminalView(PidaView):
     def get_absolute_path(self, path):
         return CurrentSystem.get_absolute_path(path, self._pid)
 
+class PythonView(PidaView):
+
+    icon_name = 'terminal'
+
+    def create_ui(self):
+        self.pid = None
+        self._box = gtk.HBox()
+        self._socket = gtk.Socket()
+        self._box.add(self._socket)
+        self._socket.show()
+        self._box.show()
+        print "socket created"
+        self.add_main_widget(self._box)
+
+    def execute(self, file_=None, cwd=os.getcwd()):
+        command = os.path.join(environment.pida_root_path, "pida", "utils", "pycons", "main.py")
+        commandargs = [self.svc.opt('python_path'), command, "--embed",
+                       "--socket=%s" %self._socket.get_id()]
+        if self.svc.opt('use_ipython'):
+            commandargs.append('--ipython')
+        if file_:
+            commandargs.append(file_)
+        print commandargs
+        self.popen = p = subprocess.Popen(commandargs, cwd=cwd, close_fds=True)
+        self._pid = p.pid
+
+    def can_be_closed(self):
+        self.kill()
+        return True
+
+    def kill(self):
+        if self._pid is not None:
+            try:
+                os.kill(self._pid, 9)
+            except OSError:
+                self.svc.log_debug('PID %s has already gone' % self._pid)
+
 # Service class
 class Commander(Service):
     """Describe your Service Here""" 
@@ -522,6 +609,33 @@ class Commander(Service):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         self._terminals.append(t)
         return t
+
+    def execute_python(self, file_, cwd, title, icon):
+        current_project = self.boss.cmd('project', 'get_current_project')
+        #if current_project:
+        #    env_pida.append('PIDA_PROJECT=%s' % current_project.source_directory)
+        t = PythonView(self, title, icon)
+        #t = TerminalView(self, title, icon)
+        #self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
+        #        env_pida, cwd))))
+        print file_, cwd, title, icon
+        #FIXME: we have to add it non dispatchable as dispatching
+        # causes the socket to not be realized for a short time 
+        # and therefor kills the process
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=t, detachable=False)
+        t.execute(file_=None, cwd=cwd)
+        self._terminals.append(t)
+        return t
+
+    def execute_python_extern(self, file_=None, cwd=os.getcwd()):
+        command = os.path.join(environment.pida_root_path, "pida", "utils", "pycons", "main.py")
+        commandargs = [self.opt('python_path'), command]
+        if self.opt('use_ipython'):
+            commandargs.append('--ipython')
+        if file_:
+            commandargs.append(file_)
+        print commandargs
+        subprocess.Popen(commandargs, cwd=cwd).pid
 
     def get_terminal_options(self):
         options = dict(

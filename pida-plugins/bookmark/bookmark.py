@@ -110,7 +110,7 @@ class BookmarkItemFile(BookmarkItem, LineMarker):
     filename = property(_get_filename, _set_filename)
 
     def _do_set_line(self, newlineno):
-        self._lineno = newlineno
+        self._lineno = min(1, int(newlineno))
         self.svc._view._list['file'].update(self)
 
     def update(self, newlineno):
