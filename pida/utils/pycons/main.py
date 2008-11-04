@@ -356,7 +356,7 @@ def main(args=()):
         )
     gtk.rc_add_default_file(os.path.join(os.path.expanduser("~/.pida2"), "gtkrc-2.0"))
     # we have to force reload the settings
-    print "parsed", gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
+    gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
     p = 'Python %s' % sys.version.split(' ')[0]
     #l = 'matplotlib %s' % matplotlib.__version__
@@ -404,8 +404,8 @@ def main(args=()):
     window.connect('delete-event', console.quit)
     window.show_all()
     console.grab_focus()
-    #__builtins__.pyshell = window
-    __builtins__['PYSHELL'] =  window
+    # usefull when debugging UI
+    #__builtins__['PYSHELL'] =  window
 
     if options.pylab and pylab_available():
         console.write ("from pylab import *")

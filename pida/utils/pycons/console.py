@@ -524,7 +524,6 @@ class Console (gtk.ScrolledWindow):
             mark = self.buffer.get_mark('suggeststart')
             iter2 = iter.copy()
             iter2.forward_char()
-            print iter2.get_offset()
             self.buffer.move_mark(mark, iter2)
             
             do_super()
