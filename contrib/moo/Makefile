@@ -1,4 +1,4 @@
-HEADERS = moopaned.h moopane.h moobigpaned.h marshals.h stock-moo.h
+HEADERS = moopaned.h moopane.h moobigpaned.h marshals.h stock-moo.h moopython-utils.h
 OBJECTS = moopaned.o moopane.o moobigpaned.o test.o marshals.o
 PICS = close.png sticky.png hide.png detach.png attach.png keepontop.png
 
@@ -58,6 +58,7 @@ prepare: marshals.c marshals.h stock-moo.h moo-pygtk.c
 
 moo-pygtk.c: moo.defs moopaned.defs moo.override moopaned.override
 	pygtk-codegen-2.0 --prefix _moo_stub \
+		--load-types argtypes_m.py \
 		--register $(PYGTK_DEFS_DIR)/gtk-types.defs \
 		--register $(PYGTK_DEFS_DIR)/gdk-types.defs \
 		--override moo.override \

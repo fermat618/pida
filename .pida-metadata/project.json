@@ -9,7 +9,7 @@
           "options": {
             "cwd": null
           }, 
-          "value": ".\/run-pida.py -D -s testing"
+          "value": "./run-pida.py -D -s testing"
         }
       ]
     }, 
@@ -20,7 +20,7 @@
         {
           "type": "shell", 
           "options": {}, 
-          "value": ".\/run-pida.py"
+          "value": "./run-pida.py"
         }
       ]
     }, 
@@ -31,7 +31,7 @@
         {
           "type": "shell", 
           "options": {}, 
-          "value": "pydoctor -c tools\/pida-pydoctor.cfg"
+          "value": "pydoctor -c tools/pida-pydoctor.cfg"
         }
       ]
     }, 
@@ -43,6 +43,33 @@
           "type": "shell", 
           "options": {}, 
           "value": "nosetests"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "build.ext", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "python setup.py build_ext -i"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "clean", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "python setup.py clean"
+        }, 
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "make -C contrib/moo clean"
         }
       ]
     }
