@@ -75,6 +75,8 @@ ansi_colors =  {'0;30': '#2E3436',
                 '1;36': '#34E2E2',
                 '1;37': '#EEEEEC'}
 
+#sys_stdout = open("/tmp/stdout", "w")
+
 # ------------------------------------------------------------- class ConsoleOut
 class ConsoleOut:
     """
@@ -95,9 +97,13 @@ class ConsoleOut:
     def readlines(self): return []
     def write(self, s):
         self.console.write (s, self.style)
+        #sys_stdout.write("WRITE: %s \n" %repr(s))
+        #sys_stdout.flush()
     def writelines(self, l):
         for s in l:
             self.console.write (s, self.style)
+            #sys_stdout.write("WRITE: %s \n" %repr(s))
+            #sys_stdout.flush()
     def seek(self, a):   raise IOError, (29, 'Illegal seek')
     def tell(self):      raise IOError, (29, 'Illegal seek')
     truncate = tell
@@ -213,11 +219,7 @@ class Console (gtk.ScrolledWindow):
         self.buffer.create_mark ('suggeststart', iter, True)
         self.view.add_events(gtk.gdk.KEY_PRESS_MASK)
         self.view.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        self.view.connect ('key-press-event', self.key_press_event)
-        self.view.connect ('cut-clipboard', self.cut_clipboard_event)
-        #self.view.connect ('cut-clipboard', self.cut_clipboard_event)
-        self.view.connect('button_press_event', self.button_press_event)
-        self.view.connect('move-cursor', self.move_cursor_event)
+        self.view.connect('key-press-event', self.key_press_event)
         self.add(self.view)
         self.show_all()
         self.killbuffer = None
@@ -299,6 +301,8 @@ class Console (gtk.ScrolledWindow):
         segments = self.color_pat.split(text)
         segment = segments.pop(0)
         start,end = self.buffer.get_bounds()
+#         sys_stdout.write("WRITE: %s \n" %repr(text))
+#         sys_stdout.flush()
         if style==None:
             self.buffer.insert(end, segment)
         else:
@@ -310,7 +314,7 @@ class Console (gtk.ScrolledWindow):
                     continue
                 i = segments.index(tag)
                 self.buffer.insert_with_tags_by_name(self.buffer.get_end_iter(),
-                                                     segments[i+1],  ntag)
+                                                     segments[i+1], tag)
                 segments.pop(i)
         self.view.scroll_mark_onscreen(self.buffer.get_insert())
 
@@ -361,16 +365,6 @@ class Console (gtk.ScrolledWindow):
         self.view.scroll_mark_onscreen(self.buffer.get_insert())
         while gtk.events_pending():
             gtk.main_iteration()
-
-    def stop_event(self, *args):
-        return True
-
-    def move_cursor_event(self, *args):
-        print args
-        return True
-
-    def cut_clipboard_event(self, widget):
-        return True
 
     def key_press_event (self, widget, event):
         """ Handle key press event """
