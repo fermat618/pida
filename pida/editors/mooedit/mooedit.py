@@ -508,18 +508,17 @@ class PidaMooInput(object):
         self.svc = svc
         self.editor = editor
         self.document = document
-        self.completion = moo.edit.TextCompletion()
-        self.completion.set_doc(editor)
         self.completer_window = PidaCompleterWindow(type_=gtk.WINDOW_POPUP,
             show_input=False)
         self.completer = self.completer_window.widget
+        self.completer.show_all()
         self.completer.connect("user-accept", self.accept)
         self.completer.connect("suggestion-selected", self.suggestion_selected)
         self.editor.connect("cursor-moved", self.on_cursor_moved)
         self.model = SuggestionsList()
         self.completer.set_model(self.model)
         
-        self.completer.hide_all()
+        #self.completer.hide()
         #self.completer_visible = False
         self.completer_added = False
         self.completer_pos = 0
@@ -641,7 +640,6 @@ class PidaMooInput(object):
         #self.completer_window.move(rpos[0],rpos[1])
         self.completer.place(rpos[0],rpos[1] - rec.height, rec.height)
         self.completer_window.set_transient_for(self.svc.boss.window)
-        self.completer_window.show()
         #self.completer_window.window.set_accept_focus(False)
         #self.completer_window.window.set_focus_on_map(False)
         #self.completer_window.window.set_skip_taskbar_hint(True)
@@ -677,6 +675,7 @@ class PidaMooInput(object):
         self.show_auto = show_auto
 
         if visible:
+            self.completer_window.show()
             self.completer.show_all()
             #self.completer_visible = True
 
@@ -815,7 +814,7 @@ class PidaMooInput(object):
         if not self.completer_visible and self.show_auto:
             print "len compl model", len(self.completer.model)
             if len(self.completer.model):
-                self.completer.show_all()
+                self.completer_window.show()
 
     def on_cursor_moved(self, widget, itr):
         buf = self.editor.get_buffer()
@@ -883,6 +882,7 @@ class PidaMooInput(object):
         # but doesn't work as this super function returns True
         # and stops the processing of connect_after functions
         modified = self.editor.do_key_press_event(editor, event)
+        #print modified, repr(event.string)
 
         if modified:
             self.update_completer()
