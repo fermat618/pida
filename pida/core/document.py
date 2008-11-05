@@ -286,7 +286,7 @@ class Document(object):
     def _update_content_from_lines(self):
         self._str = "".join(self._lines)
         if hasattr(self.boss.editor, 'set_content') and self.editor:
-            return self.boss.editor.set_content(self.editor, value)
+            return self.boss.editor.set_content(self.editor, self._str)
         self.set_content(self._str, flush=False)
 
     @property

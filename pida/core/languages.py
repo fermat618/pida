@@ -44,6 +44,8 @@ class BaseDocumentHandler(object):
 
 class Outliner(BaseDocumentHandler):
 
+    filter_type = ()
+
     def get_outline(self):
         raise NotImplementedError('Outliner must define get_outline')
 
@@ -196,10 +198,6 @@ class LanguageService(Service):
     documentator_factory = None
 
     features_config = LanguageServiceFeaturesConfig
-
-    def pre_start(self):
-        if self.language_name is None:
-            raise NotImplementedError('Language services must specify a language.')
 
 class SnippetsProvider(object):
 
