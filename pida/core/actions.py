@@ -63,6 +63,8 @@ TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
 accelerator_group = gtk.AccelGroup()
 
 class ActionsConfig(OptionsConfig):
+    # this inherits from options in order to ease storing the mapping betwen
+    # actions and accels (keyboard shortcuts)
     """
     The base action configurator.
 
@@ -107,7 +109,14 @@ class ActionsConfig(OptionsConfig):
         self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
 
     def register_options(self):
-        pass #override this one to call it somewhere else
+        # disable this one so we can invoke it after the actions are created
+        pass
+
+    def _emit_change_notification(self, option):
+        # disable options notification for the buildin way of action
+        # notifications
+        pass
+
     def create_action(self, name, atype, label, tooltip, stock_id,
                       callback=None, accel=None):
         """
