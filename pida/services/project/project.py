@@ -26,7 +26,7 @@ from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
-from pida.core.environment import get_data_path
+from pida.core import environment
 
 from pida.utils.puilder.view import PuilderView
 
@@ -389,6 +389,7 @@ class ProjectService(Service):
         if last:
             for project in self._projects:
                 if project.source_directory == last:
+                    self.set_current_project(project)
                     self.project_list.set_current_project(project)
 
     def load_and_set_project(self, project_file):
@@ -422,14 +423,15 @@ class ProjectService(Service):
 
         if project is None:
             project = self._current
-        else:
-            self.actions.get_action('project_execute_last').props.label = \
-                _('Execute: %s') %target
-            self._target_last = target
 
-        script = get_data_path('project_execute.py')
+        self.actions.get_action('project_execute_last').props.label = \
+            _('Execute: %s') %target.name
+        self._target_last = target
 
-        env = ['PYTHONPATH=%s' % sys.path[0]]
+        script = environment.get_data_path('project_execute.py')
+
+        env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
+                                    os.environ.get('PYTHONPATH', sys.path[0]))]
 
         self.boss.cmd('commander', 'execute',
                 commandargs=[

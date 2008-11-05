@@ -269,15 +269,15 @@ class MooeditView(gtk.ScrolledWindow):
             lm.props.visible = True
             marker._moo_marker = lm
 
+        buf = self.editor.props.buffer
         if marker not in self.line_markers:
-            buf = self.editor.props.buffer
             self.line_markers.append(marker)
             buf.add_line_mark(marker._moo_marker, 
                 min(max(0, int(marker.line)-1),buf.get_line_count()))
             marker._moo_marker.props.visible = True
         else:
             self.editor.props.buffer.move_line_mark(marker._moo_marker, 
-                int(marker.line)-1)
+                min(max(0, int(marker.line)-1),buf.get_line_count()))
 
 
 class MooeditActionsConfig(EditorActionsConfig):
@@ -1034,15 +1034,16 @@ class Mooedit(EditorService):
             self.boss.cmd('window', 'remove_view',
                           view=self._preferences)
 
-    def stop(self):
+    def pre_stop(self):
         views = [view for view in self._documents.values()]
-        close = True
+        rv = True
         for view in views:
             editor_close = view.editor.close()
-            self._embed.remove_page(self._embed.page_num(view))
-            close = close & editor_close
-        self.boss.stop(force=True)
-        return close
+            if not editor_close:
+                rv = False
+            else:
+                self._embed.remove_page(self._embed.page_num(view))
+        return rv
 
     def update_actions(self, enabled=True):
         all = True

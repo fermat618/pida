@@ -43,11 +43,11 @@ class Build(object):
         f.write(self.dumps())
         f.close()
 
-    def create_new_target(self, name='', actions=[], dependencies=[]):
+    def create_new_target(self, name='', actions=(), dependencies=()):
         t = Target()
         t.name = name
-        t.actions = actions
-        t.dependencies = []
+        t.actions = list(actions)
+        t.dependencies = list(dependencies)
         self.targets.append(t)
         return t
 

@@ -476,6 +476,19 @@ class Language(Service):
     def get_documentator(self, document):
         return self._get_feature(document, 'documentator', '_lnd_documentator')
 
+    def get_snippers(self, document):
+        handler = getattr(document, '_lnd_snipper', None)
+        if not handler:
+            type_ = document.doctype
+            rv = set()
+            if type_:
+                rv.update(self.features[(type_.internal, "snipper")])
+            rv.update(self.features[(None, "snipper")])
+            setattr(document, '_lnd_snipper', rv)
+            return rv
+        else:
+            return handler
+
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
         if not action.get_active():

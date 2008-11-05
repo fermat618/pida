@@ -19,6 +19,8 @@
         <menu name="ToolsMenu" action="ToolsMenu">
             <placeholder name="toolstools">
             <menuitem name="shell" action="shell" />
+            <menuitem name="python_shell" action="python_shell" />
+            <menuitem name="python_shell_extern" action="python_shell_extern" />
             </placeholder>
             <separator />
             <menu name="ToolsDebug" action="ToolsDebug">

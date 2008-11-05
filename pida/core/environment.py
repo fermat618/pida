@@ -46,7 +46,9 @@ def get_data_path(name):
 pida_home = os.path.expanduser('~/.pida2')
 firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
 plugins_dir = os.path.join(pida_home, 'plugins')
-
+pida_root_path = os.path.abspath(os.path.join(
+    __file__, os.path.pardir, os.path.pardir, os.path.pardir))
+    
 for path in pida_home, plugins_dir:
     if not os.path.exists(path):
         os.mkdir(path)

@@ -31,6 +31,7 @@ moo = Extension(
         'marshals.c',
         'moo-pygtk.c',
         'moo-stub.c',
+        'moopython-utils.c',
     ]],
     include_dirs=pkc_get_include_dirs('gtk+-2.0', 'pygtk-2.0'),
     libraries=pkc_get_libraries('gtk+-2.0', 'pygtk-2.0'),

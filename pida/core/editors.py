@@ -221,6 +221,8 @@ class LineMarker(object):
         self.type_ = type_
 
     def set_line(self, newlineno):
+        newlineno = int(newlineno)
+
         if self._lineno != newlineno:
             self.update(newlineno)
             #self._lineno = newlineno
