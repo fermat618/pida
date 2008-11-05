@@ -34,7 +34,7 @@ class Window(gtk.Window):
         self.create_all()
 
     def _on_delete_event(self, window, event):
-        return self._boss.stop()
+        return not self._boss.stop()
 
     def create_all(self):
         pass
@@ -131,8 +131,8 @@ class PidaWindow(Window):
             self._uim.remove_ui(ui_merge_id)
 
     # View API
-    def add_view(self, paned, view, removable=True, present=False):
-        self.paned.add_view(paned, view, removable, present)
+    def add_view(self, paned, view, removable=True, present=False, detachable=True):
+        self.paned.add_view(paned, view, removable, present, detachable=detachable)
 
     def remove_view(self, view):
         self.paned.remove_view(view)

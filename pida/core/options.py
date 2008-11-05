@@ -176,7 +176,9 @@ class OptionsConfig(BaseConfig):
     def _on_change(self, option):
         if option.callback:
             option.callback(option)
-        self.svc.boss.get_service('optionsmanager').emit('option_changed', option=option)
+        optionsmanager = self.svc.boss.get_service('optionsmanager')
+        if hasattr(optionsmanager, 'events'):
+            optionsmanager.emit('option_changed', option=option)
 
     def read(self):
         data = {}

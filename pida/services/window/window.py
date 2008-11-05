@@ -25,8 +25,8 @@ _ = locale.gettext
 
 class WindowCommandsConfig(CommandsConfig):
 
-    def add_view(self, paned, view, removable=True, present=True):
-        self.svc.window.add_view(paned, view, removable, present)
+    def add_view(self, paned, view, removable=True, present=True, detachable=True):
+        self.svc.window.add_view(paned, view, removable, present, detachable=detachable)
 
     def add_detached_view(self, paned, view, size=(500,400)):
         self.add_view(paned, view)

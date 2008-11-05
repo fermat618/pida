@@ -1,0 +1,91 @@
+{
+  "targets": [
+    {
+      "dependencies": [], 
+      "name": "debug", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {
+            "cwd": null
+          }, 
+          "value": ".\/run-pida.py -D -s testing"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "run", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": ".\/run-pida.py"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "genapi", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "pydoctor -c tools\/pida-pydoctor.cfg"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "tests", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "nosetests"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "build.ext", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "python setup.py build_ext -i"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "clean", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "python setup.py clean"
+        }, 
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": "make -C contrib\/moo clean"
+        }
+      ]
+    }, 
+    {
+      "dependencies": [], 
+      "name": "pyshell", 
+      "actions": [
+        {
+          "type": "shell", 
+          "options": {}, 
+          "value": ".\/run-pida-pyshell.py --ipython"
+        }
+      ]
+    }
+  ], 
+  "options": {
+    "name": "Pida"
+  }
+}

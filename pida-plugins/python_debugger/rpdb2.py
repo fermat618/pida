@@ -14167,15 +14167,17 @@ def PrintUsage(fExtended = False):
 
 
 
-def main(StartClient_func = StartClient, version = RPDB_TITLE):
+def main(StartClient_func = StartClient, version = RPDB_TITLE, argv=None):
     global g_fScreen
     global g_fDebug
     global g_fFirewallTest
     
     create_rpdb_settings_folder()
+    if argv is None:
+        argv = sys.argv
 
     encoding = detect_locale()
-    argv = [as_unicode(arg, encoding) for arg in sys.argv]
+    argv = [as_unicode(arg, encoding) for arg in argv]
     
     try:
         options, _rpdb2_args = getopt.getopt(

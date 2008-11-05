@@ -184,4 +184,26 @@ class LanguageService(Service):
         if self.language_name is None:
             raise NotImplementedError('Language services must specify a language.')
 
+class SnippetsProvider(object):
+
+    def get_snippets(self, document):
+        raise NotImplemented
+
+class SnippetTemplate(object):
+    text = ""
+
+    def get_template(self):
+        """
+        Return text for inclusion.
+        This may need expanding the template.
+        """
+        return self.text
+
+    def get_tokens(self):
+        """
+        Returns a list of Text and Template Tokens
+        """
+        return []
+
+
 

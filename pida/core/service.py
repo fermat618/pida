@@ -86,6 +86,11 @@ class Service(object):
     def start(self):
         """Override for main phase of startup"""
 
+    def pre_stop(self):
+        """pre_stop allows a service to stop the shutdown process by returning
+        False. In this phase all user interaction should take place"""
+        return True
+
     def stop(self):
         """Override to stop service"""
 

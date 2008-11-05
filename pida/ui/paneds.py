@@ -65,7 +65,7 @@ class PidaPaned(BigPaned):
         for pos in self.get_all_pos(every):
             yield self.get_paned(pos)
 
-    def add_view(self, name, view, removable=True, present=True):
+    def add_view(self, name, view, removable=True, present=True, detachable=True):
         if name == PANE_EDITOR:
             self.add_child(view.get_toplevel())
         else:
@@ -75,6 +75,7 @@ class PidaPaned(BigPaned):
                 pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
             else:
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
+            pane.props.detachable = detachable
             view.pane = pane
             pane.view = view
             if not removable:
