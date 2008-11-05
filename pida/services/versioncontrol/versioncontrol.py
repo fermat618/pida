@@ -212,10 +212,10 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
         self.publish('workdir-manager')
         try:
             #XXX: packing a s/bdist should include anyvc
-            from pida.utils.anyvc import all_known
+            from pida.utils.anyvc.workir import all_known
         except ImportError:
             try:
-                from anyvc import all_known
+                from anyvc.workdir import all_known
             except:
                 self.svc.window.error_dlg(_("Couldn't find anyvc"))
                 self.svc.log.error('Cant find anyvc')
