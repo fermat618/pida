@@ -176,6 +176,9 @@ class OptionsConfig(BaseConfig):
     def _on_change(self, option):
         if option.callback:
             option.callback(option)
+        self._emit_change_notification(option)
+
+    def _emit_change_notification(self, option):
         optionsmanager = self.svc.boss.get_service('optionsmanager')
         if hasattr(optionsmanager, 'events'):
             optionsmanager.emit('option_changed', option=option)
