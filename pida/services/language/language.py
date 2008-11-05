@@ -460,7 +460,7 @@ class Language(Service):
             rv = set()
             if type_:
                 rv.update(self.features[(type_.internal, "snipper")])
-            rv.update(self.features[(type_.internal, "snipper")])
+            rv.update(self.features[(None, "snipper")])
             setattr(document, '_lnd_snipper', rv)
             return rv
         else:
