@@ -512,6 +512,13 @@ class Console (gtk.ScrolledWindow):
             elif keyname in ['d', 'D']:
                 if not len(self.last_line().strip()):
                     self.quit()
+            elif keyname in ['c', 'C']:
+                line = self.last_line()
+                self.write("\n")
+                self.prompt('prompt')
+                #FIXME: maybe we should simply raise a KeyboardInterrupt somehow
+                #raise KeyboardInterrupt, "user abort"
+                return True
 
         # Editing before prompt is forbidden
         else:
