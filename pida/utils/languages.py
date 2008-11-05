@@ -133,3 +133,4 @@ class Documentation(InitObject):
     def __nonzero__(self):
         # a documentation object is true if it holds any value
         return bool(self.path) or bool(self.short) or bool(self.long_)
+
