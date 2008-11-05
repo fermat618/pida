@@ -108,8 +108,8 @@ class OptionItem(object):
         self.value = None
 
     def add_notify(self, callback, *args):
-        pass #XXX: reimplement ?!
-
+        import warnings
+        warnings.warn("deprecated", DeprecationWarning)
 
 manager = OptionsManager()
 
@@ -134,7 +134,7 @@ class OptionsConfig(BaseConfig):
         # in safemode we reset all dangerouse variables so pida can start
         # even if there are some settings + pida bugs that cause problems
         # default values MUST be safe
-        self.svc.log(self._options.keys())
+        self.svc.log.debug(self._options.keys())
         for name, value in self.read().items():
             self.svc.log("%s %r", name, value)
 
@@ -150,9 +150,6 @@ class OptionsConfig(BaseConfig):
         for opt in self:
             if opt.value is None:
                 self.set_value(opt.name, opt.default)
-
-
-
 
     def create_option(self, name, label, type, default, doc, callback=None, 
                       safe=True, session=False):
@@ -179,8 +176,7 @@ class OptionsConfig(BaseConfig):
     def _on_change(self, option):
         if option.callback:
             option.callback(option)
-        manager.on_change(option)
-
+        self.svc.boss.get_service('optionsmanager').emit('option_changed', option=option)
 
     def read(self):
         data = {}

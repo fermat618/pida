@@ -26,65 +26,21 @@ locale = Locale('optionsmanager')
 _ = locale.gettext
 
 
-class PidaOptionsView(PidaGladeView):
 
-    key = 'optionsmanager.editor'
+class OptionsPage(gtk.VBox):
+    def __init__(self, view, svc):
+        gtk.VBox.__init__(self, spacing=0)
+        self.set_border_width(6)
 
-    gladefile = 'options-editor'
-    locale = locale
-    label_text = 'Preferences'
-
-    icon_name = 'gnome-settings'
-
-    def create_ui(self):
-        self.current = None
-        self.refresh_ui()
-
-    def clear_ui(self):
-        while self.options_book.get_n_pages():
-            self.options_book.remove_page(-1)
-        self._services_display = []
-        self._service_pages = {}
-
-    def refresh_ui(self):
-        current = self.current
-        self.clear_ui()
-        self._services = []
-
-        for svc in self.svc.boss.get_services():
-            if svc.options:
-                self._services.append(svc)
-                self._services_display.append(
-                    (svc.get_label(), svc),
-                )
-
-        self._services.sort(key=Service.sort_key)
-
-        self._tips = gtk.Tooltips()
-
-        self.service_combo.prefill(self._services_display)
-
-        if current is not None:
-            try:
-                self.service_combo.update(current)
-            except KeyError:
-                self.service_combo.update(self.current)
-
-
-    def _add_service(self, svc):
-        self._service_pages[svc.get_name()] = self.options_book.get_n_pages()
-        self.options_book.append_page(self._create_page(svc))
-        self.options_book.show_all()
-
-    def _create_page(self, svc):
-        mainvb = gtk.VBox(spacing=0)
-        mainvb.set_border_width(6)
+        self.view = view
+        self.svc = svc
+        self.widgets = {}
 
         label = gtk.Label()
         label.set_markup('<big><b>%s</b></big>' % svc.get_label())
         label.set_alignment(0, 0.5)
 
-        mainvb.pack_start(label, expand=False)
+        self.pack_start(label, expand=False)
 
         optsw = gtk.ScrolledWindow()
         optsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -94,7 +50,7 @@ class PidaOptionsView(PidaGladeView):
 
         optsw.add_with_viewport(optvb)
 
-        mainvb.pack_start(optsw)
+        self.pack_start(optsw)
 
         labelsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         widgetsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
@@ -126,20 +82,8 @@ class PidaOptionsView(PidaGladeView):
             hb.pack_start(optwidget, expand=True)
             optwidget.update(opt.value)
             optwidget.connect('content-changed', self._on_option_changed, opt)
-            #XXX: this leaks references
-            #XXX: broken from options_refactor
-            opt.add_notify(self._on_option_changed_elsewhere, optwidget)
-            self._tips.set_tip(eb, doc)
-        return mainvb
-
-    def on_service_combo__content_changed(self, cmb):
-        self.current = svc = self.service_combo.read()
-        if not svc:
-            return # no service was selected
-        if not svc.get_name() in self._service_pages:
-            self._add_service(svc)
-        pagenum = self._service_pages[svc.get_name()]
-        self.options_book.set_current_page(pagenum)
+            self.widgets[opt.name] = optwidget
+            view._tips.set_tip(eb, doc)
 
     def _on_option_changed(self, widget, option):
         widgval = widget.read()
@@ -150,14 +94,82 @@ class PidaOptionsView(PidaGladeView):
         if widgval == ValueUnset:
             widgval = ''
         if widgval != optval:
-            option.set_value(widgval)
+            option.group.set_value(option.name, widgval)
 
-    def _on_option_changed_elsewhere(self, client, id, entry, (option, widget)):
-        #XXX: broken
-        widgval = widget.read()
-        optval = option.get_value()
+    def _on_option_changed_elsewhere(self, option):
+        widgval = self.widgets[option.name].read()
+        optval = option.value
         if optval != widgval:
-            widget.update(option.get_value())
+            self.widgets[option.name].update(option.value)
+
+class PidaOptionsView(PidaGladeView):
+
+    key = 'optionsmanager.editor'
+
+    gladefile = 'options-editor'
+    locale = locale
+    label_text = 'Preferences'
+
+    icon_name = 'gnome-settings'
+
+    def create_ui(self):
+        self.svc.events.subscribe('option_changed',
+                                  self._on_option_changed_elsewhere)
+        self.current = None
+        self.refresh_ui()
+
+    def clear_ui(self):
+        while self.options_book.get_n_pages():
+            self.options_book.remove_page(-1)
+        self._services_display = []
+        self._service_pages = {}
+        self._service_page_widgets = {}
+
+    def refresh_ui(self):
+        current = self.current
+        self.clear_ui()
+        self._services = []
+
+        for svc in self.svc.boss.get_services():
+            if svc.options:
+                self._services.append(svc)
+                self._services_display.append(
+                    (svc.get_label(), svc),
+                )
+
+        self._services.sort(key=Service.sort_key)
+
+        self._tips = gtk.Tooltips()
+
+        self.service_combo.prefill(self._services_display)
+
+        if current is not None:
+            try:
+                self.service_combo.update(current)
+            except KeyError:
+                self.service_combo.update(self.current)
+
+    def _add_service(self, svc):
+        self._service_pages[svc.get_name()] = self.options_book.get_n_pages()
+        page = OptionsPage(self, svc)
+        self._service_page_widgets[svc.get_name()] = page
+        self.options_book.append_page(page)
+        self.options_book.show_all()
+
+    def on_service_combo__content_changed(self, cmb):
+        self.current = svc = self.service_combo.read()
+        if not svc:
+            return # no service was selected
+        if not svc.get_name() in self._service_pages:
+            self._add_service(svc)
+        pagenum = self._service_pages[svc.get_name()]
+        self.options_book.set_current_page(pagenum)
+
+
+    def _on_option_changed_elsewhere(self, option):
+        page = self._service_page_widgets.get(option.group.svc.get_name())
+        if page is not None:
+            page._on_option_changed_elsewhere(option)
 
     def can_be_closed(self):
         self.svc.get_action('show_options').set_active(False)
