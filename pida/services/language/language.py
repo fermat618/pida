@@ -15,8 +15,10 @@ import pida.plugins
 from kiwi.ui.objectlist import Column
 from kiwi.ui.objectlist import ObjectList
 
+from outlinefilter import FILTERMAP
 
 from pida.core.environment import plugins_dir
+from pida.core.environment import get_pixmap_path
 
 from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
@@ -35,7 +37,6 @@ from pida.core.pdbus import DbusConfig, EXPORT
 # ui
 from pida.ui.views import PidaView, PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
-
 
 # locale
 from pida.core.locale import Locale
@@ -108,6 +109,7 @@ class BrowserView(PidaGladeView):
     label_text = _('Outliner')
 
     def create_ui(self):
+        self.task = None
         self.source_tree.set_columns(
             [
                 Column('icon_name', use_stock=True),
@@ -128,20 +130,28 @@ class BrowserView(PidaGladeView):
             'sort_hack'
         )
         self.sort_box.show()
-        self.main_vbox.pack_start(self.sort_box, expand=False)
+        self.sort_vbox.pack_start(self.sort_box, expand=False)
 
     def set_outliner(self, outliner):
         self.clear_items()
-        self.options = self.read_options()
         if outliner:
-            task = GeneratorTask(outliner.get_outline, self.add_node)
-            task.start()
+            if self.task:
+                self.task.stop()
+            self.task = GeneratorTask(outliner.get_outline, self.add_node)
+            self.task.start()
 
     def clear_items(self):
         self.source_tree.clear()
 
     def add_node(self, node, parent):
-        self.source_tree.append(parent, node)
+        if node.filter_type in self.filter_map:
+            if self.filter_map[node.filter_type]:
+                self.source_tree.append(parent, node)
+            else:
+                pass
+        else:
+             self.source_tree.append(parent, node)
+
 
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
@@ -154,21 +164,35 @@ class BrowserView(PidaGladeView):
         self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
-    def on_show_super__toggled(self, but):
-        self.browser.refresh_view()
+    def update_filterview(self, outliner):
+        if outliner:
+            self.options_vbox.remove(self.filter_toolbar)
+            self.filter_toolbar = gtk.Toolbar()
+            self.filter_map = dict(
+                [(f, FILTERMAP[f]['default']) for f in outliner.filter_type]
+                )
+            for f in self.filter_map:
+                tool_button = gtk.ToggleToolButton()
+                tool_button.set_name(f)
+                tool_button.set_active(self.filter_map[f])
+                tool_button.set_tooltip_text(FILTERMAP[f]['display'])
+                tool_button.connect("toggled", self.on_filter_toggled,outliner)
+                im = gtk.Image()
+                im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
+                tool_button.set_icon_widget(im)
+                self.filter_toolbar.insert(tool_button, 0)
+        self.options_vbox.add(self.filter_toolbar)
+        self.options_vbox.show_all()
 
-    def on_show_builtins__toggled(self, but):
-        self.browser.refresh_view()
+    def on_filter_toggled(self, but, outliner):
+        self.filter_map[but.get_name()] = not self.filter_map[but.get_name()]
+        self.set_outliner(outliner)
 
-    def on_show_imports__toggled(self, but):
-        self.browser.refresh_view()
-
-    def read_options(self):
-        return {
-            '(m)': self.show_super.get_active(),
-            '(b)': self.show_builtins.get_active(),
-            'imp': self.show_imports.get_active(),
-        }
+    def on_type_changed(self):
+        pass
+        
+#    def read_options(self):
+#        return {}
 
 
 class LanguageActionsConfig(ActionsConfig):
@@ -398,8 +422,7 @@ class Language(Service):
                  "_lng_definer"):
             if hasattr(document, k):
                 delattr(document, k)
-
-        self.on_buffer_changed(document)
+        self._view_outliner.on_type_changed()
 
     def _get_feature(self, document, feature, name, do=None):
         handler = getattr(document, name, None)
@@ -418,20 +441,20 @@ class Language(Service):
         else:
             return handler
 
-
     def on_buffer_changed(self, document):
         doctypes = self.doctypes.types_by_filename(document.filename)
         if not doctypes:
             self.current_type = None
             return
-        self.current_type = document.doctype
-
+        if self.current_type != document.doctype:
+            self.boss.get_service('buffer').emit('document-typchanged', document=document)
+            self.current_type = document.doctype
+            self._view_outliner.update_filterview(
+                self._get_feature(document, 'outliner', '_lng_outliner'))
         self._view_outliner.set_outliner(
             self._get_feature(document, 'outliner', '_lng_outliner'))
-
         self._view_validator.set_validator(
             self._get_feature(document, 'validator', '_lng_validator'))
-
         self._get_feature(document, 'completer', '_lng_completer')
         self._get_feature(document, 'definer', '_lng_definer')
 

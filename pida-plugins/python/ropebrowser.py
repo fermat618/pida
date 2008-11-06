@@ -66,7 +66,7 @@ class TreeOptions(object):
     position = 0
     has_children = False
     icon_name = 'source-property'
-
+    filter_type = 'none'
     def __init__(self, treeitem):
         self.item = treeitem
 
@@ -83,9 +83,10 @@ class FunctionOptions(TreeOptions):
     """Describe how functions are shown"""
 
     type_name = 'f'
-    icon_name = 'source-method'
+    icon_name = 'source-function'
     type_color = '#900000'
     position = 2
+    filter_type = 'function'
 
     def get_pre_markup(self):
         """Draw decorators"""
@@ -117,13 +118,13 @@ class EvaluatedOptions(TreeOptions):
     type_name = 'p'
     icon_name = 'source-property'
     type_color = '#900090'
-
+    filter_type = 'property'
 
 class MethodOptions(FunctionOptions):
 
     type_name = 'm'
     icon_name = 'source-method'
-
+    filter_type = 'method'
 
 class SuperMethodOptions(MethodOptions):
 
@@ -171,6 +172,7 @@ class AssignedOptions(TreeOptions):
     icon_name = 'source-attribute'
     type_color = '#009000'
     position = 5
+    filter_type = 'attribute'
 
 class BuiltinOptions(TreeOptions):
 
@@ -178,6 +180,7 @@ class BuiltinOptions(TreeOptions):
     icon_name = None
     type_color = '#999999'
     position = 7
+    filter_type = 'builtin'
 
 class ImportedOptions(TreeOptions):
 
@@ -185,7 +188,7 @@ class ImportedOptions(TreeOptions):
     icon_name = 'source-import'
     type_color = '#999999'
     position = 8
-    icon_name = 'source-module'
+    filter_type = 'import'
 
 def get_option_for_item(item):
     if isinstance(item.node, pynames.ImportedName):
@@ -251,6 +254,7 @@ class SourceTreeItem(object):
         self.type_markup = markup_type(self.options.type_name,
                                        self.options.type_color)
 
+        self.filter_type = self.options.filter_type
         self.icon_name = self.options.icon_name
 
     def render(self):
