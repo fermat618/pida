@@ -134,9 +134,7 @@ class OptionsConfig(BaseConfig):
         # in safemode we reset all dangerouse variables so pida can start
         # even if there are some settings + pida bugs that cause problems
         # default values MUST be safe
-        self.svc.log.debug(self._options.keys())
         for name, value in self.read().items():
-            self.svc.log("%s %r", name, value)
 
             # ignore removed options that might have config entries
             if name in self._options:
