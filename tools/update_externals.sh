@@ -3,7 +3,6 @@
 REPOSPATH="`pwd`/externals/src"
 OLDPATH=`pwd`
 REPOS="
-vellumui-main|hg|http://www.bitbucket.org/aafshar/vellumui-main/|vellumui-main/vellumui|vellumui
 rope|hg|http://www.bitbucket.org/agr/rope/|rope/rope|rope
 anyvc|hg|http://bitbucket.org/RonnyPfannschmidt/anyvc/|anyvc/anyvc|anyvc
 "
