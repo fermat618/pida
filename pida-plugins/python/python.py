@@ -34,11 +34,10 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
-    Completer, LanguageServiceFeaturesConfig, LanguageInfo, PRIO_VERY_GOOD,
-    PRIO_GOOD, Definer, Documentator)
+    Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, Documentator)
 
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
    Definition, Suggestion, Documentation, ValidationError)
 
 # services
@@ -107,7 +106,7 @@ class PythonActionsConfig(ActionsConfig):
 
 class PythonOutliner(Outliner):
 
-    priority = PRIO_VERY_GOOD
+    priority = LANG_PRIO.VERY_GOOD
 
     def get_outline(self):
         from rope.base.exceptions import RopeError
@@ -200,7 +199,7 @@ class PythonError(ValidationError):
 
 class PythonValidator(Validator):
 
-    priority = PRIO_GOOD
+    priority = LANG_PRIO.GOOD
 
     def get_validations(self):
         code_string = self.document.content
@@ -245,7 +244,7 @@ class PythonValidator(Validator):
 
 class PythonCompleter(Completer):
 
-    priority = PRIO_VERY_GOOD
+    priority = LANG_PRIO.VERY_GOOD
 
     def get_completions(self, base, buffer, offset):
 
