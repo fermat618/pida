@@ -18,7 +18,7 @@ LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
 
 # main types
 LANG_VALIDATOR_TYPES = Enumeration('LANG_TYPES',
-    ('UNKNOWN', 'INFO', 'WARNING', 'ERROR'))
+    ('UNKNOWN', 'INFO', 'WARNING', 'ERROR', 'FATAL'))
 
 # validation sub types
 LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',

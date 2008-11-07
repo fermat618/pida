@@ -9,6 +9,8 @@
     :license: GPL2 or later
 """
 
+from functools import partial
+
 import gtk
 import pida.plugins
 
@@ -55,15 +57,28 @@ class ValidatorView(PidaView):
     icon_name = 'python-icon'
     label_text = _('Language Errors')
 
-    def set_validator(self, validator):
+    def set_validator(self, validator, document):
+        self.document = document
         self.clear_nodes()
+
+        def add_node(document, node):
+            # we need this proxy function as a task may be still running in 
+            # background and the document already switched
+            # this way we still can fill up the cache by letting the task run
+            if self.document == document:
+                self.add_node(node)
+
+        radd = partial(add_node, document)
+
         if validator:
-            task = GeneratorTask(validator.get_validations, self.add_node)
+            task = GeneratorTask(validator.get_validations_cached, 
+                                 radd)
             task.start()
 
     def add_node(self, node):
-        node.lookup_color = self.errors_ol.style.lookup_color
-        self.errors_ol.append(node)
+        if node:
+            node.lookup_color = self.errors_ol.style.lookup_color
+            self.errors_ol.append(node)
 
     def create_ui(self):
         self.errors_ol = ObjectList(
@@ -454,7 +469,8 @@ class Language(Service):
         self._view_outliner.set_outliner(
             self._get_feature(document, 'outliner', '_lng_outliner'))
         self._view_validator.set_validator(
-            self._get_feature(document, 'validator', '_lng_validator'))
+            self._get_feature(document, 'validator', '_lng_validator'),
+            document)
         self._get_feature(document, 'completer', '_lng_completer')
         self._get_feature(document, 'definer', '_lng_definer')
 

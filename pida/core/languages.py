@@ -50,6 +50,28 @@ class Outliner(BaseDocumentHandler):
 
 class Validator(BaseDocumentHandler):
 
+    def get_validations_cached(self):
+        """
+        Default implementation of validator cache.
+        We cache as long as the file on disk does not change
+        """
+        if not hasattr(self, '_cache_'):
+            self._cache_ = []
+            self._lastmtime_ = 0
+        if not self.document.is_new:
+            if self.document.modified_time != self._lastmtime_:
+                self._cache_ = []
+                for x in self.get_validations():
+                    self._cache_.append(x)
+                    yield x
+                self._lastmtime_ = self.document.modified_time
+            else:
+                for x in self._cache_:
+                    yield x
+        else:
+            for x in self.get_validations():
+                yield x
+
     def get_validations(self):
         raise NotImplementedError('Validator must define get_validations')
 

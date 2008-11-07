@@ -1000,7 +1000,6 @@ class Mooedit(EditorService):
                                     ("text/uri-list", 0, 2)],
                                     gtk.gdk.ACTION_COPY | gtk.gdk.ACTION_MOVE)
             self.boss.cmd('window', 'add_view', paned='Editor', view=self._main)
-            self.boss.get_service('editor').emit('started')
             return True
         except Exception, err:
             import traceback
@@ -1014,6 +1013,7 @@ class Mooedit(EditorService):
             self.update_actions(enabled=False)
         self.get_action('mooedit_last_edit').set_sensitive(False)
         self._update_keyvals()
+        self.boss.get_service('editor').emit('started')
         return True
 
     def on_marker_changed(self, marker):
