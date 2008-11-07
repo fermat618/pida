@@ -111,6 +111,7 @@ class ServiceManager(object):
     def __init__(self, boss):
         from pida import plugins, services, editors
         self._boss = boss
+        self.started = False
         self._services = ServiceLoader(services, '__init__.py')
         self._plugins = ServiceLoader(plugins)
         self._editors = ServiceLoader(editors, '__init__.py')
@@ -139,6 +140,8 @@ class ServiceManager(object):
 
     def start_plugin(self, name):
         plugin = self._plugins.get_one(name)(self._boss)
+        assert not hasattr(plugin, 'started')
+        plugin.started = False # not yet started
         pixmaps_dir = os.path.join(plugin.__path__, 'pixmaps')
         if os.path.exists(pixmaps_dir):
             self._boss._icons.register_file_icons_for_directory(pixmaps_dir)
@@ -148,6 +151,8 @@ class ServiceManager(object):
             plugin.subscribe_all()
             plugin.pre_start()
             plugin.start()
+            assert plugin.started is False # this shouldn't change
+            plugin.started = True
             return plugin
         else:
             log.error('Unable to load plugin %s' % name)
@@ -168,7 +173,10 @@ class ServiceManager(object):
 
     def _register_services(self):
         for service in self._services.get_all():
-            self._register(service(self._boss))
+            service_instance = service(self._boss)
+            #XXX: check for started
+            service.started = False
+            self._register(service_instance)
 
     def _register(self, service):
         self._reg[service.get_name()] = service
@@ -192,6 +200,9 @@ class ServiceManager(object):
         for svc in self.get_services():
             svc.log.debug('Starting Service')
             svc.start()
+            #XXX: check if its acceptable here
+            svc.started = True
+        self.started = True
 
     def get_available_editors(self):
         return self._editors.get_all()
@@ -205,11 +216,13 @@ class ServiceManager(object):
     def start_editor(self):
         self._register(self.editor)
         self.editor.start()
+        self.editor.started = True
 
     def load_editor(self, name):
         assert not hasattr(self, 'editor') , "can't load a second editor"
         editor = self._editors.get_one(name)
         self.editor = editor(self._boss)
+        self.editor.started = False
         return self.editor
 
     def stop(self, force=False):

@@ -1,143 +1,96 @@
 # -*- coding: utf-8 -*-
 """
+    Options Management
+    ~~~~~~~~~~~~~~~~~~
+
+    This module handles the storrage of configuration data.
+    There are 3 semantical locations of configuration data:
+    * global
+    * workspace
+    * project *todo*
+
+
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-#XXX: get rid of that ;P
-import gconf
-
-from pida.core.base import BaseConfig
-from pida.core.environment import is_safe_mode, killsettings
+from __future__ import with_statement
+from functools import partial
+from .base import BaseConfig
+from .environment import is_safe_mode, killsettings, settings_dir
 from pango import Font
+from shutil import rmtree
+import simplejson
 
+
+from os import path
+import os
+get_settings_path = partial(os.path.join, settings_dir)
+
+def add_directory(*parts):
+    dir = get_settings_path(*parts)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+def unset_directory(*parts):
+    #XXX: reload=!
+    rmtree(get_settings_path(*parts))
+
+def initialize():
+    add_directory('keyboard_shortcuts')
+    add_directory('workspaces')
+
+def list_sessions(self):
+    """Returns a list with all session names """
+    workspaces = get_settings_path('workspaces')
+    return [ x for x in os.listdir(workspaces)
+                if path.isdir(
+                    path.join(workspaces, x)
+                )
+            ]
 
 class OptionsManager(object):
 
-    def __init__(self, user_session=None, session=None, boss=None):
-        self._client = gconf.client_get_default()
-        self.initialize_gconf()
+    def __init__(self, session=None):
+
+        initialize()
         self._session = None
         if session:
             self.session = session
-        elif user_session:
-            self.user_session = user_session
         if killsettings():
-            self.unset_directory()
-
-    def initialize_gconf(self):
-        self.add_directory()
-        self.add_directory('keyboard_shortcuts')
-        self.add_directory('_sessions')
+            unset_directory()
 
     def initialize_session(self):
-        self.add_directory('_sessions', self.session)
+        add_directory('workspaces', self.session)
 
-    def _get_user_session(self):
-        return gconf.unescape_key(self.session, len(self.session))
-        
-    def _set_user_session(self, value):
-        self.session = gconf.escape_key(value, len(value))
-        
-    user_session = property(_get_user_session, _set_user_session)
+    def open_session_manager(self):
+        pass #XXX: get this from the options somehow
 
     def _set_session(self, value):
         self._session = value
         self.initialize_session()
-        
+
     def _get_session(self):
-        if not self._session:
+        if self._session is None:
             # we need this form of lazy loading because the default manager
             # is created so early that the session name is not known then
             import pida.core.environment
-            self.user_session = pida.core.environment.session_name()
+            self._session = pida.core.environment.session_name()
         return self._session
-        
+
     session = property(_get_session, _set_session)
 
-    def list_sessions(self):
-        """Returns a list with all session names """
-        return [gconf.unescape_key(x[21:], len(x[21:])) for x 
-                in self._client.all_dirs("/apps/pida/_sessions")]
+    def on_change(self, option):
+        pass #XXX: implement
 
-    def open_session_manager(self):
-        """Returns True if the user wants the session manager opened"""
-        #XXX: this is violation of DRY as this value is defined in 
-        # services.sessions.sessions but this is not initialized when this value
-        # is needed. but seems to be a good place to be
-        return self._client.get_bool('/apps/pida/sessions/open_session_manager')
-
-    def add_directory(self, *parts):
-        self._client.add_dir(
-            '/'.join(['/apps/pida'] + list(parts)),
-            gconf.CLIENT_PRELOAD_NONE
-        )
-
-    def add_service_directory(self, service):
-        self.add_directory(service.get_name())
-
-    def unset_directory(self, *parts):
-        self._client.recursive_unset('/'.join(['/apps/pida'] + list(parts)), -1)
-
-    def register_option(self, option):
-        val = self._client.get(option.key)
-        if val is None:
-            self.set(option, option.default)
-        if option.callback is not None:
-            self.add_notify(option, option.callback)
-
-    def add_notify(self, option, callback, *args):
-        args = tuple([option] + list(args))
-        if len(args) == 1:
-            args = args[0]
-        self._client.notify_add(option.key, callback, args)
-
-    def get(self, option):
-        key, type = option.key, option.type
-        c = self._client
-        if type in (str, file, Font):
-            return c.get_string(key)
-        elif issubclass(type, str):
-            return c.get_string(key)
-        elif type is bool:
-            return c.get_bool(key)
-        elif type in (int, long):
-            return c.get_int(key)
-        elif type is list:
-            return c.get_list(key, gconf.VALUE_STRING)
-        else:
-            raise TypeError('unknown option type',type)
-
-
-    def set(self, option, value):
-        key, rtype = option.key, option.type
-        c = self._client
-        if rtype in (str, file, Font):
-            c.set_string(key, value)
-        elif issubclass(rtype, str):
-            c.set_string(key, value)
-        elif rtype is bool:
-            c.set_bool(key, value)
-        elif rtype in (int, long):
-            c.set_int(key, value)
-        elif rtype is list:
-            c.set_list(key, gconf.VALUE_STRING, value)
-        else:
-            raise TypeError('unknown option type',rtype)
 
 def choices(choices):
     """Helper to generate string options for choices"""
     class Choices(str):
-        """
-        Option that should be one of the choices
-        """
+        """Option that should be one of the choices"""
         options = choices
     return Choices
 
-class Color(str):
-    """
-    Option which is a color in RGB Hex
-    """
-    pass
+class Color(str): """Option which is a color in RGB Hex"""
 
 
 class OptionItem(object):
@@ -150,52 +103,57 @@ class OptionItem(object):
         self.type = rtype
         self.doc = doc
         self.default = default
-        self.session = session
-        if session:
-            self.key = '/apps/pida/_sessions/%s/%s/%s' % (
-                            manager.session, self.group, self.name)
-        else:
-            self.key = '/apps/pida/%s/%s' % (self.group, self.name)
+        self.session = bool(session)
         self.callback = callback
-
-    def get_value(self):
-        return manager.get(self)
-
-    def set_value(self, value):
-        return manager.set(self, value)
-
-    value = property(get_value, set_value)
+        self.value = None
 
     def add_notify(self, callback, *args):
-        manager.add_notify(self, callback, *args)
+        import warnings
+        warnings.warn("deprecated", DeprecationWarning)
 
 manager = OptionsManager()
 
-class OptionsConfig(BaseConfig):
+class OptionsConfig(BaseConfig): 
+
+    #enable reuse for keyboard shortcuts that need different name
+    name='%s.json'
 
     def create(self):
+        self.name = self.__class__.name%self.svc.get_name()
+        self.workspace_path = get_settings_path('workspaces', manager.session, self.name)
+        self.global_path = get_settings_path(self.name)
         self._options = {}
         self.create_options()
         self.register_options()
 
-    def create_options(self):
+
+    def create_options(self) :
         """Create the options here"""
 
     def register_options(self):
-        manager.add_service_directory(self.svc)
-        for option in self._options.values():
-            manager.register_option(option)
-
-    def create_option(self, name, label, type, default, doc, callback=None, 
-                      safe=True, session=False):
-        opt = OptionItem(self.svc.get_name(), name, label, type, default, doc,
-                         callback, session)
-        self.add_option(opt)
         # in safemode we reset all dangerouse variables so pida can start
         # even if there are some settings + pida bugs that cause problems
         # default values MUST be safe
-        if not safe and is_safe_mode():
-            self.set_value(name, default)
+        for name, value in self.read().items():
+
+            # ignore removed options that might have config entries
+            if name in self._options:
+                self._options[name].value = value
+
+        if is_safe_mode() and False:#XXX: disabled
+            for opt in self:
+                if not opt.save:
+                    self.set_value(opt.name, opt.default) #XXX: this writes on every change, BAD
+
+        for opt in self:
+            if opt.value is None:
+                self.set_value(opt.name, opt.default)
+
+    def create_option(self, name, label, type, default, doc, callback=None, 
+                      safe=True, session=False):
+        opt = OptionItem(self, name, label, type, default, doc,
+                         callback, session)
+        self.add_option(opt)
         return opt
 
     def add_option(self, option):
@@ -204,18 +162,62 @@ class OptionsConfig(BaseConfig):
     def get_option(self, optname):
         return self._options[optname]
 
-    def get_value(self, optname):
-        return manager.get(self.get_option(optname))
+    def get_value(self, name):
+        return self._options[name].value
 
-    def set_value(self, optname, value):
-        return manager.set(self.get_option(optname), value)
+    def set_value(self, name, value):
+        option = self._options[name]
+        option.value = value
+        self._on_change(option)
+        self.dump(option.session)
+
+    def _on_change(self, option):
+        # we dont do anything smart, till we are started
+        if not self.svc.started:
+            return
+        if option.callback:
+            option.callback(option)
+        self._emit_change_notification(option)
+
+    def _emit_change_notification(self, option):
+        optionsmanager = self.svc.boss.get_service('optionsmanager')
+        if hasattr(optionsmanager, 'events'):
+            optionsmanager.emit('option_changed', option=option)
+
+    def read(self):
+        data = {}
+        for f in (self.workspace_path, self.global_path):
+            try:
+                with open(f) as file:
+                    data.update(simplejson.load(file))
+            except IOError:
+                pass
+            except Exception, e:
+                self.svc.log.exception(e)
+        return data
+
+    def dump(self, session):
+        data = dict((opt.name, opt.value) for opt in self if opt.session is session)
+        if session:
+            f = self.workspace_path
+        else:
+            f = self.global_path
+
+        with open(f, 'w') as out:
+            simplejson.dump(data, out, sort_keys=True, indent=2)
 
     def __len__(self):
         return len(self._options)
 
     def __iter__(self):
+        """
+        iterate the optionsitems
+        """
         return self._options.itervalues()
 
     def __nonzero__(self):
+        """
+        shows if there are actually options defined for this config
+        """
         return bool(self._options)
 

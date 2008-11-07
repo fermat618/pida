@@ -71,8 +71,8 @@ class StatusbarOptionsConfig(OptionsConfig):
             self.on_show_ui,
         )
 
-    def on_show_ui(self, client, id, entry, option):
-        self.svc.show_statusbar(option.get_value())
+    def on_show_ui(self, option):
+        self.svc.show_statusbar(option.value)
 
 class TabLabel(gtk.HBox):
 

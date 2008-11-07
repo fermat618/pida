@@ -19,6 +19,9 @@ class MyActions(ActionsConfig):
 
 class ActionTestCase(TestCase):
 
+    def log(self, *k): #XXX: ignore log attempts of OptionsConfig
+        pass
+    log.debug = log
     def setUp(self):
         self.banana = False
         self.boss = None

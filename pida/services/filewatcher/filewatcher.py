@@ -39,7 +39,7 @@ class FileWatcherOptions(OptionsConfig):
             safe=False
         )
 
-    def on_enabled_changed(self, client, id, entry, option):
+    def on_enabled_changed(self, option):
         if option.value:
             self.svc.start_gamin()
         else:

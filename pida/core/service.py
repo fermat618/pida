@@ -45,9 +45,9 @@ class Service(object):
         {servicemanager.ServiceManager}
         """
 
-        self.options = self.options_config(self)
-        self.events = self.events_config(self)
         self.commands = self.commands_config(self)
+        self.events = self.events_config(self)
+        self.options = self.options_config(self)
         self.features = self.features_config(self)
         self.actions = self.actions_config(self)
         if self.dbus_config:

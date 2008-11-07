@@ -389,11 +389,11 @@ class PluginsOptionsConfig(OptionsConfig):
             session=True
             )
 
-    def on_rpc_url(self, client, id, entry, option):
-        self.svc.rpc_url = option.get_value()
+    def on_rpc_url(self, option):
+        self.svc.rpc_url = option.value
 
     def on_check_for_updates(self, client, id, entry, option):
-        self.svc.check_for_updates(option.get_value())
+        self.svc.check_for_updates(option.value)
 
 
 class PluginsEvents(EventsConfig):
@@ -422,7 +422,7 @@ class Plugins(Service):
     def start(self):
         self.rpc_url = self.opt('rpc_url')
         self.update_installed_plugins(start=True)
-        self.check_for_updates(self.get_option('check_for_updates').get_value())
+        self.check_for_updates(self.opt('check_for_updates'))
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -676,19 +676,19 @@ class Plugins(Service):
 
     def _get_item_markup(self, item):
         markup = '<b>%s</b>' % cgi.escape(item.name)
-        if item.version != '':
+        if item.version:
             markup += '\n<b>%s</b> : %s' % (_('Version'),
                     cgi.escape(item.version))
-        if item.author != '':
+        if item.author:
             markup += '\n<b>%s</b> : %s' % (_('Author'),
                     cgi.escape(item.author))
-        if item.category != '':
+        if item.category:
             markup += '\n<b>%s</b> : %s' % (_('Category'),
                     cgi.escape(item.category))
-        if item.depends != '':
+        if item.depends:
             markup += '\n<b>%s</b> : %s' % (_('Depends'),
                     cgi.escape(item.depends))
-        if item.require_pida != '':
+        if item.require_pida:
             markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
                     cgi.escape(item.require_pida))
         return markup
