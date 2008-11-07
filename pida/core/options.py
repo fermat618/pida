@@ -172,6 +172,9 @@ class OptionsConfig(BaseConfig):
         self.dump(option.session)
 
     def _on_change(self, option):
+        # we dont do anything smart, till we are started
+        if not self.svc.started:
+            return
         if option.callback:
             option.callback(option)
         self._emit_change_notification(option)
