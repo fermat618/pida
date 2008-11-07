@@ -42,6 +42,7 @@ class MYService(Service):
     def __init__(self, boss):
         Service.__init__(self, boss)
         self.something = False
+        self.started = False
 
 class TestOptions(TestCase):
 
