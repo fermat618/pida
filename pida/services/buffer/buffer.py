@@ -31,8 +31,6 @@ from pida.core.locale import Locale
 locale = Locale('buffer')
 _ = locale.gettext
 
-import dbus
-
 LIST_COLUMNS = {
 'onerow': [
             Column('markup', use_markup=True),
@@ -332,12 +330,13 @@ class BufferDbusConfig(DbusConfig):
 
     @EXPORT(out_signature='a(isii)')
     def get_documents(self):
-        return dbus.Array(
-                 (dbus.Struct((x.unique_id, x.filename, id(x.doctype), 
-                               x.creation_time), signature="isii")
+        return [
+                 dict(id=x.unique_id, filename=x.filename, 
+                       doctype=x.doctype and x.doctype.internal or '', 
+                       creation_time=x.creation_time)
                   for x in self.svc._documents.itervalues()
-                 )
-               )
+               ]
+               
 
 # Service class
 class Buffer(Service):
