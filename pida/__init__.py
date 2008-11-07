@@ -2,11 +2,11 @@
 The Python Integrated Development Application IDE Framework
 """
 
-PIDA_VERSION = '0.5.1'
+PIDA_VERSION = '0.6.0'
 
 PIDA_NAME = 'PIDA'
 
-PIDA_COPYRIGHT = 'Copyright (c) 2005-2007 The PIDA Project'
+PIDA_COPYRIGHT = 'Copyright (c) 2005-2008 The PIDA Project'
 
 PIDA_WEBSITE = 'http://pida.co.uk/'
 
