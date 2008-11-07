@@ -11,20 +11,15 @@ from functools import partial
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
 
-PRIO_PERFECT = 100
-PRIO_VERY_GOOD = 50
-PRIO_GOOD = 10
-PRIO_DEFAULT = 0
-PRIO_LOW = -50
-PRIO_BAD = -100
+
 
 
 class BaseDocumentHandler(object):
 
-    priority = PRIO_DEFAULT
+    priority = LANG_PRIO.DEFAULT
 
     def __init__(self, svc, document=None):
         self.svc = svc

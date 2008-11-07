@@ -107,7 +107,7 @@ class TypeManager(dict):
         for intname, data in lst.iteritems():
             nd = DocType(intname, data['human'], aliases=data['alias'], 
                          extensions=data['glob'], mimes=data['mime'],
-                         section=data['section'])
+                         section=data.get('section', None))
 
             self.add(nd)
 
