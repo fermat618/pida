@@ -1071,15 +1071,15 @@ class Mooedit(EditorService):
 
     def _update_keyvals(self):
         self.key_toggle = gtk.accelerator_parse(
-            self.get_keyboard_options()['mooedit_complete_toggle'].get_value())
+            self.get_keyboard_options()['mooedit_complete_toggle'].value)
         self.key_close = gtk.accelerator_parse(
-            self.get_keyboard_options()['mooedit_completer_close'].get_value())
+            self.get_keyboard_options()['mooedit_completer_close'].value)
         self.key_next = gtk.accelerator_parse(
-            self.get_keyboard_options()['mooedit_completer_next'].get_value())
+            self.get_keyboard_options()['mooedit_completer_next'].value)
         self.key_prev = gtk.accelerator_parse(
-            self.get_keyboard_options()['mooedit_completer_prev'].get_value())
+            self.get_keyboard_options()['mooedit_completer_prev'].value)
         self.key_accept = gtk.accelerator_parse(
-            self.get_keyboard_options()['mooedit_completer_accept'].get_value())
+            self.get_keyboard_options()['mooedit_completer_accept'].value)
 
     def open(self, document):
         """Open a document"""
