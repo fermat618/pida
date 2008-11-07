@@ -125,11 +125,3 @@ class Project(Log):
     def data_dir_path(project_directory, *args):
         return os.path.join(project_directory, DATA_DIR, *args)
 
-
-    def _mkdir(self, path):
-        pe = path.split(os.sep)
-        last = os.sep
-        for x in pe:
-            last = os.path.join(last, x)
-            if last and not os.path.isdir(last):
-                os.mkdir(last)
