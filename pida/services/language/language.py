@@ -9,6 +9,8 @@
     :license: GPL2 or later
 """
 
+from functools import partial
+
 import gtk
 import pida.plugins
 
@@ -56,15 +58,28 @@ class ValidatorView(PidaView):
     icon_name = 'python-icon'
     label_text = _('Language Errors')
 
-    def set_validator(self, validator):
+    def set_validator(self, validator, document):
+        self.document = document
         self.clear_nodes()
+
+        def add_node(document, node):
+            # we need this proxy function as a task may be still running in 
+            # background and the document already switched
+            # this way we still can fill up the cache by letting the task run
+            if self.document == document:
+                self.add_node(node)
+
+        radd = partial(add_node, document)
+
         if validator:
-            task = GeneratorTask(validator.get_validations, self.add_node)
+            task = GeneratorTask(validator.get_validations_cached, 
+                                 radd)
             task.start()
 
     def add_node(self, node):
-        node.lookup_color = self.errors_ol.style.lookup_color
-        self.errors_ol.append(node)
+        if node:
+            node.lookup_color = self.errors_ol.style.lookup_color
+            self.errors_ol.append(node)
 
     def create_ui(self):
         self.errors_ol = ObjectList(
@@ -420,7 +435,7 @@ class Language(Service):
 
     def on_buffer_typechanged(self, document):
         for k in ("_lng_outliner", "_lng_validator", "_lng_completer",
-                 "_lng_definer"):
+                 "_lng_definer", "_lnd_documentator" ,"_lnd_snipper"):
             if hasattr(document, k):
                 delattr(document, k)
         self._view_outliner.on_type_changed()
@@ -455,7 +470,8 @@ class Language(Service):
         self._view_outliner.set_outliner(
             self._get_feature(document, 'outliner', '_lng_outliner'))
         self._view_validator.set_validator(
-            self._get_feature(document, 'validator', '_lng_validator'))
+            self._get_feature(document, 'validator', '_lng_validator'),
+            document)
         self._get_feature(document, 'completer', '_lng_completer')
         self._get_feature(document, 'definer', '_lng_definer')
 
@@ -496,27 +512,34 @@ class Language(Service):
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
 
-    def change_doctype(self, widget, target):
+    def change_doctype(self, widget, current):
         doc = self.boss.cmd('buffer', 'get_current')
-        doc.doctype = target
+        doc.doctype = current.get_data('doctype')
         self.boss.get_service('buffer').emit('document-typchanged', document=doc)
 
     def create_menu(self):
         sections = {}
+        doc = self.boss.cmd('buffer', 'get_current')
         menu = gtk.Menu()
-        a = gtk.Action('None',
+        a = gtk.RadioAction('None',
                 'None',
                 'No specific document type',
-                gtk.STOCK_NEW)
+                gtk.STOCK_NEW,
+                hash(None)
+                )
+        a.set_data('doctype', None)
+        
         menu.add(a.create_menu_item())
         menu.add(gtk.SeparatorMenuItem())
 
         for target in self.doctypes.itervalues():
-            act = gtk.Action(target.internal,
+            act = gtk.RadioAction(target.internal,
                 target.human or target.internal,
                 target.tooltip,
-                '')
-            act.connect('activate', self.change_doctype, target)
+                '',
+                hash(target))
+            act.set_group(a)
+            act.set_data('doctype', target)
             mi = act.create_menu_item()
             if not sections.has_key(target.section):
                 sections[target.section] = gtk.Menu()
@@ -524,9 +547,16 @@ class Language(Service):
                 ms = gtk.MenuItem(target.section)
                 ms.set_submenu(sections[target.section])
                 menu.add(ms)
-                
+
             sections[target.section].add(mi)
-        menu.show_all()
+        if doc:
+            if doc.doctype:
+                act.set_current_value(hash(doc.doctype))
+            elif doc.doctype is None:
+                act.set_current_value(hash(None))
+        menu.show_all() 
+        a.connect('changed', self.change_doctype)
+
         return menu
 
 Service = Language

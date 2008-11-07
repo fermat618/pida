@@ -27,9 +27,10 @@ import os
 get_settings_path = partial(os.path.join, settings_dir)
 
 def add_directory(*parts):
-    dir = get_settings_path(*parts)
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    dirn = get_settings_path(*parts)
+    if not os.path.exists(dirn):
+        os.makedirs(dirn)
+    return dirn
 
 def unset_directory(*parts):
     #XXX: reload=!
@@ -120,6 +121,7 @@ class OptionsConfig(BaseConfig):
 
     def create(self):
         self.name = self.__class__.name%self.svc.get_name()
+        add_directory('workspaces', manager.session)
         self.workspace_path = get_settings_path('workspaces', manager.session, self.name)
         self.global_path = get_settings_path(self.name)
         self._options = {}

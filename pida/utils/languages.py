@@ -30,6 +30,18 @@ LANG_OUTLINER_TYPES = Enumeration('LANG_OUTLINE_TYPES',
     ('UNKNOWN', '', 'CLASS', 'FUNCTION', 'METHOD','PROPERTY','ATTRIBUTE',
      'IMPORT', 'BUILTIN', 'SUPERMETHOD', 'SUPERPROPERTY'))
 
+LANG_PRIO = Enumeration('LANG_PRIORITIES',
+(
+    ('PERFECT', 100),
+    ('VERY_GOOD', 50),
+    ('GOOD', 10),
+    ('DEFAULT', 0),
+    ('LOW', -50),
+    ('BAD', -100),
+))
+
+
+
 
 
 class InitObject(object):

@@ -167,4 +167,13 @@ class Service(object):
     def error_list_dlg(self, msg, errs):
         return self.window.error_list_dlg('%s\n\n* %s' % (msg, '\n\n* '.join(errs)))
 
-
+    def notify_user(self, data, **kwargs):
+        """Shortcut to make it easy to notify the user"""
+        if not title in kwargs:
+            kwargs['title'] = self.label
+        if self.boss:
+            try:
+                notify = self.boss.get_service('notify')
+            except KeyError:
+                return
+            notify.notify(data, **kwargs)
