@@ -13,6 +13,7 @@ from os.path import dirname, basename
 from rope.base.project import Project
 from rope.base import pynames, pyobjects, builtins
 
+from pida.utils.languages import LANG_OUTLINER_TYPES, OutlineItem
 
 
 def markup_italic(text):
@@ -66,7 +67,7 @@ class TreeOptions(object):
     position = 0
     has_children = False
     icon_name = 'source-property'
-    filter_type = 'none'
+    filter_type =  LANG_OUTLINER_TYPES.UNKNOWN
     def __init__(self, treeitem):
         self.item = treeitem
 
@@ -86,7 +87,7 @@ class FunctionOptions(TreeOptions):
     icon_name = 'source-function'
     type_color = '#900000'
     position = 2
-    filter_type = 'function'
+    filter_type = LANG_OUTLINER_TYPES.UNKNOWN
 
     def get_pre_markup(self):
         """Draw decorators"""
@@ -118,19 +119,22 @@ class EvaluatedOptions(TreeOptions):
     type_name = 'p'
     icon_name = 'source-property'
     type_color = '#900090'
-    filter_type = 'property'
+    filter_type = LANG_OUTLINER_TYPES.PROPERTY
 
 class MethodOptions(FunctionOptions):
 
     type_name = 'm'
     icon_name = 'source-method'
-    filter_type = 'method'
+    filter_type = LANG_OUTLINER_TYPES.METHOD
+
 
 class SuperMethodOptions(MethodOptions):
 
     type_name = '(m)'
     icon_name = 'source-extramethod'
     position = 6
+    filter_type = LANG_OUTLINER_TYPES.SUPERMETHOD
+
 
 class ClassMethodOptions(MethodOptions):
 
@@ -138,12 +142,12 @@ class ClassMethodOptions(MethodOptions):
     icon_name = 'source-method'
     position = 3
 
+
 class StaticMethodOptions(MethodOptions):
 
     type_name = 'sm'
     icon_name = 'source-method'
     position = 4
-
 
 
 class ClassOptions(TreeOptions):
@@ -166,13 +170,15 @@ class ClassOptions(TreeOptions):
             attrs = attrs + '\n' + doc_markup
         return attrs
 
+
 class AssignedOptions(TreeOptions):
 
     type_name = 'a'
     icon_name = 'source-attribute'
     type_color = '#009000'
     position = 5
-    filter_type = 'attribute'
+    filter_type = LANG_OUTLINER_TYPES.ATTRIBUTE
+
 
 class BuiltinOptions(TreeOptions):
 
@@ -180,7 +186,8 @@ class BuiltinOptions(TreeOptions):
     icon_name = None
     type_color = '#999999'
     position = 7
-    filter_type = 'builtin'
+    filter_type = LANG_OUTLINER_TYPES.BUILTIN
+
 
 class ImportedOptions(TreeOptions):
 
@@ -188,7 +195,8 @@ class ImportedOptions(TreeOptions):
     icon_name = 'source-import'
     type_color = '#999999'
     position = 8
-    filter_type = 'import'
+    filter_type = LANG_OUTLINER_TYPES.IMPORT
+
 
 def get_option_for_item(item):
     if isinstance(item.node, pynames.ImportedName):
@@ -221,7 +229,7 @@ def get_option_for_item(item):
         print 'Unknown Node', item, item.node, item.name, item.object
 
 
-class SourceTreeItem(object):
+class SourceTreeItem(OutlineItem):
 
     def __init__(self, mod, name, node, parent):
         self.name = name
@@ -249,21 +257,20 @@ class SourceTreeItem(object):
             else:
                 self.line_sort_hack = '%s' % self.linenumber
 
-        self.rendered = self.render()
-
         self.type_markup = markup_type(self.options.type_name,
                                        self.options.type_color)
 
         self.filter_type = self.options.filter_type
         self.icon_name = self.options.icon_name
 
-    def render(self):
+    def get_markup(self):
         return '%s%s%s %s' % (
             self.options.get_pre_markup(),
             markup_name(self.name),
             self.options.get_extra_markup(),
             markup_location(self.linenumber, self.filename)
         )
+    markup = property(get_markup)
 
 
 def get_project(path):
@@ -291,7 +298,6 @@ class ModuleParser(object):
                     for node, parent in self.create_tree_items(name, child, ti):
                         if node is not None:
                             yield node, parent
-
 
 
 

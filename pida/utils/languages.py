@@ -25,13 +25,17 @@ LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
     ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
      'DUPLICATE', 'UNUSED'))
 
+# validation sub types
+LANG_OUTLINER_TYPES = Enumeration('LANG_OUTLINE_TYPES',
+    ('UNKNOWN', '', 'CLASS', 'FUNCTION', 'METHOD','PROPERTY','ATTRIBUTE',
+     'IMPORT', 'BUILTIN', 'SUPERMETHOD', 'SUPERPROPERTY'))
+
 
 
 class InitObject(object):
     def __init__(self, **kwargs):
         for k,v in kwargs.iteritems():
             setattr(self, k, v)
-
 
 
 class ValidationError(InitObject):
@@ -90,6 +94,19 @@ class ValidationError(InitObject):
     
     markup = property(get_markup)
 
+
+class OutlineItem(InitObject):
+    """
+    Outlines are returned by an Outliner class
+    """
+    type = LANG_OUTLINER_TYPES.UNKNOWN
+    icon_name = 'source-property'
+    name = ''
+
+    def get_markup(self):
+        return '<b>%s</b>' % self.name
+
+
 class Definition(InitObject):
     """Returned by a Definer instance"""
     file_name = None
@@ -118,6 +135,7 @@ class Suggestion(unicode):
     signature = None
     # content is the full text of snippet for example
     content = None
+
 
 class Documentation(InitObject):
     """

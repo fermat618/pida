@@ -38,8 +38,8 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
     PRIO_GOOD, Definer, Documentator)
 
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES,
-   Definition, Suggestion, Documentation, ValidationError)
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES,
+    Definition, Suggestion, Documentation, ValidationError)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -109,8 +109,14 @@ class PythonOutliner(Outliner):
 
     priority = PRIO_VERY_GOOD
 
-    filter_type = ('import', 'builtin', 'method', 'function', 
-                'property', 'attribute',)
+    filter_type = (LANG_OUTLINER_TYPES.IMPORT,
+                    LANG_OUTLINER_TYPES.BUILTIN,
+                    LANG_OUTLINER_TYPES.METHOD,
+                    LANG_OUTLINER_TYPES.FUNCTION,
+                    LANG_OUTLINER_TYPES.PROPERTY,
+                    LANG_OUTLINER_TYPES.ATTRIBUTE,
+                    LANG_OUTLINER_TYPES.SUPERMETHOD,
+                    )
 
     def get_outline(self):
         from rope.base.exceptions import RopeError

@@ -24,6 +24,7 @@ from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
 
 from pida.utils.gthreads import GeneratorTask, gcall
+from pida.utils.languages import LANG_OUTLINER_TYPES
 
 # core
 from pida.core.service import Service
@@ -113,7 +114,7 @@ class BrowserView(PidaGladeView):
         self.source_tree.set_columns(
             [
                 Column('icon_name', use_stock=True),
-                Column('rendered', use_markup=True, expand=True),
+                Column('markup', use_markup=True, expand=True),
                 Column('type_markup', use_markup=True),
                 Column('sort_hack', visible=False),
                 Column('line_sort_hack', visible=False),
@@ -173,7 +174,7 @@ class BrowserView(PidaGladeView):
                 )
             for f in self.filter_map:
                 tool_button = gtk.ToggleToolButton()
-                tool_button.set_name(f)
+                tool_button.set_name(str(f))
                 tool_button.set_active(self.filter_map[f])
                 tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled", self.on_filter_toggled,outliner)
@@ -185,7 +186,7 @@ class BrowserView(PidaGladeView):
         self.options_vbox.show_all()
 
     def on_filter_toggled(self, but, outliner):
-        self.filter_map[but.get_name()] = not self.filter_map[but.get_name()]
+        self.filter_map[int(but.get_name())] = not self.filter_map[int(but.get_name())]
         self.set_outliner(outliner)
 
     def on_type_changed(self):
@@ -449,8 +450,8 @@ class Language(Service):
         if self.current_type != document.doctype:
             self.boss.get_service('buffer').emit('document-typchanged', document=document)
             self.current_type = document.doctype
-            self._view_outliner.update_filterview(
-                self._get_feature(document, 'outliner', '_lng_outliner'))
+        self._view_outliner.update_filterview(
+            self._get_feature(document, 'outliner', '_lng_outliner'))
         self._view_outliner.set_outliner(
             self._get_feature(document, 'outliner', '_lng_outliner'))
         self._view_validator.set_validator(
