@@ -25,6 +25,15 @@ LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
     ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
      'DUPLICATE', 'UNUSED'))
 
+LANG_PRIO = Enumeration('LANG_PRIORITIES',
+(
+    ('PERFECT', 100),
+    ('VERY_GOOD', 50),
+    ('GOOD', 10),
+    ('DEFAULT', 0),
+    ('LOW', -50),
+    ('BAD', -100),
+))
 
 
 class InitObject(object):
