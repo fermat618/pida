@@ -27,11 +27,12 @@ LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
 
 # validation sub types
 
-LANG_OUTLINER_TYPES = Enumeration('LANG_OUTLINE_TYPES',
-    ('UNKNOWN', '', 'CLASS', 'FUNCTION', 'METHOD','PROPERTY','ATTRIBUTE',
-     'IMPORT', 'BUILTIN', 'SUPERMETHOD', 'SUPERPROPERTY', 'DEFINE',
-     'STRUCTURE', 'ENUMERATION_NAME', 'ENUMERATION', 'TYPEDEF', 'UNION', 
-     'VARIABLE', 'MEMBER', 'PROTOTYPE'))
+LANG_OUTLINER_TYPES = Enumeration('LANG_OUTLINER_TYPES',
+ ('', 'UNKNOWN', 
+ 'ATTRIBUTE', 'BUILTIN', 'CLASS', 'DEFINE', 'ENUMERATION',
+ 'ENUMERATION_NAME', 'FUNCTION', 'IMPORT', 'MEMBER', 'METHOD', 'PROPERTY',
+ 'PROTOTYPE', 'STRUCTURE', 'SUPERMETHOD', 'SUPERPROPERTY', 'TYPEDEF', 'UNION',
+ 'VARIABLE'))
 
 LANG_PRIO = Enumeration('LANG_PRIORITIES',
 (
@@ -44,6 +45,27 @@ LANG_PRIO = Enumeration('LANG_PRIORITIES',
 ))
 
 
+LANG_OUTLINE_IMAGE_MAP = {
+    LANG_OUTLINER_TYPES.ATTRIBUTE: 'source-attribute',
+    LANG_OUTLINER_TYPES.BUILTIN: 'source-attribute',
+    LANG_OUTLINER_TYPES.CLASS: 'source-class',
+    LANG_OUTLINER_TYPES.DEFINE: 'source-define',
+    LANG_OUTLINER_TYPES.ENUMERATION: 'source-enum',
+    LANG_OUTLINER_TYPES.ENUMERATION_NAME: 'source-enumarator',
+    LANG_OUTLINER_TYPES.FUNCTION: 'source-function',
+    LANG_OUTLINER_TYPES.IMPORT: 'source-import',
+    LANG_OUTLINER_TYPES.MEMBER: 'source-member',
+    LANG_OUTLINER_TYPES.METHOD: 'source-method',
+    LANG_OUTLINER_TYPES.PROTOTYPE: 'source-interface',
+    LANG_OUTLINER_TYPES.PROPERTY: 'source-property',
+    LANG_OUTLINER_TYPES.METHOD: 'source-method',
+    LANG_OUTLINER_TYPES.SUPERMETHOD: 'source-extramethod',
+    #FIXME: superproperty icon
+    LANG_OUTLINER_TYPES.SUPERPROPERTY: 'source-property',
+    LANG_OUTLINER_TYPES.TYPEDEF: 'source-typedef',
+    LANG_OUTLINER_TYPES.UNION: 'source-union',
+    LANG_OUTLINER_TYPES.VARIABLE: 'source-variable',
+}
 
 
 
@@ -110,16 +132,21 @@ class ValidationError(InitObject):
     markup = property(get_markup)
 
 
+
+
 class OutlineItem(InitObject):
     """
     Outlines are returned by an Outliner class
     """
     type = LANG_OUTLINER_TYPES.UNKNOWN
-    icon_name = 'source-property'
     name = ''
 
     def get_markup(self):
         return '<b>%s</b>' % self.name
+
+    def _get_icon_name(self):
+        return LANG_OUTLINE_IMAGE_MAP.get(self.type, '')
+    icon_name = property(_get_icon_name)
 
 
 class Definition(InitObject):
