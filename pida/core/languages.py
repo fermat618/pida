@@ -41,29 +41,19 @@ class BaseDocumentHandler(object):
         """Returns the priority this plugin will have for this document"""
         return cls.priority
 
-
-class Outliner(BaseDocumentHandler):
-
-    filter_type = ()
-
-    def get_outline(self):
-        raise NotImplementedError('Outliner must define get_outline')
-
-
-class Validator(BaseDocumentHandler):
-
-    def get_validations_cached(self):
+class BaseCachedDocumentHandler(BaseDocumentHandler):
+    def _default_cache(self, fnc):
         """
-        Default implementation of validator cache.
+        Default implementation of outline cache.
         We cache as long as the file on disk does not change
         """
-        if not hasattr(self, '_cache_'):
+        if not self.__dict__.has_key('_cache_'):
             self._cache_ = []
             self._lastmtime_ = 0
         if not self.document.is_new:
             if self.document.modified_time != self._lastmtime_:
                 self._cache_ = []
-                for x in self.get_validations():
+                for x in fnc():
                     self._cache_.append(x)
                     yield x
                 self._lastmtime_ = self.document.modified_time
@@ -71,8 +61,31 @@ class Validator(BaseDocumentHandler):
                 for x in self._cache_:
                     yield x
         else:
-            for x in self.get_validations():
+            for x in fnc():
                 yield x
+
+
+class Outliner(BaseCachedDocumentHandler):
+    """
+    The Outliner class is used to return a list of interessting code points
+    like classes, function, methods, etc.
+    It is usually shown by the Outliner window.
+    """
+
+    filter_type = ()
+
+    def get_outline_cached(self):
+        return self._default_cache(self.get_outline)
+
+    def get_outline(self):
+        raise NotImplementedError('Outliner must define get_outline')
+
+
+class Validator(BaseCachedDocumentHandler):
+
+
+    def get_validations_cached(self):
+        return self._default_cache(self.get_validations)
 
     def get_validations(self):
         raise NotImplementedError('Validator must define get_validations')

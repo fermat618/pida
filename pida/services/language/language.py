@@ -62,18 +62,29 @@ class ValidatorView(PidaView):
         self.document = document
         self.clear_nodes()
 
-        def add_node(document, node):
+        if self.tasks.has_key(document):
+            print "task running"
+            return
+
+        def wrap_add_node(document, *args):
             # we need this proxy function as a task may be still running in 
             # background and the document already switched
             # this way we still can fill up the cache by letting the task run
-            if self.document == document:
-                self.add_node(node)
+            # sometimes args have a lengh of 0 so we have to catch this
+            if self.document == document and len(args):
+                self.add_node(args[0])
 
-        radd = partial(add_node, document)
+        def on_complete(document):
+            del self.tasks[document]
+
+        radd = partial(wrap_add_node, document)
+        rcomp = partial(on_complete, document)
 
         if validator:
             task = GeneratorTask(validator.get_validations_cached, 
-                                 radd)
+                                 radd,
+                                 complete_callback=rcomp)
+            self.tasks[document] = task
             task.start()
 
     def add_node(self, node):
@@ -82,6 +93,7 @@ class ValidatorView(PidaView):
             self.errors_ol.append(node)
 
     def create_ui(self):
+        self.tasks = {}
         self.errors_ol = ObjectList(
             Column('markup', use_markup=True)
         )
@@ -125,7 +137,7 @@ class BrowserView(PidaGladeView):
     label_text = _('Outliner')
 
     def create_ui(self):
-        self.task = None
+        self.tasks = {}
         self.source_tree.set_columns(
             [
                 Column('icon_name', use_stock=True),
@@ -148,13 +160,40 @@ class BrowserView(PidaGladeView):
         self.sort_box.show()
         self.sort_vbox.pack_start(self.sort_box, expand=False)
 
-    def set_outliner(self, outliner):
+    def set_outliner(self, outliner, document):
         self.clear_items()
         if outliner:
-            if self.task:
-                self.task.stop()
-            self.task = GeneratorTask(outliner.get_outline, self.add_node)
-            self.task.start()
+#            if self.task:
+#                self.task.stop()
+#            self.task = GeneratorTask(outliner.get_outline_cached, self.add_node)
+#            self.task.start()
+
+            if self.tasks.has_key(document):
+                print "task running"
+                return
+
+            self.document = document
+
+            def wrap_add_node(document, *args):
+                # we need this proxy function as a task may be still running in 
+                # background and the document already switched
+                # this way we still can fill up the cache by letting the task run
+                # sometimes args have a lengh of 0 so we have to catch this
+                if self.document == document and len(args):
+                    self.add_node(*args)
+
+            def on_complete(document):
+                del self.tasks[document]
+
+            radd = partial(wrap_add_node, document)
+            rcomp = partial(on_complete, document)
+
+            task = GeneratorTask(outliner.get_outline_cached, 
+                                 radd,
+                                 complete_callback=rcomp)
+            self.tasks[document] = task
+            task.start()
+
 
     def clear_items(self):
         self.source_tree.clear()
@@ -442,7 +481,7 @@ class Language(Service):
 
     def _get_feature(self, document, feature, name, do=None):
         handler = getattr(document, name, None)
-        if not handler:
+        if handler is None:
             type_ = document.doctype
             factories = ()
             if type_:
@@ -459,16 +498,15 @@ class Language(Service):
 
     def on_buffer_changed(self, document):
         doctypes = self.doctypes.types_by_filename(document.filename)
+        self.current_type = doctypes
         if not doctypes:
-            self.current_type = None
             return
-        if self.current_type != document.doctype:
-            self.boss.get_service('buffer').emit('document-typchanged', document=document)
-            self.current_type = document.doctype
+
         self._view_outliner.update_filterview(
             self._get_feature(document, 'outliner', '_lng_outliner'))
         self._view_outliner.set_outliner(
-            self._get_feature(document, 'outliner', '_lng_outliner'))
+            self._get_feature(document, 'outliner', '_lng_outliner'),
+            document)
         self._view_validator.set_validator(
             self._get_feature(document, 'validator', '_lng_validator'),
             document)

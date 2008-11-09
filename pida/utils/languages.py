@@ -145,8 +145,11 @@ class OutlineItem(InitObject):
         return '<b>%s</b>' % self.name
 
     def _get_icon_name(self):
-        return LANG_OUTLINE_IMAGE_MAP.get(self.type, '')
-    icon_name = property(_get_icon_name)
+        return getattr(self, '_icon_name_set', 
+                                    LANG_OUTLINE_IMAGE_MAP.get(self.type, ''))
+    def _set_icon_name(self, value):
+        self._icon_name_set = value
+    icon_name = property(_get_icon_name, _set_icon_name)
 
 
 class Definition(InitObject):

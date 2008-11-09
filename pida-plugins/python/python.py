@@ -376,8 +376,8 @@ class Python(LanguageService):
             )
 
     def is_current_python(self):
-        t = self.boss.cmd('language', 'get_current_filetype')
-        if t and (t.internal == self.language_name):
+        doc = self.boss.cmd('buffer', 'get_current')
+        if doc.doctype and (doc.doctype.internal == self.language_name):
             return True
         return False
 
