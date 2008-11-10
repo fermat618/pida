@@ -9,7 +9,7 @@
           "options": {
             "cwd": null
           }, 
-          "value": ".\/run-pida.py -D -s testing"
+          "value": "./run-pida.py -D -s testing"
         }
       ]
     }, 
@@ -20,7 +20,7 @@
         {
           "type": "shell", 
           "options": {}, 
-          "value": ".\/run-pida.py"
+          "value": "./run-pida.py"
         }
       ]
     }, 
@@ -31,7 +31,7 @@
         {
           "type": "shell", 
           "options": {}, 
-          "value": "pydoctor -c tools\/pida-pydoctor.cfg"
+          "value": "pydoctor -c tools/pida-pydoctor.cfg"
         }
       ]
     }, 
@@ -69,7 +69,7 @@
         {
           "type": "shell", 
           "options": {}, 
-          "value": "make -C contrib\/moo clean"
+          "value": "make -C contrib/moo clean"
         }
       ]
     }, 
@@ -80,7 +80,7 @@
         {
           "type": "shell", 
           "options": {}, 
-          "value": ".\/run-pida-pyshell.py --ipython"
+          "value": "./run-pida-pyshell.py --ipython"
         }
       ]
     }

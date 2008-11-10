@@ -7,6 +7,8 @@
 # stdlib
 import sys, compiler, os.path, keyword, re
 
+import threading, thread
+
 # gtk
 import gtk
 
@@ -132,6 +134,7 @@ from logilab.common.ureports import TextWriter
 
 class PidaLinter(PyLinter):
     def __init__(self, *args, **kwargs):
+        self.sema = threading.Semaphore(0)
         self._output = []
         self.running = True
         return super(PidaLinter, self).__init__(*args, **kwargs)
@@ -139,7 +142,11 @@ class PidaLinter(PyLinter):
     def check(self, *args, **kwargs):
         self._output = []
         self.running = True
-        return super(PidaLinter, self).check(*args, **kwargs)
+        super(PidaLinter, self).check(*args, **kwargs)
+        self.running = False
+        # for ensurance :-)
+        self.sema.release()
+        self.sema.release()
 
     def add_message(self, msg_id, line=None, node=None, args=None):
         """add the message corresponding to the given id.
@@ -206,6 +213,7 @@ class PidaLinter(PyLinter):
                             lineno = line or 1
                           )
         self._output.append(cmsg)
+        self.sema.release()
         #self._output.append((msg_id, (path, module, obj, line or 1), msg))
         #self.reporter.add_message(msg_id, (path, module, obj, line or 1), msg)
 
@@ -255,15 +263,14 @@ class PylintValidator(Validator):
                  pylintrc=None)
             from pylint import checkers
             checkers.initialize(self.linter)
-            self.linter.check((self.document.filename,))
+
+            thread.start_new_thread(self.linter.check, ((self.document.filename,),))
+
             while True:
+                self.linter.sema.acquire()
                 if not self.linter.running and not len(self.linter._output):
                     return
-                if len(self.linter._output):
-                    one = self.linter._output.pop()
-                    yield one
-                else:
-                    yield
+                yield self.linter._output.pop()
         else:
             return
 

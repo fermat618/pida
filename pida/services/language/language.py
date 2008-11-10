@@ -12,6 +12,7 @@
 from functools import partial
 
 import gtk
+import gobject
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
@@ -59,31 +60,58 @@ class ValidatorView(PidaView):
     label_text = _('Language Errors')
 
     def set_validator(self, validator, document):
+        # this is quite an act we have to do here because of the many cornercases
+        # 1. Jobs once started run through. This is for caching purpuses as a validator
+        # is supposed to cache results, somehow.
+        # 2. buffers can switch quite often and n background jobs are still 
+        # running
+
+        # set the old task job to default priorty again
+        old = self.tasks.get(self.document, None)
+        if old:
+            old.priority = gobject.PRIORITY_DEFAULT_IDLE
+
         self.document = document
         self.clear_nodes()
 
         if self.tasks.has_key(document):
-            print "task running"
+            # set the priority of the current validator higher, so it feels 
+            # faster on the current view
+            self.tasks[document].priorty = gobject.PRIORITY_HIGH_IDLE
+            # when restart is set, the set_validator is run again so the 
+            # list gets updated from the validator cache. this happens when
+            # the buffer switched to another file and back again
+            self.restart = True
+            self.svc.log.debug(_('Validator task for %s already running'), document)
             return
 
-        def wrap_add_node(document, *args):
-            # we need this proxy function as a task may be still running in 
-            # background and the document already switched
-            # this way we still can fill up the cache by letting the task run
-            # sometimes args have a lengh of 0 so we have to catch this
-            if self.document == document and len(args):
-                self.add_node(args[0])
-
-        def on_complete(document):
-            del self.tasks[document]
-
-        radd = partial(wrap_add_node, document)
-        rcomp = partial(on_complete, document)
+        self.restart = False
 
         if validator:
+
+            def wrap_add_node(document, *args):
+                # we need this proxy function as a task may be still running in 
+                # background and the document already switched
+                # this way we still can fill up the cache by letting the task run
+                # sometimes args have a lengh of 0 so we have to catch this
+                if self.document == document and len(args):
+                    self.add_node(args[0])
+
+            def on_complete(document, validator):
+                del self.tasks[document]
+                # refire the task and hope the cache will just display stuff,
+                # elsewise the task is run again
+                if document == self.document and self.restart:
+                    self.set_validator(validator, document)
+
+            radd = partial(wrap_add_node, document)
+            rcomp = partial(on_complete, document, validator)
+
+
             task = GeneratorTask(validator.get_validations_cached, 
                                  radd,
-                                 complete_callback=rcomp)
+                                 complete_callback=rcomp,
+                                 priority=gobject.PRIORITY_HIGH_IDLE)
             self.tasks[document] = task
             task.start()
 
@@ -93,7 +121,9 @@ class ValidatorView(PidaView):
             self.errors_ol.append(node)
 
     def create_ui(self):
+        self.document = None
         self.tasks = {}
+        self.restart = False
         self.errors_ol = ObjectList(
             Column('markup', use_markup=True)
         )
@@ -137,7 +167,9 @@ class BrowserView(PidaGladeView):
     label_text = _('Outliner')
 
     def create_ui(self):
+        self.document = None
         self.tasks = {}
+        self.restart = False
         self.source_tree.set_columns(
             [
                 Column('icon_name', use_stock=True),
@@ -161,18 +193,34 @@ class BrowserView(PidaGladeView):
         self.sort_vbox.pack_start(self.sort_box, expand=False)
 
     def set_outliner(self, outliner, document):
+        # see comments on set_validator
+
+        old = self.tasks.get(self.document, None)
+        if old:
+            old.priority = gobject.PRIORITY_DEFAULT_IDLE
+
+        self.document = document
         self.clear_items()
+
+        if self.tasks.has_key(document):
+            # set the priority of the current validator higher, so it feels 
+            # faster on the current view
+            self.tasks[document].priorty = gobject.PRIORITY_HIGH_IDLE
+            # when restart is set, the set_validator is run again so the 
+            # list gets updated from the validator cache. this happens when
+            # the buffer switched to another file and back again
+            self.restart = True
+            self.svc.log.debug(_('Outliner task for %s already running'), document)
+            return
+
+        self.restart = False
+
         if outliner:
 #            if self.task:
 #                self.task.stop()
 #            self.task = GeneratorTask(outliner.get_outline_cached, self.add_node)
 #            self.task.start()
 
-            if self.tasks.has_key(document):
-                print "task running"
-                return
-
-            self.document = document
 
             def wrap_add_node(document, *args):
                 # we need this proxy function as a task may be still running in 
@@ -182,15 +230,21 @@ class BrowserView(PidaGladeView):
                 if self.document == document and len(args):
                     self.add_node(*args)
 
-            def on_complete(document):
+            def on_complete(document, outliner):
                 del self.tasks[document]
+                # refire the task and hope the cache will just display stuff,
+                # elsewise the task is run again
+                if document == self.document and self.restart:
+                    self.set_outliner(outliner, document)
+
 
             radd = partial(wrap_add_node, document)
-            rcomp = partial(on_complete, document)
+            rcomp = partial(on_complete, document, outliner)
 
             task = GeneratorTask(outliner.get_outline_cached, 
                                  radd,
-                                 complete_callback=rcomp)
+                                 complete_callback=rcomp,
+                                 priority=gobject.PRIORITY_HIGH_IDLE)
             self.tasks[document] = task
             task.start()
 
@@ -370,9 +424,17 @@ class LanguageFeatures(FeaturesConfig):
 class LanguageEvents(EventsConfig):
 
     def subscribe_all_foreign(self):
-        self.subscribe_foreign('buffer', 'document-changed', self.on_document_changed)
-        self.subscribe_foreign('buffer', 'document-saved', self.on_document_changed)
-        self.subscribe_foreign('buffer', 'document-typchanged', self.on_document_type)
+        self.subscribe_foreign('buffer', 'document-changed', 
+                                self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-saved', 
+                                self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-typchanged', 
+                                self.on_document_type)
+        self.subscribe_foreign('plugins', 'plugin_started', 
+                                self.clear_all_documents)
+        self.subscribe_foreign('plugins', 'plugin_stopped', 
+                                self.clear_all_documents)
+
 
     def create(self):
         self.publish('plugin_started', 'plugin_stopped')
@@ -380,8 +442,12 @@ class LanguageEvents(EventsConfig):
     def on_document_changed(self, document):
         self.svc.on_buffer_changed(document)
 
+    def clear_all_documents(self, *args, **kwargs):
+        for doc in self.svc.boss.get_service('buffer').get_documents().itervalues():
+            self.svc.clear_document_cache(doc)
+
     def on_document_type(self, document):
-        self.svc.on_buffer_typechanged(document)
+        self.svc.clear_document_cache(document)
 
 
 class LanguageDbusConfig(DbusConfig):
@@ -431,7 +497,7 @@ class Language(Service):
         self._view_validator = ValidatorView(self)
         self.current_type = None
         # add default language info
-        self.features.subscribe((None, 'info'), LanguageInfo) 
+        self.features.subscribe((None, 'info'), LanguageInfo)
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -469,15 +535,12 @@ class Language(Service):
     def show_documentation(self):
         if hasattr(self.boss.editor, 'show_documentation'):
             self.boss.editor.show_documentation()
-        
 
-
-    def on_buffer_typechanged(self, document):
+    def clear_document_cache(self, document):
         for k in ("_lng_outliner", "_lng_validator", "_lng_completer",
                  "_lng_definer", "_lnd_documentator" ,"_lnd_snipper"):
             if hasattr(document, k):
                 delattr(document, k)
-        self._view_outliner.on_type_changed()
 
     def _get_feature(self, document, feature, name, do=None):
         handler = getattr(document, name, None)
@@ -497,6 +560,9 @@ class Language(Service):
             return handler
 
     def on_buffer_changed(self, document):
+        # wo do nothing if we are not started yet
+        if not self.started:
+            return
         doctypes = self.doctypes.types_by_filename(document.filename)
         self.current_type = doctypes
         if not doctypes:
