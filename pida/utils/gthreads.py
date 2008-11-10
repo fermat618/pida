@@ -90,8 +90,10 @@ class GeneratorTask(AsyncTask):
         import gtk
         gtk.main()
     """
-    def __init__(self, work_callback, loop_callback, complete_callback=None):
+    def __init__(self, work_callback, loop_callback, complete_callback=None,
+                 priority=gobject.PRIORITY_DEFAULT_IDLE):
         AsyncTask.__init__(self, work_callback, loop_callback)
+        self.priority = priority
         self._complete_callback = complete_callback
 
     def _work_callback(self, counter, *args, **kwargs):
@@ -99,9 +101,11 @@ class GeneratorTask(AsyncTask):
         for ret in self.work_callback(*args, **kwargs):
             if self._stopped:
                 thread.exit()
-            gobject.idle_add(self._loop_callback, (counter, ret))
+            gobject.idle_add(self._loop_callback, (counter, ret),
+                             priority=self.priority)
         if self._complete_callback is not None:
-            gobject.idle_add(self._complete_callback)
+            gobject.idle_add(self._complete_callback,
+                             priority=self.priority)
 
     def stop(self):
         self._stopped = True
