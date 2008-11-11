@@ -115,7 +115,7 @@ class ShortcutsView(PidaView):
         if gtk.accelerator_valid(event.keyval, modifiers) or self._full_button.get_active():
             accelerator = gtk.accelerator_name(event.keyval, modifiers)
             entry.set_text(accelerator)
-            self._current.value = accelerator
+            self._current.set_value(accelerator)
         return True
 
     def can_be_closed(self):

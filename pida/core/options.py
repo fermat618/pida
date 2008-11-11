@@ -108,6 +108,12 @@ class OptionItem(object):
         self.callback = callback
         self.value = None
 
+    def set_value(self, value):
+        if self.group:
+            self.group.set_value(self.name, value)
+        else:
+            self.value = value
+
     def add_notify(self, callback, *args):
         import warnings
         warnings.warn("deprecated", DeprecationWarning)
