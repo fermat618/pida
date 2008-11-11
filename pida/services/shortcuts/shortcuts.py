@@ -23,7 +23,7 @@ class ServiceListItem(object):
     
     def __init__(self, svc):
         self._svc = svc
-        self.label = svc.get_name().capitalize()
+        self.label = self.no_mnemomic_label = svc.get_name().capitalize()
         self.doc = ''
         self.stock_id = ''
         
@@ -37,7 +37,7 @@ class ShortcutsView(PidaView):
         self.shortcuts_list = ObjectTree(
             [
                 Column('stock_id', use_stock=True),
-                Column('label', sorted=True),
+                Column('no_mnemomic_label', sorted=True),
                 Column('value'),
                 Column('doc'),
             ]

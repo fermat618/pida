@@ -112,6 +112,11 @@ class OptionItem(object):
         import warnings
         warnings.warn("deprecated", DeprecationWarning)
 
+    def _get_nlabel(self):
+        return self.label.replace("_","",1)
+
+    no_mnemomic_label = property(_get_nlabel)
+
 manager = OptionsManager()
 
 class OptionsConfig(BaseConfig): 
