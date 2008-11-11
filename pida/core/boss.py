@@ -81,7 +81,7 @@ class Boss(object):
             if self._sm.stop():
                 gtk.main_quit()
         else:
-            return True
+            return False
 
     def loop_ui(self):
         gtk.main()
