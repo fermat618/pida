@@ -86,7 +86,7 @@ class LibraryView(PidaGladeView):
 
     def on_contents_tree__double_click(self, ot, item):
         #self.svc.boss.cmd('webbrowser', 'browse', url=item.path)
-        self.svc.browse_file(item.path)
+        self.svc.browse_file("file://%s" %item.path)
 
     def load_book(self):
         item = self.books_list.get_selected()
