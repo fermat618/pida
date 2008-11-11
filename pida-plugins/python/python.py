@@ -370,10 +370,12 @@ class Python(LanguageService):
 
     def execute_current_document(self):
         python_ex = self.opt('python_for_executing')
-        self.boss.cmd('commander', 'execute',
-            commandargs=[python_ex, self._current.filename],
-            cwd = self._current.directory,
-            )
+        doc = self.boss.cmd('buffer', 'get_current')
+        if doc and doc.filename:
+            self.boss.cmd('commander', 'execute',
+                commandargs=[python_ex, doc.filename],
+                cwd = doc.directory,
+                )
 
     def is_current_python(self):
         doc = self.boss.cmd('buffer', 'get_current')
