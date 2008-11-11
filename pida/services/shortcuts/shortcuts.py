@@ -125,13 +125,14 @@ class ShortcutsView(PidaView):
 class ShortcutsEventConfig(EventsConfig):
     
     def subscribe_all_foreign(self):
-        self.subscribe_foreign('plugins', 'plugin_stoped', 
+        self.subscribe_foreign('plugins', 'plugin_stopped', 
                                self.on_plugin_changed)
         self.subscribe_foreign('plugins', 'plugin_started', 
                                self.on_plugin_changed)
 
-    def on_plugin_changed(self, event):
-        self.svc._view.update()
+    def on_plugin_changed(self, *args, **kwargs):
+        if self.svc.started:
+            self.svc._view.update()
 
 class ShortcutsActionsConfig(ActionsConfig):
 
@@ -157,6 +158,7 @@ class Shortcuts(Service):
     """Describe your Service Here""" 
     
     actions_config = ShortcutsActionsConfig
+    events_config = ShortcutsEventConfig
 
     def start(self):
         self._view = ShortcutsView(self)
