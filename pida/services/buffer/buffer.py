@@ -410,6 +410,7 @@ class Buffer(Service):
 
     def recover_loading_error(self, error):
         # recover from a loading exception
+        self.notify_user(error.message, title=_("Can't load file"))
         self.log('error loading file(s): %s' %error.message)
         if error.document:
             self._remove_document(error.document)

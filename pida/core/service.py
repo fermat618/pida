@@ -169,7 +169,7 @@ class Service(object):
 
     def notify_user(self, data, **kwargs):
         """Shortcut to make it easy to notify the user"""
-        if not title in kwargs:
+        if not 'title' in kwargs:
             kwargs['title'] = self.label
         if self.boss:
             try:
