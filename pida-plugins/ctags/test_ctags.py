@@ -33,8 +33,24 @@ class TestCtags(unittest.TestCase):
     def test_parser(self):
         self.doc = Document(Mock(), os.path.join(TESTDIR, 'test.py'))
         self.outliner = CtagsOutliner(None, document=self.doc)
-        for x in self.outliner.get_outline():
-            print x
+        lst = list(self.outliner.get_outline())
+        outer = None
+        inner = None
+        for x in lst:
+            if x.name == "Outer":
+                outer = x
+            elif x.name == "Inner":
+                inner = x
+        self.assert_(outer)
+        self.assertEqual(outer.parent, None)
+        self.assertEqual(inner.parent, outer)
+        for x in lst:
+            if x.name[:6] == "outer_":
+                self.assertEqual(x.parent, outer)
+            if x.name[:6] == "inner_":
+                self.assertEqual(x.parent, inner)
+            #print x
+            
         
 
 

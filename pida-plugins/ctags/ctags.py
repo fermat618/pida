@@ -70,14 +70,13 @@ class CtagsTokenList(object):
             self._items[item.filename] = []
             self._names[item.filename] = {}
         self._items[item.filename].append(item)
-        if item.is_container:
-            cnames = self._names[item.filename]
-            cnames[item.name] = item
+        cnames = self._names[item.filename]
+        cnames[item.fullname] = item
 
     def filter_items(self, filename):
         for i in self._items[filename]:
             if not i.parent and  i.parent_name:
-                i.parent = self._names[filename].get(i.parent_name, None)
+                i.parent = self.get_parent(i)
             yield i
 
     def clear(self):
@@ -88,6 +87,11 @@ class CtagsTokenList(object):
         del self._items[filename]
         del self._names[filename]
 
+    def get_parent(self, item):
+        if item.parent:
+            return item.parent
+        return self._names[item.filename].get(item.parent_name, None)
+
     def __iter__(self):
         for j in self._items.itervalues():
             for i in j:
@@ -96,7 +100,14 @@ class CtagsTokenList(object):
                 yield i
 
 class CtagItem(OutlineItem):
-    pass
+    def _get_fullname(self):
+        if not self.parent_name:
+            return self.name
+        return "%s.%s" %(self.parent_name, self.name)
+    fullname = property(_get_fullname)
+
+    def __repr__(self):
+        return "<CtagItem %s %s %s >" %(self.name, self.parent_name, self.fullname)
 
 class CtagsOutliner(Outliner):
 
@@ -188,7 +199,6 @@ class CtagsOutliner(Outliner):
             # append current token to parent iter, or to trunk when there is none
             parent_name = self._get_parent(tokens)
             is_container = self._is_container(tokens)
-            #print "parent", parent
             #if parent in containers: node = containers[parent]
             #else:
             #    # create a dummy element in case the parent doesn't exist
