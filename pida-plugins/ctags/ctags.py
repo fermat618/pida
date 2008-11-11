@@ -60,12 +60,40 @@ _ = locale.gettext
 #         self.svc.execute_current_document()
 #
 
-class CtagsTokenList(list):
-    def filter_tokens(self, filename):
-        for i in self:
-            if len(i) > 1 and i[1] == filename:
-                yield i
+class CtagsTokenList(object):
+    def __init__(self, *args, **kwargs):
+        self._items = {}
+        self._names = {}
 
+    def add(self, item):
+        if not self._items.has_key(item.filename):
+            self._items[item.filename] = []
+            self._names[item.filename] = {}
+        self._items[item.filename].append(item)
+        if item.is_container:
+            cnames = self._names[item.filename]
+            cnames[item.name] = item
+
+    def filter_items(self, filename):
+        for i in self._items[filename]:
+            if not i.parent and  i.parent_name:
+                i.parent = self._names[filename].get(i.parent_name, None)
+            yield i
+
+    def clear(self):
+        self._items.clear()
+        self._names.clear()
+
+    def clear_filename(self, filename):
+        del self._items[filename]
+        del self._names[filename]
+
+    def __iter__(self):
+        for j in self._items.itervalues():
+            for i in j:
+                if not i.parent and  i.parent_name:
+                    i.parent = self._names[i.filename].get(i.parent_name, None)
+                yield i
 
 class CtagItem(OutlineItem):
     pass
@@ -81,20 +109,14 @@ class CtagsOutliner(Outliner):
             filename, istmp = self._update_tagfile()
         except OSError, e:
             return
-        print "filename", filename
         tags = self._parse_tagfile(filename)
 
         if self.document.project:
             self.document.project['ctags_cache'] = tags
         if istmp:
             os.unlink(filename)
-        print "tags", tags
-        for node in tags.filter_tokens(self.document.filename):
-            yield (CtagItem(name=node[0],
-                           filename=node[1],
-                           linenumber=int(node[2]),
-                           type=node[3],
-                           filter_type=node[3]))
+        for node in tags.filter_items(self.document.filename):
+            yield node
 
 
     def _update_tagfile(self, options = ("-n", "-a"), temp=False):
@@ -134,6 +156,7 @@ class CtagsOutliner(Outliner):
         # identifier, path to file, line number, type, and then more magical things
         tokenlist = [] 
         rv = CtagsTokenList()
+        #names = {}
         h = open(tagfile)
         for r in h.readlines():
             tokens = r.strip().split("\t")
@@ -154,14 +177,18 @@ class CtagsOutliner(Outliner):
         # iterate through the list of tags, 
         # Note: Originally sorted by line number, bit it did break some
         # formatting in c
+        #set_parents = []
         for tokens in tokenlist:
-        
+            #if not names.has_key(tokens[1]):
+            #    names[tokens[1]] = {}
+            #cnames = names[tokens[1]]
             # skip enums
             #if self.__get_type(tokens) in 'de': continue
         
             # append current token to parent iter, or to trunk when there is none
-            parent = self._get_parent(tokens)
-            print parent
+            parent_name = self._get_parent(tokens)
+            is_container = self._is_container(tokens)
+            #print "parent", parent
             #if parent in containers: node = containers[parent]
             #else:
             #    # create a dummy element in case the parent doesn't exist
@@ -183,7 +210,14 @@ class CtagsOutliner(Outliner):
             #if self._is_container(tokens):
             #    containername = self._get_container_name(tokens)
             #    containers[ containername ] = it
-            rv.append(tokens)
+            item = CtagItem(name=tokens[0],
+                            filename=tokens[1],
+                            linenumber=int(tokens[2]),
+                            type=tokens[3],
+                            filter_type=tokens[3],
+                            is_container = is_container,
+                            parent_name = parent_name)
+            rv.add(item)
         return rv
 
     def _get_type(self, tokrow):
@@ -218,7 +252,8 @@ class CtagsOutliner(Outliner):
             if i == 'v': return LANG_OUTLINER_TYPES.VARIABLE
             return LANG_OUTLINER_TYPES.UNKNOWN
 
-        
+        if len(tokrow) == 4 and isinstance(tokrow[3], int):
+            return tokrow[3]
         if len(tokrow) == 3: return
         for i in tokrow[3:]:
             if len(i) == 1: 
