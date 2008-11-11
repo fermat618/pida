@@ -141,6 +141,8 @@ class OutlineItem(InitObject):
     type = LANG_OUTLINER_TYPES.UNKNOWN
     name = ''
     parent = None
+    line = 0
+    filter_type = None
 
     def get_markup(self):
         return '<b>%s</b>' % self.name
