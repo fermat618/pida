@@ -23,6 +23,7 @@
         <menuitem name="show_documentation" action="show_documentation" />
         <menuitem name="goto_definition" action="goto_definition" />
         <separator />
+        <menuitem name="language_refresh" action="language_refresh" />
         </menu>
 
         <menu name="DebugMenu" action="DebugMenu">

@@ -360,6 +360,15 @@ class LanguageActionsConfig(ActionsConfig):
             self.on_documentation,
             '<Control>F1'
         )
+        self.create_action(
+            'language_refresh',
+            TYPE_NORMAL,
+            _('Refresh'),
+            _('Refresh all caches'),
+            gtk.STOCK_REFRESH,
+            self.on_refresh,
+            ''
+        )
 
     def on_type_change(self, action):
         pass
@@ -383,9 +392,13 @@ class LanguageActionsConfig(ActionsConfig):
 
     def on_goto_definition(self, action):
         self.svc.goto_defintion()
-    
+
     def on_documentation(self, action):
         self.svc.show_documentation()
+
+    def on_refresh(self, action):
+        self.svc.emit('refresh')
+
 
 
 class LanguageCommandsConfig(CommandsConfig):
@@ -437,10 +450,16 @@ class LanguageEvents(EventsConfig):
 
 
     def create(self):
-        self.publish('plugin_started', 'plugin_stopped')
+        self.publish('refresh')
+        self.subscribe('refresh', self.on_refresh)
 
     def on_document_changed(self, document):
         self.svc.on_buffer_changed(document)
+
+    def on_refresh(self):
+        self.clear_all_documents()
+        self.on_document_changed(
+            document=self.svc.boss.get_service('buffer').get_current())
 
     def clear_all_documents(self, *args, **kwargs):
         for doc in self.svc.boss.get_service('buffer').get_documents().itervalues():
