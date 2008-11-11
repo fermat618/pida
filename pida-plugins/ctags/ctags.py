@@ -94,7 +94,7 @@ class CtagsOutliner(Outliner):
                            filename=node[1],
                            linenumber=int(node[2]),
                            type=node[3],
-                           filter_type=node[3]), None)
+                           filter_type=node[3]))
 
 
     def _update_tagfile(self, options = ("-n", "-a"), temp=False):

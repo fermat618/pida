@@ -124,7 +124,7 @@ class PythonOutliner(Outliner):
         except RopeError:
             return
         for node, parent in mp.get_nodes():
-            yield (node, parent)
+            yield node
 
 class PythonDocumentator(Documentator):
 

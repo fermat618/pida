@@ -151,9 +151,7 @@ class ValidatorView(PidaView):
         self.svc.boss.editor.cmd('goto_line', line=item.lineno)
 
     def can_be_closed(self):
-        return True
-        # FIXME
-        #self.svc.get_action('show_python_errors').set_active(False)
+        self.svc.get_action('show_validator').set_active(False)
 
 
 class BrowserView(PidaGladeView):
@@ -252,7 +250,8 @@ class BrowserView(PidaGladeView):
     def clear_items(self):
         self.source_tree.clear()
 
-    def add_node(self, node, parent):
+    def add_node(self, node):
+        parent = node.parent
         if node.filter_type in self.filter_map:
             if self.filter_map[node.filter_type]:
                 self.source_tree.append(parent, node)
@@ -334,7 +333,7 @@ class LanguageActionsConfig(ActionsConfig):
         )
 
         self.create_action(
-            'show_browser',
+            'show_outliner',
             TYPE_TOGGLE,
             _('_Outliner'),
             _('Show the language browser'),
