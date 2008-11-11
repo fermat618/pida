@@ -792,10 +792,13 @@ class PidaMooInput(object):
         else:
             # incremental update. we update the current line + above and below
             lines = range(max(it.get_line()-1, 0), 
-                          min(it.get_line()+1, buf.get_line_count())+1)
+                          min(it.get_line()+1, buf.get_line_count()) + 1)
 
         for line in lines:
             its = buf.get_iter_at_line(line)
+            if its.ends_line():
+                self.list_cache[line] = []
+                continue
             ite = its.copy()
             ite.forward_to_line_end()
             self.list_cache[line] = self.tokenize(buf.get_text(its, ite))
