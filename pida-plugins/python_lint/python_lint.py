@@ -15,6 +15,7 @@ import gtk
 # PIDA Imports
 
 # core
+from pida.core import environment
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
@@ -116,20 +117,23 @@ class PythonError(ValidationError):
             linecolor = "black"
         markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
     """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno, 
+    """>:<span style="italic">%(subtype)s</span>  -  """
+    """<span size="small" style="italic">%(msg_id)s</span>\n%(message)s""" % 
+                      {'lineno':self.lineno,
                       'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
                       'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
                                     self.subtype).capitalize()),
                       'message':message_string,
                       'linecolor': linecolor,
                       'typec': typec,
+                      'msg_id': self.msg_id
                       })
         return markup
     markup = property(get_markup)
 
 
 from logilab.common.ureports import TextWriter
+from logilab.common.textutils import get_csv
 # import thread
 
 class PidaLinter(PyLinter):
@@ -137,7 +141,31 @@ class PidaLinter(PyLinter):
         self.sema = threading.Semaphore(0)
         self._output = []
         self.running = True
-        return super(PidaLinter, self).__init__(*args, **kwargs)
+        self._plugins = []
+        pylintrc = kwargs.pop('pylintrc', None)
+        super(PidaLinter, self).__init__(*args, **kwargs)
+        #self.load_plugin_modules(self._plugins)
+        from pylint import checkers
+        checkers.initialize(self)
+
+        #self._rcfile = 
+        gconfig = os.path.join(
+                    environment.get_plugin_global_settings_path('python_lint'),
+                    'pylintrc')
+        if os.path.exists(gconfig):
+            self.read_config_file(gconfig)
+        if pylintrc and os.path.exists(pylintrc):
+            self.read_config_file(pylintrc)
+        config_parser = self._config_parser
+        if config_parser.has_option('MASTER', 'load-plugins'):
+            plugins = get_csv(config_parser.get('MASTER', 'load-plugins'))
+            self.load_plugin_modules(plugins)
+
+        self.load_config_file()
+        self.set_reporter(kwargs['reporter'])
+        # now we can load file config and command line, plugins (which can
+        # provide options) have been registered
+        #self.load_config_file()
 
     def check(self, *args, **kwargs):
         self._output = []
@@ -210,7 +238,8 @@ class PidaLinter(PyLinter):
                             subtype = sty,
                             filename = path,
                             message_args = args or (),
-                            lineno = line or 1
+                            lineno = line or 1,
+                            msg_id = msg_id
                           )
         self._output.append(cmsg)
         self.sema.release()
@@ -259,10 +288,16 @@ class PylintValidator(Validator):
 
     def get_validations(self):
         if self.document.filename:
+            pylintrc = None
+            if self.document.project:
+                pylintrc = os.path.join(
+                            self.document.project.get_meta_dir('python_lint'),
+                            'pylintrc')
+
             self.linter = PidaLinter(options=(), reporter=self.reporter, option_groups=(),
-                 pylintrc=None)
-            from pylint import checkers
-            checkers.initialize(self.linter)
+                 pylintrc=pylintrc)
+            #from pylint import checkers
+            #checkers.initialize(self.linter)
 
             thread.start_new_thread(self.linter.check, ((self.document.filename,),))
 
