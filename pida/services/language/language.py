@@ -16,7 +16,7 @@ import gobject
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
-from kiwi.ui.objectlist import ObjectList
+from kiwi.ui.objectlist import ObjectList, COL_MODEL
 
 from outlinefilter import FILTERMAP
 
@@ -189,6 +189,56 @@ class BrowserView(PidaGladeView):
         )
         self.sort_box.show()
         self.sort_vbox.pack_start(self.sort_box, expand=False)
+        self.filter_model = self.source_tree.get_model().filter_new()
+        self.source_tree.get_treeview().set_model(self.filter_model)
+        self.filter_model.set_visible_func(self._visible_func)
+        self.source_tree.get_treeview().connect('key-press-event',
+            self.on_treeview_key_pressed)
+        self.source_tree.get_treeview().connect('row-activated',
+                                     self.do_treeview__row_activated)
+
+        self._last_expanded = None
+
+    def _visible_func(self, model, iter_):
+        node = model[iter_][0]
+        # FIXME: None objects shouldn't be here, but why ????
+        if not node:
+            return False
+        ftext = self.filter_name.get_text().lower()
+        #riter = model.convert_child_iter_to_iter(iter)
+        # name filter
+        def if_type(inode):
+            # type filter
+            if inode.filter_type in self.filter_map:
+                if self.filter_map[inode.filter_type]:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+
+
+        if ftext:
+            # we have to test if any children of the current node may match
+            def any_child(parent):
+                if not parent:
+                    return False
+                for i in xrange(model.iter_n_children(parent)):
+                    child = model.iter_nth_child(parent, i)
+                    cnode = model[child][0]
+                    if cnode and cnode.name.lower().find(ftext) != -1 and if_type(cnode):
+                        return True
+                    if model.iter_has_child(child) and any_child(child):
+                        return True
+                return False
+
+            if (node.name and node.name.lower().find(ftext) != -1) or \
+                (model.iter_has_child(iter_) and any_child(iter_)):
+                return if_type(node)
+            
+            return False
+        
+        return if_type(node)
 
     def set_outliner(self, outliner, document):
         # see comments on set_validator
@@ -251,31 +301,37 @@ class BrowserView(PidaGladeView):
         self.source_tree.clear()
 
     def add_node(self, node):
+        if not node:
+            return
         parent = node.parent
-        if node.filter_type in self.filter_map:
-            if self.filter_map[node.filter_type]:
-                self.source_tree.append(parent, node)
-            else:
-                pass
-        else:
-             self.source_tree.append(parent, node)
-
+        self.source_tree.append(parent, node)
 
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
 
-    def on_source_tree__double_click(self, tv, item):
-        if item.linenumber is None:
+    def do_treeview__row_activated(self, treeview, path, view_column):
+        "After activated (double clicked or pressed enter) on a row"
+        try:
+            row = self.filter_model[path]
+        except IndexError:
+            print 'path %s was not found in model: %s' % (
+                path, map(list, self._model))
             return
+        item = row[COL_MODEL]
+        print item
         if item.filename is not None:
-            self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename)
-        self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
+            self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename,
+                                                     line=item.linenumber)
+        elif item.linenumber:
+            self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
     def update_filterview(self, outliner):
         if outliner:
-            self.options_vbox.remove(self.filter_toolbar)
-            self.filter_toolbar = gtk.Toolbar()
+            def rmchild(widget):
+                self.filter_toolbar.remove(widget)
+            self.filter_toolbar.foreach(rmchild)
+
             self.filter_map = dict(
                 [(f, FILTERMAP[f]['default']) for f in outliner.filter_type]
                 )
@@ -294,7 +350,38 @@ class BrowserView(PidaGladeView):
 
     def on_filter_toggled(self, but, outliner):
         self.filter_map[int(but.get_name())] = not self.filter_map[int(but.get_name())]
-        self.set_outliner(outliner)
+        #self.set_outliner(outliner, self.document)
+        self.filter_model.refilter()
+
+    def on_filter_name_clear__clicked(self, widget):
+        self.filter_name.set_text('')
+
+    def on_filter_name__changed(self, widget):
+        if len(widget.get_text()) >= self.svc.opt('outline_expand_vars'):
+            for i in self.source_tree:
+                self.source_tree.expand(
+                    i,
+                    open_all=True)
+        else:
+            for i in self.source_tree:
+                self.source_tree.collapse(i)
+
+        self.filter_model.refilter()
+
+    def on_treeview_key_pressed(self, tree, event):
+        if event.keyval == gtk.keysyms.space:
+            # FIXME: who to do this right ??
+            cur = self.source_tree.get_selected()
+            if self._last_expanded == cur:
+                self._last_expanded = None
+                self.source_tree.collapse(
+                    cur)
+            else:
+                self.source_tree.expand(
+                    cur, 
+                    open_all=False)
+                self._last_expanded = cur
+            return True
 
     def on_type_changed(self):
         pass
@@ -368,6 +455,15 @@ class LanguageActionsConfig(ActionsConfig):
             self.on_refresh,
             ''
         )
+        self.create_action(
+            'focus_outline_browser',
+            TYPE_NORMAL,
+            _('Focus outline filter'),
+            _('Show outline browser and focus filter entry'),
+            '',
+            self.on_focus_outline,
+            ''
+        )
 
     def on_type_change(self, action):
         pass
@@ -398,6 +494,9 @@ class LanguageActionsConfig(ActionsConfig):
     def on_refresh(self, action):
         self.svc.emit('refresh')
 
+    def on_focus_outline(self, action):
+        self.get_action('show_outliner').set_active(True)
+        self.svc._view_outliner.filter_name.grab_focus()
 
 
 class LanguageCommandsConfig(CommandsConfig):
@@ -418,13 +517,13 @@ class LanguageCommandsConfig(CommandsConfig):
 
 class LanguageOptionsConfig(OptionsConfig):
     pass
-    #def create_options(self):
-    #    self.create_option(
-    #        'autoload',
-    #        _('Autoload language support'),
-    #        bool,
-    #        True,
-    #        _('Automaticly load language support on opening files'))
+    def create_options(self):
+        self.create_option(
+            'outline_expand_vars',
+            _('Expand outline after n chars'),
+            int,
+            3,
+            _('Expand all entries when searching the outliner after n chars'))
 
 
 class LanguageFeatures(FeaturesConfig):
