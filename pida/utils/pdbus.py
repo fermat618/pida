@@ -73,13 +73,13 @@ def list_pida_instances(include_this=False, callback=None, callback_done=None,
     
     if not _CALLBACKS.has_key(rec_pida_pong):
         _CALLBACKS[rec_pida_pong] = session.add_signal_receiver(
-            rec_pida_pong, pong, dbus_interface=DBUS_NS('rpc'))
+            rec_pida_pong, pong, dbus_interface=DBUS_NS('appcontroller'))
     
     if not _CALLBACKS.has_key(callback):
         # this is ugly but needed to prevent multi registration
         _CALLBACKS[callback] = session.add_signal_receiver(
-            callback, pong, dbus_interface=DBUS_NS('rpc'))
-    m = dbus.lowlevel.SignalMessage('/', DBUS_NS('rpc'), ping)
+            callback, pong, dbus_interface=DBUS_NS('appcontroller'))
+    m = dbus.lowlevel.SignalMessage('/', DBUS_NS('appcontroller'), ping)
 
     if block:
         # this is ugly, but blocking calls with send_message doesn't work
