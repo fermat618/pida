@@ -669,6 +669,7 @@ class Commander(Service):
         for term in self._terminals:
             if hasattr(term, '_stick_button') and \
                term._stick_button.child.get_active() and \
+               term._term.window and \
                term._term.window.is_visible():
                 term.chdir(document.directory)
 
