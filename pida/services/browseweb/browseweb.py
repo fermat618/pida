@@ -214,9 +214,6 @@ class BrowserView(PidaView):
         self.location.connect('activate', self.cb_url_entered)
         self.__browser = HtmlWidget(self)
         self.add_main_widget(self.__browser)
-        self.status_bar = gtk.Statusbar()
-        self.status_context = self.status_bar.get_context_id('web')
-        self.add_main_widget(self.status_bar, expand=False)
         self.get_toplevel().show_all()
         self._close_callback=None
 
