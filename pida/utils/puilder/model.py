@@ -150,7 +150,6 @@ t = dict(
             actions = [
                 dict(type='shell', value='blah', options={})
             ],
-            #dependencies = ['moo'],
         )
     ],
     options = {}
