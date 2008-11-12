@@ -134,13 +134,13 @@ class PythonOutliner(Outliner):
     def sync(self):
         try:
             self.document.project['python']['ropeproject'].sync()
-        except KeyError:
+        except KeyError, TypeError:
             pass
 
     def close(self):
         try:
             self.document.project['python']['ropeproject'].close()
-        except KeyError:
+        except KeyError, TypeError:
             pass
 
 
