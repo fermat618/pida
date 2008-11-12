@@ -342,6 +342,8 @@ class Window(Service):
         }
         for service in self.boss.get_services():
             cur = {}
+            if not hasattr(service, "actions"):
+                continue
             for action in service.actions.list_actions():
                 if isinstance(action, TYPE_REMEMBER_TOGGLE):
                     cur[action.get_name()] = action.props.active

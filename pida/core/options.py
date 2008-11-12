@@ -202,18 +202,23 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
     def get_value(self, name):
         return self._options[name].value
 
-    def set_value(self, name, value):
+    def set_value(self, name, value, dbus_notify=True, save=True):
         option = self._options[name]
         option.value = value
-        self._on_change(option)
-        self.dump(option.workspace)
+        self._on_change(option, dbus_notify=dbus_notify)
+        if save:
+            self.dump(option.workspace)
 
-    def _on_change(self, option):
+    def _on_change(self, option, dbus_notify=True):
         # we dont do anything smart, till we are started
         if not self.svc.started:
             return
         if option.callback:
             option.callback(option)
+
+        if dbus_notify:
+            self.notify_dbus(option)
+
         self._emit_change_notification(option)
 
     def _emit_change_notification(self, option):
