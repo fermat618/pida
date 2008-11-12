@@ -86,8 +86,6 @@ class Target(object):
         t.name = data.get('name', 'unnamed')
         for act in data.get('actions', ()):
             t.actions.append(Action.from_serialize(act))
-        #for dep in data['dependencies']:
-        #    t.dependencies.append(Dependency.from_serialize(dep))
         return t
 
     def create_new_action(self):
@@ -95,12 +93,6 @@ class Target(object):
         act.type = 'shell'
         self.actions.append(act)
         return act
-
-#    def create_new_dependency(self, name):
-#        dep = Dependency()
-#        dep.name = name
-#        self.dependencies.append(dep)
-#        return dep
 
 
     @property
