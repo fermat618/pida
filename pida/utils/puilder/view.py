@@ -14,12 +14,14 @@ from kiwi.ui.dialogs import yesno
 from pida.utils.puilder.model import action_types
 from pida.utils.gthreads import gcall
 
+
 def start_editing_tv(tv):
     def _start(tv=tv):
         v = tv.get_treeview()
         path, col = v.get_cursor()
         v.set_cursor(path, col, start_editing=True)
     gcall(_start)
+
 
 def create_source_tv(tv):
     b = tv.get_buffer()
@@ -31,8 +33,6 @@ def create_source_tv(tv):
         b.apply_tag(tt, b.get_start_iter(), b.get_end_iter())
 
     tv.connect('content-changed', on_changed)
-
-
 
 
 class PuilderView(GladeSlaveDelegate):
@@ -53,7 +53,7 @@ class PuilderView(GladeSlaveDelegate):
         self.targets_list.set_headers_visible(False)
 
         self.acts_list.set_columns([
-            Column('type', expand=True),
+            Column('type', expand=False),
             Column('value', expand=True, ellipsize=True),
         ])
         self.acts_list.set_headers_visible(False)
