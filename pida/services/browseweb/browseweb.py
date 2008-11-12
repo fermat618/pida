@@ -155,10 +155,6 @@ class WebkitHtmlWidget(gtk.VBox):
         self.html.open(url)
 
     def on_html__navigation_requested(self, html, frame, request):
-        print 'requestnav', [request.get_uri()]
-        print dir(frame)
-        print dir(frame.get_global_context())
-        request.set_uri('http://yahoo.com/')
         return 0
 
     def on_html__load_started(self, page, frame):
@@ -190,8 +186,10 @@ class WebkitHtmlWidget(gtk.VBox):
 
 if webkit is not None:
     HtmlWidget = WebkitHtmlWidget
-else:
+elif gtkhtml2 is not None:
     HtmlWidget = GtkHtmlWidget
+else:
+    HtmlWidget = None
 
 
 class BrowserView(PidaView):
@@ -309,7 +307,7 @@ class Webbrowser(Service):
         self._views = []
 
     def browse(self, url):
-        if gtkhtml2 is None:
+        if HtmlWidget is None:
             webbrowser.open(url)
         else:
             view = BrowserView(self)
