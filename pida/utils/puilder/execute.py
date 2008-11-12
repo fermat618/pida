@@ -34,11 +34,15 @@ def execute_external_action(project, build, action):
     p = Popen(cmd, shell=True, close_fds=True)
     p.wait()
 
+def execute_target_action(project, build, action):
+    execute(project, action.value)
+
 
 executors = {
     'shell': execute_shell_action,
     'python': execute_python_action,
     'external': execute_external_action,
+    'target': execute_target_action,
 }
 
 def _load_build(path):
@@ -61,9 +65,9 @@ def execute_target(project, path, target, indent=0):
     targets = [t for t in b.targets if t.name == target]
     if targets:
         t = targets[0]
-        indent_print('Dependencies: %s' % len(t.dependencies), indent)
-        for dep in t.dependencies:
-            execute_target(project, path, dep.name, indent + 1)
+        #indent_print('Dependencies: %s' % len(t.dependencies), indent)
+        #for dep in t.dependencies:
+        #    execute_target(project, path, dep.name, indent + 1)
         indent_print('Actions: %s' % len(t.actions), indent)
         for act in t.actions:
             indent_print('[ %s ]' % act.type, indent)

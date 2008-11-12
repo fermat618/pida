@@ -58,10 +58,10 @@ class PuilderView(GladeSlaveDelegate):
         ])
         self.acts_list.set_headers_visible(False)
 
-        self.deps_list.set_columns([
-            Column('name', title='Target name', expand=True, editable=True),
-        ])
-        self.deps_list.set_headers_visible(False)
+        #self.deps_list.set_columns([
+        #    Column('name', title='Target name', expand=True, editable=True),
+        #])
+        #self.deps_list.set_headers_visible(False)
 
         self.acts_type.prefill(action_types)
 
@@ -92,17 +92,16 @@ class PuilderView(GladeSlaveDelegate):
         m = self._create_menu(self.ActsMenu, self.AddActs)
         self.menu.add(m)
 
-        m = self._create_menu(self.DepsMenu, self.AddNamedDeps, self.AddDeps)
+        #m = self._create_menu(self.DepsMenu, self.AddNamedDeps, self.AddDeps)
+        #self.menu.add(m)
 
-        self.menu.add(m)
+        #dummy = gtk.Menu()
+        #m = gtk.MenuItem('No Targets')
+        #dummy.add(m)
+        #dummy.show_all()
 
-        dummy = gtk.Menu()
-        m = gtk.MenuItem('No Targets')
-        dummy.add(m)
-        dummy.show_all()
-
-        for mi in self.AddNamedDeps.get_proxies():
-            mi.set_submenu(dummy)
+        #for mi in self.AddNamedDeps.get_proxies():
+        #    mi.set_submenu(dummy)
 
         self.menu.show_all()
 
@@ -116,25 +115,25 @@ class PuilderView(GladeSlaveDelegate):
         self.acts_list.append(a, select=True)
 
 
-    def on_AddNamedDeps__activate(self, action):
-
-        def on_menu(mi, mtarg):
-            t = self.targets_list.get_selected()
-            dep = t.create_new_dependency(mtarg.name)
-            self.deps_list.append(dep, select=True)
-
-        menu = gtk.Menu()
-
-        for target in self.build.targets:
-            m = gtk.MenuItem(target.name)
-            m.connect('activate', on_menu, target)
-            m.show()
-            menu.add(m)
-
-        menu.show_all()
-
-        for proxy in self.AddNamedDeps.get_proxies():
-            proxy.set_submenu(menu)
+#    def on_AddNamedDeps__activate(self, action):
+#
+#        def on_menu(mi, mtarg):
+#            t = self.targets_list.get_selected()
+#            dep = t.create_new_dependency(mtarg.name)
+#            self.deps_list.append(dep, select=True)
+#
+#        menu = gtk.Menu()
+#
+#        for target in self.build.targets:
+#            m = gtk.MenuItem(target.name)
+#            m.connect('activate', on_menu, target)
+#            m.show()
+#            menu.add(m)
+#
+#        menu.show_all()
+#
+#        for proxy in self.AddNamedDeps.get_proxies():
+#            proxy.set_submenu(menu)
 
 
     def set_execute_method(self, f):
@@ -185,8 +184,8 @@ class PuilderView(GladeSlaveDelegate):
     def on_acts_list__right_click(self, ol, action, event):
         self._create_popup(event, self.AddActs, None, self.DelCurrentActs)
 
-    def on_deps_list__right_click(self, ol, dep, event):
-        self._create_popup(event, self.AddDeps, None, self.DelCurrentDeps)
+    #def on_deps_list__right_click(self, ol, dep, event):
+    #    self._create_popup(event, self.AddDeps, None, self.DelCurrentDeps)
 
 
     def create_action_views(self):
@@ -209,6 +208,10 @@ class PuilderView(GladeSlaveDelegate):
         if len(self.targets_list):
             self.targets_list.select(self.targets_list[0])
 
+        for v in self.action_views.values():
+            v.build = build
+
+
     def set_project(self, project):
         self.project = project
         self.project_label.set_markup(project.markup)
@@ -223,14 +226,14 @@ class PuilderView(GladeSlaveDelegate):
 
         if selected:
             self.acts_list.add_list(target.actions, clear=True)
-            self.deps_list.add_list(target.dependencies, clear=True)
+            #self.deps_list.add_list(target.dependencies, clear=True)
 
             if len(self.acts_list):
                 self.acts_list.select(self.acts_list[0])
 
         else:
             self.acts_list.clear()
-            self.deps_list.clear()
+            #self.deps_list.clear()
 
     def action_changed(self, action):
         selected = action is not None
@@ -286,12 +289,12 @@ class PuilderView(GladeSlaveDelegate):
             self.build.targets.remove(t)
             self.targets_list.remove(t)
 
-    def on_DelCurrentDeps__activate(self, action):
-        t = self.targets_list.get_selected()
-        d = self.deps_list.get_selected()
-        if self.confirm('Are you sure you want to delete dependency "%s"' % d.name):
-            t.dependencies.remove(d)
-            self.deps_list.remove(d)
+    #def on_DelCurrentDeps__activate(self, action):
+    #    t = self.targets_list.get_selected()
+    #    #d = self.deps_list.get_selected()
+    #    if self.confirm('Are you sure you want to delete dependency "%s"' % d.name):
+    #        t.dependencies.remove(d)
+    #        self.deps_list.remove(d)
         
 
 
@@ -322,11 +325,11 @@ class PuilderView(GladeSlaveDelegate):
         act.type = name
         self.action_type_changed(act)
 
-    def on_AddDeps__activate(self, button):
-        t = self.targets_list.get_selected()
-        dep = t.create_new_dependency('New Dependency')
-        self.deps_list.append(dep, select=True)
-        start_editing_tv(self.deps_list)
+#    def on_AddDeps__activate(self, button):
+#        t = self.targets_list.get_selected()
+#        dep = t.create_new_dependency('New Dependency')
+#        self.deps_list.append(dep, select=True)
+#        start_editing_tv(self.deps_list)
 
     def on_name_edit_button__clicked(self, button):
         if self.project is None:
@@ -449,10 +452,31 @@ class ExternalActionView(ActionView):
         self.action.options['build_args'] = entry.get_text()
 
 
+class TargetActionView(ActionView):
+
+    gladefile = 'action_target'
+
+    def create_ui(self):
+        self.action = None
+
+    def set_action(self, action):
+        items = [('', None)] + [(t.name, t.name) for t in self.build.targets]
+        self.targets_combo.prefill(items)
+        try:
+            self.targets_combo.update(action.value)
+        except KeyError:
+            self.targets_combo.update(None)
+
+    def on_targets_combo__content_changed(self, cmb):
+        if self.action is None:
+            return
+        self.action.value = cmb.read()
+
 action_views = {
     'shell': ShellActionView,
     'python': PythonActionView,
     'external': ExternalActionView,
+    'target': TargetActionView,
 }
 
 if __name__ == '__main__':
