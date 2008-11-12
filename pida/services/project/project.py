@@ -92,7 +92,8 @@ class ProjectListView(PidaGladeView):
 
     def on_project_ol__right_click(self, ol, project, event):
         self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
-            dir_name=project.source_directory, event=event, project=True)
+            dir_name=project.source_directory, event=event,
+            project=project)
 
     def set_current_project(self, project):
         self.project_ol.select(project)
@@ -158,12 +159,18 @@ class ProjectEventsConfig(EventsConfig):
 
     def show_menu(self, menu, context, **kw):
         if (context == 'dir-menu'):
-            self.svc.get_action('project_properties').set_visible(
-                kw.has_key('project'))
+            is_project = 'project' in kw
+            for a in ['project_properties', 'project_add',
+                      'project_remove_directory']:
+                self.svc.get_action(a).set_visible(is_project)
+            for a in ['project_add_directory']:
+                self.svc.get_action(a).set_visible(not is_project)
 
     def menu_deactivated(self, menu, context, **kw):
         if (context == 'dir-menu'):
-            self.svc.get_action('project_properties').set_visible(True)
+            for a in ['project_properties', 'project_add', 'project_remove',
+                      'project_add_directory']:
+                self.svc.get_action(a).set_visible(True)
 
 
 class ProjectActionsConfig(ActionsConfig):
@@ -172,7 +179,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_add',
             TYPE_NORMAL,
-            _('_Add Project'),
+            _('_Add New Project'),
             _('Adds a new project'),
             gtk.STOCK_ADD,
             self.on_project_add,
@@ -225,6 +232,24 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_execution_menu,
         )
 
+        self.create_action(
+            'project_add_directory',
+            TYPE_NORMAL,
+            _('Add Directory as Project'),
+            _('Add this directory as a project in the workspace'),
+            gtk.STOCK_ADD,
+            self.on_project_add_directory,
+        )
+
+        self.create_action(
+            'project_remove_directory',
+            TYPE_NORMAL,
+            _('Remove from workspace'),
+            _('Remove the project from the workspace'),
+            gtk.STOCK_DELETE,
+            self.on_project_remove_directory,
+        )
+
     def on_project_remove(self, action):
         self.svc.remove_current_project()
 
@@ -254,6 +279,14 @@ class ProjectActionsConfig(ActionsConfig):
         menuitem = action.get_proxies()[0]
         menuitem.remove_submenu()
         menuitem.set_submenu(self.svc.create_menu())
+
+    def on_project_add_directory(self, action):
+        path = action.contexts_kw.get('dir_name')
+        self.svc.add_directory(path)
+
+    def on_project_remove_directory(self, action):
+        project = action.contexts_kw.get('project')
+        self.svc.remove_project(project)
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
@@ -350,6 +383,10 @@ class ProjectService(Service):
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
+            dirname = os.path.realpath(dirname)
+            if not os.path.exists(dirname):
+                self.log("%s does not exist", dirname)
+                continue
             try:
                 self._load_project(dirname)
             except Exception, e: #XXX: specific?!
@@ -364,6 +401,7 @@ class ProjectService(Service):
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
+        project_directory = os.path.realpath(project_directory)
         project_file = Project.data_dir_path(project_directory, 'project.json')
         if not os.path.exists(project_file):
 
@@ -425,8 +463,8 @@ class ProjectService(Service):
         return project
 
     def remove_current_project(self):
-        self.remove_project(self._project)
-        self.set_current_project(None)
+        if self.remove_project(self._current):
+            self.set_current_project(None)
 
     def remove_project(self, project):
         if self.boss.window.yesno_dlg(
@@ -436,6 +474,7 @@ class ProjectService(Service):
             self._projects.remove(project)
             self.project_list.project_ol.remove(project, select=True)
             self._save_options()
+            return True
 
     def execute_target(self, action, target, project=None):
 

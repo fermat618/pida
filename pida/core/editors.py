@@ -190,7 +190,7 @@ class EditorService(Service):
         # make a copy of the file list as we modify it and 
         # this could cause side effects very hard to debug
         documents_c = documents[:]
-        gobject.timeout_add(1000, self._open_single, documents_c)
+        gobject.timeout_add(100, self._open_single, documents_c)
 
     @classmethod
     def get_sanity_errors(cls):

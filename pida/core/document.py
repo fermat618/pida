@@ -82,7 +82,7 @@ class Document(object):
 
     def __init__(self, boss, filename=None, project=None):
         self.boss = boss
-        self.filename = filename
+        self.filename = os.path.realpath(filename)
         self.project = project
         self.editor = None
         self._list = []

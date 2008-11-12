@@ -33,25 +33,27 @@ def label_widget(widget, label):
 
 
 class PasswordDialog(gtk.Dialog):
-    def __init__(self):
-        super(PasswordDialog, self).__init__('Enter User Details',
+    def __init__(self, username=''):
+        super(PasswordDialog, self).__init__('Enter Launchpad User Details',
             parent = None,
             flags = 0,
             buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         self.email = gtk.Entry()
+        self.email.set_text(username)
         self.password = gtk.Entry()
         self.password.set_visibility(False)
-        self.vbox.pack_start(label_widget(self.email, 'Email Address'))
-        self.vbox.pack_start(label_widget(self.password, 'Password'))
-        self.save_details = gtk.CheckButton()
-        self.save_details.set_label('Save across sessions?')
-        self.vbox.pack_start(self.save_details)
+        self.vbox.pack_start(label_widget(self.email, 'Email Address'), expand=False)
+        self.vbox.pack_start(label_widget(self.password, 'Password'), expand=False)
+        self.set_size_request(320, -1)
+        if not username:
+            self.email.grab_focus()
+        else:
+            self.password.grab_focus()
         self.show_all()
 
     def get_user_details(self):
-        return (self.email.get_text(), self.password.get_text(),
-                self.save_details.get_active())
+        return self.email.get_text(), self.password.get_text()
 
 
 
@@ -127,6 +129,7 @@ class ReportWidget(gtk.VBox):
         pass_dlg = PasswordDialog()
         def pass_response(dlg, resp):
             dlg.hide()
+            print resp
             if resp == gtk.RESPONSE_ACCEPT:
                 self.email, self.password, save = dlg.get_user_details()
                 if save:

@@ -8,12 +8,14 @@
                     <widget class="GtkAction" id="DelSession">
                         <property name="name">DelSession</property>
                         <property name="label" translatable="yes">Delete</property>
+                        <property name="stock_id">gtk-delete</property>
                     </widget>
                 </child>
                 <child>
                     <widget class="GtkAction" id="UseSession">
                         <property name="name">UseSession</property>
                         <property name="label" translatable="yes">Use</property>
+                        <property name="stock_id">gtk-apply</property>
                     </widget>
                 </child>
             </widget>

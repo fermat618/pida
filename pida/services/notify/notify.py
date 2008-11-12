@@ -29,6 +29,44 @@ _locale = Locale('notify')
 _ = _locale.gettext
 
 
+class BaseNotifier(object):
+
+    def __init__(self, svc):
+        self.svc = svc
+
+    def notify(self, item):
+        raise NotImplementedError
+
+
+class NIHNotifier(BaseNotifier):
+
+    def __init__(self, svc):
+        BaseNotifier.__init__(self, svc)
+        self._popup = NotifyPopupView(self.svc)
+        self._popup.on_pida_window = self.svc.opt('pidawindow')
+        self._popup.set_gravity(self.svc.opt('gravity'))
+
+    def notify(self, item):
+        self._popup.add_item(item)
+
+
+class LibNotifyNotifier(BaseNotifier):
+
+    def notify(self, item):
+        n = pynotify.Notification(item.title, item.data, item.stock)
+        n.set_timeout(item.timeout)
+        n.show()
+
+try:
+    import pynotify
+    pynotify.init('PIDA')
+    Notifier = LibNotifyNotifier
+except ImportError:
+    pynotify = None
+    Notifier = NIHNotifier
+
+
+
 class NotifyItem(object):
 
     def __init__(self, data, title, stock, timeout, callback):
@@ -210,6 +248,7 @@ class NotifyOptionsConfig(OptionsConfig):
             self.on_show_notify
         )
 
+
         self.create_option(
             'timeout',
             _('Timeout'),
@@ -218,6 +257,9 @@ class NotifyOptionsConfig(OptionsConfig):
             _('Timeout before hiding a notification'),
             self.on_change_timeout
         )
+
+        if pynotify is not None:
+            return
 
         self.create_option(
             'gravity',
@@ -246,14 +288,14 @@ class NotifyOptionsConfig(OptionsConfig):
     def on_show_notify(self, option):
         self.svc._show_notify = option.value
 
-    def on_change_timeout(self, client, id, entry, option):
-        self.svc._timeout = option.value
+    def on_change_timeout(self, option):
+        self.svc._timeout = option.val
 
-    def on_gravity_change(self, client, id, entry, option):
-        self.svc._popup.set_gravity(option.value)
+    def on_gravity_change(self, option):
+        self.svc.notifier._popup.set_gravity(option.value)
 
-    def on_pida_window_change(self, client, id, entry, option):
-        self.svc._popup.on_pida_window = option.value
+    def on_pida_window_change(self, option):
+        self.svc.notifier._popup.on_pida_window = option.value
 
 
 class NotifyActionsConfig(ActionsConfig):
@@ -292,12 +334,11 @@ class Notify(Service):
 
     def start(self):
         self._view = NotifyView(self)
-        self._popup = NotifyPopupView(self)
-        self._popup.on_pida_window = self.opt('pidawindow')
+
+        self.notifier = Notifier(self)
+
         self._has_loaded = False
         self._show_notify = self.opt('show_notify')
-        self._timeout = self.opt('timeout')
-        self._popup.set_gravity(self.opt('gravity'))
 
         acts = self.boss.get_service('window').actions
         
@@ -316,12 +357,12 @@ class Notify(Service):
     def add_notify(self, item):
         self._view.add_item(item)
         if self._show_notify:
-            self._popup.add_item(item)
+            self.notifier.notify(item)
 
     def notify(self, data, title='', stock=gtk.STOCK_DIALOG_INFO,
             timeout=-1, callback=None):
         if timeout == -1:
-            timeout = self._timeout
+            timeout = self.opt('timeout')
         self.add_notify(NotifyItem(data=data, title=title, stock=stock,
             timeout=timeout, callback=callback))
 

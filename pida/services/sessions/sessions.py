@@ -130,10 +130,10 @@ class SessionsOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
             'close_files_on_load',
-            _('Clear befor load'),
+            _('Clear before load'),
             bool,
             True,
-            _('Close all files before loading session'),
+            _('Close all the currently open documents before loading a session.'),
         )
 
         self.create_option(
@@ -178,7 +178,7 @@ class SessionsActionsConfig(ActionsConfig):
             _('Save session as'),
             _('Save session as'),
             '',
-            self.on_session_save,
+            self.on_session_save_as,
             ''
         )
         self.create_action(

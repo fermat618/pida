@@ -84,7 +84,7 @@ def report(root_url, email, password, productpath, title, comment):
     try:
         return True, s.filebug(d)
     except Exception, e:
-        return False, e
+        return False, str(e)
 
 
 
