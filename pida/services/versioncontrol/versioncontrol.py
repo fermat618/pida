@@ -36,7 +36,7 @@ try:
     from pygments.lexers import DiffLexer
     from pygments.formatters import HtmlFormatter
 except ImportError:
-    DiffLexer = HtmlFormatter = lambda: None
+    DiffLexer = HtmlFormatter = lambda *k, **kw: None #they get args
     def highlight(diff, *k): # dummy in case of missing pygments
          return '<pre>\n%s</pre>\n' % escape(diff)
 
