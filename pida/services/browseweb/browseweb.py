@@ -5,7 +5,7 @@
 """
 
 import urlparse
-import pida.utils.pywebbrowser as webbrowser
+import webbrowser
 
 import gtk
 
@@ -27,7 +27,7 @@ from pida.ui.views import PidaView
 
 # locale
 from pida.core.locale import Locale
-locale = Locale('webbrowser')
+locale = Locale('browseweb')
 _ = locale.gettext
 
 def get_url_mark(url):

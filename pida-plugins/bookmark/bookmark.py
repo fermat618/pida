@@ -136,7 +136,7 @@ class BookmarkItemUrl(BookmarkItem):
         BookmarkItem.__init__(self, title=title, data=data)
 
     def run(self, service):
-        service.boss.call_command('webbrowser', 'browse', url=self.data)
+        service.boss.call_command('browseweb', 'browse', url=self.data)
 """
 
 

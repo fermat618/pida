@@ -179,7 +179,7 @@ class Koders(Service):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
     def browse(self, id):
-        self.boss.cmd('webbrowser', 'browse', url=(self.url_rfctmpl + id))
+        self.boss.cmd('browseweb', 'browse', url=(self.url_rfctmpl + id))
 
     def stop(self):
         if self.task != None:
@@ -210,7 +210,7 @@ class Koders(Service):
         self._view.stop_pulse()
 
     def browse(self, url):
-        self.boss.cmd('webbrowser', 'browse', url=url)
+        self.boss.cmd('browseweb', 'browse', url=url)
 
 # Required Service attribute for service loading
 Service = Koders
