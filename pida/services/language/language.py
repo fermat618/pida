@@ -311,6 +311,8 @@ class BrowserView(PidaGladeView):
 
     def do_treeview__row_activated(self, treeview, path, view_column):
         "After activated (double clicked or pressed enter) on a row"
+        # we have to use this hand connected version as the kiwi one
+        # used the wrong model and not our filtered one :(
         try:
             row = self.filter_model[path]
         except IndexError:
@@ -318,13 +320,14 @@ class BrowserView(PidaGladeView):
                 path, map(list, self._model))
             return
         item = row[COL_MODEL]
-        print item
         if item.filename is not None:
             self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename,
                                                      line=item.linenumber)
+            self.svc.boss.editor.cmd('grab_focus')
         elif item.linenumber:
             self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
-        self.svc.boss.editor.cmd('grab_focus')
+            self.svc.boss.editor.cmd('grab_focus')
+        return True
 
     def update_filterview(self, outliner):
         if outliner:
