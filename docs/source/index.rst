@@ -2,13 +2,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PIDA's documentation!
-================================
+Welcome to the PIDA documentation!
+==================================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+
+   user/index
+   developer/index
 
 Indices and tables
 ==================
