@@ -328,10 +328,11 @@ class ShellActionView(ActionView):
     gladefile = 'action_shell'
 
     def create_ui(self):
-        self.env_list.set_columns([
-            Column('name', expand=True),
-            Column('value', expand=True),
-        ])
+        #self.env_list.set_columns([
+        #    Column('name', expand=True),
+        #    Column('value', expand=True),
+        #])
+        pass
 
     def set_action(self, action):
         self.command.set_text(action.value)
