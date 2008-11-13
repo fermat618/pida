@@ -85,6 +85,10 @@ class DbusOptionsManagerReal(Object):
                                 self.on_config_changed, 'CONFIG_CHANGED', 
                                 ns, None, path, sender_keyword='sender')
 
+    def unload(self):
+        self.config_match.remove()
+        self.remove_from_connection()
+
     def on_config_changed(self, workspace, name, value, sender=None):
         if sender == BUS.get_unique_name():
             return
@@ -225,6 +229,9 @@ class DbusOptionsManagerReal(Object):
 
 
 class DbusOptionsManagerNoop(object):
+    def unload(self):
+        pass
+
     def notify_dbus(self, *args):
         pass
     

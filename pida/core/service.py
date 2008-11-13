@@ -96,6 +96,8 @@ class Service(object):
 
     def stop_components(self):
         # Will remove everything
+        self.options.unload()
+        self.actions.unload()
         self.events.unsubscribe_foreign()
         self.features.unsubscribe_foreign()
         self.actions.remove_actions()
