@@ -10,6 +10,7 @@ from kiwi.ui.delegates import GladeDelegate, GladeSlaveDelegate
 
 from kiwi.ui.objectlist import Column
 from kiwi.ui.dialogs import yesno
+from kiwi.utils import gsignal
 
 from pida.utils.puilder.model import action_types
 from pida.utils.gthreads import gcall
@@ -40,6 +41,8 @@ class PuilderView(GladeSlaveDelegate):
     gladefile = 'puild_properties'
 
     parent_window = None
+
+    gsignal('cancel-request')
 
     def __init__(self, *args, **kw):
        GladeSlaveDelegate.__init__(self, *args, **kw)
@@ -214,6 +217,14 @@ class PuilderView(GladeSlaveDelegate):
         f.close()
         print 'saved'
         self.build.dumpf(self.project.project_file)
+
+    def on_cancel_button__clicked(self, button):
+        self.emit('cancel-request')
+
+    def on_revert_button__clicked(self, button):
+        self.project.reload()
+        self.set_project(self.project)
+        self.set_build(self.project.build)
 
     def on_targets_list__selection_changed(self, ol, target):
         self.target_changed(target)
