@@ -53,6 +53,18 @@ class DbusConfigNoop(object):
         pass
 
 class DbusOptionsManagerReal(Object):
+    __dbus_mapping = {
+        bool: 'b',
+        str: 's',
+        unicode: 's',
+        int: 'i',
+        long: 'x',
+        float: 'd',
+        list: 'as',
+        file: 's',
+        Font: 's'
+    }
+
     def __init__(self, service):
         self.svc = service
         if hasattr(self, 'export_name'):
@@ -66,23 +78,9 @@ class DbusOptionsManagerReal(Object):
         Object.__init__(self, BUS_NAME, path)
 
     def object_to_dbus(self, type_):
-        if issubclass(type_, bool):
-            return 'b'
-        elif issubclass(type_, str) or issubclass(type_, unicode):
-            return 's'
-        elif issubclass(type_, int):
-            return 'i'
-        elif issubclass(type_, long):
-            return 'x'
-        elif issubclass(type_, float):
-            return 'd'
-        elif issubclass(type_, list):
-            return 'as'
-        elif issubclass(type_, file):
-            return 's'
-        elif issubclass(type_, Font):
-            return 's'
-        else:
+        try:
+            rv = self.__dbus_mapping[type_]
+        except:
             raise ValueError, "No object type found for %s" %type_
             
     def dbus_custom_introspect(self):
