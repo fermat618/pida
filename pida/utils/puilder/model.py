@@ -84,9 +84,9 @@ class Target(object):
     def from_serialize(cls, data):
         t = Target()
         t.name = data['name']
-        for act in data['actions']:
+        for act in data.get('actions', ()):
             t.actions.append(Action.from_serialize(act))
-        for dep in data['dependencies']:
+        for dep in data.get('dependencies', ()):
             t.dependencies.append(Dependency.from_serialize(dep))
         return t
 
