@@ -179,7 +179,7 @@ class BufferActionsConfig(ActionsConfig):
         self.create_action(
             'close_all',
             TYPE_NORMAL,
-            _('_Close All Document'),
+            _('Close all Documents'),
             _('Close all documents'),
             '',
             self.on_close_all,
