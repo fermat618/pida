@@ -11,7 +11,8 @@
 
 
 import os
-from functools import partial
+from pango import Font
+from pida.utils.gthreads import gcall
 
 try:
     import dbus
@@ -19,11 +20,17 @@ try:
     from dbus.mainloop.glib import DBusGMainLoop
     DBusMainloop = DBusGMainLoop(set_as_default=True)
     
-    from dbus.service import Object
+    from dbus.service import (Object, INTROSPECTABLE_IFACE, _method_reply_error,
+        _method_reply_return)
+    from dbus.service import method
+    from dbus import Signature
+    import _dbus_bindings
 
     has_dbus = True
     
 except ImportError:
+    method = lambda x: x
+    INTROSPECTABLE_IFACE = ""
     has_dbus = False
     Object = object
 
@@ -31,15 +38,155 @@ class DbusConfigReal(Object):
 
     def __init__(self, service):
         self.svc = service
-        if hasattr(self, 'export_path'):
-            ns = DBUS_PATH(service.get_name(), self.export_path)
+        if hasattr(self, 'export_name'):
+            path = DBUS_PATH(self.export_name)
+            ns = DBUS_NS(self.export_name)
         else:
-            ns = DBUS_PATH(service.get_name())
-        Object.__init__(self, BUS_NAME, ns)
+            path = DBUS_PATH(service.get_name())
+            ns = DBUS_NS(service.get_name())
+        self.dbus_ns = ns
+        Object.__init__(self, BUS_NAME, path)
 
 class DbusConfigNoop(object):
 
     def __init__(self, service):
+        pass
+
+class DbusOptionsManagerReal(Object):
+    def __init__(self, service):
+        self.svc = service
+        if hasattr(self, 'export_name'):
+            path = DBUS_PATH(self.export_name, self.dbus_path)
+            ns = DBUS_NS(self.export_name, self.dbus_path)
+        else:
+            path = DBUS_PATH(service.get_name(), self.dbus_path)
+            ns = DBUS_NS(service.get_name(),self.dbus_path)
+        self.dbus_ns = ns
+        self.exports = {}
+        Object.__init__(self, BUS_NAME, path)
+
+    def object_to_dbus(self, type_):
+        if issubclass(type_, bool):
+            return 'b'
+        elif issubclass(type_, str) or issubclass(type_, unicode):
+            return 's'
+        elif issubclass(type_, int):
+            return 'i'
+        elif issubclass(type_, long):
+            return 'x'
+        elif issubclass(type_, float):
+            return 'd'
+        elif issubclass(type_, list):
+            return 'as'
+        elif issubclass(type_, file):
+            return 's'
+        elif issubclass(type_, Font):
+            return 's'
+        else:
+            raise ValueError, "No object type found for %s" %type_
+            
+    def dbus_custom_introspect(self):
+        rv = ''
+        rv += '  <interface name="%s">\n' % (self.dbus_ns)
+        for option in self._options.itervalues():
+            try:
+                typ = self.object_to_dbus(option.type)
+            except ValueError, e:
+                print "Can't find conversation dbus conversation for ", option
+                continue
+            rv += '    <method name="get_%s">\n' %(option.name)
+            rv += '      <arg direction="out" type="%s" />\n' %typ
+            rv += '    </method>\n'
+            rv += '    <method name="set_%s">\n' %(option.name)
+            rv += '      <arg direction="in"  type="%s" name="value" />\n' % typ
+            rv += '    </method>\n'
+
+        if hasattr(self, '_actions'):
+            for action in self._actions.list_actions():
+                rv += '    <method name="fire_%s" />\n' %(action.get_name())
+
+        rv += '  </interface>\n'
+        return rv
+
+    def _message_cb(self, connection, message):
+        method_name = message.get_member()
+        interface_name = message.get_interface()
+
+        # should we move this stuff into the OptionsConfig and ActionConfig 
+        # classes ?
+        if interface_name == self.dbus_ns:
+            if method_name[0:4] == "get_":
+                opt = self._options[method_name[4:]]
+                _method_reply_return(connection, 
+                                     message, 
+                                     method_name, 
+                                     Signature(self.object_to_dbus(opt.type)), 
+                                     opt.value)
+                return
+            if method_name[0:4] == "set_":
+                opt = self._options[method_name[4:]]
+                try:
+                    #_method_reply_error(connection, message, exception)
+                    args = message.get_args_list()
+                    opt.set_value(args[0])
+                    _method_reply_return(connection, 
+                                         message, 
+                                         method_name, 
+                                         Signature(''))
+                except Exception, exception:
+                    _method_reply_error(connection, message, exception)
+                return
+            if method_name[0:5] == "fire_":
+                act = self._actions.get_action(method_name[5:])
+                try:
+                    #_method_reply_error(connection, message, exception)
+                    gcall(act.emit, 'activate')
+                    _method_reply_return(connection, 
+                                         message, 
+                                         method_name, 
+                                         Signature(''))
+                except Exception, exception:
+                    _method_reply_error(connection, message, exception)
+                return
+        # do a normal lookup
+        return super(DbusOptionsManagerReal, self)._message_cb(connection, message)
+        
+    @method(INTROSPECTABLE_IFACE, in_signature='', out_signature='s',
+            path_keyword='object_path', connection_keyword='connection')
+    def Introspect(self, object_path, connection):
+        """Return a string of XML encoding this object's supported interfaces,
+        methods and signals.
+        """
+        reflection_data = _dbus_bindings.DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE
+        reflection_data += '<node name="%s">\n' % object_path
+
+        interfaces = self._dbus_class_table[self.__class__.__module__ + '.' + self.__class__.__name__]
+        for (name, funcs) in interfaces.iteritems():
+            reflection_data += '  <interface name="%s">\n' % (name)
+
+            for func in funcs.values():
+                if getattr(func, '_dbus_is_method', False):
+                    reflection_data += self.__class__._reflect_on_method(func)
+                elif getattr(func, '_dbus_is_signal', False):
+                    reflection_data += self.__class__._reflect_on_signal(func)
+
+            reflection_data += '  </interface>\n'
+
+        reflection_data += self.dbus_custom_introspect()
+
+        for name in connection.list_exported_child_objects(object_path):
+            reflection_data += '  <node name="%s"/>\n' % name
+
+        reflection_data += '</node>\n'
+
+        return reflection_data
+
+
+class DbusOptionsManagerNoop(object):
+    def export_option(self, option):
+        pass
+
+    def export_action(self, action):
         pass
 
 if has_dbus:
@@ -56,6 +203,7 @@ if has_dbus:
     os.environ['PIDA_DBUS_UUID'] = UUID
 
     DbusConfig = DbusConfigReal
+    DbusOptionsManager = DbusOptionsManagerReal
 else:
     # noop DbusConfig
     def noop(*args, **kwargs):
@@ -74,4 +222,4 @@ else:
     BUS_NAME = None
     BUS = None
     DbusConfig = DbusConfigNoop
-
+    DbusOptionsManager = DbusOptionsManagerNoop

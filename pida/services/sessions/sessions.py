@@ -25,6 +25,7 @@ from pida.core.locale import Locale
 locale = Locale('sessions')
 _ = locale.gettext
 
+LEXPORT = EXPORT(suffix='session')
 
 class SessionsOptionsConfig(OptionsConfig):
 
@@ -70,7 +71,7 @@ class SessionsEventsConfig(EventsConfig):
 
 class SessionsDbus(DbusConfig):
 
-    @EXPORT(out_signature='s')
+    @LEXPORT(out_signature='s')
     def get_session_name(self):
         print "get_session"
         return manager.session

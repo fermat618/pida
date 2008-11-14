@@ -17,6 +17,7 @@ from __future__ import with_statement
 from functools import partial
 from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
+from .pdbus import DbusOptionsManager
 from pango import Font
 from shutil import rmtree
 import simplejson
@@ -40,7 +41,7 @@ def initialize():
     add_directory('keyboard_shortcuts')
     add_directory('workspaces')
 
-def list_sessions(self):
+def list_sessions():
     """Returns a list with all session names """
     workspaces = get_settings_path('workspaces')
     return [ x for x in os.listdir(workspaces)
@@ -121,14 +122,22 @@ class OptionItem(object):
     def _get_nlabel(self):
         return self.label.replace("_","",1)
 
+    def __repr__(self):
+        return '<OptionItem %s %s:%s>' %(self.group, self.name, self.type)
+
     no_mnemomic_label = property(_get_nlabel)
 
 manager = OptionsManager()
 
-class OptionsConfig(BaseConfig): 
+class OptionsConfig(BaseConfig, DbusOptionsManager): 
 
     #enable reuse for keyboard shortcuts that need different name
     name='%s.json'
+    dbus_path = "options"
+
+    def __init__(self, service, *args, **kwargs):
+        DbusOptionsManager.__init__(self, service)
+        BaseConfig.__init__(self, service, *args, **kwargs)
 
     def create(self):
         self.name = self.__class__.name%self.svc.get_name()
@@ -136,6 +145,7 @@ class OptionsConfig(BaseConfig):
         self.workspace_path = get_settings_path('workspaces', manager.session, self.name)
         self.global_path = get_settings_path(self.name)
         self._options = {}
+        self._exports = {}
         self.create_options()
         self.register_options()
 

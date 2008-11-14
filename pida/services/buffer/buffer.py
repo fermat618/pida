@@ -31,6 +31,8 @@ from pida.core.locale import Locale
 locale = Locale('buffer')
 _ = locale.gettext
 
+LEXPORT = EXPORT(suffix='buffer')
+
 LIST_COLUMNS = {
 'onerow': [
             Column('markup', use_markup=True),
@@ -312,23 +314,23 @@ class BufferCommandsConfig(CommandsConfig):
 
 class BufferDbusConfig(DbusConfig):
     
-    @EXPORT(in_signature='s')
+    @LEXPORT(in_signature='s')
     def open_file(self, file_name):
         self.svc.open_file(file_name)
 
-    @EXPORT(in_signature='as')
+    @LEXPORT(in_signature='as')
     def open_files(self, files):
         self.svc.open_files(files)
         
-    @EXPORT(in_signature='s')
+    @LEXPORT(in_signature='s')
     def close_file(self, file_name):
         self.svc.close_file(file_name)
         
-    @EXPORT(out_signature='i')
+    @LEXPORT(out_signature='i')
     def get_open_documents_count(self):
         return len(self.svc._documents)
 
-    @EXPORT(out_signature='a(isii)')
+    @LEXPORT(out_signature='a(isii)')
     def get_documents(self):
         return [
                  dict(id=x.unique_id, filename=x.filename, 

@@ -35,6 +35,7 @@ from pida.core.locale import Locale
 locale = Locale('project')
 _ = locale.gettext
 
+LEXPORT = EXPORT(suffix='project')
 
 def open_directory_dialog(parent, title, folder=''):
     filechooser = gtk.FileChooserDialog(title,
@@ -294,17 +295,17 @@ class ProjectCommandsConfig(CommandsConfig):
 
 class ProjectDbusConfig(DbusConfig):
 
-    @EXPORT(in_signature='s')
+    @LEXPORT(in_signature='s')
     def add_directory(self, project_directory):
         self.svc.add_directory(project_directory)
         
-    @EXPORT(out_signature='s')
+    @LEXPORT(out_signature='s')
     def get_current_project_name(self):
         if self.svc._current:
             return self.svc._current.name
         return None
         
-    @EXPORT(out_signature='s')
+    @LEXPORT(out_signature='s')
     def get_current_project_source_directory(self):
         if self.svc._current:
             return self.svc._current.source_directory
