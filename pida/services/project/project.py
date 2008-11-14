@@ -274,7 +274,7 @@ class ProjectOptions(OptionsConfig):
             (_('The last project selected. ') +
             _('(Do not change this unless you know what you are doing)')),
             safe=False,
-            session=True
+            workspace=True
         )
 
 

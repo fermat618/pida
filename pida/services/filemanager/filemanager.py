@@ -606,14 +606,14 @@ class FileManagerOptionsConfig(OptionsConfig):
                 bool,
                 True,
                 _('Shows hidden files'),
-                session=True)
+                workspace=True)
         self.create_option(
                 'file_hidden_check',
                 _('Used file hidden checker'),
                 list,
                 [],
                 _('The used file hidden checker'),
-                session=True)
+                workspace=True)
         
         self.create_option(
                 'last_browsed_remember',
@@ -629,7 +629,7 @@ class FileManagerOptionsConfig(OptionsConfig):
                 path.expanduser('~'),
                 _('The last browsed path'),
                 safe=False,
-                session=True)
+                workspace=True)
         
         self.create_option(
                 'hide_regex',

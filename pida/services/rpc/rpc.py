@@ -8,7 +8,8 @@ import os
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.environment import session_name
+from pida.core.options import OptionsConfig
+from pida.core.environment import workspace_name
 
 from pida.core.locale import Locale
 locale = Locale('plugins')
@@ -16,6 +17,16 @@ _ = locale.gettext
 
 LEXPORT = EXPORT(suffix='rpc')
 LSIGNAL = SIGNAL(suffix='rpc')
+
+class RpcConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'open_workspace_manager',
+            _('Always show workspace manager'),
+            bool,
+            True,
+            _('Always open the workspace manager when no workspace name is given'),
+        )
 
 class RpcDbus(DbusConfig):
     
@@ -35,6 +46,11 @@ class RpcDbus(DbusConfig):
     @LEXPORT(out_signature="i")
     def get_pid(self):
         return os.getpid()
+
+
+    @LEXPORT(out_signature='s')
+    def get_workspace_name(self):
+        return manager.session
 
     @LEXPORT()
     def focus_window(self):
@@ -74,6 +90,7 @@ class Rpc(Service):
     """DBus RPC Service""" 
 
     dbus_config = RpcDbus
+    options_config = RpcConfig
 
     def start(self):
         if not BUS:

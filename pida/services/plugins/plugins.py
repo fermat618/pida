@@ -386,7 +386,7 @@ class PluginsOptionsConfig(OptionsConfig):
             [], 
             _('List of plugin to start'),
             safe=False,
-            session=True
+            workspace=True
             )
 
     def on_rpc_url(self, option):

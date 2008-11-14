@@ -70,9 +70,9 @@ class OptionsPage(gtk.VBox):
             optlabel = gtk.Label()
             lbl = opt.label
             doc = opt.doc
-            if opt.session:
+            if opt.workspace:
                 lbl += " *"
-                doc += "\n(bound to session)"
+                doc += "\n(bound to workspace)"
             optlabel.set_text('\n'.join(wrap(lbl, 20)))
             optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
