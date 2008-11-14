@@ -14,6 +14,8 @@
             <separator />
             <placeholder name="fm2">
             <menuitem name="close" action="close" />
+            <separator />
+            <menuitem name="close_all" action="close_all" />
             </placeholder>
             <separator />
             <placeholder name="fm3" />

@@ -177,6 +177,15 @@ class BufferActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'close_all',
+            TYPE_NORMAL,
+            _('_Close All Document'),
+            _('Close all documents'),
+            '',
+            self.on_close_all,
+            '',
+        )
+        self.create_action(
             'switch_next_buffer',
             TYPE_NORMAL,
             _('_Next Buffer'),
@@ -228,6 +237,9 @@ class BufferActionsConfig(ActionsConfig):
 
     def on_close(self, action):
         self.svc.close_current()
+
+    def on_close_all(self, action):
+        self.svc.close_all()
 
     def on_open_for_file(self, action):
         file_name = action.contexts_kw['file_name']
@@ -435,6 +447,15 @@ class Buffer(Service):
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
                 self.emit('document-closed')
+
+    def close_all(self):
+        docs = self._documents.values()[:]
+        for document in docs:
+            if self.boss.editor.cmd('close', document=document):
+                self._remove_document(document)
+                self.emit('document-closed')
+            else:
+                break
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():
