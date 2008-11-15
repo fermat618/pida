@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import sys
+import sys, StringIO
 from subprocess import Popen, PIPE
 
 from pida.core.projects import Project
@@ -8,11 +8,20 @@ from pida.utils.puilder.model import Build
 
 
 
+def _info(*msg):
+    sys.stderr.write('\n'.join(msg) + '\n')
+
 def execute_shell_action(project, build, action):
     cwd = action.options.get('cwd', project)
     p = Popen(action.value, shell=True, cwd=cwd, stdout=PIPE)
+    buffer = []
+    for line in p.stdout:
+        buffer.append(line)
+        sys.stdout.write(line)
+        sys.stdout.flush()
     p.wait()
-    return p.stdout.read()
+    return ''.join(buffer)
+
 
 def _execute_python(source_directory, build, value):
     sys.path.insert(0, source_directory)
@@ -31,6 +40,7 @@ def execute_python_action(project, build, action):
     s.seek(0)
     data = s.read()
     sys.stdout = oldout
+    sys.stdout.write(data)
     return data
 
 def execute_external_action(project, build, action):
@@ -124,8 +134,6 @@ def generate_execution_graph(build, target_name):
 
 
 
-import sys, StringIO
-
 def execute_action(build, action, project_directory):
     return executors[action.type](project_directory, build, action)
 
@@ -134,9 +142,11 @@ def execute_build(build, target_name, project_directory=None):
     graph = generate_execution_graph(build, target_name)
     for action in graph.actions:
         if isinstance(action, CircularAction):
-            print 'Warning: Circular action ignored.', action.target.name
+            _info('--', 'Warning: Circular action ignored: %s' % action.target.name, '--')
         else:
-            yield action, execute_action(build, action, project_directory)
+            _info('Executing: [%s]' % action.type, '--', action.value, '--')
+            yield execute_action(build, action, project_directory)
+            _info('--')
 
 
 def execute_target(project_file, target_name, project_directory=None):
@@ -145,13 +155,11 @@ def execute_target(project_file, target_name, project_directory=None):
 
 
 def execute_project(project_directory, target_name):
-    print 'Working dir: %s' % project_directory
+    _info('Working dir: %s' % project_directory)
     project_file = Project.data_dir_path(project_directory, 'project.json')
-    print 'Build file path: %s' % project_file
-    for action, res in execute_target(project_file, target_name, project_directory):
-        print 'Executing', action.type, action.value
-        print '--'
-        print res
+    _info('Build file path: %s' % project_file, '--')
+    for action in execute_target(project_file, target_name, project_directory):
+        pass
 
 
 execute = execute_project

@@ -52,14 +52,12 @@ def _get_test_build():
     json = dumps(t, sort_keys=False, indent=2)
     return Build.loads(json), json
 
-
 def _build_test(f):
     b, j = _get_test_build()
     def _f():
         return f(b)
     _f.__name__ = f.__name__
     return _f
-
 
 def _target_test(name='test'):
     def _decorator(f):
@@ -93,15 +91,17 @@ def _graph_test(target_name='test'):
         return _f
     return _decorator
 
+
 def _execution_result_test(target_name='test'):
     def _decorator(f):
         b, j = _get_test_build()
         res = list(execute_build(b, target_name))
         def _f():
-            return f([r[1] for r in res])
+            return f(res)
         _f.__name__ = f.__name__
         return _f
     return _decorator
+
 
 @_build_test
 def test_targets(b):
@@ -204,7 +204,7 @@ def test_circular_flag_action(g):
 @_build_test
 def test_execute_shell(b):
     res = list(execute_build(b, 'test'))
-    assert res[0][1] == '123\n'
+    assert res[0] == '123\n'
 
 
 @_execution_result_test('test5')
