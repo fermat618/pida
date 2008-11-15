@@ -3,6 +3,8 @@
 
 from simplejson import dumps, loads
 
+def dump(data):
+    return dumps(data, sort_keys=False, indent=2, separators=(',',':'))
 
 class Build(object):
     """A single build file"""
@@ -36,7 +38,7 @@ class Build(object):
         return s
 
     def dumps(self):
-        return dumps(self.for_serialize(), sort_keys=False, indent=2)
+        return dump(self.for_serialize())
 
     def dumpf(self, filename):
         f = open(filename, 'w')
@@ -51,19 +53,6 @@ class Build(object):
         self.targets.append(t)
         return t
 
-#class Dependency(object):
-#
-#    def __init__(self):
-#        self.name = ''
-#
-#    def for_serialize(self):
-#        return self.name
-#
-#    @classmethod
-#    def from_serialize(cls, s):
-#        d = Dependency()
-#        d.name = s
-#        return d
 
 class Target(object):
     """A single target"""
@@ -135,32 +124,10 @@ action_types = [
 ]
 
 
-t = dict(
-    targets = [
-        dict(
-            name = 'test',
-            actions = [
-                dict(type='shell', value='blah', options={})
-            ],
-        )
-    ],
-    options = {}
-)
-
-def get_test_build():
-    json = dumps(t, sort_keys=True, indent=4)
-    return Build.loads(json)
-
-def test_basic():
-    json = dumps(t, sort_keys=True, indent=4)
-
-
-    back = Build.loads(json)
-    assert back.dumps() == json
-    raise
 
 if __name__ == '__main__':
     b = get_test_build()
     b.options['name'] = 'foo'
     #b.targets[0].create_new_dependency('moo')
     print b.dumps()
+
