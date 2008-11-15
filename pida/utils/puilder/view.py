@@ -408,18 +408,24 @@ class TargetActionView(ActionView):
 
     def create_ui(self):
         self.action = None
+        self.block = False
 
     def set_action(self, action):
+        self.block = True
         items = [('', None)] + [(t.name, t.name) for t in self.build.targets]
         self.targets_combo.prefill(items)
         try:
             self.targets_combo.update(action.value)
         except KeyError:
             self.targets_combo.update(None)
+        self.block = False
 
     def on_targets_combo__content_changed(self, cmb):
         if self.action is None:
             return
+        if self.block:
+            return
+        print ['chann', cmb.read()]
         self.action.value = cmb.read()
 
 action_views = {
