@@ -62,7 +62,7 @@ class DbusOptionsManagerReal(Object):
         float: 'd',
         list: 'as',
         file: 's',
-        Font: 's'
+        Font: 's',
     }
 
     def __init__(self, service):
@@ -81,6 +81,9 @@ class DbusOptionsManagerReal(Object):
         try:
             rv = self.__dbus_mapping[type_]
         except:
+            from pida.core.options import BaseChoice, Color
+            if issubclass(type_, (BaseChoice, Color)):
+                return 's'
             raise ValueError, "No object type found for %s" %type_
             
     def dbus_custom_introspect(self):

@@ -18,6 +18,7 @@ import re
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
+from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
@@ -42,6 +43,7 @@ from pida.core.locale import Locale
 locale = Locale('filemanager')
 _ = locale.gettext
 
+IEXPORT = EXPORT(suffix='filemanager')
 
 state_text = dict(
         hidden=' ',
@@ -312,10 +314,12 @@ class FilemanagerView(PidaView):
         else:
             return False
 
-    def create_dir(self):
-        opts = DialogOptions().add('name', label=_("Directory name"), value="")
-        create_gtk_dialog(opts, parent=self.svc.boss.window).run()
-        if opts.name:
+    def create_dir(self, name=None):
+        if not name:
+            opts = DialogOptions().add('name', label=_("Directory name"), value="")
+            create_gtk_dialog(opts, parent=self.svc.boss.window).run()
+            name = opts.name
+        if name:
             npath = os.path.join(self.path, opts.name)
             if not os.path.exists(npath):
                 os.mkdir(npath)
@@ -638,6 +642,41 @@ class FileManagerOptionsConfig(OptionsConfig):
                 '^\.|.*~|.*\.py[co]$',
                 _('Hides files that match the regex'))
 
+class FilemanagerDbusConfig(DbusConfig):
+    @IEXPORT(in_signature="s")
+    def browse(self, path):
+        self.svc.browse(path)
+
+    @IEXPORT(out_signature="s")
+    def get_browsed_path(self):
+        return self.svc.path
+
+    @IEXPORT(in_signature="s")
+    def create_dir(self, path):
+        self.svc.create_dir(path)
+
+    @IEXPORT()
+    def go_current_file(self):
+        self.svc.go_current_file()
+
+    @IEXPORT()
+    def go_up(self):
+        self.svc.go_up()
+
+    @IEXPORT()
+    def refresh_file_hidden_check_menu(self):
+        self.svc.refresh_file_hidden_check_menu()
+
+    @IEXPORT()
+    def present_view(self):
+        self.svc.commands.present_view()
+
+    @IEXPORT()
+    def refresh(self):
+        self.svc.commands.refresh()
+
+
+
 class FileManagerActionsConfig(ActionsConfig):
 
     def create_actions(self):
@@ -866,6 +905,7 @@ class Filemanager(Service):
     options_config = FileManagerOptionsConfig
     features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
+    dbus_config = FilemanagerDbusConfig
     commands_config = FilemanagerCommandsConfig
     actions_config = FileManagerActionsConfig
 
@@ -896,8 +936,8 @@ class Filemanager(Service):
             self.file_view.update_to_path(new_path, select=select)
         self.emit('browsed_path_changed', path=new_path)
 
-    def create_dir(self):
-        self.file_view.create_dir()
+    def create_dir(self, name=None):
+        self.file_view.create_dir(name=name)
 
     def go_current_file(self):
         cd = self.boss.cmd('buffer', 'get_current')

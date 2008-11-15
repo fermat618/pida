@@ -96,12 +96,14 @@ class OptionsManager(object):
     def on_change(self, option):
         pass #XXX: implement
 
+class BaseChoice(str): pass
 
 def choices(choices):
     """Helper to generate string options for choices"""
-    class Choices(str):
+    class Choices(BaseChoice):
         """Option that should be one of the choices"""
         options = choices
+
     return Choices
 
 class Color(str): """Option which is a color in RGB Hex"""
