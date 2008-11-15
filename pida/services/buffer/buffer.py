@@ -342,12 +342,14 @@ class BufferDbusConfig(DbusConfig):
     def get_open_documents_count(self):
         return len(self.svc._documents)
 
-    @LEXPORT(out_signature='a(isii)')
+    @LEXPORT(out_signature='a(isiia{ss})')
     def get_documents(self):
         return [
-                 dict(id=x.unique_id, filename=x.filename, 
-                       doctype=x.doctype and x.doctype.internal or '', 
-                       creation_time=x.creation_time)
+                 (x.unique_id, x.filename, 
+                       x.doctype and x.doctype.internal or '', 
+                       x.creation_time,
+                       # extended values
+                       {})
                   for x in self.svc._documents.itervalues()
                ]
                

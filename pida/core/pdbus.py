@@ -65,6 +65,9 @@ class DbusOptionsManagerReal(Object):
         Font: 's',
     }
 
+    dbus_no_export = ()
+    dbus_no_fire = ()
+
     def __init__(self, service):
         self.svc = service
         if hasattr(self, 'export_name'):
@@ -79,7 +82,7 @@ class DbusOptionsManagerReal(Object):
 
     def object_to_dbus(self, type_):
         try:
-            rv = self.__dbus_mapping[type_]
+            return self.__dbus_mapping[type_]
         except:
             from pida.core.options import BaseChoice, Color
             if issubclass(type_, (BaseChoice, Color)):
@@ -87,24 +90,21 @@ class DbusOptionsManagerReal(Object):
             raise ValueError, "No object type found for %s" %type_
             
     def dbus_custom_introspect(self):
-        rv = ''
-        rv += '  <interface name="%s">\n' % (self.dbus_ns)
+        rv = '  <interface name="%s">\n' %(self.dbus_ns)
         for option in self._options.itervalues():
+            if option.name in self.dbus_no_export:
+                continue
             try:
                 typ = self.object_to_dbus(option.type)
             except ValueError, e:
                 print "Can't find conversation dbus conversation for ", option
                 continue
-            rv += '    <method name="get_%s">\n' %(option.name)
-            rv += '      <arg direction="out" type="%s" />\n' %typ
-            rv += '    </method>\n'
-            rv += '    <method name="set_%s">\n' %(option.name)
-            rv += '      <arg direction="in"  type="%s" name="value" />\n' % typ
-            rv += '    </method>\n'
+            rv += '    <property name="%s" type="%s" access="readwrite"/>\n' %(option.name, typ)
 
         if hasattr(self, '_actions'):
             for action in self._actions.list_actions():
-                rv += '    <method name="fire_%s" />\n' %(action.get_name())
+                if action.get_name() not in self.dbus_no_fire:
+                    rv += '    <method name="fire_%s" />\n' %(action.get_name())
 
         rv += '  </interface>\n'
         return rv
@@ -115,28 +115,34 @@ class DbusOptionsManagerReal(Object):
 
         # should we move this stuff into the OptionsConfig and ActionConfig 
         # classes ?
-        if interface_name == self.dbus_ns:
-            if method_name[0:4] == "get_":
-                opt = self._options[method_name[4:]]
+        args = message.get_args_list()
+
+        if interface_name == 'org.freedesktop.DBus.Properties' and \
+           len(args) > 1 and args[0] == self.dbus_ns:
+            if method_name == "Get":
+                opt = self._options[args[1]]
+                typ = self.object_to_dbus(opt.type)
                 _method_reply_return(connection, 
                                      message, 
                                      method_name, 
-                                     Signature(self.object_to_dbus(opt.type)), 
+                                     Signature(typ), 
                                      opt.value)
                 return
-            if method_name[0:4] == "set_":
-                opt = self._options[method_name[4:]]
-                try:
-                    #_method_reply_error(connection, message, exception)
-                    args = message.get_args_list()
-                    opt.set_value(args[0])
-                    _method_reply_return(connection, 
-                                         message, 
-                                         method_name, 
-                                         Signature(''))
-                except Exception, exception:
-                    _method_reply_error(connection, message, exception)
+            elif method_name == "Set":
+                self._options[args[1]] = args[2]
                 return
+            elif method_name == "GetAll":
+                rv = {}
+                for name, opt in self._options.iteritems():
+                    rv[name] = opt.value
+                _method_reply_return(connection, 
+                                     message, 
+                                     method_name, 
+                                     Signature('{sv}'), 
+                                     rv)
+                return
+
+        if interface_name == self.dbus_ns:
             if method_name[0:5] == "fire_":
                 act = self._actions.get_action(method_name[5:])
                 try:

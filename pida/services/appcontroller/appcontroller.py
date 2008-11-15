@@ -22,6 +22,8 @@ _ = locale.gettext
 
 class AppcontrollerActions(ActionsConfig):
 
+    dbus_no_fire = ('quit_pida',)
+
     def create_actions(self):
         self.create_action(
             'quit_pida',
