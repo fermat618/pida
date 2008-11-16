@@ -119,6 +119,58 @@ class GtkHtmlWidget(gtk.ScrolledWindow):
         self.load_url(url)
 
 
+class SearchBar(gtk.HBox):
+
+    def __init__(self, html, label='Find:'):
+        gtk.HBox.__init__(self)
+        self.html = html
+        self.set_border_width(3)
+        self.set_spacing(3)
+
+        self.label = gtk.Label(label)
+        self.label.show()
+        self.pack_start(self.label, expand=False)
+
+        self.text = gtk.Entry()
+        self.text.connect('activate', self.on_text__activate)
+        self.text.show()
+        self.pack_start(self.text)
+
+        self.find_button = gtk.Button(stock=gtk.STOCK_FIND)
+        self.find_button.connect('clicked', self.on_find_button__clicked)
+
+        self.close_button = gtk.Button(stock=gtk.STOCK_CLOSE)
+        self.close_button.connect('clicked', self.on_close_button__clicked)
+
+        self.pack_start(self.find_button, expand=False)
+        self.find_button.show()
+
+        self.pack_start(self.close_button, expand=False)
+        self.close_button.show()
+
+        self.set_no_show_all(True)
+
+    def on_text__activate(self, entry):
+        self.perform_search()
+
+    def perform_search(self):
+        search = self.text.get_text()
+        self.html.search_text(search, False, True, True)
+
+    def start_search(self):
+        self.show()
+        self.text.grab_focus()
+
+    def end_search(self):
+        self.hide()
+
+    def on_find_button__clicked(self, button):
+        self.perform_search()
+
+    def on_close_button__clicked(self, button):
+        self.end_search()
+
+
 class WebkitHtmlWidget(gtk.VBox):
 
     def __init__(self, manager=None):
@@ -139,15 +191,21 @@ class WebkitHtmlWidget(gtk.VBox):
         self.html.connect('load-finished',
                           self.on_html__load_finished)
 
+        self.html.connect('key-press-event', self.on_key_press)
 
         self.sw = gtk.ScrolledWindow()
         self.sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.sw.add(self.html)
         self.progress = gtk.ProgressBar()
         self.progress.set_no_show_all(True)
+
+        self.searchbar = SearchBar(self.html)
+
         self.pack_start(self.sw)
+        self.pack_start(self.searchbar, expand=False)
         self.pack_start(self.progress, expand=False)
         self.show_all()
+
 
     def load_url(self, url):
         self.url = url
@@ -182,7 +240,9 @@ class WebkitHtmlWidget(gtk.VBox):
         self.manager.location.set_text(url)
         self.manager.back_button.set_sensitive(self.html.can_go_back())
 
-
+    def on_key_press(self, html, event):
+        if event.keyval in (47, 102):
+            self.searchbar.start_search()
 
 if webkit is not None:
     HtmlWidget = WebkitHtmlWidget
@@ -199,18 +259,23 @@ class BrowserView(PidaView):
     HAS_TITLE = False
 
     def create_ui(self):
+        self.__browser = HtmlWidget(self)
         bar = gtk.HBox()
         self.back_button = gtk.ToolButton(stock_id=gtk.STOCK_GO_BACK)
         self.stop_button = gtk.ToolButton(stock_id=gtk.STOCK_STOP)
         bar.pack_start(self.back_button, expand=False)
         bar.pack_start(self.stop_button, expand=False)
+        if hasattr(self.__browser, 'searchbar'):
+            self.find_button = gtk.ToolButton(stock_id=gtk.STOCK_FIND)
+            self.find_button.connect('clicked', self.cb_toolbar_clicked, 'find')
+            bar.pack_start(self.find_button, expand=False)
+
         self.back_button.connect('clicked', self.cb_toolbar_clicked, 'back')
         self.stop_button.connect('clicked', self.cb_toolbar_clicked, 'stop')
         self.add_main_widget(bar, expand=False)
         self.location = gtk.Entry()
         bar.pack_start(self.location)
         self.location.connect('activate', self.cb_url_entered)
-        self.__browser = HtmlWidget(self)
         self.add_main_widget(self.__browser)
         self.get_toplevel().show_all()
         self._close_callback=None
@@ -228,8 +293,10 @@ class BrowserView(PidaView):
     def cb_toolbar_clicked(self, button, name):
         if name == 'back':
             self.__browser.back()
-        else:
+        elif name == 'stop':
             self.__browser.stop()
+        elif name == 'find':
+            self.__browser.searchbar.start_search()
 
     def can_be_closed(self):
         if self._close_callback is not None:
