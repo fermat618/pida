@@ -75,6 +75,7 @@ class ActionsConfig(OptionsConfig):
     instance.
     """
     name = '%s.keys.json'
+    dbus_path = "actions"
     accelerator_group = accelerator_group
 
     def create(self):
@@ -156,6 +157,7 @@ class ActionsConfig(OptionsConfig):
 
         if accel is not None:
             self._create_key_option(act, name, label, tooltip, accel)
+
         return act
 
     def _create_key_option(self, act, name, label, tooltip, accel):
@@ -209,3 +211,5 @@ class ActionsConfig(OptionsConfig):
         for opt in self:
             self._set_action_keypress_from_option(opt)
 
+    def export_option(self, option):
+        pass

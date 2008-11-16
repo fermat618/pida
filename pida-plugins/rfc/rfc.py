@@ -297,7 +297,7 @@ class Rfc(Service):
         yield None
 
     def browse(self, id):
-        self.boss.cmd('webbrowser', 'browse', url=(self.url_rfctmpl + id))
+        self.boss.cmd('browseweb', 'browse', url=(self.url_rfctmpl + id))
 
     def stop(self):
         if self.task != None:

@@ -136,7 +136,7 @@ class BookmarkItemUrl(BookmarkItem):
         BookmarkItem.__init__(self, title=title, data=data)
 
     def run(self, service):
-        service.boss.call_command('webbrowser', 'browse', url=self.data)
+        service.boss.call_command('browseweb', 'browse', url=self.data)
 """
 
 
@@ -468,10 +468,8 @@ class Bookmark(Service, MarkerInterface):
             self.bookmark_file(filename, line)
 
     def update_document(self, document):
-        print "update document", document
         for item in self.list_files():
             if document.filename == item.data:
-                print "emit", item
                 self.boss.get_service('editor'). \
                     emit('marker-changed', marker=item)
 

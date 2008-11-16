@@ -87,10 +87,10 @@ op.add_option('--safe_mode', action='store_true',
     help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
 op.add_option('-P', '--profile', dest="profile_path",
     help=_('Generate profile data on path.'))
-op.add_option('-s', '--session', dest="session",
-    help=_('Use session name'))
+op.add_option('-w', '--workspace', dest="workspace",
+    help=_('Use workspace name'))
 op.add_option('-m', '--manager', action='store_true',
-    help=_('Show Session Manager'))
+    help=_('Show workspace Manager'))
 op.add_option('', '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
 
@@ -121,15 +121,15 @@ def is_firstrun():
 def is_safe_mode():
     return opts.safe_mode
 
-def session_name():
-    if not opts.session:
+def workspace_name():
+    if not opts.workspace:
         return "default"
-    return opts.session
+    return opts.workspace
 
-def session_set():
-    return opts.session is not None
+def workspace_set():
+    return opts.workspace is not None
 
-def session_manager():
+def workspace_manager():
     return opts.manager
 
 def killsettings():

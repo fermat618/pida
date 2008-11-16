@@ -9,7 +9,7 @@
           "options": {
             "cwd": null
           }, 
-          "value": "./run-pida.py -D -s testing"
+          "value": "./run-pida.py -D -w testing"
         }
       ]
     }, 

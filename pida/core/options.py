@@ -17,6 +17,7 @@ from __future__ import with_statement
 from functools import partial
 from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
+from .pdbus import DbusOptionsManager
 from pango import Font
 from shutil import rmtree
 import simplejson
@@ -34,14 +35,16 @@ def add_directory(*parts):
 
 def unset_directory(*parts):
     #XXX: reload=!
-    rmtree(get_settings_path(*parts))
+    path = get_settings_path(*parts)
+    if os.path.exists(path):
+        rmtree(get_settings_path(*parts))
 
 def initialize():
     add_directory('keyboard_shortcuts')
     add_directory('workspaces')
 
-def list_sessions(self):
-    """Returns a list with all session names """
+def list_workspaces():
+    """Returns a list with all workspace names """
     workspaces = get_settings_path('workspaces')
     return [ x for x in os.listdir(workspaces)
                 if path.isdir(
@@ -51,44 +54,56 @@ def list_sessions(self):
 
 class OptionsManager(object):
 
-    def __init__(self, session=None):
+    def __init__(self, workspace=None):
 
         initialize()
-        self._session = None
-        if session:
-            self.session = session
+        self._workspace = None
+        if workspace:
+            self.workspace = workspace
         if killsettings():
             unset_directory()
 
-    def initialize_session(self):
-        add_directory('workspaces', self.session)
+    @staticmethod
+    def delete_workspace(workspace):
+        unset_directory('workspaces', workspace)
 
-    def open_session_manager(self):
-        pass #XXX: get this from the options somehow
+    def initialize_workspace(self):
+        add_directory('workspaces', self.workspace)
 
-    def _set_session(self, value):
-        self._session = value
-        self.initialize_session()
+    def open_workspace_manager(self):
+        data = {}
+        try:
+            with open(get_settings_path('rpc.json')) as file:
+                data = simplejson.load(file)
+                return bool(data.get('open_workspace_manager', False))
+        except Exception, e:
+            return False
 
-    def _get_session(self):
-        if self._session is None:
+    def _set_workspace(self, value):
+        self._workspace = value
+        self.initialize_workspace()
+
+    def _get_workspace(self):
+        if self._workspace is None:
             # we need this form of lazy loading because the default manager
-            # is created so early that the session name is not known then
+            # is created so early that the workspace name is not known then
             import pida.core.environment
-            self._session = pida.core.environment.session_name()
-        return self._session
+            self._workspace = pida.core.environment.workspace_name()
+        return self._workspace
 
-    session = property(_get_session, _set_session)
+    workspace = property(_get_workspace, _set_workspace)
 
     def on_change(self, option):
         pass #XXX: implement
 
+class BaseChoice(str): pass
 
 def choices(choices):
     """Helper to generate string options for choices"""
-    class Choices(str):
+    class Choices(BaseChoice):
         """Option that should be one of the choices"""
         options = choices
+
     return Choices
 
 class Color(str): """Option which is a color in RGB Hex"""
@@ -97,14 +112,14 @@ class Color(str): """Option which is a color in RGB Hex"""
 class OptionItem(object):
 
     def __init__(self, group, name, label, rtype, default, doc, callback, 
-                 session=None):
+                 workspace=None):
         self.group = group
         self.name = name
         self.label = label
         self.type = rtype
         self.doc = doc
         self.default = default
-        self.session = bool(session)
+        self.workspace = bool(workspace)
         self.callback = callback
         self.value = None
 
@@ -121,21 +136,30 @@ class OptionItem(object):
     def _get_nlabel(self):
         return self.label.replace("_","",1)
 
+    def __repr__(self):
+        return '<OptionItem %s %s:%s>' %(self.group, self.name, self.type)
+
     no_mnemomic_label = property(_get_nlabel)
 
 manager = OptionsManager()
 
-class OptionsConfig(BaseConfig): 
+class OptionsConfig(BaseConfig, DbusOptionsManager): 
 
     #enable reuse for keyboard shortcuts that need different name
     name='%s.json'
+    dbus_path = "options"
+
+    def __init__(self, service, *args, **kwargs):
+        DbusOptionsManager.__init__(self, service)
+        BaseConfig.__init__(self, service, *args, **kwargs)
 
     def create(self):
         self.name = self.__class__.name%self.svc.get_name()
-        add_directory('workspaces', manager.session)
-        self.workspace_path = get_settings_path('workspaces', manager.session, self.name)
+        add_directory('workspaces', manager.workspace)
+        self.workspace_path = get_settings_path('workspaces', manager.workspace, self.name)
         self.global_path = get_settings_path(self.name)
         self._options = {}
+        self._exports = {}
         self.create_options()
         self.register_options()
 
@@ -163,9 +187,9 @@ class OptionsConfig(BaseConfig):
                 self.set_value(opt.name, opt.default)
 
     def create_option(self, name, label, type, default, doc, callback=None, 
-                      safe=True, session=False):
+                      safe=True, workspace=False):
         opt = OptionItem(self, name, label, type, default, doc,
-                         callback, session)
+                         callback, workspace)
         self.add_option(opt)
         return opt
 
@@ -182,7 +206,7 @@ class OptionsConfig(BaseConfig):
         option = self._options[name]
         option.value = value
         self._on_change(option)
-        self.dump(option.session)
+        self.dump(option.workspace)
 
     def _on_change(self, option):
         # we dont do anything smart, till we are started
@@ -209,9 +233,9 @@ class OptionsConfig(BaseConfig):
                 self.svc.log.exception(e)
         return data
 
-    def dump(self, session):
-        data = dict((opt.name, opt.value) for opt in self if opt.session is session)
-        if session:
+    def dump(self, workspace):
+        data = dict((opt.name, opt.value) for opt in self if opt.workspace is workspace)
+        if workspace:
             f = self.workspace_path
         else:
             f = self.global_path

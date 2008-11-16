@@ -322,7 +322,7 @@ class PasteHistoryView(PidaView):
         to the gnome/gtk clipboard
         """
         if item is not None:
-            self.svc.boss.cmd('webbrowser', 'browse', url=item.url)
+            self.svc.boss.cmd('browseweb', 'browse', url=item.url)
             # self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
             # aa: view the paste
 

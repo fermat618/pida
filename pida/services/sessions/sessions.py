@@ -25,25 +25,18 @@ from pida.core.locale import Locale
 locale = Locale('sessions')
 _ = locale.gettext
 
+LEXPORT = EXPORT(suffix='session')
 
 class SessionsOptionsConfig(OptionsConfig):
 
     def create_options(self):
-        self.create_option(
-            'open_session_manager',
-            _('Always show session manager'),
-            bool,
-            True,
-            _('Always open the session manager when no session name is given'),
-        )
-
         self.create_option(
             'load_last_files',
             _('Load last opened files on startup'),
             bool,
             True,
             _('Load last opened files on startup'),
-            session=True
+            workspace=True
         )
 
         self.create_option(
@@ -53,7 +46,7 @@ class SessionsOptionsConfig(OptionsConfig):
             [],
             _('The list of open files'),
             safe=False,
-            session=True
+            workspace=True
             )
 
     gladefile = 'sessions-properties'
@@ -70,9 +63,8 @@ class SessionsEventsConfig(EventsConfig):
 
 class SessionsDbus(DbusConfig):
 
-    @EXPORT(out_signature='s')
+    @LEXPORT(out_signature='s')
     def get_session_name(self):
-        print "get_session"
         return manager.session
 
 class Sessions(Service):

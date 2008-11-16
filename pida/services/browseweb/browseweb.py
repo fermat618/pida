@@ -5,10 +5,14 @@
 """
 
 import urlparse
-import pida.utils.pywebbrowser as webbrowser
+import webbrowser
 
 import gtk
 
+try:
+    import webkit
+except:
+    webkit = None
 try:
     import gtkhtml2
 except:
@@ -27,7 +31,7 @@ from pida.ui.views import PidaView
 
 # locale
 from pida.core.locale import Locale
-locale = Locale('webbrowser')
+locale = Locale('browseweb')
 _ = locale.gettext
 
 def get_url_mark(url):
@@ -38,7 +42,7 @@ def get_url_mark(url):
     return url, mark
 
 
-class HtmlWidget(gtk.ScrolledWindow):
+class GtkHtmlWidget(gtk.ScrolledWindow):
 
     def __init__(self, manager=None):
         gtk.ScrolledWindow.__init__(self)
@@ -115,6 +119,79 @@ class HtmlWidget(gtk.ScrolledWindow):
         self.load_url(url)
 
 
+class WebkitHtmlWidget(gtk.VBox):
+
+    def __init__(self, manager=None):
+        self.url = ''
+        self.manager = manager
+        gtk.VBox.__init__(self)
+        self.create_ui()
+
+    def create_ui(self):
+        self.html = webkit.WebView()
+        self.html.connect('navigation-requested',
+                          self.on_html__navigation_requested)
+
+        self.html.connect('load-started',
+                          self.on_html__load_started)
+        self.html.connect('load-progress-changed',
+                          self.on_html__load_progress_changed)
+        self.html.connect('load-finished',
+                          self.on_html__load_finished)
+
+
+        self.sw = gtk.ScrolledWindow()
+        self.sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.sw.add(self.html)
+        self.progress = gtk.ProgressBar()
+        self.progress.set_no_show_all(True)
+        self.pack_start(self.sw)
+        self.pack_start(self.progress, expand=False)
+        self.show_all()
+
+    def load_url(self, url):
+        self.url = url
+        self.title = url
+        self.html.open(url)
+
+    def on_html__navigation_requested(self, html, frame, request):
+        return 0
+
+    def on_html__load_started(self, page, frame):
+        self.progress.show()
+        self.manager.stop_button.set_sensitive(True)
+
+
+    def on_html__load_finished(self, page, frame):
+        self.title = frame.get_title()
+        self.progress.hide()
+        self.finished(self.url)
+
+    def on_html__load_progress_changed(self, page, progress):
+        self.progress.set_fraction(progress / 100.0)
+        self.progress.set_text('%s%%' % progress)
+
+    def stop(self):
+        self.html.stop_loading()
+
+    def back(self):
+        self.html.go_back()
+
+    def finished(self, url):
+        self.manager.stop_button.set_sensitive(False)
+        self.manager.location.set_text(url)
+        self.manager.back_button.set_sensitive(self.html.can_go_back())
+
+
+
+if webkit is not None:
+    HtmlWidget = WebkitHtmlWidget
+elif gtkhtml2 is not None:
+    HtmlWidget = GtkHtmlWidget
+else:
+    HtmlWidget = None
+
+
 class BrowserView(PidaView):
     ICON_NAME = 'gtk-library' 
     SHORT_TITLE = _('Browser')
@@ -135,9 +212,6 @@ class BrowserView(PidaView):
         self.location.connect('activate', self.cb_url_entered)
         self.__browser = HtmlWidget(self)
         self.add_main_widget(self.__browser)
-        self.status_bar = gtk.Statusbar()
-        self.status_context = self.status_bar.get_context_id('web')
-        self.add_main_widget(self.status_bar, expand=False)
         self.get_toplevel().show_all()
         self._close_callback=None
 
@@ -233,7 +307,7 @@ class Webbrowser(Service):
         self._views = []
 
     def browse(self, url):
-        if gtkhtml2 is None:
+        if HtmlWidget is None:
             webbrowser.open(url)
         else:
             view = BrowserView(self)

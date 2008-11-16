@@ -85,7 +85,6 @@ class LibraryView(PidaGladeView):
             task.start()
 
     def on_contents_tree__double_click(self, ot, item):
-        #self.svc.boss.cmd('webbrowser', 'browse', url=item.path)
         self.svc.browse_file("file://%s" %item.path)
 
     def load_book(self):
@@ -314,7 +313,7 @@ class Library(Service):
 
     def start(self):
         self._view = LibraryView(self)
-        bclass = self.boss.cmd('webbrowser', 'get_web_browser')
+        bclass = self.boss.cmd('browseweb', 'get_web_browser')
         self._browser = bclass(self)
         self._browser.label_text = _('Documentation')
         self._browser.connect_closed(self._on_close_clicked)

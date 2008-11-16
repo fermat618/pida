@@ -8,11 +8,25 @@ import os
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.environment import session_name
+from pida.core.options import OptionsConfig
+from pida.core.environment import workspace_name
 
 from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
+
+LEXPORT = EXPORT(suffix='rpc')
+LSIGNAL = SIGNAL(suffix='rpc')
+
+class RpcConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'open_workspace_manager',
+            _('Always show workspace manager'),
+            bool,
+            True,
+            _('Always open the workspace manager when no workspace name is given'),
+        )
 
 class RpcDbus(DbusConfig):
     
@@ -23,21 +37,26 @@ class RpcDbus(DbusConfig):
             return
             
         BUS.add_signal_receiver(self.on_ping, 'PING_PIDA_INSTANCE', 
-                                DBUS_NS())
+                                DBUS_NS('rpc'))
         BUS.add_signal_receiver(self.on_ping_ext, 'PING_PIDA_INSTANCE_EXT', 
-                                DBUS_NS())
+                                DBUS_NS('rpc'))
         BUS.add_signal_receiver(self.on_ping_session, 'PING_PIDA_SESSION', 
-                                DBUS_NS())
+                                DBUS_NS('rpc'))
 
-    @EXPORT(out_signature="i")
+    @LEXPORT(out_signature="i")
     def get_pid(self):
         return os.getpid()
 
-    @EXPORT()
+
+    @LEXPORT(out_signature='s')
+    def get_workspace_name(self):
+        return manager.session
+
+    @LEXPORT()
     def focus_window(self):
         self.svc.boss.window.present()
 
-    @EXPORT(in_signature="b")
+    @LEXPORT(in_signature="b")
     def kill(self, force=False):
         self.svc.boss.stop(force)
 
@@ -57,12 +76,12 @@ class RpcDbus(DbusConfig):
             len(self.svc.boss.get_service('buffer').get_documents())
             )
 
-    @SIGNAL(signature="s")
+    @LSIGNAL(signature="s")
     def PONG_PIDA_INSTANCE(self, uid):
         pass
 
 
-    @SIGNAL(signature="sissi")
+    @LSIGNAL(signature="sissi")
     def PONG_PIDA_INSTANCE_EXT(self, uid, pid, session, project, opened_files):
         pass
 
@@ -71,6 +90,7 @@ class Rpc(Service):
     """DBus RPC Service""" 
 
     dbus_config = RpcDbus
+    options_config = RpcConfig
 
     def start(self):
         if not BUS:

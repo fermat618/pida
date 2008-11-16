@@ -15,7 +15,7 @@ from pida.core.options import OptionsConfig, Color
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_MENUTOOL
 from pida.core.document import Document
-from pida.core.environment import session_name
+from pida.core.environment import workspace_name
 
 # locale
 from pida.core.locale import Locale
@@ -173,10 +173,10 @@ class WindowOptionsConfig(OptionsConfig):
             'window_title',
             _('Window title'),
             str,
-            'Pida - $session - $filepath',
+            'Pida - $workspace - $filepath',
             _('Title template for the pida window.\n'
               '$basename : Filename of Document - $filepath : Full filepath \n'
-              '$directory : Directory if file - $session : Session name \n'
+              '$directory : Directory if file - $workspace : Workspace name \n'
               '$project_path - $project_name'),
             self.on_title_change,
         )
@@ -206,7 +206,7 @@ class WindowOptionsConfig(OptionsConfig):
     def on_color_change(self, client, id, entry, option):
         self.svc.update_colors()
 
-    def on_title_change(self, client, id, entry, option):
+    def on_title_change(self, *args):
         self.svc._title_template = None
         self.svc.update_title()
 
@@ -250,7 +250,7 @@ class Window(Service):
         subs = {'basename': document.basename or _('New Document'),
                 'filepath': document.filename or _('New Document'),
                 'directory': document.directory or '',
-                'session': session_name(),
+                'workspace': workspace_name(),
                 'project_path': document.project and document.project.data_dir or '',
                 'project_name': document.project_name
                }
