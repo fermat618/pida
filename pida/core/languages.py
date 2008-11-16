@@ -171,10 +171,10 @@ class Completer(BaseDocumentHandler):
 class LanguageServiceFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
-        if not isinstance(self.language_name, (tuple, list)):
-            all_langs = (self.language_name,)
+        if not isinstance(self.svc.language_name, (tuple, list)):
+            all_langs = (self.svc.language_name,)
         else:
-            all_langs = self.language_name
+            all_langs = self.svc.language_name
         for lname in all_langs:
             if self.svc.language_info is not None:
                 self.subscribe_foreign('language',
