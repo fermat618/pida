@@ -256,7 +256,7 @@ class Window(Service):
     def restore_state(self):
         try:
             fp = open(self.state_config, "r")
-        except OSError, e:
+        except (OSError, IOError), e:
             self.log("Can't open state file %s" %self.state_config)
             return
         data = simplejson.load(fp)
@@ -284,7 +284,7 @@ class Window(Service):
         
         try:
             fp = open(self.state_config, "w")
-        except OSError, e:
+        except (OSError, IOError), e:
             self.log("Can't open state file %s" %self.state_config)
             return
         simplejson.dump(data, fp)
