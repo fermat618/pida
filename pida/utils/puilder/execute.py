@@ -1,6 +1,14 @@
-#! /usr/bin/env python
-import sys, StringIO
+# -*- coding: utf-8 -*-
+"""
+    :copyright: 2005-2008 by The PIDA Project
+    :license: GPL 2 or later (see README/COPYING/LICENSE)
+"""
+
+
+import os, sys
 from subprocess import Popen, PIPE
+from StringIO import StringIO
+from optparse import OptionParser
 
 from pida.core.projects import Project
 
@@ -9,9 +17,12 @@ from pida.utils.puilder.model import Build
 
 
 def _info(*msg):
+    """Write an informative message to stderr"""
     sys.stderr.write('\n'.join(msg) + '\n')
 
+
 def execute_shell_action(project, build, action):
+    """Execute a shell action"""
     cwd = action.options.get('cwd', project)
     p = Popen(action.value, shell=True, cwd=cwd, stdout=PIPE)
     buffer = []
@@ -24,7 +35,6 @@ def execute_shell_action(project, build, action):
 
 
 def _execute_python(source_directory, build, value):
-    sys.path.insert(0, source_directory)
     code = compile(value + '\n', '<string>', 'exec')
     elocals = {
         'source_directory': source_directory,
@@ -33,7 +43,8 @@ def _execute_python(source_directory, build, value):
     exec code in elocals, globals()
 
 def execute_python_action(project, build, action):
-    s = StringIO.StringIO()
+    """Execute a python action"""
+    s = StringIO()
     oldout = sys.stdout
     sys.stdout = s
     _execute_python(project, build, action.value)
@@ -44,6 +55,7 @@ def execute_python_action(project, build, action):
     return data
 
 def execute_external_action(project, build, action):
+    """Execute an external action"""
     cmd = '%s %s %s' % (
         action.options.get('system', 'make'),
         action.options.get('build_args', ''),
@@ -78,6 +90,7 @@ class CircularAction(object):
 
 
 class ExecutionNode(object):
+    """A node in the execution tree"""
 
     def __init__(self, build, target, action, parent):
         self.build = build
@@ -133,7 +146,6 @@ def generate_execution_graph(build, target_name):
     return root
 
 
-
 def execute_action(build, action, project_directory):
     return executors[action.type](project_directory, build, action)
 
@@ -158,6 +170,7 @@ def execute_project(project_directory, target_name):
     _info('Working dir: %s' % project_directory)
     project_file = Project.data_dir_path(project_directory, 'project.json')
     _info('Build file path: %s' % project_file, '--')
+    sys.path.insert(0, project_directory)
     for action in execute_target(project_file, target_name, project_directory):
         pass
 
@@ -165,8 +178,37 @@ def execute_project(project_directory, target_name):
 execute = execute_project
 
 
+def list_project_targets(project_directory):
+    _info('Listing targets', '--')
+    _info('Working dir: %s' % project_directory)
+    project_file = Project.data_dir_path(project_directory, 'project.json')
+    _info('Build file path: %s' % project_file, '--')
+    build = Build.loadf(project_file)
+    _info(*[t.name for t in build.targets])
+
+
+
+def main():
+    parser = OptionParser(usage='%prog [options] [target_name]')
+
+    parser.add_option('-l', '--list', dest='do_list', action='store_true',
+                      help='list targets')
+    opts, args = parser.parse_args(sys.argv)
+
+    project_directory = os.getcwd()
+
+    if opts.do_list or len(args) < 2:
+        list_project_targets(project_directory)
+        _info('--', 'Run with target name to execute.')
+        return 0
+
+    target_name = args[1]
+
+    execute_project(project_directory, target_name)
+
+
 if __name__ == '__main__':
-    execute_target('.', 'test', 'testi')
+    sys.exit(main())
 
 
 
