@@ -1,6 +1,8 @@
 
 from simplejson import dumps
 
+from pida.utils.testing import refresh_gui
+
 from ..model import Build, dump
 from ..execute import generate_execution_graph, CircularAction, execute_build
 from ..view import PuilderView, TargetActionView, ShellActionView, \
@@ -225,8 +227,139 @@ def test_execute_python_result(res):
 
 
 @_action_test
-def test_shell_action_view(a):
+def test_shell_action_view_command(a):
     v = ShellActionView()
-    v.set_action(a)
+    v._set_action(a)
+    refresh_gui()
+    v.command.set_text('echo 456')
+    refresh_gui()
+    assert a.value == 'echo 456'
 
+
+@_action_test
+def test_shell_action_view_cwd(a):
+    v = ShellActionView()
+    v._set_action(a)
+    refresh_gui()
+    v.cwd_on.set_active(True)
+    assert a.options == {'cwd':v.cwd.get_current_folder()}
+
+
+@_action_test
+def test_python_action_view(a):
+    v = PythonActionView()
+    v._set_action(a)
+    refresh_gui()
+    v.text.get_buffer().set_text('print 1')
+    refresh_gui()
+    assert a.value == 'print 1'
+
+
+@_build_test
+def test_main_view_targets(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    assert len(v.targets_list) == len(b.targets)
+    assert list(v.targets_list) == list(b.targets)
+
+
+@_build_test
+def test_main_view_actions(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    assert list(v.acts_list) == v.targets_list[0].actions
+
+
+@_build_test
+def test_main_view_actions(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    v.targets_list.select(v.targets_list[1])
+    refresh_gui()
+    assert list(v.acts_list) == v.targets_list[1].actions
+
+
+@_build_test
+def test_main_view_add_action(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    assert list(v.acts_list) == v.targets_list[0].actions
+    t = len(v.acts_list)
+    v.AddActs.activate()
+    refresh_gui()
+    assert len(v.acts_list) > t
+    assert v.acts_list[-1].value == ''
+    assert v.acts_list[-1].type == 'shell'
+    assert v.acts_list[-1] in v.targets_list.get_selected().actions
+
+
+@_build_test
+def test_main_view_add_target(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    assert len(v.targets_list) == len(b.targets)
+    t = len(v.targets_list)
+    v.AddTarget.activate()
+    refresh_gui()
+    assert len(v.targets_list) > t
+    assert v.targets_list[-1] in b.targets
+    assert v.targets_list[-1].actions == []
+
+
+@_build_test
+def test_main_view_add_target_shell(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    assert len(v.targets_list) == len(b.targets)
+    t = len(v.targets_list)
+    v.AddShellTarget.activate()
+    refresh_gui()
+    assert len(v.targets_list) > t
+    assert v.targets_list[-1] in b.targets
+    assert v.targets_list[-1].actions == b.targets[-1].actions
+    assert b.targets[-1].actions[0].type == 'shell'
+
+
+@_build_test
+def test_main_view_add_target_shell(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    assert len(v.targets_list) == len(b.targets)
+    t = len(v.targets_list)
+    v.AddPythonTarget.activate()
+    refresh_gui()
+    assert len(v.targets_list) > t
+    assert v.targets_list[-1] in b.targets
+    assert v.targets_list[-1].actions == b.targets[-1].actions
+    assert b.targets[-1].actions[0].type == 'python'
+
+
+
+@_build_test
+def test_main_view_action_view(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    act = v.acts_list.get_selected()
+    shouldbe = v.acts_holder.page_num(v.action_views[act.type].get_toplevel())
+    assert shouldbe == v.acts_holder.get_current_page()
+
+
+@_build_test
+def test_main_view_select_action(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    v.targets_list.select(v.targets_list[1])
+    v.acts_list.select(v.acts_list[1])
+    refresh_gui()
+    shouldbe = v.acts_holder.page_num(v.action_views['target'].get_toplevel())
+    assert shouldbe == v.acts_holder.get_current_page()
 

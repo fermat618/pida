@@ -212,10 +212,6 @@ class PuilderView(GladeSlaveDelegate):
             self.acts_holder.remove(c)
 
     def on_save_button__clicked(self, button):
-        f = open('test', 'w')
-        f.write(self.build.dumps())
-        f.close()
-        print 'saved'
         self.build.dumpf(self.project.project_file)
 
     def on_cancel_button__clicked(self, button):
