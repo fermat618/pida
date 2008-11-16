@@ -306,7 +306,13 @@ class BrowserView(PidaGladeView):
         if not node:
             return
         parent = node.parent
-        self.source_tree.append(parent, node)
+        try:
+            self.source_tree.append(parent, node)
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+            print "exc", e
+            print "add", parent, node
 
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
@@ -350,7 +356,7 @@ class BrowserView(PidaGladeView):
                 im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
                 tool_button.set_icon_widget(im)
                 self.filter_toolbar.insert(tool_button, 0)
-        self.options_vbox.add(self.filter_toolbar)
+        #self.options_vbox.add(self.filter_toolbar)
         self.options_vbox.show_all()
 
     def on_filter_toggled(self, but, outliner):
