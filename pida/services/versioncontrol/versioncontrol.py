@@ -16,7 +16,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import PidaView, PidaGladeView
 
@@ -278,15 +278,14 @@ class VersioncontrolCommandsConfig(CommandsConfig):
 class VersionControlActions(ActionsConfig):
 
     def create_actions(self):
-
         self.create_action(
             'show_vc_log',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Version Control Log'),
             _('Show the version control log'),
             gtk.STOCK_CONNECT,
             self.on_show_vc_log,
-            '<Shift><Control>2',
+            ''
         )
 
         self.create_action(
@@ -623,6 +622,11 @@ class Versioncontrol(Service):
     def start(self):
         self._log = VersionControlLog(self)
         self._commit = CommitViewer(self)
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._log.key,
+                             self._log.label_text)
+
 
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")

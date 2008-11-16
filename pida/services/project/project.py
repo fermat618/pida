@@ -334,6 +334,12 @@ class ProjectService(Service):
         self.project_properties_view = ProjectSetupView(self)
         self._read_options()
 
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self.project_list.key,
+                             self.project_list.label_text)
+
+
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
             try:

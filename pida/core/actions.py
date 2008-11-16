@@ -9,6 +9,7 @@
 
 # gtk import(s)
 import gtk
+import gobject
 
 # pida core import(s)
 from pida.core.base import BaseConfig
@@ -60,6 +61,7 @@ class PidaRememberToggle(gtk.ToggleAction):
 
     def __init__(self, *args, **kw):
         gtk.ToggleAction.__init__(self, *args, **kw)
+
 
 TYPE_NORMAL = gtk.Action
 TYPE_TOGGLE = gtk.ToggleAction

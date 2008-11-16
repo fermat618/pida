@@ -31,7 +31,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_TOGGLE, TYPE_NORMAL
+from pida.core.actions import TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import PidaView
 
@@ -145,7 +145,7 @@ class KodersActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_koders',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Koders Viewer'),
             _('Show Koders search window'),
             '',
@@ -169,6 +169,11 @@ class Koders(Service):
         self._view = KodersView(self)
         self._has_loaded = False
         self.task = None
+
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
 
     def show_koders(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

@@ -74,6 +74,8 @@ class CtagsTokenList(object):
         cnames[item.fullname] = item
 
     def filter_items(self, filename):
+        if not self._items.has_key(filename):
+            return
         for i in self._items[filename]:
             if not i.parent and  i.parent_name:
                 i.parent = self.get_parent(i)

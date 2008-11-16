@@ -424,6 +424,11 @@ class Plugins(Service):
         self.update_installed_plugins(start=True)
         self.check_for_updates(self.opt('check_for_updates'))
 
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         self.update_installed_plugins()

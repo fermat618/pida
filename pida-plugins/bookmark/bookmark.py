@@ -32,7 +32,8 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_REMEMBER_TOGGLE)
 from pida.core.environment import get_uidef_path
 
 from pida.core.editors import LineMarker, MarkerInterface
@@ -225,12 +226,12 @@ class BookmarkActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_bookmark',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Bookmark Viewer'),
             _('Show bookmarks'),
             '',
             self.on_show_bookmark,
-            '<Shift><Control>1',
+            '',
         )
 
         self.create_action(
@@ -381,6 +382,12 @@ class Bookmark(Service, MarkerInterface):
         self._current = None
         self._project = None
         self.load()
+
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
         
     def show_bookmark(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

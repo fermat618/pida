@@ -65,6 +65,9 @@ class BaseCachedDocumentHandler(BaseDocumentHandler):
         if not self.document.is_new:
             if self.document.modified_time != self._lastmtime_:
                 self._cache_ = []
+                iterf = fnc()
+                if iterf is None:
+                    return
                 for x in fnc():
                     self._cache_.append(x)
                     yield x
@@ -73,7 +76,10 @@ class BaseCachedDocumentHandler(BaseDocumentHandler):
                 for x in self._cache_:
                     yield x
         else:
-            for x in fnc():
+            iterf = fnc()
+            if iterf is None:
+                return
+            for x in iterf:
                 yield x
 
 

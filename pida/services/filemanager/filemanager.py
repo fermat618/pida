@@ -916,6 +916,10 @@ class Filemanager(Service):
 
 
     def start(self):
+        acts = self.boss.get_service('window').actions
+        
+        acts.register_window(self.file_view.key,
+                             self.file_view.label_text)
         
         self.on_project_switched(self.current_project)
         self.emit('browsed_path_changed', path=self.path)

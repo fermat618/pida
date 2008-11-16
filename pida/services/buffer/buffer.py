@@ -374,6 +374,12 @@ class Buffer(Service):
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
 
+    def start(self):
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
     def get_view(self):
         return self._view
 

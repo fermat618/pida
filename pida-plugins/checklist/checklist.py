@@ -20,7 +20,11 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+from __future__ import with_statement
+
 import gtk
+import os
+import simplejson
 
 from pida.ui.objectlist import AttrSortCombo
 from kiwi.ui.objectlist import ObjectList, Column
@@ -31,7 +35,8 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_REMEMBER_TOGGLE)
 from pida.core.environment import get_uidef_path
 
 from pida.ui.views import PidaView
@@ -182,12 +187,12 @@ class ChecklistActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_checklist',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Checklist Viewer'),
             _('Show checklists'),
             '',
             self.on_show_checklist,
-            '<Shift><Control>1',
+            '',
         )
 
         self.create_action(
@@ -197,6 +202,7 @@ class ChecklistActions(ActionsConfig):
             _('Add something in checklist'),
             gtk.STOCK_ADD,
             self.on_checklist_add,
+              
         )
 
         self.create_action(
@@ -245,6 +251,12 @@ class Checklist(Service):
         self._current = None
         self._project = None
 
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
+
     def show_checklist(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         if not self._has_loaded:
@@ -284,7 +296,9 @@ class Checklist(Service):
         data = {}
         for key in self._items:
             item = self._items[key]
-            data[key] = '%s:%d:%s' % (item.done, item.priority.value, item.title)
+            data[key] = dict(done=item.done, 
+                             prio=item.priority.value, 
+                             title=item.title)
         return data
 
     def _unserialize(self, data):
@@ -292,27 +306,32 @@ class Checklist(Service):
             return
         for key in data:
             line = data[key]
-            t = line.rsplit(':',2)
-            done = False
-            if t[0] == 'True':
-                done = True
+            t = data[key]
             self.add_item(ChecklistItem(
-                title=str(t[2]),
-                priority=ChecklistStatus.get(int(t[1])),
-                done=done,
+                title=str(t['title']),
+                priority=ChecklistStatus.get(int(t['prio'])),
+                done=bool(t['done']),
                 key=key))
 
     def load(self):
+        if not self.started:
+            return
         self._items = {}
         self._view.clear()
-        data = self.boss.cmd('project', 'get_current_project_data',
-                section_name='checklist')
-        self._unserialize(data)
+        fname = self._project.get_meta_dir('checklist', filename="data.json")
+        if not os.path.exists(fname):
+            return
+        with open(fname, "r") as fp:
+            data = simplejson.load(fp)
+            if data:
+                self._unserialize(data)
 
     def save(self):
-        data = self._serialize()
-        self.boss.cmd('project', 'save_to_current_project',
-                section_name='checklist', section_data=data)
+        fname = self._project.get_meta_dir('checklist', filename="data.json")
+        with open(fname, "w") as fp:
+            data = self._serialize()
+            if data:
+                simplejson.dump(data, fp)
 
     def stop(self):
         if self.get_action('show_checklist').get_active():

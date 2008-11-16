@@ -32,7 +32,8 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_REMEMBER_TOGGLE)
 
 from pida.ui.views import PidaGladeView
 from pida.ui.htmltextview import HtmlTextView
@@ -126,7 +127,7 @@ class TracActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_trac',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Trac Viewer'),
             _('Show the Trac Viewer'),
             gtk.STOCK_INFO,
@@ -149,6 +150,12 @@ class Trac(Service):
 
     def pre_start(self):
         self._view = TracView(self)
+
+    def start(self):
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
 
     def show_trac(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

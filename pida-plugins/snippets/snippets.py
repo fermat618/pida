@@ -35,7 +35,8 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE)
 from pida.ui.views import PidaGladeView
 from pida.utils.path import walktree
 from pida.utils.gthreads import GeneratorTask, AsyncTask
@@ -483,7 +484,7 @@ class SnippetActions(ActionsConfig):
 
         self.create_action(
             'show_snippets',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Snippets manager'),
             _('Show the snippets'),
             gtk.STOCK_EXECUTE,

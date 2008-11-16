@@ -30,6 +30,8 @@ class ServiceListItem(object):
 
 class ShortcutsView(PidaView):
 
+    key = "shortcuts.view"
+
     icon_name = 'key_bindings'
     label_text = _('Shortcuts')
 
@@ -89,7 +91,7 @@ class ShortcutsView(PidaView):
         else:
             self._current = item
             self._capture_entry.set_sensitive(True)
-            self._capture_entry.set_text(item.value)
+            self._capture_entry.set_text(item and item.value or "")
 
     def _on_list_double_click(self, otree, item):
         self._capture_entry.grab_focus()
@@ -160,8 +162,17 @@ class Shortcuts(Service):
     actions_config = ShortcutsActionsConfig
     events_config = ShortcutsEventConfig
 
+    def pre_start(self):
+        self._view = None
+
     def start(self):
         self._view = ShortcutsView(self)
+
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
 
     def show_shortcuts(self):
         self.boss.cmd('window', 'add_view',
@@ -170,6 +181,9 @@ class Shortcuts(Service):
     def hide_shortcuts(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
+    def update(self):
+        if self._view:
+            self._view.update()
 
 # Required Service attribute for service loading
 Service = Shortcuts

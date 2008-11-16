@@ -31,7 +31,7 @@ from pida.core.environment import get_uidef_path
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_TOGGLE, TYPE_NORMAL
+from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
 from pida.ui.buttons import create_mini_button
 
 from pida.ui.views import PidaView
@@ -176,7 +176,7 @@ class GtagsActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_gtags',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Gtags Viewer'),
             _('Show the gtags'),
             '',
@@ -223,6 +223,12 @@ class Gtags(Service):
         self._project = self.boss.cmd('project', 'get_current_project')
         self._ticket = 0
         self.task = self._task = None
+
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
 
     def show_gtags(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)

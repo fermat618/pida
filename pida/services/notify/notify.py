@@ -19,7 +19,8 @@ from pida.ui.views import PidaView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.options import OptionsConfig, choices
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
+from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, 
+                               TYPE_REMEMBER_TOGGLE)
 from pida.ui.buttons import create_mini_button
 
 # locale
@@ -51,6 +52,8 @@ class NotifyItem(object):
 
 
 class NotifyView(PidaView):
+
+    key = "notify.view"
 
     label_text = _('Notifications')
     icon_name = gtk.STOCK_INDEX
@@ -258,7 +261,7 @@ class NotifyActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_notify',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Show notification _history'),
             _('Show the notifications history'),
             '',
@@ -295,6 +298,12 @@ class Notify(Service):
         self._show_notify = self.opt('show_notify')
         self._timeout = self.opt('timeout')
         self._popup.set_gravity(self.opt('gravity'))
+
+        acts = self.boss.get_service('window').actions
+        
+        acts.register_window(self._view.key,
+                             self._view.label_text)
+
 
     def show_notify(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
