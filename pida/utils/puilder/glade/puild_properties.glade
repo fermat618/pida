@@ -3,9 +3,6 @@
 <glade-interface>
     <widget class="GtkUIManager" id="uimanager">
         <child>
-            <widget class="GtkActionGroup" id="DefaultActions"/>
-        </child>
-        <child>
             <widget class="GtkActionGroup" id="default">
                 <child>
                     <widget class="GtkAction" id="ActsMenu">
@@ -118,7 +115,24 @@
                         <property name="stock_id">gtk-execute</property>
                     </widget>
                 </child>
+                <child>
+                    <widget class="GtkAction" id="act_down_act">
+                        <property name="name">act_down_act</property>
+                        <property name="label" translatable="yes">Move Down</property>
+                        <property name="stock_id">gtk-go-down</property>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkAction" id="act_up_act">
+                        <property name="name">act_up_act</property>
+                        <property name="label" translatable="yes">Move Up</property>
+                        <property name="stock_id">gtk-go-up</property>
+                    </widget>
+                </child>
             </widget>
+        </child>
+        <child>
+            <widget class="GtkActionGroup" id="DefaultActions"/>
         </child>
         <ui id="initial-state"><![CDATA[<ui>
 <menubar action="menu" name="menu"/>

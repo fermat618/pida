@@ -145,7 +145,11 @@ class PuilderView(GladeSlaveDelegate):
                            None, self.DelCurrentTarget)
 
     def on_acts_list__right_click(self, ol, action, event):
-        self._create_popup(event, self.AddActs, None, self.DelCurrentActs)
+        self.act_up_act.set_sensitive(self.acts_list.index(action) > 0)
+        self.act_down_act.set_sensitive(
+            self.acts_list.index(action) < (len(self.acts_list) - 1))
+        self._create_popup(event, self.AddActs, None, self.act_up_act,
+                           self.act_down_act, None, self.DelCurrentActs)
 
     def create_action_views(self):
         for name in action_views:
@@ -169,7 +173,6 @@ class PuilderView(GladeSlaveDelegate):
 
         for v in self.action_views.values():
             v.build = build
-
 
     def set_project(self, project):
         self.project = project
@@ -264,6 +267,12 @@ class PuilderView(GladeSlaveDelegate):
         if self.confirm('Are you sure you want to remove this action?'):
             target.actions.remove(act)
             self.acts_list.remove(act)
+
+    def on_act_up_act__activate(self, action):
+        pass
+
+    def on_act_down_act__activate(self, action):
+        pass
 
     def on_acts_list__selection_changed(self, ol, act):
         self.action_changed(act)
