@@ -53,8 +53,17 @@ class PidaDropDownMenuToolAction(gtk.Action):
         return toolitem
 
 
+class PidaRememberToggle(gtk.ToggleAction):
+    """Remembers the state of the toggle on restart"""
+
+    __gtype_name__ = "PidaRememberToggle"
+
+    def __init__(self, *args, **kw):
+        gtk.ToggleAction.__init__(self, *args, **kw)
+
 TYPE_NORMAL = gtk.Action
 TYPE_TOGGLE = gtk.ToggleAction
+TYPE_REMEMBER_TOGGLE = PidaRememberToggle
 TYPE_RADIO = gtk.RadioAction
 TYPE_MENUTOOL = PidaMenuToolAction
 TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
@@ -135,6 +144,7 @@ class ActionsConfig(OptionsConfig):
             - TYPE_RADIO: A gtk.RadioAction
             - TYPE_MENUTOOL: A custom Action which contains a dropdown menu
               when rendered as a tool item
+            - TYPE_REMEMBER_TOGGLE: Toggle that will be remembered
         :param label:
             The label to display on proxies of the action.
         :param toolip:
@@ -213,3 +223,10 @@ class ActionsConfig(OptionsConfig):
 
     def export_option(self, option):
         pass
+
+    def list_actions(self):
+        """
+        iterate the optionsitems
+        """
+        for action in self._actions.list_actions():
+            yield action

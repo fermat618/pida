@@ -4,8 +4,10 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
+import os
 import gtk
 import string
+import simplejson
 
 # PIDA Imports
 from pida.core.service import Service
@@ -13,9 +15,9 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, Color
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_MENUTOOL
+from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL
 from pida.core.document import Document
-from pida.core.environment import workspace_name
+from pida.core.environment import workspace_name, settings_dir
 
 # locale
 from pida.core.locale import Locale
@@ -27,19 +29,24 @@ class WindowCommandsConfig(CommandsConfig):
 
     def add_view(self, paned, view, removable=True, present=True, detachable=True):
         self.svc.window.add_view(paned, view, removable, present, detachable=detachable)
+        self.svc.save_state()
 
     def add_detached_view(self, paned, view, size=(500,400)):
         self.add_view(paned, view)
         self.detach_view(view, size)
+        self.svc.save_state()
 
     def remove_view(self, view):
         self.svc.window.remove_view(view)
+        self.svc.save_state()
 
     def detach_view(self, view, size):
         self.svc.window.detach_view(view, size)
+        self.svc.save_state()
 
     def present_view(self, view):
         self.svc.window.present_view(view)
+        self.svc.save_state()
 
 class WindowActionsConfig(ActionsConfig):
 
@@ -199,7 +206,6 @@ class WindowOptionsConfig(OptionsConfig):
             self.on_color_change,
         )
 
-
     def on_show_ui(self, option):
         self.svc.get_action(option.name).set_active(option.value)
 
@@ -224,6 +230,8 @@ class Window(Service):
         self._last_focus = None
         super(Window, self).pre_start()
         self.update_colors()
+        self.state_config = os.path.join(settings_dir, 'workspaces', 
+                                         workspace_name(), "window.state.json")
 
     def start(self):
         # Explicitly add the permanent views
@@ -235,7 +243,51 @@ class Window(Service):
         self._window_list_id = self.boss.window.create_merge_id()
         self._action_group = gtk.ActionGroup('window_list')
         self.boss.window._uim._uim.insert_action_group(self._action_group, -1)
+        self.restore_state()
+        self.window.paned.connect('config-changed', self.save_state)
+
+    def pre_stop(self):
+        self.save_state()
+
+    def stop(self):
+        self.save_state()
+
+    def restore_state(self):
+        try:
+            fp = open(self.state_config, "r")
+        except OSError, e:
+            self.log("Can't open state file %s" %self.state_config)
+            return
+        data = simplejson.load(fp)
+        for service in self.boss.get_services():
+            if not data.has_key(service.get_name()):
+                continue
+            for action in service.actions.list_actions():
+                if isinstance(action, TYPE_REMEMBER_TOGGLE):
+                    action.set_active(data[service.get_name()][action.get_name()])
+
+        self.boss.window.paned.set_config(data.get('panedstate', ''))
+
+    def save_state(self, *args):
+        if not self.started:
+            return
+        data = {}
+        data['panedstate'] = self.boss.window.paned.get_config()
+        for service in self.boss.get_services():
+            cur = {}
+            for action in service.actions.list_actions():
+                if isinstance(action, TYPE_REMEMBER_TOGGLE):
+                    cur[action.get_name()] = action.props.active
+            if cur:
+                data[service.get_name()] = cur
         
+        try:
+            fp = open(self.state_config, "w")
+        except OSError, e:
+            self.log("Can't open state file %s" %self.state_config)
+            return
+        simplejson.dump(data, fp)
+
     def update_colors(self):
         # set the colors of Document
         Document.markup_directory_color = self.opt('directory_color')

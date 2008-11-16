@@ -51,10 +51,7 @@ class PidaPaned(BigPaned):
         self._fullscreen = False
         self._fullscreen_vis = {}
         self.set_property('enable-detaching', True)
-        self.connect('config-changed', self.on_config_changed)
-        self.config_file = os.path.join(pida_home, 'paneconfig.txt')
         self.set_name('PidaBigPaned')
-        self.init_config()
 
     def get_all_pos(self, every=False):
         if every:
@@ -159,31 +156,6 @@ class PidaPaned(BigPaned):
         cy = (ph - h) / 2
         gdkwindow.move_resize(cx, cy, w, h)
         #gdkwindow.resize(w, h)
-
-    def on_config_changed(self, bigpaned):
-        self.write_config()
-
-    def write_config(self):
-        try:
-            f = open(self.config_file, 'w')
-            f.write(self.get_config())
-            f.close()
-        except IOError, OSError:
-            pass
-
-    def read_config(self):
-        try:
-            f = open(self.config_file, 'r')
-            config = f.read()
-            f.close()
-            return config
-        except IOError, OSError:
-            return None
-
-    def init_config(self):
-        config = self.read_config()
-        if config:
-            self.set_config(config)
 
     def set_fullscreen(self, fullscreen):
         if self._fullscreen == fullscreen:

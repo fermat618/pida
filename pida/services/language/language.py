@@ -32,7 +32,7 @@ from pida.utils.languages import LANG_OUTLINER_TYPES
 # core
 from pida.core.service import Service
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL
+from pida.core.actions import ActionsConfig, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
@@ -425,7 +425,7 @@ class LanguageActionsConfig(ActionsConfig):
 
         self.create_action(
             'show_validator',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('_Validator'),
             _('Show the language validator'),
             'error',
@@ -434,7 +434,7 @@ class LanguageActionsConfig(ActionsConfig):
 
         self.create_action(
             'show_outliner',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('_Outliner'),
             _('Show the language browser'),
             'info',
