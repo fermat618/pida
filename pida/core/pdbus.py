@@ -65,8 +65,7 @@ class DbusOptionsManagerReal(Object):
         Font: 's',
     }
 
-    dbus_no_export = ()
-    dbus_no_fire = ()
+    dbus_no_activate = ()
 
     def __init__(self, service):
         self.svc = service
@@ -92,8 +91,6 @@ class DbusOptionsManagerReal(Object):
     def dbus_custom_introspect(self):
         rv = '  <interface name="%s">\n' %(self.dbus_ns)
         for option in self._options.itervalues():
-            if option.name in self.dbus_no_export:
-                continue
             try:
                 typ = self.object_to_dbus(option.type)
             except ValueError, e:
@@ -103,8 +100,8 @@ class DbusOptionsManagerReal(Object):
 
         if hasattr(self, '_actions'):
             for action in self._actions.list_actions():
-                if action.get_name() not in self.dbus_no_fire:
-                    rv += '    <method name="fire_%s" />\n' %(action.get_name())
+                if action.get_name() not in self.dbus_no_activate:
+                    rv += '    <method name="activate_%s" />\n' %(action.get_name())
 
         rv += '  </interface>\n'
         return rv
@@ -143,8 +140,9 @@ class DbusOptionsManagerReal(Object):
                 return
 
         if interface_name == self.dbus_ns:
-            if method_name[0:5] == "fire_":
-                act = self._actions.get_action(method_name[5:])
+            if method_name[0:9] == "activate_" and \
+               method_name[9:] not in self.dbus_no_activate:
+                act = self._actions.get_action(method_name[9:])
                 try:
                     #_method_reply_error(connection, message, exception)
                     gcall(act.emit, 'activate')

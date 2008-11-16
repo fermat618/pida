@@ -73,7 +73,7 @@ class OptionsManager(object):
     def open_workspace_manager(self):
         data = {}
         try:
-            with open(get_settings_path('rpc.json')) as file:
+            with open(get_settings_path('appcontroller.json')) as file:
                 data = simplejson.load(file)
                 return bool(data.get('open_workspace_manager', False))
         except Exception, e:

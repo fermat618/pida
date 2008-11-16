@@ -10,6 +10,7 @@ import gtk
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
+from pida.core.options import OptionsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
@@ -19,10 +20,19 @@ from pida.core.locale import Locale
 locale = Locale('appcontroller')
 _ = locale.gettext
 
+class AppcontrollerConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'open_workspace_manager',
+            _('Always show workspace manager'),
+            bool,
+            True,
+            _('Always open the workspace manager when no workspace name is given'),
+        )
 
 class AppcontrollerActions(ActionsConfig):
 
-    dbus_no_fire = ('quit_pida',)
+    dbus_no_activate = ('quit_pida',)
 
     def create_actions(self):
         self.create_action(
@@ -44,6 +54,7 @@ class Appcontroller(Service):
     """Describe your Service Here""" 
 
     actions_config = AppcontrollerActions
+    options_config = AppcontrollerConfig
 
 # Required Service attribute for service loading
 Service = Appcontroller
