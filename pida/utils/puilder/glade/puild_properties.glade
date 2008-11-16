@@ -3,9 +3,6 @@
 <glade-interface>
     <widget class="GtkUIManager" id="uimanager">
         <child>
-            <widget class="GtkActionGroup" id="DefaultActions"/>
-        </child>
-        <child>
             <widget class="GtkActionGroup" id="default">
                 <child>
                     <widget class="GtkAction" id="ActsMenu">
@@ -118,7 +115,24 @@
                         <property name="stock_id">gtk-execute</property>
                     </widget>
                 </child>
+                <child>
+                    <widget class="GtkAction" id="act_down_act">
+                        <property name="name">act_down_act</property>
+                        <property name="label" translatable="yes">Move Down</property>
+                        <property name="stock_id">gtk-go-down</property>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkAction" id="act_up_act">
+                        <property name="name">act_up_act</property>
+                        <property name="label" translatable="yes">Move Up</property>
+                        <property name="stock_id">gtk-go-up</property>
+                    </widget>
+                </child>
             </widget>
+        </child>
+        <child>
+            <widget class="GtkActionGroup" id="DefaultActions"/>
         </child>
         <ui id="initial-state"><![CDATA[<ui>
 <menubar action="menu" name="menu"/>
@@ -223,24 +237,6 @@
                                         <property name="position">1</property>
                                     </packing>
                                 </child>
-                                <child>
-                                    <widget class="GtkFrame" id="frame3">
-                                        <property name="label" context="yes" translatable="yes">Dependencies</property>
-                                        <property name="shadow">in</property>
-                                        <property name="shadow_type">in</property>
-                                        <property name="visible">True</property>
-                                        <child>
-                                            <widget class="ObjectList" id="deps_list">
-                                                <property name="border_width">3</property>
-                                                <property name="visible">True</property>
-                                                <property name="vscrollbar_policy">automatic</property>
-                                            </widget>
-                                        </child>
-                                    </widget>
-                                    <packing>
-                                        <property name="position">2</property>
-                                    </packing>
-                                </child>
                             </widget>
                             <packing>
                                 <property name="position">1</property>
@@ -312,13 +308,23 @@
                                     </widget>
                                 </child>
                                 <child>
+                                    <widget class="GtkButton" id="revert_button">
+                                        <property name="label">gtk-revert-to-saved</property>
+                                        <property name="use_stock">True</property>
+                                        <property name="visible">True</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">1</property>
+                                    </packing>
+                                </child>
+                                <child>
                                     <widget class="GtkButton" id="cancel_button">
                                         <property name="label">gtk-cancel</property>
                                         <property name="use_stock">True</property>
                                         <property name="visible">True</property>
                                     </widget>
                                     <packing>
-                                        <property name="position">1</property>
+                                        <property name="position">2</property>
                                     </packing>
                                 </child>
                             </widget>
