@@ -248,6 +248,7 @@ class Window(Service):
 
     def pre_stop(self):
         self.save_state()
+        return True
 
     def stop(self):
         self.save_state()

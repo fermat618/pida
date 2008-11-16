@@ -229,6 +229,7 @@ class ServiceManager(object):
         for svc in self:
             # in force mode we down't care about the return value.
             if not svc.pre_stop() and not force:
+                log.info('Shutdown prevented by: %s' %svc.get_name())
                 return False
 
         for svc in self:
