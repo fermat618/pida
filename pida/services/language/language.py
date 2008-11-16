@@ -103,6 +103,7 @@ class ValidatorView(PidaView):
                 del self.tasks[document]
                 # refire the task and hope the cache will just display stuff,
                 # elsewise the task is run again
+                validator.sync()
                 if document == self.document and self.restart:
                     self.set_validator(validator, document)
 
@@ -282,6 +283,7 @@ class BrowserView(PidaGladeView):
 
             def on_complete(document, outliner):
                 del self.tasks[document]
+                outliner.sync()
                 # refire the task and hope the cache will just display stuff,
                 # elsewise the task is run again
                 if document == self.document and self.restart:

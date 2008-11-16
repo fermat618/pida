@@ -120,16 +120,35 @@ class PythonOutliner(Outliner):
     def get_outline(self):
         from rope.base.exceptions import RopeError
         try:
-            mp = ModuleParser(self.document.filename)
+            mp = ModuleParser(self.document.filename,
+                              project=self.document.project)
         except RopeError:
             return
-        for node, parent in mp.get_nodes():
-            yield node
+        try:
+            for node, parent in mp.get_nodes():
+                yield node
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+
+    def sync(self):
+        try:
+            self.document.project['python']['ropeproject'].sync()
+        except KeyError:
+            pass
+
+    def close(self):
+        try:
+            self.document.project['python']['ropeproject'].close()
+        except KeyError:
+            pass
+
 
 class PythonDocumentator(Documentator):
 
     def get_documentation(self, buffer, offset):
-        mp = ModuleParser(self.document.filename)
+        mp = ModuleParser(self.document.filename,
+                          project=self.document.project)
         buffer = buffer + ('\n' * 20)
         
         from rope.contrib.codeassist import PyDocExtractor
@@ -261,7 +280,8 @@ class PythonCompleter(Completer):
         from rope.base.exceptions import RopeError
 
         try:
-            mp = ModuleParser(self.document.filename)
+            mp = ModuleParser(self.document.filename, 
+                              project=self.document.project)
             buffer = buffer + ('\n' * 20)
             co = code_assist(mp.project, buffer, offset, maxfixes=4)
         except RopeError:
@@ -296,7 +316,8 @@ class PythonCompleter(Completer):
 class PythonDefiner(Definer):
 
     def get_definition(self, buffer, offset):
-        mp = ModuleParser(self.document.filename)
+        mp = ModuleParser(self.document.filename,
+                          project=self.document.project)
         buffer = buffer + ('\n' * 20)
 
         from rope.contrib.findit  import find_definition

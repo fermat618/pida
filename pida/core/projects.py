@@ -54,6 +54,9 @@ class Project(Log):
     def __contains__(self, key):
         return key in self.__data
 
+    def has_key(self, key):
+        return key in self.__data
+
     def reload(self):
         """Loads the project file"""
         self.build = Build.loadf(self.project_file)

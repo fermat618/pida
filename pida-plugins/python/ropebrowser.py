@@ -10,7 +10,8 @@ http://rope.sourceforge.net
 
 from os.path import dirname, basename
 
-from rope.base.project import Project
+from pida.core.projects import Project as PidaProject
+from rope.base.project import Project, get_no_project
 from rope.base import pynames, pyobjects, builtins
 
 from pida.utils.languages import LANG_OUTLINER_TYPES, OutlineItem
@@ -279,9 +280,21 @@ def get_project(path):
 
 class ModuleParser(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, project=None):
         self.filename = filename
-        self.project, self.modname = get_project(filename)
+        self.modname = basename(filename)[:-3]
+        if project:
+            if not project.has_key('python'):
+                project['python'] = {}
+                project['python']['ropeproject'] = Project(
+                    project.source_directory, 
+                    ropefolder=PidaProject.data_dir_path('', 'python'))
+
+            self.project = project['python']['ropeproject']
+            parts = project.get_relative_path_for(filename)
+            self.modname = ".".join(parts)[:-3]
+        else:
+            self.project, self.modname = get_project(filename)
         self.mod = self.project.pycore.get_module(self.modname)
 
     def get_nodes(self):

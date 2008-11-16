@@ -36,6 +36,18 @@ class BaseDocumentHandler(object):
         # what to do, what to do...
         return -1 * super(BaseDocumentHandler).__cmp__(other)
 
+    def sync(self):
+        """
+        Called once in a while to write file cache if the plugin supports it
+        """
+        pass
+
+    def close(self):
+        """
+        Called before this instance is deleted
+        """
+        pass
+
     @classmethod
     def priorty_for_document(cls, document):
         """Returns the priority this plugin will have for this document"""
