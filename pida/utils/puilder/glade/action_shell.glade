@@ -4,7 +4,7 @@
     <widget class="GtkWindow" id="action_shell">
         <property name="default_height">250</property>
         <property name="default_width">440</property>
-        <property name="visible">True</property>
+        <property name="visible">False</property>
         <child>
             <widget class="GtkHBox" id="hbox1">
                 <property name="spacing">6</property>
