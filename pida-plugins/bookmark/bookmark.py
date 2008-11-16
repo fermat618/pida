@@ -468,10 +468,8 @@ class Bookmark(Service, MarkerInterface):
             self.bookmark_file(filename, line)
 
     def update_document(self, document):
-        print "update document", document
         for item in self.list_files():
             if document.filename == item.data:
-                print "emit", item
                 self.boss.get_service('editor'). \
                     emit('marker-changed', marker=item)
 

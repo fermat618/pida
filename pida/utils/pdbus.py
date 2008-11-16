@@ -4,7 +4,8 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-from functools import partial
+from functools import partial, wraps
+
 
 import dbus
 from dbus.service import BusName
@@ -24,8 +25,24 @@ def DBUS_PATH(*path, **kwargs):
 
 BUS_NAME = BusName(DBUS_NS(UUID), bus=dbus.SessionBus())
 
-EXPORT = partial(dbus.service.method, DBUS_NS())
-SIGNAL = partial(dbus.service.signal, DBUS_NS())
+def _dbus_decorator(f, ns=None, suffix=None):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if ns is None:
+            namespace = DBUS_NS(kwds.get('suffix', suffix))
+        else:
+            namespace = ns
+        if 'suffix' in kwds:
+            del kwds['suffix']
+
+        return f(namespace, *args, **kwds)
+    return wrapper
+
+#EXPORT = partial(dbus.service.method, DBUS_NS())
+#SIGNAL = partial(dbus.service.signal, DBUS_NS())
+
+EXPORT = partial(_dbus_decorator, dbus.service.method)
+SIGNAL = partial(_dbus_decorator, dbus.service.signal)
 
 _ACTIVE_PIDAS = {}
 _CALLBACKS = {}
@@ -56,13 +73,13 @@ def list_pida_instances(include_this=False, callback=None, callback_done=None,
     
     if not _CALLBACKS.has_key(rec_pida_pong):
         _CALLBACKS[rec_pida_pong] = session.add_signal_receiver(
-            rec_pida_pong, pong, dbus_interface=DBUS_NS())
+            rec_pida_pong, pong, dbus_interface=DBUS_NS('rpc'))
     
     if not _CALLBACKS.has_key(callback):
         # this is ugly but needed to prevent multi registration
         _CALLBACKS[callback] = session.add_signal_receiver(
-            callback, pong, dbus_interface=DBUS_NS())
-    m = dbus.lowlevel.SignalMessage('/', DBUS_NS(), ping)
+            callback, pong, dbus_interface=DBUS_NS('rpc'))
+    m = dbus.lowlevel.SignalMessage('/', DBUS_NS('rpc'), ping)
 
     if block:
         # this is ugly, but blocking calls with send_message doesn't work
@@ -117,6 +134,8 @@ class PidaRemote(object):
         else:
             fpath = self._path
 
+        ns = fpath.replace("/", ".")[1:]
+
         if kwargs.has_key('signature'):
             sig = kwargs['signature']
         else:
@@ -124,7 +143,7 @@ class PidaRemote(object):
 
         return self._conn.call_blocking(self._bus_name,
                                  fpath, 
-                                 DBUS_NS_PREFIX,
+                                 ns,
                                  method_name,
                                  sig,
                                  args,
@@ -145,6 +164,8 @@ class PidaRemote(object):
         else:
             fpath = self._path
 
+        ns = fpath.replace("/", ".")[1:]
+
         if kwargs.has_key('signature'):
             sig = kwargs['signature']
         else:
@@ -155,7 +176,7 @@ class PidaRemote(object):
 
         return self._conn.call_async(self._bus_name,
                                  fpath, 
-                                 DBUS_NS_PREFIX,
+                                 ns,
                                  method_name,
                                  sig,
                                  args,

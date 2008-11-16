@@ -14,7 +14,7 @@ import os
 import gtk
 
 from pida.core.environment import (is_firstrun, firstrun_filename, is_safe_mode,
-    session_name)
+    workspace_name)
 from .options import OptionsManager
 from pida.core.servicemanager import ServiceManager
 from pida.ui.icons import IconRegister

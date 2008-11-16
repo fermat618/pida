@@ -119,7 +119,7 @@ def main():
     
     from pida.core import options
 
-    #options.create_default_manager(pida.core.environment.session_name())
+    #options.create_default_manager(pida.core.environment.workspace_name())
     import pida.core.log
     pida.core.log.setup()
     
@@ -129,15 +129,15 @@ def main():
     if opts.trace:
         set_trace()
 
-    # open session manager is asked for
+    # open workspace manager is asked for
     from pida.core.options import OptionsManager
-    # we need a new optionsmanager so the default manager does not session
+    # we need a new optionsmanager so the default manager does not workspace
     # lookup yet
-    om = OptionsManager(session="default")
+    om = OptionsManager(workspace="default")
 
-    def do_session_manager():
+    def do_workspace_manager():
         from pida.utils.pdbus import list_pida_instances
-        from pida.ui.window import SessionWindow
+        from pida.ui.window import WorkspaceWindow
 
         def kill(sm):
             sm.hide_and_quit()
@@ -149,19 +149,19 @@ def main():
                 file_names.append(os.path.abspath(i))
 
         def command(sw, row=None):
-            # command dispatcher for session window
+            # command dispatcher for workspace window
             opts.safe_mode = sw.safe_mode.get_active()
             if sw.user_action == "quit":
                 sys.exit(0)
-            elif sw.user_action == "new" and sw.new_session:
-                opts.session = sw.new_session
+            elif sw.user_action == "new" and sw.new_workspace:
+                opts.workspace = sw.new_workspace
                 sw.hide_and_quit()
                 gtk.main_quit()
             elif sw.user_action == "select":
-                if row[0]:
+                if row.id:
                     from pida.utils.pdbus import PidaRemote
 
-                    pr = PidaRemote(row[0])
+                    pr = PidaRemote(row.id)
                     if file_names:
                         pr.call('buffer', 'open_files', file_names)
 
@@ -170,23 +170,23 @@ def main():
                     sw.user_action = "quit"
                     sys.exit(0)
                 else:
-                    opts.session = row[3]
+                    opts.workspace = row.workspace
                     sw.hide_and_quit()
                     gtk.main_quit()
 
-        sw = SessionWindow(command=command)
-        sw.show_all()
-        #this mainloop will exist when the sessionwindow is closes
+        sw = WorkspaceWindow(command=command)
+        sw.show()
+        #this mainloop will exist when the workspacewindow is closes
         gtk.main()
 
 
-    if (om.open_session_manager() and not environment.session_set()) or \
-        environment.session_manager():
+    if (om.open_workspace_manager() and not environment.workspace_set()) or \
+        environment.workspace_manager():
         try:
-            do_session_manager()
+            do_workspace_manager()
         except ImportError:
             warnings.warn_explicit('python DBus bindings not available. '
-            'Not all functions available.', Warning, 'pida', '')
+                        'Not all functions available.', Warning, 'pida', '')
         
     if opts.version:
         print _('PIDA, version %s') % PIDA_VERSION

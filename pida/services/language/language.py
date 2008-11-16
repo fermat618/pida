@@ -47,6 +47,8 @@ from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
 
+LEXPORT = EXPORT(suffix='language')
+
 def get_value(tab, key):
     return tab.get(key, None)
 
@@ -572,7 +574,7 @@ class LanguageEvents(EventsConfig):
 
 class LanguageDbusConfig(DbusConfig):
 
-    @EXPORT(out_signature = 'as', in_signature = 'ssi')
+    @LEXPORT(out_signature = 'as', in_signature = 'ssi')
     def get_completions(self, base, buffer, offset):
         doc = self.svc.boss.cmd('buffer', 'get_current')
         completer = self.svc.get_completer(doc)
@@ -581,7 +583,7 @@ class LanguageDbusConfig(DbusConfig):
         else:
             return []
 
-    @EXPORT(out_signature = 'a{s(as)}', in_signature = 's')
+    @LEXPORT(out_signature = 'a{s(as)}', in_signature = 's')
     def get_info(self, lang):
         """Returns language info"""
         lst = self.svc.features[(lang, 'infos')]

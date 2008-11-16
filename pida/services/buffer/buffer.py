@@ -31,6 +31,8 @@ from pida.core.locale import Locale
 locale = Locale('buffer')
 _ = locale.gettext
 
+LEXPORT = EXPORT(suffix='buffer')
+
 LIST_COLUMNS = {
 'onerow': [
             Column('markup', use_markup=True),
@@ -175,6 +177,15 @@ class BufferActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'close_all',
+            TYPE_NORMAL,
+            _('Close all Documents'),
+            _('Close all documents'),
+            '',
+            self.on_close_all,
+            '',
+        )
+        self.create_action(
             'switch_next_buffer',
             TYPE_NORMAL,
             _('_Next Buffer'),
@@ -226,6 +237,9 @@ class BufferActionsConfig(ActionsConfig):
 
     def on_close(self, action):
         self.svc.close_current()
+
+    def on_close_all(self, action):
+        self.svc.close_all()
 
     def on_open_for_file(self, action):
         file_name = action.contexts_kw['file_name']
@@ -312,28 +326,30 @@ class BufferCommandsConfig(CommandsConfig):
 
 class BufferDbusConfig(DbusConfig):
     
-    @EXPORT(in_signature='s')
+    @LEXPORT(in_signature='s')
     def open_file(self, file_name):
         self.svc.open_file(file_name)
 
-    @EXPORT(in_signature='as')
+    @LEXPORT(in_signature='as')
     def open_files(self, files):
         self.svc.open_files(files)
         
-    @EXPORT(in_signature='s')
+    @LEXPORT(in_signature='s')
     def close_file(self, file_name):
         self.svc.close_file(file_name)
         
-    @EXPORT(out_signature='i')
+    @LEXPORT(out_signature='i')
     def get_open_documents_count(self):
         return len(self.svc._documents)
 
-    @EXPORT(out_signature='a(isii)')
+    @LEXPORT(out_signature='a(isiia{ss})')
     def get_documents(self):
         return [
-                 dict(id=x.unique_id, filename=x.filename, 
-                       doctype=x.doctype and x.doctype.internal or '', 
-                       creation_time=x.creation_time)
+                 (x.unique_id, x.filename, 
+                       x.doctype and x.doctype.internal or '', 
+                       x.creation_time,
+                       # extended values
+                       {})
                   for x in self.svc._documents.itervalues()
                ]
                
@@ -433,6 +449,15 @@ class Buffer(Service):
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
                 self.emit('document-closed')
+
+    def close_all(self):
+        docs = self._documents.values()[:]
+        for document in docs:
+            if self.boss.editor.cmd('close', document=document):
+                self._remove_document(document)
+                self.emit('document-closed')
+            else:
+                break
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():
