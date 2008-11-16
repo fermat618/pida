@@ -30,7 +30,8 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_REMEMBER_TOGGLE)
 
 from pida.ui.views import PidaGladeView, PidaView
 
@@ -390,7 +391,7 @@ class PastebinActionsConfig(ActionsConfig):
 
         self.create_action(
             'show_pastes',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Paste History'),
             _('Show the paste history viewer'),
             gtk.STOCK_PASTE,

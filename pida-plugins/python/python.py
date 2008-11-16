@@ -211,6 +211,17 @@ class PythonError(ValidationError):
         else:
             typec = self.lookup_color('pida-val-def')
         
+        if typec:
+            typec = typec.to_string()
+        else:
+            typec = "black"
+        
+        linecolor = self.lookup_color('pida-lineno')
+        if linecolor:
+            linecolor = linecolor.to_string()
+        else:
+            linecolor = "black"
+        
         markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
     """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
     """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
@@ -219,8 +230,8 @@ class PythonError(ValidationError):
                       'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
                                     self.subtype).capitalize()),
                       'message':message_string,
-                      'linecolor': self.lookup_color('pida-lineno').to_string(),
-                      'typec': typec.to_string(),
+                      'linecolor': linecolor,
+                      'typec': typec,
                       })
         return markup
     markup = property(get_markup)

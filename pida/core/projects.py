@@ -90,6 +90,8 @@ class Project(Log):
         path = Project.data_dir_path(self.source_directory, *args)
         if kwargs.get('mkdir', True):
             Project.create_data_dir(self.source_directory, *args)
+        if 'filename' in kwargs:
+            return os.path.join(path, kwargs['filename'])
         return path
 
     data_dir = property(get_meta_dir)

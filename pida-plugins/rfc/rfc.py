@@ -31,7 +31,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 from pida.core.environment import pida_home, get_uidef_path
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_TOGGLE, TYPE_NORMAL
+from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
 
 from pida.ui.views import PidaView
 
@@ -140,7 +140,7 @@ class RfcActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_rfc',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Rfc Viewer'),
             _('Show the rfc'),
             '',
@@ -198,6 +198,11 @@ class Rfc(Service):
         self.task = None
         self._filter_id = 0
         self.is_refresh = False
+
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
 
     def show_rfc(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

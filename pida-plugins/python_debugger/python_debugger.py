@@ -38,7 +38,8 @@ from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE)
 from pida.core.environment import get_uidef_path, get_pixmap_path
 
 from pida.ui.views import PidaView
@@ -727,7 +728,7 @@ class DebuggerActionsConfig(ActionsConfig):
         # Menu
         self.create_action(
             'show_pydebugger_view',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             'Show Python Debugger',
             'Show the Python debugger',
             'accessories-text-editor',

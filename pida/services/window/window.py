@@ -120,6 +120,37 @@ class WindowActionsConfig(ActionsConfig):
             self.on_windows,
         )
 
+    def register_window(self, key, title, help=None):
+        """
+        Registers a window key.
+        This window can get a shortcut assigned which will be shown
+        at the windows menu.
+        """
+        keya = 'focus_%s' %key.replace(".", "_")
+        curshort = ""
+        for name, value in self.read().items():
+
+            # ignore removed options that might have config entries
+            if name == keya:
+                curshort = value
+
+        act = self.create_action(
+            keya,
+            TYPE_NORMAL,
+            "Focus %s" %_(title),
+            help or _('Focus %s window') %_(title),
+            "",
+            self.on_focus_window,
+            curshort
+        )
+        act.key = key
+        self.set_value(keya, curshort)
+        self.subscribe_keyboard_shortcuts()
+        self.svc.boss.get_service('shortcuts').update()
+
+    def on_focus_window(self, action):
+        self.svc.present_key_window(action.key)
+
     def on_windows(self, action):
         self.svc.create_window_list()
 
@@ -232,6 +263,7 @@ class Window(Service):
         self.update_colors()
         self.state_config = os.path.join(settings_dir, 'workspaces', 
                                          workspace_name(), "window.state.json")
+        self.restore_state(paned=True)
 
     def start(self):
         # Explicitly add the permanent views
@@ -253,21 +285,27 @@ class Window(Service):
     def stop(self):
         self.save_state()
 
-    def restore_state(self):
+    def restore_state(self, paned=False):
         try:
             fp = open(self.state_config, "r")
         except (OSError, IOError), e:
             self.log("Can't open state file %s" %self.state_config)
             return
         data = simplejson.load(fp)
+
+        if paned:
+            self.boss.window.paned.set_config(data.get('panedstate', ''))
+            return
+
         for service in self.boss.get_services():
             if not data.has_key(service.get_name()):
                 continue
             for action in service.actions.list_actions():
                 if isinstance(action, TYPE_REMEMBER_TOGGLE):
-                    action.set_active(data[service.get_name()][action.get_name()])
-
-        self.boss.window.paned.set_config(data.get('panedstate', ''))
+                    try:
+                        action.set_active(data[service.get_name()][action.get_name()])
+                    except KeyError:
+                        pass
 
     def save_state(self, *args):
         if not self.started:
@@ -347,6 +385,15 @@ class Window(Service):
 
     def _on_doc_action(self, action, doc):
         self.boss.get_service('buffer').view_document(doc)
+
+    def present_key_window(self, key):
+        for pane in self.boss.window.paned.list_panes(every=True):
+            if pane.key == key:
+                self.cmd('present_view', view=pane)
+                return
+
+    def register_window(self, key, title, help=None):
+        self.actions.register_window(self, key, title, help)
 
     def create_window_list(self):
         # update the window menu list

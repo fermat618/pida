@@ -34,7 +34,7 @@ from kiwi.ui.objectlist import Column
 
 # core
 from pida.core.service import Service
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_REMEMBER_TOGGLE
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
@@ -322,7 +322,7 @@ class PythonActionsConfig(ActionsConfig):
         )
         self.create_action(
             'show_test_python',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Python Unit Tester'),
             _('Show the python unitTester'),
             'none',

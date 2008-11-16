@@ -300,6 +300,13 @@ class Grepper(Service):
         self.current_project_source_directory = None
         self._views = []
 
+    def start(self):
+        acts = self.boss.get_service('window').actions
+        
+        acts.register_window(GrepperView.key,
+                             GrepperView.label_text)
+
+
     def show_grepper_in_project_source_directory(self):
         if self.current_project_source_directory is None:
             path = os.getcwd()

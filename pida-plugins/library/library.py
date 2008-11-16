@@ -39,7 +39,8 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
+from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
+                               TYPE_REMEMBER_TOGGLE)
 
 from pida.ui.views import PidaGladeView
 
@@ -112,7 +113,7 @@ class LibraryActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_library',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Documentation Library'),
             _('Show the documentation library'),
             '',
@@ -122,7 +123,7 @@ class LibraryActions(ActionsConfig):
 
         self.create_action(
             'show_browser',
-            TYPE_TOGGLE,
+            TYPE_REMEMBER_TOGGLE,
             _('Documentation Browser'),
             _('Documentation Browser'),
             '',
@@ -318,6 +319,11 @@ class Library(Service):
         self._browser.label_text = _('Documentation')
         self._browser.connect_closed(self._on_close_clicked)
         self._has_loaded = False
+
+        acts = self.boss.get_service('window').actions
+
+        acts.register_window(self._view.key,
+                             self._view.label_text)
 
     def show_library(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

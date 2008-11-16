@@ -629,6 +629,14 @@ class Language(Service):
         # add default language info
         self.features.subscribe((None, 'info'), LanguageInfo)
 
+    def start(self):
+        acts = self.boss.get_service('window').actions
+        
+        acts.register_window(self._view_outliner.key,
+                             self._view_outliner.label_text)
+        acts.register_window(self._view_validator.key,
+                             self._view_validator.label_text)
+
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
 
