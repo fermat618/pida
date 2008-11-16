@@ -11,6 +11,7 @@
 # Standard Libs
 import os
 import gtk
+import gobject
 import re
 from gtk import gdk
 
@@ -56,7 +57,7 @@ from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
     SuggestionsList, PidaDocWindow)
-from pida.utils.gthreads import GeneratorTask, gcall
+from pida.utils.gthreads import GeneratorTask, gcall, AsyncTask
 from pida.core.languages import Suggestion
 
 # locale
@@ -252,6 +253,7 @@ class MooeditView(gtk.ScrolledWindow):
                 lm._moo_marker.props.visible = False
                 buf.delete_line_mark(lm._moo_marker)
                 del lm._moo_marker
+        self.editor.inputter.disconnect()
 
     def update_marker(self, marker):
         if marker.line == -1:
@@ -458,9 +460,7 @@ class MooeditActionsConfig(EditorActionsConfig):
         act.opt.add_notify(self.on_completer_change)
 
     def on_completer_change(self, *args):
-        print "on_completer_change"
         self.svc._update_keyvals()
-        print "bla"
         return False
 
     def on_project_preferences(self, action):
@@ -535,7 +535,19 @@ class PidaMooInput(object):
 
         editor.connect("key-press-event", self.on_keypress)
         editor.connect("focus-out-event", self.on_do_hide)
+        editor.get_toplevel().connect("focus-out-event", self.on_do_hide)
         #editor.connect_after("key-press-event", self.on_after_keypress)
+
+    def disconnect(self):
+        self.editor.disconnect_by_func(self.on_keypress)
+        self.editor.disconnect_by_func(self.on_do_hide)
+        #try:
+        #    self.editor.get_toplevel().disconnect_by_func(self.on_do_hide)
+        #except ValueError: pass
+        self.completer.disconnect_by_func(self.accept)
+        self.completer.disconnect_by_func(self.suggestion_selected)
+        self.editor.disconnect_by_func(self.on_cursor_moved)
+
 
     #def on_
 
@@ -547,9 +559,11 @@ class PidaMooInput(object):
                         unicode(self.editor.get_text()), start):
                 yield i
 
-        self.update_completer()
-        for i in self.list_all:
-            yield i
+        #self.update_completer()
+        y = 0
+        clst = self.list_all.copy()
+        for x in clst:
+            yield x
 
     def get_completer_visible(self):
         if self.completer_window and self.completer_window.window and \
@@ -577,6 +591,7 @@ class PidaMooInput(object):
         self.completer_window.hide()
         #self.completer.hide_all()
         self.completer_visible = False
+        self.show_auto = False
         # delete markers
         buf = self.editor.get_buffer()
         self._delete_suggested()
@@ -627,15 +642,11 @@ class PidaMooInput(object):
                     buf.props.cursor_position))
         pos = self.editor.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET,
             rec.x, rec.y + rec.height)
-        print "pos"
-        print pos
 
         #tw = self.editor.window.get_toplevel()
         #abspos = tw.get_position()
         abspos = self.editor.window.get_origin()
-        print abspos
         rpos = (pos[0]+abspos[0], pos[1]+abspos[1])
-        print rpos
         #self.completer_window.show_all()
         #self.completer_window.move(rpos[0],rpos[1])
         self.completer.place(rpos[0],rpos[1] - rec.height, rec.height)
@@ -732,15 +743,19 @@ class PidaMooInput(object):
 
     def _delete_suggested(self):
         buf = self.editor.props.buffer
+        if not self.completer_start or not self.completer_end:
+            return
         i1 = buf.get_iter_at_mark(self.completer_start)
         i2 = buf.get_iter_at_mark(self.completer_end)
         buf.delete(i1, i2)
 
     def d(self):
         buf = self.editor.props.buffer
-        print "pos", buf.get_iter_at_mark(self.completer_pos).get_offset()
-        print "start", buf.get_iter_at_mark(self.completer_start).get_offset()
-        print "end", buf.get_iter_at_mark(self.completer_end).get_offset()
+        if self.completer_start:
+            print "cur", buf.props.cursor_position
+            print "pos", buf.get_iter_at_mark(self.completer_pos).get_offset()
+            print "start", buf.get_iter_at_mark(self.completer_start).get_offset()
+            print "end", buf.get_iter_at_mark(self.completer_end).get_offset()
 
 
     def _replace_suggested(self, text, mark=True):
@@ -788,7 +803,7 @@ class PidaMooInput(object):
 
         if buf.get_line_count() != len(self.list_cache) or full:
             # full update of cache
-            lines = range(0, buf.get_line_count()+1)
+            lines = range(0, buf.get_line_count())
         else:
             # incremental update. we update the current line + above and below
             lines = range(max(it.get_line()-1, 0), 
@@ -801,6 +816,7 @@ class PidaMooInput(object):
                 continue
             ite = its.copy()
             ite.forward_to_line_end()
+            ite.forward_char()
             self.list_cache[line] = self.tokenize(buf.get_text(its, ite))
 
         for val in self.list_cache.itervalues():
@@ -814,8 +830,9 @@ class PidaMooInput(object):
             self.completer.add_str(line)
         # if we are in show_auto mode, the completion window
         # is delayed until we have the first visible item.
-        if not self.completer_visible and self.show_auto:
-            print "len compl model", len(self.completer.model)
+        if not self.completer_visible and self.show_auto and \
+           self.editor.get_toplevel().has_toplevel_focus() and \
+           self.editor.is_focus():
             if len(self.completer.model):
                 self.completer_window.show()
 
@@ -835,7 +852,7 @@ class PidaMooInput(object):
         if event.type == gdk.KEY_PRESS and self.svc.opt('autocomplete'):
             modifiers = event.get_state() & gtk.accelerator_get_default_mod_mask()
 
-            print event.keyval, event.state, modifiers
+            #print event.keyval, event.state, modifiers
             #print event.keyval & modifiers      
             #print int(modifiers)
             #print self.svc.key_toggle
@@ -860,8 +877,6 @@ class PidaMooInput(object):
                         return True
             elif etest(self.svc.key_accept):
                 if self.completer_visible:
-                    print "accept"
-                    print self._get_complete()
                     self.accept(None, self._get_complete())
                     return True
                     # key up, key down, ?, pgup, pgdown
@@ -886,9 +901,14 @@ class PidaMooInput(object):
         # and stops the processing of connect_after functions
         modified = self.editor.do_key_press_event(editor, event)
         #print modified, repr(event.string)
-
-        if modified:
-            self.update_completer()
+        #self.d()
+        #if self.completer_start:
+        #    buf = self.editor.get_buffer()
+        #    buf.move_mark(self.completer_start,
+        #                  buf.get_iter_at_offset(buf.props.cursor_position))
+        #if modified:
+        #    task = AsyncTask(work_callback=self.update_completer)
+        #    task.start()
 
         if self.completer_visible:
             if event.keyval in (gtk.keysyms.BackSpace, gtk.keysyms.Delete): # delete
@@ -903,9 +923,12 @@ class PidaMooInput(object):
                 if event.string not in info.word:
                     self.hide()
                 else:
-                    self._delete_suggested()
-                    self._append_typed(event.string)
-                    self.completer.filter = self._get_typed()
+                    #print "will delete", self._get_suggested(), self._get_typed()
+                    if self.completer_start:
+                        buf = self.editor.get_buffer()
+                        buf.move_mark(self.completer_start,
+                            buf.get_iter_at_offset(buf.props.cursor_position))
+                        self.completer.filter = self._get_typed()
                 return True
         # we have to retest as the completer could just have been closed by
         # a non word character but an attrib char should open it again
@@ -928,6 +951,11 @@ class PidaMooInput(object):
                 # character so break up
                 if len(event.string) and event.string not in info.word:
                     self.show_auto = False
+                elif len(event.string):
+                    #print "append typed", self._get_suggested(), self._get_typed()
+                    self._delete_suggested()
+                    self._append_typed(event.string)
+                    self.completer.filter = self._get_typed()
 
             
             #if self.svc.opt('auto_char'):
@@ -953,6 +981,12 @@ class PidaMooInput(object):
                 #    break
                 #self.completer.filter += event.string
                 #self.completer_pos_user += len(event.string)
+        if modified:
+            #prio of 50 is higher then 
+            gobject.idle_add(self.update_completer,
+                             gobject.PRIORITY_HIGH)
+            #self.update_completer()
+        #    task = AsyncTask(work_callback=self.update_completer)
         return True
 
 class MooeditEventsConfig(EventsConfig):
