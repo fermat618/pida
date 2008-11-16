@@ -171,29 +171,34 @@ class Completer(BaseDocumentHandler):
 class LanguageServiceFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
-        if self.svc.language_info is not None:
-            self.subscribe_foreign('language',
-                (self.svc.language_name, 'info'), self.svc.language_info)
-        if self.svc.outliner_factory is not None:
-            outliner = partial(self.svc.outliner_factory,self.svc)
-            self.subscribe_foreign('language',
-                (self.svc.language_name, 'outliner'), outliner)
-        if self.svc.definer_factory is not None:
-            definer = partial(self.svc.definer_factory,self.svc)
-            self.subscribe_foreign('language',
-                (self.svc.language_name, 'definer'), definer)
-        if self.svc.validator_factory is not None:
-            validator = partial(self.svc.validator_factory,self.svc)
-            self.subscribe_foreign('language',
-                (self.svc.language_name, 'validator'), validator)
-        if self.svc.completer_factory is not None:
-            completer = partial(self.svc.completer_factory,self.svc)
-            self.subscribe_foreign('language',
-                (self.svc.language_name, 'completer'), completer)
-        if self.svc.documentator_factory is not None:
-            documentator = partial(self.svc.documentator_factory,self.svc)
-            self.subscribe_foreign('language',
-                (self.svc.language_name, 'documentator'), documentator)
+        if not isinstance(self.language_name, (tuple, list)):
+            all_langs = (self.language_name,)
+        else:
+            all_langs = self.language_name
+        for lname in all_langs:
+            if self.svc.language_info is not None:
+                self.subscribe_foreign('language',
+                    (lname, 'info'), self.svc.language_info)
+            if self.svc.outliner_factory is not None:
+                outliner = partial(self.svc.outliner_factory,self.svc)
+                self.subscribe_foreign('language',
+                    (lname, 'outliner'), outliner)
+            if self.svc.definer_factory is not None:
+                definer = partial(self.svc.definer_factory,self.svc)
+                self.subscribe_foreign('language',
+                    (lname, 'definer'), definer)
+            if self.svc.validator_factory is not None:
+                validator = partial(self.svc.validator_factory,self.svc)
+                self.subscribe_foreign('language',
+                    (lname, 'validator'), validator)
+            if self.svc.completer_factory is not None:
+                completer = partial(self.svc.completer_factory,self.svc)
+                self.subscribe_foreign('language',
+                    (lname, 'completer'), completer)
+            if self.svc.documentator_factory is not None:
+                documentator = partial(self.svc.documentator_factory,self.svc)
+                self.subscribe_foreign('language',
+                    (lname, 'documentator'), documentator)
 
 
 
