@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # -*- coding: utf-8 -*-
 """
     :copyright: 2005-2008 by The PIDA Project
@@ -178,6 +176,7 @@ def execute_project(project_directory, target_name):
 
 
 execute = execute_project
+
 
 def list_project_targets(project_directory):
     _info('Listing targets', '--')
