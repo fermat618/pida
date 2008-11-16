@@ -1496,6 +1496,19 @@ class Mooedit(EditorService):
         self._docwin = pd
         pd.present()
 
+    def define_sign_type(self, name, icon, linehl, text, texthl):
+        pass
+
+    def undefine_sign_type(self, name):
+        pass
+
+    def show_sign(self, type, filename, line):
+        pass
+
+    def hide_sign(self, type, filename, line):
+        pass
+
+
 
 # Required Service attribute for service loading
 Service = Mooedit
