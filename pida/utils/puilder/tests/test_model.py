@@ -3,6 +3,8 @@ from simplejson import dumps
 
 from ..model import Build, dump
 from ..execute import generate_execution_graph, CircularAction, execute_build
+from ..view import PuilderView, TargetActionView, ShellActionView, \
+                   PythonActionView, ExternalActionView
 
 t = dict(
     targets = [
@@ -220,4 +222,11 @@ def test_execute_circular_result(res):
 @_execution_result_test('test6')
 def test_execute_python_result(res):
     assert res[0] == 'byebye\n'
+
+
+@_action_test
+def test_shell_action_view(a):
+    v = ShellActionView()
+    v.set_action(a)
+
 

@@ -307,6 +307,7 @@ class ActionView(GladeSlaveDelegate):
 
     def __init__(self, *args, **kw):
         GladeSlaveDelegate.__init__(self)
+        self.action = None
         self.create_ui()
 
     def _set_action(self, action):
@@ -354,6 +355,8 @@ class ShellActionView(ActionView):
         self.action.options['cwd'] = self.cwd.get_current_folder()
 
     def on_command__changed(self, entry):
+        if self.action is None:
+            return
         t = entry.get_text()
         if self.action.value != t:
             self.action.value = t
@@ -407,7 +410,6 @@ class TargetActionView(ActionView):
     gladefile = 'action_target'
 
     def create_ui(self):
-        self.action = None
         self.block = False
 
     def set_action(self, action):
