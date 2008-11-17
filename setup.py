@@ -105,7 +105,7 @@ setup(
     package_data = all_package_data,
     ext_modules = [moo],
     cmdclass={'build_ext': BuildExt},
-    scripts=['bin/pida', 'bin/pida-remote', 'bin/pida-build'],
+    scripts=['bin/pida', 'bin/pida-remote', 'bin/pida-build', 'bin/pida-pyshell'],
     author = PIDA_AUTHOR,
     author_email = PIDA_AUTHOR,
     url = PIDA_WEBSITE,

@@ -73,6 +73,12 @@ class PidaPaned(BigPaned):
             else:
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
             pane.props.detachable = detachable
+            #XXX: moo MooParams are not editable :(
+            oparam = pane.get_params()
+            nparam = PaneParams(keep_on_top=True, detached=oparam.detached,
+                                window_position=oparam.window_position,
+                                maximized=oparam.maximized)
+            pane.set_params(nparam)
             view.pane = pane
             pane.view = view
             if not removable:
@@ -89,6 +95,8 @@ class PidaPaned(BigPaned):
 
     def detach_view(self, view, size=(400,300)):
         paned, pos = self.find_pane(view.get_toplevel())
+        dparam = PaneParams(keep_on_top=True, detached=True)
+        paned.set_params(dparam)
         paned.detach()
         self._center_on_parent(view, size)
 
