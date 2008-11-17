@@ -24,13 +24,14 @@
             <placeholder name="tools" />
             <separator />
             <placeholder name="panes">
-            <menuitem action="switch_next_term" name="switch_next_term" />
-            <menuitem action="switch_prev_term" name="switch_prev_term" />
-            <menuitem action="focus_terminal" name="focus_terminal" />
-            <separator />
-            <menuitem action="fullscreen" name="fullscreen" />
-            <menuitem action="show_toolbar" name="show_toolbar" />
-            <menuitem action="show_menubar" name="show_menubar" />
+                <menuitem action="switch_next_term" name="switch_next_term" />
+                <menuitem action="switch_prev_term" name="switch_prev_term" />
+                <menuitem action="focus_terminal" name="focus_terminal" />
+                <separator />
+                <menuitem action="fullscreen" name="fullscreen" />
+                <menuitem action="show_toolbar" name="show_toolbar" />
+                <menuitem action="show_menubar" name="show_menubar" />
+                <placeholder name="add_panes" />
             </placeholder>
         </menu>
         

@@ -23,10 +23,7 @@
             <placeholder name="tools" />
             <separator />
             <placeholder name="perms">
-                <menuitem name="show_filebrowser" action="show_filebrowser" />
             </placeholder>
-            <separator />
-            <placeholder name="panes" />
         </menu>
 
         <placeholder name="AddMenu" /> 

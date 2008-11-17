@@ -21,7 +21,6 @@
             <placeholder name="toolstools"/>
             <separator />
             <placeholder name="toolstools2">
-            <menuitem name="show_openwith" action="show_openwith" />
             </placeholder>
             <separator />
             <menu name="ToolsDebug" action="ToolsDebug">
@@ -29,6 +28,9 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="prefs">
+            <menuitem name="show_openwith" action="show_openwith" />
+            </placeholder>
         </menu>
 
         <placeholder name="AddMenu" /> 

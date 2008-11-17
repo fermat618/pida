@@ -20,6 +20,12 @@
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+            <placeholder name="tools" />
+            <separator />
+            <placeholder name="panes">
+            </placeholder>
+            <separator />
+            <placeholder name="prefs" />
         </menu>
 
         <placeholder name="AddMenu" />

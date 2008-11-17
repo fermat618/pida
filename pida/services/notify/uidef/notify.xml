@@ -15,19 +15,14 @@
 
         <menu name="DebugMenu" action="DebugMenu">
         </menu>
-
         
         <menu name="ToolsMenu" action="ToolsMenu">
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
-            <placeholder name="tools" />
-            <separator />
-            <placeholder name="perms">
-				<menuitem action="show_notify" name="show_notify"/>
-            </placeholder>
-            <separator />
-            <placeholder name="panes" />
+        <placeholder name="tools">
+            <menuitem action="show_notify" name="show_notify"/>
+        </placeholder>
         </menu>
 
         <placeholder name="AddMenu" />

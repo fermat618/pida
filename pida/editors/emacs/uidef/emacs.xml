@@ -32,9 +32,6 @@
             <placeholder name="tools" />
             <separator />
             <placeholder name="panes">
-            <separator />
-            <menuitem action="focus_editor" name="focus_editor" />
-            <separator />
             </placeholder>
             <separator />
             <placeholder name="prefs" />

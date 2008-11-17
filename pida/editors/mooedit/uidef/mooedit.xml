@@ -52,9 +52,6 @@
             <placeholder name="tools" />
             <separator />
             <placeholder name="panes">
-            <separator />
-            <menuitem action="focus_editor" name="focus_editor" />
-            <separator />
             </placeholder>
             <placeholder name="prefs">
             <menuitem name="mooedit_preferences" action="mooedit_preferences" />
