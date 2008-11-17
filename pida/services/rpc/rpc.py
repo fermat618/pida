@@ -49,8 +49,8 @@ class RpcDbus(DbusConfig):
     def kill(self, force=False):
         self.svc.boss.stop(force)
 
-    def on_ping_session(self, session):
-        if session == session_name():
+    def on_ping_session(self, workspace):
+        if session == workspace_name():
             self.on_ping()
 
     def on_ping(self):
@@ -60,7 +60,7 @@ class RpcDbus(DbusConfig):
         self.PONG_PIDA_INSTANCE_EXT(
             BUS.get_unique_name(),
             os.getpid(),
-            session_name(),
+            workspace_name(),
             self.svc.boss.get_service('project').get_project_name() or '',
             len(self.svc.boss.get_service('buffer').get_documents())
             )
@@ -71,7 +71,27 @@ class RpcDbus(DbusConfig):
 
 
     @LSIGNAL(signature="sissi")
-    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, session, project, opened_files):
+    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, workspace, project, opened_files):
+        pass
+
+    @LSIGNAL(signature="sissi")
+    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, workspace, project, opened_files):
+        pass
+
+    @LSIGNAL(signature="sis")
+    def PIDA_START(self, uid, pid, workspace):
+        pass
+
+    @LSIGNAL(signature="sis")
+    def PIDA_PRE_START(self, uid, pid, workspace):
+        pass
+
+    @LSIGNAL(signature="si")
+    def PIDA_STOP(self, uid, pid):
+        pass
+
+    @LSIGNAL(signature="si")
+    def PIDA_PRE_STOP(self, uid, pid):
         pass
 
 # Service class
@@ -85,6 +105,34 @@ class Rpc(Service):
             self.boss.get_service('notify').notify(
                 _('DBus python bindings are missing. Limited functionality.'),
                 title=_('Modules missing'))
+        else:
+            self.dbus.PIDA_START(
+                BUS.get_unique_name(),
+                os.getpid(),
+                workspace_name()
+            )
+
+    def pre_start(self):
+        self.dbus.PIDA_PRE_START(
+            BUS.get_unique_name(),
+            os.getpid(),
+            workspace_name()
+        )
+        return True
+
+    def pre_stop(self):
+        self.dbus.PIDA_PRE_STOP(
+            BUS.get_unique_name(),
+            os.getpid()
+        )
+        return True
+
+    def stop(self):
+        self.dbus.PIDA_STOP(
+            BUS.get_unique_name(),
+            os.getpid()
+        )
+        return True
 
 # Required Service attribute for service loading
 Service = Rpc
