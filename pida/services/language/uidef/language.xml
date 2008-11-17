@@ -19,11 +19,15 @@
         <separator />
         <menuitem name="show_validator" action="show_validator" />
         <menuitem name="show_outliner" action="show_outliner" />
+        <placeholder name="languge_win" />
         <separator />
         <menuitem name="show_documentation" action="show_documentation" />
         <menuitem name="goto_definition" action="goto_definition" />
         <separator />
         <menuitem name="language_refresh" action="language_refresh" />
+        <placeholder name="languge_add">
+        <separator />
+        </placeholder>
         </menu>
 
         <menu name="DebugMenu" action="DebugMenu">
