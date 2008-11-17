@@ -263,7 +263,7 @@ class Window(Service):
         self.update_colors()
         self.state_config = os.path.join(settings_dir, 'workspaces', 
                                          workspace_name(), "window.state.json")
-        self.restore_state(paned=True)
+        self.restore_state(pre=True)
 
     def start(self):
         # Explicitly add the permanent views
@@ -285,7 +285,7 @@ class Window(Service):
     def stop(self):
         self.save_state()
 
-    def restore_state(self, paned=False):
+    def restore_state(self, pre=False):
         try:
             fp = open(self.state_config, "r")
         except (OSError, IOError), e:
@@ -293,8 +293,27 @@ class Window(Service):
             return
         data = simplejson.load(fp)
 
-        if paned:
+        if pre:
+            # in pre mode we restore the paned config and the window position/size, etc
             self.boss.window.paned.set_config(data.get('panedstate', ''))
+            # restore window size and position
+            if data.has_key('pida_main_window'):
+                cdata = data['pida_main_window']
+                # test if data is valid. we don't place the window where it
+                # is not fully visible
+                try:
+                    height = max(int(cdata['height']), 100)
+                    width = max(int(cdata['width']), 100)
+                    x = max(int(cdata['x']), 0)
+                    y = max(int(cdata['y']), 0)
+                    if x + width <= gtk.gdk.screen_width() and \
+                       y + height <= gtk.gdk.screen_height():
+                        self.boss.window.resize(width, height)
+                        self.boss.window.move(x, y)
+                    else:
+                        self.log.debug("Won't restore window size outside screen")
+                except (ValueError, KeyError):
+                    pass
             return
 
         for service in self.boss.get_services():
@@ -312,6 +331,15 @@ class Window(Service):
             return
         data = {}
         data['panedstate'] = self.boss.window.paned.get_config()
+        # save window size and position
+        size = self.boss.window.get_size()
+        pos = self.boss.window.get_position()
+        data['pida_main_window'] = {
+            "width": size[0],
+            "height": size[1],
+            "x": pos[0],
+            "y": pos[1],
+        }
         for service in self.boss.get_services():
             cur = {}
             for action in service.actions.list_actions():
