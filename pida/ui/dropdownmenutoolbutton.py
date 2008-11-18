@@ -79,6 +79,8 @@ class DropDownMenuToolButton(gtk.ToggleToolButton):
         gtk.ToggleToolButton.set_icon_widget(self, icon_widget)
 
     def set_stock_id(self, stock_id):
+        print [stock_id]
+        return
         self.unset_arrow()
         gtk.ToggleToolButton.set_stock_id(self, stock_id)
     
