@@ -190,9 +190,19 @@ class DropDownMenuToolButton(gtk.ToggleToolButton):
             self._menu.select_first(False)
 
     def _on_create_menu_proxy(self, toolitem):
-        # don't show it in the overflow menu
-        # do_create_menu_proxy doesn't work, don't know why
-        self.set_proxy_menu_item("gtk-tool-button-menu-id", None)
+        # create the overflow menu
+        m = gtk.MenuItem(' ')
+        menu = gtk.Menu()
+        for c in self.get_menu().get_children():
+            action = c.get_action()
+            if action is not None:
+                mi = action.create_menu_item()
+            else:
+                mi = gtk.SeparatorMenuItem()
+            menu.append(mi)
+        m.set_submenu(menu)
+        m.show_all()
+        self.set_proxy_menu_item("gtk-tool-button-menu-id", m)
         return True
         
     def _on_button__button_press_event(self, button, event):
