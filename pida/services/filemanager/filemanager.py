@@ -828,7 +828,7 @@ class FileManagerActionsConfig(ActionsConfig):
         self.create_action(
             'toolbar_hidden_menu',
             TYPE_DROPDOWNMENUTOOL,
-            '',
+            None,
             _('Setup which kind of files should be hidden'),
             None,
             None,
@@ -925,6 +925,10 @@ class Filemanager(Service):
         self.emit('browsed_path_changed', path=self.path)
         self.get_action('toolbar_toggle_hidden').set_active(
                 self.opt('show_hidden'))
+        # FIXME: WTF WTF WTF WTF is fixing this the empty icons. 
+        # I don't get it ! and why the hack is this happening
+        for x in self.actions.list_actions():
+            x.props.stock_id = x.props.stock_id
 
     def get_view(self):
         return self.file_view
