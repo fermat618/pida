@@ -171,8 +171,8 @@ class PidaRemote(object):
         else:
             sig = MethodCallMessage.guess_signature(*args)
 
-        reply_handler = kwargs.get('reply_handler', None)
-        error_handler = kwargs.get('error_handler', None)
+        reply_handler = kwargs.pop('reply_handler', None)
+        error_handler = kwargs.pop('error_handler', None)
 
         return self._conn.call_async(self._bus_name,
                                  fpath, 
