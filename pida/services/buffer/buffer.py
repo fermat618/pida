@@ -100,11 +100,20 @@ class BufferListView(PidaGladeView):
                                  document=item, file_name=item.filename)
 
         # Add some stuff to the menu
-        menu.append(gtk.SeparatorMenuItem())
-        menu.append(self.svc.get_action('close_selected').create_menu_item())
+        sep = gtk.SeparatorMenuItem()
+        close = self.svc.get_action('close_selected').create_menu_item()
+        menu.append(sep)
+        menu.append(close)
 
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
+
+        # Must leave the menu in the same state we found it!
+        def on_deactivate(menu):
+            menu.remove(sep)
+            menu.remove(close)
+
+        menu.connect('deactivate', on_deactivate)
 
     def get_current_buffer_index(self):
         return self.buffers_ol.index(self.svc.get_current())
