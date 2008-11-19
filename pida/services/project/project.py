@@ -92,7 +92,8 @@ class ProjectListView(PidaGladeView):
 
     def on_project_ol__right_click(self, ol, project, event):
         self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
-            dir_name=project.source_directory, event=event, project=True)
+            dir_name=project.source_directory, event=event,
+            project=project)
 
     def set_current_project(self, project):
         self.project_ol.select(project)
@@ -159,7 +160,8 @@ class ProjectEventsConfig(EventsConfig):
     def show_menu(self, menu, context, **kw):
         if (context == 'dir-menu'):
             is_project = 'project' in kw
-            for a in ['project_properties', 'project_add', 'project_remove']:
+            for a in ['project_properties', 'project_add',
+                      'project_remove_directory']:
                 self.svc.get_action(a).set_visible(is_project)
             for a in ['project_add_directory']:
                 self.svc.get_action(a).set_visible(not is_project)
@@ -239,6 +241,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_add_directory,
         )
 
+        self.create_action(
+            'project_remove_directory',
+            TYPE_NORMAL,
+            _('Remove from workspace'),
+            _('Remove the project from the workspace'),
+            gtk.STOCK_DELETE,
+            self.on_project_remove_directory,
+        )
+
     def on_project_remove(self, action):
         self.svc.remove_current_project()
 
@@ -272,6 +283,10 @@ class ProjectActionsConfig(ActionsConfig):
     def on_project_add_directory(self, action):
         path = action.contexts_kw.get('dir_name')
         self.svc.add_directory(path)
+
+    def on_project_remove_directory(self, action):
+        project = action.contexts_kw.get('project')
+        self.svc.remove_project(project)
 
 class ProjectFeaturesConfig(FeaturesConfig):
 
