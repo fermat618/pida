@@ -44,8 +44,8 @@ class PasswordDialog(gtk.Dialog):
         self.password.set_visibility(False)
         self.vbox.pack_start(label_widget(self.email, 'Email Address'), expand=False)
         self.vbox.pack_start(label_widget(self.password, 'Password'), expand=False)
+        self.set_size_request(320, -1)
         self.show_all()
-        self.resize(320,240)
 
     def get_user_details(self):
         return self.email.get_text(), self.password.get_text()
