@@ -286,6 +286,7 @@ class ModuleParser(object):
         if project:
             if not project.has_key('python'):
                 project['python'] = {}
+            if not project['python'].has_key('ropeproject'):
                 project['python']['ropeproject'] = Project(
                     project.source_directory, 
                     ropefolder=PidaProject.data_dir_path('', 'python'))

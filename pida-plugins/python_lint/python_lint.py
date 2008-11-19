@@ -20,6 +20,7 @@ from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
+from pida.core.log import Log
 
 from pida.core.languages import (LanguageService, Validator)
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
@@ -136,7 +137,7 @@ from logilab.common.ureports import TextWriter
 from logilab.common.textutils import get_csv
 # import thread
 
-class PidaLinter(PyLinter):
+class PidaLinter(PyLinter, Log):
     def __init__(self, *args, **kwargs):
         self.sema = threading.Semaphore(0)
         self._output = []
@@ -170,7 +171,11 @@ class PidaLinter(PyLinter):
     def check(self, *args, **kwargs):
         self._output = []
         self.running = True
-        super(PidaLinter, self).check(*args, **kwargs)
+        try:
+            super(PidaLinter, self).check(*args, **kwargs)
+        except:
+            self.log.debug('Error in PidaLinter check')
+
         self.running = False
         # for ensurance :-)
         self.sema.release()

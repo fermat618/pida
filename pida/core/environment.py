@@ -138,10 +138,12 @@ def killsettings():
 def get_args():
     return args
 
-def get_plugin_global_settings_path(name):
+def get_plugin_global_settings_path(name, filename=None):
     path = os.path.join(pida_home, name)
     if not os.path.exists(path):
         os.makedirs(path)
+    if filename is not None:
+        return os.path.join(path, filename)
     return path
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

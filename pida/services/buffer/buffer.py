@@ -306,6 +306,9 @@ class BufferCommandsConfig(CommandsConfig):
             return
         self.svc.close_file(file_name=file_name, document=document)
 
+    def close_all(self):
+        self.svc.close_all()
+
     def current_file_saved(self):
         self.svc.file_saved()
 

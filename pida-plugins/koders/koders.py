@@ -101,13 +101,13 @@ class KodersView(PidaView):
 
     def create_pulsebar(self):
         self.__pulse_bar = gtk.ProgressBar()
-        self.add_main_widget(self.__pulse_bar, expand=False)
         self.__pulse_bar.show_all()
         self.__pulse_bar.set_size_request(-1, 12)
         self.__pulse_bar.set_pulse_step(0.01)
         self._vbox.pack_start(self.__pulse_bar, expand=False)
         self.__pulse_bar.set_no_show_all(True)
         self.__pulse_bar.hide()
+        self.add_main_widget(self._vbox, expand=False)
 
     def append(self, item):
         self._list.append(item)
