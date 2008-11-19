@@ -10,6 +10,8 @@ import gobject
 
 
 # PIDA Imports
+from pida import PIDA_VERSION
+
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
@@ -59,6 +61,7 @@ class BugreportView(PidaGladeView):
         title = self.title_entry.get_text()
         buf = self.description_text.get_buffer()
         description = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
+        description = 'PIDA %s\n--\n%s' % (PIDA_VERSION, description)
         return report(None, self.email, self.password, 'pida', title, description)
 
     def report_complete(self, success, data):
@@ -66,6 +69,7 @@ class BugreportView(PidaGladeView):
             self.svc.boss.cmd('notify', 'notify', title=_('Bug Reported'), data=data)
             self.title_entry.set_text('')
             self.description_text.get_buffer().set_text('')
+            self.svc.boss.cmd('browseweb', 'browse', url=data.strip())
         else:
             self.svc.boss.cmd('notify', 'notify', title=_('Bug Report Failed'), data=data)
         self.progress_bar.hide()
