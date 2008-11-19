@@ -392,7 +392,7 @@ class PluginsOptionsConfig(OptionsConfig):
     def on_rpc_url(self, option):
         self.svc.rpc_url = option.value
 
-    def on_check_for_updates(self, client, id, entry, option):
+    def on_check_for_updates(self, option):
         self.svc.check_for_updates(option.value)
 
 

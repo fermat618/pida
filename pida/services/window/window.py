@@ -240,7 +240,7 @@ class WindowOptionsConfig(OptionsConfig):
     def on_show_ui(self, option):
         self.svc.get_action(option.name).set_active(option.value)
 
-    def on_color_change(self, client, id, entry, option):
+    def on_color_change(self, option):
         self.svc.update_colors()
 
     def on_title_change(self, *args):
