@@ -86,7 +86,6 @@ class DbusOptionsManagerReal(Object):
                                 ns, None, path, sender_keyword='sender')
 
     def on_config_changed(self, workspace, name, value, sender=None):
-        print "got signal change", name, value, sender, UUID
         if sender == BUS.get_unique_name():
             return
         try:
@@ -100,15 +99,21 @@ class DbusOptionsManagerReal(Object):
             self.set_value(name, value, save=False, dbus_notify=False)
 
     def notify_dbus(self, option):
-        print "send dbus notify"
         for location in self.locations:
             message = SignalMessage(self.dbus_path,
                                     self.dbus_ns,
                                     'CONFIG_CHANGED')
+            signature = 'ssv'
+            if isinstance(option.value, (tuple, list)) and \
+               not len(option.value):
+               # empty lists can't be detected, so we assume 
+               # list of strings
+               signature = "ssas"
+
             message.append(workspace_name(),
                            option.name,
                            option.value,
-                           signature='ssv')
+                           signature=signature)
             location[0].send_message(message)
 
     def object_to_dbus(self, type_):
