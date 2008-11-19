@@ -158,12 +158,17 @@ class ProjectEventsConfig(EventsConfig):
 
     def show_menu(self, menu, context, **kw):
         if (context == 'dir-menu'):
-            self.svc.get_action('project_properties').set_visible(
-                kw.has_key('project'))
+            is_project = 'project' in kw
+            for a in ['project_properties', 'project_add', 'project_remove']:
+                self.svc.get_action(a).set_visible(is_project)
+            for a in ['project_add_directory']:
+                self.svc.get_action(a).set_visible(not is_project)
 
     def menu_deactivated(self, menu, context, **kw):
         if (context == 'dir-menu'):
-            self.svc.get_action('project_properties').set_visible(True)
+            for a in ['project_properties', 'project_add', 'project_remove',
+                      'project_add_directory']:
+                self.svc.get_action(a).set_visible(True)
 
 
 class ProjectActionsConfig(ActionsConfig):
@@ -172,7 +177,7 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_add',
             TYPE_NORMAL,
-            _('_Add Project'),
+            _('_Add New Project'),
             _('Adds a new project'),
             gtk.STOCK_ADD,
             self.on_project_add,
@@ -225,6 +230,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_execution_menu,
         )
 
+        self.create_action(
+            'project_add_directory',
+            TYPE_NORMAL,
+            _('Add Directory as Project'),
+            _('Add this directory as a project in the workspace'),
+            gtk.STOCK_ADD,
+            self.on_project_add_directory,
+        )
+
     def on_project_remove(self, action):
         self.svc.remove_current_project()
 
@@ -254,6 +268,10 @@ class ProjectActionsConfig(ActionsConfig):
         menuitem = action.get_proxies()[0]
         menuitem.remove_submenu()
         menuitem.set_submenu(self.svc.create_menu())
+
+    def on_project_add_directory(self, action):
+        path = action.contexts_kw.get('dir_name')
+        self.svc.add_directory(path)
 
 class ProjectFeaturesConfig(FeaturesConfig):
 

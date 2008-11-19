@@ -7,6 +7,10 @@
 <placeholder name="3"/>
 <separator/>
 <placeholder name="4">
+  <menuitem action="project_add_directory" name="project_add_directory"/>
+  <menuitem action="project_add" name="project_add"/>
+  <menuitem action="project_remove" name="project_remove"/>
+  <separator/>
   <menuitem action="project_properties" name="project_properties"/>
 </placeholder>
 <separator/>
