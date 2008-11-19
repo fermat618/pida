@@ -124,7 +124,7 @@ class Bugreport(Service):
         self._view = BugreportView(self)
     
     def show_report(self):
-        self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
 
     def hide_report(self):
         self.boss.cmd('window', 'remove_view', view=self._view)

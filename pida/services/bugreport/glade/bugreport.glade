@@ -8,47 +8,18 @@
                 <property name="visible">True</property>
                 <property name="width_request">300</property>
                 <child>
-                    <widget class="GtkHBox" id="hbox1">
-                        <property name="visible">True</property>
-                        <child>
-                            <widget class="GtkLabel" id="label3">
-                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Report PIDA Bug&lt;/b&gt;</property>
-                                <property name="use_markup">True</property>
-                                <property name="visible">True</property>
-                                <property name="xalign">0.0</property>
-                                <property name="xpad">6</property>
-                                <property name="ypad">6</property>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <widget class="GtkLabel" id="status_label">
-                                <property name="use_markup">True</property>
-                                <property name="visible">True</property>
-                            </widget>
-                            <packing>
-                                <property name="position">1</property>
-                            </packing>
-                        </child>
-                    </widget>
-                    <packing>
-                        <property name="expand">False</property>
-                    </packing>
-                </child>
-                <child>
                     <widget class="GtkTable" id="table1">
                         <property name="border_width">6</property>
                         <property name="column_spacing">6</property>
                         <property name="n_columns">1</property>
                         <property name="n_rows">4</property>
-                        <property name="row_spacing">6</property>
+                        <property name="row_spacing">3</property>
                         <property name="visible">True</property>
                         <child>
                             <widget class="GtkLabel" id="label1">
-                                <property name="label" context="yes" translatable="yes">Title:</property>
-                                <property name="single_line_mode">True</property>
+                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Title:&lt;/b&gt;
+&lt;i&gt;Enter the summary information for your report.&lt;/i&gt;</property>
+                                <property name="use_markup">True</property>
                                 <property name="visible">True</property>
                                 <property name="xalign">0.0</property>
                             </widget>
@@ -71,7 +42,7 @@
                         <child>
                             <widget class="GtkLabel" id="label2">
                                 <property name="label" context="yes" translatable="yes">&lt;b&gt;Description:&lt;/b&gt;
-Enter a description about your bug here.</property>
+&lt;i&gt;Enter a description about your bug here.&lt;/i&gt;</property>
                                 <property name="use_markup">True</property>
                                 <property name="visible">True</property>
                                 <property name="xalign">0.0</property>
@@ -107,9 +78,6 @@ Enter a description about your bug here.</property>
                             </packing>
                         </child>
                     </widget>
-                    <packing>
-                        <property name="position">1</property>
-                    </packing>
                 </child>
                 <child>
                     <widget class="GtkHButtonBox" id="hbuttonbox1">
@@ -137,7 +105,7 @@ Enter a description about your bug here.</property>
                     </widget>
                     <packing>
                         <property name="expand">False</property>
-                        <property name="position">2</property>
+                        <property name="position">1</property>
                     </packing>
                 </child>
                 <child>
@@ -147,13 +115,7 @@ Enter a description about your bug here.</property>
                     </widget>
                     <packing>
                         <property name="expand">False</property>
-                        <property name="position">3</property>
-                    </packing>
-                </child>
-                <child>
-                    <placeholder/>
-                    <packing>
-                        <property name="position">4</property>
+                        <property name="position">2</property>
                     </packing>
                 </child>
             </widget>
