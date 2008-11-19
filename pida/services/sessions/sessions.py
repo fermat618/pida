@@ -133,7 +133,7 @@ class SessionsOptionsConfig(OptionsConfig):
             _('Clear before load'),
             bool,
             True,
-            _('Close all files before loading session'),
+            _('Close all the currently open documents before loading a session.'),
         )
 
         self.create_option(
