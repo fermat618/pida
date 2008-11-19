@@ -383,6 +383,7 @@ class ProjectService(Service):
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
+            dirname = os.path.realpath(dirname)
             if not os.path.exists(dirname):
                 self.log("%s does not exist", dirname)
                 continue
