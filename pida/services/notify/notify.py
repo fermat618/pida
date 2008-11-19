@@ -246,13 +246,13 @@ class NotifyOptionsConfig(OptionsConfig):
     def on_show_notify(self, option):
         self.svc._show_notify = option.value
 
-    def on_change_timeout(self, client, id, entry, option):
-        self.svc._timeout = option.value
+    def on_change_timeout(self, option):
+        self.svc._timeout = option.val
 
-    def on_gravity_change(self, client, id, entry, option):
+    def on_gravity_change(self, option):
         self.svc._popup.set_gravity(option.value)
 
-    def on_pida_window_change(self, client, id, entry, option):
+    def on_pida_window_change(self, option):
         self.svc._popup.on_pida_window = option.value
 
 
