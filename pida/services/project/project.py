@@ -397,6 +397,7 @@ class ProjectService(Service):
 
     def add_directory(self, project_directory):
         # Add a directory to the project list
+        project_directory = os.path.realpath(project_directory)
         project_file = Project.data_dir_path(project_directory, 'project.json')
         if not os.path.exists(project_file):
 
