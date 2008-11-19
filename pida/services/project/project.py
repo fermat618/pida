@@ -137,6 +137,9 @@ class ProjectSetupView(PidaView):
     def _on_script_view__cancel_request(self, script_view):
         self.svc.get_action('project_properties').set_active(False)
 
+    def can_be_closed(self):
+        self.svc.get_action('project_properties').set_active(False)
+
 
 class ProjectEventsConfig(EventsConfig):
 
