@@ -113,6 +113,8 @@ class ProjectSetupView(PidaView):
         self.script_view = PuilderView()
         self.script_view.show()
         self.script_view.set_execute_method(self.test_execute)
+        self.script_view.connect('cancel-request',
+                                 self._on_script_view__cancel_request)
         self.add_main_widget(self.script_view.get_toplevel())
 
     def test_execute(self, target, project):
@@ -131,6 +133,12 @@ class ProjectSetupView(PidaView):
         #        )
         self.script_view.set_build(project.build)
         self.script_view.set_project(project)
+
+    def _on_script_view__cancel_request(self, script_view):
+        self.svc.get_action('project_properties').set_active(False)
+
+    def can_be_closed(self):
+        self.svc.get_action('project_properties').set_active(False)
 
 
 class ProjectEventsConfig(EventsConfig):

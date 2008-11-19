@@ -1151,6 +1151,8 @@ class Mooedit(EditorService):
     def close(self, document):
         """Close a document"""
         # remove the last modified reference as it is not available when closed
+        if not self._documents.has_key(document.unique_id):
+            return True
         if self._last_modified and self._last_modified[0].document == document:
             self._last_modified = None
             self.get_action('mooedit_last_edit').set_sensitive(False)

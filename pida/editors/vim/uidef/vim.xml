@@ -2,8 +2,11 @@
     <menubar>
 
         <menu name="FileMenu" action="FileMenu">
+            <placeholder name="fm1">
+                <menuitem name="save" action="save" />
+            </placeholder>
         </menu>
-    
+
         <menu name="EditMenu" action="EditMenu">
             <placeholder name="undo">
             <menuitem name="undo" action="undo" />
@@ -18,16 +21,16 @@
             <separator />
             <placeholder name="find" />
         </menu>
-        
+
         <menu name="ProjectMenu" action="ProjectMenu">
         </menu>
-        
+
         <menu name="LanguageMenu" action="LanguageMenu">
         </menu>
-        
+
         <menu name="ToolsMenu" action="ToolsMenu">
         </menu>
-        
+
         <menu name="ViewMenu" action="ViewMenu">
             <placeholder name="tools" />
             <separator />

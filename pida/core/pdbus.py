@@ -13,16 +13,18 @@
 import os
 from pango import Font
 from pida.utils.gthreads import gcall
+from pida.core.environment import workspace_name
 
 try:
     import dbus
 
+    from dbus.lowlevel import SignalMessage
     from dbus.mainloop.glib import DBusGMainLoop
     DBusMainloop = DBusGMainLoop(set_as_default=True)
     
     from dbus.service import (Object, INTROSPECTABLE_IFACE, _method_reply_error,
         _method_reply_return)
-    from dbus.service import method
+    from dbus.service import method, signal
     from dbus import Signature
     import _dbus_bindings
 
@@ -30,6 +32,7 @@ try:
     
 except ImportError:
     method = lambda x: x
+    signal = lambda x: x
     INTROSPECTABLE_IFACE = ""
     has_dbus = False
     Object = object
@@ -76,8 +79,37 @@ class DbusOptionsManagerReal(Object):
             path = DBUS_PATH(service.get_name(), self.dbus_path)
             ns = DBUS_NS(service.get_name(),self.dbus_path)
         self.dbus_ns = ns
-        self.exports = {}
+        self.dbus_path = path
         Object.__init__(self, BUS_NAME, path)
+        self.config_match = BUS.add_signal_receiver(
+                                self.on_config_changed, 'CONFIG_CHANGED', 
+                                ns, None, path, sender_keyword='sender')
+
+    def on_config_changed(self, workspace, name, value, sender=None):
+        print "got signal change", name, value, sender, UUID
+        if sender == BUS.get_unique_name():
+            return
+        try:
+            opt = self.get_option(str(name))
+        except KeyError, e:
+            return
+
+        if (opt.workspace and workspace_name() == workspace) or \
+           not opt.workspace:
+
+            self.set_value(name, value, save=False, dbus_notify=False)
+
+    def notify_dbus(self, option):
+        print "send dbus notify"
+        for location in self.locations:
+            message = SignalMessage(self.dbus_path,
+                                    self.dbus_ns,
+                                    'CONFIG_CHANGED')
+            message.append(workspace_name(),
+                           option.name,
+                           option.value,
+                           signature='ssv')
+            location[0].send_message(message)
 
     def object_to_dbus(self, type_):
         try:
@@ -188,6 +220,9 @@ class DbusOptionsManagerReal(Object):
 
 
 class DbusOptionsManagerNoop(object):
+    def notify_dbus(self, *args):
+        pass
+    
     def export_option(self, option):
         pass
 

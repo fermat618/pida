@@ -214,16 +214,20 @@ class PuilderView(GladeSlaveDelegate):
         for c in children:
             self.acts_holder.remove(c)
 
+    def revert(self):
+        self.project.reload()
+        self.set_project(self.project)
+        self.set_build(self.project.build)
+
     def on_save_button__clicked(self, button):
         self.build.dumpf(self.project.project_file)
 
     def on_cancel_button__clicked(self, button):
+        self.revert()
         self.emit('cancel-request')
 
     def on_revert_button__clicked(self, button):
-        self.project.reload()
-        self.set_project(self.project)
-        self.set_build(self.project.build)
+        self.revert()
 
     def on_targets_list__selection_changed(self, ol, target):
         self.target_changed(target)

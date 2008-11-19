@@ -49,7 +49,7 @@ def call_open(pid):
     if file_names:
         pr.call('buffer', 'open_files', file_names)
 
-    pr.call('rpc', 'focus_window')
+    pr.call('appcontroller', 'focus_window')
 
     sys.exit(0)
 
@@ -85,7 +85,7 @@ if environment.workspace_manager() or om.open_workspace_manager():
 elif environment.workspace_set():
     for i in lst:
         pr = PidaRemote(i[0])
-        try:    name = pr.call('rpc', 'get_workspace_name')
+        try:    name = pr.call('appcontroller', 'get_workspace_name')
         except: name = "default"
         if name == environment.workspace_name():
             pr.call('buffer', 'open_files', file_names)
