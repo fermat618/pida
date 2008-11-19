@@ -425,8 +425,8 @@ class ProjectService(Service):
         return project
 
     def remove_current_project(self):
-        self.remove_project(self._project)
-        self.set_current_project(None)
+        if self.remove_project(self._current):
+            self.set_current_project(None)
 
     def remove_project(self, project):
         if self.boss.window.yesno_dlg(
@@ -436,6 +436,7 @@ class ProjectService(Service):
             self._projects.remove(project)
             self.project_list.project_ol.remove(project, select=True)
             self._save_options()
+            return True
 
     def execute_target(self, action, target, project=None):
 
