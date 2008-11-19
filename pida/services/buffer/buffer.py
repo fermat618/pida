@@ -96,9 +96,15 @@ class BufferListView(PidaGladeView):
         self.view_document(item)
 
     def on_buffers_ol__right_click(self, ol, item, event=None):
-        self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
-                          event=event,
-                          file_name=item.filename)
+        menu = self.svc.boss.cmd('contexts', 'get_menu', context='file-menu',
+                                 document=item, file_name=item.filename)
+
+        # Add some stuff to the menu
+        menu.append(gtk.SeparatorMenuItem())
+        menu.append(self.svc.get_action('close_selected').create_menu_item())
+
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
 
     def get_current_buffer_index(self):
         return self.buffers_ol.index(self.svc.get_current())
@@ -214,6 +220,15 @@ class BufferActionsConfig(ActionsConfig):
             '<Shift><Control>b',
         )
 
+        self.create_action(
+            'close_selected',
+            TYPE_NORMAL,
+            _('_Close Document'),
+            _('Close the selected document'),
+            gtk.STOCK_CLOSE,
+            self.on_close_selected,
+        )
+
     def on_open_file(self, action):
         project = self.svc.boss.cmd('project', 'get_current_project')
         if project:
@@ -253,6 +268,10 @@ class BufferActionsConfig(ActionsConfig):
 
     def on_show_buffer(self, action):
         self.svc.cmd('present_view')
+
+    def on_close_selected(self, action):
+        document = action.contexts_kw.get('document')
+        self.svc.close_file(document=document)
 
 class BufferFeaturesConfig(FeaturesConfig):
 
