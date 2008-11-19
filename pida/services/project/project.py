@@ -383,6 +383,9 @@ class ProjectService(Service):
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
+            if not os.path.exists(dirname):
+                self.log("%s does not exist", dirname)
+                continue
             try:
                 self._load_project(dirname)
             except Exception, e: #XXX: specific?!
