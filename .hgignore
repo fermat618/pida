@@ -8,7 +8,7 @@ moo/marshals.c
 moo/marshals.h
 moo/stock-moo.h
 moo/test
-^docs/.build
+^docs/build
 .ropeproject
 .*\.swp
 .*\.pyc
