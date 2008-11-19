@@ -16,6 +16,7 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
+from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
@@ -42,9 +43,7 @@ class BugreportView(PidaGladeView):
     label_text = _('Bug Report')
 
     def on_ok_button__clicked(self, button):
-        self.email, self.password = get_local_config()
-        if self.email is None:
-            self.get_pass()
+        self.get_pass()
         if self.email is None:
             return
         self.progress_bar.set_text('')
@@ -80,11 +79,12 @@ class BugreportView(PidaGladeView):
         return self._pulsing
 
     def get_pass(self):
-        pass_dlg = PasswordDialog()
+        pass_dlg = PasswordDialog(self.svc.opt('launchpad_email_addr'))
         def pass_response(dlg, resp):
             dlg.hide()
             if resp == gtk.RESPONSE_ACCEPT:
                 self.email, self.password = dlg.get_user_details()
+                self.svc.set_opt('launchpad_email_addr', self.email)
             dlg.destroy()
         pass_dlg.connect('response', pass_response)
         pass_dlg.run()
@@ -112,11 +112,25 @@ class BugreportActions(ActionsConfig):
             self.svc.hide_report()
 
 
+class BugreportOptions(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'launchpad_email_addr',
+            _('Launchpad Email address'),
+            str,
+            '',
+            _('Default Launchpad email address'),
+            None,
+        )
+
+
 # Service class
 class Bugreport(Service):
     """Describe your Service Here""" 
 
     actions_config = BugreportActions
+    options_config = BugreportOptions
 
     def pre_start(self):
         self._view = BugreportView(self)
