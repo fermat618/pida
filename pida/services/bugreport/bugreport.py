@@ -43,6 +43,8 @@ class BugreportView(PidaGladeView):
         self.email, self.password = get_local_config()
         if self.email is None:
             self.get_pass()
+        if self.email is None:
+            return
         self.progress_bar.set_text('')
         task = AsyncTask(self.report, self.report_complete)
         task.start()
@@ -62,10 +64,10 @@ class BugreportView(PidaGladeView):
     def report_complete(self, success, data):
         if success:
             self.svc.boss.cmd('notify', 'notify', title=_('Bug Reported'), data=data)
+            self.title_entry.set_text('')
+            self.description_text.get_buffer().set_text('')
         else:
             self.svc.boss.cmd('notify', 'notify', title=_('Bug Report Failed'), data=data)
-        self.title_entry.set_text('')
-        self.description_text.get_buffer().set_text('')
         self.progress_bar.hide()
         self._pulsing = False
 
