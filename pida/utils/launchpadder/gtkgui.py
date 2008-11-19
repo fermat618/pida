@@ -44,15 +44,11 @@ class PasswordDialog(gtk.Dialog):
         self.password.set_visibility(False)
         self.vbox.pack_start(label_widget(self.email, 'Email Address'), expand=False)
         self.vbox.pack_start(label_widget(self.password, 'Password'), expand=False)
-        self.save_details = gtk.CheckButton()
-        self.save_details.set_label('Save across sessions? (probably bad)')
-        self.vbox.pack_start(self.save_details, expand=False)
         self.show_all()
         self.resize(320,240)
 
     def get_user_details(self):
-        return (self.email.get_text(), self.password.get_text(),
-                self.save_details.get_active())
+        return self.email.get_text(), self.password.get_text()
 
 
 

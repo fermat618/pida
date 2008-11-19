@@ -34,7 +34,7 @@ _ = locale.gettext
 class BugreportView(PidaGladeView):
 
     key = 'bugreport.form'
-    
+
     gladefile = 'bugreport'
     locale = locale
 
@@ -84,9 +84,7 @@ class BugreportView(PidaGladeView):
         def pass_response(dlg, resp):
             dlg.hide()
             if resp == gtk.RESPONSE_ACCEPT:
-                self.email, self.password, save = dlg.get_user_details()
-                if save:
-                    save_local_config(self.email, self.password)
+                self.email, self.password = dlg.get_user_details()
             dlg.destroy()
         pass_dlg.connect('response', pass_response)
         pass_dlg.run()
