@@ -130,7 +130,7 @@ class SessionsOptionsConfig(OptionsConfig):
     def create_options(self):
         self.create_option(
             'close_files_on_load',
-            _('Clear befor load'),
+            _('Clear before load'),
             bool,
             True,
             _('Close all files before loading session'),
