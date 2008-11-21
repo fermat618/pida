@@ -280,6 +280,12 @@ class CommanderCommandsConfig(CommandsConfig):
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
+    def subscribe_all(self):
+        self.publish('matches')
+        for match in RE_MATCHES:
+            self.subscribe('matches',
+                (match, self.svc.default_match))
+
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
@@ -673,35 +679,36 @@ class Commander(Service):
                term._term.window.is_visible():
                 term.chdir(document.directory)
 
-    def register_matcher(self, match, callback):
-        if self._matches.has_key(match):
-            self._matches[match].append(callback)
-        else:
-            self._matches[match] = [callback]
-    
-    def unregister_matcher(self, match, callback):
-        if not self._matches.has_key(match):
-            return
-        try:
-            self._matches[match].remove(callback)
-        except ValueError:
-            pass
-    
+#     def register_matcher(self, match, callback):
+#         self.features['matcher'].add((match, callback))
+#         #if self._matches.has_key(match):
+#         #    self._matches[match].append(callback)
+#         #else:
+#         #    self._matches[match] = [callback]
+#     
+#     def unregister_matcher(self, match, callback):
+#         if not self._matches.has_key(match):
+#             return
+#         try:
+#             self._matches[match].remove(callback)
+#         except ValueError:
+#             pass
+#     
     def list_matches(self):
         # we use this so the default matchers are always the latest
         # added to a terminal. this was the more specific ones are matching 
         # first
-        for match in self._matches:
-            for call in self._matches[match]:
-                yield (match, call)
-        for match in RE_MATCHES:
-            yield (match, self.default_match)
+        rv = []
+        for cmatch, ccall in self.features['matches']:
+            rv.append(cmatch)
+        return rv
 
     def get_match_callbacks(self, match):
-        if match in RE_MATCHES:
-            return [self.default_match]
-        else:
-            return self._matches.get(match, [])
+        rv = []
+        for cmatch, ccall in self.features['matches']:
+            if match == ccall:
+                return rv.append(ccall)
+        return rv
 
     def default_match(self, term, event, match):
         match = os.path.expanduser(match)

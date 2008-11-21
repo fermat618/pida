@@ -53,6 +53,16 @@ _ = locale.gettext
 
 from ropebrowser import ModuleParser
 
+RE_MATCHES = (
+    # traceback match
+    (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
+    # internal
+     re.compile(r'\s*File\s*\"(?P<file>[^"]+)\",\s*line\s*(?P<line>\d+).*'))
+    ,
+    #FIXME: how to handle localisation of this ???
+)
+
+
 class PythonEventsConfig(EventsConfig):
 
     def subscribe_all_foreign(self):
@@ -69,6 +79,9 @@ class PythonFeaturesConfig(LanguageServiceFeaturesConfig):
         LanguageServiceFeaturesConfig.subscribe_all_foreign(self)
         self.subscribe_foreign('filemanager', 'file_hidden_check',
             self.python)
+        for match in RE_MATCHES:
+            self.subscribe_foreign('commander', 'matches',
+            (match[0], self.svc.match_call))
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_PROJECT, 
         _("Hide Python Compiled Files"))
@@ -354,15 +367,6 @@ class PythonDefiner(Definer):
         return rv
 
 
-RE_MATCHES = (
-    # traceback match
-    (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
-    # internal
-     re.compile(r'\s*File\s*\"(?P<file>[^"]+)\",\s*line\s*(?P<line>\d+).*'))
-    ,
-    #FIXME: how to handle localisation of this ???
-)
-
 class Python(LanguageService):
 
     language_name = 'Python'
@@ -382,15 +386,15 @@ class Python(LanguageService):
         self.execute_action = self.get_action('execute_python')
         self.execute_action.set_sensitive(False)
 
-    def start(self):
-        for match in RE_MATCHES:
-            self.boss.get_service('commander').register_matcher(
-                match[0], self.match_call)
-
-    def stop(self):
-        for match in RE_MATCHES:
-            self.boss.get_service('commander').unregister_matcher(
-                match[0], self.match_call)
+#     def start(self):
+#         for match in RE_MATCHES:
+#             self.boss.get_service('commander').register_matcher(
+#                 match[0], self.match_call)
+#
+#     def stop(self):
+#         for match in RE_MATCHES:
+#             self.boss.get_service('commander').unregister_matcher(
+#                 match[0], self.match_call)
 
     def match_call(self, term, event, match):
         for pattern in RE_MATCHES:

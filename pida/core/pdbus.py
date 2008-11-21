@@ -84,6 +84,10 @@ class DbusOptionsManagerReal(Object):
         self.config_match = BUS.add_signal_receiver(
                                 self.on_config_changed, 'CONFIG_CHANGED', 
                                 ns, None, path, sender_keyword='sender')
+        self.config_extra_match = BUS.add_signal_receiver(
+                                self.on_config_changed_extra, 
+                                'CONFIG_EXTRA_CHANGED', 
+                                ns, None, path, sender_keyword='sender')
 
     def unload(self):
         self.config_match.remove()
@@ -96,27 +100,50 @@ class DbusOptionsManagerReal(Object):
             opt = self.get_option(str(name))
         except KeyError, e:
             return
-
+        from .options import ExtraOptionItem
         if (opt.workspace and workspace_name() == workspace) or \
            not opt.workspace:
 
             self.set_value(name, value, save=False, dbus_notify=False)
 
+    def on_config_changed_extra(self, workspace, name, value, sender=None):
+        if sender == BUS.get_unique_name():
+            return
+        try:
+            opt = self.get_option(str(name))
+        except KeyError, e:
+            return
+        if (opt.workspace and workspace_name() == workspace) or \
+           not opt.workspace:
+            if opt.no_submit:
+                opt.dirty = True
+            else:
+                self.set_value(name, value, save=False, dbus_notify=False)
+
     def notify_dbus(self, option):
+        from .options import OptionItem
         for location in self.locations:
+            value = option.value
+            if isinstance(option, OptionItem):
+                signal = 'CONFIG_CHANGED'
+            else:
+                signal = 'CONFIG_EXTRA_CHANGED'
+                if option.no_submit:
+                    value = None
+
             message = SignalMessage(self.dbus_path,
                                     self.dbus_ns,
-                                    'CONFIG_CHANGED')
+                                    signal)
             signature = 'ssv'
-            if isinstance(option.value, (tuple, list)) and \
-               not len(option.value):
+            if isinstance(value, (tuple, list)) and \
+               not len(value):
                # empty lists can't be detected, so we assume 
                # list of strings
                signature = "ssas"
 
             message.append(workspace_name(),
                            option.name,
-                           option.value,
+                           value,
                            signature=signature)
             location[0].send_message(message)
 
@@ -234,7 +261,7 @@ class DbusOptionsManagerNoop(object):
 
     def notify_dbus(self, *args):
         pass
-    
+
     def export_option(self, option):
         pass
 
