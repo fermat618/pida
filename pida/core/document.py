@@ -82,7 +82,10 @@ class Document(object):
 
     def __init__(self, boss, filename=None, project=None):
         self.boss = boss
-        self.filename = os.path.realpath(filename)
+        if filename is not None:
+            self.filename = os.path.realpath(filename)
+        else:
+            self.filename = None
         self.project = project
         self.editor = None
         self._list = []
