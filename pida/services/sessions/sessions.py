@@ -178,7 +178,7 @@ class SessionsActionsConfig(ActionsConfig):
             _('Save session as'),
             _('Save session as'),
             '',
-            self.on_session_save,
+            self.on_session_save_as,
             ''
         )
         self.create_action(
