@@ -106,7 +106,8 @@ class DocumentTest(TestCase):
 
     def test_repr_known(self):
         doc = document(filename='test')
-        self.assertEqual(repr(doc), "<Document 'test' (%s)>" %id(doc))
+        self.assertEqual(repr(doc), "<Document '%s' (%s)>" %
+                                    (os.path.abspath('test'), id(doc)))
         
     def test_unicode_new(self):
         from pida.core import document as document_module
@@ -115,7 +116,7 @@ class DocumentTest(TestCase):
     
     def test_unicode_knows(self):
         doc = document(filename='test')
-        self.assertEqual(unicode(doc), doc.filename)
+        self.assertEqual(unicode(doc), doc.basename)
         
     def test_content_nonlife(self):
         import tempfile
