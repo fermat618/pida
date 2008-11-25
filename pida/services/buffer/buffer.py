@@ -64,8 +64,8 @@ class BufferListView(PidaGladeView):
                 ('creation_time', _('Time Opened')),
                 ('filename', _('File path')),
                 ('basename', _('File name')),
-                ('mimetype', _('Mime Type')),
                 ('doctype', _('Document Type')),
+                ('mimetype', _('Mime Type')),
                 ('length', _('File Length')),
                 ('modified_time', _('Last Modified')),
                 #('Project', _('Project_name'))

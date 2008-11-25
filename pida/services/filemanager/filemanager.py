@@ -180,9 +180,9 @@ class FilemanagerView(PidaView):
         self._sort_combo = AttrSortCombo(self.file_list,
             [
                 ('is_dir_sort', _('Directories First')),
-                ('lower_name', _('File Name')),
-                ('name', _('Case Sensitive File Name')),
                 ('path', _('File Path')),
+                ('lower_name', _('File Name')),
+                ('name', _('File Name (Case Sensitive)')),
                 ('extension_sort', _('Extension')),
                 ('state', _('Version Control Status')),
             ],
