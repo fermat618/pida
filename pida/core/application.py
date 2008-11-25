@@ -179,6 +179,9 @@ def main():
         #this mainloop will exist when the workspacewindow is closes
         gtk.main()
 
+    if opts.version:
+        print _('PIDA, version %s') % PIDA_VERSION
+        exit(0)
 
     if (om.open_workspace_manager() and not environment.workspace_set()) or \
         environment.workspace_manager():
@@ -188,9 +191,7 @@ def main():
             warnings.warn_explicit('python DBus bindings not available. '
                         'Not all functions available.', Warning, 'pida', '')
         
-    if opts.version:
-        print _('PIDA, version %s') % PIDA_VERSION
-    elif opts.profile_path:
+    if opts.profile_path:
         print "---- Running in profile mode ----"
         import hotshot, hotshot.stats, test.pystone
         prof = hotshot.Profile(opts.profile_path)
