@@ -13,10 +13,12 @@ Contents:
    user/index
    developer/index
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. Saved Until these features may, or may not, work
+.. Indices and tables
+.. ==================
+
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
 
