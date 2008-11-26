@@ -13,8 +13,6 @@ Contents:
    user/index
    developer/index
 
-
-.. Saved Until these features may, or may not, work
 .. Indices and tables
 .. ==================
 
