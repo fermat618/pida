@@ -189,7 +189,7 @@ class Emacs(EditorService):
 
         listen_port = self._cb.bind()
         instance_id = 'pida-' + str(os.getpid())
-        self._client = EmacsClient(instance_id)
+        self._client = EmacsClient(instance_id, self)
 
         time.sleep(1)
         self._view = EmacsView(
@@ -281,7 +281,7 @@ class Emacs(EditorService):
 
     def goto_line(self, line):
         """Goto a line"""
-        self._client.goto_line(line + 1)
+        self._client.goto_line(line)
         self.grab_focus()
 
     def cut(self):

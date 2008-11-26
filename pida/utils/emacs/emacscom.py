@@ -7,7 +7,7 @@
     way, and EmacsServer the other way. On occurence of a message, EmacsServer
     extracts a request name and arguments, and then tries to invoke the matching
     method on a EmacsCallback object (see editor/emacs/emacs.py).
-
+  
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
@@ -31,13 +31,14 @@ class EmacsClient(object):
     is the only one having a running server.
     """
     
-    def __init__(self, instance_id):
+    def __init__(self, instance_id, svc):
         """Constructor."""
         self._log = logging.getLogger('emacs')
         self._active = True
         self._instance_id = instance_id
         self._socket_path = _get_socket_path(self._instance_id)
         self._pending_commands = []
+        self._svc = svc
 
     def activate(self):
         """Allow communication.
@@ -63,10 +64,10 @@ class EmacsClient(object):
         self._send('(switch-to-buffer (get-file-buffer "%s"))' % filename)
         
     def save_buffer(self):
-        self._send('(save-buffer)')
+        self._send('(pida-save-buffer "%s")' % self._svc.current_document.filename)
 
     def save_buffer_as(self, filename):
-        self._send('(write-file "%s"))' % filename)
+        self._send('(pida-save-buffer-as "%s" "%s"))' % (self._svc.current_document.filename, filename))
 
     def close_buffer(self, buffer):
         self._send('(kill-buffer (get-file-buffer "%s"))' % buffer)
@@ -75,16 +76,16 @@ class EmacsClient(object):
         self._send('(pida-frame-setup nil)')
 
     def cut(self):
-        self._send('(kill-region (region-beginning) (region-end))')
+        self._send('(pida-cut "%s")' % self._svc.current_document.filename)
 
     def copy(self):
-        self._send('(kill-ring-save (region-beginning) (region-end))')
+        self._send('(pida-copy "%s")' % self._svc.current_document.filename)
 
     def paste(self):
-        self._send('(yank)')
+        self._send('(pida-paste "%s")' % self._svc.current_document.filename)
 
     def goto_line(self, line):
-        self._send('(goto-line %s)' % line)
+        self._send('(pida-goto-line "%s" %s)' % (self._svc.current_document.filename, line))
 
     def revert_buffer(self):
         self._send('(revert-buffer)')

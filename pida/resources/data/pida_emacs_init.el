@@ -155,4 +155,48 @@
 (defun pida-kill-emacs ()
   (pida-disconnect))
 
+;; pida-goto-line
+;;
+;; called by pida:  goto-line 
+(defun pida-goto-line (bufn line)
+  (set-buffer (get-file-buffer bufn))
+  (goto-line line))
+
+
+;; pida-save-buffer
+;; 
+;; called by pida to save buffer
+(defun pida-save-buffer (buffn)
+  (set-buffer (get-file-buffer buffn))
+  (save-buffer))
+
+;; pida-save-buffer-as
+;; 
+;; called by pida to save buffer as new file
+(defun pida-save-buffer (buffn filen)
+  (set-buffer (get-file-buffer buffn))
+  (write-file filen))
+
+;; pida-cut
+;; 
+;; called by pida to cut region
+(defun pida-cut (buffn)
+  (set-buffer (get-file-buffer buffn))
+  (kill-region (region-beginning) (region-end)))
+
+;; pida-copy
+;; 
+;; called by pida to copy region 
+(defun pida-copy (buffn)
+  (set-buffer (get-file-buffer buffn))
+  (kill-ring-save (region-beginning) (region-end)))
+
+;; pida-save-buffer-as
+;; 
+;; called by pida to paste 
+(defun pida-paste (buffn)
+  (set-buffer (get-file-buffer buffn))
+  (yank))
+
+
 (setq inhibit-splash-screen 1)
