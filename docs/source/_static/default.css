@@ -64,7 +64,10 @@ div.footer a {
 
 div.related {
     /* background-color: #133f52; */
-    color: #000;
+	  background: url('nav.jpg') top repeat-x #4F9EC9;
+	  border: 2px solid #388CBA;
+	  border-bottom: 2px solid #4F9EC9;
+    color: #fff;
     width: 100%;
     line-height: 30px;
     font-size: 90%;
@@ -90,7 +93,7 @@ div.related li.right {
 }
 
 div.related a {
-    color: black;
+    color: #fff;
 }
 
 /* ::: TOC :::: */
