@@ -63,7 +63,8 @@ These are required to build the external moo_stub extension, and are usually
 available in your distribution as pygtk-dev or pygtk-devel etc. packages.
 
 
-[[installation]]
+.. [[installation]]
+
 Installation
 ------------
 
@@ -71,25 +72,23 @@ PIDA is still not considered finalised by its authors. The most recent version
 lies in SVN repository, but milestones are available though to provide a
 snapshot of the development to the less adventurers.
 
-[[installation_compilation]]
-=== Compilation from sources
+.. [[installation_compilation]]
+
+
+Compilation from sources
 
 The source code comes with a standard Python installation method.
 
 .Build
 
 The build step is necessary even when running from source so as to ensure that
-the extensions are built.
+the extensions are built::
 
--------------------------------------------
-python setup.py build
--------------------------------------------
+  python setup.py build
 
-or to be more precise:
+or to be more precise::
 
--------------------------------------------
-python setup.py build_ext -i
--------------------------------------------
+  python setup.py build_ext -i
 
 
 .. note::
@@ -132,14 +131,16 @@ To run PIDA directly from the source, run::
 
 Distribution packages
 ~~~~~~~~~~~~~~~~~~~~~
+
 Though there is still a long way before PIDA can be considered mature, it is
 already packaged by several Linux and BSD(FIXME?) distributions. Use the
 guidelines of your distribution to install or remove PIDA from your system.
 
 .Known distributions that provide PIDA
-`-------------`----------------------`-----------
+
+============== ===================== ============
 Distribution   Distribution version  PIDA version
--------------------------------------------------
+============== ===================== ============
 Debian         Etch (_stable_)       0.3.1
 Debian         Lenny (_testing_)     0.5.1
 Debian         Sid (_unstable_)      0.5.1
@@ -151,21 +152,23 @@ Ubuntu         Edgy Eft              0.3.1
 Ubuntu         Feisty Fawn           0.3.1
 Ubuntu         Gutsy Gibbon          0.4.4
 Ubuntu         Hardy Heron           0.5.1
--------------------------------------------------
+============== ===================== ============
 
 IMPORTANT: There are chances that the version packaged is a bit outdated. Please
 consider trying to install the most recent version before reporting a bug. You
 can either compile pida from sources or try to use a package prepared for a more
 recent version of your distribution.
 
-[[installation_windows]]
+.. [[installation_windows]]
+
 MS Windows
 ~~~~~~~~~~
 FIXME.
 
 Some pointers on how to install PIDA dependencies can be found on http://code.google.com/p/pida/wiki/WindowsInstallation[]
 
-[[installation_mac]]
+.. [[installation_mac]]
+
 Mac OS X
 ~~~~~~~~
 FIXME.
