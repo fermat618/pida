@@ -94,7 +94,7 @@ html_style = 'default.css'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '../../pida/resources/pixmaps/pida-icon.png'
+# html_logo = '_static/pida-logo-tiny.png'
 
 
 # The name of an image file (within the static path) to use as favicon of the
