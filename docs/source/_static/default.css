@@ -16,7 +16,7 @@ body {
 
 div.document {
     /* background-color: #1c4e63; */
-    background: transparent url('pida-logo-tiny.png') top left no-repeat;
+    /* background: transparent url('pida-logo-tiny.png') top left no-repeat; */
 }
 
 div.documentwrapper {
@@ -146,8 +146,9 @@ div.sphinxsidebar ul ul {
 }
 
 div.sphinxsidebar a {
-    /* color: #98dbcc; */
-    color: #000;
+
+    color: #1c4e63;
+    /* color: #000; */
 }
 
 div.sphinxsidebar form {
@@ -155,7 +156,7 @@ div.sphinxsidebar form {
 }
 
 div.sphinxsidebar input {
-    border: 1px solid #98dbcc;
+    /* border: 1px solid #98dbcc; */
     font-family: sans-serif;
     font-size: 1em;
 }
