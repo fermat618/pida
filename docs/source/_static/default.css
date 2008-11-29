@@ -25,7 +25,7 @@ div.documentwrapper {
 }
 
 div.bodywrapper {
-    margin: 0 0 0 230px;
+    margin: 0 0 0 200px;
 }
 
 div.body {
@@ -40,9 +40,13 @@ div.sphinxsidebarwrapper {
 
 div.sphinxsidebar {
     float: left;
-    width: 230px;
-    margin-left: -100%;
+    width: 180px;
+    margin-left: -99.4%;
+    margin-right: 10px;
     font-size: 90%;
+    background: #333333;
+    border-bottom: 10px solid #000000;
+
 }
 
 div.clearer {
@@ -68,9 +72,10 @@ div.related {
 	  border: 2px solid #388CBA;
 	  border-bottom: 2px solid #4F9EC9;
     color: #fff;
-    width: 100%;
+    width: 97%;
     line-height: 30px;
     font-size: 90%;
+    margin: 10px 10px 10px 10px;
 }
 
 div.related h3 {
