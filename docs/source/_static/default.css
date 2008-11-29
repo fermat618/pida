@@ -35,7 +35,7 @@ div.body {
 }
 
 div.sphinxsidebarwrapper {
-    padding: 10px 5px 0 10px;
+    /* padding: 10px 5px 0 10px; */
 }
 
 div.sphinxsidebar {
@@ -103,29 +103,33 @@ div.related a {
 
 /* ::: TOC :::: */
 div.sphinxsidebar h3 {
-    font-family: 'Trebuchet MS', sans-serif;
-    color: #000;
-    font-size: 1.4em;
+    font:120% Arial;
+    color: #999999;
+    background-color: #000000;
     font-weight: normal;
-    margin: 0;
-    padding: 0;
+    margin: 10px 0 10px 0;
+    border: none;
+    text-indent: 10px;
 }
 
 div.sphinxsidebar h3 a {
-    color: #000;
+    background-color: #000000;
+    color: #888888;
 }
 
 div.sphinxsidebar h4 {
     font-family: 'Trebuchet MS', sans-serif;
-    color: #000;
+    color: #888888;
+    background-color: #000000;
     font-size: 1.3em;
     font-weight: normal;
-    margin: 5px 0 0 0;
+    margin: 0 0 0 0;
     padding: 0;
+    text-indent: 10px;
 }
 
 div.sphinxsidebar p {
-    color: #000;
+    color: #888888;
 }
 
 div.sphinxsidebar p.topless {
@@ -136,7 +140,7 @@ div.sphinxsidebar ul {
     margin: 10px;
     padding: 0;
     list-style: none;
-    color: #000;
+    color: #888888;
 }
 
 div.sphinxsidebar ul ul,
@@ -151,13 +155,22 @@ div.sphinxsidebar ul ul {
 }
 
 div.sphinxsidebar a {
-
-    color: #1c4e63;
+    display: block;
+    color: #ccc;
+    text-decoration: none;
     /* color: #000; */
+}
+
+div.sphinxsidebar a:hover,
+div.sphinxsidebar a.selected {
+    color: #98D158;
+    background-color: #444444;
 }
 
 div.sphinxsidebar form {
     margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
 }
 
 div.sphinxsidebar input {
