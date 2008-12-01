@@ -31,8 +31,9 @@ try:
     has_dbus = True
     
 except ImportError:
-    method = lambda x: x
-    signal = lambda x: x
+    def dummy(*k, **kw):
+        return lambda x: x
+    method = signal = dummy
     INTROSPECTABLE_IFACE = ""
     has_dbus = False
     Object = object
@@ -290,7 +291,9 @@ else:
 
     def nowrapper(*args, **kwargs):
         def wrapper(*args, **kwargs):
-            pass
+            def noop(func, *k, **kw):
+                return func
+            return noop
         return wrapper
     
     UUID = None
