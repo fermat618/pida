@@ -34,3 +34,6 @@ class EnumerationTest(TestCase):
         self.assertRaises(ValueError, setattr, test, 'A', 5)
         self.assertRaises(ValueError, setattr, test, 'X', 9)
 
+    def test_missing(self):
+        test = Enumeration('test', ('A', 'B', 'C'))
+        self.assertRaises(AttributeError, getattr, test, 'D')

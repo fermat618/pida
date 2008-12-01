@@ -4,55 +4,46 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-import types, exceptions
-
-class EnumException(exceptions.Exception):
-    pass
-
 class Enumeration(object):
     """
     Enumeration class for constants
     """
-    def __init__(self, name, enumList, valuesAreUnique=True):
+    def __init__(self, name, enumList):
         self.__doc__ = name
         lookup = { }
-        reverseLookup = { }
         i = 0
-        uniqueNames = {}
-        uniqueValues = {}
         for x in enumList:
-            if type(x) == types.TupleType:
+            if type(x) is tuple:
                 x, i = x
-            if type(x) != types.StringType:
-                raise EnumException, "enum name is not a string: " + x
-            if type(i) != types.IntType:
-                raise EnumException, "enum value is not an integer: " + i
-            if uniqueNames.has_key(x):
-                raise EnumException, "enum name is not unique: " + x
-            if valuesAreUnique and uniqueValues.has_key(i):
-                raise EnumException, "enum value is not unique for " + x
-            uniqueNames[x] = 1
-            uniqueValues[i] = 1
+            if type(x) is not str:
+                raise TypeError, "enum name is not a string: " + x
+            if type(i) is not int:
+                raise TypeError, "enum value is not an integer: " + i
+            if x in lookup:
+                raise ValueError, "enum name is not unique: " + x
+            if i in lookup:
+                raise ValueError, "enum value is not unique for " + x
             lookup[x] = i
-            reverseLookup[i] = x
+            lookup[i] = x
             i = i + 1
         self.lookup = lookup
-        self.reverseLookup = reverseLookup
 
         self._fixed = True
 
     def __getattr__(self, attr):
-        try: return self.lookup[attr]
-        except KeyError: raise AttributeError
+        try:
+            return self.lookup[attr]
+        except KeyError:
+            raise AttributeError, attr
 
     def __setattr__(self, key, value):
         if not hasattr(self, '_fixed'):
-            super(Enumeration, self).__setattr__(key, value)
+            object.__setattr__(self, key, value)
         else:
             raise ValueError, "Can't change a Enumeration object"
 
     def whatis(self, value):
-        return self.reverseLookup[value]
+        return self.lookup[value]
 
     def __repr__(self):
         return '<Enumeration %s>' %self.__doc__
