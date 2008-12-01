@@ -31,8 +31,8 @@ class EnumerationTest(TestCase):
     def test_change(self):
         test = Enumeration('test', ('A', 'B', 'C'))
         self.assertEqual(test.A, 0)
-        self.assertRaises(ValueError, setattr, test, 'A', 5)
-        self.assertRaises(ValueError, setattr, test, 'X', 9)
+        self.assertRaises(AttributeError, setattr, test, 'A', 5)
+        self.assertRaises(AttributeError, setattr, test, 'X', 9)
 
     def test_missing(self):
         test = Enumeration('test', ('A', 'B', 'C'))

@@ -8,9 +8,11 @@ class Enumeration(object):
     """
     Enumeration class for constants
     """
+    __slots__ = '_name', '_lookup'
+
     def __init__(self, name, enumList):
-        self.__doc__ = name
-        lookup = { }
+        self._name = name
+        lookup = {}
         i = 0
         for x in enumList:
             if type(x) is tuple:
@@ -26,24 +28,16 @@ class Enumeration(object):
             lookup[x] = i
             lookup[i] = x
             i = i + 1
-        self.lookup = lookup
-
-        self._fixed = True
+        self._lookup = lookup
 
     def __getattr__(self, attr):
         try:
-            return self.lookup[attr]
+            return self._lookup[attr]
         except KeyError:
             raise AttributeError, attr
 
-    def __setattr__(self, key, value):
-        if not hasattr(self, '_fixed'):
-            object.__setattr__(self, key, value)
-        else:
-            raise ValueError, "Can't change a Enumeration object"
-
     def whatis(self, value):
-        return self.lookup[value]
+        return self._lookup[value]
 
     def __repr__(self):
-        return '<Enumeration %s>' %self.__doc__
+        return '<Enumeration %s>' %self._name
