@@ -37,6 +37,7 @@ try:
     import gtk
     from gtk import gdk
     gdk.threads_init()
+    gdk.threads_enter() # need to ensure threadsavety before any ui drawing
     if gtk.pygtk_version < (2, 8):
         die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
                 % {'major':gtk.pygtk_version[:2][0], 'minor':gtk.pygtk_version[:2][1]})
