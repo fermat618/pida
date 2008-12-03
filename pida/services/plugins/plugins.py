@@ -520,8 +520,8 @@ class Plugins(Service):
             plugin_item = self.read_plugin_informations(
                     servicefile=service_file)
             installed_list.append(plugin_item)
-
-        self._view.start_pulse(_('Download available plugins'))
+        #XXX: DAMMIT this is in a worker thread ?!?!
+        gcall(self._view.start_pulse, _('Download available plugins'))
         try:
             proxy = xmlrpclib.ServerProxy(self.rpc_url,
                                           transport=create_transport())
@@ -542,7 +542,8 @@ class Plugins(Service):
     def download(self, item):
         if not item.url or item.url == '':
             return
-        self._view.start_pulse(_('Download %s') % item.name)
+        #XXX: DAMMIT this is in a worker thread ?!?!
+        gcall(self._view.start_pulse, _('Download %s') % item.name)
         def download_complete(url, content):
             self._view.stop_pulse()
             if content:
