@@ -20,10 +20,10 @@ Absolute Requirements
 ~~~~~~~~~~~~~~~~~~~~~
 
 **Python**
-  Python is the programming language PIDA is written in.  PIDA requires any version of Python greater than or equal to 2.4.  Python is available from the `Python Web Site`_ or more likely packaged for your distribution.  Most desktop Linuxes come with Python preinstalled.
+  Python is the programming language PIDA is written in.  At the time of this writing, PIDA works on version 2.5.  Python is available from the `Python Web Site`_.  Most Linux Distributions come with Python pre-installed.
 
 **PyGTK**
-  PyGTK are the Python bindings for the GTK toolkit.  Note that you will also need to have GTK installed for them to work.  These are available from the `PyGTK Web Site`_ and the `GTK Web Site`_ or more likely packaged by your Linux distribution.
+  PyGTK includes the Python bindings for the GTK toolkit.  Note that you will also need to have GTK installed for them to work.  These are available from the `PyGTK Web Site`_ and the `GTK Web Site`_.  They have likely been packaged for your Linux distribution.
 
 **Kiwi**
   Kiwi is a helper library for PyGTK. It was decided a while ago that there should not be a duplication in effort in creating common widgets and patterns withing PyGTK programs.  For this reason common things exist in Kiwi, and PIDA developers contribute fixes back upstream to Kiwi. Kiwi is available in the contrib directory of the source code. It is recommended to use this version if at all possible.  It contains no changes from the original, but it is ensured to have all the latest fixes.
@@ -50,6 +50,10 @@ PIDA is still not considered final by its authors.  The most recent version is i
 In order to obtain the latest developer sources using Mercurial_ run the following using the terminal::
 
   hg clone http://www.bitbucket.org/aafshar/pida-main/
+
+In Ubuntu, you should install the additional requirements by running the following::
+
+  sudo apt-get install gvim python-gnome2 python-gnome2-extras python-gtk2 python-vte python-kiwi python-setuptools python-glade2 librsvg2-common
 
 Compilation from sources
 ~~~~~~~~~~~~~~~~~~~~~~~~
