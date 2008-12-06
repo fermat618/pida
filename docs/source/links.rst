@@ -5,19 +5,30 @@
 .. B
 .. C
 .. D
+
+.. _Downloads: http://pida.co.uk/downloads
+
 .. E
 .. F
 .. G
+
+.. _`GTK Web Site`: 
+
 .. H
 .. I
 .. J
 .. K
 .. L
 .. M
+
+.. _Mercurial: http://www.selenic.com/mercurial/
+
 .. N
 .. O
 .. P
 
+.. _`PyGTK Web Site`: 
+.. _`Python Web Site`: http://python.org/
 .. _PIDA: http://pida.co.uk/
 
 .. Q
