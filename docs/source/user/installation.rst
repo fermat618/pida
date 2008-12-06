@@ -14,7 +14,7 @@ This document describes:
 Requirements
 ------------
 
-Because of the nature of PIDA there are a number of tools that may optionally be used; they are not absolutely required. The list of requirements is therefore split into absolute and relative requirements.
+Because of the nature of PIDA there are a number of tools that may optionally be used; they are not absolutely required.  The list of requirements is therefore split into absolute and relative requirements.
 
 Absolute Requirements
 ~~~~~~~~~~~~~~~~~~~~~
@@ -45,7 +45,7 @@ Installation
 
 The latest stable release is available on our Downloads_ page.
 
-PIDA is still not considered final by its authors.  The most recent version is in our Mercurial repository; milestones are available though that provide a snapshot of the development to the less adventurous.
+PIDA is still not considered final by its authors.  The most recent version is in our Mercurial repository.  Milestones are available though that provide a snapshot of  development for the less adventurous.
 
 In order to obtain the latest developer sources using Mercurial_ run the following using the terminal::
 
@@ -54,7 +54,7 @@ In order to obtain the latest developer sources using Mercurial_ run the followi
 Compilation from sources
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note:: The source code comes with a standard Python installation method.
+PIDA utilizes the standard Python installation method.
 
 Build
 +++++
@@ -66,7 +66,6 @@ The build step is necessary even when running from source so as to ensure that t
 or to be more precise::
 
   python setup.py build_ext -i
-
 
 .. note:: 
 
@@ -90,11 +89,11 @@ To install PIDA, run::
 Run from source
 +++++++++++++++
 
-First copy the moo_stub.so (that was built in the build stage) from the build/ directory somewhere into PYTHONPATH or the working directory.  Then execute:
+First copy the moo_stub.so (that was built in the build stage) from the build/ directory to a directory in your PYTHONPATH or the working directory.
 
 .. note::
 
-    Running from source is generally reserved for developers of PIDA, or those people who really know what they are doing. It is very useful to be able to make a change and test it immediately. It is not recommended to use this as a general running method.
+    Running from source is generally reserved for developers of PIDA, or those people who really know what they are doing. It is very useful to be able to make a change and test it immediately. It is not recommended to use this as a general execution method.
 
 To run PIDA directly from the source, run::
 
@@ -109,23 +108,23 @@ Distribution packages
 
 Though there is still a long way before PIDA can be considered mature, it is already packaged by several Linux and BSD(FIXME?) distributions.  Use the guidelines of your distribution to install or remove PIDA from your system.
 
-
 ============== ===================== ============
 Known Distributions that provide PIDA
 -------------------------------------------------
 Distribution   Distribution version  PIDA version
 ============== ===================== ============
-Debian         Etch (_stable_)       0.3.1
-Debian         Lenny (_testing_)     0.5.1
-Debian         Sid (_unstable_)      0.5.1
+Debian         Etch (stable)         0.3.1
+Debian         Lenny (testing)       0.5.1
+Debian         Sid (unstable)        0.5.1
 Gentoo                               0.5.1
-Fedora         8                     0.5.1
+Fedora         10                    0.5.1
 Ubuntu         Breezy Badger         0.2.2
 Ubuntu         Dapper Drake          0.2.2
 Ubuntu         Edgy Eft              0.3.1
 Ubuntu         Feisty Fawn           0.3.1
 Ubuntu         Gutsy Gibbon          0.4.4
 Ubuntu         Hardy Heron           0.5.1
+Ubuntu         Intrepid Ibex         0.5.1-5
 ============== ===================== ============
 
 IMPORTANT: There are chances that the version packaged is a bit outdated.  Please consider trying to install the most recent version before reporting a bug.  You can either compile pida from sources or try to use a package prepared for a more recent version of your distribution.
