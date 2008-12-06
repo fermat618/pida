@@ -27,6 +27,9 @@
 .. U
 .. V
 .. W
+
+.. _Wiki: http://code.google.com/p/pida/wiki/
+
 .. X
 .. Y
 .. Z

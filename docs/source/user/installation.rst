@@ -165,7 +165,7 @@ MS Windows
 ~~~~~~~~~~
 FIXME.
 
-Some pointers on how to install PIDA dependencies can be found on http://code.google.com/p/pida/wiki/WindowsInstallation[]
+Some pointers on how to install PIDA dependencies can be found on the Wiki_
 
 .. [[installation_mac]]
 

@@ -4,14 +4,14 @@ Getting Started
 ===============
 
 
-.. [[getting_started_wizard]]
+.. TODO:: insert image of getting_started_wizard
 
 First run wizard
 ~~~~~~~~~~~~~~~~
 
 NOTE: This feature is planned for a future version of PIDA_, which is still undetermined yet.
 
-.. [[getting_started_window]]
+.. TODO:: getting_started_window
 
 The PIDA window
 ~~~~~~~~~~~~~~~
@@ -82,7 +82,7 @@ and PIDA features overlap. In this case, both can be used, but the feature
 implemented by PIDA will certainly provide better integration with the other
 tools of the IDE.
 
-.. [[getting_started_window_views]]
+.. TODO:: Insert image of getting_started_window_views 
 
 Views
 ^^^^^
@@ -93,14 +93,14 @@ hidden though).
 
 FIXME: must choose carefully the vocabulary for elements of the views and keep them consistent.
 
-.. [[getting_started_configuration]]
+.. TODO:: getting_started_configuration
 
 PIDA configuration
 ~~~~~~~~~~~~~~~~~~
 
 FIXME: gconf, .pida
 
-.. [[services]]
+.. TODO:: insert image of services
 
 Core services
 ~~~~~~~~~~~~~
@@ -122,21 +122,21 @@ File Manager
 
 FIXME.
 
-.. [[service_project_manager]]
+.. TODO:: Insert image of service_project_manager
 
 Project Manager
 ~~~~~~~~~~~~~~~
 
 FIXME.
 
-.. [[service_terminal]]
+.. TODO:: Insert image of service_terminal
 
 Terminal
 ~~~~~~~~
 
 FIXME.
 
-.. [[service_version_control]]
+.. TODO:: service_version_control
 
 Version Control
 ~~~~~~~~~~~~~~~
@@ -149,7 +149,7 @@ Preferences
 FIXME.
 
 
-.. [[plugins]]
+.. Insert image: plugins
 
 Plug-ins
 ~~~~~~~~
