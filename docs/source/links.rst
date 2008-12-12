@@ -12,7 +12,7 @@
 .. F
 .. G
 
-.. _`GTK Web Site`: 
+.. _`GTK Web Site`: http://www.gtk.org/ 
 
 .. H
 .. I
@@ -27,7 +27,8 @@
 .. O
 .. P
 
-.. _`PyGTK Web Site`: 
+.. _`PyGTK Web Site`: http://www.pygtk.org/ 
+.. _'PyGTK': http://www.pygtk.org/ 
 .. _`Python Web Site`: http://python.org/
 .. _PIDA: http://pida.co.uk/
 

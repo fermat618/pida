@@ -4,7 +4,7 @@ The PIDA Users' Handbook
 ========================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    introduction
    installation

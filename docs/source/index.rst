@@ -1,8 +1,6 @@
 Welcome to the PIDA documentation!
 ==================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 1
 
