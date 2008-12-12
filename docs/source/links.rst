@@ -28,8 +28,9 @@
 .. P
 
 .. _`PyGTK Web Site`: http://www.pygtk.org/ 
-.. _'PyGTK': http://www.pygtk.org/ 
+.. _PyGTK: http://www.pygtk.org/ 
 .. _`Python Web Site`: http://python.org/
+.. _Python: http://www.python.org/
 .. _PIDA: http://pida.co.uk/
 
 .. Q

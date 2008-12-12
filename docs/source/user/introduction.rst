@@ -5,7 +5,7 @@ Introduction
 
 Many of the very good IDE's out there are "closed" in the sense that they are limited in terms of extensibility and communication with other tools. Further, many writers and programmers want to change their editor to something else while retaining the features of an IDE.
 
-PIDA was designed with these problems in mind.  PIDA's motto is to reuse the tools that proved to be useful and solid; thus, PIDA provides the glue for them.  PIDA is written in Python with PyGTK_.  It is easily extensible through plugins and can embed any editor provided someone writes an adapter for it.
+PIDA was designed with these problems in mind.  PIDA's motto is to reuse the tools that proved to be useful and solid; thus, PIDA provides the glue for them.  PIDA is written in Python_ with PyGTK_.  It is easily extensible through plugins and can embed any editor provided someone writes an adapter for it.
 
 PIDA has a number of unique features, such as
 
