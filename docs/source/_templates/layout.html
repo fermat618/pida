@@ -4,6 +4,7 @@
 {%- endblock %}
 {%- set reldelim1 = reldelim1 is not defined and ' &raquo;' or reldelim1 %}
 {%- set reldelim2 = reldelim2 is not defined and ' |' or reldelim2 %}
+
 {%- macro relbar %}
     <div class="related">
       <h3>{{ _('Navigation') }}</h3>
@@ -20,7 +21,11 @@
         {%- for parent in parents %}
           <li><a href="{{ parent.link|e }}" accesskey="U">{{ parent.title }}</a>{{ reldelim1 }}</li>
         {%- endfor %}
-        {%- block relbaritems %} {% endblock %}
+        {%- block relbaritems %} 
+          {% if current_page_name != 'index' %}
+          {{ title }}
+          {% endif %}
+        {% endblock %}
       </ul>
     </div>
 {%- endmacro %}
@@ -43,29 +48,21 @@
           {%- endblock %}
           {%- block sidebarrel %}
           {%- if prev %}
-            <h4>{{ _('Previous topic') }}</h4>
+            <h3>{{ _('Previous topic') }}</h3>
             <p class="topless"><a href="{{ prev.link|e }}" title="{{ _('previous chapter') }}">{{ prev.title }}</a></p>
           {%- endif %}
           {%- if next %}
-            <h4>{{ _('Next topic') }}</h4>
+            <h3>{{ _('Next topic') }}</h3>
             <p class="topless"><a href="{{ next.link|e }}" title="{{ _('next chapter') }}">{{ next.title }}</a></p>
           {%- endif %}
           {%- endblock %}
-          {%- if sourcename %}
-            <h3>{{ _('This Page') }}</h3>
-            <ul class="this-page-menu">
-            {%- if builder == 'web' %}
-              <li><a href="#comments">Comments ({{ comments|length }} so far)</a></li>
-              <li><a href="{{ pathto('@edit/' + sourcename)|e }}">{{ _('Suggest Change') }}</a></li>
-              <li><a href="{{ pathto('@source/' + sourcename)|e }}">{{ _('Show Source') }}</a></li>
-            {%- elif builder == 'html' %}
-              <li><a href="{{ pathto('_sources/' + sourcename, true)|e }}">{{ _('Show Source') }}</a></li>
-            {%- endif %}
-            </ul>
-          {%- endif %}
           {%- if customsidebar %}
           {{ rendertemplate(customsidebar) }}
           {%- endif %}
+            <h3>Links</h3>
+            <ul class="this-page-menu">
+            <li><a href="http://pida.co.uk">PIDA Home</a></li>
+            </ul>
           {%- block sidebarsearch %}
           {%- if pagename != "search" %}
           <h3>{% if builder == 'web' %}{{ _('Keyword search')}}{% else %}{{ _('Quick search') }}{% endif %}</h3>
@@ -170,7 +167,7 @@
       <div class="clearer"></div>
     </div>
 
-{%- block relbar2 %}{{ relbar() }}{% endblock %}
+{%- block relbar2 %} {{ relbar() }} {% endblock %}
 
 {%- block footer %}
     <div class="footer">

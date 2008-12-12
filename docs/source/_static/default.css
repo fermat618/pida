@@ -25,7 +25,7 @@ div.documentwrapper {
 }
 
 div.bodywrapper {
-    margin: 0 0 0 200px;
+    margin: 0 20px 0 200px;
 }
 
 div.body {
@@ -72,10 +72,10 @@ div.related {
 	  border: 2px solid #388CBA;
 	  border-bottom: 2px solid #4F9EC9;
     color: #fff;
-    width: 97%;
+    /*width: 97%;*/
     line-height: 30px;
     font-size: 90%;
-    margin: 10px 10px 10px 10px;
+    margin: 10px 21px 10px 10px;
 }
 
 div.related h3 {
@@ -107,7 +107,7 @@ div.sphinxsidebar h3 {
     color: #999999;
     background-color: #000000;
     font-weight: normal;
-    margin: 10px 0 10px 0;
+    margin: 0 0 10px 0;
     border: none;
     text-indent: 10px;
 }
