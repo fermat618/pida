@@ -44,7 +44,8 @@ div.sphinxsidebar {
     margin-left: -99.4%;
     margin-right: 10px;
     font-size: 90%;
-    background: #333333;
+    background-color: #333333;
+    background: #333333 url('pida-sidebar.jpg') top left no-repeat;
     border-bottom: 10px solid #000000;
 
 }
@@ -104,23 +105,26 @@ div.related a {
 /* ::: TOC :::: */
 div.sphinxsidebar h3 {
     font:120% Arial;
-    color: #999999;
+    color: white;
     background-color: #000000;
+    filter: alpha(opacity=55);
+    -moz-opacity: 0.55;
+    opacity: 0.55;
     font-weight: normal;
     margin: 0 0 10px 0;
     border: none;
     text-indent: 10px;
 }
 
-div.sphinxsidebar h3 a {
+/* div.sphinxsidebar h3 a {
     background-color: #000000;
-    color: #888888;
-}
+    color: white;
+} */
 
 div.sphinxsidebar h4 {
     font-family: 'Trebuchet MS', sans-serif;
     color: #888888;
-    background-color: #000000;
+    background: #000000;
     font-size: 1.3em;
     font-weight: normal;
     margin: 0 0 0 0;
