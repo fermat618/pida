@@ -13,6 +13,63 @@ body {
 }
 
 /* :::: LAYOUT :::: */
+div.headwrapper {
+	border: 3px solid #f1f1f1;
+	max-width: 900px;
+	min-width: 760px;
+	margin: 0 auto;
+	padding: 10px;
+	background-color: #ffffff;
+}
+
+
+div.header {
+	  font-size: 11px;
+	  font-family: sans-serif;
+    margin: 0px;
+  	padding: 10px;
+	  padding-left: 100px;
+	  background: transparent url('pida-logo-tiny.png') top left no-repeat;
+}
+
+div.header h1 {
+	margin: 0px;
+	padding: 10px;
+	float: left;
+	font: 250% Arial;
+	color: #333333;
+	border-right: 1px solid #cccccc;
+	line-height: 30px;
+	margin-right: 10px;
+}
+
+div.header h1 a {
+	color: #333;
+	text-decoration: none;
+	border-bottom: 2px solid #f6f6f6;
+}
+
+div.header h1 a:hover {
+	color: #111;
+	border-bottom: 2px solid #79B5D6;
+}
+
+div.header h2 {
+	margin: 0px;
+	padding: 10px;
+	font: 150% Arial;
+	color: #666;
+	border: none;
+	line-height: 30px;
+	margin-top: 5px;
+}
+
+div.header h2 a {
+	color: #444;
+	text-decoration :none;
+	border-bottom: 2px solid #f6f6f6;
+}
+
 
 div.document {
     /* background-color: #1c4e63; */
@@ -678,8 +735,8 @@ div.warning {
 }
 
 div.note {
-    background-color: #eee;
-    border: 1px solid #ccc;
+    /* background-color: #eee; */
+    /* border: 1px solid #ccc; */
 }
 
 p.admonition-title {
