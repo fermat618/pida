@@ -289,7 +289,7 @@ class NotifyOptionsConfig(OptionsConfig):
         self.svc._show_notify = option.value
 
     def on_change_timeout(self, option):
-        self.svc._timeout = option.val
+        self.svc._timeout = option.value
 
     def on_gravity_change(self, option):
         self.svc.notifier._popup.set_gravity(option.value)
