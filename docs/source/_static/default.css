@@ -14,12 +14,12 @@ body {
 
 /* :::: LAYOUT :::: */
 div.headwrapper {
-	border-bottom: 3px solid #f1f1f1;
-  border-top: 3px solid #f1f1f1;
+	border: 3px solid #f1f1f1;
 	/* max-width: 900px;
 	min-width: 760px; */
-	margin-left: 0px;
+	margin-left: 10px;
   margin-top: 10px;
+  margin-right: 10px;
 	padding: 10px;
 	background-color: #ffffff;
 }
@@ -79,31 +79,32 @@ div.document {
 }
 
 div.documentwrapper {
-    float: left;
-    width: 100%;
+    /* float: left;
+    width: 100%; */
 }
 
 div.bodywrapper {
-    margin: 0 20px 0 210px;
+    overflow: hidden;
+    position: relative;
+    margin-right: 10px;
+    margin-left: 190px;
 }
 
 div.body {
     border: 3px solid #f1f1f1;
     background-color: white;
     padding: 0 20px 30px 20px;
+    height: 100%;
+    overflow: auto;
 }
 
 div.sphinxsidebarwrapper {
-    padding: 0 0 0 0;
-}
-
-div.sphinxsidebar {
-    float: left;
-    width: 190px;
-    margin-left: -99.4%;
-    margin-right: 10px;
+    padding: 0;
+    position: absolute;
+    left: 10px;
+    top: 166px;
+    width: 170px;
     font-size: 90%;
-    background-color: #333333;
     background: #333333 url('pida-sidebar.jpg') top left no-repeat;
     border-bottom: 10px solid #000000;
 
@@ -119,6 +120,7 @@ div.footer {
     padding: 9px 0 9px 0;
     text-align: center;
     font-size: 75%;
+    position: relative;
 }
 
 div.footer a {
@@ -135,7 +137,7 @@ div.related {
     /*width: 97%;*/
     line-height: 30px;
     font-size: 90%;
-    margin: 10px 21px 10px 10px;
+    margin: 10px 10px 10px 10px;
 }
 
 div.related h3 {
