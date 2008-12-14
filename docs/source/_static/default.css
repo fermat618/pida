@@ -14,10 +14,12 @@ body {
 
 /* :::: LAYOUT :::: */
 div.headwrapper {
-	border: 3px solid #f1f1f1;
-	max-width: 900px;
-	min-width: 760px;
-	margin: 0 auto;
+	border-bottom: 3px solid #f1f1f1;
+  border-top: 3px solid #f1f1f1;
+	/* max-width: 900px;
+	min-width: 760px; */
+	margin-left: 0px;
+  margin-top: 10px;
 	padding: 10px;
 	background-color: #ffffff;
 }
@@ -82,7 +84,7 @@ div.documentwrapper {
 }
 
 div.bodywrapper {
-    margin: 0 20px 0 200px;
+    margin: 0 20px 0 210px;
 }
 
 div.body {
@@ -92,12 +94,12 @@ div.body {
 }
 
 div.sphinxsidebarwrapper {
-    /* padding: 10px 5px 0 10px; */
+    padding: 0 0 0 0;
 }
 
 div.sphinxsidebar {
     float: left;
-    width: 180px;
+    width: 190px;
     margin-left: -99.4%;
     margin-right: 10px;
     font-size: 90%;
@@ -179,13 +181,15 @@ div.sphinxsidebar h3 {
 } */
 
 div.sphinxsidebar h4 {
-    font-family: 'Trebuchet MS', sans-serif;
-    color: #888888;
-    background: #000000;
-    font-size: 1.3em;
+    font: 120% Arial;
+    color: white;
+    background-color: #000000;
+    filter: alpha(opacity=55);
+    -moz-opacity: 0.55;
+    opacity: 0.55;
     font-weight: normal;
-    margin: 0 0 0 0;
-    padding: 0;
+    margin: 0 0 10px 0;
+    border: none;
     text-indent: 10px;
 }
 
