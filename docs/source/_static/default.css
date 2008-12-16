@@ -177,10 +177,10 @@ div.sphinxsidebar h3 {
     text-indent: 10px;
 }
 
-/* div.sphinxsidebar h3 a {
+div.sphinxsidebar h3 a {
     background-color: #000000;
     color: white;
-} */
+}
 
 div.sphinxsidebar h4 {
     font: 120% Arial;
@@ -950,6 +950,7 @@ img.logo {
         width : 100%;
     }
 
+    div.headwrapper,
     div.sphinxsidebar,
     div.related,
     div.footer,
