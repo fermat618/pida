@@ -10,6 +10,7 @@ from os import listdir, path
 
 import os
 import shutil
+import sys
 
 import cgi
 
@@ -128,7 +129,12 @@ class FileEntry(object):
     def format(self, text):
         color, b, i = state_style.get(self.state, (None, False, False))
         if color:
-            color = self._manager.file_list.style.lookup_color(color).to_string()
+	    #FIXME to_string is missing on win32
+	    if sys.platform not in ('winnt', 'win32'):
+		color = self._manager.file_list.style.lookup_color(color).to_string()
+	    else:
+		color = self._manager.file_list.style.lookup_color(color)
+		color = '#%s%s%s' % (color.red,color.green,color.blue)
         if not color:
             color = "black"
         if b:
