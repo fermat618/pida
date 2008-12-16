@@ -132,7 +132,7 @@ class Bugreport(Service):
     actions_config = BugreportActions
     options_config = BugreportOptions
 
-    def pre_start(self):
+    def start(self):
         self._view = BugreportView(self)
     
     def show_report(self):
