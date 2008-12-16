@@ -336,8 +336,6 @@ class Notify(Service):
     commands_config = NotifyCommandsConfig
     options_config = NotifyOptionsConfig
 
-    def pre_start(self):
-        self._view = None
     
     def start(self):
         self._view = NotifyView(self)
@@ -362,7 +360,7 @@ class Notify(Service):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
     def add_notify(self, item):
-        if self._view is None:
+        if not self.started:
             gcall(self.add_notify, item)
             return
         self._view.add_item(item)
