@@ -76,7 +76,6 @@ except ImportError, e:
 import pida.core.pdbus
 
 def run_pida():
-    gdk.threads_enter()
     b = Boss()
     if sys.platform not in ('winnt', 'win32'):
         handle_signals(b)
