@@ -4,7 +4,7 @@
 .. A
 .. B
 
-.. _Bazaar:
+.. _Bazaar: http://bazaar-vcs.org/
 
 .. C
 .. D

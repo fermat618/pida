@@ -90,21 +90,14 @@ Cutting Edge
 
 PIDA is still not considered final by its authors.  The most recent version is in our Mercurial repository.  
 
-Several different pieces need to be downloaded.  Pick somewhere to put all of it, for example: ``/home/user/src``. In order to obtain the latest developer sources using Mercurial_ and Bazaar_, run each of the following::
+Pick somewhere to put all of it, for example: ``/home/user/src``. In order to obtain the latest developer sources using Mercurial_, run the following::
 
   hg clone http://www.bitbucket.org/aafshar/pida-main/ pida
-  hg clone http://www.bitbucket.org/aafshar/vellumui-main/ vellumui
-  hg clone http://www.bitbucket.org/RonnyPfannschmidt/anyvc/ anyvc
-  bzr branch lp:~ronny-pfannschmidt/vellum/experiment vellum-experiment
 
-Go ahead and install the dependencies as root or using sudo::
+Now update the external software::
 
-  cd vellumui
-  python setup.py install
-  cd ../anyvc
-  python setup.py install
-  cd ../vellum-experiment
-  python setup.py install
+  cd pida/tools/
+  ./update_externals.sh
 
 Building PIDA
 -------------
@@ -126,11 +119,16 @@ or to be more precise::
 Installation from Source
 ------------------------
 
-Installation is the recommended method of running PIDA.  Running from source should be reserved for people who know what they are doing.
+**Installation is the recommended method of running PIDA.  Running from source should be reserved for people who know what they are doing.**
 
 To install PIDA, the following command should be run as root (or using sudo) if you are installing to a global location.  This command is run from the PIDA directory either created from the Mercurial checkout, or the stable tarball::
 
     python setup.py install
+
+You also need to install anyvc and rope::
+
+    python tools/externals/src/anyvc/setup.py install
+    python tools/externals/src/rope/setup.py install
 
 Run from source
 ---------------
@@ -147,15 +145,15 @@ To run PIDA directly from the source, run::
 
 .. note::
 
-   This will handle your Python PATH, and will automatically link all the plugins available in the pida-plugins directory
+   This will handle your Python PATH; it will automatically link all the plugins available in the pida-plugins directory
 
 MS Windows
 ----------
 
 Some pointers on how to install PIDA dependencies can be found on the Wiki_.
 
-Mac OS X
---------
+.. Mac OS X
+.. --------
 
-FIXME.
+.. FIXME.
 
