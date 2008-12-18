@@ -211,7 +211,6 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
     def create(self):
         self.publish('workdir-manager')
 
-    def subscribe_all(self):
         try:
             from anyvc.workdir import all_known
         except:
