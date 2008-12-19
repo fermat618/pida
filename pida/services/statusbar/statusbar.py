@@ -3,6 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
+import sys
 
 import gtk
 import pango
@@ -42,8 +43,10 @@ class StatusbarEvents(EventsConfig):
 
             dt = datetime.datetime.fromtimestamp(document.modified_time)
             #FIXME local seems broken on win32 
-	    #text = dt.strftime(locale.nl_langinfo(locale.D_T_FMT))
-            text = dt.strftime('%a, %d %b %Y %H:%M')
+            if sys.platform not in ('winnt', 'win32'):
+                text = dt.strftime(locale.nl_langinfo(locale.D_T_FMT))
+            else:
+                text = dt.strftime('%a, %d %b %Y %H:%M')
             self.svc.set_label('document_mtime', text)
     
             size = document.filesize

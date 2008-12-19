@@ -3,6 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
+import sys
 from cgi import escape
 
 import gtk
@@ -23,9 +24,11 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.ui.views import PidaGladeView
 
 #FIXME causes memleak and deadlock on win32
-#from pida.utils.launchpadder.gtkgui import PasswordDialog
-#from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
-#                                          report
+if sys.platform not in ('winnt', 'win32'):
+    from pida.utils.launchpadder.gtkgui import PasswordDialog
+    from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
+        report
+
 from pida.utils.gthreads import AsyncTask, gcall
 
 # locale
