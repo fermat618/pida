@@ -150,7 +150,7 @@ To run PIDA directly from the source, run::
 MS Windows
 ----------
 
-Some pointers on how to install PIDA dependencies can be found on the Wiki_.
+Some pointers on how to install PIDA dependencies and perform a `Windows Installation`_ can be found on the Trac_.
 
 .. Mac OS X
 .. --------

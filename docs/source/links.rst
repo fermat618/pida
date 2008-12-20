@@ -40,10 +40,14 @@
 .. R
 .. S
 .. T
+
+.. _Trac: http://pida.co.uk/trac/wiki
+
 .. U
 .. V
 .. W
 
+.. _`Windows Installation`: http://pida.co.uk/trac/wiki/WindowsInstallation?version=25
 .. _Wiki: http://code.google.com/p/pida/wiki/
 
 .. X
