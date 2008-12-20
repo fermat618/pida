@@ -30,9 +30,9 @@ from pida.core.log import get_logger
 from pida.core.editors import EditorService, _
 
 # Emacs specific
-from pida.utils.emacs.emacsembed import EmacsEmbedWidget
-from pida.utils.emacs.emacscom import EmacsClient, EmacsServer
-from pida.utils.emacs import emacscom
+from .emacsembed import EmacsEmbedWidget
+from .emacscom import EmacsClient, EmacsServer
+import emacscom
 
 
 
