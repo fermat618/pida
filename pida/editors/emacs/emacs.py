@@ -120,10 +120,9 @@ class EmacsCallback(object):
 
     def cb_find_file_hooks(self, filename):
         """File opened event."""
-        # Nothing to do here. The window configuration change hook will
-        # provide notification for the new buffer.
         if filename:
             self._log.debug('emacs buffer opened "%s"' % filename)
+            self._svc.boss.cmd('buffer', 'open_file', file_name=filename)
         return True
     
     def cb_after_save_hook(self, filename):
