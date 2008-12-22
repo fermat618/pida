@@ -43,8 +43,12 @@ class SubscriberConfig(BaseConfig):
 
     def publish(self, *names):
         """publish a new subscription points"""
+        self.publish_special(set, *names)
+
+    def publish_special(self, collection, *names):
+        """publish a new subscription points"""
         for name in names:
-            self.published[name] = set()
+            self.published[name] = collection()
 
     def subscribe(self, name, instance):
         """subscribe an `instance` to the subscription point `name`

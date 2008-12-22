@@ -9,6 +9,7 @@
     :license: GPL2 or later
 """
 
+import sys
 from functools import partial
 
 import gtk
@@ -193,7 +194,9 @@ class BrowserView(PidaGladeView):
         self.sort_box.show()
         self.sort_vbox.pack_start(self.sort_box, expand=False)
         self.filter_model = self.source_tree.get_model().filter_new()
-        self.source_tree.get_treeview().set_model(self.filter_model)
+        #FIXME this causes a total crash on win32
+	if sys.platform not in ('winnt', 'win32'):
+            self.source_tree.get_treeview().set_model(self.filter_model)
         self.filter_model.set_visible_func(self._visible_func)
         self.source_tree.get_treeview().connect('key-press-event',
             self.on_treeview_key_pressed)
@@ -352,7 +355,9 @@ class BrowserView(PidaGladeView):
                 tool_button = gtk.ToggleToolButton()
                 tool_button.set_name(str(f))
                 tool_button.set_active(self.filter_map[f])
-                tool_button.set_tooltip_text(FILTERMAP[f]['display'])
+                #FIXME no tooltip on win32
+		if sys.platform not in ('winnt', 'win32'):
+                    tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled", self.on_filter_toggled,outliner)
                 im = gtk.Image()
                 im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))

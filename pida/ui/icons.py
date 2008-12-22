@@ -51,9 +51,14 @@ class IconRegister(object):
         #im = gtk.Image()
         #im.set_from_file(filename)
         #pb = im.get_pixbuf()
-        pb = gtk.gdk.pixbuf_new_from_file_at_size(filename, 32, 32)
-        icon_set = gtk.IconSet(pb)
-        self._register_icon_set(icon_set, name)
+        try:
+            pb = gtk.gdk.pixbuf_new_from_file_at_size(filename, 32, 32)
+            icon_set = gtk.IconSet(pb)
+            self._register_icon_set(icon_set, name)
+        except:
+	    #XXX: there is a image loader missing
+	    #     for *.svg its librsvg + its gtk pixmap loader
+            print filename
         # this is broken for some reason
         #gtk.icon_theme_add_builtin_icon(name, gtk.ICON_SIZE_SMALL_TOOLBAR, pb)
 

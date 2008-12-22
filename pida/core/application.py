@@ -77,7 +77,8 @@ import pida.core.pdbus
 
 def run_pida():
     b = Boss()
-    handle_signals(b)
+    if sys.platform not in ('winnt', 'win32'):
+        handle_signals(b)
     # handle start params
     from pida.core import environment
     if environment.get_args():
@@ -216,8 +217,9 @@ def main():
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        signal.signal(signal.SIGALRM, force_quit)
-        signal.alarm(3)
+        if sys.platform not in ('winnt', 'win32'):
+            signal.signal(signal.SIGALRM, force_quit)
+            signal.alarm(3)
         sys.exit(exit_val)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

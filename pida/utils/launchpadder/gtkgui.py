@@ -12,8 +12,6 @@ import gobject
 from cgi import escape
 from gtk import gdk
 
-gdk.threads_init()
-
 import lplib as launchpadlib
 
 busy_cursor = gtk.gdk.Cursor(gtk.gdk.WATCH)

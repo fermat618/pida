@@ -9,11 +9,16 @@
 """
 import os, time
 
-import gtk, dbus
+import gtk
 
-from dbus.mainloop.glib import DBusGMainLoop
+try:
+    import dbus
+    from dbus.mainloop.glib import DBusGMainLoop
 
-mainloop = DBusGMainLoop(set_as_default=True)
+    mainloop = DBusGMainLoop(set_as_default=True)
+except ImportError:
+    pass
+
 
 DBUS_NS = 'uk.co.pida.vim'
 
