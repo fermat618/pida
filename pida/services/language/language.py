@@ -54,6 +54,21 @@ def get_value(tab, key):
     return tab.get(key, None)
 
 
+class SimpleLanguageMapping(dict):
+    """
+    this maps language features
+    it wont handle priorities 
+    """
+    def add(self, language, instance):
+        if language not in self:
+            #XXX: some things expect a list ?!
+            self[language] = list()
+
+        self[language].append(instance)
+
+    def remove(self, language, instance):
+        self[language].remove(instance)
+
 
 class ValidatorView(PidaView):
 
@@ -195,7 +210,7 @@ class BrowserView(PidaGladeView):
         self.sort_vbox.pack_start(self.sort_box, expand=False)
         self.filter_model = self.source_tree.get_model().filter_new()
         #FIXME this causes a total crash on win32
-	if sys.platform not in ('winnt', 'win32'):
+        if sys.platform not in ('winnt', 'win32'):
             self.source_tree.get_treeview().set_model(self.filter_model)
         self.filter_model.set_visible_func(self._visible_func)
         self.source_tree.get_treeview().connect('key-press-event',
@@ -546,6 +561,14 @@ class LanguageOptionsConfig(OptionsConfig):
 
 class LanguageFeatures(FeaturesConfig):
 
+    def create(self):
+        self.publish_special(
+            SimpleLanguageMapping,
+            'info', 'outliner', 'definer',
+            'validator', 'completer','documenter',
+        )
+
+
     def subscribe_all_foreign(self):
         pass
 
@@ -599,7 +622,7 @@ class LanguageDbusConfig(DbusConfig):
     @LEXPORT(out_signature = 'a{s(as)}', in_signature = 's')
     def get_info(self, lang):
         """Returns language info"""
-        lst = self.svc.features[(lang, 'infos')]
+        lst = self.svc.features['info'].get('lang')
         if lst:
             l = lst[0]
             return l.to_dbus()
@@ -632,7 +655,7 @@ class Language(Service):
         self._view_validator = ValidatorView(self)
         self.current_type = None
         # add default language info
-        self.features.subscribe((None, 'info'), LanguageInfo)
+        self.features.subscribe('info', None, LanguageInfo)
 
     def start(self):
         acts = self.boss.get_service('window').actions
@@ -691,11 +714,12 @@ class Language(Service):
             type_ = document.doctype
             factories = ()
             if type_:
-                factories = self.features[(type_.internal, feature)]
+                factories = self.features[feature].get(type_.internal)
             if not factories:
                 # get typ unspecific factories
-                factories = self.features[(None, feature)]
+                factories = self.features[feature].get(None)
             if factories:
+                #XXX: factoring
                 handler = _get_best(factories, document)(document)
                 setattr(document, name, handler)
                 return handler
