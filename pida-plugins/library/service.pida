@@ -1,9 +1,7 @@
-[plugin]
-plugin = library
-name = Docbook browser
-author = Ali Afshar <aafshar@gmail.com>
-version = 0.2.2
-require_pida = 0.5
-depends = "os, gzip, tempfile, threading, xml.sax, xml.com.minidom"
-category = documentation
-description = Browse local docbook
+Name: Docbook browser
+Author: Ali Afshar <aafshar@gmail.com>
+Version: 0.2.3
+Depends: pida>=0.6
+Category: documentation
+
+Browse local docbook

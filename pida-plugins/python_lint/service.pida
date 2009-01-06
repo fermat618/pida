@@ -1,9 +1,7 @@
-[plugin]
-plugin = python_lint
-name = Python Lint
-author = Daniel Poelzleithner <pida@poelzi.org>
-version = 0.1
-require_pida = 0.6
-depends = ""
-category = language
-description = "Python Validator which uses pylint"
+Name: Python Lint
+Author: Daniel Poelzleithner <pida@poelzi.org>
+Version: 0.1
+Depends: pida>=0.6
+Category: language
+
+Python Validator which uses pylint

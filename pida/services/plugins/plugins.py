@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # Copyright (c) 2007 The PIDA Project
-
+#XXX: rework
 """
     pida.services.plugins
     ~~~~~~~~~~~~~~~~~~~~~
@@ -15,6 +15,7 @@
 
     :license: GPL2 or later
 """
+from __future__ import with_statement
 
 import gtk
 import xmlrpclib
@@ -41,7 +42,6 @@ from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 from pida.core.environment import plugins_dir
 
 from pida.utils.web import fetch_url
-from pida.utils.configobj import ConfigObj
 from pida.utils.path import walktree
 
 # consts
@@ -51,9 +51,6 @@ PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
 from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
-
-def get_value(tab, key):
-    return tab.get(key, None)
 
 # http://docs.python.org/lib/xmlrpc-client-example.html
 class ProxiedTransport(xmlrpclib.Transport):
@@ -81,16 +78,20 @@ def create_transport():
 class PluginsItem(object):
 
     def __init__(self, infos, directory=None, enabled=False, isnew=False):
+        get = infos.get
         self.isnew = isnew
-        self.plugin = get_value(infos, 'plugin')
-        self.require_pida = get_value(infos, 'require_pida')
-        self.name = get_value(infos, 'name')
-        self.author = get_value(infos, 'author')
-        self.version = get_value(infos, 'version')
-        self.description = get_value(infos, 'description')
-        self.category = get_value(infos, 'category')
-        self.url = get_value(infos, 'url')
-        self.depends = get_value(infos, 'depends')
+        if directory is not None:
+            self.plugin = os.path.basename(directory)
+        else:
+            self.plugin = None
+        self.name = get('Name')
+        assert self.name,directory
+        self.author = get('Author')
+        self.version = get('Version')
+        self.depends = get('Depends')
+        self.category = get('Category')
+        self.url = get('Location')
+        self.description = infos.get_payload()
         self.directory = directory
         self.enabled = enabled
 
@@ -117,11 +118,22 @@ class PluginsEditView(PidaGladeView):
     label_text = _('Edit a plugin')
     icon_name = gtk.STOCK_EXECUTE
 
+    edit_items = (
+        ('name', _('Plugin name')),
+        ('author', _('Author')),
+        ('version', _('Version')),
+        ('depends', _('Dependencies')),
+        ('category', _('Category')),
+        ('description', _('Description')),
+    )
+
     def create_ui(self):
         self.attr_list.set_columns([
             Column('name', title=_('Name'), data_type=str),
-            Column('value', title=_('Value'), data_type=str, editable=True,
-                expand=True),
+            Column('value', title=_('Value'), 
+                   data_type=str,
+                   editable=True,
+                   expand=True),
             ])
 
     def set_item(self, item):
@@ -129,24 +141,11 @@ class PluginsEditView(PidaGladeView):
         if item is None:
             self.attr_list.clear()
             return
-        list = []
-        list.append(PluginsEditItem('plugin',
-            _('Name'), item.plugin))
-        list.append(PluginsEditItem('name',
-            _('Plugin long name'), item.name))
-        list.append(PluginsEditItem('author',
-            _('Author'), item.author))
-        list.append(PluginsEditItem('version',
-            _('Version'), item.version))
-        list.append(PluginsEditItem('depends',
-            _('Depends'), item.depends))
-        list.append(PluginsEditItem('require_pida',
-            _('Require PIDA version'), item.require_pida))
-        list.append(PluginsEditItem('category', _('Category'),
-            item.category))
-        list.append(PluginsEditItem('description', _('Description'),
-            item.description))
-        self.attr_list.add_list(list, clear=True)
+        listing = [
+            PluginsEditItem(key, name, item.get(key))
+            for key, name in self.edit_items
+        ]
+        self.attr_list.add_list(listing, clear=True)
 
     def on_attr_list__cell_edited(self, w, item, value):
         setattr(self.item, getattr(item, 'key'), getattr(item, 'value'))
@@ -414,6 +413,7 @@ class Plugins(Service):
         self._check = False
         self._check_notify = False
         self._check_event = False
+        #XXX: we should really use the real one at some point
         self._loader = ServiceLoader(pida.plugins)
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
@@ -441,6 +441,7 @@ class Plugins(Service):
                 data = _('Started %(plugin)s plugin' % {'plugin':plugin.get_label()}))
             return True
         except ServiceLoadingError, e:
+            #XXX: support a ui traceback browser?
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data = _('Could not start plugin: %(name)s\n%(error)s' % 
                     {'error':str(e), 'plugin_path':name}))
@@ -596,6 +597,9 @@ class Plugins(Service):
         self.update_installed_plugins()
 
     def upload(self, directory, login, password):
+        # XXX: get smarter for more tricky plugins
+        # (external processes, java, ...)
+
         # first, check for a service.pida file
         if not self.is_plugin_directory(directory):
             return
@@ -662,9 +666,16 @@ class Plugins(Service):
     def read_plugin_informations(self, directory=None, servicefile=None):
         if servicefile is None:
             servicefile = os.path.join(directory, 'service.pida')
-        config = ConfigObj(servicefile)
-        return PluginsItem(config['plugin'],
-                directory=os.path.dirname(servicefile))
+        if directory is None:
+            directory = os.path.dirname(servicefile)
+
+        plugin = os.path.basename(directory)
+
+        from email import message_from_file
+        with open(servicefile) as f:
+            config = message_from_file(f)
+
+        return PluginsItem(config, directory)
 
     def write_informations(self, item):
         if not item.directory:
@@ -694,9 +705,6 @@ class Plugins(Service):
         if item.depends:
             markup += '\n<b>%s</b> : %s' % (_('Depends'),
                     cgi.escape(item.depends))
-        if item.require_pida:
-            markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
-                    cgi.escape(item.require_pida))
         return markup
 
 
