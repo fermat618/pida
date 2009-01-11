@@ -25,7 +25,7 @@ def refresh_ui():
 def _start_vim():
     env = os.environ.copy()
     env['PIDA_DBUS_UUID'] = 'pidatest'
-    p = subprocess.Popen(['gvim', '-geom', '40x40', '-f', '--cmd', 'so %s' % vim_script],
+    p = subprocess.Popen(['gvim', '-iconic', '-f', '--cmd', 'so %s' % vim_script],
                          env=env)
     return p
 
