@@ -280,11 +280,10 @@ class CommanderCommandsConfig(CommandsConfig):
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
-    def subscribe_all(self):
+    def create(self):
         self.publish('matches')
         for match in RE_MATCHES:
-            self.subscribe('matches',
-                (match, self.svc.default_match))
+            self.subscribe('matches', (match, self.svc.default_match))
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
@@ -318,7 +317,7 @@ class TerminalView(PidaView):
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
         self._matchids = {}
-        for match, callback in self.svc.list_matches():
+        for match, callback in self.svc.features['matches']:
             i = self._term.match_add(match)
             if i < 0:
                 continue
