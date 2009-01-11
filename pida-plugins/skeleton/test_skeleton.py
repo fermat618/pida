@@ -21,9 +21,9 @@
 #SOFTWARE.
 
 from pida.utils.testing.mock import Mock
-from unittest import UnitTest
+from unittest import TestCase
 
-class SkeletonTest(UnitTest):
+class SkeletonTest(TestCase):
 
     def test_sekeleton(self):
         pass

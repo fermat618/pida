@@ -1,10 +1,7 @@
-[plugin]
-plugin = gtags
-name = GNU Global Integration
-version = 0.2
-author = Mathieu Virbel <tito@bankiz.org>
-require_pida = 0.5
-depends = "os,gtk,re"
-description = "Build global index, search through database"
-website = ""
-category = code
+Name: GNU Global Integration
+Version: 0.2
+Author: Mathieu Virbel <tito@bankiz.org>
+Depends: pida>=0.6
+Category: code
+
+Build global index, search through database
