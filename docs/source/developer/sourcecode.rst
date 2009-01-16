@@ -16,37 +16,37 @@ Installing the Dependencies
 The easy unix way
 -----------------
 
- 1. run 
-{{{
-     cd YOUR/pida-main
-     ./tools/update_externals.sh
-}}}
+Run:: 
 
-=== The custom way ===
+  cd YOUR/pida-main
+  ./tools/update_externals.sh
 
+The custom way
+--------------
 
- 1. a fresh `hg clone http://www.bitbucket.org/RonnyPfannschmidt/anyvc/`
+Get this::
+  
+  hg clone http://www.bitbucket.org/RonnyPfannschmidt/anyvc/
 
-    it's our vcs-abstraction lib, we extracted it to ease development
+This is our vcs-abstraction lib, we extracted it to ease development.
 
- 2. a fresh `hg clone http://www.bitbucket.org/agr/rope/`
+And this::
+
+  hg clone http://www.bitbucket.org/agr/rope/
  
-    its a python refactoring lib, we use it for code-analysis, refactoring is planned
+This is a Python refactoring library.  We use it for code-analysis.  Refactoring is planned.
 
 The new development version *completely* breaks backward compatibility for project files and project metadata.
 
 We started using vellum to get project metadata and a task based command system with dependency handling.
 
-The basic integration of vellum is done but some shipped plugins are broken cause they used to store metadata in project files.
+The basic integration of vellum is done but some shipped plugins are broken because they used to store metadata in project files.
 
+Publishing your work
+====================
 
-== Publishing your work ==
+The most easy way is to set up an bitbucket account, create a public fork, and start pushing to it.  That way we get notified about it and can just grab it if you send us a pull request.
 
-The most easy way is to set up an bitbucket account, create a public fork and start pushing to it
-
-That way we get notified about it and can just grab it if you send us a pull request.
-
-Its recommended to chat with us at the irc channel at irc://irc.freenode.org/pida
-or start a discussion on our moderated google group at http://groups.google.com/group/pida
+It is recommended to chat with us at the irc channel at irc://irc.freenode.org/pida or start a discussion on our moderated google group at http://groups.google.com/group/pida.
 
 

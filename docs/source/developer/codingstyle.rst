@@ -2,12 +2,12 @@
 PIDA Coding Style Guidelines
 ============================
 
-First read <<PEP8>> (the PEP on how to write readable Python code). The PEP gives
+First read :pep:`8` (the PEP on how to write readable Python code). The PEP gives
 a number of good insights. The PEP gives a few options on things, and I shall
-try to clarify what I prefer here. Where this document differs from PEP8_, you
+try to clarify what I prefer here. Where this document differs from :pep:`8`, you
 should use what is presented here, unless you are a zealot in which case you
 should listen to the Python people (who are cleverer than me anyway). Also
-read PEP20_ while you are at it.
+read :pep:`20` while you are at it.
 
 Indenting
 ---------
@@ -51,7 +51,7 @@ readable.
 Blank Lines
 -----------
 
-As <<PEP8>> for 2 lines between top-level classes and functions, with one line
+As :pep:`8` for 2 lines between top-level classes and functions, with one line
 between methods.
 
 Extra blank line "to indicate logical blocks" should be avoided at all costs
@@ -99,7 +99,7 @@ No::
 
 (that space after a comma is basic punctuation)
 
-<<PEP8>> has oodles on this.
+:pep:`8` has oodles on this.
 
 Docstrings
 ----------
