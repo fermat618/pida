@@ -1,17 +1,20 @@
-
+=========================
 Obtaining The Source Code
 =========================
 
-The current development version of pida has various experimental changes 
-which aren't yet ready for the main repo, so most of the development happens on the DeveloperRepos .
+The current development version of pida has various experimental changes which aren't yet ready for the main repo; most of the development happens on the DeveloperRepos.
 
- 1. a fresh `hg clone http://www.bitbucket.org/aafshar/pida-main/`
+First, obtain a fresh::
 
-    its the repo that aggregates the current experimental development
+  hg clone http://www.bitbucket.org/aafshar/pida-main/
 
-== Installing depencies ==
+This repository aggregates the current experimental development.
 
-=== The easy unix way ===
+Installing the Dependencies
+===========================
+
+The easy unix way
+-----------------
 
  1. run 
 {{{
