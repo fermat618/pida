@@ -194,7 +194,7 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
         else:
             all_langs = self.svc.language_name
         mapping = {
-            'outliner_factory':'outline',
+            'outliner_factory':'outliner',
             'definer_factory': 'definer',
             'validator_factory': 'validator',
             'completer_factory': 'completer',

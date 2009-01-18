@@ -565,7 +565,7 @@ class LanguageFeatures(FeaturesConfig):
         self.publish_special(
             SimpleLanguageMapping,
             'info', 'outliner', 'definer',
-            'validator', 'completer','documenter',
+            'validator', 'completer','documentator',
         )
 
 
