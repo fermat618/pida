@@ -622,7 +622,7 @@ class LanguageDbusConfig(DbusConfig):
     @LEXPORT(out_signature = 'a{s(as)}', in_signature = 's')
     def get_info(self, lang):
         """Returns language info"""
-        lst = self.svc.features['info'].get('lang')
+        lst = self.svc.features['info'].get(lang)
         if lst:
             l = lst[0]
             return l.to_dbus()
