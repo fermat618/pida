@@ -14,11 +14,10 @@ This document describes:
 Distribution packages
 ---------------------
 
-Though there is still a long way before PIDA can be considered mature, it is already packaged by several Linux and BSD(FIXME?) distributions.  Use the guidelines of your distribution to install or remove PIDA from your system. 
+Though there is still a long way before PIDA can be considered mature, it is already packaged by several Linux and BSD(FIXME?) distributions.  Use the guidelines of your distribution to install or remove PIDA from your system.  The following table outlines the distributions known to provide PIDA and the version they include.
+
 
 ============== ===================== ============
-Known Distributions that provide PIDA
--------------------------------------------------
 Distribution   Distribution version  PIDA version
 ============== ===================== ============
 Debian         Etch (stable)         0.3.1
@@ -59,7 +58,8 @@ Mandatory Dependencies
 
 In the Ubuntu and Debian distributions, you should install the mandatory dependencies.  This is only necessary if you do not use the distribution version::
 
-  sudo apt-get install gvim python-gnome2 python-gnome2-extras python-gtk2 python-vte python-kiwi python-setuptools python-glade2 librsvg2-common
+  sudo apt-get install gvim python-gnome2 python-gnome2-extras \
+  python-gtk2 python-vte python-kiwi python-setuptools python-glade2 librsvg2-common
 
 Optional Dependencies
 ~~~~~~~~~~~~~~~~~~~~~
