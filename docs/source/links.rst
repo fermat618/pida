@@ -47,7 +47,7 @@
 .. V
 .. W
 
-.. _`Windows Installation`: http://pida.co.uk/trac/wiki/WindowsInstallation?version=25
+.. _`Windows Installation`: http://pida.co.uk/trac/wiki/WindowsInstallation
 .. _Wiki: http://code.google.com/p/pida/wiki/
 
 .. X
