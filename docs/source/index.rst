@@ -7,6 +7,12 @@ Welcome to the PIDA documentation!
    user/index
    developer/index
 
+There is also a PDF_ version of this Documentation.
+
+.. *** Change this, obviously.
+
+.. _PDF: http://greamin.com/pida-test/PIDA.pdf
+
 .. Indices and tables
 .. ==================
 
