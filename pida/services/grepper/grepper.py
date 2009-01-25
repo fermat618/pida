@@ -48,7 +48,8 @@ class GrepperItem(object):
         else:
             color = None
         if color:
-            color = color.to_string()
+            #color = color.to_string() # gtk 2.12 or higher
+            color = "#%04x%04x%04x" % (color.red, color.green, color.blue)
         if not color:
             color = "red"
         return ('<span color="%s"><b>%s</b></span>' %
