@@ -294,7 +294,7 @@ class Grepper(Service):
     events_config = GrepperEvents
     options_config = GrepperOptions
 
-    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]|\\x00')
+    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')
 
     def pre_start(self):
         self.current_project_source_directory = None
