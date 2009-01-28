@@ -411,15 +411,15 @@ class TerminalView(PidaView):
 
     def _on_python_fork_parse_key_press_event(self, term, event, fd):
         if event.hardware_keycode == 22:
-            os.write(fd, "")
+            os.write(fd, "\x7f")
         elif event.hardware_keycode == 98:
-            os.write(fd, "OA")
+            os.write(fd, "\x1bOA")
         elif event.hardware_keycode == 104:
-            os.write(fd, "OB")
+            os.write(fd, "\x1bOB")
         elif event.hardware_keycode == 100:
-            os.write(fd, "OD")
+            os.write(fd, "\x1bOD")
         elif event.hardware_keycode == 102:
-            os.write(fd, "OC")
+            os.write(fd, "\x1bOC")
         else:
             data = event.string
             os.write(fd, data)
