@@ -25,7 +25,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.core.environment import get_uidef_path
+from pida.core.environment import get_uidef_path, on_windows
 from pida.core.log import get_logger
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
@@ -129,16 +129,18 @@ class FileEntry(object):
     def format(self, text):
         color, b, i = state_style.get(self.state, (None, False, False))
         if color:
-	    #FIXME to_string is missing on win32
-	    if sys.platform not in ('winnt', 'win32'):
-		color = self._manager.file_list.style.lookup_color(color).to_string()
-	    else:
-		color = self._manager.file_list.style.lookup_color(color)
-		color = '#%s%s%s' % (color.red,color.green,color.blue)
-        if not color:
+            #FIXME to_string is missing on win32
+            color = self._manager.file_list.style.lookup_color(color).
+            if not on_windows:
+                color = color.to_string()
+            else:
+                color = '#%s%s%s' % (color.red,color.green,color.blue)
+        else color:
             color = "black"
+
         if b:
             text = '<b>%s</b>' % text
+
         if i:
             text = '<i>%s</i>' % text
         return '<span color="%s">%s</span>' % (color, text)

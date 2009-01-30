@@ -21,10 +21,11 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.core.environment import on_windows
 from pida.ui.views import PidaGladeView
 
 #FIXME causes memleak and deadlock on win32
-if sys.platform not in ('winnt', 'win32'):
+if not on_windows:
     from pida.utils.launchpadder.gtkgui import PasswordDialog
     from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
         report

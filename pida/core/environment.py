@@ -99,6 +99,8 @@ opts, args = op.parse_args([])
 
 env = dict(os.environ)
 
+on_windows = sys.platform == 'win32' #XXX: checked only on xp
+
 def parse_args(argv):
     global opts, args
     opts, args = op.parse_args(argv)

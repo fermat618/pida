@@ -21,8 +21,7 @@ from kiwi.ui.objectlist import ObjectList, COL_MODEL
 
 from outlinefilter import FILTERMAP
 
-from pida.core.environment import plugins_dir
-from pida.core.environment import get_pixmap_path
+from pida.core.environment import plugins_dir, on_windows, get_pixmap_path
 
 from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
@@ -210,7 +209,7 @@ class BrowserView(PidaGladeView):
         self.sort_vbox.pack_start(self.sort_box, expand=False)
         self.filter_model = self.source_tree.get_model().filter_new()
         #FIXME this causes a total crash on win32
-        if sys.platform not in ('winnt', 'win32'):
+        if not on_windows:
             self.source_tree.get_treeview().set_model(self.filter_model)
         self.filter_model.set_visible_func(self._visible_func)
         self.source_tree.get_treeview().connect('key-press-event',
@@ -371,7 +370,7 @@ class BrowserView(PidaGladeView):
                 tool_button.set_name(str(f))
                 tool_button.set_active(self.filter_map[f])
                 #FIXME no tooltip on win32
-		if sys.platform not in ('winnt', 'win32'):
+                if not on_windows:
                     tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled", self.on_filter_toggled,outliner)
                 im = gtk.Image()

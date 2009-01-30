@@ -65,7 +65,7 @@ if sys.version_info < (2, 5):
 
 # This can test if PIDA is installed
 try:
-    from pida.core.environment import opts
+    from pida.core.environment import opts, on_windows
     from pida.core.boss import Boss
     from pida import PIDA_VERSION
 
@@ -77,7 +77,9 @@ import pida.core.pdbus
 
 def run_pida():
     b = Boss()
-    if sys.platform not in ('winnt', 'win32'):
+
+    # win32 has no signal support
+    if not on_windows:
         handle_signals(b)
     # handle start params
     from pida.core import environment
@@ -217,7 +219,7 @@ def main():
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        if sys.platform not in ('winnt', 'win32'):
+        if not on_windows:
             signal.signal(signal.SIGALRM, force_quit)
             signal.alarm(3)
         sys.exit(exit_val)
