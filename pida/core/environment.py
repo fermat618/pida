@@ -107,15 +107,9 @@ def parse_args(argv):
 
     if opts.killsettings:
         opts.firstrun = True
- 
-def is_version():
-    return opts.version
 
 def is_debug():
     return opts.debug
-
-def is_trace():
-    return opts.trace
 
 def is_firstrun():
     return not os.path.exists(firstrun_filename) or opts.firstrun

@@ -518,18 +518,6 @@ class TerminalView(PidaView):
     def on_highlight_url(self, url, *args, **kw):
         return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
                                   url=url)
-    
-    def chdir(self, path):
-        # here we could look at the environment var to find out the real 
-        # directory
-        if self._pwd == path:
-            return
-        # maybe we find a good way to check if the term is currently
-        # in shell mode and maybe there is a better way to change
-        # directories somehow
-        # this is like kate does it
-        self._term.feed_child(u'cd %s\n' %path)
-        self._pwd = path
 
     def get_absolute_path(self, path):
         return get_absolute_path(path, self._pid)
