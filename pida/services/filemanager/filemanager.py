@@ -130,12 +130,12 @@ class FileEntry(object):
         color, b, i = state_style.get(self.state, (None, False, False))
         if color:
             #FIXME to_string is missing on win32
-            color = self._manager.file_list.style.lookup_color(color).
+            color = self._manager.file_list.style.lookup_color(color)
             if not on_windows:
                 color = color.to_string()
             else:
                 color = '#%s%s%s' % (color.red,color.green,color.blue)
-        else color:
+        else:
             color = "black"
 
         if b:
