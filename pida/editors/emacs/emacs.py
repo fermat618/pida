@@ -141,10 +141,10 @@ class Emacs(EditorService):
         """called when emacs started: Let notify the other services 
         and connect to dbus signals
         """
-        self.boss.get_service('editor').emit('started')
         self._cb = EmacsCallback(self)
         self._client = EmacsClient(self._cb, self)
         self._client.connect_signals()
+        self.boss.get_service('editor').emit('started')
         
     def pre_start(self):
         """Start the editor"""
@@ -301,7 +301,7 @@ class Emacs(EditorService):
         return self._current_line
 
     def set_path(self, path):
-        return None
+        return self._client.set_directory(path)
 
 
 # Required Service attribute for service loading
