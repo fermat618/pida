@@ -70,6 +70,28 @@ class SimpleLanguageMapping(dict):
         self[language].remove(instance)
 
 
+class PriorityLanguageMapping(dict):
+    """
+    this maps language features.
+    Sorts it's members after their priority member
+    """
+    def add(self, language, instance):
+        if language not in self:
+            #XXX: some things expect a list ?!
+            self[language] = list()
+
+        self[language].append(instance)
+
+        def get_prio(elem):
+            if hasattr(elem, 'priority'):
+                return elem.priority
+
+        self[language].sort(key=get_prio, reverse=True)
+
+    def remove(self, language, instance):
+        self[language].remove(instance)
+
+
 class ValidatorView(PidaView):
 
     key = 'language.validator'
@@ -570,7 +592,7 @@ class LanguageFeatures(FeaturesConfig):
 
     def create(self):
         self.publish_special(
-            SimpleLanguageMapping,
+            PriorityLanguageMapping,
             'info', 'outliner', 'definer',
             'validator', 'completer','documentator',
         )
