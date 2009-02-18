@@ -268,7 +268,7 @@ class ProjectActionsConfig(ActionsConfig):
             self.svc.add_directory(path)
 
     def on_project_execute(self, action):
-        default = self.svc._current.script.options.get('default')
+        default = self.svc._current.build.get_default()
         if default is not None:
             self.svc.execute_target(None, default)
         else:

@@ -103,6 +103,13 @@
                     </widget>
                 </child>
                 <child>
+                    <widget class="GtkAction" id="SetDefault">
+                        <property name="name">SetDefault</property>
+                        <property name="label" translatable="yes">_Set As Default Target</property>
+                        <property name="tooltip" translatable="yes">Use this target as default</property>
+                    </widget>
+                </child>
+                <child>
                     <widget class="GtkAction" id="TargetMenu">
                         <property name="name">TargetMenu</property>
                         <property name="label" translatable="yes">_Target</property>
@@ -318,8 +325,9 @@
                                     </packing>
                                 </child>
                                 <child>
-                                    <widget class="GtkButton" id="cancel_button">
-                                        <property name="label">gtk-cancel</property>
+                                    <widget class="GtkButton" id="close_button">
+                                        <property name="is_focus">True</property>
+                                        <property name="label">gtk-close</property>
                                         <property name="use_stock">True</property>
                                         <property name="visible">True</property>
                                     </widget>

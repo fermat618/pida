@@ -13,9 +13,19 @@ class Build(object):
         self.options = {}
 
     def for_serialize(self):
+        sopt = self.options.copy()
+        if 'default' in sopt:
+            # we only save the target name as default option, not the reference
+            try:
+                sopt['default'] = sopt['default'].name
+            except:
+                # this should happen but may happen due data inconsistency.
+                # better remove
+                if 'default' in sopt:
+                    del sopt['default']
         return {
             'targets': [t.for_serialize() for t in self.targets],
-            'options': self.options,
+            'options': sopt,
         }
 
     @classmethod
@@ -24,6 +34,8 @@ class Build(object):
         for d in data['targets']:
             b.targets.append(Target.from_serialize(d))
         b.options.update(data['options'])
+        if 'default' in b.options:
+            b.default = b.options['default']
         return b
 
     @classmethod
@@ -53,12 +65,43 @@ class Build(object):
         self.targets.append(t)
         return t
 
+    def get_default(self):
+        if 'default' in self.options:
+            return self.options['default']
+        else:
+            # if not a default is defined, we return a target named default
+            # as a fallback
+            for target in self.targets:
+                if target.name == "default":
+                    return target
+
+    def set_default(self, target):
+        if not isinstance(target, Target) :
+            for ctar in self.targets:
+                ctar.is_default = False
+                if ctar.name == target:
+                    ctar.is_default = True
+                    target = ctar
+        else:
+            for ctar in self.targets:
+                ctar.is_default = target is ctar
+
+        if target is None:
+            try:
+                del self.options['default']
+            except KeyError: 
+                pass
+        else:
+            self.options['default'] = target
+
+    default = property(get_default, set_default)
 
 class Target(object):
     """A single target"""
 
     def __init__(self):
         self.name = ''
+        self.is_default = False
         self.actions = []
         #self.dependencies = []
 
@@ -91,6 +134,8 @@ class Target(object):
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return '<Target %s>' %self.name
 
 class Action(object):
     """A single action"""
