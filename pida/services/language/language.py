@@ -635,6 +635,7 @@ class LanguageEvents(EventsConfig):
 
     def on_document_type(self, document):
         self.svc.clear_document_cache(document)
+        self.svc.on_buffer_changed(document)
 
 
 class LanguageDbusConfig(DbusConfig):
