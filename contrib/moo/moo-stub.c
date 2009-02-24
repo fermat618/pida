@@ -1,3 +1,4 @@
+#define NO_IMPORT_PYGTK
 #include <Python.h>
 #include <pygobject.h>
 #include <pygtk/pygtk.h>
