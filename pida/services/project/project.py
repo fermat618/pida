@@ -9,7 +9,7 @@
     :license: GPL 2 or later
 """
 from __future__ import with_statement
-import os, sys
+import os, sys, os.path
 
 import gtk
 
@@ -254,9 +254,15 @@ class ProjectActionsConfig(ActionsConfig):
         self.svc.remove_current_project()
 
     def on_project_add(self, action):
+        folder = self.svc.opt('project_root')
+        if self.svc.opt('use_filemanager_path'):
+            folder = self.svc.boss.cmd('filemanager', 'get_browsed_path')
+        if folder:
+            folder = os.path.expanduser(folder)
         path = open_directory_dialog(
             self.svc.window,
-            _('Select a directory to add')
+            _('Select a directory to add'),
+            folder=folder
         )
         if path:
             self.svc.add_directory(path)
@@ -277,8 +283,15 @@ class ProjectActionsConfig(ActionsConfig):
 
     def on_project_execution_menu(self, action):
         menuitem = action.get_proxies()[0]
-        menuitem.remove_submenu()
-        menuitem.set_submenu(self.svc.create_menu())
+        #menuitem.remove_submenu()                    # gtk2.12 or higher
+        #menuitem.set_submenu(self.svc.create_menu()) # gtk2.12 or higher
+        submenu = menuitem.get_submenu()
+        for child in submenu.get_children():
+            submenu.remove(child)
+        submenu_new =   self.svc.create_menu()
+        for child in submenu_new.get_children():
+            submenu_new.remove(child)
+            submenu.append(child)
 
     def on_project_add_directory(self, action):
         path = action.contexts_kw.get('dir_name')
@@ -298,6 +311,23 @@ class ProjectFeaturesConfig(FeaturesConfig):
 class ProjectOptions(OptionsConfig):
 
     def create_options(self):
+        self.create_option(
+            'project_root',
+            _('Project Directories'),
+            unicode,
+            "~",
+            _('The current directories in the workspace'),
+            safe=False
+        )
+
+        self.create_option(
+            'use_filemanager_path',
+            _('Use Filemanager Path'),
+            bool,
+            True,
+            _('Use the current filemanager path as startpoint')
+        )
+
         self.create_option(
             'project_dirs',
             _('Project Directories'),

@@ -71,7 +71,14 @@ class PidaPaned(BigPaned):
             if use_old:
                 pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
             else:
+                pane = view.key and self.lookup_pane(view.key) or None
+                if pane:
+                    # we will get a key collission if we dont remove first
+                    self.remove_view(pane.view)
+
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
+
+                print pane
             pane.props.detachable = detachable
             #XXX: moo MooParams are not editable :(
             oparam = pane.get_params()

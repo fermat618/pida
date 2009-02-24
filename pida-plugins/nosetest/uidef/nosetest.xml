@@ -11,13 +11,14 @@
         </menu>
         
         <menu name="LanguageMenu" action="LanguageMenu">
-        <menuitem name="show_test_python" action="show_test_python" />
+        <menuitem name="test_python" action="test_python" />
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">
+        <menuitem name="show_test_python" action="show_test_python" />
         </menu>
         
         <menu name="HelpMenu" action="HelpMenu">

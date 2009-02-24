@@ -22,6 +22,8 @@
 
 # stdlib
 import subprocess
+import os
+from xml.sax.saxutils import escape
 
 from xml.etree.ElementTree import iterparse
 # gtk
@@ -73,12 +75,12 @@ class Trace(object):
         if cause is None:
             return
         type = cause.attrib['type']
-        args = cause.findtext('')
+        args = escape(cause.findtext(''))
 
         #XXX: unescape hack, find a better one in the stdlib
-        for f, t in zip('&lt; &gt; &quot; &apos; &amp;'.split(), '<>"\'&'):
-            args = args.replace(f, t)
-        args = args.strip()
+        #for f, t in zip('&lt; &gt; &quot; &apos; &amp;'.split(), '<>"\'&'):
+        #    args = args.replace(f, t)
+        #args = args.strip()
 
         trace = Trace(type, args)
         trace.items.extend(TraceItem(**x.attrib) 
@@ -100,7 +102,7 @@ class Trace(object):
 class TestResult(object) : 
     status_map= { # 1 is for sucess, 2 for fail
                   # used for fast tree updates
-            'success': ('gtk-apply', 1),
+            'success': ('gtk-ok', 1),
             'failure': ('gtk-no', 2),
             'error': ('gtk-cancel', 2),
             }
@@ -108,7 +110,8 @@ class TestResult(object) :
     parent = None
     trace = None
 
-    def __init__(self, full_name, status, trace, capture) :
+    def __init__(self, full_name, status, trace, capture):
+        print full_name, status, trace, capture
         self.full_name = full_name
         self.trace = trace
         self.capture = capture
@@ -182,7 +185,7 @@ class TestResultBrowser(PidaGladeView):
     def create_ui(self):
         self.source_tree.set_columns([
                 Column('status', use_stock=True, justify=gtk.JUSTIFY_LEFT),
-                Column('name', column='status',),
+                Column('name', title='status',),
             ])
         self.source_tree.set_headers_visible(False)
 
@@ -212,7 +215,8 @@ class TestResultBrowser(PidaGladeView):
         names = test.group_names
         group = self.get_or_create_testgroup(names)
         test.parent = group
-        self.source_tree.append(group,test)
+        #self.source_tree.append(group,test)
+        self.source_tree.append(None, test)
 
         for parent in test.parents():
             if parent.add_child(test):
@@ -227,8 +231,9 @@ class TestResultBrowser(PidaGladeView):
 
 
     def test_add(self, element):
+        print element, str(element)
         attr = element.attrib
-        name = attr['id']
+        name = 'name' # attr['id']
         status = attr['status']
 
         trace = None
@@ -263,17 +268,22 @@ class TestResultBrowser(PidaGladeView):
         """
 
         project = self.svc.boss.cmd('project','get_current_project')
+        if not project:
+            self.svc.notify_user(_("No project found"))
+            return
         src = project.source_directory
         proc = subprocess.Popen(
-                ['nosetests','--xml'],
+                [os.path.join(os.path.dirname(__file__),'pidanose.py'),
+                '--with-xml-output'],
                 cwd=src,
-                stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                 stdout=None,
+                 stdin=subprocess.PIPE,
+                 stderr=subprocess.PIPE,
                 )
 
-        for event, element in iterparse(proc.stdout):
-            if element.tag == 'test':
+        for event, element in iterparse(proc.stderr):
+            print event, element
+            if element.tag == 'result':
                 yield element
 
     def on_source_tree__double_click(self, tv, item):
@@ -307,7 +317,10 @@ class TestOutputView(PidaView):
 
     def can_be_closed(self):
         self.svc.output_visible = False
-        return True
+        #we need this to remove the id (looks like moo bug)
+        self.svc.boss.cmd('window', 'remove_view', view=self)
+        return False
+
 
 class PythonActionsConfig(ActionsConfig):
 
@@ -368,6 +381,8 @@ class PythonTestResults(Service):
             self.boss.cmd('window', 'add_view', 
                     paned='Terminal', view=self._view)
             self.output_visible = True
+        else:
+            self.boss.cmd('window', 'present_view', view=self._view)
 
     def stop(self):
         if self.get_action('show_test_python').get_active():
