@@ -78,7 +78,6 @@ class PidaPaned(BigPaned):
 
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
 
-                print pane
             pane.props.detachable = detachable
             #XXX: moo MooParams are not editable :(
             oparam = pane.get_params()
