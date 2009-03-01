@@ -18,6 +18,7 @@ pida_plugins = path.join(
 
 def test_find_files():
     files = find_files(pida_plugins, 'skeleton')
+    assert files[0] == 'skeleton'
     assert path.basename(files[1]) == 'service.pida'
     assert len(files) == 7, 'the project skeleton has 7 items'
 
@@ -29,7 +30,7 @@ def test_pack_plugin():
     tarfile = TarFile.gzopen(None,fileobj=io)
 
     tar_files = [info.name for info in tarfile]
-    for tar, norm in zip(tar_files, files):
-        assert norm.endswith(tar)
-
+    
+    for norm, tar in zip(files, tar_files):
+        assert norm == tar
 
