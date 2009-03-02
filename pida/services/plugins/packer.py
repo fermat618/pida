@@ -67,9 +67,11 @@ def pack_plugin(base, service, notify=lambda x:None):
 def upload_data(publisher, data, user, password,
                   notify=lambda x: None):
     authinfo = urllib2.HTTPBasicAuthHandler()
-    authinfo.add_password(uri=publisher, 
+    authinfo.add_password(
+                          realm='PlugPost',
+                          uri=publisher, 
                           user=user,
-                          password=password,
+                          passwd=password,
                          )
     #XXX: proxy support 
 

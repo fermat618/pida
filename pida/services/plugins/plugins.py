@@ -473,7 +473,8 @@ class Plugins(Service):
         #XXX: DAMMIT this is in a worker thread ?!?!
         gcall(self._view.start_pulse, _('Download available plugins'))
         try:
-            plist = metadata.fetch_plugins(self.opt('publisher'))
+            plist = metadata.fetch_plugins(
+                self.opt('publish_to'))
             for item in plist:
                 inst = None
                 isnew = False
@@ -541,18 +542,23 @@ class Plugins(Service):
         # XXX: get smarter for more tricky plugins
         # (external processes, java, ...)
 
-        # first, check for a service.pida file
-        if not self.is_plugin_directory(directory):
-            return
-
         # extract plugin name
         plugin = os.path.basename(directory)
         base = os.path.dirname(directory)
+        # first, check for a service.pida file
+        if not metadata.is_plugin(base, plugin):
+            return
+
         def notify(text):
             gcall(self._view.start_publish_pulse, text)
         # get filelist
         def upload_do():
             try:
+                packer.upload_plugin(
+                    base, plugin,
+                    self.opt('publish_to'),
+                    login, password,
+                    notify)
                 #XXX: stuff
                 gcall(self.boss.cmd, 'notify', 'notify',
                      title=_('Plugins'),
