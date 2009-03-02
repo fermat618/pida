@@ -13,7 +13,6 @@ import os
 
 from email.message import Message
 from email.feedparser import FeedParser
-from email import message_from_file
 
 class _hd(object):
     def __init__(self, name):
@@ -31,8 +30,9 @@ class _hd(object):
         else:
             object.replace_header(self.name, value)
 
-
+#XXX: 
 class PluginMessage(Message, object):
+
     name = _hd('Name')
     author = _hd('Author')
     version = _hd('Version')
@@ -72,4 +72,7 @@ def from_dict(**kw):
     message.is_new = True #XXX: sematics?
     return message
 
-
+def serialize(base, plugin, meta):
+    path = os.path.join(base, plugin, 'service.pida')
+    with open(path, 'w') as f:
+        f.write(meta.to_string(True))

@@ -44,7 +44,7 @@ from pida.core.environment import plugins_dir
 from pida.utils.web import fetch_url
 from pida.utils.path import walktree
 
-from .metadata import from_plugin
+from .metadata import from_plugin, from_dict, serialize
 
 # consts
 PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
@@ -54,56 +54,6 @@ from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
 
-# http://docs.python.org/lib/xmlrpc-client-example.html
-class ProxiedTransport(xmlrpclib.Transport):
-
-    def __init__(self, proxy):
-        self.proxy = proxy
-
-    def make_connection(self, host):
-        self.realhost = host
-        return httplib.HTTP(self.proxy)
-
-    def send_request(self, connection, handler, request_body):
-        connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
-
-    def send_host(self, connection, host):
-        connection.putheader('Host', self.realhost)
-
-def create_transport():
-    if 'http_proxy' in os.environ:
-        host = os.environ['http_proxy']
-        return ProxiedTransport(host)
-    else:
-        return xmlrpclib.Transport()
-
-
-
-class PluginsItem(object):
-
-    def __init__(self, infos, directory=None, enabled=False, isnew=False):
-        get = infos.get
-        self.isnew = isnew
-        if directory is not None:
-            self.plugin = os.path.basename(directory)
-        else:
-            self.plugin = None
-        self.name = get('Name')
-        assert self.name,directory
-        self.author = get('Author')
-        self.version = get('Version')
-        self.depends = get('Depends')
-        self.category = get('Category')
-        self.url = get('Location')
-        self.description = infos.get_payload()
-        self.directory = directory
-        self.enabled = enabled
-
-    @property
-    def markup(self):
-        if self.isnew:
-            return '<span color="red"><b>!N</b></span> %s' % self.name
-        return self.name
 
 
 class PluginsEditItem(object):
@@ -501,12 +451,17 @@ class Plugins(Service):
         if self.task:
             self.task.stop()
 
-        def add_in_list(list, isnew):
+        def add_in_list(data, isnew):
             if isnew and self._check_notify:
-                self.boss.cmd('notify', 'notify', title=_('Plugins'),
+                self.boss.cmd('notify', 'notify', 
+                              title=_('Plugins'),
                     data=_('Version %(version)s of %(plugin)s is available !') \
-                            % {'version':list['version'], 'plugin':list['plugin']})
-            self._view.add_available(PluginsItem(list, isnew=isnew))
+                            % data)
+            self._view.add_available(
+                from_dict(
+                    isnew=isnew,
+                    **data)
+            )
 
         def stop_pulse():
             self._check_notify = False
@@ -679,19 +634,15 @@ class Plugins(Service):
         return from_plugin(base, plugin)
 
     def write_informations(self, item):
-        #XXX: broken
-        return
-        if not item.directory:
-            return
-        config = ConfigObj(os.path.join(item.directory, 'service.pida'))
-        section = config['plugin']
-        for key in [ 'plugin', 'name', 'author', 'version', 'require_pida',
-                'depends', 'category', 'description' ]:
-            section[key] = getattr(item, key)
-        config.write()
+        if item.plugin and item.base:
+            serialize(item.base, item.plugin, item)
+
 
     def save_running_plugin(self):
-        list = [plugin.get_name() for plugin in self.boss.get_plugins()]
+        list = [
+            plugin.get_name() 
+            for plugin in self.boss.get_plugins()
+        ]
         self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
