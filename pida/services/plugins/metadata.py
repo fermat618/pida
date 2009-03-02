@@ -86,4 +86,4 @@ def fetch_plugins(publisher):
     return map(from_dict, data)
 
 def is_plugin(base, plugin):
-    return path.exists(path.join(base, plugin, 'service.pida'))
+    return os.path.exists(os.path.join(base, plugin, 'service.pida'))
