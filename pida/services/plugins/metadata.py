@@ -24,16 +24,26 @@ class _hd(object):
             return self
         return object.get(self.name)
 
+    def __set__(self, object, value):
+        print self.name
+        if self.name not in object:
+            object[self.name] = value
+        else:
+            object.replace_header(self.name, value)
 
-class PluginMessage(Message):
+
+class PluginMessage(Message, object):
     name = _hd('Name')
     author = _hd('Author')
     version = _hd('Version')
     depends = _hd('Depends')
     category = _hd('Category') #XXX list ?
     url = _hd('Location')
-    description = property(Message.get_payload, Message.set_payload)
-
+    description = property(
+        Message.get_payload, 
+        Message.set_payload)
+    
+    
     @property
     def markup(self):
         if self.isnew:
@@ -53,4 +63,13 @@ def from_plugin(base, plugin, enabled=False):
     message.plugin = plugin
     message.base = base
     return message
+
+
+def from_dict(**kw):
+    message = PluginMessage()
+    for k, v in kw.iteritems():
+        setattr(message, k, v)
+    message.is_new = True #XXX: sematics?
+    return message
+
 
