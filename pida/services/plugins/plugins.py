@@ -44,6 +44,8 @@ from pida.core.environment import plugins_dir
 from pida.utils.web import fetch_url
 from pida.utils.path import walktree
 
+from .metadata import from_plugin
+
 # consts
 PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
 
@@ -74,6 +76,8 @@ def create_transport():
         return ProxiedTransport(host)
     else:
         return xmlrpclib.Transport()
+
+
 
 class PluginsItem(object):
 
@@ -670,14 +674,13 @@ class Plugins(Service):
             directory = os.path.dirname(servicefile)
 
         plugin = os.path.basename(directory)
+        base = os.path.dirname(directory)
 
-        from email import message_from_file
-        with open(servicefile) as f:
-            config = message_from_file(f)
-
-        return PluginsItem(config, directory)
+        return from_plugin(base, plugin)
 
     def write_informations(self, item):
+        #XXX: broken
+        return
         if not item.directory:
             return
         config = ConfigObj(os.path.join(item.directory, 'service.pida'))
