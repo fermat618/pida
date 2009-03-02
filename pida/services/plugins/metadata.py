@@ -8,6 +8,8 @@
 
 """
 from __future__ import with_statement
+from simplejson import loads
+import urllib2
 
 import os
 
@@ -70,9 +72,18 @@ def from_dict(**kw):
     for k, v in kw.iteritems():
         setattr(message, k, v)
     message.is_new = True #XXX: sematics?
+    message.base = None
     return message
 
 def serialize(base, plugin, meta):
     path = os.path.join(base, plugin, 'service.pida')
     with open(path, 'w') as f:
         f.write(meta.to_string(True))
+
+def fetch_plugins(publisher):
+    data = urllib2.urlopen(publisher)
+    plugins = loads(data)
+    return map(from_dict, data)
+
+def is_plugin(base, plugin):
+    return path.exists(path.join(base, plugin, 'service.pida'))

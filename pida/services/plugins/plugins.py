@@ -18,14 +18,11 @@
 from __future__ import with_statement
 
 import gtk
-import xmlrpclib
 import cgi
 import gobject
 import tarfile
 import os
-import base64
 import shutil
-import httplib
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
@@ -42,12 +39,9 @@ from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 from pida.core.environment import plugins_dir
 
 from pida.utils.web import fetch_url
-from pida.utils.path import walktree
 
-from .metadata import from_plugin, from_dict, serialize
-
-# consts
-PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
+from . import metadata
+from . import packer
 
 # locale
 from pida.core.locale import Locale
@@ -220,10 +214,8 @@ class PluginsView(PidaGladeView):
     def on_installed_list__cell_edited(self, w, item, value):
         if value != 'enabled':
             return
-        if not item.directory:
-            return
         if item.enabled:
-            success = self.svc.start_plugin(os.path.basename(item.directory))
+            success = self.svc.start_plugin(item.plugin)
             item.enabled = success
         else:
             self.svc.stop_plugin(item.plugin)
@@ -317,12 +309,12 @@ class PluginsOptionsConfig(OptionsConfig):
 
     def create_options(self):
         self.create_option(
-            'rpc_url',
+            'publish_to',
             _('Webservice Url'),
             str,
-            PLUGIN_RPC_URL,
+            '',
             _('URL of Webservice to download plugins'),
-            self.on_rpc_url)
+            )
 
         self.create_option(
             'check_for_updates',
@@ -342,8 +334,6 @@ class PluginsOptionsConfig(OptionsConfig):
             workspace=True
             )
 
-    def on_rpc_url(self, option):
-        self.svc.rpc_url = option.value
 
     def on_check_for_updates(self, option):
         self.svc.check_for_updates(option.value)
@@ -361,7 +351,6 @@ class Plugins(Service):
     actions_config = PluginsActionsConfig
     options_config = PluginsOptionsConfig
     events_config = PluginsEvents
-    rpc_url = PLUGIN_RPC_URL
 
     def pre_start(self):
         self._check = False
@@ -374,7 +363,6 @@ class Plugins(Service):
         self.task = None
 
     def start(self):
-        self.rpc_url = self.opt('rpc_url')
         self.update_installed_plugins(start=True)
         self.check_for_updates(self.opt('check_for_updates'))
 
@@ -392,7 +380,9 @@ class Plugins(Service):
             plugin = self.boss.start_plugin(name)
             self.emit('plugin_started', plugin=plugin)
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
-                data = _('Started %(plugin)s plugin' % {'plugin':plugin.get_label()}))
+                data = _('Started %(plugin)s plugin' % {
+                    'plugin':plugin.get_label()
+                }))
             return True
         except ServiceLoadingError, e:
             #XXX: support a ui traceback browser?
@@ -458,7 +448,7 @@ class Plugins(Service):
                     data=_('Version %(version)s of %(plugin)s is available !') \
                             % data)
             self._view.add_available(
-                from_dict(
+                metadata.from_dict(
                     isnew=isnew,
                     **data)
             )
@@ -483,11 +473,8 @@ class Plugins(Service):
         #XXX: DAMMIT this is in a worker thread ?!?!
         gcall(self._view.start_pulse, _('Download available plugins'))
         try:
-            proxy = xmlrpclib.ServerProxy(self.rpc_url,
-                                          transport=create_transport())
-            plist = proxy.plugins.list({'version': PIDA_VERSION})
-            for k in plist:
-                item = plist[k]
+            plist = metadata.fetch_plugins(self.opt('publisher'))
+            for item in plist:
                 inst = None
                 isnew = False
                 for plugin in installed_list:
@@ -502,7 +489,6 @@ class Plugins(Service):
     def download(self, item):
         if not item.url or item.url == '':
             return
-        #XXX: DAMMIT this is in a worker thread ?!?!
         gcall(self._view.start_pulse, _('Download %s') % item.name)
         def download_complete(url, content):
             self._view.stop_pulse()
@@ -514,9 +500,6 @@ class Plugins(Service):
         # write plugin
         plugin_path = os.path.join(plugins_dir, item.plugin)
         filename = os.path.join(plugins_dir, os.path.basename(item.url))
-        file = open(filename, 'wb')
-        file.write(content)
-        file.close()
 
         # check if we need to stop and remove him
         l_installed = [p[0] for p in
@@ -527,8 +510,7 @@ class Plugins(Service):
 
         # extract him
         tar = tarfile.open(filename, 'r:gz')
-        for tarinfo in tar:
-            tar.extract(tarinfo, path=plugins_dir)
+        tar.extractall(os.path.dirname(plugins_dir))
         tar.close()
         os.unlink(filename)
 
@@ -565,53 +547,22 @@ class Plugins(Service):
 
         # extract plugin name
         plugin = os.path.basename(directory)
-
+        base = os.path.dirname(directory)
+        def notify(text):
+            gcall(self._view.start_publish_pulse, text)
         # get filelist
-        self._view.start_publish_pulse('Listing files')
-        skipped_directory = [ '.svn', 'CVS' ]
-        list = []
-        for top, names in walktree(top=directory,
-                skipped_directory=skipped_directory):
-            list.append(top)
-            for name in names:
-                list.append(os.path.join(top, name))
-
-        # remove some unattended files
-        skipped_extentions = [ 'swp', 'pyc' ]
-        list = [ name for name in list if name.split('.')[-1] not in skipped_extentions ]
-
-        # make tarfile
-        self._view.start_publish_pulse('Building package')
-        filename = os.tmpnam()
-        tar = tarfile.open(filename, 'w:gz')
-        for name in list:
-            arcname = plugin + name[len(directory):]
-            tar.add(name, arcname=arcname, recursive=False)
-        tar.close()
-
-        def upload_do(login, password, plugin, filename):
+        def upload_do():
             try:
-                try:
-                    file = open(filename, 'rb')
-                    data = file.read()
-                    file.close()
-                    proxy = xmlrpclib.ServerProxy(self.rpc_url,
-                                                  transport=create_transport())
-                    code = proxy.plugins.push(login, password,
-                            plugin, base64.b64encode(data))
-                    gcall(self.boss.cmd, 'notify', 'notify',
-                            title=_('Plugins'), data=_('Package upload success !'))
-                except xmlrpclib.Fault, fault:
-                    print _('Error while posting plugin : '), fault
-                except:
-                    pass
+                #XXX: stuff
+                gcall(self.boss.cmd, 'notify', 'notify',
+                     title=_('Plugins'),
+                     data=_('Package upload success !'))
             finally:
-                os.unlink(filename)
-                self._view.stop_publish_pulse()
+                gcall(self._view.stop_publish_pulse)
 
         self._view.start_publish_pulse('Upload to community website')
         task = AsyncTask(upload_do)
-        task.start(login, password, plugin, filename)
+        task.start()
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
@@ -631,11 +582,11 @@ class Plugins(Service):
         plugin = os.path.basename(directory)
         base = os.path.dirname(directory)
 
-        return from_plugin(base, plugin)
+        return metadata.from_plugin(base, plugin)
 
     def write_informations(self, item):
         if item.plugin and item.base:
-            serialize(item.base, item.plugin, item)
+            metadata.serialize(item.base, item.plugin, item)
 
 
     def save_running_plugin(self):

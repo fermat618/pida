@@ -10,6 +10,7 @@ import os
 from os import path
 from tarfile import TarFile
 from StringIO import StringIO
+import urllib2
 
 def find_files(base, service):
 
@@ -63,4 +64,30 @@ def pack_plugin(base, service, notify=lambda x:None):
 
 
 
+def upload_data(publisher, data, user, password,
+                  notify=lambda x: None):
+    authinfo = urllib2.HTTPBasicAuthHandler()
+    authinfo.add_password(uri=publisher, 
+                          user=user,
+                          password=password,
+                         )
+    #XXX: proxy support 
+
+    opener = urllib2.build_opener(authinfo)
+    ret = opener.open(publisher, data=data)
+    return ret.status
+
+def upload_plugin(base, plugin, 
+                  publisher,
+                  user, password,
+                  notify=lambda x:None):
+    data = pack_plugin(base, plugin, notify=notify)
+
+    return upload_data(publisher, data, user, password, data)
+
+
+def unpack_plugin(base, content):
+    io = StringIO(content)
+    tarfile = TarFile.gzopen(None, content)
+    tarfile.extractall(base)
 
