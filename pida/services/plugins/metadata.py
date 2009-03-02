@@ -48,7 +48,7 @@ class PluginMessage(Message, object):
     
     @property
     def markup(self):
-        if self.isnew:
+        if self.is_new:
             return '<span color="red"><b>!N</b></span> %s' % self.name
         return self.name
 
@@ -71,7 +71,7 @@ def from_dict(**kw):
     message = PluginMessage()
     for k, v in kw.iteritems():
         setattr(message, k, v)
-    message.is_new = True #XXX: sematics?
+    message.is_new = False #XXX: sematics?
     message.base = None
     return message
 
@@ -82,8 +82,13 @@ def serialize(base, plugin, meta):
 
 def fetch_plugins(publisher):
     data = urllib2.urlopen(publisher)
-    plugins = loads(data)
-    return map(from_dict, data)
+    plugins = loads(data.read())
+    def to_bytes(d):
+        return dict(
+            (str(k), v.encode('utf8') if type(v) is unicode else v)
+            for k, v in d.iteritems()
+        )
+    return [from_dict(**to_bytes(i)) for i in plugins]
 
 def is_plugin(base, plugin):
     return os.path.exists(os.path.join(base, plugin, 'service.pida'))

@@ -447,11 +447,7 @@ class Plugins(Service):
                               title=_('Plugins'),
                     data=_('Version %(version)s of %(plugin)s is available !') \
                             % data)
-            self._view.add_available(
-                metadata.from_dict(
-                    isnew=isnew,
-                    **data)
-            )
+            self._view.add_available(data)
 
         def stop_pulse():
             self._check_notify = False
@@ -473,19 +469,21 @@ class Plugins(Service):
         #XXX: DAMMIT this is in a worker thread ?!?!
         gcall(self._view.start_pulse, _('Download available plugins'))
         try:
-            plist = metadata.fetch_plugins(
-                self.opt('publish_to'))
+            plist = metadata.fetch_plugins(self.opt('publish_to'))      
             for item in plist:
+                print item
                 inst = None
                 isnew = False
                 for plugin in installed_list:
-                    if plugin.plugin == item['plugin']:
+                    #XXX: module is weird, maybe change rpc
+                    if plugin.plugin == item.module:
                         inst = plugin
                 if inst is not None:
                     isnew = (inst.version != item['version'])
                 yield item, isnew
-        except:
-            pass
+        except Exception, e:
+            print e
+            raise
 
     def download(self, item):
         if not item.url or item.url == '':
