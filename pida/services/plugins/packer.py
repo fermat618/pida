@@ -37,8 +37,6 @@ def find_files(base, service):
     # per convention the service file is the second item
     paths.remove(service_file)
     paths.insert(1, service_file)
-    print '\n'.join(paths)
-    print
     return paths
 
 
