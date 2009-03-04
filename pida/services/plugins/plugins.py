@@ -486,7 +486,7 @@ class Plugins(Service):
             raise
 
     def download(self, item):
-        if not item.url or item.url == '':
+        if not item.url:
             return
         gcall(self._view.start_pulse, _('Download %s') % item.name)
         def download_complete(url, content):
@@ -507,12 +507,7 @@ class Plugins(Service):
         if item.plugin in l_installed:
             self.delete(item, force=True)
 
-        # extract him
-        tar = tarfile.open(filename, 'r:gz')
-        tar.extractall(os.path.dirname(plugins_dir))
-        tar.close()
-        os.unlink(filename)
-
+        packer.unpack_plugin(plugins_dir, content)
         # start service
         self.start_plugin(item.plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
