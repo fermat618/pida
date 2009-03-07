@@ -114,7 +114,7 @@ class WindowActionsConfig(ActionsConfig):
         self.create_action(
             'WindowMenu',
             TYPE_MENUTOOL,
-            _('_Windows'),
+            _('Win_dows'),
             _('Show window list'),
             'package_utilities',
             self.on_windows,

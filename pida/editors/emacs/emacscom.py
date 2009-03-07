@@ -31,7 +31,6 @@ class EmacsClient(object):
         while proxy is None:
             try:
                 proxy = session.get_object(namespace, '/uk/co/pida/Emacs')
-                print "trying dbus"
             except dbus.DBusException:
                 proxy = None
                 time.sleep(0.2)

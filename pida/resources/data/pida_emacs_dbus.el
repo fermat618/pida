@@ -24,7 +24,7 @@
 
 (defun pida-register-hooks ()
   "Register hooks to inform pida what is happening in emacs"
-  (add-hook 'emacs-startup-hook
+  (add-hook 'window-setup-hook
 	    'pida-emacs-start)
   (add-hook 'find-file-hooks
  	    'pida-find-file)
