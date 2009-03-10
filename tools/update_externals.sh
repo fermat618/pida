@@ -5,6 +5,7 @@ OLDPATH=`pwd`
 REPOS="
 rope|hg|http://www.bitbucket.org/agr/rope/|rope/rope|rope
 anyvc|hg|http://bitbucket.org/RonnyPfannschmidt/anyvc/|anyvc/anyvc|anyvc
+kiwi|bzr|lp:kiwi|kiwi/kiwi|kiwi
 "
 
 mkdir -p $REPOSPATH
