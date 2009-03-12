@@ -1,4 +1,5 @@
 # licence gpl2 or later
+#XXX: this code is ugly like hell
 import os
 import sys
 import StringIO
@@ -55,6 +56,26 @@ def upload_plugin(base, plugin):
 
     do_request(data)
 
+def upload_meta(base, plugin):
+    meta = metadata.from_plugin(base, plugin)
+    pack = meta.as_string(False)
+    io = StringIO.StringIO(pack)
+    io.name = 'pida-plugin-%s-%s.meta' % (plugin, meta.version)
+
+    data = extract_data(meta)
+    data.update({
+        # action
+        ':action': 'file_upload',
+        'protocol_version': '1',
+
+        # content
+        'content': io,
+        'filetype': 'sdist', #XXX: ???
+        'pyversion': '2.5', #XXX: argh
+        'md5_digest': hashlib.md5(pack).hexdigest(),
+    })
+
+    do_request(data)
 
 
 def register_plugin(base, plugin):
@@ -79,20 +100,30 @@ def main():
 
     options, args = parser.parse_args()
 
+    actions = [
+        ('register', register_plugin),
+        ('meta', upload_meta),
+        ('plugin', upload_plugin),
+    ]
+
     for path in args:
+
         path = os.path.abspath(path)
         path = os.path.normpath(path)
+        if not os.path.exists(os.path.join(path, 'service.pida')):
+            continue
         base = os.path.dirname(path)
 
         plugin = os.path.basename(path)
-        try:
-            meta = metadata.from_plugin(base, plugin)
-            print plugin,':', meta.name
-            register_plugin(base, plugin)
-            upload_plugin(base, plugin)
-        except: #XXX: ignore fails
-            pass
+        meta = metadata.from_plugin(base, plugin)
+        print plugin,':', meta.name
+        for action, method in actions:
+            try:
+                print plugin, '->', action,
+                method(base, plugin)
+                print 'works'
+            except Exception, e:
+                print 'fail', e
+                import traceback
+                traceback.print_exc()
 
-
-
-    
