@@ -13,7 +13,7 @@ from StringIO import StringIO
 import urllib2
 
 def find_files(base, service):
-
+    base = path.normpath(base)
     service_file = path.join(service, 'service.pida')
     service_path = path.join(base, service)
     # find a better way
@@ -35,7 +35,8 @@ def find_files(base, service):
     # sort out some duplicates
     paths = sorted(set(x[len(base)+1:] for x in paths))
     # per convention the service file is the second item
-    paths.remove(service_file)
+    if service_file in paths:
+        paths.remove(service_file)
     paths.insert(1, service_file)
     return paths
 
@@ -62,32 +63,4 @@ def pack_plugin(base, service, notify=lambda x:None):
 
 
 
-def upload_data(publisher, data, user, password,
-                  notify=lambda x: None):
-    authinfo = urllib2.HTTPBasicAuthHandler()
-    authinfo.add_password(
-                          realm='PlugPost',
-                          uri=publisher, 
-                          user=user,
-                          passwd=password,
-                         )
-    #XXX: proxy support 
-
-    opener = urllib2.build_opener(authinfo)
-    ret = opener.open(publisher, data=data)
-    return ret.status
-
-def upload_plugin(base, plugin, 
-                  publisher,
-                  user, password,
-                  notify=lambda x:None):
-    data = pack_plugin(base, plugin, notify=notify)
-
-    return upload_data(publisher, data, user, password, data)
-
-
-def unpack_plugin(base, content):
-    io = StringIO(content)
-    tarfile = TarFile.gzopen(None, content)
-    tarfile.extractall(base)
 

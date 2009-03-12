@@ -2,7 +2,7 @@
 # copyrtight 2009 by the pida team
 # see COPYING
 
-from .packer import find_files, pack_plugin
+from .packer import find_files, pack_plugin, upload_plugin
 from os import path
 from StringIO import StringIO
 from tarfile import TarFile
@@ -32,5 +32,7 @@ def test_pack_plugin():
     tar_files = [info.name for info in tarfile]
     
     for norm, tar in zip(files, tar_files):
+        tar = path.normpath(tar)
         assert norm == tar
+
 

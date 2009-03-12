@@ -55,10 +55,14 @@ class PluginMessage(Message, object):
 
 def from_plugin(base, plugin, enabled=False):
     path = os.path.join(base, plugin, 'service.pida')
-    parser = FeedParser(PluginMessage)
 
     with open(path) as f:
-        parser.feed(f.read())
+        return from_string(f.read(), base, plugin, enabled)
+
+
+def from_string(data, base, plugin, enabled=False):
+    parser = FeedParser(PluginMessage)
+    parser.feed(data)
     message = parser.close()
     message.is_new = False
     message.enabled = enabled
@@ -71,7 +75,7 @@ def from_dict(**kw):
     message = PluginMessage()
     for k, v in kw.iteritems():
         setattr(message, k, v)
-    message.is_new = False #XXX: sematics?
+    message.is_new = True #XXX: sematics?
     message.base = None
     return message
 
