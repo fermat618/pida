@@ -1,11 +1,16 @@
-from . import metadata
-from . import packer
-from . import multipart
+# licence gpl2 or later
+import os
+import sys
 import StringIO
 import urllib2
 import base64
 import hashlib
 
+from optparse import OptionParser
+
+from . import metadata
+from . import packer
+from . import multipart
 
 
 def do_request(data):
@@ -19,17 +24,15 @@ def do_request(data):
     res = opener.open(req)
     return res
 
-
 def extract_data(meta):
     return {
         # infos
         'name': 'pida.plugins.'+ meta.plugin, #XXX?!
-        'description': meta.name,
-        'long_description': meta.description,
+        'summary': 'Pida Plugin: ' + meta.name,
+        'description': meta.description,
         'version': meta.version,
         #XXX: extend
     }
-
 
 def upload_plugin(base, plugin):
     meta = metadata.from_plugin(base, plugin)
@@ -46,7 +49,7 @@ def upload_plugin(base, plugin):
         # content
         'content': io,
         'filetype': 'sdist', #XXX: ???
-        'pyversion': '2.5', #XXX:
+        'pyversion': '2.5', #XXX: argh
         'md5_digest': hashlib.md5(pack).hexdigest(),
     })
 
@@ -65,3 +68,31 @@ def register_plugin(base, plugin):
 
     return do_request(data)
 
+
+
+def main():
+    #XXX: config support
+    parser = OptionParser()
+    parser.add_option('-r', '--repository', dest='repo',)
+    parser.add_option('-u', '--user', dest='user',)
+    parser.add_option('-p', '--password', dest='pass',)
+
+    options, args = parser.parse_args()
+
+    for path in args:
+        path = os.path.abspath(path)
+        path = os.path.normpath(path)
+        base = os.path.dirname(path)
+
+        plugin = os.path.basename(path)
+        try:
+            meta = metadata.from_plugin(base, plugin)
+            print plugin,':', meta.name
+            register_plugin(base, plugin)
+            upload_plugin(base, plugin)
+        except: #XXX: ignore fails
+            pass
+
+
+
+    
