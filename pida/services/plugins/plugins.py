@@ -16,6 +16,8 @@
     :license: GPL2 or later
 """
 from __future__ import with_statement
+import StringIO
+
 
 import gtk
 import cgi
@@ -42,6 +44,7 @@ from pida.utils.web import fetch_url
 
 from . import metadata
 from . import packer
+from . import downloader
 
 # locale
 from pida.core.locale import Locale
@@ -454,6 +457,7 @@ class Plugins(Service):
             self._view.stop_pulse()
 
         self._view.clear_available()
+        self._view.start_pulse( _('Download available plugins'))
         self.task = GeneratorTask(self._fetch_available_plugins,
                 add_in_list, stop_pulse)
         self.task.start()
@@ -467,19 +471,20 @@ class Plugins(Service):
                     servicefile=service_file)
             installed_list.append(plugin_item)
         #XXX: DAMMIT this is in a worker thread ?!?!
-        gcall(self._view.start_pulse, _('Download available plugins'))
         try:
-            plist = metadata.fetch_plugins(self.opt('publish_to'))      
-            for item in plist:
-                print item
+            items = downloader.find_latest_metadata(
+                'http://localhost:8080/simple/'
+            )
+            for item in items:
+                print item.name
                 inst = None
                 isnew = False
                 for plugin in installed_list:
                     #XXX: module is weird, maybe change rpc
-                    if plugin.plugin == item.module:
+                    if plugin.plugin == item.plugin:
                         inst = plugin
                 if inst is not None:
-                    isnew = (inst.version != item['version'])
+                    isnew = (inst.version != item.version)
                 yield item, isnew
         except Exception, e:
             print e
@@ -488,7 +493,7 @@ class Plugins(Service):
     def download(self, item):
         if not item.url:
             return
-        gcall(self._view.start_pulse, _('Download %s') % item.name)
+        self._view.start_pulse(_('Download %s') % item.name)
         def download_complete(url, content):
             self._view.stop_pulse()
             if content:
@@ -496,18 +501,17 @@ class Plugins(Service):
         fetch_url(item.url, download_complete)
 
     def install(self, item, content):
-        # write plugin
-        plugin_path = os.path.join(plugins_dir, item.plugin)
-        filename = os.path.join(plugins_dir, os.path.basename(item.url))
+        item.base = plugins_dir
+        item.directory = os.path.join(plugins_dir, item.plugin)
 
-        # check if we need to stop and remove him
-        l_installed = [p[0] for p in
-            self._loader.get_all_service_files()]
-        item.directory = plugin_path
-        if item.plugin in l_installed:
-            self.delete(item, force=True)
-
-        packer.unpack_plugin(plugins_dir, content)
+        # this will gracefully ignore not installed plugins
+        self.delete(item, force=True)
+        
+        import tarfile
+        io = StringIO.StringIO(content)
+        tar = tarfile.TarFile.gzopen(None, fileobj=io)
+        tar.extractall(plugins_dir)
+        
         # start service
         self.start_plugin(item.plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),

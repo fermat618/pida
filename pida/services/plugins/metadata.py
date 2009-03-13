@@ -26,7 +26,6 @@ class _hd(object):
         return object.get(self.name)
 
     def __set__(self, object, value):
-        print self.name
         if self.name not in object:
             object[self.name] = value
         else:
@@ -45,7 +44,10 @@ class PluginMessage(Message, object):
         Message.get_payload, 
         Message.set_payload)
     
-    
+    def __repr__(self):
+        return '<Plugin metadata %s: %s>'%(getattr(self, 'plugin', None), self.name)
+
+
     @property
     def markup(self):
         if self.is_new:
@@ -83,16 +85,6 @@ def serialize(base, plugin, meta):
     path = os.path.join(base, plugin, 'service.pida')
     with open(path, 'w') as f:
         f.write(meta.to_string(True))
-
-def fetch_plugins(publisher):
-    data = urllib2.urlopen(publisher)
-    plugins = loads(data.read())
-    def to_bytes(d):
-        return dict(
-            (str(k), v.encode('utf8') if type(v) is unicode else v)
-            for k, v in d.iteritems()
-        )
-    return [from_dict(**to_bytes(i)) for i in plugins]
 
 def is_plugin(base, plugin):
     return os.path.exists(os.path.join(base, plugin, 'service.pida'))

@@ -6,6 +6,8 @@ from xml.etree import ElementTree
 from . import metadata
 from urllib import basejoin
 from collections import defaultdict
+import logging
+log = logging.getLogger('pida.services.plugins.downloader')
 
 url = 'http://localhost:8080/simple'
 url = 'http://pypi.python.org/simple/'
@@ -16,10 +18,31 @@ url = 'http://pypi.python.org/simple/'
 link_re = re.compile(r'''href=['"](.*?)["'].*?>(.*?)</''', re.M)
 plugin_name_re = re.compile("""
     .* # prefix crud
-    (?P<name>\w+)-(?P<version>[\w.]+)
+    pida.plugins.(?P<name>\w+)-(?P<version>[\w.]+)
     .(?P<ext>zip|meta|egg|tar.bz|tar.gz)
     (?P<crud>.*)
 """, re.VERBOSE)
+
+
+def find_latest_metadata(url):
+    for name, version, data in find_latest(url):
+        if 'meta' not in data:
+            log.error('%s-%s doesnt supply metadata', name, version)
+            continue
+        if 'tar.gz' not in data:
+            log.error('%s-%s doesnt supply a packed plugin', name, version)
+            continue
+        plugin = name.split('.')[-1]
+        fd = urllib2.urlopen(data['meta'])
+        meta = metadata.from_string(fd.read(), None, plugin)
+        meta.url = data['tar.gz']
+        yield meta
+
+def find_latest(url):
+    for name, versions in find_plugin_versions(url):
+        #XXX: better version key
+        latest = max(versions,key=lambda x:x.split('.'))
+        yield name, latest, versions[latest]
 
 def find_plugin_versions(url):
     for href, name in find_plugins(url):
@@ -41,7 +64,11 @@ def find_versions(url):
 
 def find_plugins(url):
     items = find_urls(url)
-    return [(href, name) for href, name in items if 'pida' in href]
+    return [
+        (href, name)
+        for href, name in items
+        if 'pida' in href.lower()
+     ]
 
 def find_urls(url,):
     fd = urllib2.urlopen(url)
