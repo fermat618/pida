@@ -39,7 +39,7 @@ def upload_plugin(base, plugin):
     meta = metadata.from_plugin(base, plugin)
     pack = packer.pack_plugin(base, plugin)
     io = StringIO.StringIO(pack)
-    io.name = 'pida-plugin-%s-%s.zip' % (plugin, meta.version)
+    io.name = 'pida.plugins.%s-%s.zip' % (plugin, meta.version)
 
     data = extract_data(meta)
     data.update({
@@ -60,7 +60,7 @@ def upload_meta(base, plugin):
     meta = metadata.from_plugin(base, plugin)
     pack = meta.as_string(False)
     io = StringIO.StringIO(pack)
-    io.name = 'pida-plugin-%s-%s.meta' % (plugin, meta.version)
+    io.name = 'pida.plugins.%s-%s.meta' % (plugin, meta.version)
 
     data = extract_data(meta)
     data.update({
