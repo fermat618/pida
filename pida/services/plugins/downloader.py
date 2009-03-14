@@ -8,12 +8,6 @@ from urllib import basejoin
 from collections import defaultdict
 import logging
 log = logging.getLogger('pida.services.plugins.downloader')
-
-url = 'http://localhost:8080/simple'
-url = 'http://pypi.python.org/simple/'
-
-
-
 #XXX: ugly hack to avout dealing with html trees
 link_re = re.compile(r'''href=['"](.*?)["'].*?>(.*?)</''', re.M)
 plugin_name_re = re.compile("""

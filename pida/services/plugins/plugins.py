@@ -132,6 +132,9 @@ class PluginsView(PidaGladeView):
                 expand=True, use_markup=True),
             Column('version', title=_('Version'), data_type=str),
             ])
+        #XXX: reenable ui publisher after making a newui
+    
+        self.notebook.remove_page(2)
 
     def can_be_closed(self):
         self.svc.get_action('show_plugins').set_active(False)
@@ -473,7 +476,7 @@ class Plugins(Service):
         #XXX: DAMMIT this is in a worker thread ?!?!
         try:
             items = downloader.find_latest_metadata(
-                'http://localhost:8080/simple/'
+                    'http://packages.pida.co.uk/simple/'
             )
             for item in items:
                 print item.name
