@@ -35,7 +35,7 @@ def get_vim(uid):
             log.debug('trying vim connect')
             proxy = session.get_object(get_bus_name(uid), '/vim')
         except dbus.DBusException:
-            log.warning('vim connect failed, retrying')
+            log.debug('vim connect failed, retrying')
             proxy = None
             time.sleep(0.2)
     return proxy
