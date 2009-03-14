@@ -41,7 +41,7 @@ moo = Extension(
 
 class BuildExt(build_ext):
     def build_extension(self, ext):
-        if ext.name == 'moo_stub':
+        if ext.name == 'pida.ui.moo_stub':
             if os.system('cd contrib/moo && make prepare'):
                 raise RuntimeError()
         build_ext.build_extension(self, ext)
