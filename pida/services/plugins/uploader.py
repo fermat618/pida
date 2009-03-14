@@ -18,12 +18,12 @@ log = logging.getLogger(__name__)
 
 def do_request(data, user, password):
     passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    passman.add_password(None, 'pypi.pida.co.uk', user, password)
+    passman.add_password(None, 'packages.pida.co.uk', user, password)
 
     authhandler = urllib2.HTTPBasicAuthHandler(passman)
     opener = urllib2.build_opener(authhandler, multipart.MultipartPostHandler)
     #XXX: use https ?
-    req = urllib2.Request('http://pypi.pida.co.uk', data)
+    req = urllib2.Request('http://packages.pida.co.uk', data)
     res = opener.open(req)
     return res
 
@@ -56,7 +56,7 @@ def upload_plugin(base, plugin, user, password):
         'md5_digest': hashlib.md5(pack).hexdigest(),
     })
 
-    do_request(data, user, password)
+    return do_request(data, user, password)
 
 def upload_meta(base, plugin, user, password):
     meta = metadata.from_plugin(base, plugin)
@@ -77,7 +77,7 @@ def upload_meta(base, plugin, user, password):
         'md5_digest': hashlib.md5(pack).hexdigest(),
     })
 
-    do_request(data, user, password)
+    return do_request(data, user, password)
 
 
 def register_plugin(base, plugin, user, password):
@@ -89,7 +89,7 @@ def register_plugin(base, plugin, user, password):
         'metadata_version' : '1.0',
     })
 
-    do_request(data, user, password)
+    return do_request(data, user, password)
 
 
 
@@ -113,20 +113,21 @@ def main():
         path = os.path.abspath(path)
         path = os.path.normpath(path)
         if not os.path.exists(os.path.join(path, 'service.pida')):
-            log.debug("%s doesn't contain a plugin", path)
+            print path, "doesn't contain a plugin"
             continue
         base = os.path.dirname(path)
 
         plugin = os.path.basename(path)
         meta = metadata.from_plugin(base, plugin)
-        print plugin,':', meta.name
+        print plugin, meta.name
         for action, method in actions:
             try:
-                print plugin, '->', action,
-                method(base, plugin, options.user, options.password)
+                print ' '*len(plugin), action,
+                res = method(base, plugin, options.user, options.password)
+                print res.code,
                 print 'works'
             except Exception, e:
-                print 'fail', e
-                import traceback
-                traceback.print_exc()
+                print e
+                print e.read()
+                break
 
