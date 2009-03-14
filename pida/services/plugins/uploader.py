@@ -12,16 +12,18 @@ from optparse import OptionParser
 from . import metadata
 from . import packer
 from . import multipart
+import logging
+log = logging.getLogger(__name__)
 
 
-def do_request(data):
+def do_request(data, user, password):
     passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    passman.add_password(None, 'localhost:8080', 'ronny', 'test')
+    passman.add_password(None, 'pypi.pida.co.uk', user, password)
 
     authhandler = urllib2.HTTPBasicAuthHandler(passman)
     opener = urllib2.build_opener(authhandler, multipart.MultipartPostHandler)
-
-    req = urllib2.Request('http://localhost:8080/', data)
+    #XXX: use https ?
+    req = urllib2.Request('http://pypi.pida.co.uk', data)
     res = opener.open(req)
     return res
 
@@ -35,7 +37,7 @@ def extract_data(meta):
         #XXX: extend
     }
 
-def upload_plugin(base, plugin):
+def upload_plugin(base, plugin, user, password):
     meta = metadata.from_plugin(base, plugin)
     pack = packer.pack_plugin(base, plugin)
     io = StringIO.StringIO(pack)
@@ -54,9 +56,9 @@ def upload_plugin(base, plugin):
         'md5_digest': hashlib.md5(pack).hexdigest(),
     })
 
-    do_request(data)
+    do_request(data, user, password)
 
-def upload_meta(base, plugin):
+def upload_meta(base, plugin, user, password):
     meta = metadata.from_plugin(base, plugin)
     pack = meta.as_string(False)
     io = StringIO.StringIO(pack)
@@ -75,10 +77,10 @@ def upload_meta(base, plugin):
         'md5_digest': hashlib.md5(pack).hexdigest(),
     })
 
-    do_request(data)
+    do_request(data, user, password)
 
 
-def register_plugin(base, plugin):
+def register_plugin(base, plugin, user, password):
     meta = metadata.from_plugin(base, plugin)
     data = extract_data(meta)
 
@@ -87,16 +89,16 @@ def register_plugin(base, plugin):
         'metadata_version' : '1.0',
     })
 
-    return do_request(data)
+    do_request(data, user, password)
 
 
 
 def main():
     #XXX: config support
     parser = OptionParser()
-    parser.add_option('-r', '--repository', dest='repo',)
+    #parser.add_option('-r', '--repository', dest='repo',)
     parser.add_option('-u', '--user', dest='user',)
-    parser.add_option('-p', '--password', dest='pass',)
+    parser.add_option('-p', '--password', dest='password',)
 
     options, args = parser.parse_args()
 
@@ -111,6 +113,7 @@ def main():
         path = os.path.abspath(path)
         path = os.path.normpath(path)
         if not os.path.exists(os.path.join(path, 'service.pida')):
+            log.debug("%s doesn't contain a plugin", path)
             continue
         base = os.path.dirname(path)
 
@@ -120,7 +123,7 @@ def main():
         for action, method in actions:
             try:
                 print plugin, '->', action,
-                method(base, plugin)
+                method(base, plugin, options.user, options.password)
                 print 'works'
             except Exception, e:
                 print 'fail', e
