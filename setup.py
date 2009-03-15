@@ -23,7 +23,7 @@ if subprocess.call(['pkg-config', '--exists', 'pygtk-2.0']) != 0:
 # Moo Extension
 from dsutils import pkc_get_include_dirs, pkc_get_libraries, pkc_get_library_dirs
 moo = Extension(
-    'moo_stub', 
+    'pida.ui.moo_stub', 
     [ 'contrib/moo/%s'%c for c in [
         'moopane.c',
         'moopaned.c',
@@ -41,7 +41,7 @@ moo = Extension(
 
 class BuildExt(build_ext):
     def build_extension(self, ext):
-        if ext.name == 'moo_stub':
+        if ext.name == 'pida.ui.moo_stub':
             if os.system('cd contrib/moo && make prepare'):
                 raise RuntimeError()
         build_ext.build_extension(self, ext)

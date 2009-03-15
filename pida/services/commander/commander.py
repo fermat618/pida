@@ -60,7 +60,7 @@ if sys.platform != 'win32':
     
     def get_absolute_path(path, pid):
         #XXX: works on bsd and linux only
-        #     cripled on solaris/sunos but the pwdx command might help there
+        #     solaris needs /proc/%s/path/cwd
         base = os.readlink('/proc/%s/cwd'%pid)
         return os.path.abspath(os.path.join(base, path))
 

@@ -485,7 +485,11 @@ class ProjectService(Service):
         if not os.path.isdir(project_path):
             self.log(_("Can't load project. Path does not exist: %s") %project_path)
             return None
-        project = Project(project_path)
+        try:
+            project = Project(project_path)
+        except (IOError, OSError), e:
+            self.log(_("Can't load project. %s") % e)
+            return None
         if project not in self._projects:
             self._projects.append(project)
             self.project_list.project_ol.append(project)

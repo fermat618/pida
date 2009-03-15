@@ -8,10 +8,12 @@ import os, time, subprocess, tempfile
 import gtk, dbus
 
 from dbus.mainloop.glib import DBusGMainLoop
-
-from client import get_vim
+import logging
+from .client import get_vim, log
+log.setLevel(logging.WARNING)
 
 mainloop = DBusGMainLoop(set_as_default=True)
+
 
 
 vim_script = os.path.abspath('pida/resources/data/pida.vim')
@@ -118,15 +120,25 @@ class TestVim(object):
 
         buffer_list = list(self.vim.get_buffer_list())
 
+        refresh_ui()
+
         assert stay_open in buffer_list
         assert will_close not in buffer_list
 
     def test_close_current_buffer(self):
-        self.vim.open_file(self.files[0])
-        self.vim.open_file(self.files[1])
+
+        will_close, stay_open = self.files[:2]
+
+        self.vim.open_file(will_close)
+        self.vim.open_file(stay_open)
+
         self.vim.close_current_buffer()
-        assert self.files[0] in self.vim.get_buffer_list()
-        assert self.files[1] not in self.vim.get_buffer_list()
+        buffer_list = list(self.vim.get_buffer_list())
+
+        refresh_ui()
+
+        assert stay_open in buffer_list
+        assert will_close not in buffer_list
 
     def test_save(self):
         self.vim.open_file(self.files[0])

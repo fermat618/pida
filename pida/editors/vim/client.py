@@ -7,9 +7,11 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 
 """
+import logging
 import os, time
 
 import gtk
+log = logging.getLogger(__name__)
 
 try:
     import dbus
@@ -30,11 +32,12 @@ def get_vim(uid):
     proxy = None
     while proxy is None:
         try:
+            log.debug('trying vim connect')
             proxy = session.get_object(get_bus_name(uid), '/vim')
         except dbus.DBusException:
+            log.debug('vim connect failed, retrying')
             proxy = None
             time.sleep(0.2)
-    print proxy
     return proxy
 
 def connect_cb(proxy, cb):

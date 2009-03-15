@@ -309,7 +309,7 @@ class BufferOptionsConfig(OptionsConfig):
             _('Display notebook title'),
             choices({'onerow':_('One Row'), 
                      'tworow':_('Filename and Path seperate ')}),
-            'onerow',
+            'tworow',
             _('Type to display in the Buffer window'),
             self.on_display_type_change
         )

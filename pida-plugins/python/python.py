@@ -52,7 +52,7 @@ from pida.core.locale import Locale
 locale = Locale('python')
 _ = locale.gettext
 
-from ropebrowser import ModuleParser
+from .ropebrowser import ModuleParser
 
 RE_MATCHES = (
     # traceback match
