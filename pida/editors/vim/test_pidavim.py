@@ -129,8 +129,8 @@ class TestVim(object):
 
         will_close, stay_open = self.files[:2]
 
-        self.vim.open_file(will_close)
         self.vim.open_file(stay_open)
+        self.vim.open_file(will_close)
 
         self.vim.close_current_buffer()
         buffer_list = list(self.vim.get_buffer_list())
