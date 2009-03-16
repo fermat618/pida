@@ -28,7 +28,6 @@ import shutil
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
-from pida import PIDA_VERSION
 from pida.ui.views import PidaGladeView
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service

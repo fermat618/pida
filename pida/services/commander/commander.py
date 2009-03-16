@@ -12,6 +12,7 @@ import gobject
 import pango
 
 # PIDA Imports
+import pida
 from pida.core import environment
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -20,7 +21,6 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida import PIDA_VERSION
 
 from pida.utils.gthreads import AsyncTask
 
@@ -577,7 +577,7 @@ class Commander(Service):
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
         env_pida = env
-        env_pida.append('PIDA_VERSION=%s' % PIDA_VERSION)
+        env_pida.append('PIDA_VERSION=%s' % pida.version)
         current_project = self.boss.cmd('project', 'get_current_project')
         if current_project:
             env_pida.append('PIDA_PROJECT=%s' % current_project.source_directory)

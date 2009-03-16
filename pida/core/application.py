@@ -65,15 +65,15 @@ if sys.version_info < (2, 5):
 
 # This can test if PIDA is installed
 try:
-    from pida.core.environment import opts, on_windows
-    from pida.core.boss import Boss
-    from pida import PIDA_VERSION
-
+    import pida
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
 # we have to import pdbus here so it gets initialized very early
 import pida.core.pdbus
+
+from pida.core.environment import opts, on_windows
+from pida.core.boss import Boss
 
 def run_pida():
     b = Boss()
@@ -193,7 +193,7 @@ def main():
                         'Not all functions available.', Warning, 'pida', '')
         
     if opts.version:
-        print _('PIDA, version %s') % PIDA_VERSION
+        print _('PIDA, version %s') % pida.version
     elif opts.profile_path:
         print "---- Running in profile mode ----"
         import hotshot, hotshot.stats, test.pystone
