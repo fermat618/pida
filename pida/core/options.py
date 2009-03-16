@@ -229,7 +229,8 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         instances have syncronized data.
         
         """
-        assert not (workspace and project)
+        #XXX: support for project-level files?
+        #assert not (workspace and project)
         opt = ExtraOptionItem(self, path, default, callback, workspace,
                               notify=notify)
         self._extra_files[path] = opt
