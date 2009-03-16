@@ -4,6 +4,7 @@ include COPYING
 include INSTALL
 include CHANGELOG
 include README
+include pida/resources/data/gtkrc-2.0
 
 recursive-include pida *.py *.glade *.xml *.po *.png *.el *.vim *.gif *.svg *.pida *.xpm
 recursive-include pida-plugins *.py *.glade *.xml *.po *.png *.el *.vim *.gif *.svg *.pida *.xpm
