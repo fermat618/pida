@@ -10,15 +10,15 @@ website = 'http://pida.co.uk/'
 
 author = 'Ali Afshar <aafshar@gmail.com>'
 
-maintainer = author
+maintainer = 'Ronny Pfannschmidt <Ronny.Pfannschmidt@gmx.de>',
 
 authors = [
     author,
+    maintainer,
     'Tiago Cogumbreiro <cogumbreiro@users.sf.net>',
     'Alejandro Mery <amery@geeks.cl>',
     'Bernard Pratz <guyzmo@m0g.net>',
     'Mathieu Virbel <tito@bankiz.org>',
-    'Ronny Pfannschmidt <Ronny.Pfannschmidt@gmx.de>',
     'Anders Conbere <aconbere@gmail.com>',
     'David Soulayrol <david.soulayrol@gmail.com>',
     'Alexander Gabriel <Alexander.Gabriel@TU-Harburg.de>',
