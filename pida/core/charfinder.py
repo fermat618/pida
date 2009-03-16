@@ -73,7 +73,7 @@ class DetectorManager:
     def append_detector(self, detector):
         self.detectors.append(detector)
     
-    def insert_detector(sef, index, detector):
+    def insert_detector(self, index, detector):
         self.detectors.insert(index, detector)
 
 ##############################################################################
