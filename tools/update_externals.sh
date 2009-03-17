@@ -9,7 +9,6 @@ get_or_update() {
             hg) hg clone -q $repo src/$name;;
             bzr) bzr checkout -q $repo src/$name;
         esac
-        ln -sf $name src/$name/$name #XXX: asume normal forms
     else
         echo -n update\ 
         pushd src/$name >/dev/null
@@ -20,6 +19,7 @@ get_or_update() {
         popd >/dev/null
     fi
 
+    ln -sf src/$name/$name $name #XXX: asume normal forms
     pushd src/$name >/dev/null
     echo -n build\ 
     python setup.py build_ext -i >/dev/null
