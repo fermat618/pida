@@ -16,3 +16,5 @@ tmp
 .pida-metadata
 .*\.*~
 externals
+dist
+MANIFEST

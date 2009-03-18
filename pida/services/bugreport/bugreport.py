@@ -11,7 +11,7 @@ import gobject
 
 
 # PIDA Imports
-from pida import PIDA_VERSION
+import pida
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -65,7 +65,7 @@ class BugreportView(PidaGladeView):
         title = self.title_entry.get_text()
         buf = self.description_text.get_buffer()
         description = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
-        description = 'PIDA %s\n--\n%s' % (PIDA_VERSION, description)
+        description = 'PIDA %s\n--\n%s' % (pida.version, description)
         return report(None, self.email, self.password, 'pida', title, description)
 
     def report_complete(self, success, data):
