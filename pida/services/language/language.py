@@ -503,16 +503,9 @@ class LanguageActionsConfig(ActionsConfig):
 
     def on_type_menu(self, action):
         menuitem = action.get_proxies()[0]
-        #menuitem.remove_submenu()                    # gtk2.12 or higher
-        #menuitem.set_submenu(self.svc.create_menu()) # gtk2.12 or higher
-        submenu = menuitem.get_submenu()
-        for child in submenu.get_children():
-            submenu.remove(child)
-        submenu_new =   self.svc.create_menu()
-        for child in submenu_new.get_children():
-            submenu_new.remove(child)
-            submenu.append(child)
-        
+        menuitem.remove_submenu()
+        menuitem.set_submenu(self.svc.create_menu())
+
     def on_show_validator(self, action):
         if action.get_active():
             self.svc.show_validator()
