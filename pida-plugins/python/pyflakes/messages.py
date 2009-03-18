@@ -24,6 +24,13 @@ class RedefinedWhileUnused(Message):
         self.message_args = (name, orig_lineno)
 
 
+class ImportShadowedByLoopVar(Message):
+    message = 'import %r from line %r shadowed by loop variable'
+    def __init__(self, filename, lineno, name, orig_lineno):
+        Message.__init__(self, filename, lineno)
+        self.message_args = (name, orig_lineno)
+
+
 class ImportStarUsed(Message):
     message = "'from %s import *' used; unable to detect undefined names"
     def __init__(self, filename, lineno, modname):
@@ -38,6 +45,13 @@ class UndefinedName(Message):
         self.message_args = (name,)
 
 
+class UndefinedLocal(Message):
+    message = "local variable %r (defined in enclosing scope on line %r) referenced before assignment"
+    def __init__(self, filename, lineno, name, orig_lineno):
+        Message.__init__(self, filename, lineno)
+        self.message_args = (name, orig_lineno)
+
+
 class DuplicateArgument(Message):
     message = 'duplicate argument %r in function definition'
     def __init__(self, filename, lineno, name):
@@ -46,7 +60,14 @@ class DuplicateArgument(Message):
 
 
 class RedefinedFunction(Message):
-    message = 'redefinition of fuction %r from line %r'
+    message = 'redefinition of function %r from line %r'
     def __init__(self, filename, lineno, name, orig_lineno):
         Message.__init__(self, filename, lineno)
         self.message_args = (name, orig_lineno)
+
+
+class LateFutureImport(Message):
+    message = 'future import(s) %r after other statements'
+    def __init__(self, filename, lineno, names):
+        Message.__init__(self, filename, lineno)
+        self.message_args = (names,)

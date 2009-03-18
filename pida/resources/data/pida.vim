@@ -84,7 +84,12 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, out_signature='as')
     def get_buffer_list(self):
-        return [b.name for b in vim.buffers]
+        # vim's buffer list also contains unlisted buffers
+        # we don't want those
+        return [
+            buffer.name for buffer in vim.buffers
+            if int(vim.eval("buflisted(%s)"%buffer.number))
+        ]
 
     @method(DBUS_NS, in_signature='s', out_signature='i')
     def get_buffer_number(self, path):

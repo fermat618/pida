@@ -20,11 +20,12 @@ import gtk
 
 from kiwi.utils import gsignal
 #FIXME win32 should get a terminal
-if sys.platform not in ('winnt', 'win32'):
+if sys.platform != 'win32':
     from vte import Terminal
 else:
+    #XXX: broken like hell
     class Terminal(object):
-	pass
+        pass
 
 # locale
 from pida.core.locale import Locale

@@ -21,8 +21,7 @@ from kiwi.ui.objectlist import ObjectList, COL_MODEL
 
 from outlinefilter import FILTERMAP
 
-from pida.core.environment import plugins_dir
-from pida.core.environment import get_pixmap_path
+from pida.core.environment import plugins_dir, on_windows, get_pixmap_path
 
 from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
@@ -65,6 +64,28 @@ class SimpleLanguageMapping(dict):
             self[language] = list()
 
         self[language].append(instance)
+
+    def remove(self, language, instance):
+        self[language].remove(instance)
+
+
+class PriorityLanguageMapping(dict):
+    """
+    this maps language features.
+    Sorts it's members after their priority member
+    """
+    def add(self, language, instance):
+        if language not in self:
+            #XXX: some things expect a list ?!
+            self[language] = list()
+
+        self[language].append(instance)
+
+        def get_prio(elem):
+            if hasattr(elem, 'priority'):
+                return elem.priority
+
+        self[language].sort(key=get_prio, reverse=True)
 
     def remove(self, language, instance):
         self[language].remove(instance)
@@ -210,7 +231,7 @@ class BrowserView(PidaGladeView):
         self.sort_vbox.pack_start(self.sort_box, expand=False)
         self.filter_model = self.source_tree.get_model().filter_new()
         #FIXME this causes a total crash on win32
-        if sys.platform not in ('winnt', 'win32'):
+        if not on_windows:
             self.source_tree.get_treeview().set_model(self.filter_model)
         self.filter_model.set_visible_func(self._visible_func)
         self.source_tree.get_treeview().connect('key-press-event',
@@ -371,7 +392,7 @@ class BrowserView(PidaGladeView):
                 tool_button.set_name(str(f))
                 tool_button.set_active(self.filter_map[f])
                 #FIXME no tooltip on win32
-		if sys.platform not in ('winnt', 'win32'):
+                if not on_windows:
                     tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled", self.on_filter_toggled,outliner)
                 im = gtk.Image()
@@ -563,7 +584,7 @@ class LanguageFeatures(FeaturesConfig):
 
     def create(self):
         self.publish_special(
-            SimpleLanguageMapping,
+            PriorityLanguageMapping,
             'info', 'outliner', 'definer',
             'validator', 'completer','documentator',
         )
@@ -606,6 +627,7 @@ class LanguageEvents(EventsConfig):
 
     def on_document_type(self, document):
         self.svc.clear_document_cache(document)
+        self.svc.on_buffer_changed(document)
 
 
 class LanguageDbusConfig(DbusConfig):

@@ -15,6 +15,8 @@ from kiwi.utils import gsignal
 from pida.utils.puilder.model import action_types
 from pida.utils.gthreads import gcall
 
+import gettext
+gettext.install('pida.puild')
 
 def start_editing_tv(tv):
     def _start(tv=tv):
@@ -49,8 +51,13 @@ class PuilderView(GladeSlaveDelegate):
        self.create_ui()
 
     def create_ui(self):
+        def format_default(obj):
+            return obj and _('<i>default</i>') or ''
+    
         self.targets_list.set_columns([
             Column('name', editable=True, expand=True),
+            Column('is_default', format_func=format_default, 
+                                 use_markup=True, title='Default'),
             Column('action_count', title='Actions'),
         ])
         self.targets_list.set_headers_visible(False)
@@ -102,6 +109,11 @@ class PuilderView(GladeSlaveDelegate):
     def set_execute_method(self, f):
         self.execute_method = f
 
+    def on_SetDefault__activate(self, action):
+        t = self.targets_list.get_selected()
+        self.build.default = t
+        self.targets_list.refresh()
+
     def on_ExecuteTargets__activate(self, action):
         t = self.targets_list.get_selected()
         if t is not None:
@@ -141,8 +153,8 @@ class PuilderView(GladeSlaveDelegate):
 
 
     def on_targets_list__right_click(self, ol, target, event):
-        self._create_popup(event, self.AddTarget, None, self.ExecuteTargets,
-                           None, self.DelCurrentTarget)
+        self._create_popup(event, self.AddTarget, None, self.SetDefault, 
+                           self.ExecuteTargets, None, self.DelCurrentTarget)
 
     def on_acts_list__right_click(self, ol, action, event):
         self.act_up_act.set_sensitive(self.acts_list.index(action) > 0)
@@ -222,7 +234,7 @@ class PuilderView(GladeSlaveDelegate):
     def on_save_button__clicked(self, button):
         self.build.dumpf(self.project.project_file)
 
-    def on_cancel_button__clicked(self, button):
+    def on_close_button__clicked(self, button):
         self.revert()
         self.emit('cancel-request')
 

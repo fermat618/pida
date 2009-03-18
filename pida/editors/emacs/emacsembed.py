@@ -12,10 +12,8 @@ for his own embedding of Emacs with his Encode project
 (http://encode.sourceforge.net/).
 """
 
-
 import subprocess
 import gtk
-
 
 class EmacsEmbedWidget(gtk.EventBox):
     """A widget embedding Emacs.
@@ -34,22 +32,20 @@ class EmacsEmbedWidget(gtk.EventBox):
         self._args = args
 
     def run(self):
-        """Start the Emacs process."""
+        """Start the editor using Popen"""
         if not self._pid:
             xid = self._create_ui()
             if xid:
                 args = ['--parent-id', '%s' % xid,
                         '-l', '%s' % self._init_script]
-                                 
                 args.extend(self._args)
-                # -f server-start has to be the last argument!
-                args.extend(['-f', 'server-start'])
                 popen = subprocess.Popen([self._command] + args, 
                                          close_fds=True)
                 self._pid = popen.pid
         self.show_all()
 
     def grab_input_focus(self):
+        """Give focus to editor"""
         self.child_focus(gtk.DIR_TAB_FORWARD)
 
     def _create_ui(self):
@@ -62,6 +58,4 @@ class EmacsEmbedWidget(gtk.EventBox):
         self.add(socket)
         self.show_all()
         return socket.get_id()
-
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

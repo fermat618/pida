@@ -268,7 +268,7 @@ class ProjectActionsConfig(ActionsConfig):
             self.svc.add_directory(path)
 
     def on_project_execute(self, action):
-        default = self.svc._current.script.options.get('default')
+        default = self.svc._current.build.get_default()
         if default is not None:
             self.svc.execute_target(None, default)
         else:
@@ -478,7 +478,11 @@ class ProjectService(Service):
         if not os.path.isdir(project_path):
             self.log(_("Can't load project. Path does not exist: %s") %project_path)
             return None
-        project = Project(project_path)
+        try:
+            project = Project(project_path)
+        except (IOError, OSError), e:
+            self.log(_("Can't load project. %s") % e)
+            return None
         if project not in self._projects:
             self._projects.append(project)
             self.project_list.project_ol.append(project)

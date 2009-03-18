@@ -44,14 +44,15 @@ from pida.utils.languages import (LANG_COMPLETER_TYPES,
 import pida.services.filemanager.filehiddencheck as filehiddencheck
 
 # utils
+from .pyflakes.checker import Checker
 from . import pyflakes
-
+from .pyflakes import messages
 # locale
 from pida.core.locale import Locale
 locale = Locale('python')
 _ = locale.gettext
 
-from ropebrowser import ModuleParser
+from .ropebrowser import ModuleParser
 
 RE_MATCHES = (
     # traceback match
@@ -261,12 +262,14 @@ class PythonValidator(Validator):
         except (SyntaxError, IndentationError), e:
             messages = _create_exception_validation(e)
         else:
-            w = pyflakes.Checker(tree, filename)
+            w = Checker(tree, filename)
             messages = w.messages
         for m in messages:
             type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
             subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
 
+            #FIXME add pyflakes 0.3 types
+            #FIXME make mapping
             if isinstance(m, pyflakes.messages.UnusedImport):
                 type_ = LANG_VALIDATOR_TYPES.INFO
                 subtype = LANG_VALIDATOR_SUBTYPES.UNUSED

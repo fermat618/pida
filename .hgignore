@@ -14,3 +14,7 @@ moo/test
 .*\.pyc
 tmp
 .pida-metadata
+.*\.*~
+externals
+dist
+MANIFEST

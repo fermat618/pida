@@ -65,19 +65,21 @@ if sys.version_info < (2, 5):
 
 # This can test if PIDA is installed
 try:
-    from pida.core.environment import opts
-    from pida.core.boss import Boss
-    from pida import PIDA_VERSION
-
+    import pida
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
 # we have to import pdbus here so it gets initialized very early
 import pida.core.pdbus
 
+from pida.core.environment import opts, on_windows
+from pida.core.boss import Boss
+
 def run_pida():
     b = Boss()
-    if sys.platform not in ('winnt', 'win32'):
+
+    # win32 has no signal support
+    if not on_windows:
         handle_signals(b)
     # handle start params
     from pida.core import environment
@@ -191,7 +193,7 @@ def main():
                         'Not all functions available.', Warning, 'pida', '')
         
     if opts.version:
-        print _('PIDA, version %s') % PIDA_VERSION
+        print _('PIDA, version %s') % pida.version
     elif opts.profile_path:
         print "---- Running in profile mode ----"
         import hotshot, hotshot.stats, test.pystone
@@ -217,7 +219,7 @@ def main():
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        if sys.platform not in ('winnt', 'win32'):
+        if not on_windows:
             signal.signal(signal.SIGALRM, force_quit)
             signal.alarm(3)
         sys.exit(exit_val)

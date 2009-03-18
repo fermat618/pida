@@ -48,7 +48,8 @@ class GrepperItem(object):
         else:
             color = None
         if color:
-            color = color.to_string()
+            #color = color.to_string() # gtk 2.12 or higher
+            color = "#%04x%04x%04x" % (color.red, color.green, color.blue)
         if not color:
             color = "red"
         return ('<span color="%s"><b>%s</b></span>' %
@@ -293,7 +294,7 @@ class Grepper(Service):
     events_config = GrepperEvents
     options_config = GrepperOptions
 
-    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]|\\x00')
+    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')
 
     def pre_start(self):
         self.current_project_source_directory = None

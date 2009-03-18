@@ -23,6 +23,47 @@
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 ;; DEALINGS IN THE SOFTWARE.
 
+(defconst pida-dbus-ns (concat "uk.co.pida.pida." (getenv "PIDA_DBUS_UUID")))
+
+(defun mycomplete (&optional prefix)
+  (interactive)
+  (setq bufstr (buffer-string))
+  (setq bufpos (- (point) 1))
+  (setq compl (dbus-call-method :session pida-dbus-ns
+ 		    "/uk/co/pida/pida/language"
+		    "uk.co.pida.pida.language" 
+		    "get_completions"
+		    prefix bufstr bufpos))
+)
+
+(defun mycomplete-wrapper (prefix maxnum)
+  "Wrapper around `dabbrev--find-all-completions',
+     to use as a `completion-function'."
+  (let ((completions (mycomplete prefix)))
+    (when maxnum
+      (setq completions
+	    (butlast completions (- (length completions) maxnum))))
+    completions))
+
+(defun prepare() 
+  (interactive)
+  (setq lp (concat 
+ 	    (file-name-directory (expand-file-name "pida_emacs_init.el"))
+ 	    "pida/resources/data/emacs/"))
+  (setq load-path (append (list lp)  load-path))
+  (require 'dbus)
+  (require 'auto-overlay-common)
+  (setq completion-function 'mycomplete-wrapper)
+  (require 'completion-ui)
+  )
+
+(prepare)
+
+
+
+;;(dbus-ping :session pida-dbus-ns)
+
+
 (defconst pida-connection-terminator "\n"
   "The terminator used to send notifications to PIDA")
 
@@ -146,6 +187,7 @@
 ;;
 ;; Callback function of window-configuration-change-hook.
 (defun pida-window-configuration-change ()
+  (setq completion-function 'mycomplete-wrapper)
   (pida-send-message (concat "window-configuration-change-hook "
 			     buffer-file-name)))
 
@@ -200,3 +242,26 @@
 
 
 (setq inhibit-splash-screen 1)
+
+(require 'dbus)
+
+(defun collabora-browser-introspect ()
+  "The collaborative editing browser interface"
+  "<node name='/Test'>
+  <interface name='org.freedesktop.DBus.Introspectable'>
+    <method name='Introspect'>
+      <arg name='xml_data' type='s' direction='out'/>
+    </method>
+  </interface>
+  <interface name='uk.co.pida.emacs.Test'>
+    <method name='Open'>
+      <arg direction='in' type='s' name='file-name'/>
+    </method>
+  </interface>
+</node>")
+
+
+
+(dbus-register-method
+ :session dbus-service-emacs "/Test"
+ dbus-interface-introspectable "Introspect" 'collabora-browser-introspect)

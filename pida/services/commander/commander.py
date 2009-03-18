@@ -12,6 +12,7 @@ import gobject
 import pango
 
 # PIDA Imports
+import pida
 from pida.core import environment
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -20,7 +21,6 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida import PIDA_VERSION
 
 from pida.utils.gthreads import AsyncTask
 
@@ -42,41 +42,27 @@ RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
               r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
              )
 
-class System(object):
-    @classmethod
-    def get_default_system_shell(cls):
-        return ""
 
-    @classmethod
-    def get_absolute_path(cls, path, pid):
-        return path
+def get_default_system_shell(cls):
+    return ""
 
-class UnixSystem(System):
-    # is this universal ?
-    PROC_MATCH = re.compile('PWD=(.*)')
-    
-    @classmethod
-    def get_default_system_shell(cls):
-        return os.environ.get('SHELL', 'bash')
-    
-    @classmethod
-    def get_absolute_path(cls, path, pid):
-        if os.path.isabs(path):
-            return path
-        try:
-            fp = open('/proc/%s/environ' %pid, 'r')
-        except IOError:
-            return path
-        cont = fp.read()
-        lines = cont.split('\x00')
-        for line in lines:
-            res = cls.PROC_MATCH.match(line)
-            if res:
-                return os.path.abspath(os.path.join(res.groups()[0], path))
-        return path
+def get_absolute_path(cls, path, pid):
+    return path
 
 # FIXME: windows port
-CurrentSystem = UnixSystem
+if sys.platform != 'win32':
+    def get_default_system_shell():
+        import pwd
+        return os.environ.get(
+            'SHELL', # try shell from env
+            pwd.getpwuid(os.getuid())[-1] # fallback to login shell
+        )
+    
+    def get_absolute_path(path, pid):
+        #XXX: works on bsd and linux only
+        #     solaris needs /proc/%s/path/cwd
+        base = os.readlink('/proc/%s/cwd'%pid)
+        return os.path.abspath(os.path.join(base, path))
 
 class CommanderOptionsConfig(OptionsConfig):
 
@@ -159,7 +145,7 @@ class CommanderOptionsConfig(OptionsConfig):
             'shell_command',
             _('The shell command'),
             str,
-            CurrentSystem.get_default_system_shell(),
+            get_default_system_shell(),
             _('The command that will be used for shells')
         )
 
@@ -425,15 +411,15 @@ class TerminalView(PidaView):
 
     def _on_python_fork_parse_key_press_event(self, term, event, fd):
         if event.hardware_keycode == 22:
-            os.write(fd, "")
+            os.write(fd, "\x7f")
         elif event.hardware_keycode == 98:
-            os.write(fd, "OA")
+            os.write(fd, "\x1bOA")
         elif event.hardware_keycode == 104:
-            os.write(fd, "OB")
+            os.write(fd, "\x1bOB")
         elif event.hardware_keycode == 100:
-            os.write(fd, "OD")
+            os.write(fd, "\x1bOD")
         elif event.hardware_keycode == 102:
-            os.write(fd, "OC")
+            os.write(fd, "\x1bOC")
         else:
             data = event.string
             os.write(fd, data)
@@ -532,21 +518,9 @@ class TerminalView(PidaView):
     def on_highlight_url(self, url, *args, **kw):
         return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
                                   url=url)
-    
-    def chdir(self, path):
-        # here we could look at the environment var to find out the real 
-        # directory
-        if self._pwd == path:
-            return
-        # maybe we find a good way to check if the term is currently
-        # in shell mode and maybe there is a better way to change
-        # directories somehow
-        # this is like kate does it
-        self._term.feed_child(u'cd %s\n' %path)
-        self._pwd = path
 
     def get_absolute_path(self, path):
-        return CurrentSystem.get_absolute_path(path, self._pid)
+        return get_absolute_path(path, self._pid)
 
 class PythonView(PidaView):
 
@@ -603,7 +577,7 @@ class Commander(Service):
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
         env_pida = env
-        env_pida.append('PIDA_VERSION=%s' % PIDA_VERSION)
+        env_pida.append('PIDA_VERSION=%s' % pida.version)
         current_project = self.boss.cmd('project', 'get_current_project')
         if current_project:
             env_pida.append('PIDA_PROJECT=%s' % current_project.source_directory)
@@ -678,21 +652,6 @@ class Commander(Service):
                term._term.window.is_visible():
                 term.chdir(document.directory)
 
-#     def register_matcher(self, match, callback):
-#         self.features['matcher'].add((match, callback))
-#         #if self._matches.has_key(match):
-#         #    self._matches[match].append(callback)
-#         #else:
-#         #    self._matches[match] = [callback]
-#     
-#     def unregister_matcher(self, match, callback):
-#         if not self._matches.has_key(match):
-#             return
-#         try:
-#             self._matches[match].remove(callback)
-#         except ValueError:
-#             pass
-#     
     def list_matches(self):
         # we use this so the default matchers are always the latest
         # added to a terminal. this was the more specific ones are matching 
