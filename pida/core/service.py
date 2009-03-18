@@ -91,6 +91,13 @@ class Service(object):
         False. In this phase all user interaction should take place"""
         return True
 
+    def destroy(self):
+        """
+        Stop and unregisters this service.
+        """
+        self.stop()
+        self.stop_components()
+
     def stop(self):
         """Override to stop service"""
 

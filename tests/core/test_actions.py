@@ -29,6 +29,9 @@ class ActionTestCase(TestCase):
         self._acts.create()
         self._act = self._acts._actions.get_action('banana')
 
+    def tearDown(self):
+        self._acts.unload()
+
     def get_name(self):
         return 'testcase'
 
