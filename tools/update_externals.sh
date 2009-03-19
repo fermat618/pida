@@ -11,28 +11,28 @@ get_or_update() {
         esac
     else
         echo -n update\ 
-        pushd src/$name >/dev/null
+        cd src/$name >/dev/null
         case $vcs in
             hg) hg pull -uq;;
             bzt) bzr update -q;;
         esac
-        popd >/dev/null
+        cd ../.. >/dev/null
     fi
 
     ln -sf src/$name/$name $name #XXX: asume normal forms
-    pushd src/$name >/dev/null
+    cd src/$name >/dev/null
     echo -n build\ 
     python setup.py build_ext -i >/dev/null
     echo done
-    popd >/dev/null
+    cd ../.. >/dev/null
 }
 
 
 mkdir -p externals/src >/dev/null
-pushd externals >/dev/null
+cd externals >/dev/null
 
 get_or_update rope hg http://www.bitbucket.org/agr/rope/
 get_or_update anyvc hg http://bitbucket.org/RonnyPfannschmidt/anyvc/
 get_or_update kiwi bzr lp:kiwi
 
-popd >/dev/null
+cd ..  >/dev/null
