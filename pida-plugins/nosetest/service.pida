@@ -1,7 +1,7 @@
 Name: NoseTest
 Author: Ronny Pfannschmidt <Ronny.Pfannschmidt@gmx.de>
-Version: 0.0.2
-Depends: pida>=0.6 nosexml==dev
+Version: 0.0.3
+Depends: pida>=0.6
 Category: code
 
 Show testresults from nose-python

@@ -142,7 +142,7 @@ class TestItem(object):
 
     @property
     def output(self):
-        return self.trace
+        return getattr(self, trace, 'Nothing is wrong directly here, i think')
 
 class TestResultBrowser(PidaGladeView):
 
@@ -179,11 +179,12 @@ class TestResultBrowser(PidaGladeView):
             self.svc.notify_user(_("No project found"))
             return
         src = project.source_directory
-        #XXX: hidden?
-        self.svc.boss.cmd('commander', 'execute',
-                commandargs = [
-                    os.path.join(os.path.dirname(__file__),'pidanose.py'),
-                    '--with-dbus-reporter'
+        def call(*k, **kw): 
+            subprocess.call(*k, **kw)
+
+        AsyncTask(call).start([
+                    os.path.join(os.path.dirname(__file__), 'pidanose.py'),
+                    '--with-dbus-reporter', '-q',
                 ],
                 cwd=src,
         )
@@ -195,6 +196,7 @@ class TestResultBrowser(PidaGladeView):
         item = TestItem(test, self.stack[-1])
         self.source_tree.append(self.stack[-1], item)
         self.stack.append(item)
+        self.source_tree.expand(item.parent)
 
     def stop_test(self):
         self.source_tree.update(self.stack[-1])
@@ -221,6 +223,8 @@ class TestResultBrowser(PidaGladeView):
         item.file = file
         self.source_tree.append(self.stack[-1], item)
         self.stack.append(item)
+        if item.parent is not None:
+            self.source_tree.expand(item.parent)
 
     def stop_context(self):
         #XXX: new status
@@ -236,6 +240,8 @@ class TestResultBrowser(PidaGladeView):
             current.status = iter(states).next()
 
         self.source_tree.update(current)
+        if current.status == 'success':
+            self.source_tree.collapse(current)
 
 
 class TestOutputView(PidaView):
