@@ -9,6 +9,11 @@ import os, sys
 from subprocess import Popen, PIPE, STDOUT
 from StringIO import StringIO
 from optparse import OptionParser
+try:
+    import select
+except ImportError:
+    select = None
+
 
 from pida.core.projects import Project
 
@@ -20,18 +25,141 @@ def _info(*msg):
     """Write an informative message to stderr"""
     sys.stderr.write('\n'.join(msg) + '\n')
 
+STDOUT = 1
+STDERR = 2
+
+class Data(unicode):
+    def __init__(self, s, fd=STDOUT):
+        self.fd = fd
+        super(Data, self).__init__(s)
+
+    def __repr__(self):
+        return '<Data %s %s>' %(self.fd, unicode.__repr__(self))
+
+class OutputBuffer(StringIO):
+    """
+    Works like a StringIO, but saves Data objects on write
+    Each data knows from which fd it came from and so, the output is 
+    easier to process.
+    """
+    def write(self, s, fd=STDOUT):
+        line = Data(s)
+        line.fd = fd
+        StringIO.write(self, line)
+
+    def dump(self):
+        return ''.join([repr(x) for x in self.buflist])
+
+
+def proc_communicate(proc, stdin=None, stdout=None, stderr=None):
+    """
+    Run the given process, piping input/output/errors to the given
+    file-like objects (which need not be actual file objects, unlike
+    the arguments passed to Popen).  Wait for process to terminate.
+
+    Note: this is taken from the posix version of
+    subprocess.Popen.communicate, but made more general through the
+    use of file-like objects.
+    """
+    read_set = []
+    write_set = []
+    input_buffer = ''
+    trans_nl = proc.universal_newlines and hasattr(open, 'newlines')
+
+    if proc.stdin:
+        # Flush stdio buffer.  This might block, if the user has
+        # been writing to .stdin in an uncontrolled fashion.
+        proc.stdin.flush()
+        if input:
+            write_set.append(proc.stdin)
+        else:
+            proc.stdin.close()
+    else:
+        assert stdin is None
+    if proc.stdout:
+        read_set.append(proc.stdout)
+    else:
+        assert stdout is None
+    if proc.stderr:
+        read_set.append(proc.stderr)
+    else:
+        assert stderr is None
+
+    while read_set or write_set:
+        rlist, wlist, xlist = select.select(read_set, write_set, [])
+
+        if proc.stdin in wlist:
+            # When select has indicated that the file is writable,
+            # we can write up to PIPE_BUF bytes without risk
+            # blocking.  POSIX defines PIPE_BUF >= 512
+            next, input_buffer = input_buffer, ''
+            next_len = 512-len(next)
+            if next_len:
+                next += stdin.read(next_len)
+            if not next:
+                proc.stdin.close()
+                write_set.remove(proc.stdin)
+            else:
+                bytes_written = os.write(proc.stdin.fileno(), next)
+                if bytes_written < len(next):
+                    input_buffer = next[bytes_written:]
+
+        if proc.stdout in rlist:
+            data = os.read(proc.stdout.fileno(), 1024)
+            if data == "":
+                proc.stdout.close()
+                read_set.remove(proc.stdout)
+            if trans_nl:
+                data = proc._translate_newlines(data)
+            sys.stdout.write(data)
+            sys.stdout.flush()
+            stdout.write(data, fd=STDOUT)
+
+        if proc.stderr in rlist:
+            data = os.read(proc.stderr.fileno(), 1024)
+            if data == "":
+                proc.stderr.close()
+                read_set.remove(proc.stderr)
+            if trans_nl:
+                data = proc._translate_newlines(data)
+            sys.stderr.write(data)
+            sys.stderr.flush()
+            stderr.write(data, fd=STDERR)
+
+    try:
+        proc.wait()
+    except OSError, e:
+        if e.errno != 10:
+            raise
+
 
 def execute_shell_action(project, build, action):
     """Execute a shell action"""
     cwd = action.options.get('cwd', project)
-    p = Popen(action.value, shell=True, cwd=cwd, stdout=PIPE, stderr=STDOUT)
-    buffer = []
-    for line in p.stdout:
-        buffer.append(line)
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    p.wait()
-    return ''.join(buffer)
+    proc = Popen(action.value, bufsize=0, shell=True, cwd=cwd, 
+              stdout=PIPE, stderr=PIPE)
+
+    buffer = OutputBuffer()
+
+    if select:
+        proc = Popen(action.value, bufsize=0, shell=True, cwd=cwd, 
+                  stdout=PIPE, stderr=PIPE)
+
+        proc_communicate(
+            proc,
+            stdout=buffer,
+            stderr=buffer)
+        #print buffer.dump()
+        #print buffer.getvalue()
+
+    else:
+        #FIXME: dear win32 hacker, this should be fixed somehow :-)
+        # as a workaround, output filters are disabled
+        proc = Popen(action.value, bufsize=0, shell=True, cwd=cwd, 
+                      stdout=None, stderr=None)
+        stdout, stderr = proc.communicate()
+
+    return buffer
 
 
 def _execute_python(source_directory, build, value):
