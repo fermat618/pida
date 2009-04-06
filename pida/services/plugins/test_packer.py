@@ -2,7 +2,7 @@
 # copyrtight 2009 by the pida team
 # see COPYING
 
-from .packer import find_files, pack_plugin, upload_plugin
+from .packer import find_files, pack_plugin
 from os import path
 from StringIO import StringIO
 from tarfile import TarFile
