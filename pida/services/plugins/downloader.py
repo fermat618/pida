@@ -65,6 +65,10 @@ def find_plugins(url):
      ]
 
 def find_urls(url,):
-    fd = urllib2.urlopen(url)
+    try:
+        fd = urllib2.urlopen(url)
+    except urllib2.URLError, e:
+        log.warning(_("Can't contact plugin website"))
+        return ()
     data = fd.read()
     return link_re.findall(data)
