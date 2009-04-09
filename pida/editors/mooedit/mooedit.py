@@ -553,19 +553,24 @@ class PidaMooInput(object):
 
     #def on_
 
-    def update_completer_and_add(self, cmpl, start):
+    def update_completer_and_add(self, cmpl, start, ignore=()):
+        """
+        Returns items for completion widgets
+        """
         # we run the language completer first and the we add our own results
         # to the completer list
         if cmpl:
             for i in cmpl.get_completions("", 
                         unicode(self.editor.get_text()), start):
-                yield i
+                if i not in ignore:
+                    yield i
 
         #self.update_completer()
         y = 0
         clst = self.list_all.copy()
         for x in clst:
-            yield x
+            if x not in ignore:
+                yield x
 
     def get_completer_visible(self):
         if self.completer_window and self.completer_window.window and \
@@ -683,7 +688,7 @@ class PidaMooInput(object):
 
         task = GeneratorTask(self.update_completer_and_add, 
                              self.add_str)
-        task.start(cmpl, start)
+        task.start(cmpl, start, ignore=(self.svc.get_current_word(),))
 
         self.show_auto = show_auto
 
@@ -1395,6 +1400,14 @@ class Mooedit(EditorService):
             start -= 1
         start = max(start, 0)
         return (start, end, txt)
+
+    def get_current_word(self):
+        """
+        Returns the word the cursor is in
+        """
+        start, end, txt = self._get_current_word_pos()
+
+        return txt[start:end]
         
 
     def call_with_current_word(self, callback):
