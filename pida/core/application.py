@@ -196,23 +196,18 @@ def main():
         print _('PIDA, version %s') % pida.version
     elif opts.profile_path:
         print "---- Running in profile mode ----"
-        import hotshot, hotshot.stats, test.pystone
-        prof = hotshot.Profile(opts.profile_path)
-        prof.start()
+        import cProfile
         try:
-            run_pida()
+            cProfile.runctx('run_pida()', globals(), locals(), opts.profile_path)
             #benchtime, stones = prof.runcall(run_pida)
-        finally: 
-            prof.stop()
-            prof.close()
-        
+        finally:
+            pass
         #signal.signal(signal.SIGALRM, force_quit)
         #signal.alarm(3)
         print "---- Top 100 statistic ----"
-        stats = hotshot.stats.load(opts.profile_path)
-        #stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(100)
+        import pstats
+        p = pstats.Stats(opts.profile_path)
+        p.strip_dirs().sort_stats('time', 'cum').print_stats(100)
 
         sys.exit(0)
 
