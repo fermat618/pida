@@ -222,6 +222,9 @@ class DbusOptionsManagerReal(Object):
                 except Exception, exception:
                     _method_reply_error(connection, message, exception)
                 return
+            elif method_name == 'CONFIG_CHANGED' or \
+                 method_name == 'CONFIG_EXTRA_CHANGED':
+                    return
         # do a normal lookup
         return super(DbusOptionsManagerReal, self)._message_cb(connection, message)
         

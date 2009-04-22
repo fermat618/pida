@@ -287,7 +287,8 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         if option.callback:
             option.callback(option)
 
-        self.notify_dbus(option)
+        if dbus_notify:
+            self.notify_dbus(option)
 
         self._emit_change_notification(option)
 
