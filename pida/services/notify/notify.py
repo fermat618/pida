@@ -71,8 +71,8 @@ except ImportError:
 class NotifyItem(object):
 
     def __init__(self, data, title, stock, timeout, callback):
-        self.data = cgi.escape(data)
-        self.title = cgi.escape(title)
+        self.data = cgi.escape(data or "")
+        self.title = cgi.escape(title or "")
         self.stock = stock
         self.timeout = timeout
         try:
