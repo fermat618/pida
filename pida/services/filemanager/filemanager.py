@@ -68,6 +68,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         hidden=('pida-fm-hidden', False, True),
         ignored=('pida-fm-ignored', False, True),
         #TODO: better handling of normal directories
+        clean=('pida-fm-clean', False, False), 
         none=('pida-fm-none', False, True), 
         normal=('pida-fm-normal', False, False),
         error=('pida-fm-error', True, True),
