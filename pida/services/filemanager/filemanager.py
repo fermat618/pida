@@ -770,6 +770,16 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'toolbar_search',
+            TYPE_NORMAL,
+            _('Find in directory'),
+            _('Find in directory'),
+            gtk.STOCK_FIND,
+            self.on_toolbar_find,
+        )
+
+
+        self.create_action(
             'toolbar_projectroot',
             TYPE_NORMAL,
             _('Project Root'),
@@ -795,7 +805,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'user-home',
             self.on_toolbar_home,
         )
-        
+
         self.create_action(
             'toolbar_current_file',
             TYPE_NORMAL,
@@ -850,6 +860,9 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
 
+    def on_toolbar_find(self, action):
+        self.svc.boss.get_service('grepper').show_grepper(self.svc.path)
+
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('browse', new_path=new_path)
@@ -863,7 +876,7 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_show_filebrowser(self, action):
         self.svc.cmd('present_view')
-    
+
     def on_toolbar_create_dir(self, action):
         self.svc.create_dir()
 

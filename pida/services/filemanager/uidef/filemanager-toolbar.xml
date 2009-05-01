@@ -12,6 +12,8 @@
         <toolitem action="toolbar_toggle_hidden" name="toolbar_toggle_hidden"/>
         <toolitem action="toolbar_hidden_menu" name="toolbar_hidden_menu"/>
         <separator />
+        <toolitem action="toolbar_search" name="toolbar_search"/>
+        <separator />
         <toolitem action="toolbar_delete" name="toolbar_delete"/>
     </toolbar>
 </ui>

@@ -1,0 +1,15 @@
+<ui>
+<popup>
+<placeholder name="1"/>
+<separator/>
+<placeholder name="2">
+<menuitem action="show_grepper_search" name="show_grepper_search" />
+</placeholder>
+<separator/>
+<placeholder name="3">
+</placeholder>
+<separator/>
+<placeholder name="4"/>
+<separator/>
+</popup>
+</ui>
