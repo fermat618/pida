@@ -9,7 +9,6 @@ This document describes:
   - How to get PIDA
   - How to meet the requirements and dependencies
   - How to install PIDA
-  - How to run PIDA without installing it
 
 Distribution packages
 ---------------------
