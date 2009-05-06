@@ -10,6 +10,7 @@
 """
 import os
 import mimetypes
+mimetypes.init() # expensive shit to keep mimetypes.guess_type threadsave
 import stat
 import time
 

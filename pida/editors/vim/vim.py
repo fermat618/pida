@@ -6,7 +6,7 @@
     :license: GPL 2 or later
     :copyright: 2007-2008 the Pida Project
 """
-import os, uuid
+import os
 
 # PIDA Imports
 from pida.core.environment import get_data_path
@@ -20,8 +20,6 @@ from .client import VimCom
 
 from pida.core.editors import EditorService, _
 
-UID = 'PIDA_EMBEDDED_%s' % uuid.uuid4().get_hex()
-
 
 def _do_nothing(*args):
     pass
@@ -32,7 +30,7 @@ nothing_async = dict(reply_handler=_do_nothing,
 class VimView(PidaView):
 
     def create_ui(self):
-        self._vim = VimEmbedWidget('gvim', self.svc.script_path, UID)
+        self._vim = VimEmbedWidget('gvim', self.svc.script_path)
         self.add_main_widget(self._vim)
 
     def run(self):

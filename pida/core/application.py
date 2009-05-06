@@ -94,11 +94,6 @@ def run_pida():
         traceback.print_exc()
         return 1
 
-def force_quit(signum, frame):
-    os.kill(os.getpid(), 9)
-
-# Set the signal handler and a 5-second alarm
-
 def set_trace():
     import linecache
     def traceit(frame, event, arg):
@@ -214,9 +209,6 @@ def main():
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        if not on_windows:
-            signal.signal(signal.SIGALRM, force_quit)
-            signal.alarm(3)
         sys.exit(exit_val)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

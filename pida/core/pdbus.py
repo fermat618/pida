@@ -260,6 +260,10 @@ class DbusOptionsManagerReal(Object):
 
 
 class DbusOptionsManagerNoop(object):
+
+    def __init__(self, service):
+        pass
+
     def unload(self):
         pass
 

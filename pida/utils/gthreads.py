@@ -30,9 +30,11 @@ class AsyncTask(object):
     The loop callback is called inside Gtk+'s main loop and it's where you
     should stick code that affects the UI.
     """
-    def __init__(self, work_callback=None, loop_callback=None):
+    def __init__(self, work_callback=None, loop_callback=None, daemon=True):
         self.counter = 0
         
+        self.daemon = daemon
+
         if work_callback is not None:
             self.work_callback = work_callback
         if loop_callback is not None:
@@ -45,7 +47,12 @@ class AsyncTask(object):
         care there.
         """
         args = (self.counter,) + args
-        threading.Thread(target=self._work_callback, args=args, kwargs=kwargs).start()
+        thread = threading.Thread(
+                target=self._work_callback,
+                args=args, kwargs=kwargs
+                )
+        thread.setDaemon(self.daemon)
+        thread.start()
     
     def work_callback(self):
         pass
