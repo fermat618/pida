@@ -25,6 +25,11 @@ class BaseDocumentHandler(object):
         self.svc = svc
         self.set_document(document)
 
+
+    @classmethod
+    def uuid(cls):
+        return "%s.%s" %(cls.__module__, cls.__name__)
+
     def set_document(self, document):
         self.document = document
 
