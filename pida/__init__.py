@@ -2,9 +2,9 @@
 The Python Integrated Development Application IDE Framework
 """
 
-version = '0.6beta2'
+version = '0.6beta3'
 
-copyright = 'Copyright (c) 2005-2008 The PIDA Project'
+copyright = 'Copyright (c) 2005-2009 The PIDA Project'
 
 website = 'http://pida.co.uk/'
 
