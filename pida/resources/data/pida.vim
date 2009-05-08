@@ -19,12 +19,8 @@ Vim Integration for PIDA
 import os, sys
 import vim
 
-try:
-    import pida
-except:
-    # pida is not in the default path
-    sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
-    import pida # we want our stuff
+# just in case, our pida might not be in the default path
+sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
 
 
 import gtk, gobject
