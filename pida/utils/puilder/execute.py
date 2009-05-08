@@ -135,10 +135,8 @@ def proc_communicate(proc, stdin=None, stdout=None, stderr=None):
 
 def execute_shell_action(project, build, action):
     """Execute a shell action"""
-    cwd = action.options.get('cwd', project)
-    proc = Popen(action.value, bufsize=0, shell=True, cwd=cwd, 
-              stdout=PIPE, stderr=PIPE)
 
+    cwd = action.options.get('cwd', project)
     buffer = OutputBuffer()
 
     if select:
@@ -331,7 +329,6 @@ def main():
         return 0
 
     target_name = args[1]
-
     execute_project(project_directory, target_name)
 
 
