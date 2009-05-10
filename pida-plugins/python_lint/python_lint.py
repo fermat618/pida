@@ -87,6 +87,20 @@ except ImportError:
 #         #self.svc.execute_current_document()
 #         pass
 
+SUBTYPE_MAPPING = {
+'W0511': LANG_VALIDATOR_SUBTYPES.FIXME,
+'W0622': LANG_VALIDATOR_SUBTYPES.REDEFINED,
+'W0611': LANG_VALIDATOR_SUBTYPES.UNUSED,
+'W0612': LANG_VALIDATOR_SUBTYPES.UNUSED,
+'E1101': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
+'W0201': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
+'W0212': LANG_VALIDATOR_SUBTYPES.PROTECTION,
+'W0703': LANG_VALIDATOR_SUBTYPES.DANGEROUS,
+'W0107': LANG_VALIDATOR_SUBTYPES.UNUSED,
+
+}
+
+
 class PythonError(ValidationError):
     def get_markup(self):
         if self.message_args:
@@ -138,6 +152,11 @@ from logilab.common.textutils import get_csv
 # import thread
 
 class PidaLinter(PyLinter, Log):
+
+    name = "pylint"
+    plugin = "python_lint"
+    description = _("A very good customizable, but slow validator")
+
     def __init__(self, *args, **kwargs):
         self.sema = threading.Semaphore(0)
         self._output = []
@@ -201,7 +220,7 @@ class PidaLinter(PyLinter, Log):
             ty = LANG_VALIDATOR_TYPES.INFO
             sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
         elif msg_id[0] == 'C':
-            ty = LANG_VALIDATOR_TYPES.WARNING
+            ty = LANG_VALIDATOR_TYPES.INFO
             sty = LANG_VALIDATOR_SUBTYPES.BADSTYLE
         elif msg_id[0] == 'R':
             ty = LANG_VALIDATOR_TYPES.WARNING
@@ -226,6 +245,9 @@ class PidaLinter(PyLinter, Log):
         #    self.stats['by_msg'][msg_id] += 1
         #except KeyError:
         #    self.stats['by_msg'][msg_id] = 1
+        if SUBTYPE_MAPPING.has_key(msg_id):
+            sty = SUBTYPE_MAPPING[msg_id]
+
         msg = self._messages[msg_id].msg
         # expand message ?
         #if args:

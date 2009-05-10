@@ -11,8 +11,8 @@ from .addtypes import Enumeration
 
 # completer types
 LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
-    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 'PROPERTY',
-    'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
+    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 
+    'PROPERTY', 'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
     'KEYWORD', 'SNIPPET'))
 
 
@@ -23,7 +23,7 @@ LANG_VALIDATOR_TYPES = Enumeration('LANG_TYPES',
 # validation sub types
 LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
     ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
-     'DUPLICATE', 'UNUSED'))
+     'DUPLICATE', 'UNUSED', 'FIXME', 'PROTECTION', 'DANGEROUS'))
 
 # validation sub types
 
@@ -71,14 +71,21 @@ LANG_OUTLINE_IMAGE_MAP = {
 
 class InitObject(object):
     def __init__(self, **kwargs):
-        for k,v in kwargs.iteritems():
+        for k, v in kwargs.iteritems():
             setattr(self, k, v)
 
+
+def color_to_string(color):
+    """Converts a color object to a string"""
+    if isinstance(color, basestring):
+        return color
+    # gtk color
+    return color.to_string()
 
 class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
-    type = LANG_VALIDATOR_TYPES.UNKNOWN
+    type_ = LANG_VALIDATOR_TYPES.UNKNOWN
     subtype = LANG_VALIDATOR_SUBTYPES.UNKNOWN
     filename = None
     lineno = None
@@ -113,23 +120,23 @@ class ValidationError(InitObject):
                       'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
                                     self.subtype).capitalize()),
                       'message':self.message,
-                      'linecolor': self.lookup_color('pida-lineno').to_string(),
-                      'typec': typec.to_string(),
+                      'linecolor': color_to_string(self.lookup_color('pida-lineno')),
+                      'typec': color_to_string(typec),
                       })
         return markup
     markup = property(get_markup)
-    def get_markup(self):
-        #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-        #message_string = self.message % tuple(args)
-        #msg.name = msg.__class__.__name__
-        markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
-                      (self.lineno, 
-                      LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
-                      LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
-                      self.message))
-        return markup
-    
-    markup = property(get_markup)
+#     def get_markup(self):
+#         #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
+#         #message_string = self.message % tuple(args)
+#         #msg.name = msg.__class__.__name__
+#         markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
+#                       (self.lineno, 
+#                       LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
+#                       LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
+#                       self.message))
+#         return markup
+#     
+#     markup = property(get_markup)
 
 
 
@@ -167,10 +174,10 @@ class Definition(InitObject):
     def __repr__(self):
         where = ""
         if self.offset is not None:
-            where = " offset %s " %self.offset
+            where = " offset %s " % self.offset
         elif self.line is not None:
-            where = " line %s " %self.line
-        return '<Definition %s%s>' %(self.file_name, where)
+            where = " line %s " % self.line
+        return '<Definition %s%s>' % (self.file_name, where)
 
 
 class Suggestion(unicode):
