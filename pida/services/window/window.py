@@ -78,8 +78,19 @@ class WindowActionsConfig(ActionsConfig):
             _('Toggle the fullscreen mode'),
             gtk.STOCK_FULLSCREEN,
             self.on_fullscreen,
+            '<Shift>F11',
+        )
+
+        self.create_action(
+            'max_editor',
+            TYPE_TOGGLE,
+            _('M_aximize Editor'),
+            _('Maximizes the editor by hiding panels'),
+            gtk.STOCK_FULLSCREEN,
+            self.on_max_editor,
             'F11',
         )
+
 
         self.create_action(
             'switch_next_term',
@@ -165,6 +176,9 @@ class WindowActionsConfig(ActionsConfig):
 
     def on_fullscreen(self, action):
         self.svc.set_fullscreen(action.get_active())
+
+    def on_max_editor(self, action):
+        self.svc.set_max_editor(action.get_active())
 
     def on_show_ui(self, action):
         val = action.get_active()
@@ -392,6 +406,13 @@ class Window(Service):
         self.window.set_menubar_visibility(visibility)
 
     def set_fullscreen(self, var):
+        if var:
+            self.boss.window.fullscreen()
+        else:
+            self.window.unfullscreen()
+
+
+    def set_max_editor(self, var):
         if var:
             # shall we do a weak ref here ?
             self._last_focus = self.boss.window.get_focus()
