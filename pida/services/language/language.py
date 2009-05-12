@@ -232,7 +232,7 @@ class CustomLanguageMapping(dict):
     def get_or_create(self, language):
         if language not in self:
             #XXX: some things expect a list ?!
-            self[language] = CustomLanguagePrioList(key=getkey)
+            self[language] = CustomLanguagePrioList()
         return self[language]
 
     def add(self, language, instance):
