@@ -561,7 +561,7 @@ class PythonView(PidaView):
 
 # Service class
 class Commander(Service):
-    """Describe your Service Here""" 
+    """Executes programms in a terminal window or background""" 
 
     commands_config = CommanderCommandsConfig
     actions_config = CommanderActionsConfig
