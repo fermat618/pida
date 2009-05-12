@@ -14,12 +14,28 @@ from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
 
+# locale
+from pida.core.locale import Locale
+locale = Locale('core')
+_ = locale.gettext
 
-
+#FIXME: maybe we should fill the plugin values with a metaclass ???
+# class LanguageMetaclass(type):
+#     def __new__(meta, name, bases, dct):
+#         print "Creating class %s using CustomMetaclass" % name
+#         print meta, name, bases, dct
+#         klass = type.__new__(meta, name, bases, dct)
+#         #meta.addParentContent(klass)
+#         klass.plugin = dct['__module__']
+#         return klass
 
 class BaseDocumentHandler(object):
 
+    #__metaclass__ = LanguageMetaclass
     priority = LANG_PRIO.DEFAULT
+    name = "NAME MISSING"
+    plugin = "PLUGIN MISSING"
+    description = "DESCRIPTION MISSING"
 
     def __init__(self, svc, document=None):
         self.svc = svc
@@ -28,9 +44,22 @@ class BaseDocumentHandler(object):
 
     @classmethod
     def uuid(cls):
+        """
+        Returns a unique id for this class as a string to identify it again
+        """
         return "%s.%s" %(cls.__module__, cls.__name__)
 
+    @property
+    def uid(self):
+        """
+        property for uuid()
+        """
+        return self.__class__.uuid()
+
     def set_document(self, document):
+        """
+        sets the document this instance is assigned to
+        """
         self.document = document
 
     def __cmp__(self, other):
@@ -163,8 +192,8 @@ class LanguageInfo(object):
     word = varchars
     word_first = varchars_first
 
-    open_backets = ['[','(','{']
-    close_backets = [']',')','}']
+    open_backets = ['[', '(', '{']
+    close_backets = [']', ')', '}']
 
     # . in python; -> in c, ...
     attributerefs = []
@@ -180,7 +209,7 @@ class LanguageInfo(object):
 
 class Completer(BaseDocumentHandler):
 
-    def get_completions(self, base, buffer, offset):
+    def get_completions(self, base, buffer_, offset):
         """
         Gets a list of completitions.
         
@@ -207,7 +236,8 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
         }
         for lname in all_langs:
             if self.svc.language_info is not None:
-                self.subscribe_foreign('language', 'info', lname, self.svc.language_info)
+                self.subscribe_foreign('language', 'info', 
+                                       lname, self.svc.language_info)
 
             for factory_name, feature in mapping.iteritems():
                 factory = getattr(self.svc, factory_name)
@@ -255,5 +285,29 @@ class SnippetTemplate(object):
         """
         return []
 
+
+LANGUAGE_PLUGIN_TYPES = {
+'completer': {
+    'name':_('Completer'),
+    'description': _('Provides suggestions for autocompletion'),
+    'class': Completer},
+'definer': {
+    'name':_('Definer'),
+    'description': _(
+        'Jumps to the code position where the current symbol is defined'),
+    'class': Definer},
+'documentator': {
+    'name':_('Documentator'),
+    'description': _('Provides the signature of the current symbol'),
+    'class': Documentator},
+'outliner': {
+    'name': _('Outliner'),
+    'description': _('Provides informations where symbols are defined'),
+    'class': Outliner},
+'validator': {
+    'name':_('Validator'),
+    'description': _('Shows problems and style errors in the code'),
+    'class': Validator}
+}
 
 

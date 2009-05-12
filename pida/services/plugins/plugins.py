@@ -632,15 +632,18 @@ class Plugins(Service):
         if not self._check and check:
             self._check = check
             # check now
-            self._check_for_updates()
+            # we don't fetch when starting the service to reduce
+            # startup time
+            self._check_for_updates(fetch=False)
             return
 
-    def _check_for_updates(self):
+    def _check_for_updates(self, fetch=True):
         self._check_event = False
         if not self._check:
             return
         self._check_notify = True
-        self.fetch_available_plugins()
+        if fetch:
+            self.fetch_available_plugins()
         # relaunch event in 30 minutes
         if not self._check_event:
             gobject.timeout_add(30 * 60 * 1000, self._check_for_updates)

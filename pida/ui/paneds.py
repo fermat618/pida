@@ -164,7 +164,12 @@ class PidaPaned(BigPaned):
 
     def _center_on_parent(self, view, size):
         gdkwindow = view.get_parent_window()
-        px, py, pw, ph, pbd = view.svc.window.window.get_geometry()
+        try:
+            px, py, pw, ph, pbd = view.svc.window.window.get_geometry()
+        except AttributeError:
+            # this can fail if the window is not yet realized, so skip the 
+            # the renice stuff :-(
+            return
         w, h = size
         cx = (pw - w) / 2
         cy = (ph - h) / 2

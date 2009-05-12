@@ -121,6 +121,10 @@ class PythonActionsConfig(ActionsConfig):
 class PythonOutliner(Outliner):
 
     priority = LANG_PRIO.VERY_GOOD
+    name = "rope"
+    plugin = "python"
+    description = _("A very deep and precises, but slow outliner")
+
 
     filter_type = (LANG_OUTLINER_TYPES.IMPORT,
                     LANG_OUTLINER_TYPES.BUILTIN,
@@ -159,6 +163,11 @@ class PythonOutliner(Outliner):
 
 
 class PythonDocumentator(Documentator):
+
+    name = "rope"
+    plugin = "python"
+    description = _("A very good documentator")
+
 
     def get_documentation(self, buffer, offset):
         mp = ModuleParser(self.document.filename,
@@ -253,6 +262,9 @@ class PythonError(ValidationError):
 class PythonValidator(Validator):
 
     priority = LANG_PRIO.GOOD
+    name = "pyflakes"
+    plugin = "python"
+    description = _("A not very precise, non configurable validator, but fast")
 
     def get_validations(self):
         code_string = self.document.content
@@ -300,6 +312,9 @@ class PythonValidator(Validator):
 class PythonCompleter(Completer):
 
     priority = LANG_PRIO.VERY_GOOD
+    name = "rope"
+    plugin = "python"
+    description = _("Creates very exact suggestions at reasonable speed")
 
     def get_completions(self, base, buffer, offset):
 
@@ -341,6 +356,10 @@ class PythonCompleter(Completer):
 
 
 class PythonDefiner(Definer):
+
+    name = "rope"
+    plugin = "python"
+    description = _("Shows a good definition of a function")
 
     def get_definition(self, buffer, offset):
         mp = ModuleParser(self.document.filename,

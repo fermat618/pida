@@ -53,7 +53,7 @@ disable-msg-cat=
 #enable-msg=
 
 # Disable the message(s) with the given id(s).
-disable-msg=R0901,R0902,R0903,R0904,R0913,W0613
+disable-msg=R0901,R0902,R0903,R0904,R0913,W0613,W0622
 
 
 [REPORTS]
@@ -148,7 +148,7 @@ required-attributes=
 
 # Regular expression which should only match functions or classes name which do
 # not require a docstring
-no-docstring-rgx=_.*|on_.*|create_.*|subscribe_.*|.*Config
+no-docstring-rgx=_.*|on_.*|create_.*|subscribe_.*|.*Config|__.*__
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$

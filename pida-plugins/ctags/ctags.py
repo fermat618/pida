@@ -114,6 +114,9 @@ class CtagItem(OutlineItem):
 class CtagsOutliner(Outliner):
 
     priority = LANG_PRIO.GOOD
+    name = "ctags"
+    plugin = "ctags"
+    description = _("A very fast but only shallow outliner")
 
     def get_outline(self):
         if not self.document.filename:

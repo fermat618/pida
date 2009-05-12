@@ -30,6 +30,8 @@ MOO_DATA_DIRS=os.pathsep.join((
                                 for x in SYS_DATA.split(os.pathsep)]),
                 "/usr/share/moo",
                 "/usr/local/share/moo",
+                "/usr/share/pida",
+                "/usr/local/share/pida",
                 ))
 
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS

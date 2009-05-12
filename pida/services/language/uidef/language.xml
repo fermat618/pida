@@ -35,6 +35,9 @@
 
         
         <menu name="ToolsMenu" action="ToolsMenu">
+            <placeholder name="prefs">
+                <menuitem action="show_language_prio" name="show_language_prio" />
+            </placeholder>
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">

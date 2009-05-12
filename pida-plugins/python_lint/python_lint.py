@@ -153,10 +153,6 @@ from logilab.common.textutils import get_csv
 
 class PidaLinter(PyLinter, Log):
 
-    name = "pylint"
-    plugin = "python_lint"
-    description = _("A very good customizable, but slow validator")
-
     def __init__(self, *args, **kwargs):
         self.sema = threading.Semaphore(0)
         self._output = []
@@ -308,7 +304,10 @@ class PidaReporter(BaseReporter):
 class PylintValidator(Validator):
 
     priority = LANG_PRIO.VERY_GOOD
-    
+    name = "pylint"
+    plugin = "python_lint"
+    description = _("A very good customizable, but slow validator")
+
     def __init__(self, *args, **kwargs):
         self.reporter = PidaReporter(self)
         Validator.__init__(self, *args, **kwargs)

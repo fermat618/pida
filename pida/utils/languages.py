@@ -9,6 +9,16 @@ List of general Language classes.
 """
 from .addtypes import Enumeration
 
+
+
+#!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!! these are inter process interfaces, too                     !!!!
+#!!!! don't change their order, remove or change existing entries !!!!
+#!!!! you can append new entries at the end                       !!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
 # completer types
 LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
     ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 

@@ -9,43 +9,50 @@
     :license: GPL2 or later
 """
 
-import sys
 from functools import partial
 
 import gtk
 import gobject
-import pida.plugins
 
 from kiwi.ui.objectlist import Column
 from kiwi.ui.objectlist import ObjectList, COL_MODEL
 
-from outlinefilter import FILTERMAP
+from .outlinefilter import FILTERMAP
 
-from pida.core.environment import plugins_dir, on_windows, get_pixmap_path
+from pida.core.environment import on_windows, get_pixmap_path
 
-from pida.core.doctype import TypeManager
-from pida.core.languages import LanguageInfo
+from pida.core.doctype import TypeManager, DocType
+from pida.core.languages import LanguageInfo, LANGUAGE_PLUGIN_TYPES
 
 from pida.utils.gthreads import GeneratorTask, gcall
 from pida.utils.languages import LANG_OUTLINER_TYPES
+from pida.utils.addtypes import PriorityList
 
 # core
-from pida.core.service import Service
+#from pida.core.service import Service
+from pida.core.languages import LanguageService, LanguageServiceFeaturesConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL
 from pida.core.options import OptionsConfig
-from pida.core.features import FeaturesConfig
+#from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
+from pida.core.log import get_logger
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
+from pida.ui.prioritywindow import Category, Entry, PriorityEditorView
+
+from .disabled import (NoopCompleter, NoopValidator, NoopDefiner, 
+                       NoopDocumentator, NoopOutliner)
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
+
+logger = get_logger('service.language')
 
 LEXPORT = EXPORT(suffix='language')
 
@@ -58,10 +65,13 @@ class SimpleLanguageMapping(dict):
     this maps language features
     it wont handle priorities 
     """
-    def add(self, language, instance):
+    def get_or_create(self, language):
         if language not in self:
-            #XXX: some things expect a list ?!
             self[language] = list()
+        return self[language]
+
+    def add(self, language, instance):
+        self.get_or_create(language)
 
         self[language].append(instance)
 
@@ -74,10 +84,13 @@ class PriorityLanguageMapping(dict):
     this maps language features.
     Sorts it's members after their priority member
     """
-    def add(self, language, instance):
+    def get_or_create(self, language):
         if language not in self:
-            #XXX: some things expect a list ?!
             self[language] = list()
+        return self[language]
+
+    def add(self, language, instance):
+        self.get_or_create(language)
 
         self[language].append(instance)
 
@@ -91,12 +104,285 @@ class PriorityLanguageMapping(dict):
         self[language].remove(instance)
 
 
+class CustomLanguagePrioList(PriorityList, Category):
+    def get_keyfnc(self, default=True):
+        def getkey(item):
+            if isinstance(item, partial):
+                return item.func.uuid()
+            return item.uuid()
+        def getprio(item):
+            if isinstance(item, partial) and hasattr(item.func, 'priority'):
+                return item.func.priority*-1
+            elif hasattr(item, 'priority'):
+                return item.priority*-1
+        if self.customized and default:
+            return getkey
+        return getprio
+    def set_keyfunc(self, value):
+        pass
+    _keyfnc = property(get_keyfnc, set_keyfunc)
+
+    @property
+    def _keyfnc_default(self):
+        return self.get_keyfnc(default=False)
+    
+    def _sort_iterator(self):
+        for x in self._sort_list:
+            yield x['uuid']
+
+    def set_sort_list(self, sort_list):
+        self.customized = bool(sort_list)
+        super(CustomLanguagePrioList, self).set_sort_list(sort_list)
+        
+    def update_sort_list(self):
+        self.set_sort_list([{"uuid": x.uuid(),
+                             "name": x.name,
+                             "plugin": x.plugin,
+                             "description": x.description} 
+                                 for x in self])
+
+    def get_full_list(self):
+        if self._sort_list:
+            rv = []
+            done = []
+            uplst = dict((x.uuid(), x) for x in self)
+            for i in self.get_sort_list():
+                uid = i['uuid']
+                name = i['name']
+                plugin = i['plugin']
+                description = i['description']
+                # if the plugin is loaded, we can get up to date
+                # data from it
+                if uplst.has_key(uid):
+                    name = uplst[uid].name
+                    description = uplst[uid].description
+                    plugin = uplst[uid].plugin
+                le = LanguageEntry(uuid=i['uuid'], name=name,
+                         plugin=plugin, description=description)
+                done.append(i['uuid'])
+                rv.append(le)
+            for i in self:
+                if i.uuid() in done:
+                    continue
+                le = LanguageEntry.from_plugin(i)
+                rv.append(le)
+            return rv
+        else:
+            return [LanguageEntry.from_plugin(i) for i in self]
+
+    def get_joined(self, other_lists=()):
+        """
+        Returns the best element possible.
+        
+        This may be the sort_list defined or according to priority
+        
+        @other_lists: other CustomLanguagePrioList used to lookup for classes
+        """
+        if self._sort_list:
+            for i in self.get_sort_list():
+                uid = i['uuid']
+                for group in (self,) + other_lists:
+                    for fac in group:
+                        if isinstance(fac, partial):
+                            if fac.func.uuid() == uid:
+                                return fac
+                        else:
+                            if fac.uuid() == uid:
+                                return fac
+        else:
+            tmp = []
+            for group in (self,) + other_lists:
+                for i in group:
+                    tmp.append(i)
+            tmp.sort(key=self._keyfnc)
+            return tmp[0]
+
+    def get_joined_list(self, other_lists=()):
+        """
+        Returns a list of the enabled elements.
+        
+        This is a list of all elements responsible until the Noop Element
+        
+        @other_lists: other CustomLanguagePrioList used to lookup for classes
+        """
+        rv = []
+        if self._sort_list:
+            for i in self.get_sort_list():
+                uid = i['uuid']
+                for group in (self,) + other_lists:
+                    for fac in group:
+                        if isinstance(fac, partial):
+                            if fac.func.uuid() == uid:
+                                if getattr(fac.func, 'IS_DISABELING', False):
+                                    return rv
+                                rv.append(fac)
+                        else:
+                            if fac.uuid() == uid:
+                                if getattr(fac, 'IS_DISABELING', False):
+                                    return rv
+                                rv.append(fac)
+        #FIXME: not finished..
+
+class CustomLanguageMapping(dict):
+    """
+    this maps language features.
+    Sorts it's members after their priority member but allows
+    custom order and gets saved in a config file.
+    """
+    def get_or_create(self, language):
+        if language not in self:
+            #XXX: some things expect a list ?!
+            self[language] = CustomLanguagePrioList(key=getkey)
+        return self[language]
+
+    def add(self, language, instance):
+        self.get_or_create(language)
+        #self[language].append(instance)
+
+        #def get_prio(elem):
+        #    if hasattr(elem, 'priority'):
+        #        return elem.priority
+
+        #self[language].sort(key=get_prio, reverse=True)
+        if instance not in self[language]:
+            self[language].add(instance)
+
+    def remove(self, language, instance):
+        self[language].remove(instance)
+
+    def load(self, data):
+        """
+        Loads the priority data into the internal structure
+        """
+        if not isinstance(data, dict):
+            logger(_("can't load data structure of type %s") %type(data))
+            return
+        for key, pluglist in data.iteritems():
+            if not self.has_key(key):
+                self[key] = CustomLanguagePrioList(key=getkey)
+            self[key].set_sort_list(pluglist)
+            self[key].customized = True
+
+    def dump(self):
+        """
+        Dump the mapping to be loaded again.
+        """
+        rv = {}
+        for key, value in self.iteritems():
+            print key, value, value.customized
+            if value.customized:
+                rv[key] = [{"uuid": x.uuid,
+                            "name": x.name,
+                            "plugin": x.plugin,
+                            "description": x.description} 
+                                for x in value.get_full_list()]
+        return rv
+
+    def get_best(self, language):
+        """
+        Returns the best factory for the language
+        """
+        if self.has_key(language) and language:
+            return self[language].get_joined(other_lists=(self.get_or_create(None),))
+        else:
+            return self.get_or_create(None).get_joined()
+
+
+class LanguageEntry(Entry):
+
+    @classmethod
+    def from_plugin(cls, plugin):
+        return cls(uid=plugin.func.uuid(),
+                   display=plugin.func.name,
+                   plugin=plugin.func.plugin,
+                   description=plugin.func.description)
+
+    def uuid(self):
+        return self.uid
+
+class LanguageSubCategory(Category):
+    def __init__(self, svc, lang, type_):
+        self.svc = svc
+        self.lang = lang
+        self.type_ = type_
+    
+    @property
+    def display(self):
+        return LANGUAGE_PLUGIN_TYPES[self.type_]['name']
+
+    @property
+    def display_info(self):
+        if self.type_ == 'completer':
+            return _('<i>All plugins before the Disabled entry are used</i>')
+        return None
+
+    def get_entries(self, default=False):
+        #for type_, info in LANGUAGE_PLUGIN.iteritems():
+        for i in self.svc.get_plugins(self.lang, self.type_):
+            print i
+            yield LanguageEntry.from_plugin(i)
+
+    def commit_list(self, lst):
+        print "save list", lst
+        prio = [{"uuid": x.uuid(),
+                 "name": x.display,
+                 "plugin": x.plugin,
+                 "description": x.description} 
+                                for x in lst]
+        self.svc.set_priority_list(self.lang, self.type_, prio)
+
+class LanguageCategory(Category):
+    def __init__(self, svc, lang):
+        self.svc = svc
+        self.lang = lang
+
+    @property
+    def display(self):
+        return self.svc.doctypes[self.lang].human
+
+
+    def get_subcategories(self):
+        for type_, info in LANGUAGE_PLUGIN_TYPES.iteritems():
+            #self.svc.get_plugins(self.lang, type_)
+            yield LanguageSubCategory(self.svc, self.lang, type_)
+    
+
+class LanguageRoot(Category):
+    """
+    Data root for PriorityEditor
+    """
+    def __init__(self, svc):
+        self.svc = svc
+
+    def get_subcategories(self):
+        for internal, doctype in self.svc.doctypes.iteritems():
+            yield LanguageCategory(self.svc, internal)
+        
+
+class LanguagePriorityView(PriorityEditorView):
+    key = 'language.prio'
+
+    icon_name = 'gtk-library'
+    label_text = _('Language Priorities')
+
+    def create_ui(self):
+        self.root = LanguageRoot(self.svc)
+        self.set_category_root(self.root)
+
+    def can_be_closed(self):
+        self.svc.get_action('show_language_prio').set_active(False)
+
+    def on_button_ok__clicked(self, action):
+        super(LanguagePriorityView, self).on_button_ok__clicked(action)
+        self.svc.get_action('show_language_prio').set_active(False)
+
+
 class ValidatorView(PidaView):
 
     key = 'language.validator'
 
     icon_name = 'python-icon'
-    label_text = _('Language Errors')
+    label_text = _('Validator')
 
     def set_validator(self, validator, document):
         # this is quite an act we have to do here because of the many cornercases
@@ -518,6 +804,15 @@ class LanguageActionsConfig(ActionsConfig):
             self.on_focus_outline,
             ''
         )
+        self.create_action(
+            'show_language_prio',
+            TYPE_TOGGLE,
+            _('_Plugin Priorities'),
+            _('Configure priorities for language plugins'),
+            'info',
+            self.on_show_language_prio,
+        )
+
 
     def on_type_change(self, action):
         pass
@@ -552,6 +847,9 @@ class LanguageActionsConfig(ActionsConfig):
         self.get_action('show_outliner').set_active(True)
         self.svc._view_outliner.filter_name.grab_focus()
 
+    def on_show_language_prio(self, action):
+        self.svc.show_language_prio(action.get_active())
+
 
 class LanguageCommandsConfig(CommandsConfig):
 
@@ -568,9 +866,15 @@ class LanguageCommandsConfig(CommandsConfig):
         return self.svc.boss.cmd('window', 'present_view',
                                  view=self.svc.get_browser())
 
+    def present_language_prio(self):
+        self.svc.show_language_prio(True)
+
+    def hide_language_prio(self):
+        self.svc.show_language_prio(False)
+
 
 class LanguageOptionsConfig(OptionsConfig):
-    pass
+
     def create_options(self):
         self.create_option(
             'outline_expand_vars',
@@ -580,18 +884,15 @@ class LanguageOptionsConfig(OptionsConfig):
             _('Expand all entries when searching the outliner after n chars'))
 
 
-class LanguageFeatures(FeaturesConfig):
+class LanguageFeatures(LanguageServiceFeaturesConfig):
 
     def create(self):
         self.publish_special(
-            PriorityLanguageMapping,
+            CustomLanguageMapping,
             'info', 'outliner', 'definer',
             'validator', 'completer','documentator',
         )
 
-
-    def subscribe_all_foreign(self):
-        pass
 
 
 class LanguageEvents(EventsConfig):
@@ -659,7 +960,7 @@ def _get_best(lst, document):
     return nlst[0]
 
 
-class Language(Service):
+class Language(LanguageService):
     """ Language manager service """
 
     actions_config = LanguageActionsConfig
@@ -669,7 +970,15 @@ class Language(Service):
     commands_config = LanguageCommandsConfig
     dbus_config = LanguageDbusConfig
 
+    completer_factory = NoopCompleter
+    definer_factory = NoopDefiner
+    outliner_factory = NoopOutliner
+    validator_factory = NoopValidator
+    documentator_factory = NoopDocumentator
+
+
     def pre_start(self):
+        self._language_prio_window = None
         self.doctypes = TypeManager()
         import deflang
         self.doctypes._parse_map(deflang.DEFMAPPING)
@@ -686,6 +995,9 @@ class Language(Service):
                              self._view_outliner.label_text)
         acts.register_window(self._view_validator.key,
                              self._view_validator.label_text)
+
+        #FIXME remove
+        self.show_language_prio(True)
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -735,18 +1047,49 @@ class Language(Service):
         if handler is None:
             type_ = document.doctype
             factories = ()
-            if type_:
-                factories = self.features[feature].get(type_.internal)
-            if not factories:
-                # get typ unspecific factories
-                factories = self.features[feature].get(None)
-            if factories:
+            #if type_:
+            factory = self.features[feature].get_best(type_.internal)
+            #if not factories:
+            #    # get typ unspecific factories
+            #    factories = self.features[feature].get(None)
+            if factory:
                 #XXX: factoring
-                handler = _get_best(factories, document)(document)
+                handler = factory(document)
                 setattr(document, name, handler)
                 return handler
         else:
             return handler
+
+    def get_plugins(self, language, feature):
+        """
+        Returns a list of registered language plugins for this type
+        """
+        if isinstance(language, DocType):
+            lang = language.internal
+        else:
+            lang = language
+        rv = []
+        lst = self.features[feature].get(lang)
+        if lst:
+            rv.extend(lst)
+        lst = self.features[feature].get(None)
+        if lst:
+            rv.extend(lst)
+        return rv
+
+    def set_priority_list(self, lang, type_, lst):
+        """
+        Sets a new priority list on a given language and type_
+        
+        @lang: internal language name
+        @type_: LANGUAGE_PLUGIN_TYPES id
+        """
+        clist = self.features[type_].get_or_create(lang)
+        if hasattr(clist, "set_sort_list"):
+            print "set save list", lst
+            clist.set_sort_list(lst)
+        else:
+            self.log.warning(_("Try to set a priority list on non priority sublist"))
 
     def on_buffer_changed(self, document):
         # wo do nothing if we are not started yet
@@ -779,7 +1122,7 @@ class Language(Service):
 
     def get_completer(self, document):
         return self._get_feature(document, 'completer', '_lng_completer')
-        
+
     def get_definer(self, document):
         return self._get_feature(document, 'definer', '_lng_definer')
 
@@ -804,6 +1147,20 @@ class Language(Service):
         if not action.get_active():
             action.set_active(True)
         self.boss.cmd('window', 'present_view', view=self._view)
+
+    def show_language_prio(self, visible=True):
+        if visible:
+            if not self._language_prio_window:
+                self._language_prio_window = LanguagePriorityView(self)
+            #self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
+            self.boss.cmd('window', 'add_detached_view', paned='Plugin',
+                view=self._language_prio_window)
+        else:
+            if self._language_prio_window:
+                self.boss.cmd('window', 'remove_view',
+                    view=self._language_prio_window)
+                self._language_prio_window = None
+
 
     def change_doctype(self, widget, current):
         doc = self.boss.cmd('buffer', 'get_current')
