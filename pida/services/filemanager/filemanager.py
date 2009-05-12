@@ -90,21 +90,39 @@ def check_or_home(path):
         return homedir
     return path
 
+class AlwaysSmall(unicode):
+    """
+    Helper class to cheat ordering
+    """
+    def __cmp__(self, other):
+        return -1
 
 
 class FileEntry(object):
     """The model for file entries"""
 
-    def __init__(self, name, parent_path, manager):
+    def __init__(self, name, parent_path, manager, parent_link=False):
         self._manager = manager
         self.state = 'normal'
+        self.parent_link = parent_link
         self.name = name
-        self.lower_name = self.name.lower()
+
+        if parent_link:
+            self.lower_name = AlwaysSmall(self.name.lower())
+            self.name = AlwaysSmall(name)
+            self.path = parent_path
+            self.is_dir = True
+            self.is_dir_sort = AlwaysSmall(self.lower_name)
+        else:
+            self.lower_name = self.name.lower()
+            self.name = name
+            self.path = os.path.join(parent_path, name)
+            self.is_dir = os.path.isdir(self.path)
+            self.is_dir_sort = not self.is_dir, self.lower_name
+
         self.parent_path = parent_path
-        self.path = os.path.join(parent_path, name)
         self.extension = os.path.splitext(self.name)[-1]
         self.extension_sort = self.extension, self.lower_name
-        self.is_dir = os.path.isdir(self.path)
         self.is_dir_sort = not self.is_dir, self.lower_name
         self.visible = False
 
@@ -211,10 +229,13 @@ class FilemanagerView(PidaView):
         self._vbox.pack_start(self._toolbar, expand=False)
         self._toolbar.show_all()
 
-    def add_or_update_file(self, name, basepath, state, select=False):
-        if basepath != self.path:
+    def add_or_update_file(self, name, basepath, state, select=False,
+                           parent_link=False):
+        if basepath != self.path and not parent_link:
             return
-        entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
+        entry = self.entries.setdefault(name,
+                                        FileEntry(name, basepath, self,
+                                                  parent_link=parent_link))
         entry.state = state
 
         self.show_or_hide(entry, select=select)
@@ -229,7 +250,7 @@ class FilemanagerView(PidaView):
             else:
                 return True
 
-        if self.svc.opt('show_hidden'):
+        if self.svc.opt('show_hidden') or entry.parent_link:
             show = True
         else:
             show = all(check(x)
@@ -256,7 +277,14 @@ class FilemanagerView(PidaView):
 
         self.file_list.clear()
         self.entries.clear()
-        
+
+        if self.svc.opt('show_parent'):
+            parent = os.path.normpath(os.path.join(new_path, os.path.pardir))
+            # skip if we are already on the root
+            if parent != new_path:
+                self.add_or_update_file(os.pardir, parent, 
+                                        'normal', parent_link=True)
+
         def work(basepath):
             dir_content = listdir(basepath)
             # add all files from vcs and remove the corresponding items 
@@ -626,6 +654,14 @@ class FileManagerOptionsConfig(OptionsConfig):
                 True,
                 _('Shows hidden files'),
                 workspace=True)
+
+        self.create_option(
+                'show_parent',
+                _('Show parent entry'),
+                bool,
+                True,
+                _('Shows a ".." entry in the filebrowser'))
+
         self.create_option(
                 'file_hidden_check',
                 _('Used file hidden checker'),
