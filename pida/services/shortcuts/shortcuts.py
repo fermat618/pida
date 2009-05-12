@@ -114,7 +114,8 @@ class ShortcutsView(PidaView):
                 entry.set_text('')
             return True
         # Check if the accelerator is valid and add it to the entry
-        if gtk.accelerator_valid(event.keyval, modifiers) or self._full_button.get_active():
+        if gtk.accelerator_valid(event.keyval, modifiers) or \
+           self._full_button.get_active():
             accelerator = gtk.accelerator_name(event.keyval, modifiers)
             entry.set_text(accelerator)
             self._current.set_value(accelerator)
@@ -125,7 +126,11 @@ class ShortcutsView(PidaView):
 
 
 class ShortcutsEventConfig(EventsConfig):
-    
+
+    def create(self):
+        self.publish('shortcut_changed')
+        self.subscribe('shortcut_changed', self.on_shortcut_changed)
+
     def subscribe_all_foreign(self):
         self.subscribe_foreign('plugins', 'plugin_stopped', 
                                self.on_plugin_changed)
@@ -135,6 +140,14 @@ class ShortcutsEventConfig(EventsConfig):
     def on_plugin_changed(self, *args, **kwargs):
         if self.svc.started:
             self.svc._view.update()
+
+    def on_shortcut_changed(self):
+        try:
+            if self.svc._view.toplevel.window.is_visible():
+                self.svc._view.shortcuts_list.refresh()
+        except AttributeError, e:
+            # window may not exist or was not realized yet
+            pass
 
 class ShortcutsActionsConfig(ActionsConfig):
 
