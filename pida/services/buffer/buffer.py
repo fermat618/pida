@@ -100,10 +100,8 @@ class BufferListView(PidaGladeView):
                                  document=item, file_name=item.filename)
 
         # Add some stuff to the menu
-        sep = gtk.SeparatorMenuItem()
         close = self.svc.get_action('close_selected').create_menu_item()
-        menu.append(sep)
-        menu.append(close)
+        menu.insert(close, 2)
 
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
