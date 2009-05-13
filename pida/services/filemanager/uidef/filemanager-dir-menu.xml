@@ -2,12 +2,14 @@
 <popup>
 <placeholder name="1">
   <menuitem action="browse-for-dir" name="browse-for-dir"/>
-  <menuitem action="delete-dir" name="delete-dir"/>
 </placeholder>
 <separator/>
 <placeholder name="2"/>
 <separator/>
-<placeholder name="3"/>
+<placeholder name="3">
+<separator/>
+<menuitem action="delete-dir" name="delete-dir"/>
+</placeholder>
 <separator/>
 <placeholder name="4"/>
 <separator/>
