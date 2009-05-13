@@ -220,13 +220,16 @@ class Completer(BaseDocumentHandler):
         raise NotImplementedError('Validator must define get_completions')
 
 
+def make_iterable(inp):
+    if not isinstance(inp, (tuple, list)):
+        return (inp,)
+    return inp
+
+
 class LanguageServiceFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
-        if not isinstance(self.svc.language_name, (tuple, list)):
-            all_langs = (self.svc.language_name,)
-        else:
-            all_langs = self.svc.language_name
+        all_langs = make_iterable(self.svc.language_name)
         mapping = {
             'outliner_factory':'outliner',
             'definer_factory': 'definer',
@@ -234,19 +237,25 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
             'completer_factory': 'completer',
             'documentator_factory': 'documentator'
         }
+        # register all language info classes
         for lname in all_langs:
             if self.svc.language_info is not None:
-                self.subscribe_foreign('language', 'info', 
-                                       lname, self.svc.language_info)
+                self.subscribe_foreign('language', 'info', lname, self.svc.language_info)
 
-            for factory_name, feature in mapping.iteritems():
-                factory = getattr(self.svc, factory_name)
-                if factory is not None:
+
+        for factory_name, feature in mapping.iteritems():
+            factory = getattr(self.svc, factory_name)
+            if factory is not None:
+                # a language_name of a factory overrides the service 
+                # language_name
+                if hasattr(factory, 'language_name'):
+                    cur_langs = make_iterable(factory.language_name)
+                else:
+                    cur_langs = all_langs
+                for lname in cur_langs:
                     self.subscribe_foreign(
-                        'language', feature, lname, 
-                        partial(factory, self.svc),
-                    )
-
+                            'language', feature, lname, 
+                            partial(factory, self.svc))
 
 
 class LanguageService(Service):

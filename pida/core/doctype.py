@@ -139,6 +139,19 @@ class TypeManager(dict):
         
         return best
 
+    def get_fuzzy(self, pattern):
+        """
+        Returns a fuzzy match to the pattern provided.
+        A match is if any alias, the internal or human name
+        match in lower case
 
+        @pattern: string
+        """
+        pattern = pattern.lower()
+        for lang in self.itervalues():
+            if pattern == lang.internal.lower() or \
+               pattern == lang.human.lower() or \
+               any((pattern == x.lower() for x in lang.aliases)):
+                return lang
 
 

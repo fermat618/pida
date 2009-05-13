@@ -43,7 +43,32 @@ from pida.utils.languages import (LANG_PRIO, LANG_OUTLINER_TYPES, OutlineItem )
 from pida.core.locale import Locale
 locale = Locale('python')
 _ = locale.gettext
+from subprocess import Popen, PIPE
 
+
+def build_language_list(typemanager):
+    """
+    Build a list of language internal names from the output of 
+    ctags --list-languages
+    """
+    try:
+        output = Popen(["ctags", "--list-languages"], 
+                       stdout=PIPE).communicate()[0]
+    except OSError, e:
+        # can't find ctags -> no support :-)
+        return []
+    output = output.splitlines()
+    rv = []
+    for name in output:
+        clang = typemanager.get_fuzzy(name)
+        if clang:
+            rv.append(clang)
+
+    return rv
+
+from pida.services.language import DOCTYPES
+
+SUPPORTED_LANGS = build_language_list(DOCTYPES)
 # class PythonActionsConfig(ActionsConfig):
 #
 #     def create_actions(self):
@@ -323,7 +348,7 @@ class CtagsOutliner(Outliner):
 
 class Ctags(LanguageService):
 
-    language_name = None
+    language_name = [x.internal for x in SUPPORTED_LANGS]
     outliner_factory = CtagsOutliner
 
 

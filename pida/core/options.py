@@ -321,6 +321,8 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
             try:
                 with open(f) as file:
                     data.update(simplejson.load(file))
+            except ValueError, e:
+                self.svc.log.warning(_('File corrupted: %s') %f)
             except IOError:
                 pass
             except Exception, e:

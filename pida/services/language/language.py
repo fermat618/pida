@@ -21,11 +21,11 @@ from .outlinefilter import FILTERMAP
 
 from pida.core.environment import on_windows, get_pixmap_path
 
-from pida.core.doctype import TypeManager, DocType
+from pida.core.doctype import DocType
 from pida.core.languages import LanguageInfo, LANGUAGE_PLUGIN_TYPES
 
 from pida.utils.gthreads import GeneratorTask, gcall
-from pida.utils.languages import LANG_OUTLINER_TYPES
+#from pida.utils.languages import LANG_OUTLINER_TYPES
 from pida.utils.addtypes import PriorityList
 
 # core
@@ -55,6 +55,10 @@ _ = locale.gettext
 logger = get_logger('service.language')
 
 LEXPORT = EXPORT(suffix='language')
+
+# we have to put our type database here, as plugins may need it long before
+# registering
+from .__init__ import DOCTYPES
 
 def get_value(tab, key):
     return tab.get(key, None)
@@ -268,7 +272,7 @@ class CustomLanguageMapping(dict):
             return
         for key, pluglist in data.iteritems():
             if not self.has_key(key):
-                self[key] = CustomLanguagePrioList(key=getkey)
+                self[key] = CustomLanguagePrioList()
             self[key].set_sort_list(pluglist)
             self[key].customized = True
 
@@ -997,9 +1001,7 @@ class Language(LanguageService):
 
     def pre_start(self):
         self._language_prio_window = None
-        self.doctypes = TypeManager()
-        import deflang
-        self.doctypes._parse_map(deflang.DEFMAPPING)
+        self.doctypes = DOCTYPES
         self._view_outliner = BrowserView(self)
         self._view_validator = ValidatorView(self)
         self.current_type = None
