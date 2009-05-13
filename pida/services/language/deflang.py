@@ -725,7 +725,4 @@ DEFMAPPING = {
                'human': 'Yacc',
                'mime': ('text/x-yacc','text/x-bison'),
                'section': 'Others'}
-
-
-
 }

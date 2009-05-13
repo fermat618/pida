@@ -136,7 +136,6 @@ class PriorityEditorView(PidaGladeView):
         def add_sub(root, sub):
             self.selection_tree.append(root, sub)
             for ssub in sub.get_subcategories():
-                print "add ssub", ssub
                 add_sub(sub, ssub)
 
         for sub in root.get_subcategories():

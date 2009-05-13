@@ -229,6 +229,10 @@ class CustomLanguageMapping(dict):
     Sorts it's members after their priority member but allows
     custom order and gets saved in a config file.
     """
+    def __init__(self, svc):
+        self.svc = svc
+        super(CustomLanguageMapping, self).__init__()
+    
     def get_or_create(self, language):
         if language not in self:
             #XXX: some things expect a list ?!
@@ -236,6 +240,8 @@ class CustomLanguageMapping(dict):
         return self[language]
 
     def add(self, language, instance):
+        if language and self.svc.doctypes.has_key(language):
+            self.svc.doctypes[language].inc_support()
         self.get_or_create(language)
         #self[language].append(instance)
 
@@ -248,6 +254,9 @@ class CustomLanguageMapping(dict):
             self[language].add(instance)
 
     def remove(self, language, instance):
+        if language and self.svc.doctypes.has_key(language):
+            self.svc.doctypes[language].dec_support()
+
         self[language].remove(instance)
 
     def load(self, data):
@@ -742,6 +751,14 @@ class LanguageActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'show_all_types',
+            TYPE_REMEMBER_TOGGLE,
+            _('Show All Types'),
+            _('Show all available types'),
+            '',
+        )
+
+        self.create_action(
             'language_type_menu',
             TYPE_NORMAL,
             _('_Type'),
@@ -887,8 +904,9 @@ class LanguageOptionsConfig(OptionsConfig):
 class LanguageFeatures(LanguageServiceFeaturesConfig):
 
     def create(self):
+        nmapping = partial(CustomLanguageMapping, self.svc)
         self.publish_special(
-            CustomLanguageMapping,
+            nmapping,
             'info', 'outliner', 'definer',
             'validator', 'completer','documentator',
         )
@@ -1046,14 +1064,12 @@ class Language(LanguageService):
         handler = getattr(document, name, None)
         if handler is None:
             type_ = document.doctype
-            factories = ()
-            #if type_:
-            factory = self.features[feature].get_best(type_.internal)
-            #if not factories:
-            #    # get typ unspecific factories
-            #    factories = self.features[feature].get(None)
+            if type_:
+                type_ = type_.internal
+            else:
+                type_ = None
+            factory = self.features[feature].get_best(type_)
             if factory:
-                #XXX: factoring
                 handler = factory(document)
                 setattr(document, name, handler)
                 return handler
@@ -1164,6 +1180,8 @@ class Language(LanguageService):
 
     def change_doctype(self, widget, current):
         doc = self.boss.cmd('buffer', 'get_current')
+        if doc is None:
+            return
         doc.doctype = current.get_data('doctype')
         self.boss.get_service('buffer').emit('document-typchanged', document=doc)
 
@@ -1181,8 +1199,11 @@ class Language(LanguageService):
         
         menu.add(a.create_menu_item())
         menu.add(gtk.SeparatorMenuItem())
+        show_all = self.get_action('show_all_types').get_active()
 
         for target in self.doctypes.itervalues():
+            if not show_all and target.support < 1:
+                continue
             act = gtk.RadioAction(target.internal,
                 target.human or target.internal,
                 target.tooltip,

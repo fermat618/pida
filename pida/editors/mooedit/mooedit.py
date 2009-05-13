@@ -69,6 +69,7 @@ from pida.core.locale import Locale
 locale = Locale('mooedit')
 _ = locale.gettext
 
+from .langs import build_mapping, MAPPINGS
 
 class MooeditMain(PidaView):
     """Main Mooedit View.
@@ -1003,9 +1004,16 @@ class MooeditEventsConfig(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('editor', 'marker-changed',
             self.marker_changed)
+        self.subscribe_foreign('buffer', 'document-typchanged',
+            self.doctype_changed)
 
     def marker_changed(self, marker):
         self.svc.on_marker_changed(marker)
+
+    def doctype_changed(self, document):
+        if document.doctype and getattr(document, 'editor', None):
+            document.editor.set_lang(MAPPINGS.get(document.doctype.internal, 
+                                                  None))
 
 # Service class
 class Mooedit(EditorService):
@@ -1060,6 +1068,11 @@ class Mooedit(EditorService):
         self.get_action('mooedit_last_edit').set_sensitive(False)
         self._update_keyvals()
         self.boss.get_service('editor').emit('started')
+
+        # build a mapping table
+        build_mapping(moo.edit.lang_mgr_default(), 
+                      self.boss.get_service('language').doctypes)
+
         return True
 
     def on_marker_changed(self, marker):

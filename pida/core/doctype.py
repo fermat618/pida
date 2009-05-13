@@ -17,7 +17,7 @@ class DocType(object):
     file, etc.
     """
     __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes', 
-                 'section', 'parsers', 'validators')
+                 'section', 'parsers', 'validators', 'support')
 
     def __init__(self, internal, human, aliases = None, extensions = None, 
                  mimes = None, section = 'Others'):
@@ -27,48 +27,21 @@ class DocType(object):
         self.extensions = extensions and list(extensions) or []
         self.mimes = mimes and list(mimes) or []
         self.section = section
+        # the support counter tracs how much support this document type gets
+        # 0 means that he is currently not supported by something special
+        self.support = 0
         
         self.parsers = []
         self.validators = []
 
-    
-#    def _register(self, lst, prio, val):
-#        self.parser.append((prio, val))
-#        self.parser.sort(key=lambda x: x[0], reverse=True)
-#    
-#    def _unregister(self, lst, obj):
-#        dlist = []
-#        for i in lst:
-#            if i[1] == obj:
-#                dlist.append(i)
-#        for i in dlist:
-#            lst.remove(i)
-#    
-#        
-#    def register_parser(self, parser, priority = PRIO_DEFAULT):
-#        self._register(self.parsers, priority, parser)
-#        
-#    def unregister_parser(self, parser):
-#        self._unregister(self.parsers, parser)
-#    
-#    def register_validator(self, validator, priority = PRIO_DEFAULT):
-#        """
-#        Register a Validator for this DocType.
-#        """
-#        self._register(self.validators, priority, validator)
-#        
-#    def unregister_validator(self, validator):
-#        """
-#        Unregister a validator
-#        """
-#        self._unregister(self.validators, validator)
-#
-#
-#    def get_best_parser(self):
-#        if self.parsers:
-#            return self.parsers[0]
-#        return None
-#
+    def inc_support(self):
+        self.support += 1
+
+    def dec_support(self):
+        self.support -= 1
+        # this can only happen if something decs more then supports it
+        assert self.support >= 0
+
     @property
     def tooltip(self):
         rv = " ".join(self.aliases)
