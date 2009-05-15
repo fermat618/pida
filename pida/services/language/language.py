@@ -12,19 +12,11 @@
 from functools import partial
 
 import gtk
-import gobject
-
-from kiwi.ui.objectlist import Column
-from kiwi.ui.objectlist import ObjectList, COL_MODEL
-
-from .outlinefilter import FILTERMAP
-
-from pida.core.environment import on_windows, get_pixmap_path
 
 from pida.core.doctype import DocType
-from pida.core.languages import LanguageInfo, LANGUAGE_PLUGIN_TYPES
+from pida.core.languages import LanguageInfo
 
-from pida.utils.gthreads import GeneratorTask, gcall
+from pida.utils.gthreads import gcall
 #from pida.utils.languages import LANG_OUTLINER_TYPES
 from pida.utils.addtypes import PriorityList
 
@@ -32,7 +24,8 @@ from pida.utils.addtypes import PriorityList
 #from pida.core.service import Service
 from pida.core.languages import LanguageService, LanguageServiceFeaturesConfig
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL
+from pida.core.actions import (ActionsConfig, TYPE_TOGGLE,
+                               TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL)
 from pida.core.options import OptionsConfig
 #from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
@@ -40,9 +33,9 @@ from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.log import get_logger
 
 # ui
-from pida.ui.views import PidaView, PidaGladeView
-from pida.ui.objectlist import AttrSortCombo
-from pida.ui.prioritywindow import Category, Entry, PriorityEditorView
+
+
+from pida.ui.prioritywindow import Category
 
 from .disabled import (NoopCompleter, NoopValidator, NoopDefiner, 
                        NoopDocumentator, NoopOutliner)
@@ -59,6 +52,8 @@ LEXPORT = EXPORT(suffix='language')
 # we have to put our type database here, as plugins may need it long before
 # registering
 from .__init__ import DOCTYPES
+from .gui import (ValidatorView, BrowserView, PriorityEditorView, LanguageEntry,
+                 LanguagePriorityView)
 
 def get_value(tab, key):
     return tab.get(key, None)
@@ -282,7 +277,6 @@ class CustomLanguageMapping(dict):
         """
         rv = {}
         for key, value in self.iteritems():
-            print key, value, value.customized
             if value.customized:
                 rv[key] = [{"uuid": x.uuid,
                             "name": x.name,
@@ -296,451 +290,15 @@ class CustomLanguageMapping(dict):
         Returns the best factory for the language
         """
         if self.has_key(language) and language:
-            return self[language].get_joined(other_lists=(self.get_or_create(None),))
+            return self[language].get_joined(
+                                    other_lists=(self.get_or_create(None),))
         else:
             return self.get_or_create(None).get_joined()
 
+#FIXME: filtering is currently done very dirty but
+# setting a filter function on the model causes segfault
+# on windows and performance is non critical here
 
-class LanguageEntry(Entry):
-
-    @classmethod
-    def from_plugin(cls, plugin):
-        return cls(uid=plugin.func.uuid(),
-                   display=plugin.func.name,
-                   plugin=plugin.func.plugin,
-                   description=plugin.func.description)
-
-    def uuid(self):
-        return self.uid
-
-class LanguageSubCategory(Category):
-    def __init__(self, svc, lang, type_):
-        self.svc = svc
-        self.lang = lang
-        self.type_ = type_
-    
-    @property
-    def display(self):
-        return LANGUAGE_PLUGIN_TYPES[self.type_]['name']
-
-    @property
-    def display_info(self):
-        if self.type_ == 'completer':
-            return _('<i>All plugins before the Disabled entry are used</i>')
-        return None
-
-    def get_entries(self, default=False):
-        #for type_, info in LANGUAGE_PLUGIN.iteritems():
-        for i in self.svc.get_plugins(self.lang, self.type_):
-            print i
-            yield LanguageEntry.from_plugin(i)
-
-    def commit_list(self, lst):
-        print "save list", lst
-        prio = [{"uuid": x.uuid(),
-                 "name": x.display,
-                 "plugin": x.plugin,
-                 "description": x.description} 
-                                for x in lst]
-        self.svc.set_priority_list(self.lang, self.type_, prio)
-
-class LanguageCategory(Category):
-    def __init__(self, svc, lang):
-        self.svc = svc
-        self.lang = lang
-
-    @property
-    def display(self):
-        return self.svc.doctypes[self.lang].human
-
-
-    def get_subcategories(self):
-        for type_, info in LANGUAGE_PLUGIN_TYPES.iteritems():
-            #self.svc.get_plugins(self.lang, type_)
-            yield LanguageSubCategory(self.svc, self.lang, type_)
-    
-
-class LanguageRoot(Category):
-    """
-    Data root for PriorityEditor
-    """
-    def __init__(self, svc):
-        self.svc = svc
-
-    def get_subcategories(self):
-        for internal, doctype in self.svc.doctypes.iteritems():
-            yield LanguageCategory(self.svc, internal)
-        
-
-class LanguagePriorityView(PriorityEditorView):
-    key = 'language.prio'
-
-    icon_name = 'gtk-library'
-    label_text = _('Language Priorities')
-
-    def create_ui(self):
-        self.root = LanguageRoot(self.svc)
-        self.set_category_root(self.root)
-
-    def can_be_closed(self):
-        self.svc.get_action('show_language_prio').set_active(False)
-
-    def on_button_ok__clicked(self, action):
-        super(LanguagePriorityView, self).on_button_ok__clicked(action)
-        self.svc.get_action('show_language_prio').set_active(False)
-
-
-class ValidatorView(PidaView):
-
-    key = 'language.validator'
-
-    icon_name = 'python-icon'
-    label_text = _('Validator')
-
-    def set_validator(self, validator, document):
-        # this is quite an act we have to do here because of the many cornercases
-        # 1. Jobs once started run through. This is for caching purpuses as a validator
-        # is supposed to cache results, somehow.
-        # 2. buffers can switch quite often and n background jobs are still 
-        # running
-
-        # set the old task job to default priorty again
-        old = self.tasks.get(self.document, None)
-        if old:
-            old.priority = gobject.PRIORITY_DEFAULT_IDLE
-
-        self.document = document
-        self.clear_nodes()
-
-        if self.tasks.has_key(document):
-            # set the priority of the current validator higher, so it feels 
-            # faster on the current view
-            self.tasks[document].priorty = gobject.PRIORITY_HIGH_IDLE
-            # when restart is set, the set_validator is run again so the 
-            # list gets updated from the validator cache. this happens when
-            # the buffer switched to another file and back again
-            self.restart = True
-            self.svc.log.debug(_('Validator task for %s already running'), document)
-            return
-
-        self.restart = False
-
-        if validator:
-
-            def wrap_add_node(document, *args):
-                # we need this proxy function as a task may be still running in 
-                # background and the document already switched
-                # this way we still can fill up the cache by letting the task run
-                # sometimes args have a lengh of 0 so we have to catch this
-                if self.document == document and len(args):
-                    self.add_node(args[0])
-
-            def on_complete(document, validator):
-                del self.tasks[document]
-                # refire the task and hope the cache will just display stuff,
-                # elsewise the task is run again
-                validator.sync()
-                if document == self.document and self.restart:
-                    self.set_validator(validator, document)
-
-            radd = partial(wrap_add_node, document)
-            rcomp = partial(on_complete, document, validator)
-
-
-            task = GeneratorTask(validator.get_validations_cached, 
-                                 radd,
-                                 complete_callback=rcomp,
-                                 priority=gobject.PRIORITY_HIGH_IDLE)
-            self.tasks[document] = task
-            task.start()
-
-    def add_node(self, node):
-        if node:
-            node.lookup_color = self.errors_ol.style.lookup_color
-            self.errors_ol.append(node)
-
-    def create_ui(self):
-        self.document = None
-        self.tasks = {}
-        self.restart = False
-        self.errors_ol = ObjectList(
-            Column('markup', use_markup=True)
-        )
-        self.errors_ol.set_headers_visible(False)
-        self.errors_ol.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.add_main_widget(self.errors_ol)
-        self.errors_ol.connect('double-click', self._on_errors_double_clicked)
-        self.errors_ol.show_all()
-        self.sort_combo = AttrSortCombo(
-            self.errors_ol,
-            [
-                ('lineno', _('Line Number')),
-                ('message', _('Message')),
-                ('type_', _('Type')),
-            ],
-            'lineno',
-        )
-        self.sort_combo.show()
-        self.add_main_widget(self.sort_combo, expand=False)
-
-    def clear_nodes(self):
-        self.errors_ol.clear()
-
-    def _on_errors_double_clicked(self, ol, item):
-        self.svc.boss.editor.cmd('goto_line', line=item.lineno)
-
-    def can_be_closed(self):
-        self.svc.get_action('show_validator').set_active(False)
-
-
-class BrowserView(PidaGladeView):
-
-    key = 'language.browser'
-
-
-    gladefile = 'outline-browser'
-    locale = locale
-    icon_name = 'python-icon'
-    label_text = _('Outliner')
-
-    def create_ui(self):
-        self.document = None
-        self.tasks = {}
-        self.restart = False
-        self.source_tree.set_columns(
-            [
-                Column('icon_name', use_stock=True),
-                Column('markup', use_markup=True, expand=True),
-                Column('type_markup', use_markup=True),
-                Column('sort_hack', visible=False),
-                Column('line_sort_hack', visible=False),
-            ]
-        )
-        self.source_tree.set_headers_visible(False)
-        self.sort_box = AttrSortCombo(
-            self.source_tree,
-            [
-                ('sort_hack', _('Alphabetical by type')),
-                ('line_sort_hack', _('Line Number')),
-                ('name', _('Name')),
-            ],
-            'sort_hack'
-        )
-        self.sort_box.show()
-        self.sort_vbox.pack_start(self.sort_box, expand=False)
-        self.filter_model = self.source_tree.get_model().filter_new()
-        #FIXME this causes a total crash on win32
-        if not on_windows:
-            self.source_tree.get_treeview().set_model(self.filter_model)
-        self.filter_model.set_visible_func(self._visible_func)
-        self.source_tree.get_treeview().connect('key-press-event',
-            self.on_treeview_key_pressed)
-        self.source_tree.get_treeview().connect('row-activated',
-                                     self.do_treeview__row_activated)
-
-        self._last_expanded = None
-
-    def _visible_func(self, model, iter_):
-        node = model[iter_][0]
-        # FIXME: None objects shouldn't be here, but why ????
-        if not node:
-            return False
-        ftext = self.filter_name.get_text().lower()
-        #riter = model.convert_child_iter_to_iter(iter)
-        # name filter
-        def if_type(inode):
-            # type filter
-            if inode.filter_type in self.filter_map:
-                if self.filter_map[inode.filter_type]:
-                    return True
-                else:
-                    return False
-            else:
-                return True
-
-
-        if ftext:
-            # we have to test if any children of the current node may match
-            def any_child(parent):
-                if not parent:
-                    return False
-                for i in xrange(model.iter_n_children(parent)):
-                    child = model.iter_nth_child(parent, i)
-                    cnode = model[child][0]
-                    if cnode and cnode.name.lower().find(ftext) != -1 and if_type(cnode):
-                        return True
-                    if model.iter_has_child(child) and any_child(child):
-                        return True
-                return False
-
-            if (node.name and node.name.lower().find(ftext) != -1) or \
-                (model.iter_has_child(iter_) and any_child(iter_)):
-                return if_type(node)
-            
-            return False
-        
-        return if_type(node)
-
-    def set_outliner(self, outliner, document):
-        # see comments on set_validator
-
-        old = self.tasks.get(self.document, None)
-        if old:
-            old.priority = gobject.PRIORITY_DEFAULT_IDLE
-
-        self.document = document
-        self.clear_items()
-
-        if self.tasks.has_key(document):
-            # set the priority of the current validator higher, so it feels 
-            # faster on the current view
-            self.tasks[document].priorty = gobject.PRIORITY_HIGH_IDLE
-            # when restart is set, the set_validator is run again so the 
-            # list gets updated from the validator cache. this happens when
-            # the buffer switched to another file and back again
-            self.restart = True
-            self.svc.log.debug(_('Outliner task for %s already running'), document)
-            return
-
-        self.restart = False
-
-        if outliner:
-#            if self.task:
-#                self.task.stop()
-#            self.task = GeneratorTask(outliner.get_outline_cached, self.add_node)
-#            self.task.start()
-
-
-            def wrap_add_node(document, *args):
-                # we need this proxy function as a task may be still running in 
-                # background and the document already switched
-                # this way we still can fill up the cache by letting the task run
-                # sometimes args have a lengh of 0 so we have to catch this
-                if self.document == document and len(args):
-                    self.add_node(*args)
-
-            def on_complete(document, outliner):
-                del self.tasks[document]
-                outliner.sync()
-                # refire the task and hope the cache will just display stuff,
-                # elsewise the task is run again
-                if document == self.document and self.restart:
-                    self.set_outliner(outliner, document)
-
-
-            radd = partial(wrap_add_node, document)
-            rcomp = partial(on_complete, document, outliner)
-
-            task = GeneratorTask(outliner.get_outline_cached, 
-                                 radd,
-                                 complete_callback=rcomp,
-                                 priority=gobject.PRIORITY_HIGH_IDLE)
-            self.tasks[document] = task
-            task.start()
-
-
-    def clear_items(self):
-        self.source_tree.clear()
-
-    def add_node(self, node):
-        if not node:
-            return
-        parent = node.parent
-        try:
-            self.source_tree.append(parent, node)
-        except Exception, e:
-            import traceback
-            traceback.print_exc()
-            print "exc", e
-            print "add", parent, node
-
-    def can_be_closed(self):
-        self.svc.get_action('show_outliner').set_active(False)
-
-    def do_treeview__row_activated(self, treeview, path, view_column):
-        "After activated (double clicked or pressed enter) on a row"
-        # we have to use this hand connected version as the kiwi one
-        # used the wrong model and not our filtered one :(
-        try:
-            row = self.filter_model[path]
-        except IndexError:
-            print 'path %s was not found in model: %s' % (
-                path, map(list, self._model))
-            return
-        item = row[COL_MODEL]
-        if item.filename is not None:
-            self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename,
-                                                     line=item.linenumber)
-            self.svc.boss.editor.cmd('grab_focus')
-        elif item.linenumber:
-            self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
-            self.svc.boss.editor.cmd('grab_focus')
-        return True
-
-    def update_filterview(self, outliner):
-        if outliner:
-            def rmchild(widget):
-                self.filter_toolbar.remove(widget)
-            self.filter_toolbar.foreach(rmchild)
-
-            self.filter_map = dict(
-                [(f, FILTERMAP[f]['default']) for f in outliner.filter_type]
-                )
-            for f in self.filter_map:
-                tool_button = gtk.ToggleToolButton()
-                tool_button.set_name(str(f))
-                tool_button.set_active(self.filter_map[f])
-                #FIXME no tooltip on win32
-                if not on_windows:
-                    tool_button.set_tooltip_text(FILTERMAP[f]['display'])
-                tool_button.connect("toggled", self.on_filter_toggled,outliner)
-                im = gtk.Image()
-                im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
-                tool_button.set_icon_widget(im)
-                self.filter_toolbar.insert(tool_button, 0)
-        #self.options_vbox.add(self.filter_toolbar)
-        self.options_vbox.show_all()
-
-    def on_filter_toggled(self, but, outliner):
-        self.filter_map[int(but.get_name())] = not self.filter_map[int(but.get_name())]
-        #self.set_outliner(outliner, self.document)
-        self.filter_model.refilter()
-
-    def on_filter_name_clear__clicked(self, widget):
-        self.filter_name.set_text('')
-
-    def on_filter_name__changed(self, widget):
-        if len(widget.get_text()) >= self.svc.opt('outline_expand_vars'):
-            for i in self.source_tree:
-                self.source_tree.expand(
-                    i,
-                    open_all=True)
-        else:
-            for i in self.source_tree:
-                self.source_tree.collapse(i)
-
-        self.filter_model.refilter()
-
-    def on_treeview_key_pressed(self, tree, event):
-        if event.keyval == gtk.keysyms.space:
-            # FIXME: who to do this right ??
-            cur = self.source_tree.get_selected()
-            if self._last_expanded == cur:
-                self._last_expanded = None
-                self.source_tree.collapse(
-                    cur)
-            else:
-                self.source_tree.expand(
-                    cur, 
-                    open_all=False)
-                self._last_expanded = cur
-            return True
-
-    def on_type_changed(self):
-        pass
-        
-#    def read_options(self):
-#        return {}
 
 
 class LanguageActionsConfig(ActionsConfig):
@@ -945,7 +503,8 @@ class LanguageEvents(EventsConfig):
             document=self.svc.boss.get_service('buffer').get_current())
 
     def clear_all_documents(self, *args, **kwargs):
-        for doc in self.svc.boss.get_service('buffer').get_documents().itervalues():
+        for doc in self.svc.boss.get_service('buffer'). \
+                    get_documents().itervalues():
             self.svc.clear_document_cache(doc)
 
     def on_document_type(self, document):
@@ -1008,16 +567,18 @@ class Language(LanguageService):
         # add default language info
         self.features.subscribe('info', None, LanguageInfo)
 
+        # we should fill this quite early or the wrong plugins will be used
+        # in the beginning
+        self.options.register_extra_option("plugin_priorities", {}, 
+                            callback=None, workspace=True, notify=True)
+        self.load_priority_lists()
+
     def start(self):
         acts = self.boss.get_service('window').actions
-        
         acts.register_window(self._view_outliner.key,
                              self._view_outliner.label_text)
         acts.register_window(self._view_validator.key,
                              self._view_validator.label_text)
-
-        #FIXME remove
-        self.show_language_prio(True)
 
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
@@ -1078,7 +639,7 @@ class Language(LanguageService):
         else:
             return handler
 
-    def get_plugins(self, language, feature):
+    def get_plugins(self, language, feature, default=True):
         """
         Returns a list of registered language plugins for this type
         """
@@ -1086,16 +647,37 @@ class Language(LanguageService):
             lang = language.internal
         else:
             lang = language
-        rv = []
+        rv = CustomLanguagePrioList()
         lst = self.features[feature].get(lang)
         if lst:
             rv.extend(lst)
         lst = self.features[feature].get(None)
         if lst:
             rv.extend(lst)
+        if not default:
+            rv.set_sort_list(self.get_priority_list(language, feature))
         return rv
 
-    def set_priority_list(self, lang, type_, lst):
+    def load_priority_lists(self):
+        """
+        Fill the priority lists by analyzing the options
+        """
+        for lang, data in self.options.get_extra('plugin_priorities').iteritems():
+            for type_, lst in data.iteritems():
+                self.set_priority_list(lang, type_, lst, save=False)
+
+    def get_priority_list(self, lang, type_):
+        """
+        Returns the current priority list for a language and type
+        """
+        opt = self.options.get_extra("plugin_priorities")
+        if not lang in opt:
+            return []
+        if not type_ in opt[lang]:
+            return []
+        return opt[lang][type_]
+
+    def set_priority_list(self, lang, type_, lst, save=True):
         """
         Sets a new priority list on a given language and type_
         
@@ -1104,14 +686,38 @@ class Language(LanguageService):
         """
         clist = self.features[type_].get_or_create(lang)
         if hasattr(clist, "set_sort_list"):
-            print "set save list", lst
             clist.set_sort_list(lst)
         else:
             self.log.warning(_("Try to set a priority list on non priority sublist"))
 
+        # save list in options
+        pp = self.options.get_extra("plugin_priorities")
+
+        if lst:
+            if not pp.has_key(lang):
+                pp[lang] = {}
+            if not pp[lang].has_key(type_):
+                pp[lang][type_] = lst
+            else:
+                pp[lang][type_] = lst
+
+        else:
+            if not pp.has_key(lang):
+                return
+            if not pp[lang].has_key(type_):
+                return
+            del pp[lang][type_]
+            if len(pp[lang]) == 0:
+                del pp[lang]
+        if save:
+            self.options.set_extra_value(
+                "plugin_priorities",
+                self.options.get_extra("plugin_priorities"))
+
+
     def on_buffer_changed(self, document):
         # wo do nothing if we are not started yet
-        if not self.started:
+        if not self.started or not document:
             return
         doctypes = self.doctypes.types_by_filename(document.filename)
         self.current_type = doctypes

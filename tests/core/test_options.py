@@ -38,21 +38,21 @@ class OptionConfigTest(TestCase):
         #opt = OptionsConfig(service)
         opt = service.options
         opt.SUPPORTS_MULTIPLE_CONNECTIONS = True
-        opt.register_extra_file(self.path, ['default'], 
+        opt.register_extra_option('test', ['default'], 
                       callback=self.extra_callback, 
-                      safe=True, workspace=False)
-        self.assertEqual(opt.get_extra(self.path), ['default'])
-        opt.set_extra_value(self.path, [2])
+                      safe=True, workspace=False, path=self.path)
+        self.assertEqual(opt.get_extra('test'), ['default'])
+        opt.set_extra_value('test', [2])
         # service is not started yet, so the callback didn't get fired
         self.assertEqual(self.last_call, None)
         service.started = True
         # not we test the real stuff
-        opt.set_extra_value(self.path, [2])
-        self.assertEqual(opt.get_extra(self.path), [2])
+        opt.set_extra_value('test', [2])
+        self.assertEqual(opt.get_extra('test'), [2])
         self.assertEqual(self.last_call.value, [2])
         self.assertEqual(self.last_call.dirty, False)
         self.last_call.dirty = True
-        self.assertEqual(opt.get_extra(self.path), [2])
+        self.assertEqual(opt.get_extra('test'), [2])
         service.destroy()
 
         #opt2 = OptionsConfig(service)

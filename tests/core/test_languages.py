@@ -3,9 +3,12 @@ import os
 #from pida.core.doctype import DocType
 #from pida.core.testing import test, assert_equal, assert_notequal
 from pida.core.languages import Outliner
-from pida.services.language.language import CustomLanguageMapping, CustomLanguagePrioList
+from pida.services.language.language import (CustomLanguageMapping, 
+    CustomLanguagePrioList, LanguageService)
+from pida.services.language import DOCTYPES
 from pida.services.language.disabled import NoopOutliner
 
+from .test_services import MockBoss
 from pida.utils.testing.mock import Mock
 
 from unittest import TestCase
@@ -26,6 +29,11 @@ class TestOutliner4(Outliner):
 class TestOutlinerUp(Outliner):
     pass
 
+MOCKBOSS = MockBoss()
+TEST_SERVICE = LanguageService(MOCKBOSS)
+TEST_SERVICE.doctypes = DOCTYPES
+
+
 class PriorityTest(TestCase):
 
     default_sort_list = {'test': [  
@@ -43,7 +51,7 @@ class PriorityTest(TestCase):
                              'name': 'NAME MISSING'}]}
 
     def test_priority(self):
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         lm.add('test', TestOutliner2)
         lm.add('test', TestOutliner)
         lm.add('test', TestOutliner2)
@@ -70,7 +78,7 @@ class PriorityTest(TestCase):
                          'name': 'NAME MISSING'}]})
 
     def test_load(self):
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         sort_list = {'test': [  
                         {'description': 'DESCRIPTION MISSING', 
                          'plugin': 'PLUGIN MISSING', 
@@ -106,13 +114,13 @@ class PriorityTest(TestCase):
         self.assertEqual(lm.dump(),sort_list)
 
     def test_def_priority(self):
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         lm.add('test', TestOutliner4)
         lm.add('test', TestOutliner2)
         lm.add('test', NoopOutliner)
         self.assertEqual(lm, {'test':
                               [TestOutliner2, TestOutliner4, NoopOutliner]})
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         lm.add('test', NoopOutliner)
         lm.add('test', TestOutliner2)
         lm.add('test', TestOutliner4)
@@ -134,7 +142,7 @@ class PriorityTest(TestCase):
                          'plugin': 'PLUGIN MISSING', 
                          'uuid': 'tests.core.test_languages.TestOutliner2', 
                          'name': 'NAME MISSING'}]}
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         lm['test'] = CustomLanguagePrioList(sort_list=sort_list['test'])
         lm.add('test', TestOutliner4)
         lm.add('test', TestOutliner2)
@@ -169,7 +177,7 @@ class PriorityTest(TestCase):
                          'plugin': 'PLUGIN MISSING', 
                          'uuid': 'tests.core.test_languages.TestOutlinerUp', 
                          'name': 'NAME MISSING'},]
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         lm.add('test', TestOutlinerUp)
         lm['test'].set_sort_list(sort_list)
         TestOutlinerUp.name = "TestUP"
@@ -185,7 +193,7 @@ class PriorityTest(TestCase):
                 })
 
     def test_best(self):
-        lm = CustomLanguageMapping()
+        lm = CustomLanguageMapping(TEST_SERVICE)
         lm.load(self.default_sort_list)
         #ltest = lm.get_or_create('test')
         lm.add('test', TestOutliner3)
