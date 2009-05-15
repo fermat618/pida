@@ -57,7 +57,10 @@ if sys.platform != 'win32':
             'SHELL', # try shell from env
             pwd.getpwuid(os.getuid())[-1] # fallback to login shell
         )
-    
+
+    def get_cwd(pid):
+        return os.readlink('/proc/%s/cwd'%pid)
+
     def get_absolute_path(path, pid):
         #XXX: works on bsd and linux only
         #     solaris needs /proc/%s/path/cwd
@@ -518,6 +521,18 @@ class TerminalView(PidaView):
     def on_highlight_url(self, url, *args, **kw):
         return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
                                   url=url)
+
+    def chdir(self, path):
+        """
+        Try to change into the new directory
+        """
+        if get_cwd(self._pid) == path:
+            return
+        # maybe we find a good way to check if the term is currently
+        # in shell mode and maybe there is a better way to change
+        # directories somehow
+        # this is like kate does it
+        self._term.feed_child(u'cd %s\n' %path)
 
     def get_absolute_path(self, path):
         return get_absolute_path(path, self._pid)
