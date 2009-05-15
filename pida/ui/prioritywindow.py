@@ -18,6 +18,7 @@ class Category(object):
     """Abstract class to implement a category list"""
 
     customized = False
+    
     temporary_list = None
     display_info = None
 
@@ -89,6 +90,7 @@ class PriorityEditorView(PidaGladeView):
 
     def __init__(self, *args, **kwargs):
         self._current_selection = None
+        self._root_category = None
         self.simple = kwargs.pop('simple', False)
         super(PriorityEditorView, self).__init__(*args, **kwargs)
         self.selection_tree.set_columns([
@@ -130,6 +132,7 @@ class PriorityEditorView(PidaGladeView):
         @tree: list of entries to display
         @category: category to set. can be Category object or string
         """
+        self._root_category = root
         self.selection_tree.clear()
         self.priority_list.clear()
 
@@ -148,7 +151,9 @@ class PriorityEditorView(PidaGladeView):
         cur = self.selection_tree.get_selected()
         # we have to update the priority list only if the customize checkbox
         # does not change
-        update_prio = self.customize_button.get_active() == cur.customized
+        if not cur:
+            return
+        #update_prio = self.customize_button.get_active() == cur.customized
         if cur.display_info:
             self.info.set_markup(cur.display_info)
             self.info.props.visible = True
@@ -156,14 +161,18 @@ class PriorityEditorView(PidaGladeView):
             self.info.props.visible = False
 
         self.customize_button.set_active(cur.customized)
-        if update_prio:
-            self.update_priority_list()
+        #if update_prio:
+        self.update_priority_list()
+        self.customize_button.set_sensitive(len(self.priority_list))
         # open the submenu
         self.selection_tree.expand(cur, open_all=True)
 
     def save_list(self):
         if self._current_selection:
-            self._current_selection.temporary_list = list(self.priority_list)
+            if self.customize_button.get_active():
+                self._current_selection.temporary_list = list(self.priority_list)
+            else:
+                self._current_selection.temporary_list = None
 
     def update_priority_list(self, default=False):
         self.priority_list.clear()
@@ -187,12 +196,16 @@ class PriorityEditorView(PidaGladeView):
         customized = False
         if cur:
             cur.customized = customized = self.customize_button.get_active()
-        for wid in [self.button_move_up, self.button_move_down]:
+        for wid in [self.button_move_up, self.button_move_down, 
+                    self.priority_list]:
             wid.set_sensitive(customized)
         self.selection_tree.refresh()
         #self.priority_list.set_sensitive(True)
         self.update_priority_list()
         #self.priority_list.set_sensitive(cur.customized)
+
+    def on_all_languages__toggled(self, action):
+        self.set_category_root(self._root_category)
 
     def on_button_move_up__clicked(self, action):
         self._move_row(-1)
@@ -204,17 +217,21 @@ class PriorityEditorView(PidaGladeView):
         #self.reset_caches()
         self.update_priority_list(default=True)
 
-    def on_button_ok__clicked(self, action):
+    def on_button_close__clicked(self, action):
+        self.reset_caches()
+
+    def on_button_apply__clicked(self, action):
         self.save_list()
         def save(root):
             for cat in self.selection_tree.get_descendants(root):
-                if cat.temporary_list != None:
-                    cat.commit_list(cat.temporary_list)
+                #if cat.temporary_list != None:
+                cat.commit_list(cat.temporary_list or [])
         for cat in self.selection_tree:
             save(cat)
 
     def reset_caches(self):
         for item in self.selection_tree:
+            # we set a [] here, because it's not None and will
             item.temporary_list = None
 
 

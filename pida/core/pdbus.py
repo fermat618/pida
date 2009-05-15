@@ -111,7 +111,7 @@ class DbusOptionsManagerReal(Object):
         if sender == BUS.get_unique_name():
             return
         try:
-            opt = self.get_option(str(name))
+            opt = self.get_extra_option(str(name))
         except KeyError, e:
             return
         if (opt.workspace and workspace_name() == workspace) or \
@@ -119,7 +119,7 @@ class DbusOptionsManagerReal(Object):
             if opt.no_submit:
                 opt.dirty = True
             else:
-                self.set_value(name, value, save=False, dbus_notify=False)
+                self.set_extra_value(name, value, save=False, dbus_notify=False)
 
     def notify_dbus(self, option):
         from .options import OptionItem
@@ -136,11 +136,13 @@ class DbusOptionsManagerReal(Object):
                                     self.dbus_ns,
                                     signal)
             signature = 'ssv'
-            if isinstance(value, (tuple, list)) and \
-               not len(value):
-               # empty lists can't be detected, so we assume 
-               # list of strings
-               signature = "ssas"
+            if isinstance(value, dict) and not len(value):
+                # emptry dicts can't be detected
+                signature = 'a{ss}'
+            elif isinstance(value, (tuple, list)) and not len(value):
+                # empty lists can't be detected, so we assume 
+                # list of strings
+                signature = "ssas"
 
             message.append(workspace_name(),
                            option.name,

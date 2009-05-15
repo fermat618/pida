@@ -57,8 +57,8 @@ class PriorityList(list):
     def __init__(self, *args, **kwargs):
         self._sort_list = None
         list.__init__(self, args)
-        self.set_sort_list(list(kwargs.pop('sort_list', ())))
         self._keyfnc = kwargs.pop('key', None)
+        self.set_sort_list(list(kwargs.pop('sort_list', ())))
         self.sort()
         
     def set_sort_list(self, lst):
@@ -66,6 +66,7 @@ class PriorityList(list):
         Set the list of attributes to return
         """
         self._sort_list = lst
+        self.sort()
 
     def get_sort_list(self):
         """

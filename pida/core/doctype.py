@@ -71,10 +71,11 @@ class TypeManager(dict):
             raise "doctype already registed"
         self[doctype.internal] = doctype
         for ext in doctype.extensions:
-            if self._globs.has_key(ext):
-                self._globs[ext].append(doctype)
-            else:
-                self._globs[ext] = [doctype]
+            if ext:
+                if self._globs.has_key(ext):
+                    self._globs[ext].append(doctype)
+                else:
+                    self._globs[ext] = [doctype]
 
     def _parse_map(self, lst):
         for intname, data in lst.iteritems():
@@ -115,6 +116,9 @@ class TypeManager(dict):
                 if len(test) > len(best_glob):
                     best_glob = test
                     best_list += self._globs[test]
+
+        return self._globs[best_glob][0]
+        
         if len(best_list) > 1:
             # erks. got more then one result. try different approach
             # guess the mimetype through the python mimetype lib
@@ -129,7 +133,7 @@ class TypeManager(dict):
                 pass
             if gtest:
                 for dt in best_list:
-                    if mtest in dt.mimes:
+                    if gtest in dt.mimes:
                         best = dt
             else:
                 # use the first one as total fallback :(
