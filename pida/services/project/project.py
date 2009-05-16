@@ -143,7 +143,7 @@ class ProjectSetupView(PidaView):
     def _on_script_view__project_saved(self, script_view, project):
         # reload the project when it gets saved
         if self.svc._current is project:
-            self.svc.set_current_project(project)
+            self.svc.update_execution_menus()
 
     def can_be_closed(self):
         self.svc.get_action('project_properties').set_active(False)
@@ -289,9 +289,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.svc.show_properties(action.get_active())
 
     def on_project_execution_menu(self, action):
-        menuitem = action.get_proxies()[0]
-        menuitem.remove_submenu()
-        menuitem.set_submenu(self.svc.create_menu())
+        # stub that does nothing
+        pass
 
     def on_project_add_directory(self, action):
         path = action.contexts_kw.get('dir_name')
@@ -460,8 +459,7 @@ class ProjectService(Service):
         if project is not None:
             project.reload()
             self.emit('project_switched', project=project)
-            toolitem = self.get_action('project_execute').get_proxies()[0]
-            toolitem.set_menu(self.create_menu())
+            self.update_execution_menus()
             self.project_properties_view.set_project(project)
             self.get_action('project_execute').set_sensitive(bool(project.targets))
             self.set_opt('last_project', project.source_directory)
@@ -469,6 +467,13 @@ class ProjectService(Service):
             self._target_last = project.options.get('default')
             self.actions.get_action('project_execute_last').props.label = \
                 _('Execute Last Controller')
+
+    def update_execution_menus(self):
+        toolitem = self.get_action('project_execute').get_proxies()[0]
+        toolitem.set_menu(self.create_menu())
+        menuitem = self.get_action('project_execution_menu').get_proxies()[0]
+        menuitem.remove_submenu()
+        menuitem.set_submenu(self.create_menu())
 
     def set_last_project(self):
         last = self.opt('last_project')
