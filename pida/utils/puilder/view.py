@@ -1,5 +1,5 @@
 
-import gtk
+import gtk, gobject
 
 from kiwi.environ import Library
 
@@ -45,6 +45,7 @@ class PuilderView(GladeSlaveDelegate):
     parent_window = None
 
     gsignal('cancel-request')
+    gsignal('project-saved', gobject.TYPE_PYOBJECT)
 
     def __init__(self, *args, **kw):
        GladeSlaveDelegate.__init__(self, *args, **kw)
@@ -233,6 +234,7 @@ class PuilderView(GladeSlaveDelegate):
 
     def on_save_button__clicked(self, button):
         self.build.dumpf(self.project.project_file)
+        self.emit('project-saved', self.project)
 
     def on_close_button__clicked(self, button):
         self.revert()
