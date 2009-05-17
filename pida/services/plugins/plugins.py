@@ -602,7 +602,7 @@ class Plugins(Service):
         self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
-        markup = '<b>%s</b>' % cgi.escape(item.name)
+        markup = '<b>%s</b>' % cgi.escape(item.name or str(item))
         if item.version:
             markup += '\n<b>%s</b> : %s' % (_('Version'),
                     cgi.escape(item.version))

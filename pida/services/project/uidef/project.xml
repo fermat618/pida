@@ -61,6 +61,7 @@
         <placeholder name="PT1">
         <toolitem action="project_add" name="project_add" />
         <toolitem action="project_execute" name="project_execute" />
+        <toolitem action="project_execute_last" name="project_execute_last" />
         </placeholder>
         <placeholder name="PT2" />
         </placeholder>

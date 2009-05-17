@@ -197,7 +197,7 @@ class ProjectActionsConfig(ActionsConfig):
 
         self.create_action(
             'project_execute_last',
-            TYPE_MENUTOOL,
+            TYPE_NORMAL,
             _('Execute _last Controller'),
             _('Execute last Controller'),
             'package_utilities',
