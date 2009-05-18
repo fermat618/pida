@@ -472,6 +472,10 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.svc.show_preferences(action.get_active())
 
     def on_save_as(self, action):
+        # open in current filebrowser path
+        moo.utils.prefs_new_key_string('Editor/last_dir')
+        moo.utils.prefs_set_string('Editor/last_dir', 
+            self.svc.boss.cmd('filemanager', 'get_browsed_path'))
         self.svc._current.editor.save_as()
 
     def on_find(self, action):
