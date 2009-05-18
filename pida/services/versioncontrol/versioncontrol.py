@@ -78,6 +78,8 @@ class TextDiffViewer(PidaView):
         from pida.services.language import DOCTYPES
         self._txt.set_doctype(DOCTYPES['Diff'])
         self._txt.set_show_line_numbers(True)
+        import pango
+        self._txt.modify_font(pango.FontDescription('mono'))
         #self._html.set_left_margin(6)
         #self._html.set_right_margin(6)
         sb.add(self._txt)
