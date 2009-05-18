@@ -31,16 +31,11 @@ from pida.core.locale import Locale
 locale = Locale('versioncontrol')
 _ = locale.gettext
 
-try:
-    from pygments import highlight
-    from pygments.lexers import DiffLexer
-    from pygments.formatters import HtmlFormatter
-except ImportError:
-    DiffLexer = HtmlFormatter = lambda *k, **kw: None #they get args
-    def highlight(diff, *k): # dummy in case of missing pygments
-         return '<pre>\n%s</pre>\n' % escape(diff)
 
-class DiffViewer(PidaView):
+from pida.ui.besttextview import BestTextView
+
+
+class HtmlDiffViewer(PidaView):
 
     icon_name = gtk.STOCK_COPY
     label_text = _('Differences')
@@ -65,6 +60,53 @@ class DiffViewer(PidaView):
 
     def can_be_closed(self):
          return True
+
+
+class TextDiffViewer(PidaView):
+
+    icon_name = gtk.STOCK_COPY
+    label_text = _('Differences')
+
+    def create_ui(self):
+        hb = gtk.HBox()
+        self.add_main_widget(hb)
+        sb = gtk.ScrolledWindow()
+        sb.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sb.set_shadow_type(gtk.SHADOW_IN)
+        sb.set_border_width(3)
+        self._txt = BestTextView()
+        from pida.services.language import DOCTYPES
+        self._txt.set_doctype(DOCTYPES['Diff'])
+        self._txt.set_show_line_numbers(True)
+        #self._html.set_left_margin(6)
+        #self._html.set_right_margin(6)
+        sb.add(self._txt)
+        hb.pack_start(sb)
+        hb.show_all()
+
+    def set_diff(self, diff):
+        #data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
+        #self._html.display_html(data)
+        self._txt.get_buffer().set_text(diff)
+        self._txt.set_editable(False)
+
+    def can_be_closed(self):
+         return True
+
+if not BestTextView.has_syntax_highlighting:
+    try:
+        from pygments import highlight
+        from pygments.lexers import DiffLexer
+        from pygments.formatters import HtmlFormatter
+    except ImportError:
+        DiffLexer = HtmlFormatter = lambda *k, **kw: None #they get args
+        def highlight(diff, *k): # dummy in case of missing pygments
+            return '<pre>\n%s</pre>\n' % escape(diff)
+
+    DiffViewer = HtmlDiffViewer
+else:
+    DiffViewer = TextDiffViewer
+
 
 class VersionControlLog(PidaGladeView):
 

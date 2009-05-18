@@ -1160,10 +1160,9 @@ class Mooedit(EditorService):
         good = None
         for doc in documents:
             try:
-                if self._load_file(doc):
-                    good = doc
+                good = self._load_file(doc)
             except DocumentException, err:
-                self.log.exception(err)
+                #self.log.exception(err)
                 self.boss.get_service('editor').emit('document-exception', error=err)
         # we open the last good document now normally again to 
         # make system consistent

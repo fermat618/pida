@@ -108,7 +108,7 @@ class BufferListView(PidaGladeView):
 
         # Must leave the menu in the same state we found it!
         def on_deactivate(menu):
-            menu.remove(sep)
+            #menu.remove(sep)
             menu.remove(close)
 
         menu.connect('deactivate', on_deactivate)
