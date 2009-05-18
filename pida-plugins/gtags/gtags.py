@@ -168,7 +168,9 @@ class GtagsView(PidaView):
         self.svc.build_db()
 
     def _on_list_double_click(self, o, w):
-        self.svc.boss.cmd('buffer', 'open_file', file_name=w.file, line=w.line)
+        file_name = os.path.join(self.svc._project.source_directory, w.file)
+        self.svc.boss.cmd('buffer', 'open_file', file_name=file_name, 
+                          line=int(w.line))
 
 class GtagsActions(ActionsConfig):
 
@@ -245,22 +247,16 @@ class Gtags(Service):
     def build_db(self, clean=False):
         if self._project is None:
             return False
-        if clean:
-            for name in ('GPATH','GRTAGS','GSYMS','GTAGS'):
-                try:
-                    os.unlink(os.path.join(self._project.source_directory, name))
-                except: 
-                    pass
-        if self.have_database():
-            commandargs = ['global', '-v', '-u']
-        else:
-            commandargs = ['gtags', '-v']
-            aconf = self._project.get_meta_dir('gtags', filename="gtags.conf")
-            if os.path.exists(aconf):
-                commandargs.extend(['--gtagsconf', aconf])
-            afiles = self._project.get_meta_dir('gtags', filename="files")
-            if os.path.exists(afiles):
-                commandargs.extend(['-f', afiles])
+        commandargs = ['gtags', '-v']
+        if self.have_database() and not clean:
+            commandargs.append('-i')
+        
+        aconf = self._project.get_meta_dir('gtags', filename="gtags.conf")
+        if os.path.exists(aconf):
+            commandargs.extend(['--gtagsconf', aconf])
+        afiles = self._project.get_meta_dir('gtags', filename="files")
+        if os.path.exists(afiles):
+            commandargs.extend(['-f', afiles])
         self._view._refresh_button.set_sensitive(False)
         self.boss.cmd('commander', 'execute',
                 commandargs=commandargs,
