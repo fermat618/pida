@@ -542,7 +542,7 @@ class TerminalView(PidaView):
             try:
                 os.kill(self._pid, 9)
             except OSError:
-                self.svc.log_debug('PID %s has already gone' % self._pid)
+                self.svc.log.debug('PID %s has already gone' % self._pid)
 
     def on_button_pressed(self, term, event):
         if not event.button in [1,2] or \
