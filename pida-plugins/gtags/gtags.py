@@ -168,8 +168,7 @@ class GtagsView(PidaView):
         self.svc.build_db()
 
     def _on_list_double_click(self, o, w):
-        self.svc.boss.cmd('buffer', 'open_file', file_name=w.file)
-        self.svc.boss.editor.goto_line(w.line)
+        self.svc.boss.cmd('buffer', 'open_file', file_name=w.file, line=w.line)
 
 class GtagsActions(ActionsConfig):
 
@@ -243,13 +242,25 @@ class Gtags(Service):
             return False
         return os.path.exists(os.path.join(self._project.source_directory, 'GTAGS'))
 
-    def build_db(self):
+    def build_db(self, clean=False):
         if self._project is None:
             return False
+        if clean:
+            for name in ('GPATH','GRTAGS','GSYMS','GTAGS'):
+                try:
+                    os.unlink(os.path.join(self._project.source_directory, name))
+                except: 
+                    pass
         if self.have_database():
             commandargs = ['global', '-v', '-u']
         else:
             commandargs = ['gtags', '-v']
+            aconf = self._project.get_meta_dir('gtags', filename="gtags.conf")
+            if os.path.exists(aconf):
+                commandargs.extend(['--gtagsconf', aconf])
+            afiles = self._project.get_meta_dir('gtags', filename="files")
+            if os.path.exists(afiles):
+                commandargs.extend(['-f', afiles])
         self._view._refresh_button.set_sensitive(False)
         self.boss.cmd('commander', 'execute',
                 commandargs=commandargs,
