@@ -22,7 +22,7 @@ _ = locale.gettext
 class ServiceListItem(object):
     
     def __init__(self, svc):
-        self._svc = svc
+        self.svc = svc
         self.label = self.no_mnemomic_label = svc.get_name().capitalize()
         self.doc = ''
         self.stock_id = ''
@@ -55,7 +55,8 @@ class ShortcutsView(PidaView):
         self.add_main_widget(vbox)
         self.update()
         self.shortcuts_list.show_all()
-        hbox = gtk.HBox(spacing=6)
+        hbox = gtk.VBox(spacing=6)
+        bbox = gtk.HBox(spacing=6)
         l = gtk.Label(_('Capture Shortcut'))
         hbox.pack_start(l, expand=False)
         self._capture_entry = gtk.Entry()
@@ -63,8 +64,21 @@ class ShortcutsView(PidaView):
         self._capture_entry.connect('key-press-event',
                                     self._on_capture_keypress)
         self._capture_entry.set_sensitive(False)
-        self._full_button = gtk.ToggleButton('Full')
-        hbox.pack_start(self._full_button)
+        self._default_button = gtk.Button(_('Default'))
+        self._default_button.connect('clicked',
+                                    self._on_default_clicked)
+
+        self._clear_button = gtk.Button(_('Clear'))
+        self._clear_button.connect('clicked',
+                                    self._on_clear_clicked)
+
+        self._full_button = gtk.ToggleButton(_('Allow All'))
+        self._full_button.set_tooltip_markup(
+            _("This allows you to bind all/confusing keys to a shortcut (be warned :-))"))
+        hbox.pack_start(bbox)
+        bbox.pack_start(self._default_button)
+        bbox.pack_start(self._clear_button)
+        bbox.pack_start(self._full_button)
         vbox.pack_start(self.shortcuts_list)
         vbox.pack_start(hbox, expand=False)
         vbox.show_all()
@@ -97,6 +111,15 @@ class ShortcutsView(PidaView):
         self._capture_entry.grab_focus()
         self._capture_entry.select_region(0, -1)
 
+    def _on_clear_clicked(self, event):
+        self._capture_entry.set_text('')
+        self._current.set_value('')
+
+    def _on_default_clicked(self, event):
+        self._capture_entry.set_text(self._current.default)
+        self._current.set_value(self._current.default)
+
+
     def _on_capture_keypress(self, entry, event):
         # svn.gnome.org/viewcvs/gazpacho/trunk/gazpacho/actioneditor.py
         # Tab must be handled as normal. Otherwise we can't move from
@@ -112,6 +135,7 @@ class ShortcutsView(PidaView):
         if modifiers == 0 and not self._full_button.get_active():
             if event.keyval in clear_keys:
                 entry.set_text('')
+                self._current.set_value('')
             return True
         # Check if the accelerator is valid and add it to the entry
         if gtk.accelerator_valid(event.keyval, modifiers) or \
@@ -119,6 +143,8 @@ class ShortcutsView(PidaView):
             accelerator = gtk.accelerator_name(event.keyval, modifiers)
             entry.set_text(accelerator)
             self._current.set_value(accelerator)
+            # deactive the dangerouse button again :-)
+            self._full_button.set_active(False)
         return True
 
     def can_be_closed(self):
