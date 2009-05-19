@@ -339,7 +339,7 @@ class CommanderFeaturesConfig(FeaturesConfig):
                 self.svc.boss.cmd('buffer', 'open_file', 
                                     file_name=file_name,
                                     line=int(line))
-            else:
+            elif os.path.isdir(file_name):
                 self.svc.boss.cmd('filemanager', 'browse', 
                             new_path=file_name)
                 self.svc.boss.cmd('filemanager', 'present_view')

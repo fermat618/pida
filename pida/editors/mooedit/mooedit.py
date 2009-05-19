@@ -497,7 +497,12 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.svc._current.editor.emit('find-word-at-cursor', False)
 
     def on_goto(self, action):
+        cl = self.svc.get_current_line()
         self.svc._current.editor.emit('goto-line-interactive')
+        nl = self.svc.get_current_line()
+        if cl != nl:
+            self.svc.boss.get_service('buffer').emit('document-goto', 
+                                    document=self.svc._current, line=nl)
 
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
@@ -1228,6 +1233,8 @@ class Mooedit(EditorService):
     def goto_line(self, line):
         """Goto a line"""
         self._current.editor.move_cursor(line-1, 0, False, True)
+        self.boss.get_service('buffer').emit('document-goto', 
+                                        document=self._current.document, line=line-1)
 
     def goto_last_edit(self):
         if self._last_modified:

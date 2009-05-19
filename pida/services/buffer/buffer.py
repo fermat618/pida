@@ -290,7 +290,8 @@ class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed', 
-            'document-typchanged', 'document-closed', 'document-opened')
+            'document-typchanged', 'document-closed', 'document-opened', 
+            'document-goto')
         self.subscribe('document-saved', self.on_document_change)
         self.subscribe('document-changed', self.on_document_change)
         self.subscribe('document-typchanged', self.on_document_change)
@@ -352,6 +353,10 @@ class BufferCommandsConfig(CommandsConfig):
         return self.svc.boss.cmd('window', 'present_view',
             view=view)
         view.buffers_ol.grab_focus()
+
+    def get_document_by_id(self, document_id=None):
+        if id_:
+            return self.svc._documents.get(id_, None)
 
 class BufferDbusConfig(DbusConfig):
     
@@ -533,6 +538,7 @@ class Buffer(Service):
                 gcall(self.boss.editor.set_cursor_position, offset)
         elif line is not None:
             gcall(self.boss.editor.goto_line, line)
+            gcall(self.emit, document, line)
         self.get_action('close').set_sensitive(document is not None)
 
     def file_saved(self):
