@@ -402,13 +402,13 @@ class TerminalView(PidaView):
 
     def _init_matches(self):
         for args in self.svc.features['match']:
-            self._term.match_add_match(*args, usr=self)
+            self._term.match_add_match(usr=self, *args)
         for args in self.svc.features['match-callback']:
-            self._term.match_add_callback(*args, usr=self)
+            self._term.match_add_callback(usr=self, *args)
         for args in self.svc.features['match-menu']:
-            self._term.match_add_menu(*args, usr=self)
+            self._term.match_add_menu(usr=self, *args)
         for args in self.svc.features['match-menu-callback']:
-            self._term.match_add_menu_callback(*args, usr=self)
+            self._term.match_add_menu_callback(usr=self, *args)
 
     def _create_scrollbar(self):
         self._scrollbar = gtk.VScrollbar()

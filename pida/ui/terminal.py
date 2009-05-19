@@ -183,8 +183,8 @@ class PidaTerminal(Terminal):
                         groups = rematch.groups()
                         if groups:
                             match_val = groups
-                    if call.callback(term, event, match_str, *match_val, 
-                            usr=call.usr):
+                    if call.callback(term, event, match_str, usr=call.usr,
+                                    *match_val):
                         break
 
     def _on_match_right_clicked(self, term, event, match_num, match_str):
@@ -210,8 +210,8 @@ class PidaTerminal(Terminal):
                     continue
 
                 first = True
-                for action in call.callback(term, event, match_str, *match_val, 
-                                            usr=call.usr):
+                for action in call.callback(term, event, match_str,
+                                            usr=call.usr, *match_val):
                     action.match_args = match_val
                     if isinstance(action, gtk.Action):
                         menu_item = action.create_menu_item()
