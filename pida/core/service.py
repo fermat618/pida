@@ -95,8 +95,18 @@ class Service(object):
         """
         Stop and unregisters this service.
         """
-        self.stop()
-        self.stop_components()
+        try:
+            self.stop()
+        except Exception, e:
+            self.log.exception(e)
+            # big fat warning to the user
+            self.log.error(
+              _('!!!! Warning !!!!\n'
+                'Exception while unloading. Pida is in an unpredictable state.'
+                'Consider a restart'
+                ))
+        finally:
+            self.stop_components()
 
     def stop(self):
         """Override to stop service"""
