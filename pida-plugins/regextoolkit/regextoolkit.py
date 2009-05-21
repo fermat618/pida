@@ -36,6 +36,8 @@ from pida.ui.views import PidaGladeView
 from regextoolkitlib import *
 import gtk
 import gobject
+import pango
+import itertools
 
 # locale
 from pida.core.locale import Locale
@@ -63,7 +65,12 @@ class RegextoolkitView(PidaGladeView):
         for chk in self.chks:
             self.flagsdict[chk.get_label()]=True
             
-        self.txtInput.get_buffer().create_tag("red_bg", background="red")
+        self.txtInput.get_buffer().create_tag("red_bg", background="red", foreground="white",size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("blue_bg", background="blue", foreground="white", size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("green_bg", background="green", foreground="white", size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("yellow_bg", background="yellow", foreground="black", size=15*pango.SCALE )
+        
+        self.buf_tags=["red_bg", "blue_bg", "green_bg", "yellow_bg"]
 
     def get_dialog(self):
         return self.regextoolkitdialog
@@ -74,7 +81,7 @@ class RegextoolkitView(PidaGladeView):
                 del self.flagsdict[k]
                 
         self.flags=flags_from_dict(self.flagsdict) if self.flagsdict else 0
-        print self.flags
+        #print self.flags
         
     def get_text_from_buffer(self, buffer):
         siter=buffer.get_start_iter()
@@ -93,19 +100,33 @@ class RegextoolkitView(PidaGladeView):
         iter=buf.get_iter_at_offset(0)
         buf.insert(iter, lastinput[:m.start(1)])
         if not len(m.groups()): print "returning"; return
+       
+        curtagidx=0
         for i in range(1, len(m.groups())+1):
-            buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], "red_bg" )
+            #print "CurrentTagIdx: ", curtagidx
+            #print "Buftags: ", self.buf_tags
+            #print "Current tag:", self.buf_tags[curtagidx]
+
+            #buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], "red_bg" )
+            buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], self.buf_tags[curtagidx])
+            #NOW WRITE TILL THE NEXT GROUPSTART
             try:
-                nxtstart=m.start(i+1)
-                #print "NxtStart: ", nxtstart
-                if not nxtstart: nxtstart=-1
+                nxtstart=m.start(i+1) or -1
+                #print "M.end(%d): %d"%(i, m.end(i))
+                #print "NXT START: ", nxtstart
+                #print "Writing: <%s>"%lastinput[m.end(i):nxtstart]
                 buf.insert(iter, lastinput[m.end(i):nxtstart])
-                
             except Exception, ex:
-                pass #no such group..
+                #print ex #no such group..
+                buf.insert(iter, lastinput[m.end(i):])
             #print "Highlighting: ", m.span(i)
             
-        
+            if curtagidx<len(self.buf_tags): 
+                curtagidx+=1
+            else:
+                curtagidx=0
+    
+
     def on_btnExecute_clicked(self, widget, *args):
 
         regex, inp=self.get_text_from_buffer(self.txtRegex.get_buffer()), self.get_text_from_buffer(self.txtInput.get_buffer())
@@ -169,7 +190,7 @@ class RegextoolkitView(PidaGladeView):
     
     def on_chk_toggled(self, widget, *args):
         if widget.get_active():
-            print widget.get_label() + " is checked.."
+            #print widget.get_label() + " is checked.."
             self.flagsdict[widget.get_label()]=True
         else:
             self.flagsdict[widget.get_label()]=False
