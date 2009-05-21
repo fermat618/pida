@@ -47,6 +47,7 @@ def flags_from_dict(d=flags):
 match=re.match
 capture_groups=lambda m: m.groups() if m else None
 capture_named_groups=lambda m: m.groupdict() if m else None
+all_matches=lambda reg, input: list(re.finditer(reg, input))
 #print get_flags(MULTILINE=True, VERBOSE=True)
 
 def test():

@@ -65,14 +65,6 @@ class RegextoolkitView(PidaGladeView):
         for chk in self.chks:
             self.flagsdict[chk.get_label()]=True
             
-        #self.txtInput.get_buffer().create_tag("red_bg", background="red", foreground="white",size=15*pango.SCALE)
-        #self.txtInput.get_buffer().create_tag("blue_bg", background="blue", foreground="white", size=15*pango.SCALE)
-        #self.txtInput.get_buffer().create_tag("green_bg", background="green", foreground="white", size=15*pango.SCALE)
-        #self.txtInput.get_buffer().create_tag("yellow_bg", background="yellow", foreground="black", size=15*pango.SCALE )
-        
-        #self.buf_tags=["red_bg", "blue_bg", "green_bg", "yellow_bg"]
-
-
         self.txtInput.get_buffer().create_tag("red_fg", foreground="red",size=15*pango.SCALE)
         self.txtInput.get_buffer().create_tag("blue_fg", foreground="blue",  size=15*pango.SCALE)
         self.txtInput.get_buffer().create_tag("green_fg", foreground="green", size=15*pango.SCALE)
@@ -82,8 +74,11 @@ class RegextoolkitView(PidaGladeView):
         
         self.buf_tags=["red_fg", "blue_fg", "green_fg", "lightbr_fg", "vi_fg", "darkred_fg"]
         
-    def get_dialog(self):
-        return self.regextoolkitdialog
+        #TreeView columns.
+        midcell=gtk.CellRendererText()
+        midcol=gtk.TreeViewColumn("#mid", midcell, text=0)
+        self.tvResult.append_column(midcol)
+        
         
     def update_flags(self):
         for k, v in self.flagsdict.items():
@@ -92,120 +87,75 @@ class RegextoolkitView(PidaGladeView):
                 
         self.flags=flags_from_dict(self.flagsdict) if self.flagsdict else 0
         #print self.flags
-        
     def get_text_from_buffer(self, buffer):
         siter=buffer.get_start_iter()
         eiter=buffer.get_end_iter()
         return buffer.get_text(siter, eiter)
         
-    def inspect_match(self, m):
-        print m.groups()
-        
-    def highlightmatch(self, m):
+    def highlightmatch(self, ms):
         
         buf=self.txtInput.get_buffer()
         lastinput=self.get_text_from_buffer(buf)
-        #buf.set_text("")
-        #self.inspect_match(m)
-        #iter=buf.get_iter_at_offset(0)
-        #buf.insert(iter, lastinput[:m.start(1)])
-        if not len(m.groups()): print "returning"; return
-       
-        curtagidx=0
-        for i in range(1, len(m.groups())+1):
-            istart=buf.get_iter_at_offset(m.start(i))
-            iend=buf.get_iter_at_offset(m.end(i))
-            #            buf.apply_tag(buf.get_tag_table().lookup(self.buf_tags[curtagidx]), istart, iend)
-            buf.apply_tag_by_name(self.buf_tags[curtagidx], istart, iend)
-            
-            ##print "CurrentTagIdx: ", curtagidx
-            ##print "Buftags: ", self.buf_tags
-            ##print "Current tag:", self.buf_tags[curtagidx]
 
-            ##buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], "red_bg" )
-            #buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], self.buf_tags[curtagidx])
-            ##NOW WRITE TILL THE NEXT GROUPSTART
-            #try:
-                #nxtstart=m.start(i+1) or -1
-                ##print "M.end(%d): %d"%(i, m.end(i))
-                ##print "NXT START: ", nxtstart
-                ##print "Writing: <%s>"%lastinput[m.end(i):nxtstart]
-                #buf.insert(iter, lastinput[m.end(i):nxtstart])
-            #except Exception, ex:
-                ##print ex #no such group..
-                #buf.insert(iter, lastinput[m.end(i):])
-            ##print "Highlighting: ", m.span(i)
-            
-            if curtagidx<len(self.buf_tags)-1: 
-                curtagidx+=1
-            else:
-                curtagidx=0
+        for m in ms:
+            if not len(m.groups()): continue
+           
+            curtagidx=0
+            for i in range(1, len(m.groups())+1):
+                istart=buf.get_iter_at_offset(m.start(i))
+                iend=buf.get_iter_at_offset(m.end(i))
+                #buf.apply_tag(buf.get_tag_table().lookup(self.buf_tags[curtagidx]), istart, iend)
+                buf.apply_tag_by_name(self.buf_tags[curtagidx], istart, iend)
+                
+                
+                if curtagidx<len(self.buf_tags)-1: 
+                    curtagidx+=1
+                else:
+                    curtagidx=0
     
 
     def on_btnExecute_clicked(self, widget, *args):
 
         regex, inp=self.get_text_from_buffer(self.txtRegex.get_buffer()), self.get_text_from_buffer(self.txtInput.get_buffer())
        
-        m=match(regex, inp)
-        if m:
+        ms=all_matches(regex, inp)
+        if len(ms):
             self.statusbar.push(1, "[+]MATCH")
-            self.highlightmatch(m)
+            self._prep_tv_for_matches(ms)
+            self.highlightmatch(ms)
         else:
             self.statusbar.push(1, "[-]NO MATCH")
             return
-        #(?P<name>\w+?)(?P<num>\d+)
-        namedgroups=capture_named_groups(match(regex, inp))
-        if namedgroups:
-            self._prep_tv_for_named_groups(namedgroups)
-        else:
-            groups=capture_groups(match(regex, inp))
-            if groups:
-                self._prep_tv_for_anonymouse_groups(groups)
             
+    
+    def _prep_tv_for_matches(self, ms):
+        #self._remove_columns()
+        reg=re.compile(self.get_text_from_buffer(self.txtRegex.get_buffer()))
+        namedgroupsdict={}
+        #print "REG GIDX: ", reg.groupindex
+        for gname, idx  in reg.groupindex.items():
+            namedgroupsdict[idx]=gname
+        #tstore=gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING) #mid, gid, name, match 
+        tstore=gtk.TreeStore(gobject.TYPE_STRING)
+        miter = tstore.get_iter_first()
+        for mid, m in enumerate(ms):
 
-    
-    def _prep_tv_for_named_groups(self, namedgroups):
-        self._remove_columns()
-        lstore=gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING) #id, name, match 
-    
-        for i, gname in enumerate(namedgroups.keys()):
-            iter=lstore.append([str(i), gname, namedgroups[gname]])
-    
-        #return lstore
-        idcell=gtk.CellRendererText()
-        idcol=gtk.TreeViewColumn("#", idcell, text=0)
-    
-    
-        namecell=gtk.CellRendererText()
-        namecol=gtk.TreeViewColumn("Name", namecell, text=1)
-    
-        matchcell=gtk.CellRendererText()
-        matchcol=gtk.TreeViewColumn("Match", matchcell, text=2)
-    
-        map(self.tvResult.append_column,[idcol, namecol, matchcol])
-        self.tvResult.set_model(lstore)
-        
-    
-    def _prep_tv_for_anonymouse_groups(self, groups):
-        self._remove_columns()
-        lstore=gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
-    
-        for i, group in enumerate(groups):
-            iter=lstore.append([str(i), group])
+            miter=tstore.append(None, ["Match#"+str(mid)])
 
-        #return lstore
-        idcell=gtk.CellRendererText()
-        idcol=gtk.TreeViewColumn("#", idcell, text=0)
-        groupcell=gtk.CellRendererText()
-        groupcol=gtk.TreeViewColumn("Match", groupcell, text=1)
-        map(self.tvResult.append_column,[idcol, groupcol])
+            #citer = tstore.iter_children(miter)
+            groups=capture_groups(m)
+            #for gi, gval in enumerate(groups):(?P<name>\w+?)(\d+)
+            #interested in first match...
+            for gi in range(len(groups)+1):
+                gval=m.group(gi)
+                tstore.append(miter, ["%d: %s (%s)"%(gi , gval, namedgroupsdict.get(gi, "Anonymouse") )])
+
+                
+        self.tvResult.set_model(tstore)
         
-        self.tvResult.set_model(lstore)
-    
-    
+            
     def on_chk_toggled(self, widget, *args):
         if widget.get_active():
-            #print widget.get_label() + " is checked.."
             self.flagsdict[widget.get_label().upper()]=True
         else:
             self.flagsdict[widget.get_label().upper()]=False
@@ -216,9 +166,18 @@ class RegextoolkitView(PidaGladeView):
         colslist=self.tvResult.get_columns()
         map(self.tvResult.remove_column, colslist)
 
-
     def on_btnRegexLib_clicked(self, widget, *args):
         pass
+            
+    def on_gregextoolkitwindow_delete_event(self, widget, event, data=None):
+        return False
+    
+    def on_gregextoolkitwindow_destroy(self, widget, data=None):
+        gtk.main_quit()
+    
+    def remove_columns(self):
+        colslist=self.tvResult.get_columns()
+        map(self.tvResult.remove_column, colslist)
 
 
 class RegextoolkitActions(ActionsConfig):
