@@ -95,33 +95,38 @@ class RegextoolkitView(PidaGladeView):
         
         buf=self.txtInput.get_buffer()
         lastinput=self.get_text_from_buffer(buf)
-        buf.set_text("")
+        #buf.set_text("")
         #self.inspect_match(m)
-        iter=buf.get_iter_at_offset(0)
-        buf.insert(iter, lastinput[:m.start(1)])
+        #iter=buf.get_iter_at_offset(0)
+        #buf.insert(iter, lastinput[:m.start(1)])
         if not len(m.groups()): print "returning"; return
        
         curtagidx=0
         for i in range(1, len(m.groups())+1):
-            #print "CurrentTagIdx: ", curtagidx
-            #print "Buftags: ", self.buf_tags
-            #print "Current tag:", self.buf_tags[curtagidx]
-
-            #buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], "red_bg" )
-            buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], self.buf_tags[curtagidx])
-            #NOW WRITE TILL THE NEXT GROUPSTART
-            try:
-                nxtstart=m.start(i+1) or -1
-                #print "M.end(%d): %d"%(i, m.end(i))
-                #print "NXT START: ", nxtstart
-                #print "Writing: <%s>"%lastinput[m.end(i):nxtstart]
-                buf.insert(iter, lastinput[m.end(i):nxtstart])
-            except Exception, ex:
-                #print ex #no such group..
-                buf.insert(iter, lastinput[m.end(i):])
-            #print "Highlighting: ", m.span(i)
+            istart=buf.get_iter_at_offset(m.start(i))
+            iend=buf.get_iter_at_offset(m.end(i))
+            #            buf.apply_tag(buf.get_tag_table().lookup(self.buf_tags[curtagidx]), istart, iend)
+            buf.apply_tag_by_name(self.buf_tags[curtagidx], istart, iend)
             
-            if curtagidx<len(self.buf_tags): 
+            ##print "CurrentTagIdx: ", curtagidx
+            ##print "Buftags: ", self.buf_tags
+            ##print "Current tag:", self.buf_tags[curtagidx]
+
+            ##buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], "red_bg" )
+            #buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], self.buf_tags[curtagidx])
+            ##NOW WRITE TILL THE NEXT GROUPSTART
+            #try:
+                #nxtstart=m.start(i+1) or -1
+                ##print "M.end(%d): %d"%(i, m.end(i))
+                ##print "NXT START: ", nxtstart
+                ##print "Writing: <%s>"%lastinput[m.end(i):nxtstart]
+                #buf.insert(iter, lastinput[m.end(i):nxtstart])
+            #except Exception, ex:
+                ##print ex #no such group..
+                #buf.insert(iter, lastinput[m.end(i):])
+            ##print "Highlighting: ", m.span(i)
+            
+            if curtagidx<len(self.buf_tags)-1: 
                 curtagidx+=1
             else:
                 curtagidx=0
