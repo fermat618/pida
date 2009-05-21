@@ -65,13 +65,23 @@ class RegextoolkitView(PidaGladeView):
         for chk in self.chks:
             self.flagsdict[chk.get_label()]=True
             
-        self.txtInput.get_buffer().create_tag("red_bg", background="red", foreground="white",size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("blue_bg", background="blue", foreground="white", size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("green_bg", background="green", foreground="white", size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("yellow_bg", background="yellow", foreground="black", size=15*pango.SCALE )
+        #self.txtInput.get_buffer().create_tag("red_bg", background="red", foreground="white",size=15*pango.SCALE)
+        #self.txtInput.get_buffer().create_tag("blue_bg", background="blue", foreground="white", size=15*pango.SCALE)
+        #self.txtInput.get_buffer().create_tag("green_bg", background="green", foreground="white", size=15*pango.SCALE)
+        #self.txtInput.get_buffer().create_tag("yellow_bg", background="yellow", foreground="black", size=15*pango.SCALE )
         
-        self.buf_tags=["red_bg", "blue_bg", "green_bg", "yellow_bg"]
+        #self.buf_tags=["red_bg", "blue_bg", "green_bg", "yellow_bg"]
 
+
+        self.txtInput.get_buffer().create_tag("red_fg", foreground="red",size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("blue_fg", foreground="blue",  size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("green_fg", foreground="green", size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("darkred_bg", foreground="#BB0A0A", size=15*pango.SCALE )
+        self.txtInput.get_buffer().create_tag("lightbr_fg", foreground="#DBD39C", size=15*pango.SCALE )
+        self.txtInput.get_buffer().create_tag("vi_fg", foreground="#5F4E84", size=15*pango.SCALE )
+        
+        self.buf_tags=["red_fg", "blue_fg", "green_fg", "lightbr_fg", "vi_fg", "darkred_fg"]
+        
     def get_dialog(self):
         return self.regextoolkitdialog
         
@@ -196,9 +206,9 @@ class RegextoolkitView(PidaGladeView):
     def on_chk_toggled(self, widget, *args):
         if widget.get_active():
             #print widget.get_label() + " is checked.."
-            self.flagsdict[widget.get_label()]=True
+            self.flagsdict[widget.get_label().upper()]=True
         else:
-            self.flagsdict[widget.get_label()]=False
+            self.flagsdict[widget.get_label().upper()]=False
         self.update_flags()
 
     
