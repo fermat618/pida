@@ -62,9 +62,12 @@ class RegextoolkitView(PidaGladeView):
         
         for chk in self.chks:
             self.flagsdict[chk.get_label()]=True
+            
+        self.txtInput.get_buffer().create_tag("red_bg", background="red")
 
     def get_dialog(self):
         return self.regextoolkitdialog
+        
     def update_flags(self):
         for k, v in self.flagsdict.items():
             if not v:
@@ -78,11 +81,39 @@ class RegextoolkitView(PidaGladeView):
         eiter=buffer.get_end_iter()
         return buffer.get_text(siter, eiter)
         
+    def inspect_match(self, m):
+        print m.groups()
+        
+    def highlightmatch(self, m):
+        
+        buf=self.txtInput.get_buffer()
+        lastinput=self.get_text_from_buffer(buf)
+        buf.set_text("")
+        #self.inspect_match(m)
+        iter=buf.get_iter_at_offset(0)
+        buf.insert(iter, lastinput[:m.start(1)])
+        if not len(m.groups()): print "returning"; return
+        for i in range(1, len(m.groups())+1):
+            buf.insert_with_tags_by_name(iter, lastinput[ m.start(i):m.end(i) ], "red_bg" )
+            try:
+                nxtstart=m.start(i+1)
+                #print "NxtStart: ", nxtstart
+                if not nxtstart: nxtstart=-1
+                buf.insert(iter, lastinput[m.end(i):nxtstart])
+                
+            except Exception, ex:
+                pass #no such group..
+            #print "Highlighting: ", m.span(i)
+            
+        
     def on_btnExecute_clicked(self, widget, *args):
 
         regex, inp=self.get_text_from_buffer(self.txtRegex.get_buffer()), self.get_text_from_buffer(self.txtInput.get_buffer())
-        if match(regex, inp):
+       
+        m=match(regex, inp)
+        if m:
             self.statusbar.push(1, "[+]MATCH")
+            self.highlightmatch(m)
         else:
             self.statusbar.push(1, "[-]NO MATCH")
             return
@@ -95,6 +126,8 @@ class RegextoolkitView(PidaGladeView):
             if groups:
                 self._prep_tv_for_anonymouse_groups(groups)
             
+
+    
     def _prep_tv_for_named_groups(self, namedgroups):
         self._remove_columns()
         lstore=gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING) #id, name, match 
@@ -132,7 +165,8 @@ class RegextoolkitView(PidaGladeView):
         map(self.tvResult.append_column,[idcol, groupcol])
         
         self.tvResult.set_model(lstore)
-        
+    
+    
     def on_chk_toggled(self, widget, *args):
         if widget.get_active():
             print widget.get_label() + " is checked.."
