@@ -20,23 +20,30 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+"""
+GTags plugins. It utalizes gtags/the gnu global software to provide 
+language support
+"""
+
+
 import os
 import gtk
 import re
+from threading import Thread
 
 from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import get_uidef_path
-from pida.core.service import Service
+from pida.core.languages import LanguageService
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
 from pida.ui.buttons import create_mini_button
+import subprocess
 
 from pida.ui.views import PidaView
 
-from pida.utils.gthreads import GeneratorTask, GeneratorSubprocessTask
+from pida.utils.gthreads import GeneratorSubprocessTask
 
 # locale
 from pida.core.locale import Locale
@@ -44,6 +51,9 @@ locale = Locale('gtags')
 _ = locale.gettext
 
 class GtagsItem(object):
+    """
+    Object which is used to fill the GtagsView list
+    """
 
     def __init__(self, file, line, dataline, symbol, search):
         self.file = file
@@ -54,15 +64,21 @@ class GtagsItem(object):
 
         self.symbol = self._color_match(symbol, search)
         self.dataline = self._color(dataline, symbol)
-        self.filename = '%s:<span color="#000099">%s</span>' % (self.file, self.line)
+        self.filename = '%s:<span color="#000099">%s</span>' % (self.file, 
+                                                                self.line)
 
     def _color_match(self, data, match):
-        return data.replace(match, '<span color="#c00000"><b>%s</b></span>' % match)
+        return data.replace(match, 
+                            '<span color="#c00000"><b>%s</b></span>' % match)
 
     def _color(self, data, match):
-        return data.replace(match, '<span color="#c00000">%s</span>' % match)
+        return data.replace(match, 
+                            '<span color="#c00000">%s</span>' % match)
 
 class GtagsView(PidaView):
+    """
+    Window wich shows the seach entry and update button for gtags
+    """
 
     key = 'gtags.list'
 
@@ -209,11 +225,44 @@ class GtagsEvents(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('project', 'project_switched',
                                self.svc.on_project_switched)
+        self.subscribe_foreign('buffer', 'document-saved',
+                               self.svc.on_document_saved)
 
+
+class GtagsUpdateThread(Thread):
+    def __init__(self, svc):
+        self.svc = svc
+        self.run_again = True
+        super(GtagsUpdateThread, self).__init__()
+        self.daemon = True
+
+    def run(self):
+        while self.run_again:
+            self.run_again = False
+
+            args, cwd = self.svc.build_args(quiet=True)
+            if args:
+                self.svc.log.debug(
+                            _('Run Gtags with %s in %s') %(args, cwd))
+                pid  = subprocess.Popen(args, stdin=None, 
+                                        stdout=subprocess.PIPE, 
+                                        stderr=subprocess.PIPE, 
+                                        shell=True, 
+                                        cwd=cwd, universal_newlines=True)
+                stdout, stderr = pid.communicate()
+                if pid.returncode:
+                    self.svc.log.error(
+                            _('Error executing background gtags: %s') %stderr)
+
+                else:
+                    self.svc.log.info(_('Ran gtags in backgroud successfully'))
+        
 
 # Service class
-class Gtags(Service):
+class Gtags(LanguageService):
     """Fetch gtags list and show an gtags"""
+
+    language_name = ('C', 'Cpp', 'Java', 'Php', 'Yacc', 'Assembly')
 
     actions_config = GtagsActions
     events_config = GtagsEvents
@@ -221,8 +270,12 @@ class Gtags(Service):
     def start(self):
         self._view = GtagsView(self)
         self._has_loaded = False
-        self._project = self.boss.cmd('project', 'get_current_project')
+        self._project = None
+        self.on_project_switched(self.boss.cmd('project', 
+                                               'get_current_project'))
         self._ticket = 0
+        self._bg_thread = None
+        self._bd_do_updates = False
         self.task = self._task = None
 
         acts = self.boss.get_service('window').actions
@@ -242,25 +295,45 @@ class Gtags(Service):
     def have_database(self):
         if self._project is None:
             return False
-        return os.path.exists(os.path.join(self._project.source_directory, 'GTAGS'))
+        return os.path.exists(os.path.join(self._project.source_directory, 
+                                           'GTAGS'))
 
-    def build_db(self, clean=False):
-        if self._project is None:
-            return False
+    def build_args(self, clean=False, quiet=False):
+        """
+        Generates the command and cwd the should be run to update database
+        """
+        if not self._project:
+            return None, None
+
         commandargs = ['gtags', '-v']
         if self.have_database() and not clean:
             commandargs.append('-i')
         
+        if quiet:
+            commandargs.append('-q')
+
         aconf = self._project.get_meta_dir('gtags', filename="gtags.conf")
         if os.path.exists(aconf):
             commandargs.extend(['--gtagsconf', aconf])
         afiles = self._project.get_meta_dir('gtags', filename="files")
         if os.path.exists(afiles):
             commandargs.extend(['-f', afiles])
+
+        return commandargs, self._project.source_directory
+
+    def build_db(self, clean=False):
+        """
+        Build/Update the gtags database.
+        """
+        if self._project is None:
+            return False
+
+        commandargs, cwd = self.build_args(clean=clean)
+
         self._view._refresh_button.set_sensitive(False)
         self.boss.cmd('commander', 'execute',
                 commandargs=commandargs,
-                cwd=self._project.source_directory,
+                cwd=cwd,
                 title=_('Gtags build...'),
                 eof_handler=self.build_db_finished)
 
@@ -271,12 +344,33 @@ class Gtags(Service):
             data=_('Database build complete'))
 
     def on_project_switched(self, project):
-        if project != self._project:
+        if project != self._project and project:
             self._project = project
             self._view.activate(self.have_database())
+            self._bgupdate = os.path.exists(self._project.get_meta_dir(
+                                                'gtags', 
+                                                filename="autoupdate"))
+        elif not project:
+            self._project = None
+            self._bgupdate = False
+
+    def on_document_saved(self, document):
+        if not document.doctype or \
+           document.doctype.internal not in self.language_name:
+            # we only run updates if a document with doctypes we 
+            # handle are saved
+            return
+
+        if self._bg_thread and self._bg_thread.is_alive():
+            # mark that daemon should run again
+            self._bg_thread.run_again = True
+        else:
+            self._bg_thread = GtagsUpdateThread(self)
+            self._bg_thread.start()
 
     def tag_search_current_word(self):
-        self.boss.editor.cmd('call_with_current_word', callback=self.tag_search_cw)
+        self.boss.editor.cmd('call_with_current_word', 
+                             callback=self.tag_search_cw)
 
     def tag_search_cw(self, word):
         self.get_action('show_gtags').set_active(True)
