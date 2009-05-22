@@ -195,7 +195,9 @@ class CustomLanguagePrioList(PriorityList, Category):
                 for i in group:
                     tmp.append(i)
             tmp.sort(key=self._keyfnc)
-            return tmp[0]
+            if len(tmp):
+                return tmp[0]
+            return None
 
     def get_joined_list(self, other_lists=()):
         """
