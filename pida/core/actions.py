@@ -119,6 +119,14 @@ class ActionsConfig(OptionsConfig):
         group for the service, and can be used for any purpose.
         """
 
+    def remove_action(self, action):
+        """
+        Removes a Action from ActionManager
+
+        @param action: Action instance
+        """
+        self._actions.remove_action(action)
+
     def remove_actions(self):
         self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
 
@@ -186,6 +194,8 @@ class ActionsConfig(OptionsConfig):
         act.set_accel_group(self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
+        # return the option created to allow easy manipulation
+        return opt
 
 # XXX: for some reason this does not work. the changed function gets called
 # when it shouldn't and doesn't detect the wrong path

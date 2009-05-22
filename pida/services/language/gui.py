@@ -156,7 +156,7 @@ class LanguagePriorityView(PriorityEditorView):
         # update all caches
         self.svc.options.set_extra_value(
             "plugin_priorities",
-            self.svc.options.get_extra("plugin_priorities"))
+            self.svc.options.get_extra_value("plugin_priorities"))
         self.svc.emit('refresh')
 
     def on_button_close__clicked(self, action):

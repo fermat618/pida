@@ -157,4 +157,14 @@ class PidaView(SlaveDelegate, PidaViewMixin):
         self._main_widget.pack_start(widget, *args, **kw)
 
 
+class WindowConfig(object):
+    """
+    WindowConfig objects are used to register
+    a window in the windows service so they
+    can get proper shortcuts
+    """
+    key = None
+    label_text = ""
+    description = ""
+    default_shortcut = ""
 

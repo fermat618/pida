@@ -18,7 +18,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE
 
-from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.views import PidaView, PidaGladeView, WindowConfig
 
 from pida.ui.htmltextview import HtmlTextView
 
@@ -250,6 +250,14 @@ class CommitViewer(PidaGladeView):
         self.set_path(None)
         self.svc.get_action('show_commit').set_active(False)
 
+class VersioncontrolLogWindowConfig(WindowConfig):
+    key = VersionControlLog.key
+    label_text = VersionControlLog.label_text
+
+class VersioncontrolCommitWindowConfig(WindowConfig):
+    key = CommitViewer.key
+    label_text = CommitViewer.label_text
+
 class VersioncontrolFeaturesConfig(FeaturesConfig):
 
     def create(self):
@@ -270,6 +278,11 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
             (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'versioncontrol-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            VersioncontrolCommitWindowConfig)
+        self.subscribe_foreign('window', 'window-config',
+            VersioncontrolLogWindowConfig)
+
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, 
         _("Hide Ignored Files by Version Control"))
@@ -662,7 +675,6 @@ class Versioncontrol(Service):
     def start(self):
         self._log = VersionControlLog(self)
         self._commit = CommitViewer(self)
-        acts = self.boss.get_service('window').actions
 
         if not self.features['workdir-manager']:
             self.boss.get_service('notify').notify(
@@ -670,9 +682,6 @@ class Versioncontrol(Service):
                             title="Can't find anyvc",
                             stock=gtk.STOCK_DIALOG_ERROR,
                             )
-
-        acts.register_window(self._log.key,
-                             self._log.label_text)
 
 
     def ignored_file_checker(self, path, name, state):

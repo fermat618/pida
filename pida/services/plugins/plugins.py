@@ -28,10 +28,11 @@ import shutil
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
@@ -350,12 +351,22 @@ class PluginsEvents(EventsConfig):
         self.publish('plugin_started', 'plugin_stopped')
 
 
+class PluginsWindowConfig(WindowConfig):
+    key = PluginsView.key
+    label_text = PluginsView.label_text
+
+class PluginsFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            PluginsWindowConfig)
+
 class Plugins(Service):
     """ Plugins manager service """
 
     actions_config = PluginsActionsConfig
     options_config = PluginsOptionsConfig
     events_config = PluginsEvents
+    features_config = PluginsFeaturesConfig
 
     def pre_start(self):
         self._check = False
@@ -370,11 +381,6 @@ class Plugins(Service):
     def start(self):
         self.update_installed_plugins(start=True)
         self.check_for_updates(self.opt('check_for_updates'))
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

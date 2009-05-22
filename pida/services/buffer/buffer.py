@@ -20,7 +20,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document, DocumentException
 
@@ -280,11 +280,18 @@ class BufferActionsConfig(ActionsConfig):
         document = action.contexts_kw.get('document')
         self.svc.close_file(document=document)
 
+class BufferListConfig(WindowConfig):
+    key = BufferListView.key
+    label_text = BufferListView.label_text
+    description = "Buffer List"
+
 class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'buffer-file-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            BufferListConfig)
 
 class BufferEventsConfig(EventsConfig):
 
@@ -407,12 +414,6 @@ class Buffer(Service):
         self._view = BufferListView(self)
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
-
-    def start(self):
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def get_view(self):
         return self._view

@@ -36,12 +36,13 @@ from kiwi.ui.objectlist import ObjectList, Column
 # PIDA Imports
 from pida.core.languages import LanguageService
 from pida.core.events import EventsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
 from pida.ui.buttons import create_mini_button
 import subprocess
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
 from pida.utils.gthreads import GeneratorSubprocessTask
 
@@ -256,7 +257,16 @@ class GtagsUpdateThread(Thread):
 
                 else:
                     self.svc.log.info(_('Ran gtags in backgroud successfully'))
-        
+
+class GtagsWindowConfig(WindowConfig):
+    key = GtagsView.key
+    label_text = GtagsView.label_text
+
+class GtagsFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            GtagsWindowConfig)
+
 
 # Service class
 class Gtags(LanguageService):
@@ -266,6 +276,7 @@ class Gtags(LanguageService):
 
     actions_config = GtagsActions
     events_config = GtagsEvents
+    features_config = GtagsFeaturesConfig
 
     def start(self):
         self._view = GtagsView(self)
@@ -277,12 +288,6 @@ class Gtags(LanguageService):
         self._bg_thread = None
         self._bd_do_updates = False
         self.task = self._task = None
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
 
     def show_gtags(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)

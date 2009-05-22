@@ -36,6 +36,7 @@ from pida.core.log import get_logger
 
 
 from pida.ui.prioritywindow import Category
+from pida.ui.views import WindowConfig
 
 from .disabled import (NoopCompleter, NoopValidator, NoopDefiner, 
                        NoopDocumentator, NoopOutliner)
@@ -462,6 +463,16 @@ class LanguageOptionsConfig(OptionsConfig):
             3,
             _('Expand all entries when searching the outliner after n chars'))
 
+class ValidatorConfig(WindowConfig):
+    key = ValidatorView.key
+    label_text = ValidatorView.label_text
+    description = _("Window that shows validation errors")
+
+class OutlinerConfig(WindowConfig):
+    key = BrowserView.key
+    label_text = BrowserView.label_text
+    description = _("Outliner shows file structure")
+
 
 class LanguageFeatures(LanguageServiceFeaturesConfig):
 
@@ -473,6 +484,11 @@ class LanguageFeatures(LanguageServiceFeaturesConfig):
             'validator', 'completer','documentator',
         )
 
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            OutlinerConfig)
+        self.subscribe_foreign('window', 'window-config',
+            ValidatorConfig)
 
 
 class LanguageEvents(EventsConfig):
@@ -573,13 +589,6 @@ class Language(LanguageService):
                             callback=None, workspace=True, notify=True)
         self.load_priority_lists()
 
-    def start(self):
-        acts = self.boss.get_service('window').actions
-        acts.register_window(self._view_outliner.key,
-                             self._view_outliner.label_text)
-        acts.register_window(self._view_validator.key,
-                             self._view_validator.label_text)
-
     def show_validator(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view_validator)
 
@@ -662,7 +671,8 @@ class Language(LanguageService):
         """
         Fill the priority lists by analyzing the options
         """
-        for lang, data in self.options.get_extra('plugin_priorities').iteritems():
+        for lang, data in \
+            self.options.get_extra_value('plugin_priorities').iteritems():
             for type_, lst in data.iteritems():
                 self.set_priority_list(lang, type_, lst, save=False)
 
@@ -670,7 +680,7 @@ class Language(LanguageService):
         """
         Returns the current priority list for a language and type
         """
-        opt = self.options.get_extra("plugin_priorities")
+        opt = self.options.get_extra_value("plugin_priorities")
         if not lang in opt:
             return []
         if not type_ in opt[lang]:
@@ -691,7 +701,7 @@ class Language(LanguageService):
             self.log.warning(_("Try to set a priority list on non priority sublist"))
 
         # save list in options
-        pp = self.options.get_extra("plugin_priorities")
+        pp = self.options.get_extra_value("plugin_priorities")
 
         if lst:
             if not pp.has_key(lang):
@@ -712,7 +722,7 @@ class Language(LanguageService):
         if save:
             self.options.set_extra_value(
                 "plugin_priorities",
-                self.options.get_extra("plugin_priorities"))
+                self.options.get_extra_value("plugin_priorities"))
 
 
     def on_buffer_changed(self, document):
