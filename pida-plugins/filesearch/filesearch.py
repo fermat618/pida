@@ -123,6 +123,7 @@ class SearchView(PidaGladeView):
         # filter entry objects
         for name, entry in entries.iteritems():
             box.pack_start(entry)
+            entry.connect('activate', self.on_search_button__clicked)
 
         # remove button
         def remove_btn_clicked(btn):
