@@ -369,12 +369,12 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
 
     def read(self):
         data = {}
-        for f in (self.workspace_path, self.global_path):
+        for f in (self.global_path, self.workspace_path):
             try:
-                with open(f) as file:
-                    data.update(simplejson.load(file))
+                with open(f) as file_:
+                    data.update(simplejson.load(file_))
             except ValueError, e:
-                self.svc.log.warning(_('File corrupted: %s') %f)
+                self.svc.log.error(_('Settings file corrupted: %s') %f)
             except IOError:
                 pass
             except Exception, e:
