@@ -427,6 +427,9 @@ class LanguageActionsConfig(ActionsConfig):
 
     def on_focus_outline(self, action):
         self.get_action('show_outliner').set_active(True)
+        self.svc.boss.cmd('window', 'present_view',
+                          view=self.svc._view_outliner)
+        self.svc._view_outliner.filter_name.select_region(0, -1)
         self.svc._view_outliner.filter_name.grab_focus()
 
     def on_show_language_prio(self, action):
