@@ -204,6 +204,8 @@ class GrepperView(PidaGladeView):
             self.close()
         else:
             self.pattern_entry.set_text(word)
+            # very unlikely that a selected text is a regex
+            self.re_check.set_active(False)
             self.start_grep()
 
     def start_grep(self):
