@@ -317,7 +317,8 @@ class ProjectOptions(OptionsConfig):
             unicode,
             "~",
             _('The current directories in the workspace'),
-            safe=False
+            safe=False,
+            workspace=True
         )
 
         self.create_option(
@@ -334,7 +335,8 @@ class ProjectOptions(OptionsConfig):
             list,
             [],
             _('The current directories in the workspace'),
-            safe=False
+            safe=False,
+            workspace=True
         )
 
         self.create_option(
