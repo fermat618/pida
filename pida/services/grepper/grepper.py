@@ -347,7 +347,7 @@ class Grepper(Service):
             view = self.show_grepper_in_project_source_directory()
         else:
             view = self.show_grepper(path)
-        self.boss.editor.cmd('call_with_current_word',
+        self.boss.editor.cmd('call_with_selection_or_word',
                              callback=view.start_grep_for_word)
 
     def grep(self, top, regex, recursive=False, show_hidden=False):

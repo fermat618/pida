@@ -154,6 +154,9 @@ class EditorCommandsConfig(CommandsConfig):
     def call_with_selection(self, callback):
         self.svc.call_with_selection(callback)
 
+    def call_with_selection_or_word(self, callback):
+        self.svc.call_with_selection_or_word(callback)
+
     def grab_focus(self):
         self.svc.grab_focus()
 
