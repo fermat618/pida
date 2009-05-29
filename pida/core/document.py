@@ -14,7 +14,7 @@ mimetypes.init() # expensive shit to keep mimetypes.guess_type threadsave
 import stat
 import time
 
-from charfinder import DETECTOR_MANAGER
+from charfinder import detect_encoding
 import codecs
 
 from pida.core.log import log
@@ -98,7 +98,6 @@ class Document(object):
         self.editor = None
         self._list = []
         self._str = ""
-        self._detect_encoding = DETECTOR_MANAGER
         self.creation_time = time.time()
 
         if filename is None:
@@ -141,7 +140,7 @@ class Document(object):
             fname = self.filename
             mime = self.mimetype
 
-            self._encoding = self._detect_encoding(stream, fname, mime)
+            self._encoding = detect_encoding(stream, fname, mime)
             stream.seek(0)
             stream = codecs.EncodedFile(stream, self._encoding)
             self._str = stream.read()
