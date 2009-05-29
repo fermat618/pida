@@ -86,8 +86,11 @@ class WayStack(list):
                 if check.line < line + self.threshold  and \
                    check.line > line - self.threshold and \
                    check.time + self.timespan  <= ctime:
-                    if self.has_fuzzy(wpoint):
-                        return
+                    fuzz = self.get_fuzzy(wpoint)
+                    if fuzz:
+                        # we update the line of the fuzzy match so
+                        # have the point near bye when jumping back
+                        fuzz.line = line
                     else:
                         self._addpoint(wpoint)
                         del self._considered[:]
@@ -135,16 +138,22 @@ class WayStack(list):
                 return True
         return False
 
-    def get_fuzzy(self, document, line):
+    def get_fuzzy(self, document, line=0):
         """
         Returns the first fuzzy matched element from the Stack
         """
+        if isinstance(document, WayPoint):
+            line = document.line
+            document = document.document
+        
+        best = None
         for i in self:
             if document == i.document and \
                (i.line - self.threshold) < line and \
                (i.line + self.threshold) > line:
-                return i
-        return None
+                if not best or abs(best.line - line) > abs(i.line - line):
+                    best = i
+        return best
 
 
     def clear(self):
@@ -314,7 +323,7 @@ class WaypointActionsConfig(ActionsConfig):
         #self.svc.execute_current_document()
         self.svc._stack.clear()
 
-    def on_force_waypoint(self):
+    def on_force_waypoint(self, action):
         self.svc.notify_change(None, None, force=True)
 
     def on_menu(self, action):

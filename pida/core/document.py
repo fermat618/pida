@@ -46,9 +46,11 @@ class Document(object):
     markup_prefix = ''
     markup_directory_color = '#FFFF00'
     markup_project_color = '#FF0000'
+    markup_color_noproject = "#FF0000"
+
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'markup_project_color', 'markup_directory_color', 
-                         'filename', 'directory']
+                         'filename', 'directory', 'markup_color_noproject']
 
     markup_string_project = (
                      u'<span color="%(markup_project_color)s">'
@@ -78,8 +80,18 @@ class Document(object):
                      u'%(directory)s/</span>'
                      u'%(basename)s')
 
-    markup_string = (u'<b>%(basename)s</b>')
+    markup_string_noproject_file = (
+                     u'<span foreground="%(markup_color_noproject)s">'
+                     u'<b>%(basename)s</b></span>'
+                     )
 
+    markup_string = u'<b>%(basename)s</b>'
+
+    @property
+    def markup_string_if_project(self):
+        if not self.project:
+            return self.markup_string_noproject_file
+        return self.markup_string
 
     def __init__(self, boss, filename=None, project=None):
         """
@@ -413,6 +425,7 @@ class Document(object):
                 markup_dict[attr] = escape(var)
             else:
                 markup_dict[attr] = ''
+
         return markup_dict
 
     @property
