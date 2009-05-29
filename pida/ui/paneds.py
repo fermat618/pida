@@ -182,15 +182,20 @@ class PidaPaned(BigPaned):
         if fullscreen:
             for pos in self.get_all_pos():
                 paned = self.get_paned(pos)
-                self._fullscreen_vis[pos] = paned.get_open_pane()
+                self._fullscreen_vis[pos] = {
+                     'pane':paned.get_open_pane(),
+                     'sticky': paned.props.sticky_pane
+                     }
+                paned.set_sticky_pane(False)
+                paned.props.sticky_pane = False
                 paned.hide_pane()
-                #self.hide_pane(pan)
         else:
-             for pos in self.get_all_pos():
+             for pos in self.get_all_pos(True):
                 paned = self.get_paned(pos)
                 if self._fullscreen_vis.has_key(pos) and \
-                    self._fullscreen_vis[pos]:
-                    paned.open_pane(self._fullscreen_vis[pos])
+                    self._fullscreen_vis[pos]['pane']:
+                    paned.open_pane(self._fullscreen_vis[pos]['pane'])
+                    paned.set_sticky_pane(self._fullscreen_vis[pos]['sticky'])
         self._fullscreen = fullscreen
 
     def get_fullscreen(self):

@@ -307,6 +307,15 @@ class WindowOptionsConfig(OptionsConfig):
         )
 
         self.create_option(
+            'no_project_color',
+            _('No project color'),
+            Color,
+            '#CB4444',
+            _('The color projects shall have in PIDA'),
+            self.on_color_change,
+        )
+
+        self.create_option(
             'directory_color',
             _('Directory color'),
             Color,
@@ -440,6 +449,7 @@ class Window(Service):
         # set the colors of Document
         Document.markup_directory_color = self.opt('directory_color')
         Document.markup_project_color = self.opt('project_color')
+        Document.markup_color_noproject = self.opt('no_project_color')
 
     def update_title(self, document=None):
         if self._title_template is None:
