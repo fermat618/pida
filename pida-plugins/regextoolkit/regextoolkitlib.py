@@ -25,7 +25,14 @@
 
 import re
 
-flags=dict(MULTILINE=re.MULTILINE, DOTALL=re.DOTALL, VERBOSE=re.VERBOSE, LOCALE=re.L, UNICODE=re.UNICODE, IGNORECASE=re.IGNORECASE)
+flags=dict(
+        MULTILINE=re.MULTILINE,
+        DOTALL=re.DOTALL,
+        VERBOSE=re.VERBOSE,
+        LOCALE=re.L,
+        UNICODE=re.UNICODE,
+        IGNORECASE=re.IGNORECASE,
+        )
 
 #def get_flags(**kw):
 #    assert map(flags.has_key, kw.keys())
@@ -36,12 +43,8 @@ flags=dict(MULTILINE=re.MULTILINE, DOTALL=re.DOTALL, VERBOSE=re.VERBOSE, LOCALE=
 
 ##sames as get_flags(**d)
 def flags_from_dict(d=flags):
-    assert map(flags.has_key, d.keys())
-    myflags=0
-    for k in d.keys():
-        myflags |= flags[k]
-
-    return myflags
+    assert all(k in flags for k in d)
+    return sum(flags[k] for k in d)
 
 
 match=re.match

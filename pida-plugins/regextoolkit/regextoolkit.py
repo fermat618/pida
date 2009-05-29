@@ -33,7 +33,8 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import PidaGladeView
-from regextoolkitlib import *
+from regextoolkitlib import flags_from_dict, all_matches, capture_groups
+import re
 import gtk
 import gobject
 import pango
@@ -91,43 +92,36 @@ class RegextoolkitView(PidaGladeView):
         siter=buffer.get_start_iter()
         eiter=buffer.get_end_iter()
         return buffer.get_text(siter, eiter)
-        
+
     def highlightmatch(self, ms):
-        
-        buf=self.txtInput.get_buffer()
-        lastinput=self.get_text_from_buffer(buf)
+
+        buf = self.txtInput.get_buffer()
+        buf.remove_all_tags(buf.get_start_iter(), buf.get_end_iter())
 
         for m in ms:
-            if not len(m.groups()): continue
-           
-            curtagidx=0
-            for i in range(1, len(m.groups())+1):
-                istart=buf.get_iter_at_offset(m.start(i))
-                iend=buf.get_iter_at_offset(m.end(i))
+            for idx in range(len(m.groups())):
+                pos = idx+1
+                tag = idx%len(self.buf_tags)
+
+                istart=buf.get_iter_at_offset(m.start(pos))
+                iend=buf.get_iter_at_offset(m.end(pos))
                 #buf.apply_tag(buf.get_tag_table().lookup(self.buf_tags[curtagidx]), istart, iend)
-                buf.apply_tag_by_name(self.buf_tags[curtagidx], istart, iend)
-                
-                
-                if curtagidx<len(self.buf_tags)-1: 
-                    curtagidx+=1
-                else:
-                    curtagidx=0
-    
+                buf.apply_tag_by_name(self.buf_tags[tag], istart, iend)
 
     def on_btnExecute_clicked(self, widget, *args):
 
-        regex, inp=self.get_text_from_buffer(self.txtRegex.get_buffer()), self.get_text_from_buffer(self.txtInput.get_buffer())
+        regex = self.get_text_from_buffer(self.txtRegex.get_buffer())
+        inp = self.get_text_from_buffer(self.txtInput.get_buffer())
        
         ms=all_matches(regex, inp)
-        if len(ms):
+        if len(ms): 
             self.statusbar.push(1, "[+]MATCH")
             self._prep_tv_for_matches(ms)
             self.highlightmatch(ms)
         else:
             self.statusbar.push(1, "[-]NO MATCH")
             return
-            
-    
+
     def _prep_tv_for_matches(self, ms):
         #self._remove_columns()
         reg=re.compile(self.get_text_from_buffer(self.txtRegex.get_buffer()))
@@ -150,31 +144,20 @@ class RegextoolkitView(PidaGladeView):
                 gval=m.group(gi)
                 tstore.append(miter, ["%d: %s (%s)"%(gi , gval, namedgroupsdict.get(gi, "Anonymouse") )])
 
-                
+
         self.tvResult.set_model(tstore)
-        
-            
+
     def on_chk_toggled(self, widget, *args):
-        if widget.get_active():
-            self.flagsdict[widget.get_label().upper()]=True
-        else:
-            self.flagsdict[widget.get_label().upper()]=False
+        self.flagsdict[widget.get_label().upper()]=widget.get_active()
         self.update_flags()
 
-    
     def _remove_columns(self):
         colslist=self.tvResult.get_columns()
         map(self.tvResult.remove_column, colslist)
 
     def on_btnRegexLib_clicked(self, widget, *args):
         pass
-            
-    def on_gregextoolkitwindow_delete_event(self, widget, event, data=None):
-        return False
-    
-    def on_gregextoolkitwindow_destroy(self, widget, data=None):
-        gtk.main_quit()
-    
+
     def remove_columns(self):
         colslist=self.tvResult.get_columns()
         map(self.tvResult.remove_column, colslist)
@@ -198,7 +181,7 @@ class RegextoolkitActions(ActionsConfig):
             self.svc.show_regextoolkit()
         else:
             self.svc.hide_regextoolkit()
-            
+
 class RegextoolkitOptions(OptionsConfig):
 
     pass
