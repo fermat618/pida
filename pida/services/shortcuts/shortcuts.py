@@ -9,10 +9,11 @@ from kiwi.ui.objectlist import ObjectTree, Column
 
 # PIDA Imports
 from pida.core.service import Service
+from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE
 from pida.core.events import  EventsConfig
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
 # locale
 from pida.core.locale import Locale
@@ -194,24 +195,28 @@ class ShortcutsActionsConfig(ActionsConfig):
         else:
             self.svc.hide_shortcuts()
 
+class ShortcutsWindowConfig(WindowConfig):
+    key = ShortcutsView.key
+    label_text = ShortcutsView.label_text
+
+class ShortcutsFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            ShortcutsWindowConfig)
+
 # Service class
 class Shortcuts(Service):
     """Describe your Service Here""" 
     
     actions_config = ShortcutsActionsConfig
     events_config = ShortcutsEventConfig
+    features_config = ShortcutsFeaturesConfig
 
     def pre_start(self):
         self._view = None
 
     def start(self):
         self._view = ShortcutsView(self)
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
 
     def show_shortcuts(self):
         self.boss.cmd('window', 'add_view',
@@ -221,6 +226,8 @@ class Shortcuts(Service):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
     def update(self):
+        if not self.started:
+            return
         if self._view:
             self._view.update()
 

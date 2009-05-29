@@ -286,6 +286,10 @@ class Vim(EditorService):
     def call_with_current_word(self, callback):
         return self._com.get_cword(self.server, callback)
 
+    def call_with_selection_or_word(self, callback):
+        #FIXME: test for selection
+        return self._com.get_cword(self.server, callback)
+
     def call_with_selection(self, callback):
         return self._com.get_selection(self.server, callback)
 

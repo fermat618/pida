@@ -61,7 +61,6 @@ class Window(gtk.Window):
     def info_dlg(self, *args, **kw):
         return info(parent = self, *args, **kw)
 
-    @with_gdk_lock
     def error_dlg(self, *args, **kw):
         return error(parent = self, *args, **kw)
 

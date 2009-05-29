@@ -1428,8 +1428,9 @@ class Mooedit(EditorService):
 
     def get_current_word(self):
         """
-        Returns the word the cursor is in
+        Returns the word the cursor is in or the selected text
         """
+        
         start, end, txt = self._get_current_word_pos()
 
         return txt[start:end]
@@ -1458,7 +1459,14 @@ class Mooedit(EditorService):
             return
 
         callback(rv)
-    
+
+    def call_with_selection_or_word(self, callback):
+        if self._current.editor.has_selection():
+            self.call_with_selection(callback)
+        else:
+            self.call_with_current_word(callback)
+
+
     def insert_text(self, text):
         self._current.editor.get_buffer().insert_at_cursor(text)
     

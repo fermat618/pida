@@ -19,10 +19,11 @@ from os import path
 from kiwi.ui.objectlist import Column
 
 from pida.core.locale import Locale
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.utils.gthreads import GeneratorTask
@@ -122,6 +123,7 @@ class SearchView(PidaGladeView):
         # filter entry objects
         for name, entry in entries.iteritems():
             box.pack_start(entry)
+            entry.connect('activate', self.on_search_button__clicked)
 
         # remove button
         def remove_btn_clicked(btn):
@@ -256,6 +258,15 @@ class FileManagerOptionsConfig(OptionsConfig):
               'from search')
         )
 
+class SearchWindowConfig(WindowConfig):
+    key = SearchView.key
+    label_text = SearchView.label_text
+
+class SearchFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            SearchWindowConfig)
+
 
 class Search(Service):
     """Search service"""
@@ -266,12 +277,6 @@ class Search(Service):
 
     def pre_start(self):
         self._view = SearchView(self)
-
-    def start(self):
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def change_search_folder(self, path):
         self._view.set_search_folder(path)

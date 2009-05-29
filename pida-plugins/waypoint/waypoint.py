@@ -6,6 +6,7 @@
 
 # gtk
 import gtk, gobject
+import time
 
 # PIDA Imports
 
@@ -31,19 +32,21 @@ class WayPoint(object):
     """
     Represents a single point of the waypoint history
     """
-    def __init__(self, document, line):
+    def __init__(self, document, line, time_=None):
         self.document = document
         self.line = line
+        self.time = time_ or time.time()
 
     def __repr__(self):
-        return '<WayPoint %s %s>' %(self.document, self.line)
+        return '<WayPoint %s %s @ %s>' %(self.document, self.line, self.time)
     
 
 class WayStack(list):
     """
     Object to stores the waypoint's
     """
-    def __init__(self, threshold = 30, max_length = 30):
+    def __init__(self, threshold = 30, max_length = 30, timespan=8,
+                       docswitch=False):
         """
         Makes a new instance of WayStack.
         
@@ -51,40 +54,98 @@ class WayStack(list):
         :max_length - max numbers of point in path
         """
         self.threshold  = threshold
+        self.timespan = timespan
         self.max_length = max_length
+        self.docswitch = docswitch
         self.current_point = None
+        self._considered = []
         self._last_document = None
         self._last_line = None
 
-    def notify_change(self, document, line, force=False):
+    def notify_change(self, document, line, force=False, time_=None):
         """
         Adds the document waypoint to the 
         """
         # jumping in the history should not change it
-        for point in self:
-            if point.document == document and point.line == line:
-                return
+        #for point in self:
+        #    if point.document == document and point.line == line:
+        #        return
         
-        if document != self._last_document or \
-           line < self._last_line - self.threshold or \
-           line > self._last_line + self.threshold or \
-           force:
+        is_good = None
 
-            wpoint = WayPoint(document, line)
+        wpoint = WayPoint(document, line, time_=time_)
+        ctime = wpoint.time
+        self._considered.insert(0, wpoint)
+        # cap considered stack
+        del self._considered[20:]
 
-            if self.current_point:
-                cpoint = self.index(self.current_point)
-                if cpoint:
-                    # delete all entries befor the current_point
-                    del self[0:cpoint]
-            self.insert(0, wpoint)
-            self.current_point = wpoint
-            del self[self.max_length:]
-            self._last_line = line
-            self._last_document = document
+        first = time.time()
+
+        for check in self._considered[1:]:
+            if document == check.document:
+                if check.line < line + self.threshold  and \
+                   check.line > line - self.threshold and \
+                   check.time + self.timespan  <= ctime:
+                    if self.has_fuzzy(wpoint):
+                        return
+                    else:
+                        self._addpoint(wpoint)
+                        del self._considered[:]
+            elif self.docswitch and document != check.document:
+                # if the document changes, we don't need checking anymore
+                self._addpoint(wpoint)
+                del self._considered[:]
+            else:
+                break
+
+    def _addpoint(self, point):
+        if self.current_point:
+            cpoint = self.index(self.current_point)
+            if cpoint:
+                # delete all entries befor the current_point
+                del self[0:cpoint]
+        self.insert(0, point)
+        self.current_point = point
+        del self[self.max_length:]
+        #self._last_line = line
+        #self._last_document = document
 
         #self._last_document = document
         #self._last_line = line
+
+    def __contains__(self, element):
+        if not isinstance(element, WayPoint):
+            return list.__contains__(element)
+        for i in self:
+            if element.line == i.line and element.document == i.document:
+                return True
+        return False
+
+
+    def has_fuzzy(self, element):
+        """
+        Tests if a element of roughly the props is in the stack
+        """
+        if not isinstance(element, WayPoint):
+            return list.__contains__(element)
+        for i in self:
+            if element.document == i.document and \
+               (i.line - self.threshold) < element.line and \
+               (i.line + self.threshold) > element.line:
+                return True
+        return False
+
+    def get_fuzzy(self, document, line):
+        """
+        Returns the first fuzzy matched element from the Stack
+        """
+        for i in self:
+            if document == i.document and \
+               (i.line - self.threshold) < line and \
+               (i.line + self.threshold) > line:
+                return i
+        return None
+
 
     def clear(self):
         """
@@ -137,11 +198,30 @@ class WaypointOptionsConfig(OptionsConfig):
 
     def create_options(self):
         self.create_option(
+            'timespan',
+            _('Timespan'),
+            int,
+            8,
+            _('After how man seconds a groups of lines (in the threshold) '
+              'is considered a waypoint'),
+            self.on_update
+        )
+
+        self.create_option(
             'threshold',
             _('Threshold'),
             int,
             30,
             _('After how many lines set a new waypoint'),
+            self.on_update
+        )
+
+        self.create_option(
+            'docswitch',
+            _('Waypoint on document change'),
+            bool,
+            False,
+            _('Should a new waypoint be generated if the document switches'),
             self.on_update
         )
 
@@ -195,6 +275,16 @@ class WaypointActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'force_waypoint',
+            TYPE_NORMAL,
+            _('Add Waypoint'),
+            _('Forces a new Waypoint'),
+            '',
+            self.on_force_waypoint,
+            ''
+        )
+
+        self.create_action(
             'jump_waypoint_back',
             TYPE_NORMAL,
             _('Jump Waypoint Back'),
@@ -224,6 +314,9 @@ class WaypointActionsConfig(ActionsConfig):
         #self.svc.execute_current_document()
         self.svc._stack.clear()
 
+    def on_force_waypoint(self):
+        self.svc.notify_change(None, None, force=True)
+
     def on_menu(self, action):
         self.svc.create_waypoint_menu()
 
@@ -237,7 +330,8 @@ class Waypoint(Service):
     commands_config = WaypointCommandsConfig
 
     def pre_start(self):
-        self._stack = WayStack(self.opt('threshold'), self.opt('max_entries'))
+        self._stack = WayStack(self.opt('threshold'), self.opt('max_entries'),
+                               self.opt('timespan'), self.opt('docswitch'))
 
     def update_stack(self):
         """
@@ -245,9 +339,18 @@ class Waypoint(Service):
         """
         self._stack.threshold = self.opt('threshold')
         self._stack.max_length = self.opt('max_entries')
+        self._stack.timespan = self.opt('timespan')
+        self._stack.docswitch = self.opt('docswitch')
 
     def notify_change(self, document, line, force=False):
         """Notify of a document, and line number change"""
+
+        if document is None:
+            document = self.boss.cmd('buffer', 'get_current')
+            line = self.boss.editor.get_current_line()
+            if not document and not line:
+                return
+
         if not isinstance(document, Document):
             import traceback
             print "Not a document"
@@ -266,10 +369,7 @@ class Waypoint(Service):
                           document=npoint.document, line=npoint.line)
 
     def _update_waypoints(self):
-        doc = self.boss.cmd('buffer', 'get_current')
-        line = self.boss.editor.get_current_line()
-        if doc and line:
-            self.notify_change(doc, int(line))
+        self.notify_change(None, None)
         return True
 
     def start(self):

@@ -31,7 +31,7 @@ from pida.core.log import get_logger
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.utils.path import homedir
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
 from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
@@ -616,6 +616,11 @@ class FilemanagerCommandsConfig(CommandsConfig):
         self.svc.get_view().update_to_path()
 
 
+class FilemanagerWindowConfig(WindowConfig):
+    key = FilemanagerView.key
+    label_text = FilemanagerView.label_text
+    description = _("Filebrowser")
+
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create(self):
@@ -629,6 +634,8 @@ class FilemanagerFeatureConfig(FeaturesConfig):
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+                               FilemanagerWindowConfig)
 
     # File Hidden Checks
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, _("Hide Dot-Files"))
@@ -980,11 +987,6 @@ class Filemanager(Service):
 
 
     def start(self):
-        acts = self.boss.get_service('window').actions
-        
-        acts.register_window(self.file_view.key,
-                             self.file_view.label_text)
-        
         self.on_project_switched(self.current_project)
         self.emit('browsed_path_changed', path=self.path)
         self.get_action('toolbar_toggle_hidden').set_active(

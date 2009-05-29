@@ -16,9 +16,10 @@ import locale
 import logging
 
 from kiwi.ui.objectlist import Column, ObjectList
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
+from pida.core.features import FeaturesConfig
 from pida.core.options import OptionsConfig, choices
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, 
                                TYPE_REMEMBER_TOGGLE)
@@ -429,6 +430,16 @@ class NotifyCommandsConfig(CommandsConfig):
     def notify(self, data, **kw):
         self.svc.notify(data=data, **kw)
 
+class NotifyWindowConfig(WindowConfig):
+    key = NotifyView.key
+    label_text = NotifyView.label_text
+    description = _("Window with notifications")
+
+class NotifyFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            NotifyWindowConfig)
+
 
 class Notify(Service):
     """
@@ -438,7 +449,7 @@ class Notify(Service):
     actions_config = NotifyActionsConfig
     commands_config = NotifyCommandsConfig
     options_config = NotifyOptionsConfig
-
+    features_config = NotifyFeaturesConfig
     
     def start(self):
         self._error_handler = PIDAHANDLER.connect('errors', self._on_error)
@@ -451,10 +462,6 @@ class Notify(Service):
         self._has_loaded = False
         self._show_notify = self.opt('show_notify')
 
-        acts = self.boss.get_service('window').actions
-        
-        acts.register_window(self._view.key,
-                             self._view.label_text)
         # send already occured errors
         #while True:
         #    try:

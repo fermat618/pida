@@ -31,9 +31,10 @@ from kiwi.ui.objectlist import ObjectList, Column
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
 from pida.utils.gthreads import GeneratorTask, gcall
 from pida.utils.web import fetch_url
@@ -159,21 +160,26 @@ class KodersActions(ActionsConfig):
         else:
             self.svc.hide_koders()
 
+class KodersWindowConfig(WindowConfig):
+    key = KodersView.key
+    label_text = KodersView.label_text
+
+class KodersFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            KodersWindowConfig)
+
 # Service class
 class Koders(Service):
     """Browse Koders database"""
 
     actions_config = KodersActions
+    features_config = KodersFeaturesConfig
 
     def start(self):
         self._view = KodersView(self)
         self._has_loaded = False
         self.task = None
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_koders(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
