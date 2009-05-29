@@ -1355,7 +1355,7 @@ class Mooedit(EditorService):
     def _get_document_title(self, document):
         dsp = self.opt('display_type')
         if dsp == 'filename':
-            return document.get_markup(document.markup_string)
+            return document.get_markup(document.markup_string_if_project)
         elif dsp == 'fullpath':
             return document.get_markup(document.markup_string_fullpath)
         return document.markup
