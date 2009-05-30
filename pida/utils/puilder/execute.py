@@ -47,6 +47,10 @@ class OutputBuffer(StringIO):
         line.fd = fd
         StringIO.write(self, line)
 
+
+    def __repr__(self):
+        return "<OutputBuffer %r>"%self.getvalue()
+
     def dump(self):
         return ''.join([repr(x) for x in self.buflist])
 
