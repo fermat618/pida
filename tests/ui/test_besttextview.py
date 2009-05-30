@@ -1,6 +1,4 @@
 
-from unittest import TestCase
-
 import gtk
 import gtk.gdk
 
@@ -9,24 +7,29 @@ from pida.utils.testing import refresh_gui
 
 
 class BaseTests(object):
-    def __init__(self, textview):
-        self._textviewcls = textview
 
     def setUp(self):
-        self.textview = self._textviewcls()
+        self.textview = self.TextView()
+
+    def setup_method(self, method):
+        self.setUp()
+
 
     def test_setget_text(self):
         txt = 'some text to test with\nwith two lines'
         self.textview.get_buffer().set_text(txt)
-        self.assertEqual(txt, self.textview.get_buffer().props.text)
+        print txt
+        assert txt==self.textview.get_buffer().props.text
         txt = u'some \u1234text to test \u4321 with\nwith two lines'
         self.textview.get_buffer().set_text(txt)
-        self.assertEqual(txt, self.textview.get_buffer().props.text)
+        print txt
+        assert txt==self.textview.get_buffer().props.text
 
     def test_sethighligting(self):
-        self.assertEqual(self.textview.get_doctype(), None)
+        assert self.textview.get_doctype() is None
+
         self.textview.set_doctype(DOCTYPES['Python'])
-        self.assertEqual(self.textview.get_doctype(), DOCTYPES['Python'])
+        assert self.textview.get_doctype() == DOCTYPES['Python']
         #if self.textview.has_syntax_highlighting:
         #    self.assertNotEqual(self.textview.get_lang(), None)
 
@@ -55,18 +58,15 @@ class BaseTests(object):
             self.textview.emit('key-press-event', event) 
             refresh_gui()
             if do:
-                self.assertEqual(self.textview.get_buffer().props.text, 
-                                 "a%s" %txt)
+                assert self.textview.get_buffer().props.text == "a%s" %txt
             else:
-                self.assertEqual(self.textview.get_buffer().props.text, txt)
+                assert self.textview.get_buffer().props.text == txt
         win.destroy()
 try:
     from pida.ui.besttextview.mooview import MooTextView
     
-    class TestMoo(BaseTests, TestCase):
-        def __init__(self, *args, **kwargs):
-            BaseTests.__init__(self, MooTextView)
-            TestCase.__init__(self, *args, **kwargs) 
+    class TestMoo(ViewTest):
+        TextView = MooTextView
     
 except ImportError:
     #FIXME: how to report skipped tests properly ???
@@ -75,10 +75,8 @@ except ImportError:
 try:
     from pida.ui.besttextview.sourceview import SourceTextView
     
-    class TestSourceView(BaseTests, TestCase):
-        def __init__(self, *args, **kwargs):
-            BaseTests.__init__(self, SourceTextView)
-            TestCase.__init__(self, *args, **kwargs) 
+    class TestSourceView(BaseTests):
+        TextView = SourceTextView
     
 except ImportError:
     #FIXME: how to report skipped tests properly ???
@@ -87,8 +85,6 @@ except ImportError:
 
 from pida.ui.besttextview.textview import SimpleTextView
 
-class TestSimpleText(BaseTests, TestCase):
-    def __init__(self, *args, **kwargs):
-        BaseTests.__init__(self, SimpleTextView)
-        TestCase.__init__(self, *args, **kwargs) 
+class TestSimpleText(BaseTests):
+    TextView = SimpleTextView
 

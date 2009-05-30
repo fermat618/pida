@@ -21,7 +21,6 @@
 #SOFTWARE.
 
 from pida.utils.testing.mock import Mock
-from unittest import TestCase
 
 from pida.core.document import Document
 
@@ -29,12 +28,12 @@ from .waypoint import WayPoint, WayStack
 
 BOSS = Mock()
 
-class WaypointTest(TestCase):
+class WaypointTest(object):
 
     def should(self, wp, should):
-        for i in xrange(len(should)):
-            self.assertEqual(wp[i].document, should[i][0])
-            self.assertEqual(wp[i].line, should[i][1])
+        for i, (doc, pos) in enumerate(should):
+            self.assertEqual(wp[i].document, doc)
+            self.assertEqual(wp[i].line, pos)
 
 
     def test_has(self):
