@@ -124,6 +124,27 @@ class WaypointTest(object):
         should = ((doc1, 50), (doc1, 100), (doc2, 109), (doc1, 12))
         self.should(wp, should)
 
+    def test_force(self):
+        doc1 = Document(BOSS)
+        doc2 = Document(BOSS)
+        wp = WayStack(max_length=10)
+        wp.notify_change(doc1, 10, time_=10)
+        wp.notify_change(doc1, 10, time_=20)
+        self.assertEqual(wp[0].document, doc1)
+        self.assertEqual(wp[0].line, 10)
+        wp.notify_change(doc1, 15, time_=22, force=True)
+        self.assertEqual(wp[0].document, doc1)
+        self.assertEqual(wp[0].line, 15)
+        self.assertEqual(wp[1].document, doc1)
+        self.assertEqual(wp[1].line, 10)
+        wp.notify_change(doc2, 1, time_=32, force=True)
+        wp.notify_change(doc1, 15, time_=32, force=True)
+        self.assertEqual(wp[0].document, doc2)
+        self.assertEqual(wp[0].line, 1)
+        self.assertEqual(wp[1].document, doc1)
+        self.assertEqual(wp[1].line, 15)
+
+
     def test_waypoint_jump(self):
         doc1 = Document(BOSS)
         doc2 = Document(BOSS)

@@ -81,6 +81,10 @@ class WayStack(list):
 
         first = time.time()
 
+        if force:
+            self._addpoint(wpoint)
+            return
+
         for check in self._considered[1:]:
             if document == check.document:
                 if check.line < line + self.threshold  and \
@@ -102,11 +106,11 @@ class WayStack(list):
                 break
 
     def _addpoint(self, point):
-        if self.current_point:
-            cpoint = self.index(self.current_point)
-            if cpoint:
-                # delete all entries befor the current_point
-                del self[0:cpoint]
+        #if self.current_point:
+        #    cpoint = self.index(self.current_point)
+        #    if cpoint:
+        #        # delete all entries befor the current_point
+        #        del self[0:cpoint]
         self.insert(0, point)
         self.current_point = point
         del self[self.max_length:]
@@ -151,6 +155,9 @@ class WayStack(list):
             if document == i.document and \
                (i.line - self.threshold) < line and \
                (i.line + self.threshold) > line:
+                # we can simply return the exact match
+                if i.line == line:
+                    return i
                 if not best or abs(best.line - line) > abs(i.line - line):
                     best = i
         return best
@@ -172,20 +179,28 @@ class WayStack(list):
         If steps would break the Borders of the Path, min or max point is 
         returned.
         """
+        if not len(self):
+            return
         nindex = min(max(self.index(self.current_point)+steps, 0), len(self)-1)
         self.current_point = self[nindex]
         self._last_line = self.current_point.line
         self._last_document = self.current_point.document
         return self.current_point
 
-
+    def remove_waypoint(self, document, line):
+        best = self.get_fuzzy(document, line)
+        if best and line == best.line:
+            self.remove(best)
+            if self.current_point == best:
+                self.current_point = len(self) and self[0] or None
 
 
 class WaypointEventsConfig(EventsConfig):
-
     def subscribe_all_foreign(self):
         self.subscribe_foreign('buffer', 'document-changed',
                     self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-closed',
+                    self.on_document_closed)
         self.subscribe_foreign('buffer', 'document-goto',
                     self.on_document_goto)
 
@@ -196,6 +211,9 @@ class WaypointEventsConfig(EventsConfig):
     def on_document_goto(self, document, line):
         self.svc.notify_change(document, line)
 
+    def on_document_closed(self, document):
+        if self.opt('rm_on_close'):
+            self.svc.remove_waypoint(document, line)
 
 class WaypointFeaturesConfig(FeaturesConfig):
 
@@ -241,6 +259,14 @@ class WaypointOptionsConfig(OptionsConfig):
             30,
             _('Who many entries to have'),
             self.on_update
+        )
+
+        self.create_option(
+            'rm_on_close',
+            _('Remove on close'),
+            bool,
+            True,
+            _('Remove entries when a document is closed')
         )
 
     def on_update(self, *args):
@@ -294,6 +320,16 @@ class WaypointActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'remove_waypoint',
+            TYPE_NORMAL,
+            _('Remove Waypoint'),
+            _('Remove current waypoint'),
+            '',
+            self.on_remove_waypoint,
+            ''
+        )
+
+        self.create_action(
             'jump_waypoint_back',
             TYPE_NORMAL,
             _('Jump Waypoint Back'),
@@ -326,6 +362,12 @@ class WaypointActionsConfig(ActionsConfig):
     def on_force_waypoint(self, action):
         self.svc.notify_change(None, None, force=True)
 
+    def on_remove_waypoint(self, action):
+        document = self.svc.boss.cmd('buffer', 'get_current')
+        line = self.svc.boss.editor.get_current_line()
+        if document and line:
+            self.svc.remove_waypoint(document, line)
+
     def on_menu(self, action):
         self.svc.create_waypoint_menu()
 
@@ -351,6 +393,13 @@ class Waypoint(Service):
         self._stack.timespan = self.opt('timespan')
         self._stack.docswitch = self.opt('docswitch')
 
+    def remove_waypoint(self, document, line, fuzzy=False):
+        self._stack.remove_waypoint(document, line)
+
+    def remove_waypoint_for_(self, document, line):
+        self._stack.remove_waypoint(document, line)
+
+
     def notify_change(self, document, line, force=False):
         """Notify of a document, and line number change"""
 
@@ -367,7 +416,7 @@ class Waypoint(Service):
             return
         if not line:
             line = 1
-        self._stack.notify_change(document, line, force=False)
+        self._stack.notify_change(document, line, force=force)
 
     def jump(self, steps):
         """
