@@ -539,7 +539,6 @@ class Buffer(Service):
                 gcall(self.boss.editor.set_cursor_position, offset)
         elif line is not None:
             gcall(self.boss.editor.goto_line, line)
-            gcall(self.emit, document, line)
         self.get_action('close').set_sensitive(document is not None)
 
     def file_saved(self):
