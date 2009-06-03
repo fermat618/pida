@@ -958,7 +958,7 @@ class PidaMooInput(object):
             if self.svc.opt('auto_attr'):
                 # we have to build a small buffer, because the character 
                 # typed is not in the buffer yet
-                for x in info.attributerefs + info.open_backets:
+                for x in info.completer_open:
                     end = it.copy()
                     end.backward_chars(len(x))
                     rv = it.backward_search(x, gtk.TEXT_SEARCH_TEXT_ONLY, end)

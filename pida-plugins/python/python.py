@@ -204,6 +204,10 @@ class PythonLanguage(LanguageInfo):
     # . in python
     attributerefs = ['.']
 
+    completer_open = ['[', '(', ',', '.']
+    completer_close = [']', ')', '}']
+
+
 
 def _create_exception_validation(e):
     msg = e

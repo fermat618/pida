@@ -198,6 +198,9 @@ class LanguageInfo(object):
     # . in python; -> in c, ...
     attributerefs = []
 
+    completer_open = ['[', '(', '{']
+    completer_close = [']', ')', '}']
+
     def __init__(self, document):
         self.document = document
 
