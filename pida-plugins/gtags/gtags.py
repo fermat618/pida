@@ -34,9 +34,10 @@ from threading import Thread
 from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.languages import LanguageService
+from pida.core.languages import LanguageService, Completer, \
+                                LanguageServiceFeaturesConfig
+from pida.utils.languages import Suggestion, LANG_PRIO
 from pida.core.events import EventsConfig
-from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
 from pida.ui.buttons import create_mini_button
@@ -189,6 +190,45 @@ class GtagsView(PidaView):
         self.svc.boss.cmd('buffer', 'open_file', file_name=file_name, 
                           line=int(w.line))
 
+class GtagsSuggestion(Suggestion):
+    pass
+
+
+class GtagsCompleter(Completer):
+
+    priority = LANG_PRIO.DEFAULT
+    name = "global"
+    plugin = "gtags"
+    description = _("a per project global completer list")
+
+    def get_completions(self, base, buffer_, offset):
+        """
+        Gets a list of completitions.
+        
+        @base - string which starts completions
+        @buffer - document to parse
+        @offset - cursor position
+        """
+        if self.document.project and \
+           self.svc.have_database(self.document.project):
+            
+            args = ['global', '-c', base and unicode(base) or '']
+            pipe = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                    stdin=None, stderr=None, shell=False,
+                                    universal_newlines=True,
+                                    cwd=self.document.project.source_directory)
+
+            while True:
+                line = pipe.stdout.readline()
+                if not line:
+                    pipe.communicate()
+                    return
+
+                yield GtagsSuggestion(line.strip())
+
+        return
+
+
 class GtagsActions(ActionsConfig):
 
     def create_actions(self):
@@ -262,8 +302,10 @@ class GtagsWindowConfig(WindowConfig):
     key = GtagsView.key
     label_text = GtagsView.label_text
 
-class GtagsFeaturesConfig(FeaturesConfig):
+class GtagsFeaturesConfig(LanguageServiceFeaturesConfig):
     def subscribe_all_foreign(self):
+        super(GtagsFeaturesConfig, self).subscribe_all_foreign()
+
         self.subscribe_foreign('window', 'window-config',
             GtagsWindowConfig)
 
@@ -277,6 +319,7 @@ class Gtags(LanguageService):
     actions_config = GtagsActions
     events_config = GtagsEvents
     features_config = GtagsFeaturesConfig
+    completer_factory = GtagsCompleter
 
     def start(self):
         self._view = GtagsView(self)
@@ -297,9 +340,13 @@ class Gtags(LanguageService):
     def hide_gtags(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
-    def have_database(self):
-        if self._project is None:
+    def have_database(self, project=None):
+        if project is None:
+            project = self._project
+
+        if project is None:
             return False
+
         return os.path.exists(os.path.join(self._project.source_directory, 
                                            'GTAGS'))
 
@@ -404,6 +451,7 @@ class Gtags(LanguageService):
             if self._view._count > 200:
                 self._task.stop()
 
+        #FIXME this is not portable
         cmd = 'for foo in `global -c %s`; do global -x -e $foo; done' % pattern
         self._task = GeneratorSubprocessTask(_line)
         self._task.start(cmd, cwd=self._project.source_directory, shell=True)
