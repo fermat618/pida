@@ -485,7 +485,7 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
 
     def close_file(self, file_name = None, document = None):
         if not document:
@@ -493,14 +493,14 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
 
     def close_all(self):
         docs = self._documents.values()[:]
         for document in docs:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
             else:
                 break
 

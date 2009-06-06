@@ -194,6 +194,19 @@ class WayStack(list):
             if self.current_point == best:
                 self.current_point = len(self) and self[0] or None
 
+    def remove_waypoints_of_document(self, document):
+        rmlst = []
+
+        for i in self:
+            if i.document == document:
+                rmlst.append(i)
+        for i in rmlst:
+            self.remove(i)
+
+        if self.current_point in rmlst:
+            self.current_point = None
+
+
 
 class WaypointEventsConfig(EventsConfig):
     def subscribe_all_foreign(self):
@@ -212,8 +225,8 @@ class WaypointEventsConfig(EventsConfig):
         self.svc.notify_change(document, line)
 
     def on_document_closed(self, document):
-        if self.opt('rm_on_close'):
-            self.svc.remove_waypoint(document, line)
+        if self.svc.opt('rm_on_close'):
+            self.svc.remove_waypoints_of_document(document)
 
 class WaypointFeaturesConfig(FeaturesConfig):
 
@@ -396,8 +409,8 @@ class Waypoint(Service):
     def remove_waypoint(self, document, line, fuzzy=False):
         self._stack.remove_waypoint(document, line)
 
-    def remove_waypoint_for_(self, document, line):
-        self._stack.remove_waypoint(document, line)
+    def remove_waypoints_of_document(self, document):
+        self._stack.remove_waypoints_of_document(document)
 
 
     def notify_change(self, document, line, force=False):
