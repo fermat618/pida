@@ -636,6 +636,11 @@ class PidaMooInput(object):
         #    self.editor.props.buffer.props.cursor_position
 
         cmpl = self.svc.boss.get_service('language').get_completer(self.document)
+        info = self.svc.boss.get_service('language').get_info(self.document)
+        if info:
+            self.completer.ignore_case = not info.case_sensitive
+        else:
+            self.completer.ignore_case = False
 
         buf = self.editor.get_buffer()
 

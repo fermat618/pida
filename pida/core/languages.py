@@ -201,6 +201,9 @@ class LanguageInfo(object):
     completer_open = ['[', '(', '{']
     completer_close = [']', ')', '}']
 
+    # i think most languages are
+    case_sensitive = True
+
     def __init__(self, document):
         self.document = document
 
