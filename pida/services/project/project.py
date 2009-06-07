@@ -200,7 +200,7 @@ class ProjectActionsConfig(ActionsConfig):
             TYPE_NORMAL,
             _('Execute _last Controller'),
             _('Execute last Controller'),
-            'package_utilities',
+            'restart',
             self.on_project_execute_last,
             ''
         )
