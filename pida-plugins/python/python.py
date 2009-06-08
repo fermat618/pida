@@ -331,7 +331,7 @@ class PythonCompleter(Completer):
                               project=self.document.project)
             buffer = buffer + ('\n' * 20)
             co = code_assist(mp.project, buffer, offset, maxfixes=4)
-        except RopeError:
+        except RopeError, IndentationError:
             return []
         so = sorted_proposals(co)
         rv = []
