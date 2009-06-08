@@ -38,8 +38,8 @@ from pida.core.languages import LanguageService, Completer, \
                                 LanguageServiceFeaturesConfig
 from pida.utils.languages import Suggestion, LANG_PRIO
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
+from pida.core.options import OptionsConfig
+from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL, ActionsConfig
 from pida.ui.buttons import create_mini_button
 import subprocess
 
@@ -211,7 +211,14 @@ class GtagsCompleter(Completer):
         """
         if self.document.project and \
            self.svc.have_database(self.document.project):
-            
+            # gtags is no good completer and often returns way to much results
+            # limiting here is a good thing
+            if (not isinstance(base, basestring) and 
+                self.svc.opt("min_filter_length")) or (
+                self.svc.opt("min_filter_length") > len(base)):
+
+                return
+
             args = ['global', '-c', base and unicode(base) or '']
             pipe = subprocess.Popen(args, stdout=subprocess.PIPE,
                                     stdin=None, stderr=None, shell=False,
@@ -310,6 +317,15 @@ class GtagsFeaturesConfig(LanguageServiceFeaturesConfig):
             GtagsWindowConfig)
 
 
+class GtagsOptionsConfig(OptionsConfig):
+    def create_options(self):
+        self.create_option(
+            'min_filter_length',
+            _('Min filter length'),
+            int,
+            3,
+            _('Minimum characters for completer to start.'))
+
 # Service class
 class Gtags(LanguageService):
     """Fetch gtags list and show an gtags"""
@@ -319,6 +335,7 @@ class Gtags(LanguageService):
     actions_config = GtagsActions
     events_config = GtagsEvents
     features_config = GtagsFeaturesConfig
+    options_config = GtagsOptionsConfig
     completer_factory = GtagsCompleter
 
     def start(self):
