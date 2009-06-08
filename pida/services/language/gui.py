@@ -82,7 +82,9 @@ class LanguageSubCategory(Category):
             yield LanguageEntry.from_plugin(i)
 
     def has_entries(self):
-        return len(self.svc.get_plugins(self.lang, self.type_)) > 0
+        # the disable service should always exist,so there should be more 
+        # then 1 real entries
+        return len(self.svc.get_plugins(self.lang, self.type_)) > 1
 
     def commit_list(self, lst):
 

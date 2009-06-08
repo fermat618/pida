@@ -490,6 +490,7 @@ class LanguageFeatures(LanguageServiceFeaturesConfig):
         )
 
     def subscribe_all_foreign(self):
+        super(LanguageFeatures, self).subscribe_all_foreign()
         self.subscribe_foreign('window', 'window-config',
             OutlinerConfig)
         self.subscribe_foreign('window', 'window-config',
