@@ -16,7 +16,7 @@ import re
 from gtk import gdk
 
 # UGLY UGLY workarround as suggested by muntyan_
-# this will be changed someday when there will be a correct 
+# this will be changed someday when therue will be a correct 
 # api for this.
 from pida.core.environment import pida_home
 
@@ -541,6 +541,7 @@ class PidaMooInput(object):
         self.completer_start = None
         self.completer_end = None
         self.show_auto = False
+        self._task = None
 
         # db stuff for the autocompleter
         self.list_matcher = re.compile("""\w{3,100}""")
@@ -703,9 +704,9 @@ class PidaMooInput(object):
         else:
             self.completer.filter = ""
 
-        task = GeneratorTask(self.update_completer_and_add, 
+        self._task = GeneratorTask(self.update_completer_and_add, 
                              self.add_str)
-        task.start(cmpl, start, ignore=(self.svc.get_current_word(),))
+        self._task.start(cmpl, start, ignore=(self.svc.get_current_word(),))
 
         self.show_auto = show_auto
 
@@ -848,6 +849,13 @@ class PidaMooInput(object):
 
     def add_str(self, line):
         #print "add line", line
+        if len(self.completer) > 3000:
+            #emergency stop
+            self.svc.log.info(
+                        _("Emergency stop of completer: Too many entries"))
+            self._task.stop()
+            return
+
         if isinstance(line, Suggestion):
             self.completer.add_str(line, type_=line.type_)
         else:

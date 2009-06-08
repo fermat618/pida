@@ -236,7 +236,10 @@ class PidaCompleter(gtk.HBox):
     #@property
     def get_model(self):
         return self._model
-    
+
+    def __len__(self):
+        return len(self._modelreal)
+
     def set_model(self, model):
         #model = gtk.(gobject.TYPE_INT, gobject.TYPE_STRING)
         #self._tree.set_model(model)
