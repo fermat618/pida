@@ -137,14 +137,13 @@ def proc_communicate(proc, stdin=None, stdout=None, stderr=None):
             raise
 
 
-def execute_shell_action(project, build, action):
-    """Execute a shell action"""
 
-    cwd = action.options.get('cwd', project)
+def _execute_external(cmd, cwd):
+
     buffer = OutputBuffer()
 
     if select:
-        proc = Popen(action.value, bufsize=0, shell=True, cwd=cwd, 
+        proc = Popen(cmd, bufsize=0, shell=True, cwd=cwd, 
                   stdout=PIPE, stderr=PIPE)
 
         proc_communicate(
@@ -157,11 +156,18 @@ def execute_shell_action(project, build, action):
     else:
         #FIXME: dear win32 hacker, this should be fixed somehow :-)
         # as a workaround, output filters are disabled
-        proc = Popen(action.value, bufsize=0, shell=True, cwd=cwd, 
+        proc = Popen(cmd, bufsize=0, shell=True, cwd=cwd, 
                       stdout=None, stderr=None)
         stdout, stderr = proc.communicate()
 
     return buffer
+
+
+def execute_shell_action(project, build, action):
+    """Execute a shell action"""
+    cwd = action.options.get('cwd', project)
+    cmd = action.value
+    return _execute_external(cmd, cwd)
 
 
 def _execute_python(source_directory, build, value):
@@ -191,9 +197,8 @@ def execute_external_action(project, build, action):
         action.options.get('build_args', ''),
         action.value,
     )
-    p = Popen(cmd, shell=True, close_fds=True, stdout=PIPE, stderr=STDOUT)
-    p.wait()
-    return p.stdout.read()
+    cwd = action.options.get('cwd', project)
+    return _execute_external(cmd, cwd)
 
 
 executors = {
