@@ -237,6 +237,8 @@ class PidaPaned(BigPaned):
         Test if a pane is visible to the user or not
         """
         # detached are always visible
+        if not pane:
+            return False
         if pane.get_params().detached:
             return True
         # this is kinda tricky because the widgets think they are visible
