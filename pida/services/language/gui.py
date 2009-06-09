@@ -29,6 +29,8 @@ from pida.utils.gthreads import GeneratorTask
 from pida.ui.views import PidaView, PidaGladeView
 from pida.ui.objectlist import AttrSortCombo
 from pida.ui.prioritywindow import Category, Entry, PriorityEditorView
+from pida.core.languages import (PRIO_DEFAULT, PRIO_FOREGROUND, 
+                                 PRIO_FOREGROUND_HIGH, PRIO_LOW)
 
 # locale
 from pida.core.locale import Locale
@@ -182,7 +184,7 @@ class ValidatorView(PidaView):
         # set the old task job to default priorty again
         old = self.tasks.get(self.document, None)
         if old:
-            old.priority = gobject.PRIORITY_DEFAULT_IDLE
+            old.priority = PRIO_LOW
 
         self.document = document
         self.clear_nodes()
@@ -190,7 +192,11 @@ class ValidatorView(PidaView):
         if self.tasks.has_key(document):
             # set the priority of the current validator higher, so it feels 
             # faster on the current view
-            self.tasks[document].priorty = gobject.PRIORITY_HIGH_IDLE
+            if self.svc.boss.window.paned.is_visible_pane(self.pane):
+                prio = PRIO_FOREGROUND
+            else:
+                prio = PRIO_DEFAULT
+            self.tasks[document].priorty = prio
             # when restart is set, the set_validator is run again so the 
             # list gets updated from the validator cache. this happens when
             # the buffer switched to another file and back again
@@ -221,11 +227,15 @@ class ValidatorView(PidaView):
             radd = partial(wrap_add_node, document)
             rcomp = partial(on_complete, document, validator)
 
+            if self.svc.boss.window.paned.is_visible_pane(self.pane):
+                prio = PRIO_FOREGROUND
+            else:
+                prio = PRIO_DEFAULT
 
             task = GeneratorTask(validator.get_validations_cached, 
                                  radd,
                                  complete_callback=rcomp,
-                                 priority=gobject.PRIORITY_HIGH_IDLE)
+                                 priority=prio)
             self.tasks[document] = task
             task.start()
 
@@ -364,7 +374,7 @@ class BrowserView(PidaGladeView):
 
         old = self.tasks.get(self.document, None)
         if old:
-            old.priority = gobject.PRIORITY_DEFAULT_IDLE
+            old.priority = PRIO_DEFAULT
 
         self.document = document
         self.clear_items()
@@ -372,7 +382,11 @@ class BrowserView(PidaGladeView):
         if self.tasks.has_key(document):
             # set the priority of the current validator higher, so it feels 
             # faster on the current view
-            self.tasks[document].priorty = gobject.PRIORITY_HIGH_IDLE
+            if self.svc.boss.window.paned.is_visible_pane(self.pane):
+                prio = PRIO_FOREGROUND
+            else:
+                prio = PRIO_DEFAULT
+            self.tasks[document].priorty = prio
             # when restart is set, the set_validator is run again so the 
             # list gets updated from the validator cache. this happens when
             # the buffer switched to another file and back again
@@ -409,10 +423,15 @@ class BrowserView(PidaGladeView):
             radd = partial(wrap_add_node, document)
             rcomp = partial(on_complete, document, outliner)
 
+            if self.svc.boss.window.paned.is_visible_pane(self.pane):
+                prio = PRIO_FOREGROUND
+            else:
+                prio = PRIO_DEFAULT
+
             task = GeneratorTask(outliner.get_outline_cached, 
                                  radd,
                                  complete_callback=rcomp,
-                                 priority=gobject.PRIORITY_HIGH_IDLE)
+                                 priority=prio)
             self.tasks[document] = task
             task.start()
 

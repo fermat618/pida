@@ -122,8 +122,33 @@ class PidaPaned(BigPaned):
         pane = paned.get_open_pane()
         return paned, pane
 
-    def switch_next_pane(self, name):
+    def present_pane_if_not_focused(self, pane):
+        """
+        Present a pane if it (means any child) does not have the focus
+        
+        Returns True if the pane was presented
+        """
+        # most top focus candidate
+        focus = pane.view.toplevel.get_focus_child()
+        while hasattr(focus, 'get_focus_child'):
+            # we dive into the children until we find a child that has focus
+            # or does not have a child
+            if focus.is_focus():
+                break
+            focus = focus.get_focus_child()
+        if not focus or not focus.is_focus():
+            pane.present()
+            return True
+        return False
+
+
+
+    def switch_next_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)
+
+        if needs_focus and pane and self.present_pane_if_not_focused(pane):
+            return
+
         if pane is None:
             num = -1
         else:
@@ -137,8 +162,12 @@ class PidaPaned(BigPaned):
             return
         newpane.present()
 
-    def switch_prev_pane(self, name):
+    def switch_prev_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)
+
+        if needs_focus and pane and self.present_pane_if_not_focused(pane):
+            return
+
         if pane is None:
             num = paned.n_panes()
         else:
@@ -200,4 +229,18 @@ class PidaPaned(BigPaned):
 
     def get_fullscreen(self):
         return self._fullscreen
+
+    def is_visible_pane(self, pane):
+        """
+        Test if a pane is visible to the user or not
+        """
+        # detached are always visible
+        if pane.get_params().detached:
+            return True
+        # this is kinda tricky because the widgets think they are visible
+        # even when they are in a non top pane
+        for paned in self.get_all_paneds(True):
+            if pane == paned.get_open_pane():
+                return True
+        return False
 
