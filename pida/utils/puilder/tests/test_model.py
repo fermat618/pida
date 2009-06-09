@@ -208,17 +208,17 @@ def test_circular_flag_action(g):
 @_build_test
 def test_execute_shell(b):
     res = list(execute_build(b, 'test'))
-    assert res[0] == '123\n'
+    assert res[0].getvalue() == '123\n'
 
 
 @_execution_result_test('test5')
 def test_execute_shell_result(res):
-    assert res[0] == 'hello\n'
+    assert res[0].getvalue() == 'hello\n'
 
 
 @_execution_result_test('test4')
 def test_execute_circular_result(res):
-    assert res[0] == 'hello\n'
+    assert res[0].getvalue() == 'hello\n'
 
 
 @_execution_result_test('test6')

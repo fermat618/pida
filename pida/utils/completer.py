@@ -236,7 +236,10 @@ class PidaCompleter(gtk.HBox):
     #@property
     def get_model(self):
         return self._model
-    
+
+    def __len__(self):
+        return len(self._modelreal)
+
     def set_model(self, model):
         #model = gtk.(gobject.TYPE_INT, gobject.TYPE_STRING)
         #self._tree.set_model(model)
@@ -347,8 +350,16 @@ class PidaCompleter(gtk.HBox):
         return self._tree_icons.set_visible(value)
 
     def add_str(self, line, type_=None):
-        bt = _PIXMAPS.get(type_, None)
-        self._modelreal.append((bt, line))
+        # we only hold a uniqe list of items
+        # because a later suggestion may give us a better type, we update the
+        # old one
+        for entry in self._modelreal:
+            if entry[1] == line:
+                if entry[0] == None:
+                   entry[0] = _PIXMAPS.get(type_, None)
+                return
+
+        self._modelreal.append((_PIXMAPS.get(type_, None), line))
 
     show_icons = property(get_show_icons, set_show_icons)
 

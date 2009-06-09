@@ -16,7 +16,7 @@ import re
 from gtk import gdk
 
 # UGLY UGLY workarround as suggested by muntyan_
-# this will be changed someday when there will be a correct 
+# this will be changed someday when therue will be a correct 
 # api for this.
 from pida.core.environment import pida_home
 
@@ -472,6 +472,10 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.svc.show_preferences(action.get_active())
 
     def on_save_as(self, action):
+        # open in current filebrowser path
+        moo.utils.prefs_new_key_string('Editor/last_dir')
+        moo.utils.prefs_set_string('Editor/last_dir', 
+            self.svc.boss.cmd('filemanager', 'get_browsed_path'))
         self.svc._current.editor.save_as()
 
     def on_find(self, action):
@@ -493,7 +497,12 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.svc._current.editor.emit('find-word-at-cursor', False)
 
     def on_goto(self, action):
+        cl = self.svc.get_current_line()
         self.svc._current.editor.emit('goto-line-interactive')
+        nl = self.svc.get_current_line()
+        if cl != nl:
+            self.svc.boss.get_service('buffer').emit('document-goto', 
+                                    document=self.svc._current, line=nl)
 
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
@@ -532,6 +541,7 @@ class PidaMooInput(object):
         self.completer_start = None
         self.completer_end = None
         self.show_auto = False
+        self._task = None
 
         # db stuff for the autocompleter
         self.list_matcher = re.compile("""\w{3,100}""")
@@ -563,7 +573,7 @@ class PidaMooInput(object):
         # we run the language completer first and the we add our own results
         # to the completer list
         if cmpl:
-            for i in cmpl.get_completions("", 
+            for i in cmpl.get_completions(self.svc.get_current_word(), 
                         unicode(self.editor.get_text()), start):
                 if i not in ignore:
                     yield i
@@ -627,6 +637,11 @@ class PidaMooInput(object):
         #    self.editor.props.buffer.props.cursor_position
 
         cmpl = self.svc.boss.get_service('language').get_completer(self.document)
+        info = self.svc.boss.get_service('language').get_info(self.document)
+        if info:
+            self.completer.ignore_case = not info.case_sensitive
+        else:
+            self.completer.ignore_case = False
 
         buf = self.editor.get_buffer()
 
@@ -689,9 +704,9 @@ class PidaMooInput(object):
         else:
             self.completer.filter = ""
 
-        task = GeneratorTask(self.update_completer_and_add, 
+        self._task = GeneratorTask(self.update_completer_and_add, 
                              self.add_str)
-        task.start(cmpl, start, ignore=(self.svc.get_current_word(),))
+        self._task.start(cmpl, start, ignore=(self.svc.get_current_word(),))
 
         self.show_auto = show_auto
 
@@ -834,6 +849,13 @@ class PidaMooInput(object):
 
     def add_str(self, line):
         #print "add line", line
+        if len(self.completer) > 3000:
+            #emergency stop
+            self.svc.log.info(
+                        _("Emergency stop of completer: Too many entries"))
+            self._task.stop()
+            return
+
         if isinstance(line, Suggestion):
             self.completer.add_str(line, type_=line.type_)
         else:
@@ -949,7 +971,7 @@ class PidaMooInput(object):
             if self.svc.opt('auto_attr'):
                 # we have to build a small buffer, because the character 
                 # typed is not in the buffer yet
-                for x in info.attributerefs + info.open_backets:
+                for x in info.completer_open:
                     end = it.copy()
                     end.backward_chars(len(x))
                     rv = it.backward_search(x, gtk.TEXT_SEARCH_TEXT_ONLY, end)
@@ -1160,10 +1182,9 @@ class Mooedit(EditorService):
         good = None
         for doc in documents:
             try:
-                if self._load_file(doc):
-                    good = doc
+                good = self._load_file(doc)
             except DocumentException, err:
-                self.log.exception(err)
+                #self.log.exception(err)
                 self.boss.get_service('editor').emit('document-exception', error=err)
         # we open the last good document now normally again to 
         # make system consistent
@@ -1225,6 +1246,8 @@ class Mooedit(EditorService):
     def goto_line(self, line):
         """Goto a line"""
         self._current.editor.move_cursor(line-1, 0, False, True)
+        self.boss.get_service('buffer').emit('document-goto', 
+                                        document=self._current.document, line=line-1)
 
     def goto_last_edit(self):
         if self._last_modified:
@@ -1345,7 +1368,7 @@ class Mooedit(EditorService):
     def _get_document_title(self, document):
         dsp = self.opt('display_type')
         if dsp == 'filename':
-            return document.get_markup(document.markup_string)
+            return document.get_markup(document.markup_string_if_project)
         elif dsp == 'fullpath':
             return document.get_markup(document.markup_string_fullpath)
         return document.markup
@@ -1418,8 +1441,9 @@ class Mooedit(EditorService):
 
     def get_current_word(self):
         """
-        Returns the word the cursor is in
+        Returns the word the cursor is in or the selected text
         """
+        
         start, end, txt = self._get_current_word_pos()
 
         return txt[start:end]
@@ -1448,7 +1472,14 @@ class Mooedit(EditorService):
             return
 
         callback(rv)
-    
+
+    def call_with_selection_or_word(self, callback):
+        if self._current.editor.has_selection():
+            self.call_with_selection(callback)
+        else:
+            self.call_with_current_word(callback)
+
+
     def insert_text(self, text):
         self._current.editor.get_buffer().insert_at_cursor(text)
     
@@ -1460,6 +1491,8 @@ class Mooedit(EditorService):
                    buf.get_iter_at_offset(end))
 
     def get_current_line(self):
+        if not self._current:
+            return None
         buf = self._current.editor.get_buffer()
         i = buf.get_iter_at_offset(buf.props.cursor_position)
         return i.get_line()+1

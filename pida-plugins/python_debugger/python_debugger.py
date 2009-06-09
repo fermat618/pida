@@ -745,6 +745,7 @@ class DebuggerActionsConfig(ActionsConfig):
             self.on_exec_commandline,
             '<Shift><Control>6',
         )
+
         #self.create_action(
         #    'show_stack_view',
         #    TYPE_TOGGLE,

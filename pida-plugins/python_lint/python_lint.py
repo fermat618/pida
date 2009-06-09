@@ -5,20 +5,17 @@
 """
 
 # stdlib
-import sys, compiler, os.path, keyword, re
+import sys, os.path 
 
 import threading, thread
-
-# gtk
-import gtk
 
 # PIDA Imports
 
 # core
 from pida.core import environment
-from pida.core.service import Service
-from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL
+#from pida.core.service import Service
+#from pida.core.events import EventsConfig
+#from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.log import Log
 
@@ -33,7 +30,7 @@ locale = Locale('skeleton')
 _ = locale.gettext
 
 try:
-    import pylint
+    #import pylint
     from pylint.reporters import BaseReporter
     from pylint.lint import PyLinter
     from pylint.interfaces import IReporter
@@ -101,16 +98,23 @@ SUBTYPE_MAPPING = {
 }
 
 
-class PythonError(ValidationError):
+class PythonError(ValidationError, Log):
+    """
+    Validator class for PyLint errrors
+    """
     def get_markup(self):
         if self.message_args:
-            if isinstance(self.message_args, (list, tuple)):
-                args = [('<b>%s</b>' % arg) for arg in self.message_args]
-                message_string = self.message % tuple(args)
-            else:
-                args = '<b>%s</b>' % self.message_args
-                message_string = self.message % args
-                
+            try:
+                if isinstance(self.message_args, (list, tuple)):
+                    args = [('<b>%s</b>' % arg) for arg in self.message_args]
+                    message_string = self.message % tuple(args)
+                else:
+                    args = '<b>%s</b>' % self.message_args
+                    message_string = self.message % args
+            except TypeError, e:
+                self.log.warning("Can't convert arguments %s : %s" %(
+                                    self.message, self.message_args))
+                message_string = self.message
         else:
             message_string = self.message
         if self.type_ == LANG_VALIDATOR_TYPES.ERROR:

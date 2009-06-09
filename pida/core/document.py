@@ -14,7 +14,7 @@ mimetypes.init() # expensive shit to keep mimetypes.guess_type threadsave
 import stat
 import time
 
-from charfinder import DETECTOR_MANAGER
+from charfinder import detect_encoding
 import codecs
 
 from pida.core.log import log
@@ -46,9 +46,11 @@ class Document(object):
     markup_prefix = ''
     markup_directory_color = '#FFFF00'
     markup_project_color = '#FF0000'
+    markup_color_noproject = "#FF0000"
+
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'markup_project_color', 'markup_directory_color', 
-                         'filename', 'directory']
+                         'filename', 'directory', 'markup_color_noproject']
 
     markup_string_project = (
                      u'<span color="%(markup_project_color)s">'
@@ -78,8 +80,18 @@ class Document(object):
                      u'%(directory)s/</span>'
                      u'%(basename)s')
 
-    markup_string = (u'<b>%(basename)s</b>')
+    markup_string_noproject_file = (
+                     u'<span foreground="%(markup_color_noproject)s">'
+                     u'<b>%(basename)s</b></span>'
+                     )
 
+    markup_string = u'<b>%(basename)s</b>'
+
+    @property
+    def markup_string_if_project(self):
+        if not self.project:
+            return self.markup_string_noproject_file
+        return self.markup_string
 
     def __init__(self, boss, filename=None, project=None):
         """
@@ -98,7 +110,6 @@ class Document(object):
         self.editor = None
         self._list = []
         self._str = ""
-        self._detect_encoding = DETECTOR_MANAGER
         self.creation_time = time.time()
 
         if filename is None:
@@ -141,7 +152,7 @@ class Document(object):
             fname = self.filename
             mime = self.mimetype
 
-            self._encoding = self._detect_encoding(stream, fname, mime)
+            self._encoding = detect_encoding(stream, fname, mime)
             stream.seek(0)
             stream = codecs.EncodedFile(stream, self._encoding)
             self._str = stream.read()
@@ -413,6 +424,7 @@ class Document(object):
                 markup_dict[attr] = escape(var)
             else:
                 markup_dict[attr] = ''
+
         return markup_dict
 
     @property

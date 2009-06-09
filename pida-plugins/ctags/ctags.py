@@ -160,7 +160,7 @@ class CtagsOutliner(Outliner):
             yield node
 
 
-    def _update_tagfile(self, options = ("-n", "-a"), temp=False):
+    def _update_tagfile(self, options = ("-n",), temp=False):
         """ filestr is a string, could be *.* or explicit paths """
 
         # create tempfile

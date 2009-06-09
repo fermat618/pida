@@ -7,6 +7,7 @@ stock["pida-terminal"] = {
 
 color["pida-project"] = "#FF0000"
 color["pida-project-path"] = "#FFFF00"
+color["pida-nonproject"] = "#D64A4A"
 
 # Filemanager color settings
 color["pida-fm-unknown"] = "#242424"

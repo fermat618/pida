@@ -86,7 +86,6 @@ class PriorityList(list):
         """
         Sort the PriorityList
         """
-        print "sort", self._sort_list
         if self._sort_list:
             tmp = self[:]
             del self[:]
@@ -98,7 +97,6 @@ class PriorityList(list):
                 for i in tmp:
                     cache[i] = i
             j = 0
-            print cache
             for i in self._sort_iterator():
                 if cache.has_key(i):
                     addo = cache[i]
@@ -119,7 +117,6 @@ class PriorityList(list):
         Adds a item to the list.This will use the supplied order from the 
         sort_list
         """
-        print "add item", item
         # we can't use biselect, because it's a customized list
         # and key access
         #if not self._sort_list:

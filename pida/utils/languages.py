@@ -95,6 +95,7 @@ def color_to_string(color):
 class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
+    message_args = None
     type_ = LANG_VALIDATOR_TYPES.UNKNOWN
     subtype = LANG_VALIDATOR_SUBTYPES.UNKNOWN
     filename = None

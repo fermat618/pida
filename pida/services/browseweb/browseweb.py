@@ -9,14 +9,8 @@ import webbrowser
 
 import gtk
 
-try:
-    import webkit
-except:
-    webkit = None
-try:
-    import gtkhtml2
-except:
-    gtkhtml2 = None
+webkit = None
+gtkhtml2 = None
 
 # PIDA Imports
 from pida.core.service import Service
@@ -244,12 +238,31 @@ class WebkitHtmlWidget(gtk.VBox):
         if event.keyval in (47, 102):
             self.searchbar.start_search()
 
-if webkit is not None:
-    HtmlWidget = WebkitHtmlWidget
-elif gtkhtml2 is not None:
-    HtmlWidget = GtkHtmlWidget
-else:
-    HtmlWidget = None
+HtmlWidget = None
+
+def set_html_widget():
+    global webkit, gtkhtml2, HtmlWidget
+    #import traceback
+    #traceback.print_stack()
+
+    if HtmlWidget:
+        return
+
+    try:
+        import webkit
+    except:
+        try:
+            import gtkhtml2
+        except:
+            pass
+
+
+    if webkit is not None:
+        HtmlWidget = WebkitHtmlWidget
+    elif gtkhtml2 is not None:
+        HtmlWidget = GtkHtmlWidget
+    else:
+        HtmlWidget = None
 
 
 class BrowserView(PidaView):
@@ -259,6 +272,7 @@ class BrowserView(PidaView):
     HAS_TITLE = False
 
     def create_ui(self):
+        set_html_widget()
         self.__browser = HtmlWidget(self)
         bar = gtk.HBox()
         self.back_button = gtk.ToolButton(stock_id=gtk.STOCK_GO_BACK)
@@ -374,6 +388,7 @@ class Webbrowser(Service):
         self._views = []
 
     def browse(self, url):
+        set_html_widget()
         if HtmlWidget is None:
             webbrowser.open(url)
         else:

@@ -20,7 +20,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document, DocumentException
 
@@ -108,7 +108,7 @@ class BufferListView(PidaGladeView):
 
         # Must leave the menu in the same state we found it!
         def on_deactivate(menu):
-            menu.remove(sep)
+            #menu.remove(sep)
             menu.remove(close)
 
         menu.connect('deactivate', on_deactivate)
@@ -280,17 +280,25 @@ class BufferActionsConfig(ActionsConfig):
         document = action.contexts_kw.get('document')
         self.svc.close_file(document=document)
 
+class BufferListConfig(WindowConfig):
+    key = BufferListView.key
+    label_text = BufferListView.label_text
+    description = "Buffer List"
+
 class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'buffer-file-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            BufferListConfig)
 
 class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed', 
-            'document-typchanged', 'document-closed', 'document-opened')
+            'document-typchanged', 'document-closed', 'document-opened', 
+            'document-goto')
         self.subscribe('document-saved', self.on_document_change)
         self.subscribe('document-changed', self.on_document_change)
         self.subscribe('document-typchanged', self.on_document_change)
@@ -353,6 +361,10 @@ class BufferCommandsConfig(CommandsConfig):
             view=view)
         view.buffers_ol.grab_focus()
 
+    def get_document_by_id(self, document_id=None):
+        if id_:
+            return self.svc._documents.get(id_, None)
+
 class BufferDbusConfig(DbusConfig):
     
     @LEXPORT(in_signature='s')
@@ -402,12 +414,6 @@ class Buffer(Service):
         self._view = BufferListView(self)
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
-
-    def start(self):
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def get_view(self):
         return self._view
@@ -479,7 +485,7 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
 
     def close_file(self, file_name = None, document = None):
         if not document:
@@ -487,14 +493,14 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
 
     def close_all(self):
         docs = self._documents.values()[:]
         for document in docs:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
             else:
                 break
 

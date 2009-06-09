@@ -81,8 +81,9 @@ class PythonFeaturesConfig(LanguageServiceFeaturesConfig):
         self.subscribe_foreign('filemanager', 'file_hidden_check',
             self.python)
         for match in RE_MATCHES:
-            self.subscribe_foreign('commander', 'matches',
-            (match[0], self.svc.match_call))
+            self.subscribe_foreign('commander', 'match-callback',
+            ('Python', match[0], match[1], self.svc.match_call))
+
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_PROJECT, 
         _("Hide Python Compiled Files"))
@@ -202,6 +203,10 @@ class PythonLanguage(LanguageInfo):
 
     # . in python
     attributerefs = ['.']
+
+    completer_open = ['[', '(', ',', '.']
+    completer_close = [']', ')', '}']
+
 
 
 def _create_exception_validation(e):
@@ -326,7 +331,7 @@ class PythonCompleter(Completer):
                               project=self.document.project)
             buffer = buffer + ('\n' * 20)
             co = code_assist(mp.project, buffer, offset, maxfixes=4)
-        except RopeError:
+        except RopeError, IndentationError:
             return []
         so = sorted_proposals(co)
         rv = []
@@ -418,12 +423,12 @@ class Python(LanguageService):
 #             self.boss.get_service('commander').unregister_matcher(
 #                 match[0], self.match_call)
 
-    def match_call(self, term, event, match):
+    def match_call(self, term, event, match, *args, **kwargs):
         for pattern in RE_MATCHES:
             test = pattern[1].match(match)
             if test:
                 self.boss.get_service('buffer').open_file(
-                    term.get_absolute_path(test.groups()[0]),
+                    kwargs['usr'].get_absolute_path(test.groups()[0]),
                     line=int(test.groups()[1]))
 
     def execute_current_document(self):

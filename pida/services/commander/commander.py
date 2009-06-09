@@ -38,8 +38,10 @@ _ = locale.gettext
 #RE_ABSOLUTE_UNIX = r'''((?:\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:[1-9]+)?)'''
 #RE_ABSOLUTE_UNIX = r'((\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:\d+)?)'
 
-RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
-              r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
+RE_MATCHES = ((r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
+               r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)'),
+              (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)',
+              r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)')
              )
 
 
@@ -57,12 +59,21 @@ if sys.platform != 'win32':
             'SHELL', # try shell from env
             pwd.getpwuid(os.getuid())[-1] # fallback to login shell
         )
-    
+
+    def get_cwd(pid):
+        try:
+            return os.readlink('/proc/%s/cwd'%pid)
+        except OSError:
+            return None
+
     def get_absolute_path(path, pid):
         #XXX: works on bsd and linux only
         #     solaris needs /proc/%s/path/cwd
-        base = os.readlink('/proc/%s/cwd'%pid)
-        return os.path.abspath(os.path.join(base, path))
+        try:
+            base = os.readlink('/proc/%s/cwd'%pid)
+            return os.path.abspath(os.path.join(base, path))
+        except OSError:
+            return path
 
 class CommanderOptionsConfig(OptionsConfig):
 
@@ -267,15 +278,80 @@ class CommanderCommandsConfig(CommandsConfig):
 class CommanderFeaturesConfig(FeaturesConfig):
 
     def create(self):
-        self.publish('matches')
+        self.publish('match', 'match-callback', 'match-menu', 'match-menu-callback')
         for match in RE_MATCHES:
-            self.subscribe('matches', (match, self.svc.default_match))
+            self.subscribe('match-callback', ('File', match[0], match[1], 
+                                              self.on_default_match))
+            self.subscribe('match-menu-callback',
+                ('dir-match',
+                match[0], match[1],
+                self.on_highlight_path))
+
+        self.subscribe('match-menu-callback',
+            ('url-match',
+                r'https{0,1}://[A-Za-z0-9/\-\._]+',
+                r'(https{0,1}://[A-Za-z0-9/\-\._]+)',
+                self.on_highlight_url))
+        self.subscribe('match-menu-callback',
+            ('dir-match',
+            r'~{0,1}/[a-zA-Z/\-\._]+',
+            r'(~{0,1}/[A-Za-z0-9/\-\._]+)',
+            self.on_highlight_path))
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'commander-dir-menu.xml'))
+
+    def _mkactlst(self, lst):
+        rv = []
+        for item in lst:
+            act = item.get_action()
+            if act:
+                rv.append(act)
+        return rv
+
+
+    def on_highlight_url(self, term, event, url, *args, **kw):
+        return self._mkactlst(self.svc.boss.cmd('contexts', 'get_menu', 
+                                                context='url-menu', url=url))
+
+    def on_highlight_path(self, term, event, path, *args, **kw):
+        path = os.path.expanduser(path)
+        path = kw['usr'].get_absolute_path(path)
+        if os.path.isdir(path):
+            return self._mkactlst(self.svc.boss.cmd('contexts',
+                                'get_menu', context='dir-menu', dir_name=path))
+        elif os.path.isfile(path):
+            return self._mkactlst(self.svc.boss.cmd('contexts', 
+                              'get_menu', context='file-menu', file_name=path))
+        else:
+            return []
+
+    def on_default_match(self, term, event, match, *args, **kwargs):
+        match = os.path.expanduser(args[0])
+
+        if match.find(":") != -1:
+            file_name, line = match.rsplit(":", 1)
+            file_name = kwargs['usr'].get_absolute_path(file_name)
+            if os.path.isfile(file_name):
+                self.svc.boss.cmd('buffer', 'open_file', 
+                                    file_name=file_name,
+                                    line=int(line))
+            elif os.path.isdir(file_name):
+                self.svc.boss.cmd('filemanager', 'browse', 
+                            new_path=file_name)
+                self.svc.boss.cmd('filemanager', 'present_view')
+        else:
+            file_name = os.path.realpath(kwargs['usr'].get_absolute_path(match))
+            if os.path.isfile(file_name):
+                self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
+            elif os.path.isdir(file_name):
+                self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
+                self.svc.boss.cmd('filemanager', 'present_view')
+
+
 
 class CommanderEvents(EventsConfig):
 
@@ -296,23 +372,23 @@ class TerminalView(PidaView):
     icon_name = 'terminal'
 
     def create_ui(self):
-        self._pwd = None
         self._pid = None
+        self._is_alive = False
         self._hb = gtk.HBox()
         self._hb.show()
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
-        self._matchids = {}
-        for match, callback in self.svc.features['matches']:
-            i = self._term.match_add(match)
-            if i < 0:
-                continue
-            self._term.match_set_cursor_type(i, gtk.gdk.HAND2)
-            self._matchids[i] = match
+        #self._matchids = {}
+        #for match, callback in self.svc.features['matches']:
+        #    i = self._term.match_add(match)
+        #    if i < 0:
+        #        continue
+        #    self._term.match_set_cursor_type(i, gtk.gdk.HAND2)
+        #    self._matchids[i] = match
         self._term.parent_view = self
         self._term.connect('window-title-changed', self.on_window_title_changed)
         self._term.connect('selection-changed', self.on_selection_changed)
-        self._term.connect('button_press_event', self.on_button_pressed)
+        #self._term.connect('button_press_event', self.on_button_pressed)
         self._term.show()
         self._create_scrollbar()
         self._create_bar()
@@ -322,7 +398,18 @@ class TerminalView(PidaView):
         self._hb.pack_start(self._bar, expand=False)
         self.master = None
         self.slave = None
-        self.prep_highlights()
+        self._init_matches()
+        #self.prep_highlights()
+
+    def _init_matches(self):
+        for args in self.svc.features['match']:
+            self._term.match_add_match(usr=self, *args)
+        for args in self.svc.features['match-callback']:
+            self._term.match_add_callback(usr=self, *args)
+        for args in self.svc.features['match-menu']:
+            self._term.match_add_menu(usr=self, *args)
+        for args in self.svc.features['match-menu-callback']:
+            self._term.match_add_menu_callback(usr=self, *args)
 
     def _create_scrollbar(self):
         self._scrollbar = gtk.VScrollbar()
@@ -355,17 +442,22 @@ class TerminalView(PidaView):
     def execute(self, commandargs, env, cwd, eof_handler=None,
                 use_python_fork=False, parser_func=None):
         title_text = ' '.join(commandargs)
+        self._is_alive = True
         self._title.set_text(title_text)
         if eof_handler is None:
-            eof_handler = self.on_exited
-        self.eof_handler = eof_handler
+            self.eof_handler = self.on_exited
+        else:
+            def eof_wrapper(*args, **kwargs):
+                self._is_alive = False
+                eof_handler(*args, **kwargs)
+            self.eof_handler = eof_wrapper
         if use_python_fork:
             if parser_func == None:
                 self._python_fork(commandargs, env, cwd)
             else:
                 self._python_fork_parse(commandargs, env, cwd, parser_func)
         else:
-            self._vte_fork(commandargs, env, cwd) 
+            self._vte_fork(commandargs, env, cwd)
 
     def _python_fork_waiter(self, popen):
         exit_code = popen.wait()
@@ -443,6 +535,7 @@ class TerminalView(PidaView):
         self.svc.boss.cmd('window', 'remove_view', view=self)
 
     def on_exited(self, term):
+        self._is_alive = False
         self._term.feed_text(_('Child exited')+'\r\n', '1;34')
         self._term.feed_text(_('Press any key to close.'))
         self._term.connect('commit', self.on_press_any_key)
@@ -456,7 +549,7 @@ class TerminalView(PidaView):
             try:
                 os.kill(self._pid, 9)
             except OSError:
-                self.svc.log_debug('PID %s has already gone' % self._pid)
+                self.svc.log.debug('PID %s has already gone' % self._pid)
 
     def on_button_pressed(self, term, event):
         if not event.button in [1,2] or \
@@ -494,37 +587,30 @@ class TerminalView(PidaView):
     def on_window_title_changed(self, term):
         self._title.set_text(term.get_window_title())
 
-    def prep_highlights(self):
-        self._term.match_add_menu_callback('url-match',
-            r'https{0,1}://[A-Za-z0-9/\-\._]+',
-            r'(https{0,1}://[A-Za-z0-9/\-\._]+)',
-            self.on_highlight_url)
-        self._term.match_add_menu_callback('dir-match',
-            r'~{0,1}/[a-zA-Z/\-\._]+',
-            r'(~{0,1}/[A-Za-z0-9/\-\._]+)',
-            self.on_highlight_path)
-
-    def on_highlight_path(self, path, *args, **kw):
-        path = os.path.expanduser(path)
-        if os.path.isdir(path):
-            return self.svc.boss.cmd('contexts', 'get_menu', context='dir-menu',
-                                     dir_name=path)
-        elif os.path.isfile(path):
-            return self.svc.boss.cmd('contexts', 'get_menu', context='file-menu',
-                                     file_name=path)
-        else:
-            return None
-
-    def on_highlight_url(self, url, *args, **kw):
-        return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
-                                  url=url)
+    def chdir(self, path):
+        """
+        Try to change into the new directory.
+        Used by pin terminals for example.
+        """
+        if get_cwd(self._pid) == path:
+            return
+        # maybe we find a good way to check if the term is currently
+        # in shell mode and maybe there is a better way to change
+        # directories somehow
+        # this is like kate does it
+        self._term.feed_child(u'cd %s\n' %path)
 
     def get_absolute_path(self, path):
         return get_absolute_path(path, self._pid)
 
+    @property
+    def is_alive(self):
+        return self._is_alive
+
 class PythonView(PidaView):
 
     icon_name = 'terminal'
+    focus_ignore = True
 
     def create_ui(self):
         self.pid = None
@@ -533,7 +619,6 @@ class PythonView(PidaView):
         self._box.add(self._socket)
         self._socket.show()
         self._box.show()
-        print "socket created"
         self.add_main_widget(self._box)
 
     def execute(self, file_=None, cwd=os.getcwd()):
@@ -664,31 +749,9 @@ class Commander(Service):
     def get_match_callbacks(self, match):
         rv = []
         for cmatch, ccall in self.features['matches']:
-            if match == ccall:
-                return rv.append(ccall)
+            if match == cmatch:
+                rv.append(ccall)
         return rv
-
-    def default_match(self, term, event, match):
-        match = os.path.expanduser(match)
-
-        if match.find(":") != -1:
-            file_name, line = match.rsplit(":", 1)
-            file_name = term.get_absolute_path(file_name)
-            if os.path.isfile(file_name):
-                self.boss.cmd('buffer', 'open_file', 
-                                    file_name=file_name,
-                                    line=int(line))
-            else:
-                self.boss.cmd('filemanager', 'browse', 
-                            new_path=file_name)
-                self.boss.cmd('filemanager', 'present_view')
-        else:
-            file_name = term.get_absolute_path(match)
-            if os.path.isfile(match):
-                self.boss.cmd('buffer', 'open_file', file_name=file_name)
-            else:
-                self.boss.cmd('filemanager', 'browse', new_path=file_name)
-                self.boss.cmd('filemanager', 'present_view')
 
 
 

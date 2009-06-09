@@ -8,6 +8,8 @@ import os
 import gtk
 import string
 import simplejson
+from functools import partial
+import collections
 
 # PIDA Imports
 from pida.core.service import Service
@@ -17,12 +19,66 @@ from pida.core.options import OptionsConfig, Color
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL
 from pida.core.document import Document
+from pida.core.features import FeaturesConfig
 from pida.core.environment import workspace_name, settings_dir
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('window')
 _ = locale.gettext
+
+
+
+class ActionWindowMapping(list):
+    """
+    this maps language features
+    it wont handle priorities 
+    """
+    def __init__(self, svc):
+        self.svc = svc
+        self._actions = {}
+        super(ActionWindowMapping, self).__init__()
+
+    @staticmethod
+    def _genkey(key):
+        """Returns the key for a action"""
+        return 'window_config_%s' %key.replace(".", "_")
+
+    def add(self, config):
+        """
+        Add a new shortcut for focusing a window.
+        Get the shorcut from the window-config
+        """
+        self.append(config)
+        keya = self._genkey(config.key)
+        curshort = self.svc.actions.get_extra_value('window-config').\
+                                   get(keya, '')
+
+        act = self.svc.actions.create_action(
+            keya,
+            TYPE_NORMAL,
+            "Focus %s" %_(config.label_text),
+            config.description or _('Focus %s window') %_(config.label_text),
+            "",
+            self.svc.actions.on_focus_window,
+            config.default_shortcut
+        )
+        act.key = config.key
+        self._actions[config.key] = act
+        self.svc.actions.set_value(keya, curshort)
+        # make the shortcuts update to reflect change
+        self.svc.boss.get_service('shortcuts').update()
+
+    def remove(self, config):
+        """Unregister a WindowConfig"""
+        # unregister action
+        self.svc.actions.remove_action(self._actions[config.key])
+
+        del self._actions[config.key]
+        opt = self.svc.actions.get_option(self._genkey(config.key))
+        self.svc.actions.remove_option(opt)
+        #self.remove(config)
+        self.svc.boss.get_service('shortcuts').update()
 
 
 class WindowCommandsConfig(CommandsConfig):
@@ -51,6 +107,9 @@ class WindowCommandsConfig(CommandsConfig):
 class WindowActionsConfig(ActionsConfig):
 
     def create_actions(self):
+        self.register_extra_option('window-config', safe=False, notify=True,
+                                   default={}, workspace=False)
+
         self.create_action(
             'show_toolbar',
             TYPE_TOGGLE,
@@ -131,34 +190,6 @@ class WindowActionsConfig(ActionsConfig):
             self.on_windows,
         )
 
-    def register_window(self, key, title, help=None):
-        """
-        Registers a window key.
-        This window can get a shortcut assigned which will be shown
-        at the windows menu.
-        """
-        keya = 'focus_%s' %key.replace(".", "_")
-        curshort = ""
-        for name, value in self.read().items():
-
-            # ignore removed options that might have config entries
-            if name == keya:
-                curshort = value
-
-        act = self.create_action(
-            keya,
-            TYPE_NORMAL,
-            "Focus %s" %_(title),
-            help or _('Focus %s window') %_(title),
-            "",
-            self.on_focus_window,
-            curshort
-        )
-        act.key = key
-        self.set_value(keya, curshort)
-        self.subscribe_keyboard_shortcuts()
-        self.svc.boss.get_service('shortcuts').update()
-
     def on_focus_window(self, action):
         self.svc.present_key_window(action.key)
 
@@ -185,6 +216,24 @@ class WindowActionsConfig(ActionsConfig):
         self.svc.set_opt(action.get_name(), val)
         getattr(self.svc, action.get_name())(val)
 
+    def _on_option_change(self, option):
+        # hacky highjacking to put the options into a extra config :-)
+        self.svc.actions.get_extra_value('window-config')[option.name] = \
+            option.value
+        self.svc.actions.set_extra_value('window-config', 
+            self.svc.actions.get_extra_value('window-config'))
+        # call normal callback
+        self._set_action_keypress_from_option(option)
+
+    def _create_key_option(self, act, name, label, tooltip, accel):
+        opt = super(WindowActionsConfig, self)._create_key_option(act, 
+                                            name, label, tooltip, accel)
+
+        if name[:14] == 'window_config_':
+            # we highjack the callback on the external defined options
+            # so we can set the extra option value so it gets persistent saved
+            opt.callback = self._on_option_change
+
 class WindowEvents(EventsConfig):
 
     def subscribe_all_foreign(self):
@@ -199,6 +248,21 @@ class WindowEvents(EventsConfig):
     def on_editor_started(self):
         self.svc.boss.hide_splash()
         self.svc.window.show()
+
+
+class WindowFeatures(FeaturesConfig):
+    def create(self):
+        nmapping = partial(ActionWindowMapping, self.svc)
+        self.publish_special(
+            nmapping,
+            'window-config',
+        )
+
+
+        #self.publish('window-config')
+        #self.subscribe('window-config', self.on_window_config)
+
+
 
 class WindowOptionsConfig(OptionsConfig):
 
@@ -243,6 +307,15 @@ class WindowOptionsConfig(OptionsConfig):
         )
 
         self.create_option(
+            'no_project_color',
+            _('No project color'),
+            Color,
+            '#CB4444',
+            _('The color projects shall have in PIDA'),
+            self.on_color_change,
+        )
+
+        self.create_option(
             'directory_color',
             _('Directory color'),
             Color,
@@ -269,6 +342,7 @@ class Window(Service):
     options_config = WindowOptionsConfig
     actions_config = WindowActionsConfig
     events_config = WindowEvents
+    features_config = WindowFeatures
     
     def pre_start(self):
         self._title_template = None
@@ -375,6 +449,7 @@ class Window(Service):
         # set the colors of Document
         Document.markup_directory_color = self.opt('directory_color')
         Document.markup_project_color = self.opt('project_color')
+        Document.markup_color_noproject = self.opt('no_project_color')
 
     def update_title(self, document=None):
         if self._title_template is None:
@@ -442,9 +517,6 @@ class Window(Service):
             if pane.key == key:
                 self.cmd('present_view', view=pane)
                 return
-
-    def register_window(self, key, title, help=None):
-        self.actions.register_window(self, key, title, help)
 
     def create_window_list(self):
         # update the window menu list

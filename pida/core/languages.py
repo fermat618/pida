@@ -7,6 +7,7 @@ Language Support Superclasses
 :copyright: 2008 the Pida Project
 """
 from functools import partial
+import gobject
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -28,6 +29,16 @@ _ = locale.gettext
 #         #meta.addParentContent(klass)
 #         klass.plugin = dct['__module__']
 #         return klass
+
+# priorities for running language plugins
+
+PRIO_DEFAULT = gobject.PRIORITY_DEFAULT_IDLE
+PRIO_FOREGROUND = PRIO_DEFAULT - 40
+
+PRIO_FOREGROUND_HIGH = PRIO_FOREGROUND - 40
+
+PRIO_LOW = PRIO_DEFAULT + 40
+
 
 class BaseDocumentHandler(object):
 
@@ -197,6 +208,12 @@ class LanguageInfo(object):
 
     # . in python; -> in c, ...
     attributerefs = []
+
+    completer_open = ['[', '(', '{']
+    completer_close = [']', ')', '}']
+
+    # i think most languages are
+    case_sensitive = True
 
     def __init__(self, document):
         self.document = document

@@ -39,7 +39,7 @@ from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO,
                                TYPE_REMEMBER_TOGGLE)
 from pida.core.environment import get_uidef_path
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 from pida.utils.unique import create_unique_id
 
 # locale
@@ -236,6 +236,15 @@ class ChecklistEvents(EventsConfig):
                                self.svc.on_project_switched)
 
 
+class ChecklistWindowConfig(WindowConfig):
+    key = ChecklistView.key
+    label_text = ChecklistView.label_text
+
+class ChecklistFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            ChecklistWindowConfig)
+
 
 # Service class
 class Checklist(Service):
@@ -250,12 +259,6 @@ class Checklist(Service):
         self._items = {}
         self._current = None
         self._project = None
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
 
     def show_checklist(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

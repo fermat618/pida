@@ -17,6 +17,9 @@
         </menu>
         
         <menu name="ToolsMenu" action="ToolsMenu">
+            <menu name="ToolsDebug" action="ToolsDebug">
+            <menuitem action="show_pida_log" name="show_pida_log" />
+            </menu>
         </menu>
         
         <menu name="ViewMenu" action="ViewMenu">

@@ -10,6 +10,7 @@
 """
 from __future__ import with_statement
 import os, sys, os.path
+from collections import defaultdict
 
 import gtk
 
@@ -23,7 +24,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.projects import Project
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaGladeView, PidaView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
@@ -204,10 +205,10 @@ class ProjectActionsConfig(ActionsConfig):
 
         self.create_action(
             'project_execute_last',
-            TYPE_MENUTOOL,
+            TYPE_NORMAL,
             _('Execute _last Controller'),
             _('Execute last Controller'),
-            'package_utilities',
+            'restart',
             self.on_project_execute_last,
             ''
         )
@@ -300,12 +301,19 @@ class ProjectActionsConfig(ActionsConfig):
         project = action.contexts_kw.get('project')
         self.svc.remove_project(project)
 
+
+class ProjectWindowConfig(WindowConfig):
+    key = ProjectSetupView.key
+    label_text = ProjectSetupView.label_text
+    description = _("Project setup window")
+
 class ProjectFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'project-dir-menu.xml'))
-
+        self.subscribe_foreign('window', 'window-config',
+            ProjectWindowConfig)
 
 class ProjectOptions(OptionsConfig):
 
@@ -316,7 +324,8 @@ class ProjectOptions(OptionsConfig):
             unicode,
             "~",
             _('The current directories in the workspace'),
-            safe=False
+            safe=False,
+            workspace=True
         )
 
         self.create_option(
@@ -333,7 +342,8 @@ class ProjectOptions(OptionsConfig):
             list,
             [],
             _('The current directories in the workspace'),
-            safe=False
+            safe=False,
+            workspace=True
         )
 
         self.create_option(
@@ -346,7 +356,14 @@ class ProjectOptions(OptionsConfig):
             safe=False,
             workspace=True
         )
-
+        self.create_option(
+            'autoclose',
+            _('Autoclose targets'),
+            bool,
+            False,
+            _('Autoclose old targets when new its restarted'),
+            workspace=True
+        )
 
 
 class ProjectCommandsConfig(CommandsConfig):
@@ -398,6 +415,7 @@ class ProjectService(Service):
 
     def start(self):
         self._projects = []
+        self._running_targets = defaultdict(list)
         self.set_current_project(None)
         ###
         self.project_list = ProjectListView(self)
@@ -405,10 +423,6 @@ class ProjectService(Service):
         self._read_options()
 
         acts = self.boss.get_service('window').actions
-
-        acts.register_window(self.project_list.key,
-                             self.project_list.label_text)
-
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
@@ -529,7 +543,18 @@ class ProjectService(Service):
         env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
-        self.boss.cmd('commander', 'execute',
+        if self.opt("autoclose") and (action, target) in self._running_targets:
+            torm = []
+            for old in self._running_targets[(action, target)]:
+                if not old.is_alive:
+                    old.close_view()
+                    torm.append(old)
+            for old in torm:
+                self._running_targets[(action, target)].remove(old)
+
+
+        t = self.boss.cmd(
+            'commander', 'execute',
                 commandargs=[
                     'python', script,
                     '--directory', project.source_directory,
@@ -539,6 +564,8 @@ class ProjectService(Service):
                 title=_('%s:%s') % (project.name, target.name),
                 env=env,
                 )
+        if self.opt("autoclose"):
+            self._running_targets[(action, target)].append(t)
 
     def execute_last(self):
         if self._target_last:

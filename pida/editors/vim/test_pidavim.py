@@ -27,6 +27,7 @@ def refresh_ui():
 def _start_vim():
     env = os.environ.copy()
     env['PIDA_DBUS_UUID'] = 'pidatest'
+    env['PIDA_PATH'] = '.'
     p = subprocess.Popen(['gvim', '-iconic', '-f', '--cmd', 'so %s' % vim_script],
                          env=env)
     return p
@@ -41,7 +42,7 @@ def _make_test_file():
 
 class TestVim(object):
 
-    def setUp(self):
+    def setup_method(self, method=None):
         self.vim_process = _start_vim()
         time.sleep(1)
         self.vim = get_vim('pidatest')
@@ -49,7 +50,7 @@ class TestVim(object):
 
         self.files = [_make_test_file() for i in range(5)]
 
-    def tearDown(self):
+    def teardown_method(self, method=None):
         for fn in self.files:
             os.unlink(fn)
         # XXX this segfaults for some reason
@@ -58,6 +59,10 @@ class TestVim(object):
         os.kill(self.vim_process.pid, 9)
 
         self.vim_process.wait()
+
+    #XXX: nosetest compat
+    setup = setup_method
+    teardown = teardown_method
 
     def test_eval(self):
         # vim-python is broken with regards evaling numbers as strings
