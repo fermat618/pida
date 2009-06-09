@@ -599,6 +599,7 @@ class TerminalView(PidaView):
 class PythonView(PidaView):
 
     icon_name = 'terminal'
+    focus_ignore = True
 
     def create_ui(self):
         self.pid = None

@@ -129,6 +129,8 @@ class PidaPaned(BigPaned):
         Returns True if the pane was presented
         """
         # most top focus candidate
+        if getattr(pane.view, 'focus_ignore', False):
+            return False
         focus = pane.view.toplevel.get_focus_child()
         while hasattr(focus, 'get_focus_child'):
             # we dive into the children until we find a child that has focus
