@@ -1491,6 +1491,8 @@ class Mooedit(EditorService):
                    buf.get_iter_at_offset(end))
 
     def get_current_line(self):
+        if not self._current:
+            return None
         buf = self._current.editor.get_buffer()
         i = buf.get_iter_at_offset(buf.props.cursor_position)
         return i.get_line()+1

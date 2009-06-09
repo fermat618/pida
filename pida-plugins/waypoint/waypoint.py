@@ -419,7 +419,7 @@ class Waypoint(Service):
         if document is None:
             document = self.boss.cmd('buffer', 'get_current')
             line = self.boss.editor.get_current_line()
-            if not document and not line:
+            if not document or not line:
                 return
 
         if not isinstance(document, Document):

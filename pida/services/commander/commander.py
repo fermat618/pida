@@ -373,6 +373,7 @@ class TerminalView(PidaView):
 
     def create_ui(self):
         self._pid = None
+        self._is_alive = False
         self._hb = gtk.HBox()
         self._hb.show()
         self.add_main_widget(self._hb)
@@ -441,17 +442,22 @@ class TerminalView(PidaView):
     def execute(self, commandargs, env, cwd, eof_handler=None,
                 use_python_fork=False, parser_func=None):
         title_text = ' '.join(commandargs)
+        self._is_alive = True
         self._title.set_text(title_text)
         if eof_handler is None:
-            eof_handler = self.on_exited
-        self.eof_handler = eof_handler
+            self.eof_handler = self.on_exited
+        else:
+            def eof_wrapper(*args, **kwargs):
+                self._is_alive = False
+                eof_handler(*args, **kwargs)
+            self.eof_handler = eof_wrapper
         if use_python_fork:
             if parser_func == None:
                 self._python_fork(commandargs, env, cwd)
             else:
                 self._python_fork_parse(commandargs, env, cwd, parser_func)
         else:
-            self._vte_fork(commandargs, env, cwd) 
+            self._vte_fork(commandargs, env, cwd)
 
     def _python_fork_waiter(self, popen):
         exit_code = popen.wait()
@@ -529,6 +535,7 @@ class TerminalView(PidaView):
         self.svc.boss.cmd('window', 'remove_view', view=self)
 
     def on_exited(self, term):
+        self._is_alive = False
         self._term.feed_text(_('Child exited')+'\r\n', '1;34')
         self._term.feed_text(_('Press any key to close.'))
         self._term.connect('commit', self.on_press_any_key)
@@ -595,6 +602,10 @@ class TerminalView(PidaView):
 
     def get_absolute_path(self, path):
         return get_absolute_path(path, self._pid)
+
+    @property
+    def is_alive(self):
+        return self._is_alive
 
 class PythonView(PidaView):
 

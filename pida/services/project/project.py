@@ -10,6 +10,7 @@
 """
 from __future__ import with_statement
 import os, sys, os.path
+from collections import defaultdict
 
 import gtk
 
@@ -349,7 +350,14 @@ class ProjectOptions(OptionsConfig):
             safe=False,
             workspace=True
         )
-
+        self.create_option(
+            'autoclose',
+            _('Autoclose targets'),
+            bool,
+            False,
+            _('Autoclose old targets when new its restarted'),
+            workspace=True
+        )
 
 
 class ProjectCommandsConfig(CommandsConfig):
@@ -401,6 +409,7 @@ class ProjectService(Service):
 
     def start(self):
         self._projects = []
+        self._running_targets = defaultdict(list)
         self.set_current_project(None)
         ###
         self.project_list = ProjectListView(self)
@@ -522,7 +531,18 @@ class ProjectService(Service):
         env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
-        self.boss.cmd('commander', 'execute',
+        if self.opt("autoclose") and (action, target) in self._running_targets:
+            torm = []
+            for old in self._running_targets[(action, target)]:
+                if not old.is_alive:
+                    old.close_view()
+                    torm.append(old)
+            for old in torm:
+                self._running_targets[(action, target)].remove(old)
+
+
+        t = self.boss.cmd(
+            'commander', 'execute',
                 commandargs=[
                     'python', script,
                     '--directory', project.source_directory,
@@ -532,6 +552,8 @@ class ProjectService(Service):
                 title=_('%s:%s') % (project.name, target.name),
                 env=env,
                 )
+        if self.opt("autoclose"):
+            self._running_targets[(action, target)].append(t)
 
     def execute_last(self):
         if self._target_last:
