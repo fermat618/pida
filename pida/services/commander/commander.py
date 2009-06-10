@@ -537,7 +537,7 @@ class TerminalView(PidaView):
     def on_exited(self, term):
         self._is_alive = False
         self._term.feed_text(_('Child exited')+'\r\n', '1;34')
-        self._term.feed_text(_('Press any key to close.'))
+        self._term.feed_text(_('Press Enter/Space key to close.'))
         self._term.connect('commit', self.on_press_any_key)
 
     def can_be_closed(self):
@@ -578,7 +578,8 @@ class TerminalView(PidaView):
         self._term.paste_clipboard()
 
     def on_press_any_key(self, term, data, datalen):
-        self.close_view()
+        if data == "\r" or data == " ":
+            self.close_view()
 
     def on_commit_python(self, term, data, datalen):
         if data == '\x03':
