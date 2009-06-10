@@ -214,6 +214,17 @@ class ProjectActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'project_execute_popup',
+            TYPE_NORMAL,
+            _('Open target popup'),
+            _('Opens a popup with the project targets'),
+            '',
+            self.on_project_popup,
+            ''
+        )
+
+
+        self.create_action(
             'project_remove',
             TYPE_NORMAL,
             _('Remove from workspace'),
@@ -300,6 +311,16 @@ class ProjectActionsConfig(ActionsConfig):
     def on_project_remove_directory(self, action):
         project = action.contexts_kw.get('project')
         self.svc.remove_project(project)
+
+    def on_project_popup(self, action):
+        self._popupmenu = self.svc.create_menu()
+        def center(*args):
+            px, py, pw, ph, pbd = self.svc.boss.window.window.get_geometry()
+            px, py = self.svc.boss.window.window.get_position()
+            cx = px+int(pw / 2)
+            cy = py+int(ph / 2)
+            return cx, cy, True
+        self._popupmenu.popup(None, None, center, 0, 0)
 
 
 class ProjectWindowConfig(WindowConfig):
