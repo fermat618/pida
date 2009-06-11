@@ -568,7 +568,8 @@ class ProjectService(Service):
             torm = []
             for old in self._running_targets[(action, target)]:
                 if not old.is_alive:
-                    old.close_view()
+                    if old.pane:
+                        old.close_view()
                     torm.append(old)
             for old in torm:
                 self._running_targets[(action, target)].remove(old)
