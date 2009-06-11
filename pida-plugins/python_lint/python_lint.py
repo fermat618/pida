@@ -29,6 +29,10 @@ from pida.core.locale import Locale
 locale = Locale('skeleton')
 _ = locale.gettext
 
+# log
+import logging
+log = logging.getLogger('python_lint')
+
 try:
     #import pylint
     from pylint.reporters import BaseReporter
@@ -180,8 +184,11 @@ class PidaLinter(PyLinter, Log):
         if config_parser.has_option('MASTER', 'load-plugins'):
             plugins = get_csv(config_parser.get('MASTER', 'load-plugins'))
             self.load_plugin_modules(plugins)
-
-        self.load_config_file()
+        try:
+            self.load_config_file()
+        except Exception, e:
+            log.exception(e)
+            log.error(_("pylint couldn't load your config file: %s") %e)
         self.set_reporter(kwargs['reporter'])
         # now we can load file config and command line, plugins (which can
         # provide options) have been registered
