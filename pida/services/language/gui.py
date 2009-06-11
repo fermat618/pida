@@ -414,6 +414,8 @@ class BrowserView(PidaGladeView):
             def on_complete(document, outliner):
                 del self.tasks[document]
                 outliner.sync()
+                # fire refilter so the list is updated after buffer changed
+                self.filter_model.refilter()
                 # refire the task and hope the cache will just display stuff,
                 # elsewise the task is run again
                 if document == self.document and self.restart:
