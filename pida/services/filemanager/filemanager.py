@@ -407,8 +407,10 @@ class FilemanagerView(PidaView):
     def _get_ancestors(self, directory):
         ancs = [directory]
         parent = None
-        while directory != parent:
+        while True:
             parent = os.path.dirname(directory)
+            if parent == directory:
+                break
             ancs.append(parent)
             directory = parent
         return ancs

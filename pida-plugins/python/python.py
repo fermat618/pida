@@ -375,7 +375,7 @@ class PythonDefiner(Definer):
         from rope.base.exceptions import RopeError
 
         try:
-            dl = find_definition(mp.project, buffer, offset)
+            dl = find_definition(mp.project, buffer, offset, maxfixes=4)
         except RopeError:
             return None
 

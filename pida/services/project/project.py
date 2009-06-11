@@ -386,7 +386,6 @@ class ProjectOptions(OptionsConfig):
             workspace=True
         )
 
-
 class ProjectCommandsConfig(CommandsConfig):
 
     def add_directory(self, project_directory):
@@ -564,16 +563,12 @@ class ProjectService(Service):
         env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
-        if self.opt("autoclose") and (action, target) in self._running_targets:
-            torm = []
-            for old in self._running_targets[(action, target)]:
+        if self.opt("autoclose") and target in self._running_targets:
+            # cleanup old reverences of already
+            for old in self._running_targets[target]:
                 if not old.is_alive:
                     if old.pane:
                         old.close_view()
-                    torm.append(old)
-            for old in torm:
-                self._running_targets[(action, target)].remove(old)
-
 
         t = self.boss.cmd(
             'commander', 'execute',
@@ -587,7 +582,12 @@ class ProjectService(Service):
                 env=env,
                 )
         if self.opt("autoclose"):
-            self._running_targets[(action, target)].append(t)
+            self._running_targets[target].append(t)
+            t.pane.connect('remove', self._on_term_remove, t, target)
+
+    def _on_term_remove(self,pane, term, target):
+        self._running_targets[target].remove(term)
+
 
     def execute_last(self):
         if self._target_last:
