@@ -630,7 +630,6 @@ class PythonView(PidaView):
             commandargs.append('--ipython')
         if file_:
             commandargs.append(file_)
-        print commandargs
         self.popen = p = subprocess.Popen(commandargs, cwd=cwd, close_fds=True)
         self._pid = p.pid
 
@@ -662,7 +661,7 @@ class Commander(Service):
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
-        env_pida = env
+        env_pida = env[:]
         env_pida.append('PIDA_VERSION=%s' % pida.version)
         current_project = self.boss.cmd('project', 'get_current_project')
         if current_project:
@@ -672,6 +671,7 @@ class Commander(Service):
                 env_pida, cwd))))
         t.execute(commandargs, env_pida, cwd, eof_handler, use_python_fork, parser_func)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
+        t.pane.connect('remove', self._on_termclose)
         self._terminals.append(t)
         return t
 
@@ -683,13 +683,13 @@ class Commander(Service):
         #t = TerminalView(self, title, icon)
         #self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
         #        env_pida, cwd))))
-        print file_, cwd, title, icon
-        #FIXME: we have to add it non dispatchable as dispatching
+        #FIXME: we have to add it non detachable as dispatching
         # causes the socket to not be realized for a short time 
         # and therefor kills the process
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t, detachable=False)
         t.execute(file_=None, cwd=cwd)
         self._terminals.append(t)
+        t.pane.connect('remove', self._on_termclose)
         return t
 
     def execute_python_extern(self, file_=None, cwd=os.getcwd()):
@@ -699,8 +699,14 @@ class Commander(Service):
             commandargs.append('--ipython')
         if file_:
             commandargs.append(file_)
-        print commandargs
+        self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
+                env_pida, cwd))))
         subprocess.Popen(commandargs, cwd=cwd).pid
+
+    def _on_termclose(self, pane):
+        for term in self._terminals:
+            if term.pane == pane:
+                self._terminals.remove(term)
 
     def get_terminal_options(self):
         options = dict(
