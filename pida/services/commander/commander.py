@@ -700,7 +700,7 @@ class Commander(Service):
         if file_:
             commandargs.append(file_)
         self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
-                env_pida, cwd))))
+                cwd))))
         subprocess.Popen(commandargs, cwd=cwd).pid
 
     def _on_termclose(self, pane):

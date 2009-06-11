@@ -613,7 +613,8 @@ class Language(LanguageService):
         definer = self.get_definer(doc)
         if not definer:
             self.boss.get_service('notify').notify(
-            data=_('No support found'), timeout=2000)
+            title=_('Goto Definition'),
+            data=_('No support for this type found'), timeout=2000)
             return
         res = definer.get_definition(doc.content,
                                      self.boss.editor.get_cursor_position())
@@ -626,6 +627,7 @@ class Language(LanguageService):
             gcall(self.boss.editor.grab_focus)
         else:
             self.boss.get_service('notify').notify(
+            title=_('Goto Definition'),
             data=_('No definition found'), timeout=2000)
 
     def show_documentation(self):

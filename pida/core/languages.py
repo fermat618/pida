@@ -32,7 +32,7 @@ _ = locale.gettext
 
 # priorities for running language plugins
 
-PRIO_DEFAULT = gobject.PRIORITY_DEFAULT_IDLE
+PRIO_DEFAULT = gobject.PRIORITY_DEFAULT_IDLE + 100
 PRIO_FOREGROUND = PRIO_DEFAULT - 40
 
 PRIO_FOREGROUND_HIGH = PRIO_FOREGROUND - 40

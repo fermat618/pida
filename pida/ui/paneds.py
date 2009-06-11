@@ -89,13 +89,18 @@ class PidaPaned(BigPaned):
             pane.view = view
             if not removable:
                 pane.set_property('removable', False)
-            pane.connect('remove', view.on_remove_attempt)
+            view._on_remove_attempt_id = pane.connect('remove', 
+                                                      view.on_remove_attempt)
             view.toplevel.parent.set_name('PidaWindow')
             if present:
                 gcall(self.present_pane, view.get_toplevel())
             self.show_all()
 
     def remove_view(self, view):
+        # remove the default handler and fire the remove handler
+        # this ensures the remove event is fired at least once
+        view.pane.disconnect(view._on_remove_attempt_id)
+        view.pane.emit('remove')
         self.remove_pane(view.get_toplevel())
         view.pane = None
 
