@@ -63,10 +63,7 @@ if psutil and hasattr(psutil.Process, 'getcwd'):
     
         @pid: process id
         """
-        try:
-            return psutil.Process(pid).getcwd()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            return None
+        return psutil.Process(pid).getcwd()
 
     def get_absolute_path(path, pid):
         """
@@ -77,11 +74,8 @@ if psutil and hasattr(psutil.Process, 'getcwd'):
         """
         if os.path.isabs(path):
             return path
-        try:
-            base = psutil.Process(pid).getcwd()
-            return os.path.abspath(os.path.join(base, path))
-        except (psutil.NoSuchProcess, psutil.AccessDenied, OSError):
-            return None
+        base = psutil.Process(pid).getcwd()
+        return os.path.abspath(os.path.join(base, path))
 
 elif sys.platform in ('linux2', 'bsd'):
     # linux fallbacks
@@ -94,7 +88,7 @@ elif sys.platform in ('linux2', 'bsd'):
         try:
             return os.readlink('/proc/%s/cwd'%pid)
         except OSError:
-            return None
+            raise NoSuchProcess("pid %s does not exist" %pid)
 
     def get_absolute_path(path, pid):
         """
@@ -111,7 +105,7 @@ elif sys.platform in ('linux2', 'bsd'):
             base = os.readlink('/proc/%s/cwd'%pid)
             return os.path.abspath(os.path.join(base, path))
         except OSError:
-            return None
+            raise NoSuchProcess("pid %s does not exist" %pid)
 
 else:
     def get_cwd(dummy):

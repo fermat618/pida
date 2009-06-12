@@ -338,6 +338,7 @@ class TerminalView(PidaView):
     def create_ui(self):
         self._pid = None
         self._is_alive = False
+        self._last_cwd = None
         self._hb = gtk.HBox()
         self._hb.show()
         self.add_main_widget(self._hb)
@@ -446,6 +447,8 @@ class TerminalView(PidaView):
                              preexec_fn=self._python_fork_preexec_fn,
                              stderr=slave, env=env, cwd=cwd, close_fds=True)
         self._pid = p.pid
+        self._last_cwd = cwd
+        gobject.timeout_add(200, self._save_cwd)
         t = AsyncTask(self._python_fork_waiter, self._python_fork_complete)
         t.start(p)
 
@@ -460,6 +463,8 @@ class TerminalView(PidaView):
                          stderr=subprocess.STDOUT, stdin=slave,
                          close_fds=True)
         self._pid = p.pid
+        self._last_cwd = cwd
+        gobject.timeout_add(200, self._save_cwd)
         gobject.io_add_watch(self.master, gobject.IO_IN, 
                                 self._on_python_fork_parse_stdout, parser_func)
         self._term.connect('key-press-event',
@@ -494,6 +499,8 @@ class TerminalView(PidaView):
     def _vte_fork(self, commandargs, env, cwd):
         self._term.connect('child-exited', self.eof_handler)
         self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
+        self._last_cwd = cwd
+        gobject.timeout_add(200, self._save_cwd) 
 
     def close_view(self):
         self.svc.boss.cmd('window', 'remove_view', view=self)
@@ -565,8 +572,24 @@ class TerminalView(PidaView):
         # this is like kate does it
         self._term.feed_child(u'cd %s\n' %path)
 
+    def _save_cwd(self):
+        try:
+            self._last_cwd = ostools.get_path(self._pid)
+            return True
+        except (ostools.NoSuchProcess, ostools.AccessDenied):
+            return False
+
     def get_absolute_path(self, path):
-        return ostools.get_absolute_path(path, self._pid)
+        """
+        Return the absolute path for path and the terminals cwd
+        """
+        try:
+            return ostools.get_absolute_path(path, self._pid)
+        except (ostools.NoSuchProcess, ostools.AccessDenied):
+            if self._last_cwd:
+                apath = os.path.abspath(os.path.join(self._last_cwd, path))
+                if os.path.exists(apath):
+                    return apath
 
     @property
     def is_alive(self):
