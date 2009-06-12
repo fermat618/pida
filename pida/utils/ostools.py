@@ -10,8 +10,21 @@ import os, sys
 
 try:
     import psutil
+    NoSuchProcess = psutil.NoSuchProcess
+    AccessDenied = psutil.AccessDenied
 except ImportError:
     psutil = None
+    class NoSuchProcess(Exception):
+        """
+        No process was found for the given parameters.
+        """
+        pass
+    class AccessDenied(Exception):
+        """
+        No process was found for the given parameters.
+        """
+        pass
+
 
 
 if sys.platform != 'win32':
@@ -43,7 +56,7 @@ else:
 
 
 
-if psutil and psutil.Process.getcwd:
+if psutil and hasattr(psutil.Process, 'getcwd'):
     def get_cwd(pid):
         """
         Returns the working path for a process
@@ -68,7 +81,7 @@ if psutil and psutil.Process.getcwd:
             base = psutil.Process(pid).getcwd()
             return os.path.abspath(os.path.join(base, path))
         except (psutil.NoSuchProcess, psutil.AccessDenied, OSError):
-            return path
+            return None
 
 elif sys.platform in ('linux2', 'bsd'):
     # linux fallbacks
@@ -98,7 +111,7 @@ elif sys.platform in ('linux2', 'bsd'):
             base = os.readlink('/proc/%s/cwd'%pid)
             return os.path.abspath(os.path.join(base, path))
         except OSError:
-            return path
+            return None
 
 else:
     def get_cwd(dummy):
@@ -120,5 +133,58 @@ else:
         @path: path to add
         @pid: process id
         """
-        return path
+        if os.path.isabs(path):
+            return path
+
+        return None
+
+if psutil:
+    def pid_exist(pid):
+        """
+        Check whether the given PID exists in the current process list
+        """
+        return psutil.pid_exists(pid)
+
+elif sys.platform in ('linux2', 'bsd'):
+    def pid_exist(pid):
+        """
+        Check whether the given PID exists in the current process list
+        """
+        return os.path.exists("/proc/%s" %pid)
+else:
+    def pid_exist(dummy):
+        """
+        Check whether the given PID exists in the current process list
+        """
+        return None
+
+
+if psutil:
+    def kill_pid(pid, sig=None):
+        """
+        Kill the current process by using signal sig (defaults to SIGKILL).
+        """
+        psutil.Process(pid).kill(sig)
+
+elif hasattr(os, 'kill'):
+    def kill_pid(pid, sig=None):
+        """
+        Kill the current process by using signal sig (defaults to SIGKILL).
+        """
+        if sig is not None:
+            try:
+                return os.kill(pid, sig)
+            except OSError, err:
+                raise NoSuchProcess(err)
+        else:
+            try:
+                return os.kill(pid, 9)
+            except OSError, err:
+                raise NoSuchProcess(err)
+else:
+    def kill_pid(dummy, dummy2=None):
+        """
+        Kill the current process by using signal sig (defaults to SIGKILL).
+        """
+        return None
 

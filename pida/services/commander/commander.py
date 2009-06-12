@@ -511,8 +511,8 @@ class TerminalView(PidaView):
     def kill(self):
         if self._pid is not None:
             try:
-                os.kill(self._pid, 9)
-            except OSError:
+                ostools.kill_pid(self._pid)
+            except (ostools.NoSuchProcess, ostools.AccessDenied):
                 self.svc.log.debug('PID %s has already gone' % self._pid)
 
     def on_button_pressed(self, term, event):
@@ -547,7 +547,7 @@ class TerminalView(PidaView):
 
     def on_commit_python(self, term, data, datalen):
         if data == '\x03':
-            os.kill(self._pid, 2)
+            ostool.kill_pid(self._pid, 2)
 
     def on_window_title_changed(self, term):
         self._title.set_text(term.get_window_title())
@@ -604,8 +604,8 @@ class PythonView(PidaView):
     def kill(self):
         if self._pid is not None:
             try:
-                os.kill(self._pid, 9)
-            except OSError:
+                ostools.kill_pid(self._pid)
+            except ostools.NoSuchProcess:
                 self.svc.log_debug('PID %s has already gone' % self._pid)
 
 # Service class
