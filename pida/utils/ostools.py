@@ -70,7 +70,7 @@ if psutil and psutil.Process.getcwd:
         except (psutil.NoSuchProcess, psutil.AccessDenied, OSError):
             return path
 
-elif sys.platform == 'linux2':
+elif sys.platform in ('linux2', 'bsd'):
     # linux fallbacks
     def get_cwd(pid):
         """
