@@ -23,6 +23,7 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.utils.gthreads import AsyncTask
+from pida.utils import ostools
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
@@ -33,47 +34,6 @@ from pida.core.locale import Locale
 locale = Locale('commander')
 _ = locale.gettext
 
-
-#RE_ABSOLUTE_UNIX = r'^((?:\/[a-zA-Z0-9]+(?:_[a-zA-Z0-9]+)*(?:\-[a-zA-Z0-9]+)*)+)$'
-#RE_ABSOLUTE_UNIX = r'''((?:\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:[1-9]+)?)'''
-#RE_ABSOLUTE_UNIX = r'((\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:\d+)?)'
-
-RE_MATCHES = ((r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
-               r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)'),
-              (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)',
-              r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)')
-             )
-
-
-def get_default_system_shell(cls):
-    return ""
-
-def get_absolute_path(cls, path, pid):
-    return path
-
-# FIXME: windows port
-if sys.platform != 'win32':
-    def get_default_system_shell():
-        import pwd
-        return os.environ.get(
-            'SHELL', # try shell from env
-            pwd.getpwuid(os.getuid())[-1] # fallback to login shell
-        )
-
-    def get_cwd(pid):
-        try:
-            return os.readlink('/proc/%s/cwd'%pid)
-        except OSError:
-            return None
-
-    def get_absolute_path(path, pid):
-        #XXX: works on bsd and linux only
-        #     solaris needs /proc/%s/path/cwd
-        try:
-            base = os.readlink('/proc/%s/cwd'%pid)
-            return os.path.abspath(os.path.join(base, path))
-        except OSError:
-            return path
 
 class CommanderOptionsConfig(OptionsConfig):
 
@@ -156,7 +116,7 @@ class CommanderOptionsConfig(OptionsConfig):
             'shell_command',
             _('The shell command'),
             str,
-            get_default_system_shell(),
+            ostools.get_default_system_shell(),
             _('The command that will be used for shells')
         )
 
@@ -279,7 +239,7 @@ class CommanderFeaturesConfig(FeaturesConfig):
 
     def create(self):
         self.publish('match', 'match-callback', 'match-menu', 'match-menu-callback')
-        for match in RE_MATCHES:
+        for match in ostools.PATH_MATCHES:
             self.subscribe('match-callback', ('File', match[0], match[1], 
                                               self.on_default_match))
             self.subscribe('match-menu-callback',
@@ -335,6 +295,8 @@ class CommanderFeaturesConfig(FeaturesConfig):
         if match.find(":") != -1:
             file_name, line = match.rsplit(":", 1)
             file_name = kwargs['usr'].get_absolute_path(file_name)
+            if not file_name:
+                return
             if os.path.isfile(file_name):
                 self.svc.boss.cmd('buffer', 'open_file', 
                                     file_name=file_name,
@@ -345,6 +307,8 @@ class CommanderFeaturesConfig(FeaturesConfig):
                 self.svc.boss.cmd('filemanager', 'present_view')
         else:
             file_name = os.path.realpath(kwargs['usr'].get_absolute_path(match))
+            if not file_name:
+                return
             if os.path.isfile(file_name):
                 self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
             elif os.path.isdir(file_name):
@@ -593,7 +557,7 @@ class TerminalView(PidaView):
         Try to change into the new directory.
         Used by pin terminals for example.
         """
-        if get_cwd(self._pid) == path:
+        if ostools.get_cwd(self._pid) == path:
             return
         # maybe we find a good way to check if the term is currently
         # in shell mode and maybe there is a better way to change
@@ -602,7 +566,7 @@ class TerminalView(PidaView):
         self._term.feed_child(u'cd %s\n' %path)
 
     def get_absolute_path(self, path):
-        return get_absolute_path(path, self._pid)
+        return ostools.get_absolute_path(path, self._pid)
 
     @property
     def is_alive(self):
