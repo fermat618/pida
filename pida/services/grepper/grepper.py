@@ -11,6 +11,7 @@ from glob import fnmatch
 
 from kiwi.ui.objectlist import Column
 from pida.ui.views import PidaGladeView, PidaView
+from pida.core.charfinder import detect_text
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
@@ -322,8 +323,6 @@ class Grepper(Service):
     options_config = GrepperOptions
     features_config = GrepperFeatures
 
-    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')
-
     def pre_start(self):
         self.current_project_source_directory = None
         self._views = []
@@ -403,11 +402,12 @@ class Grepper(Service):
         each cycle, that contains the path, line number and matches data.
         """
         try:
-            f = open(filename, 'r')
-            for linenumber, line in enumerate(f):
-                if self.BINARY_RE.search(line):
-                    break
+            if not detect_text(None, filename, None):
+                return
 
+            f = open(filename, 'r')
+
+            for linenumber, line in enumerate(f):
                 # enumerate is 0 based, line numbers are 1 based
                 linenumber = linenumber + 1
 
