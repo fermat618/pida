@@ -40,9 +40,9 @@ class ShortcutsView(PidaView):
         self.shortcuts_list = ObjectTree(
             [
                 Column('stock_id', use_stock=True),
-                Column('no_mnemomic_label', sorted=True),
-                Column('value'),
-                Column('doc'),
+                Column('no_mnemomic_label', sorted=True, searchable=True),
+                Column('value', searchable=True),
+                Column('doc', searchable=True),
             ]
         )
         self.shortcuts_list.set_headers_visible(False)
@@ -64,6 +64,10 @@ class ShortcutsView(PidaView):
         hbox.pack_start(self._capture_entry)
         self._capture_entry.connect('key-press-event',
                                     self._on_capture_keypress)
+        self._capture_entry.connect('focus-in-event',
+                                    self._on_focus_in)
+        self._capture_entry.connect('focus-out-event',
+                                    self._on_focus_out)
         self._capture_entry.set_sensitive(False)
         self._default_button = gtk.Button(_('Default'))
         self._default_button.connect('clicked',
@@ -120,6 +124,15 @@ class ShortcutsView(PidaView):
         self._capture_entry.set_text(self._current.default)
         self._current.set_value(self._current.default)
 
+    def _on_focus_in(self, dummy1, dummy2):
+        for service in self.svc.boss.get_services() + [
+                                self.svc.boss.editor]:
+            service.get_action_group().set_sensitive(False)
+
+    def _on_focus_out(self, dummy1, dummy2):
+        for service in self.svc.boss.get_services() + [
+                                self.svc.boss.editor]:
+            service.get_action_group().set_sensitive(True)
 
     def _on_capture_keypress(self, entry, event):
         # svn.gnome.org/viewcvs/gazpacho/trunk/gazpacho/actioneditor.py
@@ -142,10 +155,33 @@ class ShortcutsView(PidaView):
         if gtk.accelerator_valid(event.keyval, modifiers) or \
            self._full_button.get_active():
             accelerator = gtk.accelerator_name(event.keyval, modifiers)
-            entry.set_text(accelerator)
-            self._current.set_value(accelerator)
+            if self.free_accelerator(accelerator, self._current):
+                entry.set_text(accelerator)
+                self._current.set_value(accelerator)
             # deactive the dangerouse button again :-)
             self._full_button.set_active(False)
+        return True
+
+    def free_accelerator(self, accelerator, setfor):
+        """
+        Test if a accelerator is free and if not ask the user if it should
+        be freed
+        
+        @return True if accelerator is free
+        """
+        for service in self.svc.boss.get_services() + [
+                                self.svc.boss.editor]:
+            if len(service.get_keyboard_options()):
+                for opt in service.get_keyboard_options().values():
+                    if opt.value == accelerator and opt != setfor:
+                        if self.svc.yesno_dlg(
+                            _("Shortcut is already in use by: %s/%s\n"
+                              "Should it be cleared ?" 
+                                %(service.get_label(),
+                                  opt.no_mnemomic_label))):
+                            opt.set_value('')
+                        else:
+                            return False
         return True
 
     def can_be_closed(self):
