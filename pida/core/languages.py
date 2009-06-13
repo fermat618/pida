@@ -212,6 +212,13 @@ class LanguageInfo(object):
     completer_open = ['[', '(', '{']
     completer_close = [']', ')', '}']
 
+    keywords = []
+    operators = []
+
+    comment_line = []
+    comment_start = []
+    comment_end = []
+    
     # i think most languages are
     case_sensitive = True
 
