@@ -45,7 +45,7 @@ class PidaLogHandler(gobject.GObject, logging.Handler):
 
     def __init__(self, *args, **kwargs):
         self.error_stack = []
-        self.max_length = kwargs.get('max_length', 15000)
+        self.max_length = kwargs.get('max_length', 50000)
         self.buffer = gtk.TextBuffer()
         gobject.GObject.__init__(self)
         logging.Handler.__init__(self, *args, **kwargs)

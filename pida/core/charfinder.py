@@ -55,22 +55,22 @@ try:
 
     def magic_detect(stream, filename, mimetype):
         if filename:
-            mime = magic.from_file(filename, mime=True)
+            mime = magic.Magic(mime=True).from_file(filename)
             if mime[:5] == 'text/':
                 # magic return often a to specific content that does not
                 # contain the encoding :-(
-                return _magic_enc(magic.from_file(filename).split()[0])
+                return _magic_enc(magic.Magic().from_file(filename).split()[0])
         elif stream:
             # very bad
             chunk = stream.read()
-            mime = magic.from_buffer(chunk, mime=True)
+            mime = magic.Magic(mime=True).from_buffer(chunk)
             if mime[:5] == 'text/':
-                return _magic_enc(magic.from_buffer(chunk).split()[0])
-            
+                return _magic_enc(magic.Magic().from_buffer(chunk).split()[0])
+
 
     def magic_test(stream, filename, mimetype):
         if filename:
-            mime = magic.from_file(filename, mime=True)
+            mime = magic.Magic(mime=True).from_file(filename)
             if mime[:5] == 'text/':
                 return True
             elif mime in text_mime:
@@ -79,7 +79,7 @@ try:
         elif stream:
             # very bad
             chunk = stream.read()
-            mime = magic.from_buffer(chunk, mime=True)
+            mime = magic.Magic(mime=True).from_buffer(chunk)
             if mime[:5] == 'text/':
                 return True
             elif mime in text_mime:

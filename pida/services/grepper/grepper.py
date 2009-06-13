@@ -160,11 +160,16 @@ class GrepperView(PidaGladeView):
         # we should set this to the current project I think
         self.path_chooser.set_filename(os.path.expanduser('~/'))
 
+        self._history = gtk.ListStore(gobject.TYPE_STRING)
+        self.pattern_combo.set_model(self._history)
+        self.pattern_combo.set_text_column(0)
         self.recursive.set_active(True)
         self.re_check.set_active(True)
+        self.pattern_entry = self.pattern_combo.child
+        self.pattern_entry.connect('activate', self._on_pattern_entry_activate)
 
         self.task = GeneratorTask(self.svc.grep, self.append_to_matches_list,
-                                  self.grep_complete)
+                                  self.grep_complete, pass_generator=True)
         self.running = False
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
@@ -188,7 +193,7 @@ class GrepperView(PidaGladeView):
         cpath = self.svc.boss.cmd('filemanager', 'get_browsed_path')
         self.path_chooser.set_current_folder(cpath)
 
-    def on_pattern_entry__activate(self, entry):
+    def _on_pattern_entry_activate(self, entry):
         self.start_grep()
 
     def _translate_glob(self, glob):
@@ -212,6 +217,8 @@ class GrepperView(PidaGladeView):
     def start_grep(self):
         self.matches_list.clear()
         pattern = self.pattern_entry.get_text()
+        self._history.insert(0, (pattern,))
+        self.pattern_combo.set_active(0)
         location = self.path_chooser.get_filename()
         if location is None:
             location = self._hacky_extra_location
@@ -349,7 +356,8 @@ class Grepper(Service):
         self.boss.editor.cmd('call_with_selection_or_word',
                              callback=view.start_grep_for_word)
 
-    def grep(self, top, regex, recursive=False, show_hidden=False):
+    def grep(self, top, regex, recursive=False, show_hidden=False,
+             generator_task=None):
         """
         grep is a wrapper around _grep_file_list and _grep_file.
         """
@@ -360,17 +368,24 @@ class Grepper(Service):
                 yield result
         elif recursive:
             for root, dirs, files in os.walk(top):
+                if generator_task.is_stopped:
+                    return
                 # Remove hidden directories
                 if os.path.basename(root).startswith('.') and not show_hidden:
                     del dirs[:]
                     continue
-                for matches in self._grep_file_list(files, root, regex):
+                for matches in self._grep_file_list(files, root, regex,
+                                                generator_task=generator_task,
+                                                show_hidden=show_hidden):
                     yield matches
         else:
-            for matches in self._grep_file_list(os.listdir(top), top, regex):
+            for matches in self._grep_file_list(os.listdir(top), top, regex,
+                                                generator_task=generator_task,
+                                                show_hidden=show_hidden):
                 yield matches
 
-    def _grep_file_list(self, file_list, root, regex, show_hidden=False):
+    def _grep_file_list(self, file_list, root, regex, show_hidden=False,
+                                               generator_task=None):
         """
         Grep for a list of files.
 
@@ -382,6 +397,8 @@ class Grepper(Service):
         each of them with the supplied arguments.
         """
         for file in file_list:
+            if generator_task and generator_task.is_stopped:
+                return
             if self._result_count > self.opt('maximum_results'):
                 break
             if file.startswith(".") and not show_hidden:

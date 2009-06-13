@@ -34,9 +34,10 @@ class Magic:
     """
     Magic is a wrapper around the libmagic C library.  
     
+    This class is threadsafe
     """
 
-    def __init__(self, mime=False, magic_file=None):
+    def __init__(self, mime=False, magic_file=None, flags=None):
         """
         Create a new libmagic wrapper.
 
@@ -44,7 +45,9 @@ class Magic:
         magic_file - use a mime database other than the system default
         
         """
-        flags = MAGIC_NONE
+        if not flags:
+            flags = MAGIC_NONE
+        
         if mime:
             flags |= MAGIC_MIME
             
@@ -67,7 +70,7 @@ class Magic:
 
         if not os.path.exists(filename):
             raise IOError("File does not exist: " + filename)
-        
+
         return magic_file(self.cookie, filename)
 
     def __del__(self):
@@ -99,10 +102,20 @@ def _get_magic_type(mime):
         return _get_magic()
 
 def from_file(filename, mime=False):
+    """
+    Return magic from file
+    
+    This function is NOT threadsafe.
+    """
     m = _get_magic_type(mime)
     return m.from_file(filename)
 
 def from_buffer(buffer, mime=False):
+    """
+    Return magic from buffer
+    
+    This function is NOT threadsafe.
+    """
     m = _get_magic_type(mime)
     return m.from_buffer(buffer)
 

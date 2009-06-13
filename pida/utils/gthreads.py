@@ -83,6 +83,12 @@ class GeneratorTask(AsyncTask):
     The diference between this task and AsyncTask is that the 'work_callback'
     returns a generator. For each value the generator yields the loop_callback
     is called inside Gtk+'s main loop.
+    
+    @work_callback: callback that returns results
+    @loop_callback: callback inside the gtk thread
+    @priority: gtk priority the loop callback will have
+    @pass_generator: will pass the generator instance as generator_task to the 
+                     worker callback
 
     A simple example::
 
@@ -99,13 +105,18 @@ class GeneratorTask(AsyncTask):
         gtk.main()
     """
     def __init__(self, work_callback, loop_callback, complete_callback=None,
-                 priority=gobject.PRIORITY_DEFAULT_IDLE):
+                 priority=gobject.PRIORITY_DEFAULT_IDLE,
+                 pass_generator=False):
         AsyncTask.__init__(self, work_callback, loop_callback)
         self.priority = priority
         self._complete_callback = complete_callback
+        self._pass_generator = pass_generator
 
     def _work_callback(self, counter, *args, **kwargs):
         self._stopped = False
+        if self._pass_generator:
+            kwargs = kwargs.copy()
+            kwargs['generator_task'] = self
         for ret in self.work_callback(*args, **kwargs):
             if self._stopped:
                 thread.exit()
@@ -117,6 +128,10 @@ class GeneratorTask(AsyncTask):
 
     def stop(self):
         self._stopped = True
+
+    @property
+    def is_stopped(self):
+        return self._stopped
 
 
 class GeneratorSubprocessTask(GeneratorTask):
