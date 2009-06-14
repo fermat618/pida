@@ -174,6 +174,34 @@ class ValidatorView(PidaView):
     icon_name = 'python-icon'
     label_text = _('Validator')
 
+    def create_ui(self):
+        self._last_selected = None
+        self.document = None
+        self.tasks = {}
+        self.restart = False
+        self.errors_ol = ObjectList(
+            Column('markup', use_markup=True)
+        )
+        self.errors_ol.set_headers_visible(False)
+        self.errors_ol.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.add_main_widget(self.errors_ol)
+        self.errors_ol.connect('double-click', self._on_errors_double_clicked)
+        self.errors_ol.connect('row-activated', self._on_errors_double_clicked)
+        self.errors_ol.connect('selection-changed', 
+                               self._on_errors_ol_selection_changed)
+        self.errors_ol.show_all()
+        self.sort_combo = AttrSortCombo(
+            self.errors_ol,
+            [
+                ('lineno', _('Line Number')),
+                ('message', _('Message')),
+                ('type_', _('Type')),
+            ],
+            'lineno',
+        )
+        self.sort_combo.show()
+        self.add_main_widget(self.sort_combo, expand=False)
+
     def set_validator(self, validator, document):
         # this is quite an act we have to do here because of the many cornercases
         # 1. Jobs once started run through. This is for caching purpuses as a validator
@@ -215,12 +243,17 @@ class ValidatorView(PidaView):
                 # sometimes args have a lengh of 0 so we have to catch this
                 if self.document == document and len(args):
                     self.add_node(args[0])
+                    if self._last_selected:
+                        if self._last_selected[0] == self.document:
+                            if args[0].lineno == self._last_selected[1]:
+                                self.errors_ol.select(args[0])
 
             def on_complete(document, validator):
                 del self.tasks[document]
                 # refire the task and hope the cache will just display stuff,
                 # elsewise the task is run again
                 validator.sync()
+
                 if document == self.document and self.restart:
                     self.set_validator(validator, document)
 
@@ -244,32 +277,14 @@ class ValidatorView(PidaView):
             node.lookup_color = self.errors_ol.style.lookup_color
             self.errors_ol.append(node)
 
-    def create_ui(self):
-        self.document = None
-        self.tasks = {}
-        self.restart = False
-        self.errors_ol = ObjectList(
-            Column('markup', use_markup=True)
-        )
-        self.errors_ol.set_headers_visible(False)
-        self.errors_ol.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.add_main_widget(self.errors_ol)
-        self.errors_ol.connect('double-click', self._on_errors_double_clicked)
-        self.errors_ol.show_all()
-        self.sort_combo = AttrSortCombo(
-            self.errors_ol,
-            [
-                ('lineno', _('Line Number')),
-                ('message', _('Message')),
-                ('type_', _('Type')),
-            ],
-            'lineno',
-        )
-        self.sort_combo.show()
-        self.add_main_widget(self.sort_combo, expand=False)
 
     def clear_nodes(self):
         self.errors_ol.clear()
+
+    def _on_errors_ol_selection_changed(self, ol, item):
+        if not item:
+            return
+        self._last_selected = (self.document, item.lineno)
 
     def _on_errors_double_clicked(self, ol, item):
         self.svc.boss.editor.cmd('goto_line', line=item.lineno)

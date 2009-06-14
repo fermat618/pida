@@ -41,6 +41,9 @@ PRIO_LOW = PRIO_DEFAULT + 40
 
 
 class BaseDocumentHandler(object):
+    """
+    Base class for all language plugins
+    """
 
     #__metaclass__ = LanguageMetaclass
     priority = LANG_PRIO.DEFAULT
@@ -58,7 +61,7 @@ class BaseDocumentHandler(object):
         """
         Returns a unique id for this class as a string to identify it again
         """
-        return "%s.%s" %(cls.__module__, cls.__name__)
+        return "%s.%s" % (cls.__module__, cls.__name__)
 
     @property
     def uid(self):
@@ -99,6 +102,12 @@ class BaseDocumentHandler(object):
         return cls.priority
 
 class BaseCachedDocumentHandler(BaseDocumentHandler):
+    """
+    Default cache implementation for Languge Plugins.
+    
+    The cache is valid until the file is changed on disk
+    """
+    
     def _default_cache(self, fnc):
         """
         Default implementation of outline cache.
@@ -138,9 +147,15 @@ class Outliner(BaseCachedDocumentHandler):
     filter_type = ()
 
     def get_outline_cached(self):
+        """
+        Returns a cached iterator of OutlineItems
+        """
         return self._default_cache(self.get_outline)
 
     def get_outline(self):
+        """
+        Returns a fresh computed iterator of OutlineItems
+        """
         raise NotImplementedError('Outliner must define get_outline')
 
 
@@ -148,9 +163,15 @@ class Validator(BaseCachedDocumentHandler):
 
 
     def get_validations_cached(self):
+        """
+        Returns a cached iterator of ValidatorItems
+        """
         return self._default_cache(self.get_validations)
 
     def get_validations(self):
+        """
+        Returns a fresh computed iterator of ValidatorItems
+        """
         raise NotImplementedError('Validator must define get_validations')
 
 class Definer(BaseDocumentHandler):
@@ -218,7 +239,7 @@ class LanguageInfo(object):
     comment_line = []
     comment_start = []
     comment_end = []
-    
+
     # i think most languages are
     case_sensitive = True
 
@@ -230,6 +251,26 @@ class LanguageInfo(object):
                 'word':          self.word,
                 'attributerefs': self.attributerefs,
                }
+
+class TooManyResults(Exception):
+    """
+    Indicates that the Outliner had to many suggestions returned.
+    
+    This will cause the cache to be cleared and will cause a rerun of the
+    get_outliner on the next character entered
+    
+    @base: base string used
+    @expect_length: integer of additional characters needed so the Exception
+                    won't happen again
+    """
+    def __init__(self, base, expected_length=None):
+        super(TooManySuggestions, self).__init__()
+        self.base = base
+        if expected_length is None:
+            self.expected_length = len(base)+1
+        else:
+            self.expected_length = expected_length
+
 
 class Completer(BaseDocumentHandler):
 
@@ -264,7 +305,8 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
         # register all language info classes
         for lname in all_langs:
             if self.svc.language_info is not None:
-                self.subscribe_foreign('language', 'info', lname, self.svc.language_info)
+                self.subscribe_foreign('language', 'info', lname, 
+                                       self.svc.language_info)
 
 
         for factory_name, feature in mapping.iteritems():
