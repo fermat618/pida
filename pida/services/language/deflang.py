@@ -328,7 +328,7 @@ DEFMAPPING = {
           'mime': ('text/x-java',),
           'section': 'Sources'},
  'Javascript': {'alias': ('js', 'javascript'),
-                'glob': ('*.js',),
+                'glob': ('*.js', '*.json'),
                 'human': 'JavaScript',
                 'mime': ('application/x-javascript',
                          'application/javascript',

@@ -30,6 +30,7 @@ from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
 
 from pida.utils.puilder.view import PuilderView
+from pida.utils.gthreads import AsyncTask
 
 # locale
 from pida.core.locale import Locale
@@ -161,6 +162,11 @@ class ProjectEventsConfig(EventsConfig):
         self.subscribe_foreign('contexts', 'show-menu', self.show_menu)
         self.subscribe_foreign('contexts', 'menu-deactivated',
             self.menu_deactivated)
+        self.subscribe_foreign('buffer', 'document-saved',
+            self.on_document_saved)
+
+    def on_document_saved(self, document):
+        self.svc.update_index_file(document.filename)
 
     def editor_started(self):
         self.svc.set_last_project()
@@ -269,6 +275,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_remove_directory,
         )
 
+        self.create_action(
+            'project_refresh',
+            TYPE_NORMAL,
+            _('Refresh Filelist'),
+            _('Refreshes the file cache of the project'),
+            gtk.STOCK_REFRESH,
+            self.on_project_refresh,
+        )
+
     def on_project_remove(self, action):
         self.svc.remove_current_project()
 
@@ -321,6 +336,9 @@ class ProjectActionsConfig(ActionsConfig):
             cy = py+int(ph / 2)
             return cx, cy, True
         self._popupmenu.popup(None, None, center, 0, 0)
+
+    def on_project_refresh(self, action):
+        self.svc.update_index()
 
 
 class ProjectWindowConfig(WindowConfig):
@@ -435,6 +453,7 @@ class ProjectService(Service):
 
     def start(self):
         self._projects = []
+        self._update_task = None
         self._running_targets = defaultdict(list)
         self.set_current_project(None)
         ###
@@ -443,6 +462,10 @@ class ProjectService(Service):
         self._read_options()
 
         acts = self.boss.get_service('window').actions
+
+    def stop(self):
+        if self._current:
+            self._current.save_cache()
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
@@ -631,7 +654,30 @@ class ProjectService(Service):
         if self._current:
             return self._current.name
         return None
-        
+
+    def update_index_file(self, path):
+        """
+        Updates the index of one file
+        """
+        if self._current:
+            self._current.index_path(path)
+
+    def update_index(self):
+        """
+        Updates the project cache database
+        """
+        if self._current and not self._update_task:
+            self.notify_user(_("Update started"), title=_("Project"))
+            def update_done(*args):
+                self.notify_user(_("Update complete"), title=_("Project"))
+                self._current.save_cache()
+                self._update_task = None
+
+            self._update_task = AsyncTask(
+                        work_callback=self._current.index, 
+                        loop_callback=update_done)
+            self._update_task.start(recrusive=True, rebuild=True)
+            
 
 
 # Required Service attribute for service loading

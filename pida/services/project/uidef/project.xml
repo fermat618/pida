@@ -24,6 +24,8 @@
         <placeholder name="p3"/>
         <separator />
         <placeholder name="p4">
+        <menuitem action="project_refresh" name="project_refresh" />
+        <separator />
         <menuitem action="project_properties" name="project_properties" />
         </placeholder>
         </menu>

@@ -46,3 +46,32 @@ class DocumentTest(TestCase):
                          self.doctypes['XmlDjango'])
         self.assertEqual(self.doctypes.get_fuzzy('xml+dJanGo'),
                          self.doctypes['XmlDjango'])
+
+    def test_filename(self):
+        self.build_doctypes()
+        self.assertEqual(self.doctypes.type_by_filename('source.c'), 
+                         self.doctypes['C'])
+        self.assertEqual(self.doctypes.type_by_filename('source.h'), 
+                         self.doctypes['C'])
+        self.assertEqual(self.doctypes.type_by_filename('source.cpp'), 
+                         self.doctypes['Cpp'])
+        self.assertEqual(self.doctypes.type_by_filename('LICENSE'), 
+                         None)
+        self.assertEqual(self.doctypes.type_by_filename('some.tk'), 
+                         self.doctypes['Tcl'])
+        self.assertEqual(self.doctypes.type_by_filename('some.tcl'), 
+                         self.doctypes['Tcl'])
+        self.assertEqual(self.doctypes.type_by_filename('some.c.tcl'), 
+                         self.doctypes['Tcl'])
+        self.assertEqual(self.doctypes.type_by_filename('sources.list'), 
+                         self.doctypes['SourcesList'])
+        self.assertEqual(self.doctypes.type_by_filename('1sources.list'), 
+                         None)
+        self.assertEqual(self.doctypes.type_by_filename('sources.list_'), 
+                         None)
+        self.assertEqual(self.doctypes.type_by_filename('makefile.am'), 
+                         self.doctypes['Makefile'])
+        self.assertEqual(self.doctypes.type_by_filename('Makefile'), 
+                         self.doctypes['Makefile'])
+        self.assertEqual(self.doctypes.type_by_filename('Makefile.in'), 
+                         self.doctypes['Makefile'])

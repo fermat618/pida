@@ -22,6 +22,9 @@ def get_relative_path(from_path, to_path):
             else:
                 return None
         return final_list
+    elif to_list == from_list:
+        # the relative path between the same paths is an empty sequence
+        return []
     else:
         return None
 

@@ -11,7 +11,14 @@
 
 from glob import fnmatch
 import charfinder
+from collections import defaultdict
 
+def ensure_list(data):
+    if not isinstance(data, (list, tuple)):
+        return (data,)
+    if not data:
+        return []
+    return data
 
 class DocType(object):
     """Represents a type of document. Like a python sourcecode file, a xml
@@ -24,9 +31,9 @@ class DocType(object):
                  mimes = None, section = 'Others'):
         self.internal = internal
         self.human = human
-        self.aliases = aliases and list(aliases) or []
-        self.extensions = extensions and list(extensions) or []
-        self.mimes = mimes and list(mimes) or []
+        self.aliases = ensure_list(aliases)
+        self.extensions = ensure_list(extensions)
+        self.mimes = ensure_list(mimes)
         self.section = section
         # the support counter tracs how much support this document type gets
         # 0 means that he is currently not supported by something special
@@ -64,8 +71,8 @@ class TypeManager(dict):
     """
 
     def __init__(self):
-        self._globs = {}
-        self._mimetypes = {}
+        self._globs = defaultdict(list)
+        self._mimetypes = defaultdict(list)
 
     def add(self, doctype):
         if self.has_key(doctype.internal):
@@ -73,10 +80,7 @@ class TypeManager(dict):
         self[doctype.internal] = doctype
         for ext in doctype.extensions:
             if ext:
-                if self._globs.has_key(ext):
-                    self._globs[ext].append(doctype)
-                else:
-                    self._globs[ext] = [doctype]
+                self._globs[ext].append(doctype)
         # we fill the list of known mimetypes as we see them
         for mime in doctype.mimes:
             charfinder.text_mime.add(mime)
@@ -121,6 +125,8 @@ class TypeManager(dict):
                     best_glob = test
                     best_list += self._globs[test]
 
+        if best_glob == '':
+            return None
         return self._globs[best_glob][0]
         
         if len(best_list) > 1:
