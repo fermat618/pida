@@ -13,6 +13,7 @@ def test_loaded_event():
     boss = Mock()
     
     project_service = ProjectService(boss)
+    project_service.started = False
     project_service.create_all()
     project_service.start()
     #XXX: mock mimicing the result of project_service.pre_start
