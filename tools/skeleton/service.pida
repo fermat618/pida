@@ -1,0 +1,7 @@
+Name: {{name}}
+Author: Your Name
+Version: 0.1
+Depends: pida>=0.6
+Category: 
+
+Here the description

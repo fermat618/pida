@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 
-# Copyright (c) 2007 The PIDA Project
+# Copyright (c) {{year}} {{author}}
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,10 @@
 from pida.utils.testing.mock import Mock
 from unittest import TestCase
 
-class SkeletonTest(TestCase):
+class {{classprefix}}Test(TestCase):
 
-    def test_sekeleton(self):
+    def test_plugin(self):
         pass
-
-
-
 
 
 
