@@ -191,9 +191,9 @@ class Qopen(Service):
 
     #features_config = QopenFeaturesConfig
     actions_config = QopenActionsConfig
-    #options_config = QopenOptionsConfig
+    options_config = QopenOptionsConfig
     #events_config = QopenEventsConfig
-
+    label = "QOpen"
 
     def pre_start(self):
         self._view = None
