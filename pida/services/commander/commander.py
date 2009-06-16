@@ -569,7 +569,7 @@ class TerminalView(PidaView):
 
     def _save_cwd(self):
         try:
-            self._last_cwd = ostools.get_path(self._pid)
+            self._last_cwd = ostools.get_cwd(self._pid)
             return True
         except (ostools.NoSuchProcess, ostools.AccessDenied):
             return False
