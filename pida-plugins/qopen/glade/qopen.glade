@@ -1,0 +1,70 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="qopen">
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <child>
+            <widget class="GtkVBox" id="vbox1">
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkComboBoxEntry" id="filter">
+                        <property name="can_default">True</property>
+                        <property name="has_default">True</property>
+                        <property name="has_tooltip">True</property>
+                        <property name="tooltip_markup" context="yes" translatable="yes">Search for files in the project:
+#Type - Filetype
+!filename - Basename of file
+
+Arguments are space seperated and AND linked</property>
+                        <property name="tooltip_text" context="yes" translatable="yes">Search for files in the project:
+#Type - Filetype
+!filename - Basename of file
+
+Arguments are space seperated and AND linked</property>
+                        <property name="visible">True</property>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="ObjectList" id="olist">
+                        <property name="visible">True</property>
+                        <property name="vscrollbar_policy">automatic</property>
+                    </widget>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkHButtonBox" id="hbuttonbox1">
+                        <property name="layout_style">spread</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkButton" id="button_close">
+                                <property name="label">gtk-close</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="button_open">
+                                <property name="label">gtk-open</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>

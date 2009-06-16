@@ -9,7 +9,7 @@ from unittest import TestCase
 class TestParser(object):
     pass
 
-class DocumentTest(TestCase):
+class DoctypeTest(TestCase):
 
     def build_doctypes(self):
         #self.assertEqual(_DEFMAPPING.keys().sort(), Manager.keys().sort())
@@ -46,6 +46,18 @@ class DocumentTest(TestCase):
                          self.doctypes['XmlDjango'])
         self.assertEqual(self.doctypes.get_fuzzy('xml+dJanGo'),
                          self.doctypes['XmlDjango'])
+
+    def test_fuzzy_list(self):
+        self.build_doctypes()
+        self.assertEqual(self.doctypes.get_fuzzy_list('C'), [self.doctypes['C']])
+        self.assertEqual(self.doctypes.get_fuzzy_list('Cpp'), [self.doctypes['Cpp']])
+        self.assertEqual(self.doctypes.get_fuzzy_list('C'), [self.doctypes['C']])
+        self.assertEqual(self.doctypes.get_fuzzy_list('pyThoN'),
+                         [self.doctypes['Python']])
+        self.assertEqual(self.doctypes.get_fuzzy_list('py', True),
+                         [self.doctypes['PythonConsole'], 
+                         self.doctypes['PythonTraceback'], 
+                         self.doctypes['Python']])
 
     def test_filename(self):
         self.build_doctypes()

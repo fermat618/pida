@@ -168,4 +168,26 @@ class TypeManager(dict):
                any((pattern == x.lower() for x in lang.aliases)):
                 return lang
 
+    def get_fuzzy_list(self, pattern, substr=False):
+        """
+        Returns a list of fuzzy matchei to the pattern provided.
+        A match is if any alias, the internal or human name
+        match in lower case
+
+        @pattern: string
+        @substr: match even if substr is true
+        """
+        rv = []
+        import operator
+        if substr:
+            op = operator.contains
+        else:
+            op = operator.eq
+        pattern = pattern.lower()
+        for lang in self.itervalues():
+            if op(lang.internal.lower(), pattern) or \
+               op(lang.human.lower(), pattern) or \
+               any((op(x.lower(), pattern) for x in lang.aliases)):
+                rv.append(lang)
+        return rv
 

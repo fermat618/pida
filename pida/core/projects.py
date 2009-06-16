@@ -36,7 +36,8 @@ DATA_DIR = ".pida-metadata"
 CACHE_NAME = "FILECACHE"
 
 RESULT = Enumeration("RESULT",
-            ("YES", "NO", "YES_NOCHILDS", "NO_NOCHILDS"))
+            ("YES", "NO", "YES_NOCHILDS", "NO_NOCHILDS",
+             "ABORT"))
 
 class FileInfo(object):
     def __init__(self, path, relpath):
@@ -334,6 +335,9 @@ class Project(Log):
 
             if res == RESULT.NO_NOCHILDS or res == RESULT.YES_NOCHILDS:
                 skip = "%s%s" % (path, os.path.sep)
+
+            if res == RESULT.ABORT:
+                break
 
 
     def query_basename(self, filename, glob=False, files=True, dirs=False, 

@@ -515,6 +515,7 @@ class ProjectService(Service):
         self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
             project.reload()
+            project.load_cache()
             self.emit('project_switched', project=project)
             self.update_execution_menus()
             self.project_properties_view.set_project(project)
