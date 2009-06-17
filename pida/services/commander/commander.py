@@ -549,7 +549,7 @@ class TerminalView(PidaView):
 
     def on_commit_python(self, term, data, datalen):
         if data == '\x03':
-            ostool.kill_pid(self._pid, 2)
+            ostools.kill_pid(self._pid, 2)
 
     def on_window_title_changed(self, term):
         self._title.set_text(term.get_window_title())
