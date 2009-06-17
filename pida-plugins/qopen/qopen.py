@@ -25,7 +25,9 @@ from pida.core.options import OptionsConfig
 from pida.ui.views import PidaGladeView, WindowConfig
 from pida.services.language import DOCTYPES
 from pida.core.projects import RESULT
+from pida.utils.gthreads import gcall
 import time
+
 
 # locale
 from pida.core.locale import Locale
@@ -56,6 +58,9 @@ class QOpenView(PidaGladeView):
         self.olist.set_selection_mode(gtk.SELECTION_MULTIPLE)
         self.filter.child.connect("changed", self.on_filter_changed)
         self.filter.child.connect("activate", self.on_filter_activate)
+        self.filter.child.connect("key-press-event", self.on_filter_keypress)
+        #self.toplevel.connect_after("map", self.on_show)
+        self.filter.connect_after("map", self.on_show)
 
     def set_filter(self, text, time_check=None):
         if time_check and self.last_entered > time_check:
@@ -109,6 +114,19 @@ class QOpenView(PidaGladeView):
 
         return False
 
+    def on_show(self, *args):
+        gcall(self.filter.child.grab_focus)
+
+    def on_olist__key_press_event(self, widget, event):
+        if event.keyval == gtk.keysyms.Escape and self.pane.get_params().detached:
+            self.can_be_closed()
+
+    def on_filter_keypress(self, widget, event):
+        if event.keyval == gtk.keysyms.Tab and len(self.olist):
+            gcall(self.olist.grab_focus)
+        if event.keyval == gtk.keysyms.Escape and self.pane.get_params().detached:
+            self.can_be_closed()
+
     def on_filter_activate(self, *args):
         if len(self.olist):
             self.svc.open(self.olist[0])
@@ -127,6 +145,9 @@ class QOpenView(PidaGladeView):
             self.svc.open(item)
         if self.pane.get_params().detached:
             self.on_button_close__clicked(button)
+
+    def can_be_closed(self):
+        self.svc.boss.cmd('window', 'remove_view', view=self)
 
     def on_button_close__clicked(self, button):
         self.svc.boss.cmd('window', 'remove_view', view=self)
@@ -208,8 +229,12 @@ class Qopen(Service):
     def show_qopen(self):
         if not self._view:
             self._view = QOpenView(self)
-        self.boss.cmd('window', 'add_detached_view', 
-                      paned='Buffer', view=self._view)
+        if not self.boss.cmd('window', 'is_added', view=self._view):
+            self.boss.cmd('window', 'add_detached_view', 
+                          paned='Buffer', view=self._view,
+                          )
+        else:
+            self.boss.cmd('window', 'present_view', view=self._view)
 
     def open(self, item):
         project = self.boss.cmd('project', 'get_current_project')

@@ -14,7 +14,7 @@ from pida.core.environment import pida_home
 # being used.
 try:
     import moo
-    from moo.utils import BigPaned, PaneLabel, PaneParams, Paned
+    from moo.utils import BigPaned, PaneLabel, PaneParams, Paned, Pane
     from moo.utils import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     version = moo.version.split('.')
     if ((int(version[0]) > 0) or
@@ -25,7 +25,7 @@ try:
         use_old = True
 
 except ImportError:
-    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams, Paned
+    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams, Paned, Pane
     from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
@@ -95,6 +95,15 @@ class PidaPaned(BigPaned):
             if present:
                 gcall(self.present_pane, view.get_toplevel())
             self.show_all()
+
+    def __contains__(self, item):
+        if not isinstance(item, Pane):
+            item = item.pane
+        for paned in self.get_all_paneds(True):
+            for pane in paned.list_panes():
+                if pane == item:
+                    return True
+        return False
 
     def remove_view(self, view):
         # remove the default handler and fire the remove handler

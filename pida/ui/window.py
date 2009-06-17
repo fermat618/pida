@@ -198,6 +198,8 @@ class PidaWindow(Window):
         else:
             self._statusbar.hide_all()
 
+    def __contains__(self, item):
+        return self.paned.__contains__(item)
 
 class WorkspaceWindow(GladeDelegate):
     gladefile = 'workspace_select'

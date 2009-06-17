@@ -108,6 +108,9 @@ class WindowCommandsConfig(CommandsConfig):
         self.svc.window.present_view(view)
         self.svc.save_state()
 
+    def is_added(self, view):
+        return view in self.svc.window
+
 class WindowActionsConfig(ActionsConfig):
 
     def create_actions(self):
