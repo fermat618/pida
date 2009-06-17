@@ -144,7 +144,7 @@ class KodersView(PidaView):
 class KodersActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        KodersWindowConfig.action = self.create_action(
             'show_koders',
             TYPE_REMEMBER_TOGGLE,
             _('Koders Viewer'),

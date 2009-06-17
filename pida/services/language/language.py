@@ -332,7 +332,7 @@ class LanguageActionsConfig(ActionsConfig):
             self.on_type_menu,
         )
 
-        self.create_action(
+        ValidatorConfig.action = self.create_action(
             'show_validator',
             TYPE_REMEMBER_TOGGLE,
             _('_Validator'),
@@ -341,7 +341,7 @@ class LanguageActionsConfig(ActionsConfig):
             self.on_show_validator,
         )
 
-        self.create_action(
+        OutlinerConfig.action = self.create_action(
             'show_outliner',
             TYPE_REMEMBER_TOGGLE,
             _('_Outliner'),

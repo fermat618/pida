@@ -111,7 +111,7 @@ class LibraryView(PidaGladeView):
 class LibraryActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        LibraryWindowConfig.action = self.create_action(
             'show_library',
             TYPE_REMEMBER_TOGGLE,
             _('Documentation Library'),

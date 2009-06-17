@@ -394,7 +394,7 @@ class NotifyOptionsConfig(OptionsConfig):
 class NotifyActionsConfig(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        NotifyWindowConfig.action = self.create_action(
             'show_notify',
             TYPE_REMEMBER_TOGGLE,
             _('Show notification _history'),

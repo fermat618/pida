@@ -171,7 +171,7 @@ class QopenOptionsConfig(OptionsConfig):
 class QopenActionsConfig(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        QopenWindowConfig.action = self.create_action(
             'qopen_show',
             TYPE_NORMAL,
             _('QOpen'),

@@ -139,7 +139,7 @@ class RfcView(PidaView):
 class RfcActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        RfcWindowConfig.action = self.create_action(
             'show_rfc',
             TYPE_REMEMBER_TOGGLE,
             _('Rfc Viewer'),

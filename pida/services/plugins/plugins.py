@@ -284,7 +284,7 @@ class PluginsView(PidaGladeView):
 
 class PluginsActionsConfig(ActionsConfig):
     def create_actions(self):
-        self.create_action(
+        PluginsWindowConfig.action = self.create_action(
             'show_plugins',
             TYPE_TOGGLE,
             _('Plugins manager'),

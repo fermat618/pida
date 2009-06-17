@@ -125,7 +125,7 @@ def trac_report(base_address, report_id, callback, auth):
 class TracActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        TracWindowConfig.action = self.create_action(
             'show_trac',
             TYPE_REMEMBER_TOGGLE,
             _('Trac Viewer'),

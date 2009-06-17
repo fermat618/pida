@@ -30,8 +30,7 @@ _ = locale.gettext
 
 class ActionWindowMapping(list):
     """
-    this maps language features
-    it wont handle priorities 
+    Specialised mapping for persitant shortcuts on plugin windows
     """
     def __init__(self, svc):
         self.svc = svc
@@ -63,6 +62,7 @@ class ActionWindowMapping(list):
             config.default_shortcut
         )
         act.key = config.key
+        act.visible_action = config.action
         self._actions[config.key] = act
         self.svc.actions.set_value(keya, curshort)
         # make the shortcuts update to reflect change
@@ -205,6 +205,9 @@ class WindowActionsConfig(ActionsConfig):
         )
 
     def on_focus_window(self, action):
+        if action.visible_action and isinstance(action.visible_action, 
+                                          (TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE)):
+                action.visible_action.set_active(True)
         self.svc.present_key_window(action.key)
 
     def on_windows(self, action):

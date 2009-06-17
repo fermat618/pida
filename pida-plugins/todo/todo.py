@@ -86,7 +86,7 @@ class TodoActionsConfig(ActionsConfig):
 
     def create_actions(self):
         #XXX: blah
-        self.create_action(
+        TodoWindowConfig.action = self.create_action(
             'show_todo',
             TYPE_REMEMBER_TOGGLE,
             _('Todo Viewer'),

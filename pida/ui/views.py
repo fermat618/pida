@@ -167,4 +167,4 @@ class WindowConfig(object):
     label_text = ""
     description = ""
     default_shortcut = ""
-
+    action = None

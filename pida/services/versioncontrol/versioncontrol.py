@@ -331,7 +331,7 @@ class VersioncontrolCommandsConfig(CommandsConfig):
 class VersionControlActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        VersioncontrolLogWindowConfig.action = self.create_action(
             'show_vc_log',
             TYPE_REMEMBER_TOGGLE,
             _('Version Control Log'),

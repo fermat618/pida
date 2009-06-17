@@ -222,7 +222,7 @@ class SearchEvents(EventsConfig):
 class SearchActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        SearchWindowConfig.action = self.create_action(
             'show_search',
             TYPE_REMEMBER_TOGGLE,
             _('File Search'),

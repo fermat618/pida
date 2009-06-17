@@ -185,7 +185,7 @@ class ChecklistView(PidaView):
 class ChecklistActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        ChecklistWindowConfig.action = self.create_action(
             'show_checklist',
             TYPE_REMEMBER_TOGGLE,
             _('Checklist Viewer'),

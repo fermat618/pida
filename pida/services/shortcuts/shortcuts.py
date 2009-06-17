@@ -215,7 +215,7 @@ class ShortcutsEventConfig(EventsConfig):
 class ShortcutsActionsConfig(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        WindowConfig.action = self.create_action(
             'show_shortcuts',
             TYPE_TOGGLE,
             _('Edit Shortcuts'),

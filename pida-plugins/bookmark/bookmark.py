@@ -224,7 +224,7 @@ class BookmarkView(PidaView):
 class BookmarkActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        BookmarkWindowConfig.action = self.create_action(
             'show_bookmark',
             TYPE_REMEMBER_TOGGLE,
             _('Bookmark Viewer'),

@@ -127,7 +127,7 @@ class ManView(PidaView):
 class ManActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        ManWindowConfig.action = self.create_action(
             'show_man',
             TYPE_REMEMBER_TOGGLE,
             _('Man Viewer'),

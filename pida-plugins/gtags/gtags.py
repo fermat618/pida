@@ -239,7 +239,7 @@ class GtagsCompleter(Completer):
 class GtagsActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        GtagsWindowConfig.action = self.create_action(
             'show_gtags',
             TYPE_REMEMBER_TOGGLE,
             _('Gtags Viewer'),
