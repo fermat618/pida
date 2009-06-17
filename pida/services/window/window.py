@@ -9,7 +9,6 @@ import gtk
 import string
 import simplejson
 from functools import partial
-import collections
 
 # PIDA Imports
 from pida.core.service import Service
@@ -91,6 +90,10 @@ class WindowCommandsConfig(CommandsConfig):
         self.add_view(paned, view)
         self.detach_view(view, size)
         self.svc.save_state()
+
+    def close_focus_pane(self):
+        pane = self.svc.window.get_focus_pane()
+        pane.view.can_be_closed()
 
     def remove_view(self, view):
         self.svc.window.remove_view(view)
@@ -182,6 +185,16 @@ class WindowActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'close_pane',
+            TYPE_NORMAL,
+            _('Close Pane'),
+            _('Close the current active pane'),
+            gtk.STOCK_CLOSE,
+            self.on_close_pane,
+            '<Control>F4',
+        )
+
+        self.create_action(
             'WindowMenu',
             TYPE_MENUTOOL,
             _('Win_dows'),
@@ -204,6 +217,9 @@ class WindowActionsConfig(ActionsConfig):
 
     def on_switch_prev_term(self, action):
         self.svc.window.switch_prev_view('Terminal')
+
+    def on_close_pane(self, action):
+        self.svc.cmd('close_focus_pane')
 
     def on_fullscreen(self, action):
         self.svc.set_fullscreen(action.get_active())

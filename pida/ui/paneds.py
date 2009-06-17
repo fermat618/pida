@@ -14,7 +14,7 @@ from pida.core.environment import pida_home
 # being used.
 try:
     import moo
-    from moo.utils import BigPaned, PaneLabel, PaneParams
+    from moo.utils import BigPaned, PaneLabel, PaneParams, Paned
     from moo.utils import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     version = moo.version.split('.')
     if ((int(version[0]) > 0) or
@@ -25,7 +25,7 @@ try:
         use_old = True
 
 except ImportError:
-    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams
+    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams, Paned
     from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
@@ -149,6 +149,16 @@ class PidaPaned(BigPaned):
         return False
 
 
+    def get_focus_pane(self):
+        last_pane = getattr(self, 'focus_child', None)
+        if not isinstance(last_pane, Paned):
+            return
+        while True:
+            child_pane = getattr(last_pane, 'focus_child', None)
+            if isinstance(child_pane, Paned):
+                last_pane = child_pane
+            else:
+                return last_pane.get_open_pane()
 
     def switch_next_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)

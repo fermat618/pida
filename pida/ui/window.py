@@ -146,6 +146,9 @@ class PidaWindow(Window):
     def add_view(self, paned, view, removable=True, present=False, detachable=True):
         self.paned.add_view(paned, view, removable, present, detachable=detachable)
 
+    def get_focus_pane(self):
+        return self.paned.get_focus_pane()
+
     def remove_view(self, view):
         self.paned.remove_view(view)
 
