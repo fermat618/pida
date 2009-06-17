@@ -13,6 +13,7 @@ from functools import partial
 
 import gtk
 import gobject
+import os
 
 from kiwi.ui.objectlist import Column
 from kiwi.ui.objectlist import ObjectList, COL_MODEL
@@ -555,3 +556,61 @@ class BrowserView(PidaGladeView):
         
 #    def read_options(self):
 #        return {}
+
+class DefinitionView(PidaGladeView):
+    """
+    List of Definitions if language plugin returns more then one result
+    """
+
+    key = 'language.definition'
+
+    gladefile = 'definition'
+    #icon_name = 'python-icon'
+    label_text = _('Definition')
+
+
+    def create_ui(self):
+        self._project = None
+        self.list.set_columns(
+                [
+                    Column('icon_name', title=' ', width=35, use_stock=True,
+                            expand=False),
+                    Column('signature', data_type=str, title=_('Symbol'),
+                           format_func=self.format_signature,
+                           expander=True, searchable=True),
+                    Column('file_name', data_type=str, title=_('Filename'),
+                           format_func=self.format_path,
+                           expander=True, searchable=True),
+                    Column('line', data_type=int, title=_('Line'))
+                ]
+        )
+    def grab_focus(self):
+        self.list.grab_focus()
+        if len(self.list):
+            self.list.select(self.list[0], scroll=True)
+            self.list.get_treeview().grab_focus()
+
+    def format_signature(self, value):
+        if value:
+            return value[:80]
+        return ''
+
+    def format_path(self, path):
+        if not self._project:
+            return path
+        comps = self._project.get_relative_path_for(path)
+        if comps:
+            return os.path.sep.join(comps)
+        return path
+
+    def set_list(self, lst):
+        self._project = self.svc.boss.cmd('project', 'get_current_project')
+        self.list.clear()
+        for i in lst:
+            self.list.append(i)
+
+    def on_list__row_activated(self, widget, row):
+        self.svc.use_definition(row)
+
+    def on_list__double_click(self, widget, row):
+        self.svc.use_definition(row)

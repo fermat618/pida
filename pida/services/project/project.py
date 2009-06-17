@@ -461,8 +461,6 @@ class ProjectService(Service):
         self.project_properties_view = ProjectSetupView(self)
         self._read_options()
 
-        acts = self.boss.get_service('window').actions
-
     def stop(self):
         if self._current:
             self._current.save_cache()

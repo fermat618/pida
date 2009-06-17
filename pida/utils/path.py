@@ -49,6 +49,27 @@ def walktree(top = ".", depthfirst = True, skipped_directory = []):
         names = [name for name in names if name not in skipped_directory]
         yield top, names
 
+def get_line_from_file(file_name, line=None, offset=None):
+    """
+    Returns the line of a file. It removes trailing newlines and whitespaces.
+    
+    @line: linenumber 
+    @offset: offset of file
+    """ 
+    if line is None and offset is None:
+        raise ValueError('At least on of line or offset must be set')
+    fp = open(file_name)
+    if line is not None:
+        i = 0
+        for fline in fp:
+            i += 1
+            if i == line:
+                return fline.strip()
+    else:
+        fp.seek(offset)
+        return fp.readline().strip()
+        
+    return None
 
 if __name__ == '__main__':
     print get_relative_path('/a/b/c/d', '/a/b/c1/d1')

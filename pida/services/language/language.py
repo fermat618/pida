@@ -53,8 +53,8 @@ LEXPORT = EXPORT(suffix='language')
 # we have to put our type database here, as plugins may need it long before
 # registering
 from .__init__ import DOCTYPES
-from .gui import (ValidatorView, BrowserView, PriorityEditorView, LanguageEntry,
-                 LanguagePriorityView)
+from .gui import (ValidatorView, BrowserView, LanguageEntry,
+                 LanguagePriorityView, DefinitionView)
 
 def get_value(tab, key):
     return tab.get(key, None)
@@ -619,16 +619,34 @@ class Language(LanguageService):
         res = definer.get_definition(doc.content,
                                      self.boss.editor.get_cursor_position())
 
+        if isinstance(res, (list, tuple)):
+            deflist = DefinitionView(self)
+            deflist.set_list(res)
+            self.boss.cmd('window', 'add_view', paned='Terminal', 
+                                                view=deflist)
+            gcall(deflist.grab_focus)
+        elif res:
+            self.use_definition(res)
+        else:
+            self.boss.get_service('notify').notify(
+            title=_('Goto Definition'),
+            data=_('No definition found'), timeout=2000)
+
+
+    def use_definition(self, res):
+        doc = self.boss.cmd('buffer', 'get_current')
         if res and res.offset is not None:
             if res.file_name == doc.filename:
                 self.boss.editor.set_cursor_position(res.offset)
             else:
                 self.boss.cmd('buffer', 'open_file', file_name=res.file_name, offset=res.offset)
             gcall(self.boss.editor.grab_focus)
-        else:
-            self.boss.get_service('notify').notify(
-            title=_('Goto Definition'),
-            data=_('No definition found'), timeout=2000)
+        elif res and res.line is not None:
+            if res.file_name == doc.filename:
+                self.boss.editor.goto_line(res.line)
+            else:
+                self.boss.cmd('buffer', 'open_file', file_name=res.file_name, line=res.line)
+            gcall(self.boss.editor.grab_focus)
 
     def show_documentation(self):
         if hasattr(self.boss.editor, 'show_documentation'):
