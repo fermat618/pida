@@ -234,7 +234,11 @@ class Project(Log):
         if rpath in self._cache['paths']:
             info = self._cache['paths'][rpath]
         else:
-            info = FileInfo(path, rpath)
+            try:
+                info = FileInfo(path, rpath)
+            except OSError, err:
+                self.log.info(_("Error indexing %s:%s") % (path, err))
+                return
         info.doctype = doctype and doctype.internal or None
         self._cache["paths"][info.relpath] = info
         
