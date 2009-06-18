@@ -39,6 +39,16 @@ RESULT = Enumeration("RESULT",
             ("YES", "NO", "YES_NOCHILDS", "NO_NOCHILDS",
              "ABORT"))
 
+REFRESH_PRIORITY = Enumeration("REFRESH_PRIORITY",
+            (("PRE_FILECACHE", 400), ("FILECACHE", 350), 
+            ("POST_FILECACHE", 300), ("EARLY", 200), ("NORMAL", 100), 
+            ("LATE", 0)))
+
+
+class RefreshCall(object):
+    priority = REFRESH_PRIORITY.NORMAL
+    call = None
+
 class FileInfo(object):
     def __init__(self, path, relpath):
         self.relpath = relpath

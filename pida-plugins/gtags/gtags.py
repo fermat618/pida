@@ -40,6 +40,7 @@ from pida.utils.languages import Suggestion, LANG_PRIO
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL, ActionsConfig
+from pida.core.projects import REFRESH_PRIORITY
 from pida.ui.buttons import create_mini_button
 import subprocess
 
@@ -281,6 +282,8 @@ class GtagsUpdateThread(Thread):
     def __init__(self, svc):
         self.svc = svc
         self.run_again = True
+        self.callback = None
+        self.clean = False
         super(GtagsUpdateThread, self).__init__()
         self.daemon = True
 
@@ -288,22 +291,33 @@ class GtagsUpdateThread(Thread):
         while self.run_again:
             self.run_again = False
 
-            args, cwd = self.svc.build_args(quiet=True)
+            args, cwd = self.svc.build_args(quiet=True, clean=self.clean)
             if args:
                 self.svc.log.debug(
                             _('Run Gtags with %s in %s') %(args, cwd))
-                pid  = subprocess.Popen(args, stdin=None, 
-                                        stdout=subprocess.PIPE, 
-                                        stderr=subprocess.PIPE, 
-                                        shell=True, 
-                                        cwd=cwd, universal_newlines=True)
-                stdout, stderr = pid.communicate()
-                if pid.returncode:
-                    self.svc.log.error(
-                            _('Error executing background gtags: %s') %stderr)
+                try:
+                    pid  = subprocess.Popen(args, stdin=None, 
+                                            stdout=subprocess.PIPE, 
+                                            stderr=subprocess.PIPE, 
+                                            shell=True, 
+                                            cwd=cwd, universal_newlines=True)
+                    stdout, stderr = pid.communicate()
+                    if pid.returncode:
+                        self.svc.log.error(
+                             _('Error executing background gtags: %s') %stderr)
 
-                else:
-                    self.svc.log.info(_('Ran gtags in backgroud successfully'))
+                    else:
+                        self.svc.log.info(
+                             _('Ran gtags in backgroud successfully'))
+                except OSError, err:
+                    self.svc.log.error(
+                         _('Error running gtags %s' %err))
+
+                self.clean = False
+
+                if self.callback:
+                    self.callback()
+                    self.callback = None
 
 class GtagsWindowConfig(WindowConfig):
     key = GtagsView.key
@@ -315,7 +329,13 @@ class GtagsFeaturesConfig(LanguageServiceFeaturesConfig):
 
         self.subscribe_foreign('window', 'window-config',
             GtagsWindowConfig)
+        self.subscribe_foreign('project', 'project_refresh',
+            self.do_refresh)
 
+    def do_refresh(self, callback):
+        self.svc.project_refresh(callback)
+    
+    do_refresh.priority = REFRESH_PRIORITY.PRE_FILECACHE
 
 class GtagsOptionsConfig(OptionsConfig):
     def create_options(self):
@@ -406,7 +426,7 @@ class Gtags(LanguageService):
                 title=_('Gtags build...'),
                 eof_handler=self.build_db_finished)
 
-    def build_db_finished(self, w):
+    def build_db_finished(self, dummy):
         self._view.activate(self.have_database())
         self._view._refresh_button.set_sensitive(True)
         self.boss.cmd('notify', 'notify', title=_('Gtags'),
@@ -436,6 +456,23 @@ class Gtags(LanguageService):
         else:
             self._bg_thread = GtagsUpdateThread(self)
             self._bg_thread.start()
+
+    def project_refresh(self, callback):
+        """Runs the gtags update on project refresh"""
+        if not self.have_database():
+            return
+
+        if self._bg_thread and self._bg_thread.is_alive():
+            # mark that daemon should run again
+            self._bg_thread.run_again = True
+            self._bg_thread.callback = callback
+            self._bg_thread.clean = True
+        else:
+            self._bg_thread = GtagsUpdateThread(self)
+            self._bg_thread.callback = callback
+            self._bg_thread.clean = True
+            self._bg_thread.start()
+        
 
     def tag_search_current_word(self):
         self.boss.editor.cmd('call_with_current_word', 

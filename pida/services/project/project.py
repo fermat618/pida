@@ -11,6 +11,7 @@
 from __future__ import with_statement
 import os, sys, os.path
 from collections import defaultdict
+from functools import partial
 
 import gtk
 
@@ -30,7 +31,9 @@ from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
 
 from pida.utils.puilder.view import PuilderView
-from pida.utils.gthreads import AsyncTask
+from pida.utils.gthreads import AsyncTask, gcall
+
+from pida.core.projects import REFRESH_PRIORITY
 
 # locale
 from pida.core.locale import Locale
@@ -278,8 +281,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.create_action(
             'project_refresh',
             TYPE_NORMAL,
-            _('Refresh Filelist'),
-            _('Refreshes the file cache of the project'),
+            _('Update Project'),
+            _('Update the project caches'),
             gtk.STOCK_REFRESH,
             self.on_project_refresh,
         )
@@ -346,13 +349,38 @@ class ProjectWindowConfig(WindowConfig):
     label_text = ProjectSetupView.label_text
     description = _("Project setup window")
 
+class PriorityMap(list):
+    """
+    Sorts it's members after their priority member
+    """
+    def add(self, instance):
+        self.append(instance)
+
+        def get_prio(elem):
+            return getattr(elem, 'priority', REFRESH_PRIORITY.NORMAL)
+
+        self.sort(key=get_prio, reverse=True)
+
+
 class ProjectFeaturesConfig(FeaturesConfig):
+
+    def create(self):
+        self.publish_special(PriorityMap ,'project_refresh')
+
+        self.subscribe('project_refresh', self.do_refresh)
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'project-dir-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
             ProjectWindowConfig)
+
+    def do_refresh(self, callback):
+        self.svc._current.index(recrusive=True, rebuild=True)
+        self.svc._current.save_cache()
+        callback()
+    
+    do_refresh.priority = REFRESH_PRIORITY.FILECACHE
 
 class ProjectOptions(OptionsConfig):
 
@@ -665,18 +693,39 @@ class ProjectService(Service):
         """
         Updates the project cache database
         """
-        if self._current and not self._update_task:
-            self.notify_user(_("Update started"), title=_("Project"))
-            def update_done(*args):
-                self.notify_user(_("Update complete"), title=_("Project"))
-                self._current.save_cache()
-                self._update_task = None
+        if not self._current:
+            return
+        if self._update_task:
+            self.notify_user(_("Update already running"), title=_("Project"))
+            return
 
-            self._update_task = AsyncTask(
-                        work_callback=self._current.index, 
-                        loop_callback=update_done)
-            self._update_task.start(recrusive=True, rebuild=True)
-            
+        self.notify_user(_("Update started"), title=_("Project"))
+        
+        self._update_task = AsyncTask(
+                work_callback=self._update_job)
+        self._update_task.start()
+
+        
+        def update_done(*args):
+            self.notify_user(_("Update complete"), title=_("Project"))
+            self._current.save_cache()
+            self._update_task = None
+
+    def _update_job(self):
+        not_recalled = []
+
+        for job in self.features['project_refresh']:
+            not_recalled.append(job)
+            self.log.debug('Run update job: %s' % job)
+            def do_callback(job):
+                not_recalled.remove(job)
+                if not len(not_recalled):
+                    gcall(self.notify_user, _("Update complete"), 
+                                           title=_("Project"))
+                    self._update_task = None
+
+            job(partial(do_callback, job))
+
 
 
 # Required Service attribute for service loading
