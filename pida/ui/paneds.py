@@ -79,12 +79,7 @@ class PidaPaned(BigPaned):
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
 
             pane.props.detachable = detachable
-            #XXX: moo MooParams are not editable :(
-            oparam = pane.get_params()
-            nparam = PaneParams(keep_on_top=True, detached=oparam.detached,
-                                window_position=oparam.window_position,
-                                maximized=oparam.maximized)
-            pane.set_params(nparam)
+            self.set_params(pane, keep_on_top=True)
             view.pane = pane
             pane.view = view
             if not removable:
@@ -157,6 +152,38 @@ class PidaPaned(BigPaned):
             return True
         return False
 
+    @staticmethod
+    def set_params(pane, **kwargs):
+        """
+        Updates the parameters on a pane.
+        Keyword arguments can be one of the following:
+        
+        @keep_on_top: sets the sticky flag
+        @detached: sets if the window is detached from the main window
+        @window_position: position of the pane in detached mode
+        @maximized: ???
+        """
+        oparam = pane.get_params()
+        nparam = PaneParams(keep_on_top=oparam.keep_on_top, 
+                            detached=kwargs.get('detached', oparam.detached),
+                            window_position=kwargs.get('window_position', oparam.window_position),
+                            maximized=kwargs.get('maximized', oparam.maximized))
+        pane.set_params(nparam)
+        #OMFG don't look at this, 
+        # but changing the params does not work for keep_on_top
+        if oparam.keep_on_top != kwargs.get('keep_on_top', oparam.keep_on_top):
+            try:
+                mbuttons = pane.get_child().get_parent().get_parent().\
+                                get_children()[0].get_children()
+            except Exception:
+                # who knows...
+                return
+            if len(mbuttons) == 5 and isinstance(mbuttons[2], gtk.ToggleButton):
+                # only click works...
+                mbuttons[2].clicked()
+            elif len(mbuttons) == 3 and isinstance(mbuttons[1], gtk.ToggleButton):
+                # only click works...
+                mbuttons[2].clicked()
 
     def get_focus_pane(self):
         last_pane = getattr(self, 'focus_child', None)

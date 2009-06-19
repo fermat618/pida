@@ -96,6 +96,13 @@ class WindowCommandsConfig(CommandsConfig):
         if pane:
             pane.view.can_be_closed()
 
+    def toggle_sticky_pane(self):
+        pane = self.svc.window.get_focus_pane()
+        if pane:
+            self.svc.window.paned.set_params(
+                    pane, 
+                    keep_on_top=not pane.get_params().keep_on_top)
+
     def remove_view(self, view):
         self.svc.window.remove_view(view)
         self.svc.save_state()
@@ -199,6 +206,16 @@ class WindowActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'toggle_sticky',
+            TYPE_NORMAL,
+            _('Toggle sticky'),
+            _('Toggle the sticky button on current pane'),
+            'pin',
+            self.on_toggle_sticky,
+            '',
+        )
+
+        self.create_action(
             'WindowMenu',
             TYPE_MENUTOOL,
             _('Win_dows'),
@@ -227,6 +244,9 @@ class WindowActionsConfig(ActionsConfig):
 
     def on_close_pane(self, action):
         self.svc.cmd('close_focus_pane')
+
+    def on_toggle_sticky(self, action):
+        self.svc.cmd('toggle_sticky_pane')
 
     def on_fullscreen(self, action):
         self.svc.set_fullscreen(action.get_active())
