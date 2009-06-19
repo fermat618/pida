@@ -12,10 +12,12 @@ os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(
                                 os.path.abspath(application.__file__)))
 
 # hack the wm_class so we don't show up as run-pida.py
-import gtk.gdk, glib
-gtk.gdk.set_program_class('Pida')
-glib.set_prgname('pida')
-
+try:
+    import gtk.gdk, glib
+    gtk.gdk.set_program_class('Pida')
+    glib.set_prgname('pida')
+except ImportError:
+    pass
 
 application.main()
 
