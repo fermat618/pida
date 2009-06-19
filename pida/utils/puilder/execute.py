@@ -29,9 +29,10 @@ STDOUT = 1
 STDERR = 2
 
 class Data(unicode):
-    def __init__(self, s, fd=STDOUT):
+    __slots__ = ('fd')
+    def __init__(self, s, fd=STDOUT, errors='strict'):
         self.fd = fd
-        super(Data, self).__init__(s)
+        super(Data, self).__init__(s, errors='strict')
 
     def __repr__(self):
         return '<Data %s %s>' %(self.fd, unicode.__repr__(self))
@@ -43,7 +44,7 @@ class OutputBuffer(StringIO):
     easier to process.
     """
     def write(self, s, fd=STDOUT):
-        line = Data(s)
+        line = Data(s, errors='replace')
         line.fd = fd
         StringIO.write(self, line)
 
