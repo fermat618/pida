@@ -833,6 +833,7 @@ class Language(LanguageService):
         sections = {}
         doc = self.boss.cmd('buffer', 'get_current')
         menu = gtk.Menu()
+        act = None
         a = gtk.RadioAction('None',
                 'None',
                 'No specific document type',
@@ -864,7 +865,7 @@ class Language(LanguageService):
                 menu.add(ms)
 
             sections[target.section].add(mi)
-        if doc:
+        if doc and act:
             if doc.doctype:
                 act.set_current_value(hash(doc.doctype))
             elif doc.doctype is None:
