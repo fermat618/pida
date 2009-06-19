@@ -341,7 +341,7 @@ class ProjectActionsConfig(ActionsConfig):
         self._popupmenu.popup(None, None, center, 0, 0)
 
     def on_project_refresh(self, action):
-        self.svc.update_index()
+        self.svc.refresh_project()
 
 
 class ProjectWindowConfig(WindowConfig):
@@ -528,6 +528,7 @@ class ProjectService(Service):
                 return
         self.load_and_set_project(project_directory)
         self._save_options()
+        self.refresh_project()
 
     def create_project_file(self, project_directory):
         project_name = os.path.basename(project_directory)
@@ -689,7 +690,7 @@ class ProjectService(Service):
         if self._current:
             self._current.index_path(path)
 
-    def update_index(self):
+    def refresh_project(self):
         """
         Updates the project cache database
         """
