@@ -55,10 +55,14 @@ Mandatory Dependencies
 **VTE**
   VTE is a GTK terminal widget that is used by gnome-terminal.  PIDA uses this for many things, and since it is in most distributions that Gnome is in, we have made it an absolute requirement.
 
+**gazpacho**
+  gazpacho is a gtk ui designer, it is needed for some glade-extensions, 
+  we hope to phase it out in a future release.
+
 In the Ubuntu and Debian distributions, you should install the mandatory dependencies.  This is only necessary if you do not use the distribution version::
 
   sudo apt-get install gvim python-gnome2 python-gnome2-extras \
-  python-gtk2 python-vte python-kiwi python-setuptools python-glade2 librsvg2-common
+  python-gtk2 python-vte python-kiwi python-setuptools python-glade2 librsvg2-common gazpacho
 
 Optional Dependencies
 ~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +122,8 @@ or to be more precise::
 Installation from Source
 ------------------------
 
-**Installation is the recommended method of running PIDA.  Running from source should be reserved for people who know what they are doing.**
+**Installation is the recommended method of running PIDA for users.
+Running from source should be reserved for people intending to develop pida itself or a plugion.**
 
 To install PIDA, the following command should be run as root (or using sudo) if you are installing to a global location.  This command is run from the PIDA directory either created from the Mercurial checkout, or the stable tarball::
 
@@ -132,11 +137,15 @@ You also need to install anyvc and rope::
 Run from source
 ---------------
 
-First copy the file moo_stub.so (that was built in the build stage) from the build/ directory to a directory in your PYTHONPATH or the working directory.
+It is necessary to invoke `python setup.py build_ext -i` 
+in order to get a c-written ui extension compiled + placed in the source path.
 
 .. note::
 
-    Running from source is generally reserved for developers of PIDA, or those people who really know what they are doing. It is very useful to be able to make a change and test it immediately. It is not recommended to use this as a general execution method.
+    Running from source is generally reserved for developers of PIDA
+    or those people who really know what they are doing.
+    It is very useful to be able to make a change and test it immediately.
+    It is not recommended to use this as a general execution method.
 
 To run PIDA directly from the source, run::
 
@@ -144,15 +153,19 @@ To run PIDA directly from the source, run::
 
 .. note::
 
-   This will handle your Python PATH; it will automatically link all the plugins available in the pida-plugins directory
+   `run-pida.py` will add the plugins in the checkout to the plugin-search-path,
+   the installed executables wont do that.
 
 MS Windows
 ----------
 
-Some pointers on how to install PIDA dependencies and perform a `Windows Installation`_ can be found on the Trac_.
+Some pointers on how to install PIDA dependencies 
+and perform a `Windows Installation`_ can be found on the Trac_.
 
-.. Mac OS X
-.. --------
+Due to lack of developers on Win32 we can't maintain official support.
 
-.. FIXME.
+Mac OS X
+--------
 
+No official support yet,
+but planned support for pida with gtk based embedded editors (medit and gtksourceview).

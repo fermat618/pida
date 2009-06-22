@@ -14,5 +14,6 @@ moo/test
 .*\.pyc
 tmp
 .pida-metadata
+docs/_build
 .*\.*~
 externals

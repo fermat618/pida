@@ -2,51 +2,34 @@
 PIDA Coding Style Guidelines
 ============================
 
-First read :pep:`8` (the PEP on how to write readable Python code). The PEP gives
-a number of good insights. The PEP gives a few options on things, and I shall
-try to clarify what I prefer here. Where this document differs from :pep:`8`, you
-should use what is presented here, unless you are a zealot in which case you
-should listen to the Python people (who are cleverer than me anyway). Also
-read :pep:`20` while you are at it.
+First read :pep:`8` (the PEP on how to write readable Python code).
+The PEP gives a number of good insights.
+The PEP gives a few options on things,
+and we shall try to clarify what we prefer here.
+Where this document differs from :pep:`8`,
+you should use what is presented here,
+unless you are a zealot in which case
+you should listen to the Python people
+(who are cleverer than me anyway).
+Also read :pep:`20` while you are at it.
 
 Indenting
 ---------
 
-4 Spaces, no tabs ever ever. This is not negotiable. Emacs users please check
-your settings, somehow tabs creep into emacs-written code.
+4 Spaces, no tabs ever ever. This is not negotiable.
+
+.. note::
+
+  Emacs users please check your settings,
+  somehow tabs creep into emacs-written code.
 
 Line Width
 ----------
 
-79 characters, perhaps 78 to be safe. This is negotiable, and there are times
-when 83 character lines are acceptable. You can be the judge. I am not sure
-many people use 80-character terminals these days, so we can be a bit less
-hard-line than the PEP.
-
-You can split lines however you wish. I personally use 3 different forms of
-splitting depending on the purpose.
-
-Long lists, dicts, or many paramteres to a function::
-
-    service_base_classes =  [
-        OptionsMixin,
-        commands_mixin,
-        events_mixin,
-        bindings_mixin,
-    ]
-
-Single extra bit::
-
-    def really_long_method_or_function_name(first_parameter, second_paramater,
-        third_parameter)
-
-Or::
-
-    def really_long_method_or_function_name(first_parameter, second_paramater,
-                                            third_parameter)
-
-It all depends on the use at the time, and we should remember to keep it
-readable.
+79 characters, perhaps 78 to be safe.
+This is negotiable, and there are times when 83 character lines are acceptable.
+You can be the judge. We are not sure many people use 80-character terminals these days, 
+so we can be a bit less hard-line than the PEP.
 
 Blank Lines
 -----------
@@ -165,13 +148,6 @@ I hate magic, perhaps because I am dumb. I am really wary of using some of
 Python's shoot-me-in-the-foot techniques because I have to maintain the code,
 so. I have made these mistakes myself, and have (hopefully learned from the
 mistakes. So:
-
-Meta classes
-~~~~~~~~~~~~
-        
-Never! I have yet to see a use-case for metaclasses which did not
-relate to perverting some other library or external class. I am happy
-to be enlightened.
 
 Decorators
 ~~~~~~~~~~
