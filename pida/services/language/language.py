@@ -9,6 +9,7 @@
     :license: GPL2 or later
 """
 
+import sys
 from functools import partial
 
 import gtk
@@ -20,8 +21,7 @@ from kiwi.ui.objectlist import ObjectList, COL_MODEL
 
 from outlinefilter import FILTERMAP
 
-from pida.core.environment import plugins_dir
-from pida.core.environment import get_pixmap_path
+from pida.core.environment import plugins_dir, on_windows, get_pixmap_path
 
 from pida.core.doctype import TypeManager
 from pida.core.languages import LanguageInfo
@@ -52,6 +52,43 @@ LEXPORT = EXPORT(suffix='language')
 def get_value(tab, key):
     return tab.get(key, None)
 
+
+class SimpleLanguageMapping(dict):
+    """
+    this maps language features
+    it wont handle priorities 
+    """
+    def add(self, language, instance):
+        if language not in self:
+            #XXX: some things expect a list ?!
+            self[language] = list()
+
+        self[language].append(instance)
+
+    def remove(self, language, instance):
+        self[language].remove(instance)
+
+
+class PriorityLanguageMapping(dict):
+    """
+    this maps language features.
+    Sorts it's members after their priority member
+    """
+    def add(self, language, instance):
+        if language not in self:
+            #XXX: some things expect a list ?!
+            self[language] = list()
+
+        self[language].append(instance)
+
+        def get_prio(elem):
+            if hasattr(elem, 'priority'):
+                return elem.priority
+
+        self[language].sort(key=get_prio, reverse=True)
+
+    def remove(self, language, instance):
+        self[language].remove(instance)
 
 
 class ValidatorView(PidaView):
@@ -193,7 +230,9 @@ class BrowserView(PidaGladeView):
         self.sort_box.show()
         self.sort_vbox.pack_start(self.sort_box, expand=False)
         self.filter_model = self.source_tree.get_model().filter_new()
-        self.source_tree.get_treeview().set_model(self.filter_model)
+        #FIXME this causes a total crash on win32
+        if not on_windows:
+            self.source_tree.get_treeview().set_model(self.filter_model)
         self.filter_model.set_visible_func(self._visible_func)
         self.source_tree.get_treeview().connect('key-press-event',
             self.on_treeview_key_pressed)
@@ -352,7 +391,9 @@ class BrowserView(PidaGladeView):
                 tool_button = gtk.ToggleToolButton()
                 tool_button.set_name(str(f))
                 tool_button.set_active(self.filter_map[f])
-                tool_button.set_tooltip_text(FILTERMAP[f]['display'])
+                #FIXME no tooltip on win32
+                if not on_windows:
+                    tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled", self.on_filter_toggled,outliner)
                 im = gtk.Image()
                 im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
@@ -483,9 +524,16 @@ class LanguageActionsConfig(ActionsConfig):
 
     def on_type_menu(self, action):
         menuitem = action.get_proxies()[0]
-        menuitem.remove_submenu()
-        menuitem.set_submenu(self.svc.create_menu())
-
+        #menuitem.remove_submenu()                    # gtk2.12 or higher
+        #menuitem.set_submenu(self.svc.create_menu()) # gtk2.12 or higher
+        submenu = menuitem.get_submenu()
+        for child in submenu.get_children():
+            submenu.remove(child)
+        submenu_new =   self.svc.create_menu()
+        for child in submenu_new.get_children():
+            submenu_new.remove(child)
+            submenu.append(child)
+        
     def on_show_validator(self, action):
         if action.get_active():
             self.svc.show_validator()
@@ -541,6 +589,14 @@ class LanguageOptionsConfig(OptionsConfig):
 
 class LanguageFeatures(FeaturesConfig):
 
+    def create(self):
+        self.publish_special(
+            PriorityLanguageMapping,
+            'info', 'outliner', 'definer',
+            'validator', 'completer','documentator',
+        )
+
+
     def subscribe_all_foreign(self):
         pass
 
@@ -578,6 +634,7 @@ class LanguageEvents(EventsConfig):
 
     def on_document_type(self, document):
         self.svc.clear_document_cache(document)
+        self.svc.on_buffer_changed(document)
 
 
 class LanguageDbusConfig(DbusConfig):
@@ -594,7 +651,7 @@ class LanguageDbusConfig(DbusConfig):
     @LEXPORT(out_signature = 'a{s(as)}', in_signature = 's')
     def get_info(self, lang):
         """Returns language info"""
-        lst = self.svc.features[(lang, 'infos')]
+        lst = self.svc.features['info'].get(lang)
         if lst:
             l = lst[0]
             return l.to_dbus()
@@ -627,7 +684,7 @@ class Language(Service):
         self._view_validator = ValidatorView(self)
         self.current_type = None
         # add default language info
-        self.features.subscribe((None, 'info'), LanguageInfo)
+        self.features.subscribe('info', None, LanguageInfo)
 
     def start(self):
         acts = self.boss.get_service('window').actions
@@ -686,11 +743,12 @@ class Language(Service):
             type_ = document.doctype
             factories = ()
             if type_:
-                factories = self.features[(type_.internal, feature)]
+                factories = self.features[feature].get(type_.internal)
             if not factories:
                 # get typ unspecific factories
-                factories = self.features[(None, feature)]
+                factories = self.features[feature].get(None)
             if factories:
+                #XXX: factoring
                 handler = _get_best(factories, document)(document)
                 setattr(document, name, handler)
                 return handler

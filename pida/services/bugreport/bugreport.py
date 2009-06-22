@@ -3,6 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
+import sys
 from cgi import escape
 
 import gtk
@@ -20,11 +21,15 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
+from pida.core.environment import on_windows
 from pida.ui.views import PidaGladeView
 
-from pida.utils.launchpadder.gtkgui import PasswordDialog
-from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
-                                          report
+#FIXME causes memleak and deadlock on win32
+if not on_windows:
+    from pida.utils.launchpadder.gtkgui import PasswordDialog
+    from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
+        report
+
 from pida.utils.gthreads import AsyncTask, gcall
 
 # locale
@@ -132,7 +137,7 @@ class Bugreport(Service):
     actions_config = BugreportActions
     options_config = BugreportOptions
 
-    def pre_start(self):
+    def start(self):
         self._view = BugreportView(self)
     
     def show_report(self):

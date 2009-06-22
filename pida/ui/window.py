@@ -5,7 +5,7 @@
 """
 
 import gtk
-
+from gtk import gdk
 from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
 from kiwi.ui.views import BaseView
 from kiwi.ui.delegates import GladeDelegate
@@ -18,12 +18,23 @@ from pida.core.environment import get_uidef_path, get_pixmap_path
 from pida.core.actions import accelerator_group
 from pida.utils.gthreads import gcall
 
+from functools import wraps
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-
+def with_gdk_lock(func):
+    @wraps(func)
+    def _wrapped(*k, **kw):
+        try:
+            gdk.threads_enter()
+            func(*k, **kw)
+        finally:
+            gdk.threads_leave()
+    return _wrapped
+        
 class Window(gtk.Window):
 
     def __init__(self, boss, *args, **kw):
@@ -50,6 +61,7 @@ class Window(gtk.Window):
     def info_dlg(self, *args, **kw):
         return info(parent = self, *args, **kw)
 
+    @with_gdk_lock
     def error_dlg(self, *args, **kw):
         return error(parent = self, *args, **kw)
 

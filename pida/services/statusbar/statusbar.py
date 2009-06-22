@@ -3,6 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
+import sys
 
 import gtk
 import pango
@@ -13,7 +14,7 @@ import datetime
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
-
+from pida.core.environment import on_windows
 # locale
 from pida.core.locale import Locale
 _locale = Locale('statusbar')
@@ -41,7 +42,11 @@ class StatusbarEvents(EventsConfig):
             self.svc.set_label('document_encoding', document.encoding)
 
             dt = datetime.datetime.fromtimestamp(document.modified_time)
-            text = dt.strftime(locale.nl_langinfo(locale.D_T_FMT))
+            #FIXME local seems broken on win32 
+            if not on_windows:
+                text = dt.strftime(locale.nl_langinfo(locale.D_T_FMT))
+            else:
+                text = dt.strftime('%a, %d %b %Y %H:%M')
             self.svc.set_label('document_mtime', text)
     
             size = document.filesize

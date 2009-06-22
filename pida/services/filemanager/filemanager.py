@@ -10,6 +10,7 @@ from os import listdir, path
 
 import os
 import shutil
+import sys
 
 import cgi
 
@@ -24,7 +25,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.core.environment import get_uidef_path
+from pida.core.environment import get_uidef_path, on_windows
 from pida.core.log import get_logger
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
@@ -128,11 +129,18 @@ class FileEntry(object):
     def format(self, text):
         color, b, i = state_style.get(self.state, (None, False, False))
         if color:
-            color = self._manager.file_list.style.lookup_color(color).to_string()
-        if not color:
+            #FIXME to_string is missing on win32
+            color = self._manager.file_list.style.lookup_color(color)
+            if not on_windows:
+                color = color.to_string()
+            else:
+                color = '#%s%s%s' % (color.red,color.green,color.blue)
+        else:
             color = "black"
+
         if b:
             text = '<b>%s</b>' % text
+
         if i:
             text = '<i>%s</i>' % text
         return '<span color="%s">%s</span>' % (color, text)
@@ -369,7 +377,8 @@ class FilemanagerView(PidaView):
 
     def _get_ancestors(self, directory):
         ancs = [directory]
-        while directory != '/':
+        parent = None
+        while directory != parent:
             parent = os.path.dirname(directory)
             ancs.append(parent)
             directory = parent
@@ -466,19 +475,24 @@ class FilemanagerView(PidaView):
                                                            is not None)
 
     def paste_clipboard(self):
-        task = AsyncTask(self._paste_clipboard, lambda: None)
-        task.start()
-
-    def _paste_clipboard(self):
         newname = os.path.join(self.path, os.path.basename(self._clipboard_file))
         if newname == self._clipboard_file:
             self.svc.error_dlg(_('Cannot copy files to themselves.'))
             return
         if not os.path.exists(self._clipboard_file):
             self.svc.error_dlg(_('Source file has vanished.'))
+            return
         if os.path.exists(newname):
             self.svc.error_dlg(_('Destination already exists.'))
             return
+        
+        task = AsyncTask(self._paste_clipboard, lambda: None)
+        task.start()
+
+    def _paste_clipboard(self):
+        #XXX: in thread
+        newname = os.path.join(self.path, os.path.basename(self._clipboard_file))
+        #XXX: GIO?
         if os.path.isdir(self._clipboard_file):
             shutil.copytree(self._clipboard_file, newname)
         else:
@@ -495,7 +509,7 @@ class FilemanagerView(PidaView):
             os.remove(path)
         if path == self._clipboard_file:
             self._clipboard_file = None
-            self._fix_paste_sensitivity()
+            gcall(self._fix_paste_sensitivity)
 
 class FilemanagerEvents(EventsConfig):
 

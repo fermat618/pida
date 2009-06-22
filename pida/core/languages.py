@@ -193,30 +193,24 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
             all_langs = (self.svc.language_name,)
         else:
             all_langs = self.svc.language_name
+        mapping = {
+            'outliner_factory':'outliner',
+            'definer_factory': 'definer',
+            'validator_factory': 'validator',
+            'completer_factory': 'completer',
+            'documentator_factory': 'documentator'
+        }
         for lname in all_langs:
             if self.svc.language_info is not None:
-                self.subscribe_foreign('language',
-                    (lname, 'info'), self.svc.language_info)
-            if self.svc.outliner_factory is not None:
-                outliner = partial(self.svc.outliner_factory,self.svc)
-                self.subscribe_foreign('language',
-                    (lname, 'outliner'), outliner)
-            if self.svc.definer_factory is not None:
-                definer = partial(self.svc.definer_factory,self.svc)
-                self.subscribe_foreign('language',
-                    (lname, 'definer'), definer)
-            if self.svc.validator_factory is not None:
-                validator = partial(self.svc.validator_factory,self.svc)
-                self.subscribe_foreign('language',
-                    (lname, 'validator'), validator)
-            if self.svc.completer_factory is not None:
-                completer = partial(self.svc.completer_factory,self.svc)
-                self.subscribe_foreign('language',
-                    (lname, 'completer'), completer)
-            if self.svc.documentator_factory is not None:
-                documentator = partial(self.svc.documentator_factory,self.svc)
-                self.subscribe_foreign('language',
-                    (lname, 'documentator'), documentator)
+                self.subscribe_foreign('language', 'info', lname, self.svc.language_info)
+
+            for factory_name, feature in mapping.iteritems():
+                factory = getattr(self.svc, factory_name)
+                if factory is not None:
+                    self.subscribe_foreign(
+                        'language', feature, lname, 
+                        partial(factory, self.svc),
+                    )
 
 
 

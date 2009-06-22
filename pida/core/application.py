@@ -37,6 +37,7 @@ try:
     import gtk
     from gtk import gdk
     gdk.threads_init()
+    gdk.threads_enter() # need to ensure threadsavety before any ui drawing
     if gtk.pygtk_version < (2, 8):
         die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
                 % {'major':gtk.pygtk_version[:2][0], 'minor':gtk.pygtk_version[:2][1]})
@@ -64,7 +65,7 @@ if sys.version_info < (2, 5):
 
 # This can test if PIDA is installed
 try:
-    from pida.core.environment import opts
+    from pida.core.environment import opts, on_windows
     from pida.core.boss import Boss
     from pida import PIDA_VERSION
 
@@ -76,7 +77,10 @@ import pida.core.pdbus
 
 def run_pida():
     b = Boss()
-    handle_signals(b)
+
+    # win32 has no signal support
+    if not on_windows:
+        handle_signals(b)
     # handle start params
     from pida.core import environment
     if environment.get_args():
@@ -215,8 +219,9 @@ def main():
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        signal.signal(signal.SIGALRM, force_quit)
-        signal.alarm(3)
+        if not on_windows:
+            signal.signal(signal.SIGALRM, force_quit)
+            signal.alarm(3)
         sys.exit(exit_val)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

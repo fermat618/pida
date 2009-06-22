@@ -25,8 +25,8 @@ try:
         use_old = True
 
 except ImportError:
-    from moo_stub import BigPaned, PaneLabel, PaneParams
-    from moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
+    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams
+    from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
 
@@ -71,7 +71,13 @@ class PidaPaned(BigPaned):
             if use_old:
                 pane = self.insert_pane(view.get_toplevel(), lab, POS, POS)
             else:
+                pane = view.key and self.lookup_pane(view.key) or None
+                if pane:
+                    # we will get a key collission if we dont remove first
+                    self.remove_view(pane.view)
+
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
+
             pane.props.detachable = detachable
             #XXX: moo MooParams are not editable :(
             oparam = pane.get_params()

@@ -1,10 +1,7 @@
-[plugin]
-plugin = rfc
-name = RFC Viewer
-version = 0.2
-author = Mathieu Virbel <tito@bankiz.org>
-require_pida = 0.5
-depends = "os,gtk,re,urllib"
-description = "Download RFC index, search and view RFC pages inside PIDA"
-website = ""
-category = documentation
+Name: RFC Viewer
+Author: Mathieu Virbel <tito@bankiz.org>
+Version: 0.2.1
+Depends: pida>=0.6
+Category: documentation
+
+Download RFC index, search and view RFC pages inside PIDA

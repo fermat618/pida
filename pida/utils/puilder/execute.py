@@ -6,7 +6,7 @@
 
 
 import os, sys
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from StringIO import StringIO
 from optparse import OptionParser
 
@@ -24,7 +24,7 @@ def _info(*msg):
 def execute_shell_action(project, build, action):
     """Execute a shell action"""
     cwd = action.options.get('cwd', project)
-    p = Popen(action.value, shell=True, cwd=cwd, stdout=PIPE)
+    p = Popen(action.value, shell=True, cwd=cwd, stdout=PIPE, stderr=STDOUT)
     buffer = []
     for line in p.stdout:
         buffer.append(line)
@@ -61,7 +61,7 @@ def execute_external_action(project, build, action):
         action.options.get('build_args', ''),
         action.value,
     )
-    p = Popen(cmd, shell=True, close_fds=True, stdout=PIPE)
+    p = Popen(cmd, shell=True, close_fds=True, stdout=PIPE, stderr=STDOUT)
     p.wait()
     return p.stdout.read()
 

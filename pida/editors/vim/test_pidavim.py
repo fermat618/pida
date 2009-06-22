@@ -25,7 +25,7 @@ def refresh_ui():
 def _start_vim():
     env = os.environ.copy()
     env['PIDA_DBUS_UUID'] = 'pidatest'
-    p = subprocess.Popen(['gvim', '-geom', '40x40', '-f', '--cmd', 'so %s' % vim_script],
+    p = subprocess.Popen(['gvim', '-iconic', '-f', '--cmd', 'so %s' % vim_script],
                          env=env)
     return p
 
@@ -109,11 +109,17 @@ class TestVim(object):
         assert self.vim.get_current_buffer() == self.files[0]
 
     def test_close_buffer(self):
-        self.vim.open_file(self.files[0])
-        self.vim.open_file(self.files[1])
-        self.vim.close_buffer(self.files[0])
-        assert self.files[0] not in self.vim.get_buffer_list()
-        assert self.files[1] in self.vim.get_buffer_list()
+
+        will_close, stay_open = self.files[:2]
+
+        self.vim.open_file(will_close)
+        self.vim.open_file(stay_open)
+        self.vim.close_buffer(will_close)
+
+        buffer_list = list(self.vim.get_buffer_list())
+
+        assert stay_open in buffer_list
+        assert will_close not in buffer_list
 
     def test_close_current_buffer(self):
         self.vim.open_file(self.files[0])

@@ -141,6 +141,34 @@ class OptionItem(object):
 
     no_mnemomic_label = property(_get_nlabel)
 
+class ExtraOptionItem(object):
+
+    def __init__(self, group, path, default, callback, 
+                 workspace=False, notify=True, no_submit=False):
+        self.group = group
+        self.path = path
+        # currently only json is supported
+        self.type = "json"
+        self.default = default
+        self.workspace = bool(workspace)
+        self.callback = callback
+        self.value = None
+        self.dirty = True
+        self.notfiy = True
+        self.no_submit = no_submit
+
+    def set_value(self, value):
+        self.value = value
+        self.dirty = False
+
+    @property
+    def name(self):
+        return self.path
+
+    def __repr__(self):
+        return '<ExtraOptionItem %s>' %(self.path)
+
+
 manager = OptionsManager()
 
 class OptionsConfig(BaseConfig, DbusOptionsManager): 
@@ -159,6 +187,7 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         self.workspace_path = get_settings_path('workspaces', manager.workspace, self.name)
         self.global_path = get_settings_path(self.name)
         self._options = {}
+        self._extra_files = {}
         self._exports = {}
         self.create_options()
         self.register_options()
@@ -186,12 +215,46 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
             if opt.value is None:
                 self.set_value(opt.name, opt.default)
 
+
+    def register_extra_file(self, path, default, callback=None, 
+                      safe=True, workspace=False, notify=True):
+        """
+        Registers an aditional option file a service uses.
+        
+        The object stored in the extra file is only one object which
+        can be serialized by simplejson.
+        
+        All further accesses to the data object should happen over
+        get_extra(name) which will make sure that other pida
+        instances have syncronized data.
+        
+        """
+        assert not (workspace and project)
+        opt = ExtraOptionItem(self, path, default, callback, workspace,
+                              notify=notify)
+        self._extra_files[path] = opt
+    
+    def get_extra(self, name):
+        opt = self._extra_files[name]
+        if opt.dirty:
+            # reread the file
+            opt.value = self.read_extra(opt.path, opt.default)
+            opt.dirty = False
+        
+        return opt.value
+        
+    def save_extra(self, name, data):
+        """
+        Saves a data object to the extra file name
+        """
+
     def create_option(self, name, label, type, default, doc, callback=None, 
                       safe=True, workspace=False):
         opt = OptionItem(self, name, label, type, default, doc,
                          callback, workspace)
         self.add_option(opt)
         return opt
+
 
     def add_option(self, option):
         self._options[option.name] = option
@@ -201,6 +264,13 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
 
     def get_value(self, name):
         return self._options[name].value
+
+    def set_extra_value(self, path, value, dbus_notify=True, save=True):
+        option = self._extra_files[path]
+        option.set_value(value)
+        self._on_change(option, dbus_notify=dbus_notify)
+        if save:
+            self.dump_data(option.path, option.value)
 
     def set_value(self, name, value, dbus_notify=True, save=True):
         option = self._options[name]
@@ -216,15 +286,32 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         if option.callback:
             option.callback(option)
 
-        if dbus_notify:
-            self.notify_dbus(option)
+        self.notify_dbus(option)
 
         self._emit_change_notification(option)
 
     def _emit_change_notification(self, option):
-        optionsmanager = self.svc.boss.get_service('optionsmanager')
-        if hasattr(optionsmanager, 'events'):
-            optionsmanager.emit('option_changed', option=option)
+        if isinstance(option, OptionItem):
+            optionsmanager = self.svc.boss.get_service('optionsmanager')
+            if hasattr(optionsmanager, 'events'):
+                optionsmanager.emit('option_changed', option=option)
+
+    def read_extra(self, filename, default):
+        try:
+            with open(filename) as file:
+                return simplejson.load(file)
+        except IOError:
+            return default
+        except Exception, e:
+            return default
+
+    def dump_data(self, filename, data):
+        try:
+            with open(filename, 'w') as out:
+                simplejson.dump(data, out)
+        except Exception, e:
+            self.svc.log.exception(e)
+
 
     def read(self):
         data = {}

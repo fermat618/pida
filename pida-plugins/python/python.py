@@ -44,14 +44,25 @@ from pida.utils.languages import (LANG_COMPLETER_TYPES,
 import pida.services.filemanager.filehiddencheck as filehiddencheck
 
 # utils
+from .pyflakes.checker import Checker
 from . import pyflakes
-
+from .pyflakes import messages
 # locale
 from pida.core.locale import Locale
 locale = Locale('python')
 _ = locale.gettext
 
 from ropebrowser import ModuleParser
+
+RE_MATCHES = (
+    # traceback match
+    (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
+    # internal
+     re.compile(r'\s*File\s*\"(?P<file>[^"]+)\",\s*line\s*(?P<line>\d+).*'))
+    ,
+    #FIXME: how to handle localisation of this ???
+)
+
 
 class PythonEventsConfig(EventsConfig):
 
@@ -69,6 +80,9 @@ class PythonFeaturesConfig(LanguageServiceFeaturesConfig):
         LanguageServiceFeaturesConfig.subscribe_all_foreign(self)
         self.subscribe_foreign('filemanager', 'file_hidden_check',
             self.python)
+        for match in RE_MATCHES:
+            self.subscribe_foreign('commander', 'matches',
+            (match[0], self.svc.match_call))
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_PROJECT, 
         _("Hide Python Compiled Files"))
@@ -248,12 +262,14 @@ class PythonValidator(Validator):
         except (SyntaxError, IndentationError), e:
             messages = _create_exception_validation(e)
         else:
-            w = pyflakes.Checker(tree, filename)
+            w = Checker(tree, filename)
             messages = w.messages
         for m in messages:
             type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
             subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
 
+            #FIXME add pyflakes 0.3 types
+            #FIXME make mapping
             if isinstance(m, pyflakes.messages.UnusedImport):
                 type_ = LANG_VALIDATOR_TYPES.INFO
                 subtype = LANG_VALIDATOR_SUBTYPES.UNUSED
@@ -354,15 +370,6 @@ class PythonDefiner(Definer):
         return rv
 
 
-RE_MATCHES = (
-    # traceback match
-    (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
-    # internal
-     re.compile(r'\s*File\s*\"(?P<file>[^"]+)\",\s*line\s*(?P<line>\d+).*'))
-    ,
-    #FIXME: how to handle localisation of this ???
-)
-
 class Python(LanguageService):
 
     language_name = 'Python'
@@ -382,15 +389,15 @@ class Python(LanguageService):
         self.execute_action = self.get_action('execute_python')
         self.execute_action.set_sensitive(False)
 
-    def start(self):
-        for match in RE_MATCHES:
-            self.boss.get_service('commander').register_matcher(
-                match[0], self.match_call)
-
-    def stop(self):
-        for match in RE_MATCHES:
-            self.boss.get_service('commander').unregister_matcher(
-                match[0], self.match_call)
+#     def start(self):
+#         for match in RE_MATCHES:
+#             self.boss.get_service('commander').register_matcher(
+#                 match[0], self.match_call)
+#
+#     def stop(self):
+#         for match in RE_MATCHES:
+#             self.boss.get_service('commander').unregister_matcher(
+#                 match[0], self.match_call)
 
     def match_call(self, term, event, match):
         for pattern in RE_MATCHES:

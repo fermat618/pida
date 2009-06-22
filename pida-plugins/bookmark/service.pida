@@ -1,9 +1,7 @@
-[plugin]
-plugin = bookmark
-name = Bookmarks
-author = Mathieu Virbel <tito@bankiz.org>
-version = 0.3
-require_pida = 0.5
-depends = "gtk,os,cgi"
-category = user
-description = "Manage bookmark (files, directories...)"
+Name: Bookmarks
+Author: Mathieu Virbel <tito@bankiz.org>
+Version: 0.4
+Depends: pida>=0.6
+Category: user
+
+Manage bookmarks to files/lines/urls

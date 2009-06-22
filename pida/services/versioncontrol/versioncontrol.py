@@ -210,16 +210,12 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
 
     def create(self):
         self.publish('workdir-manager')
+
         try:
-            #XXX: packing a s/bdist should include anyvc
-            from pida.utils.anyvc.workir import all_known
-        except ImportError:
-            try:
-                from anyvc.workdir import all_known
-            except:
-                self.svc.window.error_dlg(_("Couldn't find anyvc"))
-                self.svc.log.error('Cant find anyvc')
-                all_known = ()
+            from anyvc.workdir import all_known
+        except:
+            self.svc.log.info('Cant find anyvc')
+            all_known = ()
         for mgr in all_known:
             self.subscribe('workdir-manager', mgr)
 
@@ -624,6 +620,13 @@ class Versioncontrol(Service):
         self._commit = CommitViewer(self)
         acts = self.boss.get_service('window').actions
 
+        if not self.features['workdir-manager']:
+            self.boss.get_service('notify').notify(
+                            "versioncontrol integration disabled",
+                            title="Can't find anyvc",
+                            stock=gtk.STOCK_DIALOG_ERROR,
+                            )
+
         acts.register_window(self._log.key,
                              self._log.label_text)
 
@@ -647,7 +650,7 @@ class Versioncontrol(Service):
         workdir = self.get_workdir_manager_for_path(path)
 
         if workdir is not None: 
-            for item in workdir.list(paths=[path], recursive=False):
+            for item in workdir.status(paths=[path], recursive=False):
                 abspath = item.abspath
                 name = os.path.basename (abspath)
                 path = os.path.dirname(abspath)

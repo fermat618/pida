@@ -146,7 +146,7 @@ class Appcontroller(Service):
     label = _("Application")
 
     def start(self):
-        if not BUS:
+        if BUS is None:
             self.boss.get_service('notify').notify(
                 _('DBus python bindings are missing. Limited functionality.'),
                 title=_('Modules missing'))
@@ -158,25 +158,28 @@ class Appcontroller(Service):
             )
 
     def pre_start(self):
-        self.dbus.PIDA_PRE_START(
-            BUS.get_unique_name(),
-            os.getpid(),
-            workspace_name()
-        )
+        if BUS is not None:
+            self.dbus.PIDA_PRE_START(
+                BUS.get_unique_name(),
+                os.getpid(),
+                workspace_name()
+            )
         return True
 
     def pre_stop(self):
-        self.dbus.PIDA_PRE_STOP(
-            BUS.get_unique_name(),
-            os.getpid()
-        )
+        if BUS is not None:
+            self.dbus.PIDA_PRE_STOP(
+                BUS.get_unique_name(),
+                os.getpid()
+            )
         return True
 
     def stop(self):
-        self.dbus.PIDA_STOP(
-            BUS.get_unique_name(),
-            os.getpid()
-        )
+        if BUS is not None:
+            self.dbus.PIDA_STOP(
+                BUS.get_unique_name(),
+                os.getpid()
+            )
         return True
 
 

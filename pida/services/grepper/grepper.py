@@ -48,7 +48,8 @@ class GrepperItem(object):
         else:
             color = None
         if color:
-            color = color.to_string()
+            #color = color.to_string() # gtk 2.12 or higher
+            color = "#%04x%04x%04x" % (color.red, color.green, color.blue)
         if not color:
             color = "red"
         return ('<span color="%s"><b>%s</b></span>' %
@@ -133,7 +134,6 @@ class GrepperView(PidaGladeView):
     locale = locale
     label_text = _('Find in Files')
     icon_name = gtk.STOCK_FIND
-    key = 'grepper.form'
 
     def create_ui(self):
         self.grepper_dir = ''
@@ -294,18 +294,11 @@ class Grepper(Service):
     events_config = GrepperEvents
     options_config = GrepperOptions
 
-    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]|\\x00')
+    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')
 
     def pre_start(self):
         self.current_project_source_directory = None
         self._views = []
-
-    def start(self):
-        acts = self.boss.get_service('window').actions
-        
-        acts.register_window(GrepperView.key,
-                             GrepperView.label_text)
-
 
     def show_grepper_in_project_source_directory(self):
         if self.current_project_source_directory is None:

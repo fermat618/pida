@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # Copyright (c) 2007 The PIDA Project
-
+#XXX: rework
 """
     pida.services.plugins
     ~~~~~~~~~~~~~~~~~~~~~
@@ -15,16 +15,16 @@
 
     :license: GPL2 or later
 """
+from __future__ import with_statement
+import StringIO
+
 
 import gtk
-import xmlrpclib
 import cgi
 import gobject
 import tarfile
 import os
-import base64
 import shutil
-import httplib
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
@@ -41,64 +41,16 @@ from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 from pida.core.environment import plugins_dir
 
 from pida.utils.web import fetch_url
-from pida.utils.configobj import ConfigObj
-from pida.utils.path import walktree
 
-# consts
-PLUGIN_RPC_URL = 'http://pida.co.uk/RPC2'
+from . import metadata
+from . import packer
+from . import downloader
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
 
-def get_value(tab, key):
-    return tab.get(key, None)
-
-# http://docs.python.org/lib/xmlrpc-client-example.html
-class ProxiedTransport(xmlrpclib.Transport):
-
-    def __init__(self, proxy):
-        self.proxy = proxy
-
-    def make_connection(self, host):
-        self.realhost = host
-        return httplib.HTTP(self.proxy)
-
-    def send_request(self, connection, handler, request_body):
-        connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
-
-    def send_host(self, connection, host):
-        connection.putheader('Host', self.realhost)
-
-def create_transport():
-    if 'http_proxy' in os.environ:
-        host = os.environ['http_proxy']
-        return ProxiedTransport(host)
-    else:
-        return xmlrpclib.Transport()
-
-class PluginsItem(object):
-
-    def __init__(self, infos, directory=None, enabled=False, isnew=False):
-        self.isnew = isnew
-        self.plugin = get_value(infos, 'plugin')
-        self.require_pida = get_value(infos, 'require_pida')
-        self.name = get_value(infos, 'name')
-        self.author = get_value(infos, 'author')
-        self.version = get_value(infos, 'version')
-        self.description = get_value(infos, 'description')
-        self.category = get_value(infos, 'category')
-        self.url = get_value(infos, 'url')
-        self.depends = get_value(infos, 'depends')
-        self.directory = directory
-        self.enabled = enabled
-
-    @property
-    def markup(self):
-        if self.isnew:
-            return '<span color="red"><b>!N</b></span> %s' % self.name
-        return self.name
 
 
 class PluginsEditItem(object):
@@ -117,11 +69,22 @@ class PluginsEditView(PidaGladeView):
     label_text = _('Edit a plugin')
     icon_name = gtk.STOCK_EXECUTE
 
+    edit_items = (
+        ('name', _('Plugin name')),
+        ('author', _('Author')),
+        ('version', _('Version')),
+        ('depends', _('Dependencies')),
+        ('category', _('Category')),
+        ('description', _('Description')),
+    )
+
     def create_ui(self):
         self.attr_list.set_columns([
             Column('name', title=_('Name'), data_type=str),
-            Column('value', title=_('Value'), data_type=str, editable=True,
-                expand=True),
+            Column('value', title=_('Value'), 
+                   data_type=str,
+                   editable=True,
+                   expand=True),
             ])
 
     def set_item(self, item):
@@ -129,24 +92,11 @@ class PluginsEditView(PidaGladeView):
         if item is None:
             self.attr_list.clear()
             return
-        list = []
-        list.append(PluginsEditItem('plugin',
-            _('Name'), item.plugin))
-        list.append(PluginsEditItem('name',
-            _('Plugin long name'), item.name))
-        list.append(PluginsEditItem('author',
-            _('Author'), item.author))
-        list.append(PluginsEditItem('version',
-            _('Version'), item.version))
-        list.append(PluginsEditItem('depends',
-            _('Depends'), item.depends))
-        list.append(PluginsEditItem('require_pida',
-            _('Require PIDA version'), item.require_pida))
-        list.append(PluginsEditItem('category', _('Category'),
-            item.category))
-        list.append(PluginsEditItem('description', _('Description'),
-            item.description))
-        self.attr_list.add_list(list, clear=True)
+        listing = [
+            PluginsEditItem(key, name, item.get(key))
+            for key, name in self.edit_items
+        ]
+        self.attr_list.add_list(listing, clear=True)
 
     def on_attr_list__cell_edited(self, w, item, value):
         setattr(self.item, getattr(item, 'key'), getattr(item, 'value'))
@@ -182,6 +132,9 @@ class PluginsView(PidaGladeView):
                 expand=True, use_markup=True),
             Column('version', title=_('Version'), data_type=str),
             ])
+        #XXX: reenable ui publisher after making a newui
+    
+        self.notebook.remove_page(2)
 
     def can_be_closed(self):
         self.svc.get_action('show_plugins').set_active(False)
@@ -267,10 +220,8 @@ class PluginsView(PidaGladeView):
     def on_installed_list__cell_edited(self, w, item, value):
         if value != 'enabled':
             return
-        if not item.directory:
-            return
         if item.enabled:
-            success = self.svc.start_plugin(os.path.basename(item.directory))
+            success = self.svc.start_plugin(item.plugin)
             item.enabled = success
         else:
             self.svc.stop_plugin(item.plugin)
@@ -364,12 +315,12 @@ class PluginsOptionsConfig(OptionsConfig):
 
     def create_options(self):
         self.create_option(
-            'rpc_url',
+            'publish_to',
             _('Webservice Url'),
             str,
-            PLUGIN_RPC_URL,
+            '',
             _('URL of Webservice to download plugins'),
-            self.on_rpc_url)
+            )
 
         self.create_option(
             'check_for_updates',
@@ -389,10 +340,8 @@ class PluginsOptionsConfig(OptionsConfig):
             workspace=True
             )
 
-    def on_rpc_url(self, option):
-        self.svc.rpc_url = option.value
 
-    def on_check_for_updates(self, client, id, entry, option):
+    def on_check_for_updates(self, option):
         self.svc.check_for_updates(option.value)
 
 
@@ -408,19 +357,18 @@ class Plugins(Service):
     actions_config = PluginsActionsConfig
     options_config = PluginsOptionsConfig
     events_config = PluginsEvents
-    rpc_url = PLUGIN_RPC_URL
 
     def pre_start(self):
         self._check = False
         self._check_notify = False
         self._check_event = False
+        #XXX: we should really use the real one at some point
         self._loader = ServiceLoader(pida.plugins)
         self._view = PluginsView(self)
         self._viewedit = PluginsEditView(self)
         self.task = None
 
     def start(self):
-        self.rpc_url = self.opt('rpc_url')
         self.update_installed_plugins(start=True)
         self.check_for_updates(self.opt('check_for_updates'))
 
@@ -438,9 +386,12 @@ class Plugins(Service):
             plugin = self.boss.start_plugin(name)
             self.emit('plugin_started', plugin=plugin)
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
-                data = _('Started %(plugin)s plugin' % {'plugin':plugin.get_label()}))
+                data = _('Started %(plugin)s plugin' % {
+                    'plugin':plugin.get_label()
+                }))
             return True
         except ServiceLoadingError, e:
+            #XXX: support a ui traceback browser?
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data = _('Could not start plugin: %(name)s\n%(error)s' % 
                     {'error':str(e), 'plugin_path':name}))
@@ -496,18 +447,20 @@ class Plugins(Service):
         if self.task:
             self.task.stop()
 
-        def add_in_list(list, isnew):
+        def add_in_list(data, isnew):
             if isnew and self._check_notify:
-                self.boss.cmd('notify', 'notify', title=_('Plugins'),
+                self.boss.cmd('notify', 'notify', 
+                              title=_('Plugins'),
                     data=_('Version %(version)s of %(plugin)s is available !') \
-                            % {'version':list['version'], 'plugin':list['plugin']})
-            self._view.add_available(PluginsItem(list, isnew=isnew))
+                            % data)
+            self._view.add_available(data)
 
         def stop_pulse():
             self._check_notify = False
             self._view.stop_pulse()
 
         self._view.clear_available()
+        self._view.start_pulse( _('Download available plugins'))
         self.task = GeneratorTask(self._fetch_available_plugins,
                 add_in_list, stop_pulse)
         self.task.start()
@@ -520,27 +473,28 @@ class Plugins(Service):
             plugin_item = self.read_plugin_informations(
                     servicefile=service_file)
             installed_list.append(plugin_item)
-
-        self._view.start_pulse(_('Download available plugins'))
+        #XXX: DAMMIT this is in a worker thread ?!?!
         try:
-            proxy = xmlrpclib.ServerProxy(self.rpc_url,
-                                          transport=create_transport())
-            plist = proxy.plugins.list({'version': PIDA_VERSION})
-            for k in plist:
-                item = plist[k]
+            items = downloader.find_latest_metadata(
+                    'http://packages.pida.co.uk/simple/'
+            )
+            for item in items:
+                self.log.debug('found plugin %s', item.name)
                 inst = None
                 isnew = False
                 for plugin in installed_list:
-                    if plugin.plugin == item['plugin']:
+                    #XXX: module is weird, maybe change rpc
+                    if plugin.plugin == item.plugin:
                         inst = plugin
                 if inst is not None:
-                    isnew = (inst.version != item['version'])
+                    isnew = (inst.version != item.version)
                 yield item, isnew
-        except:
-            pass
+        except Exception, e:
+            print e
+            raise
 
     def download(self, item):
-        if not item.url or item.url == '':
+        if not item.url:
             return
         self._view.start_pulse(_('Download %s') % item.name)
         def download_complete(url, content):
@@ -550,27 +504,17 @@ class Plugins(Service):
         fetch_url(item.url, download_complete)
 
     def install(self, item, content):
-        # write plugin
-        plugin_path = os.path.join(plugins_dir, item.plugin)
-        filename = os.path.join(plugins_dir, os.path.basename(item.url))
-        file = open(filename, 'wb')
-        file.write(content)
-        file.close()
+        item.base = plugins_dir
+        item.directory = os.path.join(plugins_dir, item.plugin)
 
-        # check if we need to stop and remove him
-        l_installed = [p[0] for p in
-            self._loader.get_all_service_files()]
-        item.directory = plugin_path
-        if item.plugin in l_installed:
-            self.delete(item, force=True)
-
-        # extract him
-        tar = tarfile.open(filename, 'r:gz')
-        for tarinfo in tar:
-            tar.extract(tarinfo, path=plugins_dir)
-        tar.close()
-        os.unlink(filename)
-
+        # this will gracefully ignore not installed plugins
+        self.delete(item, force=True)
+        
+        import tarfile
+        io = StringIO.StringIO(content)
+        tar = tarfile.TarFile.gzopen(None, fileobj=io)
+        tar.extractall(plugins_dir)
+        
         # start service
         self.start_plugin(item.plugin)
         self.boss.cmd('notify', 'notify', title=_('Plugins'),
@@ -595,59 +539,36 @@ class Plugins(Service):
         self.update_installed_plugins()
 
     def upload(self, directory, login, password):
-        # first, check for a service.pida file
-        if not self.is_plugin_directory(directory):
-            return
+        # XXX: get smarter for more tricky plugins
+        # (external processes, java, ...)
 
         # extract plugin name
         plugin = os.path.basename(directory)
+        base = os.path.dirname(directory)
+        # first, check for a service.pida file
+        if not metadata.is_plugin(base, plugin):
+            return
 
+        def notify(text):
+            gcall(self._view.start_publish_pulse, text)
         # get filelist
-        self._view.start_publish_pulse('Listing files')
-        skipped_directory = [ '.svn', 'CVS' ]
-        list = []
-        for top, names in walktree(top=directory,
-                skipped_directory=skipped_directory):
-            list.append(top)
-            for name in names:
-                list.append(os.path.join(top, name))
-
-        # remove some unattended files
-        skipped_extentions = [ 'swp', 'pyc' ]
-        list = [ name for name in list if name.split('.')[-1] not in skipped_extentions ]
-
-        # make tarfile
-        self._view.start_publish_pulse('Building package')
-        filename = os.tmpnam()
-        tar = tarfile.open(filename, 'w:gz')
-        for name in list:
-            arcname = plugin + name[len(directory):]
-            tar.add(name, arcname=arcname, recursive=False)
-        tar.close()
-
-        def upload_do(login, password, plugin, filename):
+        def upload_do():
             try:
-                try:
-                    file = open(filename, 'rb')
-                    data = file.read()
-                    file.close()
-                    proxy = xmlrpclib.ServerProxy(self.rpc_url,
-                                                  transport=create_transport())
-                    code = proxy.plugins.push(login, password,
-                            plugin, base64.b64encode(data))
-                    gcall(self.boss.cmd, 'notify', 'notify',
-                            title=_('Plugins'), data=_('Package upload success !'))
-                except xmlrpclib.Fault, fault:
-                    print _('Error while posting plugin : '), fault
-                except:
-                    pass
+                packer.upload_plugin(
+                    base, plugin,
+                    self.opt('publish_to'),
+                    login, password,
+                    notify)
+                #XXX: stuff
+                gcall(self.boss.cmd, 'notify', 'notify',
+                     title=_('Plugins'),
+                     data=_('Package upload success !'))
             finally:
-                os.unlink(filename)
-                self._view.stop_publish_pulse()
+                gcall(self._view.stop_publish_pulse)
 
         self._view.start_publish_pulse('Upload to community website')
         task = AsyncTask(upload_do)
-        task.start(login, password, plugin, filename)
+        task.start()
 
     def ensure_view_visible(self):
         action = self.get_action('show_plugins')
@@ -661,22 +582,24 @@ class Plugins(Service):
     def read_plugin_informations(self, directory=None, servicefile=None):
         if servicefile is None:
             servicefile = os.path.join(directory, 'service.pida')
-        config = ConfigObj(servicefile)
-        return PluginsItem(config['plugin'],
-                directory=os.path.dirname(servicefile))
+        if directory is None:
+            directory = os.path.dirname(servicefile)
+
+        plugin = os.path.basename(directory)
+        base = os.path.dirname(directory)
+
+        return metadata.from_plugin(base, plugin)
 
     def write_informations(self, item):
-        if not item.directory:
-            return
-        config = ConfigObj(os.path.join(item.directory, 'service.pida'))
-        section = config['plugin']
-        for key in [ 'plugin', 'name', 'author', 'version', 'require_pida',
-                'depends', 'category', 'description' ]:
-            section[key] = getattr(item, key)
-        config.write()
+        if item.plugin and item.base:
+            metadata.serialize(item.base, item.plugin, item)
+
 
     def save_running_plugin(self):
-        list = [plugin.get_name() for plugin in self.boss.get_plugins()]
+        list = [
+            plugin.get_name() 
+            for plugin in self.boss.get_plugins()
+        ]
         self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
@@ -693,9 +616,6 @@ class Plugins(Service):
         if item.depends:
             markup += '\n<b>%s</b> : %s' % (_('Depends'),
                     cgi.escape(item.depends))
-        if item.require_pida:
-            markup += '\n<b>%s</b> : %s' % (_('Require PIDA'),
-                    cgi.escape(item.require_pida))
         return markup
 
 

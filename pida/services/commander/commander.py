@@ -42,41 +42,27 @@ RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
               r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
              )
 
-class System(object):
-    @classmethod
-    def get_default_system_shell(cls):
-        return ""
 
-    @classmethod
-    def get_absolute_path(cls, path, pid):
-        return path
+def get_default_system_shell(cls):
+    return ""
 
-class UnixSystem(System):
-    # is this universal ?
-    PROC_MATCH = re.compile('PWD=(.*)')
-    
-    @classmethod
-    def get_default_system_shell(cls):
-        return os.environ.get('SHELL', 'bash')
-    
-    @classmethod
-    def get_absolute_path(cls, path, pid):
-        if os.path.isabs(path):
-            return path
-        try:
-            fp = open('/proc/%s/environ' %pid, 'r')
-        except IOError:
-            return path
-        cont = fp.read()
-        lines = cont.split('\x00')
-        for line in lines:
-            res = cls.PROC_MATCH.match(line)
-            if res:
-                return os.path.abspath(os.path.join(res.groups()[0], path))
-        return path
+def get_absolute_path(cls, path, pid):
+    return path
 
 # FIXME: windows port
-CurrentSystem = UnixSystem
+if sys.platform != 'win32':
+    def get_default_system_shell():
+        import pwd
+        return os.environ.get(
+            'SHELL', # try shell from env
+            pwd.getpwuid(os.getuid())[-1] # fallback to login shell
+        )
+    
+    def get_absolute_path(path, pid):
+        #XXX: works on bsd and linux only
+        #     solaris needs /proc/%s/path/cwd
+        base = os.readlink('/proc/%s/cwd'%pid)
+        return os.path.abspath(os.path.join(base, path))
 
 class CommanderOptionsConfig(OptionsConfig):
 
@@ -159,7 +145,7 @@ class CommanderOptionsConfig(OptionsConfig):
             'shell_command',
             _('The shell command'),
             str,
-            CurrentSystem.get_default_system_shell(),
+            get_default_system_shell(),
             _('The command that will be used for shells')
         )
 
@@ -280,6 +266,11 @@ class CommanderCommandsConfig(CommandsConfig):
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
+    def create(self):
+        self.publish('matches')
+        for match in RE_MATCHES:
+            self.subscribe('matches', (match, self.svc.default_match))
+
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
             (self.svc.get_action_group(), 'commander-file-menu.xml'))
@@ -312,7 +303,7 @@ class TerminalView(PidaView):
         self.add_main_widget(self._hb)
         self._term = PidaTerminal(**self.svc.get_terminal_options())
         self._matchids = {}
-        for match, callback in self.svc.list_matches():
+        for match, callback in self.svc.features['matches']:
             i = self._term.match_add(match)
             if i < 0:
                 continue
@@ -420,15 +411,15 @@ class TerminalView(PidaView):
 
     def _on_python_fork_parse_key_press_event(self, term, event, fd):
         if event.hardware_keycode == 22:
-            os.write(fd, "")
+            os.write(fd, "\x7f")
         elif event.hardware_keycode == 98:
-            os.write(fd, "OA")
+            os.write(fd, "\x1bOA")
         elif event.hardware_keycode == 104:
-            os.write(fd, "OB")
+            os.write(fd, "\x1bOB")
         elif event.hardware_keycode == 100:
-            os.write(fd, "OD")
+            os.write(fd, "\x1bOD")
         elif event.hardware_keycode == 102:
-            os.write(fd, "OC")
+            os.write(fd, "\x1bOC")
         else:
             data = event.string
             os.write(fd, data)
@@ -527,21 +518,9 @@ class TerminalView(PidaView):
     def on_highlight_url(self, url, *args, **kw):
         return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
                                   url=url)
-    
-    def chdir(self, path):
-        # here we could look at the environment var to find out the real 
-        # directory
-        if self._pwd == path:
-            return
-        # maybe we find a good way to check if the term is currently
-        # in shell mode and maybe there is a better way to change
-        # directories somehow
-        # this is like kate does it
-        self._term.feed_child(u'cd %s\n' %path)
-        self._pwd = path
 
     def get_absolute_path(self, path):
-        return CurrentSystem.get_absolute_path(path, self._pid)
+        return get_absolute_path(path, self._pid)
 
 class PythonView(PidaView):
 
@@ -669,38 +648,25 @@ class Commander(Service):
         for term in self._terminals:
             if hasattr(term, '_stick_button') and \
                term._stick_button.child.get_active() and \
+               term._term.window and \
                term._term.window.is_visible():
                 term.chdir(document.directory)
 
-    def register_matcher(self, match, callback):
-        if self._matches.has_key(match):
-            self._matches[match].append(callback)
-        else:
-            self._matches[match] = [callback]
-    
-    def unregister_matcher(self, match, callback):
-        if not self._matches.has_key(match):
-            return
-        try:
-            self._matches[match].remove(callback)
-        except ValueError:
-            pass
-    
     def list_matches(self):
         # we use this so the default matchers are always the latest
         # added to a terminal. this was the more specific ones are matching 
         # first
-        for match in self._matches:
-            for call in self._matches[match]:
-                yield (match, call)
-        for match in RE_MATCHES:
-            yield (match, self.default_match)
+        rv = []
+        for cmatch, ccall in self.features['matches']:
+            rv.append(cmatch)
+        return rv
 
     def get_match_callbacks(self, match):
-        if match in RE_MATCHES:
-            return [self.default_match]
-        else:
-            return self._matches.get(match, [])
+        rv = []
+        for cmatch, ccall in self.features['matches']:
+            if match == ccall:
+                return rv.append(ccall)
+        return rv
 
     def default_match(self, term, event, match):
         match = os.path.expanduser(match)

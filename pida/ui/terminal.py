@@ -13,13 +13,19 @@
 
 import re
 import os
+import sys
 import gobject
 import subprocess
 import gtk
 
 from kiwi.utils import gsignal
-
-from vte import Terminal
+#FIXME win32 should get a terminal
+if sys.platform != 'win32':
+    from vte import Terminal
+else:
+    #XXX: broken like hell
+    class Terminal(object):
+        pass
 
 # locale
 from pida.core.locale import Locale

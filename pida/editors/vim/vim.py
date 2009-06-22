@@ -308,6 +308,12 @@ class Vim(EditorService):
         self._com.quit(reply_handler=lambda *a: None,
                        error_handler=lambda *a: None)
         return
+
+    #FIXME list of missing functions
+
+    #def set_content(self, editor, value)
+    #def get_content(self, editor)
+    
 # Required Service attribute for service loading
 Service = Vim
 

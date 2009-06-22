@@ -22,6 +22,7 @@ from pida.core.options import OptionsConfig, choices
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, 
                                TYPE_REMEMBER_TOGGLE)
 from pida.ui.buttons import create_mini_button
+from pida.utils.gthreads import gcall
 
 # locale
 from pida.core.locale import Locale
@@ -74,8 +75,11 @@ class NotifyItem(object):
         self.title = cgi.escape(title)
         self.stock = stock
         self.timeout = timeout
-        self.time = datetime.datetime.today().strftime(
+        try:
+            self.time = datetime.datetime.today().strftime(
                 locale.nl_langinfo(locale.D_T_FMT))
+        except: # here locale is broken
+            self.time = "<unknown>"
         self.callback = callback
 
     @property
@@ -289,7 +293,7 @@ class NotifyOptionsConfig(OptionsConfig):
         self.svc._show_notify = option.value
 
     def on_change_timeout(self, option):
-        self.svc._timeout = option.val
+        self.svc._timeout = option.value
 
     def on_gravity_change(self, option):
         self.svc.notifier._popup.set_gravity(option.value)
@@ -332,6 +336,7 @@ class Notify(Service):
     commands_config = NotifyCommandsConfig
     options_config = NotifyOptionsConfig
 
+    
     def start(self):
         self._view = NotifyView(self)
 
@@ -355,6 +360,9 @@ class Notify(Service):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
     def add_notify(self, item):
+        if not self.started:
+            gcall(self.add_notify, item)
+            return
         self._view.add_item(item)
         if self._show_notify:
             self.notifier.notify(item)

@@ -81,8 +81,18 @@ class Document(object):
 
 
     def __init__(self, boss, filename=None, project=None):
+        """
+        Create a new Document instance.
+        
+        @boss: boss this document belongs to
+        @filename: path to the file or None (unamed buffer)
+        @project: project this document belongs to
+        """
         self.boss = boss
-        self.filename = filename
+        if filename is not None:
+            self.filename = os.path.realpath(filename)
+        else:
+            self.filename = None
         self.project = project
         self.editor = None
         self._list = []
@@ -105,6 +115,9 @@ class Document(object):
         self.clear()
 
     def clear(self):
+        """
+        Clear document caches
+        """
         self._str = None
         self._lines = None
         self._encoding = None
@@ -168,6 +181,9 @@ class Document(object):
 
     @property
     def stat(self):
+        """
+        Returns the stat of the current file
+        """
         try:
             return os.stat(self.filename)
         except OSError:
@@ -175,6 +191,9 @@ class Document(object):
 
     @cached_property
     def mimetype(self):
+        """
+        Returns the mimetype guessed from the file
+        """
         #FIXME: use doctypes
         typ, encoding = mimetypes.guess_type(self.filename)
         if typ is None:
@@ -185,6 +204,9 @@ class Document(object):
 
     @property
     def filesize(self):
+        """
+        Filesize of Document
+        """
         return self.stat[stat.ST_SIZE]
 
     def __repr__(self):
@@ -207,7 +229,9 @@ class Document(object):
 
     @property
     def markup_title(self):
-        """Returns a markup version of unicode"""
+        """
+        Returns a markup version of unicode
+        """
         if self.filename is None:
             if self.newfile_index > 1:
                 return _(u'<b>Untitled (%d)</b>') %(self.newfile_index)
@@ -226,6 +250,9 @@ class Document(object):
 
     @property
     def encoding(self):
+        """
+        Encoding of file
+        """
         self._load()
         # FIXME: if self.is_new we should run the _encode detection from
         # the editors buffer if possible
@@ -240,6 +267,9 @@ class Document(object):
 
     @property
     def live(self):
+        """
+        Returns a boolean if the document is loaded in the editor
+        """
         # live indicates that this object has a editor instance which get_content
         #self.live = False
         if self.editor and hasattr(self.editor, 'get_content'):
@@ -247,13 +277,22 @@ class Document(object):
 
         return False
 
-    def get_content(self):
-        if hasattr(self.editor, 'get_content') and self.editor:
+    def get_content(self, live=True):
+        """
+        Returns the content of the document.
+        If live is true and the document is loaded into an editor the
+        content of the editor is returned
+        """
+        if live and hasattr(self.editor, 'get_content') and self.editor:
             return self.boss.editor.get_content(self.editor)
         self._load()
         return self._str
 
-    def set_content(self, value, flush=True):
+    def set_content(self, value, flush=True, live=True):
+        """
+        Sets the content of the document.
+        If live is True and the document is loaded, it's content is returned
+        """
         if hasattr(self.boss.editor, 'set_content') and self.editor:
             return self.boss.editor.set_content(self.editor, value)
 
@@ -266,6 +305,11 @@ class Document(object):
     content = property(get_content, set_content)
 
     def flush(self):
+        """
+        Flush the buffer.
+        If editor has loaded this document, it's value
+        is fetched befor writing to disc
+        """
         if hasattr(self.editor, 'get_content') and self.editor:
             value = self.boss.editor.get_content(self.editor)
         else:
@@ -291,18 +335,27 @@ class Document(object):
 
     @property
     def directory(self):
+        """
+        Directory name the Document is located in
+        """
         if self.is_new:
             return None
         return os.path.dirname(self.filename)
 
     @property
     def directory_basename(self):
+        """
+        Directory's name the Document is located in
+        """
         if self.is_new:
             return None
         return os.path.basename(self.directory)
 
     @property
     def basename(self):
+        """
+        Basename of the file. It's actuall filename
+        """
         if self.is_new:
             return None
         return os.path.basename(self.filename)
@@ -316,6 +369,10 @@ class Document(object):
         return id(self)
 
     def get_markup(self, markup_string=None, style=None):
+        """
+        Returns a markup version the Document designed for
+        beeing embedded in gtk views
+        """
         if markup_string is None:
             if self.project:
                 markup_string = self.markup_string_project
@@ -332,6 +389,9 @@ class Document(object):
     markup = property(get_markup)
 
     def get_markup_tworow(self, style=None):
+        """
+        Two rowed version of above
+        """
         if self.project:
             mark = self.get_markup(self.markup_string_tworow_project)
         else:
@@ -356,12 +416,18 @@ class Document(object):
 
     @property
     def project_name(self):
+        """
+        Name of Project or None
+        """
         if self.project is not None:
             return self.project.display_name
         else:
             return ''
 
     def get_project_relative_path(self):
+        """
+        Returns the relative path to Project's root
+        """
         if self.filename is None:
             return None, None
 
@@ -376,6 +442,9 @@ class Document(object):
 
     @property
     def is_new(self):
+        """
+        True if the Document is not associated to a filename
+        """
         return self.filename is None
 
     # emulate a container element. this allows access to a document
@@ -398,6 +467,9 @@ class Document(object):
         return iter(self._list)
 
     def append(self, line):
+        """
+        Add a line to the Document
+        """
         self._list.append(line)
         self._update_content_from_lines()
 

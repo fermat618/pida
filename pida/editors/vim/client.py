@@ -7,13 +7,20 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 
 """
+import logging
 import os, time
 
-import gtk, dbus
+import gtk
+log = logging.getLogger(__name__)
 
-from dbus.mainloop.glib import DBusGMainLoop
+try:
+    import dbus
+    from dbus.mainloop.glib import DBusGMainLoop
 
-mainloop = DBusGMainLoop(set_as_default=True)
+    mainloop = DBusGMainLoop(set_as_default=True)
+except ImportError:
+    pass
+
 
 DBUS_NS = 'uk.co.pida.vim'
 
@@ -25,11 +32,12 @@ def get_vim(uid):
     proxy = None
     while proxy is None:
         try:
+            log.debug('trying vim connect')
             proxy = session.get_object(get_bus_name(uid), '/vim')
         except dbus.DBusException:
+            log.warning('vim connect failed, retrying')
             proxy = None
             time.sleep(0.2)
-    print proxy
     return proxy
 
 def connect_cb(proxy, cb):
