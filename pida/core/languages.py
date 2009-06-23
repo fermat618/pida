@@ -9,16 +9,30 @@ Language Support Superclasses
 from functools import partial
 import gobject
 
+from pida.core.document import Document
+
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
+from weakref import WeakKeyDictionary
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
+
+from pida.core.log import get_logger
+log = get_logger('core.languages')
+
+try:
+    import multiprocessing
+    from multiprocessing.managers import BaseManager, BaseProxy, SyncManager
+except ImportError: 
+    log.info(_("Can't find multiprocessing, disabled work offload"))
+    multiprocessing = None
+    BaseManager = BaseProxy = SyncManager = object
 
 #FIXME: maybe we should fill the plugin values with a metaclass ???
 # class LanguageMetaclass(type):
@@ -187,7 +201,7 @@ class Definer(BaseDocumentHandler):
         @buffer - the text to search in
         @offset - nth char in the document point is on
         """
-        raise NotImplementedError('Validator must define get_definition')
+        raise NotImplementedError('Definer must define get_definition')
 
 class Documentator(BaseDocumentHandler):
     """
@@ -201,7 +215,7 @@ class Documentator(BaseDocumentHandler):
         @buffer - the text to search in
         @offset - nth char in the document point is on
         """
-        raise NotImplementedError('Validator must define get_definition')
+        raise NotImplementedError('Documentator must define get_definition')
 
 class LanguageInfo(object):
     """
@@ -264,7 +278,7 @@ class TooManyResults(Exception):
                     won't happen again
     """
     def __init__(self, base, expected_length=None):
-        super(TooManySuggestions, self).__init__()
+        super(TooManyResults, self).__init__()
         self.base = base
         if expected_length is None:
             self.expected_length = len(base)+1
@@ -273,6 +287,9 @@ class TooManyResults(Exception):
 
 
 class Completer(BaseDocumentHandler):
+    """
+    Completer returns suggestions for autocompleter features
+    """
 
     def get_completions(self, base, buffer_, offset):
         """
@@ -282,7 +299,7 @@ class Completer(BaseDocumentHandler):
         @buffer - document to parse
         @offset - cursor position
         """
-        raise NotImplementedError('Validator must define get_completions')
+        raise NotImplementedError('Completer must define get_completions')
 
 
 def make_iterable(inp):
@@ -292,6 +309,11 @@ def make_iterable(inp):
 
 
 class LanguageServiceFeaturesConfig(FeaturesConfig):
+    """
+    An advanced version of FeaturesConfig used for language plugins.
+    
+    Please remember to call the overloaded function
+    """
 
     def subscribe_all_foreign(self):
         all_langs = make_iterable(self.svc.language_name)
@@ -324,21 +346,6 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
                             partial(factory, self.svc))
 
 
-class LanguageService(Service):
-    """
-    Base class for easily implementing a language service
-    """
-
-    language_name = None
-    language_info = None
-    completer_factory = None
-    definer_factory = None
-    outliner_factory = None
-    validator_factory = None
-    documentator_factory = None
-
-    features_config = LanguageServiceFeaturesConfig
-
 class SnippetsProvider(object):
 
     def get_snippets(self, document):
@@ -360,6 +367,258 @@ class SnippetTemplate(object):
         """
         return []
 
+
+
+# Proxy type for generator objects
+class GeneratorProxy(BaseProxy):
+    """
+    Proxies iterators over multiprocessing
+    """
+    _exposed_ = ('next', '__next__')
+    def __iter__(self):
+        return self
+    def next(self):
+        return self._callmethod('next')
+    def __next__(self):
+        return self._callmethod('__next__')
+
+class ExternalMeta(type):
+    """
+    MetaClass for Extern classes. registers the functions for beeing extern
+    callable
+    """
+    LANG_MAP = {
+        'validator': ['get_validations'],
+        'outliner': ['get_outline'],
+        'completer': ['get_completions'],
+        'documentator': ['get_documentation'],
+        'definer': ['get_definition'],
+      }
+    def __new__(cls, name, bases, dct):
+        return type.__new__(cls, name, bases, dct)
+    def __init__(cls, name, bases, dct):
+        super(ExternalMeta, cls).__init__(name, bases, dct)
+        if not hasattr(cls, 'register'):
+            return
+        for type_, funcs in self.LANG_MAP.iteritems():
+            if not type_ in dct or not dct[type_]:
+                continue
+            cls.register(type_, dct[type_])
+            for mfunc in funcs:
+                nname = "%s_%s" %(type_, mfunc)
+                # we register the function as a callable external
+                cls.register(nname, getattr(dct[type_], mfunc), proxytype=GeneratorProxy)
+
+
+class External(SyncManager):
+    """
+    The External superclass is used to configure and control the external
+    processes.
+
+    Create a new class inhereting from External and define the class
+    variables of the types you want to externalize. This class must be the
+    'extern' class variable of your LanguageService
+    
+    @validator: validator class
+    @outliner
+    @definer
+    @documentator
+    
+    You can define additional static functions here that can be run on the
+    external process.
+    """
+
+    __metaclass__ = ExternalMeta
+
+    validator = None
+    outliner = None
+    definer = None
+    documentator = None
+    
+    @staticmethod
+    def validator_get_validations(instance):
+        for i in instance.get_validations():
+            yield i
+
+    @staticmethod
+    def outliner_get_outline(instance):
+        for i in instance.get_outline():
+            yield i
+
+    @staticmethod
+    def definer_get_definition(instance, buffer, offset):
+        for i in instance.get_definition(buffer, offset):
+            yield i
+
+    @staticmethod
+    def documentator_get_documentation(instance, buffer, offset):
+        for i in instance.get_documentation(buffer, offset):
+            yield i
+
+class ExternalValidatorProxy(Validator):
+    """Proxies to the jobmanager and therefor to the external process"""
+    def get_validations(self):
+        for result in self.svc.jobserver.validator_get_validations(self):
+            yield result
+
+class ExternalOutlinerProxy(Outliner):
+    """Proxies to the jobmanager and therefor to the external process"""
+    def get_outline(self):
+        for result in self.svc.jobserver.outliner_get_outline(self):
+            yield result
+
+class ExternalDefinerProxy(Definer):
+    """Proxies to the jobmanager and therefor to the external process"""
+    def get_definition(self, buffer, offset):
+        rv = self.svc.jobserver.definer_get_definition(self, buffer, offset)
+        if hasattr(rv, '__iter__'):
+            for result in rv:
+                yield result
+        else:
+            yield rv
+
+class ExternalDocumentatorProxy(Documentator):
+    """Proxies to the jobmanager and therefor to the external process"""
+    def get_documentation(self, buffer, offset):
+        rv = self.svc.jobserver.documentator_get_documentation(self, buffer,
+                                                               offset)
+        if hasattr(rv, '__iter__'):
+            for result in rv:
+                yield result
+        else:
+            yield rv
+
+class ExternalCompleterProxy(Definer):
+    """Proxies to the jobmanager and therefor to the external process"""
+    def get_completions(self, base, buffer_, offset):
+        rv = self.svc.jobserver.completer_get_completions(self, base,
+                                                          buffer_, offset)
+        if hasattr(rv, '__iter__'):
+            for result in rv:
+                yield result
+        else:
+            yield rv
+
+
+class JobServer(object):
+    """
+    The Jobserver dispatches language plugin jobs to external processes it 
+    manages.
+    """
+    def __init__(self, svc, external, max_processes=2):
+        self.svc = svc
+        self.max_processes = max_processes
+        # we have to map the proxy objects to
+        self._processes = [] 
+        self._external = external
+        self._proxy_map = WeakKeyDictionary()
+        self._instances = {}
+
+    def get_process(self, proxy=None):
+        """
+        Returns a Extern instance.
+        It tries to use the same instance for proxy so it does not need to
+        be recreated and can make best use of caching
+        """
+        #FIXME needs some better management of processes and dispatching
+        if not self._processes:
+            np = self._external()
+            np.start()
+            self._instances[np] = {} #np.dict()
+            self._processes.append(np)
+        return self._processes[0]
+
+    def get_instance(self, proxy, type_):
+        """
+        Returns the manager and the real instance of language plugin type of
+        the proxy.
+        
+        Everything called on this objects are done in the external process
+        """
+        manager = self._proxy_map.get(proxy, None)
+        if not manager:
+            manager = self.get_process(proxy)
+            self._proxy_map[proxy] = manager
+        instances = self._instances[manager]
+        if proxy.document.unique_id not in instances:
+            instances[proxy.document.unique_id] = manager.dict()
+        if type_ not in instances[proxy.document.unique_id]:
+            #no = getattr(manager, type_)(manager)(None, proxy.document)
+            instances[proxy.document.unique_id][type_] = getattr(manager, type_)(None, proxy.document)
+        return manager, instances[proxy.document.unique_id][type_]
+
+
+    def validator_get_validations(self, proxy):
+        """Forwards to the external process"""
+        manager, instance = self.get_instance(proxy, 'validator')
+        for i in manager.validator_get_validations(instance):
+            yield i
+
+    def outliner_get_outline(self, proxy):
+        """Forwards to the external process"""
+        manager, instance = self.get_instance(proxy, 'outliner')
+        for i in manager.outliner_get_outline(instance):
+            yield i
+
+    def definer_get_definition(self, proxy, buffer, offset):
+        """Forwards to the external process"""
+        manager, instance = self.get_instance(proxy, 'definer')
+        for i in manager.definer_get_definition(instance, buffer, offset):
+            yield i
+
+    def documentator_get_documentation(self, proxy, buffer, offset):
+        """Forwards to the external process"""
+        manager, instance = self.get_instance(proxy, 'documentator')
+        for i in manager.documentator_get_documentation(instance, buffer, offset):
+            yield i
+
+    def completer_get_completions(self, proxy, base, buffer, offset):
+        """Forwards to the external process"""
+        manager, instance = self.get_instance(proxy, 'completer')
+        for i in manager.completer_get_completions(instance, base, buffer,
+                                                        offset):
+            yield i
+
+class LanguageService(Service):
+    """
+    Base class for easily implementing a language service
+    """
+
+    language_name = None
+    language_info = None
+    completer_factory = None
+    definer_factory = None
+    outliner_factory = None
+    validator_factory = None
+    documentator_factory = None
+
+    external = None
+    jobserver_factory = JobServer
+
+    features_config = LanguageServiceFeaturesConfig
+
+    def __init__(self, boss):
+        if self.external is not None and multiprocessing:
+            # if we have multiprocessing support we exchange the
+            # language factories to the proxy objects
+            if self.external.validator:
+                self.validator_factory = ExternalValidatorProxy
+            if self.external.outliner:
+                self.outliner_factory = ExternalOutlinerProxy
+            if self.external.documentator:
+                self.documentator_factory = ExternalDocumentatorProxy
+            if self.external.definer:
+                self.definer_factory = ExternalDefinerProxy
+            if self.external.completer:
+                self.completer_factory = ExternalCompleterProxy
+
+        super(LanguageService, self).__init__(boss)
+        self.boss = boss
+        self.log.debug('Loading Service')
+        if self.external is not None and multiprocessing:
+            self.jobserver = self.jobserver_factory(self, self.external)
+        else:
+            self.jobserver = None
 
 LANGUAGE_PLUGIN_TYPES = {
 'completer': {
@@ -384,5 +643,4 @@ LANGUAGE_PLUGIN_TYPES = {
     'description': _('Shows problems and style errors in the code'),
     'class': Validator}
 }
-
 

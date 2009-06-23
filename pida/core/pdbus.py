@@ -158,7 +158,7 @@ class DbusOptionsManagerReal(Object):
             if issubclass(type_, (BaseChoice, Color)):
                 return 's'
             raise ValueError, "No object type found for %s" %type_
-            
+
     def dbus_custom_introspect(self):
         rv = '  <interface name="%s">\n' %(self.dbus_ns)
         for option in self._options.itervalues():
