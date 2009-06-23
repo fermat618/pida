@@ -69,6 +69,11 @@ try:
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
+# Prevent PIDA from being run as root.
+if os.getuid() == 0:
+    die_gui("Pida should not be run as root", "Pida is dying")
+
+
 # we have to import pdbus here so it gets initialized very early
 import pida.core.pdbus
 
