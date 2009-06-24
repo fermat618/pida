@@ -7,17 +7,18 @@ Language Support Superclasses
 :copyright: 2008 the Pida Project
 """
 from functools import partial
+from weakref import WeakKeyDictionary
 import gobject
 
 from pida.core.document import Document
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
+from pida.core.environment import opts
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
-from weakref import WeakKeyDictionary
-
+from pida.utils.path import get_relative_path
 # locale
 from pida.core.locale import Locale
 locale = Locale('core')
@@ -26,11 +27,16 @@ _ = locale.gettext
 from pida.core.log import get_logger
 log = get_logger('core.languages')
 
-try:
-    import multiprocessing
-    from multiprocessing.managers import BaseManager, BaseProxy, SyncManager
-except ImportError: 
-    log.info(_("Can't find multiprocessing, disabled work offload"))
+print opts.multiprocessing
+if opts.multiprocessing:
+    try:
+        import multiprocessing
+        from multiprocessing.managers import BaseManager, BaseProxy, SyncManager
+    except ImportError:
+        log.info(_("Can't find multiprocessing, disabled work offload"))
+        multiprocessing = None
+        BaseManager = BaseProxy = SyncManager = object
+else:
     multiprocessing = None
     BaseManager = BaseProxy = SyncManager = object
 
@@ -400,7 +406,7 @@ class ExternalMeta(type):
         super(ExternalMeta, cls).__init__(name, bases, dct)
         if not hasattr(cls, 'register'):
             return
-        for type_, funcs in self.LANG_MAP.iteritems():
+        for type_, funcs in cls.LANG_MAP.iteritems():
             if not type_ in dct or not dct[type_]:
                 continue
             cls.register(type_, dct[type_])
@@ -434,6 +440,8 @@ class External(SyncManager):
     outliner = None
     definer = None
     documentator = None
+    definer = None
+    completer = None
     
     @staticmethod
     def validator_get_validations(instance):
@@ -455,19 +463,67 @@ class External(SyncManager):
         for i in instance.get_documentation(buffer, offset):
             yield i
 
-class ExternalValidatorProxy(Validator):
+class ExternalDocument(Document):
+    """
+    Emulates a document that resides in a different python process
+    """
+    _unique_id = 0
+    _project_path = None
+
+    @property
+    def uniqueid(self):
+        return self._unique_id
+
+    def get_project_relative_path(self):
+        """
+        Returns the relative path to Project's root
+        """
+        if self.filename is None or not self._project_path:
+            return None, None
+        return get_relative_path(self._project_path, self.filename)
+
+class ExternalProxy(object):
+    """
+    Base Class for all proxy objects.
+    """
+    _external_document = None
+
+    def set_document(self, document):
+        self.document = document
+        self._external_document = None
+
+    def get_external_document(self):
+        if not self._external_document:
+            self._external_document = ExternalDocument(None, self.document.filename)
+            self._external_document._unique_id = self.document.unique_id
+            if self.document.project:
+                self._external_document._project_path = self.document.project.source_directory
+        return self._external_document
+
+    @classmethod
+    def uuid(cls):
+        return cls._uuid
+
+    @property
+    def uid(self):
+        """
+        property for uuid()
+        """
+        return self._uuid
+
+class ExternalValidatorProxy(Validator, ExternalProxy):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_validations(self):
         for result in self.svc.jobserver.validator_get_validations(self):
             yield result
 
-class ExternalOutlinerProxy(Outliner):
+class ExternalOutlinerProxy(Outliner, ExternalProxy):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_outline(self):
         for result in self.svc.jobserver.outliner_get_outline(self):
             yield result
 
-class ExternalDefinerProxy(Definer):
+class ExternalDefinerProxy(Definer, ExternalProxy):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_definition(self, buffer, offset):
         rv = self.svc.jobserver.definer_get_definition(self, buffer, offset)
@@ -477,7 +533,7 @@ class ExternalDefinerProxy(Definer):
         else:
             yield rv
 
-class ExternalDocumentatorProxy(Documentator):
+class ExternalDocumentatorProxy(Documentator, ExternalProxy):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_documentation(self, buffer, offset):
         rv = self.svc.jobserver.documentator_get_documentation(self, buffer,
@@ -488,7 +544,7 @@ class ExternalDocumentatorProxy(Documentator):
         else:
             yield rv
 
-class ExternalCompleterProxy(Definer):
+class ExternalCompleterProxy(Definer, ExternalProxy):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_completions(self, base, buffer_, offset):
         rv = self.svc.jobserver.completer_get_completions(self, base,
@@ -544,7 +600,7 @@ class JobServer(object):
             instances[proxy.document.unique_id] = manager.dict()
         if type_ not in instances[proxy.document.unique_id]:
             #no = getattr(manager, type_)(manager)(None, proxy.document)
-            instances[proxy.document.unique_id][type_] = getattr(manager, type_)(None, proxy.document)
+            instances[proxy.document.unique_id][type_] = getattr(manager, type_)(None, proxy.get_external_document())
         return manager, instances[proxy.document.unique_id][type_]
 
 
@@ -601,20 +657,29 @@ class LanguageService(Service):
         if self.external is not None and multiprocessing:
             # if we have multiprocessing support we exchange the
             # language factories to the proxy objects
+            def newproxy(old, factory):
+                class NewProxy(factory):
+                    pass
+                NewProxy._uuid = old.uuid()
+                NewProxy.priority = old.priority
+                NewProxy.name = old.name
+                NewProxy.plugin = old.plugin
+                NewProxy.description = old.description
+                return NewProxy
+
             if self.external.validator:
-                self.validator_factory = ExternalValidatorProxy
+                self.validator_factory = newproxy(self.validator_factory, ExternalValidatorProxy)
             if self.external.outliner:
-                self.outliner_factory = ExternalOutlinerProxy
+                self.outliner_factory = newproxy(self.outliner_factory, ExternalValidatorProxy)
             if self.external.documentator:
-                self.documentator_factory = ExternalDocumentatorProxy
+                self.documentator_factory = newproxy(self.documentator_factory, ExternalDocumentatorProxy)
             if self.external.definer:
-                self.definer_factory = ExternalDefinerProxy
+                self.definer_factory = newproxy(self.definer_factory, ExternalDefinerProxy)
             if self.external.completer:
-                self.completer_factory = ExternalCompleterProxy
+                self.completer_factory = newproxy(self.completer_factory, ExternalCompleterProxy)
 
         super(LanguageService, self).__init__(boss)
         self.boss = boss
-        self.log.debug('Loading Service')
         if self.external is not None and multiprocessing:
             self.jobserver = self.jobserver_factory(self, self.external)
         else:
