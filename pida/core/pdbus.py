@@ -28,8 +28,13 @@ try:
     from dbus import Signature
     import _dbus_bindings
 
-    has_dbus = True
-    
+    # Is dbus available?
+    # Throws dbus.exceptions.DBusException if not.
+    dbus.SessionBus()
+
+except dbus.exceptions.DBusException:
+    has_dbus = False
+
 except ImportError:
     def dummy(*k, **kw):
         return lambda x: x
@@ -37,6 +42,9 @@ except ImportError:
     INTROSPECTABLE_IFACE = ""
     has_dbus = False
     Object = object
+
+else:
+    has_dbus = True
 
 class DbusConfigReal(Object):
 
