@@ -457,10 +457,31 @@ class BrowserView(PidaGladeView):
     def clear_items(self):
         self.source_tree.clear()
 
+    def get_by_id(self, id_):
+        """
+        Return the OutlinerItem by it's id property
+        """
+        def lookup(model, path, iter):
+            if model.get_value(iter, 0).id == id_:
+                lookup.rv = model.get_value(iter, 0)
+                return True
+
+        self.source_tree.get_model().foreach(lookup)
+        return getattr(lookup, 'rv', None)
+
+
     def add_node(self, node):
         if not node:
             return
-        parent = node.parent
+
+        if node.parent:
+            parent = node.parent
+        elif node.parent_id:
+            # only the parent_id was submitted so we have to look the parent up
+            parent = self.get_by_id(node.parent_id)
+        else:
+            parent = None
+
         try:
             self.source_tree.append(parent, node)
         except Exception, e:
@@ -614,3 +635,4 @@ class DefinitionView(PidaGladeView):
 
     def on_list__double_click(self, widget, row):
         self.svc.use_definition(row)
+

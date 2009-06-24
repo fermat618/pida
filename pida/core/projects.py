@@ -227,7 +227,11 @@ class Project(Log):
         """
         from pida.services.language import DOCTYPES
         doctype = DOCTYPES.type_by_filename(path)
-        rpath = os.sep.join(self.get_relative_path_for(path))
+        try:
+            rpath = os.sep.join(*self.get_relative_path_for(path))
+        except TypeError:
+            # we don't care about outside projects
+            return
         if rpath is None:
             #document outside of project
             return

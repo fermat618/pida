@@ -28,6 +28,10 @@ import ctypes.util
 
 from ctypes import c_char_p, c_int, c_size_t, c_void_p
 
+from threading import Lock
+
+MAGIC_LOCK = Lock()
+
 class MagicException(Exception): pass
 
 class Magic:
@@ -50,17 +54,26 @@ class Magic:
         
         if mime:
             flags |= MAGIC_MIME
-            
-        self.cookie = magic_open(flags)
+        try:
+            MAGIC_LOCK.acquire()
+            self.cookie = magic_open(flags)
 
-        magic_load(self.cookie, magic_file)
+            magic_load(self.cookie, magic_file)
+        finally:
+            MAGIC_LOCK.release()
 
 
     def from_buffer(self, buf):
         """
         Identify the contents of `buf`
         """
-        return magic_buffer(self.cookie, buf)
+        try:
+            MAGIC_LOCK.acquire()
+            rv = magic_buffer(self.cookie, buf)
+        finally:
+            MAGIC_LOCK.release()
+        return rv
+            
 
     def from_file(self, filename):
         """
@@ -70,14 +83,21 @@ class Magic:
 
         if not os.path.exists(filename):
             raise IOError("File does not exist: " + filename)
-
-        return magic_file(self.cookie, filename)
+        try:
+            MAGIC_LOCK.acquire()
+            rv = magic_file(self.cookie, filename)
+        finally:
+            MAGIC_LOCK.release()
+        return rv
 
     def __del__(self):
         try:
+            MAGIC_LOCK.acquire()
             magic_close(self.cookie)
         except Exception, e:
             print "got thig: ", e
+        finally:
+            MAGIC_LOCK.release()
 
 
 _magic_mime = None

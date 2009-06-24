@@ -34,11 +34,12 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
-    Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, Documentator)
+    Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, 
+    Documentator, External)
 
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, LANG_PRIO,
-    Definition, Suggestion, Documentation, ValidationError)
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, 
+    LANG_PRIO, Definition, Suggestion, Documentation, ValidationError)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
@@ -54,6 +55,7 @@ _ = locale.gettext
 
 from .ropebrowser import ModuleParser
 
+MAX_FIXES = 10
 RE_MATCHES = (
     # traceback match
     (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
@@ -179,20 +181,19 @@ class PythonDocumentator(Documentator):
         from rope.base.exceptions import RopeError
         from rope.contrib import fixsyntax
         try:
-            pymodule = fixsyntax.get_pymodule(mp.project.pycore, buffer,
-                                               None, 4)
-            pyname = fixsyntax.find_pyname_at(mp.project, buffer,
-                                               offset, pymodule, 4)
+            fix = fixsyntax.FixSyntax(mp.project.pycore, buffer, None, maxfixes=MAX_FIXES)
+            pymodule = fix.get_pymodule()
+            pyname = fix.pyname_at(offset)
         except RopeError:
-            return None
+            return
         if pyname is None:
-            return None
+            return
         pyobject = pyname.get_object()
         rv = Documentation(
             short=PyDocExtractor().get_calltip(pyobject, False, False),
             long_=PyDocExtractor().get_doc(pyobject)
             )
-        return rv
+        yield rv
         
 class PythonLanguage(LanguageInfo):
     varchars = [chr(x) for x in xrange(97, 122)] + \
@@ -330,11 +331,10 @@ class PythonCompleter(Completer):
             mp = ModuleParser(self.document.filename, 
                               project=self.document.project)
             buffer = buffer + ('\n' * 20)
-            co = code_assist(mp.project, buffer, offset, maxfixes=4)
+            co = code_assist(mp.project, buffer, offset, maxfixes=MAX_FIXES)
         except RopeError, IndentationError:
-            return []
+            return
         so = sorted_proposals(co)
-        rv = []
         for c in so:
             if c.name.startswith(base):
                 r = Suggestion(c.name)
@@ -356,9 +356,7 @@ class PythonCompleter(Completer):
                         r.type_ = LANG_COMPLETER_TYPES.PARAMETER
                 else:
                     r.type_ = LANG_COMPLETER_TYPES.UNKNOWN
-                rv.append(r)
-        return rv
-
+                yield r
 
 class PythonDefiner(Definer):
 
@@ -375,12 +373,12 @@ class PythonDefiner(Definer):
         from rope.base.exceptions import RopeError
 
         try:
-            dl = find_definition(mp.project, buffer, offset, maxfixes=4)
+            dl = find_definition(mp.project, buffer, offset, maxfixes=MAX_FIXES)
         except RopeError:
-            return None
+            return
 
         if not dl:
-            return None
+            return
 
         if dl.resource is not None:
             file_name = dl.resource.path
@@ -391,8 +389,14 @@ class PythonDefiner(Definer):
         rv = Definition(file_name=file_name, offset=dl.offset,
                         line=dl.lineno, length=(dl.region[1]-dl.region[0]))
 
-        return rv
+        yield rv
 
+class PythonExternal(External):
+    outliner = PythonOutliner
+    validator = PythonValidator
+    completer = PythonCompleter
+    definer = PythonDefiner
+    documentator = PythonDocumentator
 
 class Python(LanguageService):
 
@@ -408,6 +412,8 @@ class Python(LanguageService):
     actions_config = PythonActionsConfig
     options_config = PythonOptionsConfig
     events_config = PythonEventsConfig
+
+    external = PythonExternal
 
     def pre_start(self):
         self.execute_action = self.get_action('execute_python')

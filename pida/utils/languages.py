@@ -161,6 +161,9 @@ class OutlineItem(InitObject):
     type = LANG_TYPES.UNKNOWN
     name = ''
     parent = None
+    id = None
+    # the parent id is a link to the parent's id value which can be pickeled
+    parent_id = None
     line = 0
     filter_type = None
 

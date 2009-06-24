@@ -15,7 +15,9 @@ from rope.base.project import Project, get_no_project
 from rope.base import pynames, pyobjects, builtins
 
 from pida.utils.languages import LANG_OUTLINER_TYPES, OutlineItem
+from pida.utils.unique import counter
 
+OUTLINE_COUNTER = counter()
 
 def markup_italic(text):
     """Make some italic pango"""
@@ -69,8 +71,9 @@ class TreeOptions(object):
     has_children = False
     icon_name = 'source-property'
     filter_type =  LANG_OUTLINER_TYPES.UNKNOWN
-    def __init__(self, treeitem):
-        self.item = treeitem
+
+    def __init__(self, treeitem, obj):
+        pass
 
     def get_extra_markup(self):
         """Markup added to the end of each definition"""
@@ -90,10 +93,9 @@ class FunctionOptions(TreeOptions):
     position = 2
     filter_type = LANG_OUTLINER_TYPES.UNKNOWN
 
-    def get_pre_markup(self):
-        """Draw decorators"""
+    def __init__(self, item, obj):
         decs = []
-        for dec in self.item.object.decorators:
+        for dec in obj.decorators:
             if hasattr(dec, 'id'):
                 decs.append('@' + dec.id)
             elif hasattr(dec, 'func') and hasattr(dec.func, 'id'):
@@ -101,16 +103,20 @@ class FunctionOptions(TreeOptions):
         decs = ', '.join(decs)
         if decs:
             decs = decs + '\n'
-        return markup_fixed(markup_italic(decs))
+        self.decs = decs
+        self.param_names = obj.get_param_names()
+        self.doc = obj.get_doc()
 
+    def get_pre_markup(self):
+        """Draw decorators"""
+        return markup_fixed(markup_italic(self.decs))
 
     def get_extra_markup(self):
         attrs = markup_bold_bracketted(
-            ', '.join(self.item.object.get_param_names())
+            ', '.join(self.param_names)
         )
-        doc = self.item.object.get_doc()
-        if doc:
-            doc_markup = markup_green_italic('"""%s"""' % doc.splitlines()[0])
+        if self.doc:
+            doc_markup = markup_green_italic('"""%s"""' % self.doc.splitlines()[0])
             attrs = attrs + '\n' + doc_markup
         return attrs
 
@@ -159,15 +165,19 @@ class ClassOptions(TreeOptions):
     position = 1
     has_children = True
 
+    def __init__(self, item, obj):
+        self.supernames = [s.get_name() for s in
+            obj.get_superclasses() if hasattr(s, 'get_name')]
+        self.doc = obj.get_doc()
+
+
     def get_extra_markup(self):
         attrs = markup_bold_bracketted(
-            ', '.join([s.get_name() for s in
-                       self.item.object.get_superclasses() if hasattr(s, 'get_name')])
+            ', '.join(self.supernames)
         )
 
-        doc = self.item.object.get_doc()
-        if doc:
-            doc_markup = markup_green_italic('"""%s"""' % doc.splitlines()[0])
+        if self.doc:
+            doc_markup = markup_green_italic('"""%s"""' % self.doc.splitlines()[0])
             attrs = attrs + '\n' + doc_markup
         return attrs
 
@@ -199,54 +209,57 @@ class ImportedOptions(TreeOptions):
     filter_type = LANG_OUTLINER_TYPES.IMPORT
 
 
-def get_option_for_item(item):
-    if isinstance(item.node, pynames.ImportedName):
-        return ImportedOptions(item)
-    elif isinstance(item.node, pynames.ImportedModule):
-        return ImportedOptions(item)
-    elif isinstance(item.node, pynames.DefinedName):
-        if isinstance(item.object, pyobjects.PyFunction):
-            kind = item.object.get_kind()
+def get_option_for_item(item, node, obj, parent_obj=None):
+    if isinstance(node, pynames.ImportedName):
+        return ImportedOptions(item, obj)
+    elif isinstance(node, pynames.ImportedModule):
+        return ImportedOptions(item, obj)
+    elif isinstance(node, pynames.DefinedName):
+        if isinstance(obj, pyobjects.PyFunction):
+            kind = obj.get_kind()
             if kind == 'method':
-                if item.name in item.parent.object.get_scope().get_defined_names():
-                    return MethodOptions(item)
+                if item.name in parent_obj.get_object().get_scope().get_defined_names():
+                    return MethodOptions(item, obj)
                 else:
-                    return SuperMethodOptions(item)
+                    return SuperMethodOptions(item, obj)
             elif kind == 'classmethod':
-                return ClassMethodOptions(item)
+                return ClassMethodOptions(item, obj)
             elif kind == 'staticmethod':
-                return StaticMethodOptions(item)
+                return StaticMethodOptions(item, obj)
             else:
-                return FunctionOptions(item)
+                return FunctionOptions(item, obj)
         else:
-            return ClassOptions(item)
-    elif isinstance(item.node, pynames.AssignedName):
-        return AssignedOptions(item)
-    elif isinstance(item.node, builtins.BuiltinName):
-        return BuiltinOptions(item)
-    elif isinstance(item.node, pynames.EvaluatedName):
-        return EvaluatedOptions(item)
+            return ClassOptions(item, obj)
+    elif isinstance(node, pynames.AssignedName):
+        return AssignedOptions(item, obj)
+    elif isinstance(node, builtins.BuiltinName):
+        return BuiltinOptions(item, obj)
+    elif isinstance(node, pynames.EvaluatedName):
+        return EvaluatedOptions(item, obj)
     else:
-        print 'Unknown Node', item, item.node, item.name, item.object
+        print 'Unknown Node', item, node, item.name, item.object
 
 
 class SourceTreeItem(OutlineItem):
 
-    def __init__(self, mod, name, node, parent):
+    def __init__(self, mod, name, node, parent, parent_obj=None):
         self.name = name
-        self.node = node
-        self.object = node.get_object()
-        self.parent = parent
+        #self.node = None #node
+        self.id = OUTLINE_COUNTER()
+        if parent:
+            self.parent_id = parent.id
+
+        obj = node.get_object()
 
         # where is the thing defined
-        self.def_module, self.linenumber = self.node.get_definition_location()
-        self.foreign = mod is not self.def_module
-        if self.foreign and self.def_module is not None:
-            self.filename = self.def_module.get_resource().path
+        def_module, self.linenumber = node.get_definition_location()
+        foreign = mod is not def_module
+        if foreign and def_module is not None:
+            self.filename = def_module.get_resource().path
         else:
             self.filename =  None
 
-        self.options = get_option_for_item(self)
+        self.options = get_option_for_item(self, node, obj, parent_obj=parent_obj)
 
         self.sort_hack = '%s%s' % (self.options.position, self.name)
 
@@ -303,15 +316,16 @@ class ModuleParser(object):
             for name, node in self.create_tree_items(name, node):
                 yield name, node
 
-    def create_tree_items(self, name, node, parent=None, start=False):
-        ti = SourceTreeItem(self.mod, name, node, parent)
+    def create_tree_items(self, name, node, parent=None, start=False, parent_obj=None):
+        ti = SourceTreeItem(self.mod, name, node, parent, parent_obj=parent_obj)
         if ti:
             yield ti, parent
             if ti.options.has_children:
-                for name, child in ti.object.get_attributes().items():
-                    for node, parent in self.create_tree_items(name, child, ti):
-                        if node is not None:
-                            yield node, parent
+                for name, child in node.get_object().get_attributes().items():
+                    for nnode, parent in self.create_tree_items(name, child, ti,
+                                                               parent_obj=node):
+                        if nnode is not None:
+                            yield nnode, parent
 
 
 

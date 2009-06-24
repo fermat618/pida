@@ -60,9 +60,10 @@ from pida.core.events import EventsConfig
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
-    SuggestionsList, PidaDocWindow)
+    SuggestionsList)
 from pida.utils.gthreads import GeneratorTask, gcall, AsyncTask
 from pida.core.languages import Suggestion
+from pida.ui.languages import PidaDocWindow
 
 # locale
 from pida.core.locale import Locale
@@ -1554,6 +1555,11 @@ class Mooedit(EditorService):
                 data=_('No documentation found'), timeout=2000)
             return
         pd = PidaDocWindow(documentation=docu)
+        if not pd.valid:
+            self.notify_user(_("No documentation found"), 
+                             title=_("Show documentation"),
+                             quick=True)
+            return
         pd.connect("destroy-event", self.on_doc_destroy)
         self._current.editor.props.buffer.connect(
             'cursor-moved', self.do_doc_destroy)

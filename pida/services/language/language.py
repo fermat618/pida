@@ -31,6 +31,7 @@ from pida.core.options import OptionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core.log import get_logger
+from pida.utils.languages import Definition
 
 # ui
 
@@ -619,14 +620,20 @@ class Language(LanguageService):
         res = definer.get_definition(doc.content,
                                      self.boss.editor.get_cursor_position())
 
-        if isinstance(res, (list, tuple)):
+        if isinstance(res, Definition):
+            self.use_definition(res)
+            return
+        elif hasattr(res, '__iter__'):
+            res = [x for x in res]
+
+        if isinstance(res, (list, tuple)) and len(res) > 1:
             deflist = DefinitionView(self)
             deflist.set_list(res)
             self.boss.cmd('window', 'add_view', paned='Terminal', 
                                                 view=deflist)
             gcall(deflist.grab_focus)
         elif res:
-            self.use_definition(res)
+            self.use_definition(res[0])
         else:
             self.boss.get_service('notify').notify(
             title=_('Goto Definition'),

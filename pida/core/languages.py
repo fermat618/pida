@@ -619,13 +619,13 @@ class JobServer(object):
     def definer_get_definition(self, proxy, buffer, offset):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'definer')
-        for i in manager.definer_get_definition(instance, buffer, offset):
+        for i in manager.definer_get_definition(instance, buffer, offset)
             yield i
 
     def documentator_get_documentation(self, proxy, buffer, offset):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'documentator')
-        for i in manager.documentator_get_documentation(instance, buffer, offset):
+        for i in manager.documentator_get_documentation(instance, buffer, offset)
             yield i
 
     def completer_get_completions(self, proxy, base, buffer, offset):
@@ -670,7 +670,7 @@ class LanguageService(Service):
             if self.external.validator:
                 self.validator_factory = newproxy(self.validator_factory, ExternalValidatorProxy)
             if self.external.outliner:
-                self.outliner_factory = newproxy(self.outliner_factory, ExternalValidatorProxy)
+                self.outliner_factory = newproxy(self.outliner_factory, ExternalOutlinerProxy)
             if self.external.documentator:
                 self.documentator_factory = newproxy(self.documentator_factory, ExternalDocumentatorProxy)
             if self.external.definer:

@@ -86,6 +86,16 @@
           "value":"gdb --args python -u run-pida.py -w testing -D"
         }
       ]
+    },
+    {
+      "name":"debug disabled multiprocessing",
+      "actions":[
+        {
+          "type":"shell",
+          "options":{},
+          "value":"python -u ./run-pida.py -D -w testing --disable-multiprocessing"
+        }
+      ]
     }
   ],
   "options":{}
