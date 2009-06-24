@@ -495,14 +495,17 @@ class Notify(Service):
             self.notifier.notify(item)
 
     def _on_error(self, handler, msg):
-        self.notify(msg.getMessage(), timeout=20,
+        self.notify(msg.getMessage(), timeout=20000,
                     title=_("Pida error occured in %s") %msg.name)
 
 
     def notify(self, data, title='', stock=gtk.STOCK_DIALOG_INFO,
-            timeout=-1, callback=None):
+            timeout=-1, callback=None, quick=False):
         if timeout == -1:
-            timeout = self.opt('timeout')
+            if quick:
+                timeout = 700
+            else:
+                timeout = self.opt('timeout')
         self.add_notify(NotifyItem(data=data, title=title, stock=stock,
             timeout=timeout, callback=callback))
 
