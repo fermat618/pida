@@ -93,9 +93,9 @@ class WindowCommandsConfig(CommandsConfig):
 
     def close_focus_pane(self):
         pane = self.svc.window.get_focus_pane()
-        print 'close', pane
         if pane:
-            pane.view.can_be_closed()
+            if pane.view.can_be_closed() and pane.view:
+                self.remove_view(pane.view)
 
     def toggle_sticky_pane(self):
         pane = self.svc.window.get_focus_pane()
