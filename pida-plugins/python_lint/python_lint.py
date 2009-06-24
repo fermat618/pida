@@ -7,7 +7,8 @@
 # stdlib
 import sys, os.path 
 
-import threading, thread
+from threading import Semaphore
+import thread
 
 # PIDA Imports
 
@@ -19,7 +20,7 @@ from pida.core import environment
 from pida.core.options import OptionsConfig
 from pida.core.log import Log
 
-from pida.core.languages import (LanguageService, Validator)
+from pida.core.languages import (LanguageService, Validator, External)
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
    Definition, Suggestion, Documentation, ValidationError)
@@ -162,7 +163,7 @@ from logilab.common.textutils import get_csv
 class PidaLinter(PyLinter, Log):
 
     def __init__(self, *args, **kwargs):
-        self.sema = threading.Semaphore(0)
+        self.sema = Semaphore(0)
         self._output = []
         self.running = True
         self._plugins = []
@@ -346,6 +347,8 @@ class PylintValidator(Validator):
         else:
             return
 
+class PythonLintExternal(External):
+    validator = PylintValidator
 
 
 class PythonLintService(LanguageService):
@@ -353,6 +356,7 @@ class PythonLintService(LanguageService):
     language_name = 'Python'
     validator_factory = PylintValidator
 
+    external = PythonLintExternal
 #    features_config = SkeletonFeaturesConfig
 #    actions_config = SkeletonActionsConfig
 #    options_config = SkeletonOptionsConfig
