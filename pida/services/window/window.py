@@ -93,6 +93,7 @@ class WindowCommandsConfig(CommandsConfig):
 
     def close_focus_pane(self):
         pane = self.svc.window.get_focus_pane()
+        print 'close', pane
         if pane:
             pane.view.can_be_closed()
 

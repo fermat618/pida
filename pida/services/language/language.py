@@ -299,6 +299,13 @@ class CustomLanguageMapping(dict):
         else:
             return self.get_or_create(None).get_joined()
 
+    def get_enabled_list(self, language):
+        if self.has_key(language) and language:
+            return self[language].get_joined_list(
+                                    other_lists=(self.get_or_create(None),))
+        else:
+            return self.get_or_create(None).get_joined_list()
+
 #FIXME: filtering is currently done very dirty but
 # setting a filter function on the model causes segfault
 # on windows and performance is non critical here
@@ -666,6 +673,9 @@ class Language(LanguageService):
                 delattr(document, k)
 
     def _get_feature(self, document, feature, name, do=None):
+        """
+        Returns the best feature for a document
+        """
         handler = getattr(document, name, None)
         if handler is None:
             type_ = document.doctype
@@ -680,6 +690,27 @@ class Language(LanguageService):
                 return handler
         else:
             return handler
+
+    def _get_feature_list(self, document, feature, name, do=None):
+        """
+        Returns a list of all plugins that provide support and are above
+        the disable entry
+        """
+        handler = getattr(document, name, None)
+        if handler is None:
+            type_ = document.doctype
+            if type_:
+                type_ = type_.internal
+            else:
+                type_ = None
+            factory_list = self.features[feature].get_joined_list(type_)
+            if factory:
+                handler = factory(document)
+                setattr(document, name, handler)
+                return handler
+        else:
+            return handler
+
 
     def get_plugins(self, language, feature, default=True):
         """
