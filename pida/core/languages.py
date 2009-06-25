@@ -27,7 +27,6 @@ _ = locale.gettext
 from pida.core.log import get_logger
 log = get_logger('core.languages')
 
-print opts.multiprocessing
 if opts.multiprocessing:
     try:
         import multiprocessing
@@ -309,7 +308,7 @@ class Completer(BaseDocumentHandler):
 
 
 def make_iterable(inp):
-    if not isinstance(inp, (tuple, list)):
+    if not isinstance(inp, (tuple, list)) and not hasattr(inp, '__iter__'):
         return (inp,)
     return inp
 
@@ -544,7 +543,7 @@ class ExternalDocumentatorProxy(Documentator, ExternalProxy):
         else:
             yield rv
 
-class ExternalCompleterProxy(Definer, ExternalProxy):
+class ExternalCompleterProxy(Completer, ExternalProxy):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_completions(self, base, buffer_, offset):
         rv = self.svc.jobserver.completer_get_completions(self, base,
@@ -555,6 +554,43 @@ class ExternalCompleterProxy(Definer, ExternalProxy):
         else:
             yield rv
 
+class Merger(BaseDocumentHandler):
+    """
+    Merges different sources of providers into one stream
+    """
+    def __init__(self, svc, document=None, sources=()):
+        self.set_sources(sources)
+        super(Merger, self).__init__(svc, document)
+
+    def set_sources(self, sources):
+        """
+        Set all sources that will be used to build the results.
+        
+        The order of the sources will define the order which create the results
+        """
+        self.sources = sources
+        self.instances = None
+
+    def create_instances(self):
+        """
+        Create all instances that are an the sources list
+        """
+        self.instances = []
+        for src in self.sources:
+            self.instances.append(src(self.document))
+
+
+class MergeCompleter(Completer, Merger):
+    def get_completions(self, base, buffer_, offset):
+        if not self.instances:
+            self.create_instances()
+        results = set()
+        for prov in self.instances:
+            for res in prov.get_completions(base, buffer_, offset):
+                if res in results:
+                    continue
+                results.add(res)
+                yield res
 
 class JobServer(object):
     """
@@ -564,6 +600,7 @@ class JobServer(object):
     def __init__(self, svc, external, max_processes=2):
         self.svc = svc
         self.max_processes = max_processes
+        self.stopped = False
         # we have to map the proxy objects to
         self._processes = [] 
         self._external = external
@@ -606,34 +643,50 @@ class JobServer(object):
 
     def validator_get_validations(self, proxy):
         """Forwards to the external process"""
+        if self.stopped:
+            return
         manager, instance = self.get_instance(proxy, 'validator')
         for i in manager.validator_get_validations(instance):
             yield i
 
     def outliner_get_outline(self, proxy):
         """Forwards to the external process"""
+        if self.stopped:
+            return
         manager, instance = self.get_instance(proxy, 'outliner')
         for i in manager.outliner_get_outline(instance):
             yield i
 
     def definer_get_definition(self, proxy, buffer, offset):
         """Forwards to the external process"""
+        if self.stopped:
+            return
         manager, instance = self.get_instance(proxy, 'definer')
         for i in manager.definer_get_definition(instance, buffer, offset):
             yield i
 
     def documentator_get_documentation(self, proxy, buffer, offset):
         """Forwards to the external process"""
+        if self.stopped:
+            return
         manager, instance = self.get_instance(proxy, 'documentator')
-        for i in manager.documentator_get_documentation(instance, buffer, offset):
+        for i in manager.documentator_get_documentation(instance, buffer,
+                                                        offset):
             yield i
 
     def completer_get_completions(self, proxy, base, buffer, offset):
         """Forwards to the external process"""
+        if self.stopped:
+            return
         manager, instance = self.get_instance(proxy, 'completer')
         for i in manager.completer_get_completions(instance, base, buffer,
                                                         offset):
             yield i
+
+    def stop(self):
+        self.stopped = True
+        for i in self._processes:
+            i.shutdown()
 
 class LanguageService(Service):
     """
@@ -684,6 +737,11 @@ class LanguageService(Service):
             self.jobserver = self.jobserver_factory(self, self.external)
         else:
             self.jobserver = None
+
+    def destroy(self):
+        if self.jobserver:
+            self.jobserver.stop()
+        super(LanguageService, self).destroy()
 
 LANGUAGE_PLUGIN_TYPES = {
 'completer': {

@@ -22,7 +22,8 @@ from pida.utils.addtypes import PriorityList
 
 # core
 #from pida.core.service import Service
-from pida.core.languages import LanguageService, LanguageServiceFeaturesConfig
+from pida.core.languages import (LanguageService, LanguageServiceFeaturesConfig,
+                                 MergeCompleter)
 from pida.core.events import EventsConfig
 from pida.core.actions import (ActionsConfig, TYPE_TOGGLE,
                                TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL, TYPE_NORMAL)
@@ -217,14 +218,25 @@ class CustomLanguagePrioList(PriorityList, Category):
                         if isinstance(fac, partial):
                             if fac.func.uuid() == uid:
                                 if getattr(fac.func, 'IS_DISABELING', False):
-                                    return rv
+                                    break
                                 rv.append(fac)
                         else:
                             if fac.uuid() == uid:
                                 if getattr(fac, 'IS_DISABELING', False):
-                                    return rv
+                                    break
                                 rv.append(fac)
-        #FIXME: not finished..
+        else:
+            for group in (self,) + other_lists:
+                for fac in group:
+                    if isinstance(fac, partial):
+                        if getattr(fac.func, 'IS_DISABELING', False):
+                            break
+                        rv.append(fac)
+                    else:
+                        if getattr(fac, 'IS_DISABELING', False):
+                            break
+                        rv.append(fac)
+        return rv
 
 class CustomLanguageMapping(dict):
     """
@@ -691,7 +703,7 @@ class Language(LanguageService):
         else:
             return handler
 
-    def _get_feature_list(self, document, feature, name, do=None):
+    def _get_feature_list(self, document, feature, name, merger, do=None):
         """
         Returns a list of all plugins that provide support and are above
         the disable entry
@@ -703,9 +715,9 @@ class Language(LanguageService):
                 type_ = type_.internal
             else:
                 type_ = None
-            factory_list = self.features[feature].get_joined_list(type_)
-            if factory:
-                handler = factory(document)
+            factory_list = self.features[feature].get_enabled_list(type_)
+            if factory_list:
+                handler = merger(self, document, factory_list)
                 setattr(document, name, handler)
                 return handler
         else:
@@ -806,7 +818,8 @@ class Language(LanguageService):
         self._view_validator.set_validator(
             self._get_feature(document, 'validator', '_lng_validator'),
             document)
-        self._get_feature(document, 'completer', '_lng_completer')
+        self._get_feature_list(document, 'completer', '_lng_completer',
+                               MergeCompleter)
         self._get_feature(document, 'definer', '_lng_definer')
 
     def get_info(self, document):
@@ -819,7 +832,8 @@ class Language(LanguageService):
         return self._get_feature(document, 'validator', '_lng_validator')
 
     def get_completer(self, document):
-        return self._get_feature(document, 'completer', '_lng_completer')
+        return self._get_feature_list(document, 'completer', '_lng_completer', 
+                                      MergeCompleter)
 
     def get_definer(self, document):
         return self._get_feature(document, 'definer', '_lng_definer')
