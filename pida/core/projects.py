@@ -180,10 +180,11 @@ class Project(Log):
                 fp = open(path)
                 self._cache = pickle.load(fp)
             except Exception, err:
-                self.log.error("can't load cache: %s" %err)
-                self.index(recrusive=True)
+                self.log.error("can't load cache")
+                os.unlink(path)
+                self.index(recrusive=True, rebuild=True)
         else:
-            self.index(recrusive=True)
+            self.index(recrusive=True, rebuild=True)
 
     def save_cache(self):
         path = self.get_meta_dir(filename=CACHE_NAME)
@@ -227,11 +228,11 @@ class Project(Log):
         """
         from pida.services.language import DOCTYPES
         doctype = DOCTYPES.type_by_filename(path)
-        try:
-            rpath = os.sep.join(*self.get_relative_path_for(path))
-        except TypeError:
-            # we don't care about outside projects
+        rel = self.get_relative_path_for(path)
+        if rel is None:
             return
+        rpath = os.sep.join(self.get_relative_path_for(path))
+
         if rpath is None:
             #document outside of project
             return
