@@ -192,9 +192,9 @@ class {{classname}}Validator(Validator):
 
 class {{classname}}Completer(Completer):
 
-    priority = LANG_PRIO.VERY_GOOD
-    name = "rope"
-    plugin = "python"
+    priority = LANG_PRIO.GOOD
+    name = "{{name}}"
+    plugin = "{{name}}"
     description = _("Creates very exact suggestions at reasonable speed")
 
     def get_completions(self, base, buffer, offset):
