@@ -268,8 +268,13 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
         except:
             self.svc.log.info('Cant find anyvc')
             all_known = ()
+        try:
+            from anyvc.exc import NotFoundError
+        except ImportError:
+            NotFoundError = ValueError
         for mgr in all_known:
             self.subscribe('workdir-manager', mgr)
+            mgr.NOTFOUND = NotFoundError
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('filemanager', 'file_hidden_check', 
@@ -695,7 +700,7 @@ class Versioncontrol(Service):
                 if (not found_vcm 
                     or len(vcm_instance.base_path) > len(found_vcm.base_path)):
                     found_vcm = vcm_instance
-            except ValueError:
+            except vcm.NOTFOUND:
                 pass
         return found_vcm
 
