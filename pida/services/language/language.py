@@ -695,11 +695,14 @@ class Language(LanguageService):
                 type_ = type_.internal
             else:
                 type_ = None
-            factory = self.features[feature].get_best(type_)
-            if factory:
-                handler = factory(document)
-                setattr(document, name, handler)
-                return handler
+            factory_list = self.features[feature].get_enabled_list(type_)
+            if factory_list:
+                # try until one factory has returned a valid result
+                for factory in factory_list:
+                    handler = factory(document)
+                    if handler:
+                        setattr(document, name, handler)
+                        return handler
         else:
             return handler
 

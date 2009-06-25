@@ -576,8 +576,10 @@ class Merger(BaseDocumentHandler):
         Create all instances that are an the sources list
         """
         self.instances = []
-        for src in self.sources:
-            self.instances.append(src(self.document))
+        for factory in self.sources:
+            handler = factory(self.document)
+            if handler:
+                self.instances.append(handler)
 
 
 class MergeCompleter(Completer, Merger):

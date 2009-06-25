@@ -101,7 +101,10 @@ class PriorityList(list):
                 if cache.has_key(i):
                     addo = cache[i]
                     self.insert(j+1, addo)
-                    tmp.remove(addo)
+                    try:
+                        tmp.remove(addo)
+                    except ValueError:
+                        pass
                     j += 1
             # we put the rest of the keys that are not in 
             # the sort_list into self, but sort them internaly
