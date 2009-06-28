@@ -28,9 +28,9 @@ import ctypes.util
 
 from ctypes import c_char_p, c_int, c_size_t, c_void_p
 
-from threading import Lock
+from threading import RLock
 
-MAGIC_LOCK = Lock()
+MAGIC_LOCK = RLock()
 
 class MagicException(Exception): pass
 
@@ -56,9 +56,13 @@ class Magic:
             flags |= MAGIC_MIME
         try:
             MAGIC_LOCK.acquire()
-            self.cookie = magic_open(flags)
+            cookie = None
+            while cookie is None:
+                cookie = magic_open(flags)
+            self.cookie = cookie
 
-            magic_load(self.cookie, magic_file)
+            if magic_load(self.cookie, magic_file):
+                raise ValueError("Can't load magic")
         finally:
             MAGIC_LOCK.release()
 
@@ -95,7 +99,9 @@ class Magic:
             MAGIC_LOCK.acquire()
             magic_close(self.cookie)
         except Exception, e:
-            print "got thig: ", e
+            # it's to late to do anything here anyway.
+            # it seems to report random but seldom errors here
+            pass
         finally:
             MAGIC_LOCK.release()
 
@@ -147,11 +153,16 @@ libmagic = ctypes.CDLL(ctypes.util.find_library('magic'))
 magic_t = ctypes.c_void_p
 
 def errorcheck(result, func, args):
-    err = magic_error(args[0])
-    if err is not None:
-        raise MagicException(err)
+    try:
+        MAGIC_LOCK.acquire()
+        err = magic_errno(args[0])
+    finally:
+        MAGIC_LOCK.release()
+    if err is not 0:
+        raise MagicException('error no %s' %err)
     else:
         return result
+
 
 magic_open = libmagic.magic_open
 magic_open.restype = magic_t
