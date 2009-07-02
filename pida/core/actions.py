@@ -89,7 +89,6 @@ class ActionsConfig(OptionsConfig):
     """
     name = '%s.keys.json'
     dbus_path = "actions"
-    accelerator_group = accelerator_group
 
     def create(self):
         """
@@ -191,7 +190,7 @@ class ActionsConfig(OptionsConfig):
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
         act.opt = opt
-        act.set_accel_group(self.accelerator_group)
+        act.set_accel_group(accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
         # return the option created to allow easy manipulation
