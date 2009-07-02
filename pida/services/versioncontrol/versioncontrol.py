@@ -746,7 +746,9 @@ class Versioncontrol(Service):
         def done(output):
             self._log.append_result(output)
             self.boss.cmd('notify', 'notify',
-                title=_('Version Control %(action)s Completed') % {'action': action.capitalize()},
+                title=_('Version Control %(action)s Completed') % {
+                    'action': action.capitalize()
+                },
                 data=path,
                 stock=stock_id)
             self.boss.cmd('filemanager', 'refresh')
