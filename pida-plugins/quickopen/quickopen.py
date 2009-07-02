@@ -208,13 +208,13 @@ class QopenActionsConfig(ActionsConfig):
 
 
 
-class Qopen(Service):
+class QuickOpen(Service):
 
     #features_config = QopenFeaturesConfig
     actions_config = QopenActionsConfig
     options_config = QopenOptionsConfig
     #events_config = QopenEventsConfig
-    label = "QOpen"
+    label = "Quick Open"
 
     def pre_start(self):
         self._view = None
@@ -248,7 +248,7 @@ class Qopen(Service):
             self.boss.cmd('buffer', 'open_file', file_name=path)
 
 # Required Service attribute for service loading
-Service = Qopen
+Service = QuickOpen
 
 
 
