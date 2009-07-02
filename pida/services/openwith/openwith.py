@@ -202,7 +202,12 @@ class OpenWithActions(ActionsConfig):
         menu.show_all()
 
     def on_open_with(self, action, file_name, item):
-        command = item.command % file_name
+        try:
+            command = item.command % file_name
+        except TypeError, e:
+            self.svc.notify_user(_("The command assigned contains errors"))
+            return
+            
         if (item.terminal):
             self.svc.boss.cmd('commander', 'execute',
                 commandargs=['bash', '-c', command], title=item.name,

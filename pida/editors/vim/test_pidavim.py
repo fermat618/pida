@@ -8,10 +8,12 @@ import os, time, subprocess, tempfile
 import gtk, dbus
 
 from dbus.mainloop.glib import DBusGMainLoop
-
-from client import get_vim
+import logging
+from .client import get_vim, log
+log.setLevel(logging.WARNING)
 
 mainloop = DBusGMainLoop(set_as_default=True)
+
 
 
 vim_script = os.path.abspath('pida/resources/data/pida.vim')
@@ -25,6 +27,7 @@ def refresh_ui():
 def _start_vim():
     env = os.environ.copy()
     env['PIDA_DBUS_UUID'] = 'pidatest'
+    env['PIDA_PATH'] = '.'
     p = subprocess.Popen(['gvim', '-iconic', '-f', '--cmd', 'so %s' % vim_script],
                          env=env)
     return p
@@ -39,7 +42,7 @@ def _make_test_file():
 
 class TestVim(object):
 
-    def setUp(self):
+    def setup_method(self, method=None):
         self.vim_process = _start_vim()
         time.sleep(1)
         self.vim = get_vim('pidatest')
@@ -47,7 +50,7 @@ class TestVim(object):
 
         self.files = [_make_test_file() for i in range(5)]
 
-    def tearDown(self):
+    def teardown_method(self, method=None):
         for fn in self.files:
             os.unlink(fn)
         # XXX this segfaults for some reason
@@ -56,6 +59,10 @@ class TestVim(object):
         os.kill(self.vim_process.pid, 9)
 
         self.vim_process.wait()
+
+    #XXX: nosetest compat
+    setup = setup_method
+    teardown = teardown_method
 
     def test_eval(self):
         # vim-python is broken with regards evaling numbers as strings
@@ -118,15 +125,25 @@ class TestVim(object):
 
         buffer_list = list(self.vim.get_buffer_list())
 
+        refresh_ui()
+
         assert stay_open in buffer_list
         assert will_close not in buffer_list
 
     def test_close_current_buffer(self):
-        self.vim.open_file(self.files[0])
-        self.vim.open_file(self.files[1])
+
+        will_close, stay_open = self.files[:2]
+
+        self.vim.open_file(stay_open)
+        self.vim.open_file(will_close)
+
         self.vim.close_current_buffer()
-        assert self.files[0] in self.vim.get_buffer_list()
-        assert self.files[1] not in self.vim.get_buffer_list()
+        buffer_list = list(self.vim.get_buffer_list())
+
+        refresh_ui()
+
+        assert stay_open in buffer_list
+        assert will_close not in buffer_list
 
     def test_save(self):
         self.vim.open_file(self.files[0])

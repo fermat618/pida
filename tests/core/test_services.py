@@ -17,6 +17,9 @@ class MockBoss(object):
     def add_action_group_and_ui(*args):
         pass
 
+    def remove_action_group_and_ui(*args):
+        pass
+
 
 class MYOptions(OptionsConfig):
 
@@ -48,7 +51,7 @@ class TestOptions(TestCase):
 
     def setUp(self):
         pass
-
+    
     def test_options_setup(self):
         svc = MYService(boss=MockBoss())
         svc.create_all()
@@ -56,6 +59,7 @@ class TestOptions(TestCase):
             svc.options.get_option('g1'),
             svc.o_test
         )
+        svc.destroy()
 
     def test_option_get(self):
         svc = MYService(boss=MockBoss())
@@ -63,6 +67,7 @@ class TestOptions(TestCase):
         self.assertEqual(
             svc.get_option('g1'), svc.o_test
         )
+        svc.destroy()
 
     def test_option_get_value(self):
         svc = MYService(boss=MockBoss())
@@ -70,12 +75,16 @@ class TestOptions(TestCase):
         self.assertEqual(
             svc.opt('g1'), 'default value'
         )
+        svc.destroy()
 
 class TestCommands(TestCase):
 
     def setUp(self):
         self.svc = MYService(boss=MockBoss())
         self.svc.create_all()
+
+    def tearDown(self):
+        self.svc.destroy()
 
     def test_call(self):
         self.assertEqual(self.svc.something, False)
@@ -88,5 +97,16 @@ class TestCommands(TestCase):
         self.assertRaises(TypeError, c)
 
 
+class TestService(TestCase):
+
+    def test_dbus_double_register(self):
+        svc = MYService(boss=MockBoss())
+        svc.create_all()
+        svc2 = MYService(boss=MockBoss())
+        # we can't start two services with the same name
+        self.assertRaises(KeyError, svc2.create_all)
+        #svc2.create_all()
+        svc.destroy()
+        #svc2.destroy()
 
 

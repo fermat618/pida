@@ -37,135 +37,112 @@ from kiwi.ui.objectlist import Column
 # core
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
+from pida.core.pdbus import DbusConfig, EXPORT
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
 
 # utils
-from pida.utils.gthreads import GeneratorTask
+from pida.utils.gthreads import GeneratorTask, AsyncTask
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('nosetest')
 _ = locale.gettext
 
-
-class TraceItem(object):
-    def __init__(self, **kw):
-        for name in 'text file function line'.split():
-            setattr(self, name, kw[name])
-
-    def __str__(self):
-        return 'File %r, line %s, in %s'%(self.file, self.line, self.function)
-
-    @property
-    def markup(self):
-        return '  %s'%self
+export = EXPORT(suffix='nosetest')
 
 
-class Trace(object):
-    def __init__(self, type, args):
-        self.type = type
-        self.args = args
-        self.items = []
 
-    @staticmethod
-    def from_element(element):
-        cause = element.find('cause')
-        if cause is None:
-            return
-        type = cause.attrib['type']
-        args = escape(cause.findtext(''))
+class NosetestDBusConfig(DbusConfig):
 
-        #XXX: unescape hack, find a better one in the stdlib
-        #for f, t in zip('&lt; &gt; &quot; &apos; &amp;'.split(), '<>"\'&'):
-        #    args = args.replace(f, t)
-        #args = args.strip()
+    @export(sender_keyword='sender',  in_signature='s')
+    def beginProcess(self, cwd, sender):
+        self.svc.log.info('beginning suite of %s in %s', sender, cwd)
+        self.sender = sender
+        self.svc._tests.clear()
 
-        trace = Trace(type, args)
-        trace.items.extend(TraceItem(**x.attrib) 
-                                  for x in element.findall('frame'))
+    @export(sender_keyword='sender')
+    def endProcess(self, sender):
+        pass
 
-        # XXX: captured output support
-        return trace
-    
-    @property
-    def markup(self):
-        return '%s: %s'%(self.type, self.args)
+    @export(sender_keyword='sender', in_signature='s')
+    def addSuccess(self, test, sender):
+        if sender == self.sender:
+            self.svc._tests.add_success(test)
 
-    def __str__(self):
-        lines = ['Traceback:']
-        lines.extend(x.markup for x in self.items)
-        lines.append(self.markup)
-        return '\n'.join(lines)
+    @export(sender_keyword='sender', in_signature='ss')
+    def addError(self, test, err, sender):
+        if sender == self.sender:
+            self.svc._tests.add_error(test, err)
 
-class TestResult(object) : 
-    status_map= { # 1 is for sucess, 2 for fail
-                  # used for fast tree updates
-            'success': ('gtk-ok', 1),
-            'failure': ('gtk-no', 2),
-            'error': ('gtk-cancel', 2),
-            }
+    @export(sender_keyword='sender', in_signature='ss')
+    def addFailure(self, test, err, sender):
+        if sender == self.sender:
+            self.svc._tests.add_failure(test, err)
 
-    parent = None
-    trace = None
+    @export(sender_keyword='sender', in_signature='ss')
+    def startContext(self, name, file, sender):
+        if sender == self.sender:
+            self.svc._tests.start_context(name, file)
 
-    def __init__(self, full_name, status, trace, capture):
-        print full_name, status, trace, capture
-        self.full_name = full_name
-        self.trace = trace
-        self.capture = capture
-        self.name, self.group_names = self.parse_test_name(full_name)
-        status = status.lower()
-        self.status, self.state = self.status_map[status]
+    @export(sender_keyword='sender')
+    def stopContext(self, sender):
+        if sender == self.sender:
+            self.svc._tests.stop_context()
 
-    def parse_test_name (self, name):
-        if '(' in name:
-            group, name = name.split('(', 2)
-            return name[:-1], tuple(group.split('.'))
-        else:
-            groups = tuple(name.split('.'))
-            return groups[-1], groups[:-1]
+    @export(sender_keyword='sender', in_signature='s')
+    def startTest(self, test, sender):
+        if sender == self.sender:
+            self.svc._tests.start_test(test)
 
-    def parents(self): 
-        p = self.parent
+    @export(sender_keyword='sender')
+    def stopTest(self, sender):
+        if sender == self.sender:
+            self.svc._tests.stop_test()
 
-        while p.parent:
-            yield p
-            p = p.parent
+status_map= { # 1 is for sucess, 2 for fail
+              # used for fast tree updates
+        'success': 'gtk-apply',
+        'failure': 'gtk-no',
+        'error': 'gtk-cancel',
+        'mixed:': 'gtk-dialog-warning',
+        'running': 'gtk-refresh',
+        }
 
-    @property
-    def output(self):
-        if self.trace:
-            return str(self.trace)
-        else:
-            return 'Success'
+def parse_test_name (self, name):
+    if '(' in name:
+        group, name = name.split('(', 2)
+        return name[:-1], tuple(group.split('.'))
+    else:
+        groups = tuple(name.split('.'))
+        return groups[-1], groups[:-1]
 
-class TestResultGroup(object):
-    state_map = {
-            0: 'gtk-directory',
-            1: 'gtk-ok',
-            2: 'gtk-dialog-error',
-            3: 'gtk-dialog-question',
-            }
 
-    def __init__(self,  names, parent):
-        self.name = names and names[-1] or None
-        self.names = names
+class TestItem(object):
+    def __init__(self, name, parent):
+        self.name = name
         self.parent = parent
-        self.state = 0
-        self.status = 'gtk-directory'
+        self.children = {}
+        self.status = 'running'
+        if parent is not None:
+            parent.children[self.name] = self
 
-    def add_child(self,  child):
-        res = child.state | self.state
-        if res != self.state:
-            self.state = res
-            self.status = self.state_map[res]
-            return True
+    @property
+    def short_name(self):
+        if self.parent is None:
+            return self.name
+        else:
+            return self.name[len(self.parent.name)+1:]
+
+    @property
+    def icon(self):
+        return status_map[self.status]
+
 
     @property
     def output(self):
-        return 'TestResultGroup %s'% '.'.join(self.names)
+        return getattr(self, trace, 'Nothing is wrong directly here, i think')
 
 class TestResultBrowser(PidaGladeView):
 
@@ -178,116 +155,94 @@ class TestResultBrowser(PidaGladeView):
 
     def __init__(self,* k,**kw):
         PidaGladeView.__init__(self,*k,**kw)
-        self.items = {}
-        self.tree = {(): TestResultGroup(None, None)}
-        self.gt = None
+        self.clear()
 
     def create_ui(self):
         self.source_tree.set_columns([
-                Column('status', use_stock=True, justify=gtk.JUSTIFY_LEFT),
-                Column('name', title='status',),
+                Column('icon', use_stock=True, justify=gtk.JUSTIFY_LEFT),
+                Column('short_name', title='status',),
             ])
         self.source_tree.set_headers_visible(False)
 
-    def clear_items(self):
+    def clear(self):
         self.source_tree.clear()
-        self.items.clear()
-        self.tree = {(): TestResultGroup(None, None)}
+        self.tree = {}
+        self.stack = [ None ]
 
 
     def can_be_closed(self):
         self.svc.get_action('show_test_python').set_active(False)
 
-    def get_or_create_testgroup(self, names):
-        group = self.tree.get(names)
-        if not group:
-            parent = self.get_or_create_testgroup(names[:-1])
-            group = TestResultGroup(names, parent)
-            self.tree[names] = group
-            a = self.source_tree.append
-            if parent.name is None:
-                a(None , group)
-            else:
-                a(parent, group)
-        return group
-
-    def add_test_tree(self , test):
-        names = test.group_names
-        group = self.get_or_create_testgroup(names)
-        test.parent = group
-        #self.source_tree.append(group,test)
-        self.source_tree.append(None, test)
-
-        for parent in test.parents():
-            if parent.add_child(test):
-                self.source_tree.update(parent)
-            else:
-                break
-
-        if test.state == 2:
-            for parent in reversed(list(test.parents())):
-                self.source_tree.expand(parent, open_all=False)
-
-
-
-    def test_add(self, element):
-        print element, str(element)
-        attr = element.attrib
-        name = 'name' # attr['id']
-        status = attr['status']
-
-        trace = None
-        capture = None
-
-        test = TestResult(name, status, trace, capture) #XXX add traces
-        
-        trace = Trace.from_element(element)
-        if trace:
-            test.trace = trace
-
-        self.items[test.full_name] = test
-        self.add_test_tree(test)
-
     def run_tests(self):
-        if self.gt:
-            self.svc.log.info('tried to start nosetests twice')
-            return
-
-        self.clear_items()
-        gt = GeneratorTask(self.test_task, self.test_add, self.test_done)
-        gt.start()
-        self.gt = gt
-
-    def test_done(self):
-        self.gt = None
-
-    def test_task(self):
-        """
-        reads the test ouput from nosetest verbose
-        very untested code ;)
-        """
-
         project = self.svc.boss.cmd('project','get_current_project')
         if not project:
             self.svc.notify_user(_("No project found"))
             return
         src = project.source_directory
-        proc = subprocess.Popen(
-                [os.path.join(os.path.dirname(__file__),'pidanose.py'),
-                '--with-xml-output'],
-                cwd=src,
-                 stdout=None,
-                 stdin=subprocess.PIPE,
-                 stderr=subprocess.PIPE,
-                )
+        def call(*k, **kw): 
+            subprocess.call(*k, **kw)
 
-        for event, element in iterparse(proc.stderr):
-            print event, element
-            if element.tag == 'result':
-                yield element
+        AsyncTask(call).start([
+                    os.path.join(os.path.dirname(__file__), 'pidanose.py'),
+                    '--with-dbus-reporter', '-q',
+                ],
+                cwd=src,
+        )
 
     def on_source_tree__double_click(self, tv, item):
-            self.svc.show_result(item)
+            self.svc.show_result(item.output)
+
+    def start_test(self, test):
+        item = TestItem(test, self.stack[-1])
+        self.source_tree.append(self.stack[-1], item)
+        self.stack.append(item)
+        self.source_tree.expand(item.parent)
+
+    def stop_test(self):
+        self.source_tree.update(self.stack[-1])
+        self.stack.pop()
+
+    def add_success(self, test):
+        if self.stack[-1]:
+            self.stack[-1].status = 'success'
+
+    def add_error(self, test, error):
+        if self.stack[-1]:
+            item = self.stack[-1]
+            item.status = 'error'
+            item.trace = error
+
+    def add_failure(self, test, error):
+        if self.stack[-1]:
+            item = self.stack[-1]
+            item.status = 'failure'
+            item.trace = error
+
+    def start_context(self, name, file):
+        item = TestItem(name, self.stack[-1])
+        item.file = file
+        self.source_tree.append(self.stack[-1], item)
+        self.stack.append(item)
+        if item.parent is not None:
+            self.source_tree.expand(item.parent)
+
+    def stop_context(self):
+        #XXX: new status
+        current = self.stack.pop()
+        if not current.children:
+            self.source_tree.remove(current)
+            return
+
+        states = set(x.status for x in current.children.itervalues())
+        if len(states) > 1:
+            current.status = 'mixed'
+        else:
+            current.status = iter(states).next()
+
+        self.source_tree.update(current)
+        if current.status == 'success':
+            self.source_tree.collapse(current)
+
 
 class TestOutputView(PidaView):
 
@@ -312,8 +267,8 @@ class TestOutputView(PidaView):
         hb.pack_start(sb)
         hb.show_all()
 
-    def set_result(self, result):
-        self._trace.get_buffer().set_text(result.output)
+    def set_result(self, trace):
+        self._trace.get_buffer().set_text(trace)
 
     def can_be_closed(self):
         self.svc.output_visible = False
@@ -360,6 +315,7 @@ class PythonTestResults(Service):
     """Service for all things Python""" 
 
     actions_config = PythonActionsConfig
+    dbus_config = NosetestDBusConfig
 
     def pre_start(self):
         """Start the service"""

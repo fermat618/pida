@@ -19,7 +19,9 @@ Vim Integration for PIDA
 import os, sys
 import vim
 
-#sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
+# just in case, our pida might not be in the default path
+sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
+
 
 import gtk, gobject
 
@@ -84,7 +86,12 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, out_signature='as')
     def get_buffer_list(self):
-        return [b.name for b in vim.buffers]
+        # vim's buffer list also contains unlisted buffers
+        # we don't want those
+        return [
+            buffer.name for buffer in vim.buffers
+            if int(vim.eval("buflisted(%s)"%buffer.number))
+        ]
 
     @method(DBUS_NS, in_signature='s', out_signature='i')
     def get_buffer_number(self, path):

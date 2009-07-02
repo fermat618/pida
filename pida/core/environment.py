@@ -93,7 +93,12 @@ op.add_option('-m', '--manager', action='store_true',
     help=_('Show workspace Manager'))
 op.add_option('', '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
-
+op.add_option('', '--disable-multiprocessing', action="store_false",
+    dest='multiprocessing',
+    help=_('Disable usage of external python instances'))
+op.add_option('', '--force-multiprocessing', action="store_true", 
+    dest='multiprocessing',
+    help=_('Disable usage of external python instances'))
 
 opts, args = op.parse_args([])
 
@@ -107,6 +112,13 @@ def parse_args(argv):
 
     if opts.killsettings:
         opts.firstrun = True
+
+    if opts.multiprocessing is None:
+        try:
+            import multiprocessing
+            opts.multiprocessing = multiprocessing.cpu_count() > 1
+        except ImportError:
+            opts.multiprocessing = False
 
 def is_debug():
     return opts.debug

@@ -6,7 +6,7 @@
 
 import os
 import os
-from pida.utils.addtypes import Enumeration
+from pida.utils.addtypes import Enumeration, PriorityList
 #from pida.core.testing import test, assert_equal, assert_notequal
 
 from pida.utils.testing.mock import Mock
@@ -37,3 +37,31 @@ class EnumerationTest(TestCase):
     def test_missing(self):
         test = Enumeration('test', ('A', 'B', 'C'))
         self.assertRaises(AttributeError, getattr, test, 'D')
+
+
+class PriorityListTest(TestCase):
+
+    def test_list(self):
+        pl = PriorityList(1,2,3)
+        self.assertEqual(pl, [1,2,3])
+        pl.sort(reverse=True)
+        self.assertEqual(pl, [3,2,1])
+        pl.add(4)
+        self.assertEqual(pl, [1,2,3,4])
+        pl.sort(reverse=True)
+        self.assertEqual(pl, [4,3,2,1])
+
+    def test_prio_list(self):
+        pl = PriorityList(1,2,3,4,'test',
+                sort_list=(2,3,'test',1,4))
+        self.assertEqual(pl, [2,3,'test',1,4])
+
+
+    def test_prio_list2(self):
+        pl = PriorityList('test',1,2,3,4,
+                sort_list=(2,3,7,'test',1,4,6))
+        self.assertEqual(pl, [2,3,'test',1,4])
+        pl.add(6)
+        self.assertEqual(pl, [2,3,'test',1,4,6])
+        pl.add(7)
+        self.assertEqual(pl, [2,3,7,'test',1,4,6])

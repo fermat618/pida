@@ -8,11 +8,22 @@ List of general Language classes.
 
 """
 from .addtypes import Enumeration
+from .path import get_line_from_file
+
+
+
+#!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!! these are inter process interfaces, too                     !!!!
+#!!!! don't change their order, remove or change existing entries !!!!
+#!!!! you can append new entries at the end                       !!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
 # completer types
 LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
-    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 'PROPERTY',
-    'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
+    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 
+    'PROPERTY', 'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
     'KEYWORD', 'SNIPPET'))
 
 
@@ -23,16 +34,18 @@ LANG_VALIDATOR_TYPES = Enumeration('LANG_TYPES',
 # validation sub types
 LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
     ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
-     'DUPLICATE', 'UNUSED'))
+     'DUPLICATE', 'UNUSED', 'FIXME', 'PROTECTION', 'DANGEROUS'))
 
 # validation sub types
 
-LANG_OUTLINER_TYPES = Enumeration('LANG_OUTLINER_TYPES',
+LANG_TYPES = Enumeration('LANG_TYPES',
  ('', 'UNKNOWN', 
  'ATTRIBUTE', 'BUILTIN', 'CLASS', 'DEFINE', 'ENUMERATION',
  'ENUMERATION_NAME', 'FUNCTION', 'IMPORT', 'MEMBER', 'METHOD', 'PROPERTY',
  'PROTOTYPE', 'STRUCTURE', 'SUPERMETHOD', 'SUPERPROPERTY', 'TYPEDEF', 'UNION',
  'VARIABLE'))
+
+LANG_OUTLINER_TYPES = LANG_TYPES
 
 LANG_PRIO = Enumeration('LANG_PRIORITIES',
 (
@@ -45,40 +58,47 @@ LANG_PRIO = Enumeration('LANG_PRIORITIES',
 ))
 
 
-LANG_OUTLINE_IMAGE_MAP = {
-    LANG_OUTLINER_TYPES.ATTRIBUTE: 'source-attribute',
-    LANG_OUTLINER_TYPES.BUILTIN: 'source-attribute',
-    LANG_OUTLINER_TYPES.CLASS: 'source-class',
-    LANG_OUTLINER_TYPES.DEFINE: 'source-define',
-    LANG_OUTLINER_TYPES.ENUMERATION: 'source-enum',
-    LANG_OUTLINER_TYPES.ENUMERATION_NAME: 'source-enumarator',
-    LANG_OUTLINER_TYPES.FUNCTION: 'source-function',
-    LANG_OUTLINER_TYPES.IMPORT: 'source-import',
-    LANG_OUTLINER_TYPES.MEMBER: 'source-member',
-    LANG_OUTLINER_TYPES.METHOD: 'source-method',
-    LANG_OUTLINER_TYPES.PROTOTYPE: 'source-interface',
-    LANG_OUTLINER_TYPES.PROPERTY: 'source-property',
-    LANG_OUTLINER_TYPES.METHOD: 'source-method',
-    LANG_OUTLINER_TYPES.SUPERMETHOD: 'source-extramethod',
+LANG_IMAGE_MAP = {
+    LANG_TYPES.ATTRIBUTE: 'source-attribute',
+    LANG_TYPES.BUILTIN: 'source-attribute',
+    LANG_TYPES.CLASS: 'source-class',
+    LANG_TYPES.DEFINE: 'source-define',
+    LANG_TYPES.ENUMERATION: 'source-enum',
+    LANG_TYPES.ENUMERATION_NAME: 'source-enumarator',
+    LANG_TYPES.FUNCTION: 'source-function',
+    LANG_TYPES.IMPORT: 'source-import',
+    LANG_TYPES.MEMBER: 'source-member',
+    LANG_TYPES.METHOD: 'source-method',
+    LANG_TYPES.PROTOTYPE: 'source-interface',
+    LANG_TYPES.PROPERTY: 'source-property',
+    LANG_TYPES.METHOD: 'source-method',
+    LANG_TYPES.SUPERMETHOD: 'source-extramethod',
     #FIXME: superproperty icon
-    LANG_OUTLINER_TYPES.SUPERPROPERTY: 'source-property',
-    LANG_OUTLINER_TYPES.TYPEDEF: 'source-typedef',
-    LANG_OUTLINER_TYPES.UNION: 'source-union',
-    LANG_OUTLINER_TYPES.VARIABLE: 'source-variable',
+    LANG_TYPES.SUPERPROPERTY: 'source-property',
+    LANG_TYPES.TYPEDEF: 'source-typedef',
+    LANG_TYPES.UNION: 'source-union',
+    LANG_TYPES.VARIABLE: 'source-variable',
 }
-
 
 
 class InitObject(object):
     def __init__(self, **kwargs):
-        for k,v in kwargs.iteritems():
+        for k, v in kwargs.iteritems():
             setattr(self, k, v)
 
+
+def color_to_string(color):
+    """Converts a color object to a string"""
+    if isinstance(color, basestring):
+        return color
+    # gtk color
+    return color.to_string()
 
 class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
-    type = LANG_VALIDATOR_TYPES.UNKNOWN
+    message_args = None
+    type_ = LANG_VALIDATOR_TYPES.UNKNOWN
     subtype = LANG_VALIDATOR_SUBTYPES.UNKNOWN
     filename = None
     lineno = None
@@ -113,23 +133,23 @@ class ValidationError(InitObject):
                       'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
                                     self.subtype).capitalize()),
                       'message':self.message,
-                      'linecolor': self.lookup_color('pida-lineno').to_string(),
-                      'typec': typec.to_string(),
+                      'linecolor': color_to_string(self.lookup_color('pida-lineno')),
+                      'typec': color_to_string(typec),
                       })
         return markup
     markup = property(get_markup)
-    def get_markup(self):
-        #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-        #message_string = self.message % tuple(args)
-        #msg.name = msg.__class__.__name__
-        markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
-                      (self.lineno, 
-                      LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
-                      LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
-                      self.message))
-        return markup
-    
-    markup = property(get_markup)
+#     def get_markup(self):
+#         #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
+#         #message_string = self.message % tuple(args)
+#         #msg.name = msg.__class__.__name__
+#         markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
+#                       (self.lineno, 
+#                       LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
+#                       LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
+#                       self.message))
+#         return markup
+#     
+#     markup = property(get_markup)
 
 
 
@@ -138,9 +158,12 @@ class OutlineItem(InitObject):
     """
     Outlines are returned by an Outliner class
     """
-    type = LANG_OUTLINER_TYPES.UNKNOWN
+    type = LANG_TYPES.UNKNOWN
     name = ''
     parent = None
+    id = None
+    # the parent id is a link to the parent's id value which can be pickeled
+    parent_id = None
     line = 0
     filter_type = None
 
@@ -149,7 +172,7 @@ class OutlineItem(InitObject):
 
     def _get_icon_name(self):
         return getattr(self, '_icon_name_set', 
-                                    LANG_OUTLINE_IMAGE_MAP.get(self.type, ''))
+                                    LANG_IMAGE_MAP.get(self.type, ''))
     def _set_icon_name(self, value):
         self._icon_name_set = value
     icon_name = property(_get_icon_name, _set_icon_name)
@@ -157,6 +180,7 @@ class OutlineItem(InitObject):
 
 class Definition(InitObject):
     """Returned by a Definer instance"""
+    type = LANG_TYPES.UNKNOWN
     file_name = None
     offset = None
     length = None
@@ -167,17 +191,37 @@ class Definition(InitObject):
     def __repr__(self):
         where = ""
         if self.offset is not None:
-            where = " offset %s " %self.offset
+            where = " offset %s " % self.offset
         elif self.line is not None:
-            where = " line %s " %self.line
-        return '<Definition %s%s>' %(self.file_name, where)
+            where = " line %s " % self.line
+        return '<Definition %s%s>' % (self.file_name, where)
 
+    def _get_icon_name(self):
+        return getattr(self, '_icon_name_set', 
+                                    LANG_IMAGE_MAP.get(self.type, ''))
+    def _set_icon_name(self, value):
+        self._icon_name_set = value
+
+    icon_name = property(_get_icon_name, _set_icon_name)
+
+    def _get_signature(self):
+        if self.line is None and self.offset is None:
+            return None
+        if not hasattr(self, '_signature_value'):
+            self._signature_value = get_line_from_file(self.file_name,
+                line=self.line, offset=self.offset)
+        return self._signature_value
+
+    def _set_signature(self, value):
+        self._signature_value = value
+
+    signature = property(_get_signature, _set_signature)
 
 class Suggestion(unicode):
     """
     Suggestions are returned by an Completer class
     """
-    type_ = LANG_COMPLETER_TYPES.UNKNOWN
+    type_ = LANG_TYPES.UNKNOWN
     doc = None
     docpath = None
     signature = None

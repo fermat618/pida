@@ -28,11 +28,11 @@ import shutil
 import pida.plugins
 
 from kiwi.ui.objectlist import Column
-from pida import PIDA_VERSION
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
@@ -284,7 +284,7 @@ class PluginsView(PidaGladeView):
 
 class PluginsActionsConfig(ActionsConfig):
     def create_actions(self):
-        self.create_action(
+        PluginsWindowConfig.action = self.create_action(
             'show_plugins',
             TYPE_TOGGLE,
             _('Plugins manager'),
@@ -351,12 +351,22 @@ class PluginsEvents(EventsConfig):
         self.publish('plugin_started', 'plugin_stopped')
 
 
+class PluginsWindowConfig(WindowConfig):
+    key = PluginsView.key
+    label_text = PluginsView.label_text
+
+class PluginsFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            PluginsWindowConfig)
+
 class Plugins(Service):
     """ Plugins manager service """
 
     actions_config = PluginsActionsConfig
     options_config = PluginsOptionsConfig
     events_config = PluginsEvents
+    features_config = PluginsFeaturesConfig
 
     def pre_start(self):
         self._check = False
@@ -371,11 +381,6 @@ class Plugins(Service):
     def start(self):
         self.update_installed_plugins(start=True)
         self.check_for_updates(self.opt('check_for_updates'))
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_plugins(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -603,7 +608,7 @@ class Plugins(Service):
         self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
-        markup = '<b>%s</b>' % cgi.escape(item.name)
+        markup = '<b>%s</b>' % cgi.escape(item.name or str(item))
         if item.version:
             markup += '\n<b>%s</b> : %s' % (_('Version'),
                     cgi.escape(item.version))
@@ -633,15 +638,18 @@ class Plugins(Service):
         if not self._check and check:
             self._check = check
             # check now
-            self._check_for_updates()
+            # we don't fetch when starting the service to reduce
+            # startup time
+            self._check_for_updates(fetch=False)
             return
 
-    def _check_for_updates(self):
+    def _check_for_updates(self, fetch=True):
         self._check_event = False
         if not self._check:
             return
         self._check_notify = True
-        self.fetch_available_plugins()
+        if fetch:
+            self.fetch_available_plugins()
         # relaunch event in 30 minutes
         if not self._check_event:
             gobject.timeout_add(30 * 60 * 1000, self._check_for_updates)

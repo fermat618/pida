@@ -8,11 +8,15 @@ import os, os.path
 from pida.core.projects import Project
 from .project import ProjectService
 from pida.utils.testing.mock import Mock
+from pida.core.environment import library
+library.add_global_resource('glade', 
+                            os.path.join(os.path.dirname(__file__), 'glade'))
 
 def test_loaded_event():
     boss = Mock()
     
     project_service = ProjectService(boss)
+    project_service.started = False
     project_service.create_all()
     project_service.start()
     #XXX: mock mimicing the result of project_service.pre_start

@@ -18,7 +18,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE
 
-from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.views import PidaView, PidaGladeView, WindowConfig
 
 from pida.ui.htmltextview import HtmlTextView
 
@@ -31,16 +31,11 @@ from pida.core.locale import Locale
 locale = Locale('versioncontrol')
 _ = locale.gettext
 
-try:
-    from pygments import highlight
-    from pygments.lexers import DiffLexer
-    from pygments.formatters import HtmlFormatter
-except ImportError:
-    DiffLexer = HtmlFormatter = lambda *k, **kw: None #they get args
-    def highlight(diff, *k): # dummy in case of missing pygments
-         return '<pre>\n%s</pre>\n' % escape(diff)
 
-class DiffViewer(PidaView):
+from pida.ui.besttextview import BestTextView
+
+
+class HtmlDiffViewer(PidaView):
 
     icon_name = gtk.STOCK_COPY
     label_text = _('Differences')
@@ -65,6 +60,55 @@ class DiffViewer(PidaView):
 
     def can_be_closed(self):
          return True
+
+
+class TextDiffViewer(PidaView):
+
+    icon_name = gtk.STOCK_COPY
+    label_text = _('Differences')
+
+    def create_ui(self):
+        hb = gtk.HBox()
+        self.add_main_widget(hb)
+        sb = gtk.ScrolledWindow()
+        sb.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sb.set_shadow_type(gtk.SHADOW_IN)
+        sb.set_border_width(3)
+        self._txt = BestTextView()
+        from pida.services.language import DOCTYPES
+        self._txt.set_doctype(DOCTYPES['Diff'])
+        self._txt.set_show_line_numbers(True)
+        import pango
+        self._txt.modify_font(pango.FontDescription('mono'))
+        #self._html.set_left_margin(6)
+        #self._html.set_right_margin(6)
+        sb.add(self._txt)
+        hb.pack_start(sb)
+        hb.show_all()
+
+    def set_diff(self, diff):
+        #data = highlight(diff, DiffLexer(), HtmlFormatter(noclasses=True))
+        #self._html.display_html(data)
+        self._txt.get_buffer().set_text(diff)
+        self._txt.set_editable(False)
+
+    def can_be_closed(self):
+         return True
+
+if not BestTextView.has_syntax_highlighting:
+    try:
+        from pygments import highlight
+        from pygments.lexers import DiffLexer
+        from pygments.formatters import HtmlFormatter
+    except ImportError:
+        DiffLexer = HtmlFormatter = lambda *k, **kw: None #they get args
+        def highlight(diff, *k): # dummy in case of missing pygments
+            return '<pre>\n%s</pre>\n' % escape(diff)
+
+    DiffViewer = HtmlDiffViewer
+else:
+    DiffViewer = TextDiffViewer
+
 
 class VersionControlLog(PidaGladeView):
 
@@ -206,6 +250,14 @@ class CommitViewer(PidaGladeView):
         self.set_path(None)
         self.svc.get_action('show_commit').set_active(False)
 
+class VersioncontrolLogWindowConfig(WindowConfig):
+    key = VersionControlLog.key
+    label_text = VersionControlLog.label_text
+
+class VersioncontrolCommitWindowConfig(WindowConfig):
+    key = CommitViewer.key
+    label_text = CommitViewer.label_text
+
 class VersioncontrolFeaturesConfig(FeaturesConfig):
 
     def create(self):
@@ -216,8 +268,13 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
         except:
             self.svc.log.info('Cant find anyvc')
             all_known = ()
+        try:
+            from anyvc.exc import NotFoundError
+        except ImportError:
+            NotFoundError = ValueError
         for mgr in all_known:
             self.subscribe('workdir-manager', mgr)
+            mgr.NOTFOUND = NotFoundError
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('filemanager', 'file_hidden_check', 
@@ -226,6 +283,11 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
             (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'versioncontrol-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            VersioncontrolCommitWindowConfig)
+        self.subscribe_foreign('window', 'window-config',
+            VersioncontrolLogWindowConfig)
+
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, 
         _("Hide Ignored Files by Version Control"))
@@ -274,7 +336,7 @@ class VersioncontrolCommandsConfig(CommandsConfig):
 class VersionControlActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        VersioncontrolLogWindowConfig.action = self.create_action(
             'show_vc_log',
             TYPE_REMEMBER_TOGGLE,
             _('Version Control Log'),
@@ -618,7 +680,6 @@ class Versioncontrol(Service):
     def start(self):
         self._log = VersionControlLog(self)
         self._commit = CommitViewer(self)
-        acts = self.boss.get_service('window').actions
 
         if not self.features['workdir-manager']:
             self.boss.get_service('notify').notify(
@@ -626,9 +687,6 @@ class Versioncontrol(Service):
                             title="Can't find anyvc",
                             stock=gtk.STOCK_DIALOG_ERROR,
                             )
-
-        acts.register_window(self._log.key,
-                             self._log.label_text)
 
 
     def ignored_file_checker(self, path, name, state):
@@ -642,7 +700,7 @@ class Versioncontrol(Service):
                 if (not found_vcm 
                     or len(vcm_instance.base_path) > len(found_vcm.base_path)):
                     found_vcm = vcm_instance
-            except ValueError:
+            except vcm.NOTFOUND:
                 pass
         return found_vcm
 
@@ -688,7 +746,9 @@ class Versioncontrol(Service):
         def done(output):
             self._log.append_result(output)
             self.boss.cmd('notify', 'notify',
-                title=_('Version Control %(action)s Completed') % {'action': action.capitalize()},
+                title=_('Version Control %(action)s Completed') % {
+                    'action': action.capitalize()
+                },
                 data=path,
                 stock=stock_id)
             self.boss.cmd('filemanager', 'refresh')

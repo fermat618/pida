@@ -31,9 +31,10 @@ from kiwi.ui.objectlist import ObjectList, Column
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
 from pida.utils.gthreads import GeneratorSubprocessTask
 
@@ -126,7 +127,7 @@ class ManView(PidaView):
 class ManActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        ManWindowConfig.action = self.create_action(
             'show_man',
             TYPE_REMEMBER_TOGGLE,
             _('Man Viewer'),
@@ -142,22 +143,27 @@ class ManActions(ActionsConfig):
         else:
             self.svc.hide_man()
 
+class ManWindowConfig(WindowConfig):
+    key = ManView.key
+    label_text = ManView.label_text
+
+
+class ManFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            ManWindowConfig)
+
 # Service class
 class Man(Service):
     """Show manpage of command"""
 
     actions_config = ManActions
+    features_config = ManFeaturesConfig
 
     def start(self):
         self._view = ManView(self)
         self._has_loaded = False
         self.task = None
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
 
     def show_man(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)

@@ -10,10 +10,11 @@
 """
 import os
 import mimetypes
+mimetypes.init() # expensive shit to keep mimetypes.guess_type threadsave
 import stat
 import time
 
-from charfinder import DETECTOR_MANAGER
+from charfinder import detect_encoding
 import codecs
 
 from pida.core.log import log
@@ -45,9 +46,11 @@ class Document(object):
     markup_prefix = ''
     markup_directory_color = '#FFFF00'
     markup_project_color = '#FF0000'
+    markup_color_noproject = "#FF0000"
+
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
                          'markup_project_color', 'markup_directory_color', 
-                         'filename', 'directory']
+                         'filename', 'directory', 'markup_color_noproject']
 
     markup_string_project = (
                      u'<span color="%(markup_project_color)s">'
@@ -77,8 +80,18 @@ class Document(object):
                      u'%(directory)s/</span>'
                      u'%(basename)s')
 
-    markup_string = (u'<b>%(basename)s</b>')
+    markup_string_noproject_file = (
+                     u'<span foreground="%(markup_color_noproject)s">'
+                     u'<b>%(basename)s</b></span>'
+                     )
 
+    markup_string = u'<b>%(basename)s</b>'
+
+    @property
+    def markup_string_if_project(self):
+        if not self.project:
+            return self.markup_string_noproject_file
+        return self.markup_string
 
     def __init__(self, boss, filename=None, project=None):
         """
@@ -97,7 +110,6 @@ class Document(object):
         self.editor = None
         self._list = []
         self._str = ""
-        self._detect_encoding = DETECTOR_MANAGER
         self.creation_time = time.time()
 
         if filename is None:
@@ -140,7 +152,7 @@ class Document(object):
             fname = self.filename
             mime = self.mimetype
 
-            self._encoding = self._detect_encoding(stream, fname, mime)
+            self._encoding = detect_encoding(stream, fname, mime)
             stream.seek(0)
             stream = codecs.EncodedFile(stream, self._encoding)
             self._str = stream.read()
@@ -283,7 +295,7 @@ class Document(object):
         If live is true and the document is loaded into an editor the
         content of the editor is returned
         """
-        if live and hasattr(self.editor, 'get_content') and self.editor:
+        if live and hasattr(self.editor, 'get_content'):
             return self.boss.editor.get_content(self.editor)
         self._load()
         return self._str
@@ -293,7 +305,7 @@ class Document(object):
         Sets the content of the document.
         If live is True and the document is loaded, it's content is returned
         """
-        if hasattr(self.boss.editor, 'set_content') and self.editor:
+        if self.boss and hasattr(self.boss.editor, 'set_content') and self.editor:
             return self.boss.editor.set_content(self.editor, value)
 
         self._str = value
@@ -310,7 +322,7 @@ class Document(object):
         If editor has loaded this document, it's value
         is fetched befor writing to disc
         """
-        if hasattr(self.editor, 'get_content') and self.editor:
+        if self.boss and hasattr(self.editor, 'get_content') and self.editor:
             value = self.boss.editor.get_content(self.editor)
         else:
             value = self._str
@@ -412,6 +424,7 @@ class Document(object):
                 markup_dict[attr] = escape(var)
             else:
                 markup_dict[attr] = ''
+
         return markup_dict
 
     @property
@@ -432,6 +445,8 @@ class Document(object):
             return None, None
 
         #XXX: move to buffer manager
+        if not self.boss:
+            return None, os.path.join(*os.path.split(self.directory)[-2:])
         match = self.boss.cmd('project', 'get_project_for_document', document=self)
         if match is None:
             return None, os.path.join(*os.path.split(self.directory)[-2:])

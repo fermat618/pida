@@ -10,6 +10,8 @@
 """
 from __future__ import with_statement
 import os, sys, os.path
+from collections import defaultdict
+from functools import partial
 
 import gtk
 
@@ -23,12 +25,15 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.projects import Project
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaGladeView, PidaView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
 
 from pida.utils.puilder.view import PuilderView
+from pida.utils.gthreads import AsyncTask, gcall
+
+from pida.core.projects import REFRESH_PRIORITY
 
 # locale
 from pida.core.locale import Locale
@@ -116,6 +121,8 @@ class ProjectSetupView(PidaView):
         self.script_view.set_execute_method(self.test_execute)
         self.script_view.connect('cancel-request',
                                  self._on_script_view__cancel_request)
+        self.script_view.connect('project-saved',
+                                 self._on_script_view__project_saved)
         self.add_main_widget(self.script_view.get_toplevel())
 
     def test_execute(self, target, project):
@@ -138,6 +145,11 @@ class ProjectSetupView(PidaView):
     def _on_script_view__cancel_request(self, script_view):
         self.svc.get_action('project_properties').set_active(False)
 
+    def _on_script_view__project_saved(self, script_view, project):
+        # reload the project when it gets saved
+        if self.svc._current is project:
+            self.svc.update_execution_menus()
+
     def can_be_closed(self):
         self.svc.get_action('project_properties').set_active(False)
 
@@ -153,6 +165,11 @@ class ProjectEventsConfig(EventsConfig):
         self.subscribe_foreign('contexts', 'show-menu', self.show_menu)
         self.subscribe_foreign('contexts', 'menu-deactivated',
             self.menu_deactivated)
+        self.subscribe_foreign('buffer', 'document-saved',
+            self.on_document_saved)
+
+    def on_document_saved(self, document):
+        self.svc.update_index_file(document.filename)
 
     def editor_started(self):
         self.svc.set_last_project()
@@ -197,13 +214,24 @@ class ProjectActionsConfig(ActionsConfig):
 
         self.create_action(
             'project_execute_last',
-            TYPE_MENUTOOL,
+            TYPE_NORMAL,
             _('Execute _last Controller'),
             _('Execute last Controller'),
-            'package_utilities',
+            'restart',
             self.on_project_execute_last,
             ''
         )
+
+        self.create_action(
+            'project_execute_popup',
+            TYPE_NORMAL,
+            _('Open target popup'),
+            _('Opens a popup with the project targets'),
+            '',
+            self.on_project_popup,
+            ''
+        )
+
 
         self.create_action(
             'project_remove',
@@ -250,6 +278,15 @@ class ProjectActionsConfig(ActionsConfig):
             self.on_project_remove_directory,
         )
 
+        self.create_action(
+            'project_refresh',
+            TYPE_NORMAL,
+            _('Update Project'),
+            _('Update the project caches'),
+            gtk.STOCK_REFRESH,
+            self.on_project_refresh,
+        )
+
     def on_project_remove(self, action):
         self.svc.remove_current_project()
 
@@ -282,16 +319,8 @@ class ProjectActionsConfig(ActionsConfig):
         self.svc.show_properties(action.get_active())
 
     def on_project_execution_menu(self, action):
-        menuitem = action.get_proxies()[0]
-        #menuitem.remove_submenu()                    # gtk2.12 or higher
-        #menuitem.set_submenu(self.svc.create_menu()) # gtk2.12 or higher
-        submenu = menuitem.get_submenu()
-        for child in submenu.get_children():
-            submenu.remove(child)
-        submenu_new =   self.svc.create_menu()
-        for child in submenu_new.get_children():
-            submenu_new.remove(child)
-            submenu.append(child)
+        # stub that does nothing
+        pass
 
     def on_project_add_directory(self, action):
         path = action.contexts_kw.get('dir_name')
@@ -301,12 +330,57 @@ class ProjectActionsConfig(ActionsConfig):
         project = action.contexts_kw.get('project')
         self.svc.remove_project(project)
 
+    def on_project_popup(self, action):
+        self._popupmenu = self.svc.create_menu()
+        def center(*args):
+            px, py, pw, ph, pbd = self.svc.boss.window.window.get_geometry()
+            px, py = self.svc.boss.window.window.get_position()
+            cx = px+int(pw / 2)
+            cy = py+int(ph / 2)
+            return cx, cy, True
+        self._popupmenu.popup(None, None, center, 0, 0)
+
+    def on_project_refresh(self, action):
+        self.svc.refresh_project()
+
+
+class ProjectWindowConfig(WindowConfig):
+    key = ProjectSetupView.key
+    label_text = ProjectSetupView.label_text
+    description = _("Project setup window")
+
+class PriorityMap(list):
+    """
+    Sorts it's members after their priority member
+    """
+    def add(self, instance):
+        self.append(instance)
+
+        def get_prio(elem):
+            return getattr(elem, 'priority', REFRESH_PRIORITY.NORMAL)
+
+        self.sort(key=get_prio, reverse=True)
+
+
 class ProjectFeaturesConfig(FeaturesConfig):
+
+    def create(self):
+        self.publish_special(PriorityMap ,'project_refresh')
+
+        self.subscribe('project_refresh', self.do_refresh)
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'project-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            ProjectWindowConfig)
 
+    def do_refresh(self, callback):
+        self.svc._current.index(recrusive=True, rebuild=True)
+        self.svc._current.save_cache()
+        callback()
+    
+    do_refresh.priority = REFRESH_PRIORITY.FILECACHE
 
 class ProjectOptions(OptionsConfig):
 
@@ -317,7 +391,8 @@ class ProjectOptions(OptionsConfig):
             unicode,
             "~",
             _('The current directories in the workspace'),
-            safe=False
+            safe=False,
+            workspace=True
         )
 
         self.create_option(
@@ -334,7 +409,8 @@ class ProjectOptions(OptionsConfig):
             list,
             [],
             _('The current directories in the workspace'),
-            safe=False
+            safe=False,
+            workspace=True
         )
 
         self.create_option(
@@ -347,8 +423,14 @@ class ProjectOptions(OptionsConfig):
             safe=False,
             workspace=True
         )
-
-
+        self.create_option(
+            'autoclose',
+            _('Autoclose targets'),
+            bool,
+            False,
+            _('Autoclose old targets when new its restarted'),
+            workspace=True
+        )
 
 class ProjectCommandsConfig(CommandsConfig):
 
@@ -399,17 +481,17 @@ class ProjectService(Service):
 
     def start(self):
         self._projects = []
+        self._update_task = None
+        self._running_targets = defaultdict(list)
         self.set_current_project(None)
         ###
         self.project_list = ProjectListView(self)
         self.project_properties_view = ProjectSetupView(self)
         self._read_options()
 
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self.project_list.key,
-                             self.project_list.label_text)
-
+    def stop(self):
+        if self._current:
+            self._current.save_cache()
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
@@ -446,6 +528,7 @@ class ProjectService(Service):
                 return
         self.load_and_set_project(project_directory)
         self._save_options()
+        self.refresh_project()
 
     def create_project_file(self, project_directory):
         project_name = os.path.basename(project_directory)
@@ -459,9 +542,9 @@ class ProjectService(Service):
         self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
             project.reload()
+            project.load_cache()
             self.emit('project_switched', project=project)
-            toolitem = self.get_action('project_execute').get_proxies()[0]
-            toolitem.set_menu(self.create_menu())
+            self.update_execution_menus()
             self.project_properties_view.set_project(project)
             self.get_action('project_execute').set_sensitive(bool(project.targets))
             self.set_opt('last_project', project.source_directory)
@@ -469,6 +552,13 @@ class ProjectService(Service):
             self._target_last = project.options.get('default')
             self.actions.get_action('project_execute_last').props.label = \
                 _('Execute Last Controller')
+
+    def update_execution_menus(self):
+        toolitem = self.get_action('project_execute').get_proxies()[0]
+        toolitem.set_menu(self.create_menu())
+        menuitem = self.get_action('project_execution_menu').get_proxies()[0]
+        menuitem.remove_submenu()
+        menuitem.set_submenu(self.create_menu())
 
     def set_last_project(self):
         last = self.opt('last_project')
@@ -485,7 +575,11 @@ class ProjectService(Service):
         if not os.path.isdir(project_path):
             self.log(_("Can't load project. Path does not exist: %s") %project_path)
             return None
-        project = Project(project_path)
+        try:
+            project = Project(project_path)
+        except (IOError, OSError), e:
+            self.log(_("Can't load project. %s") % e)
+            return None
         if project not in self._projects:
             self._projects.append(project)
             self.project_list.project_ol.append(project)
@@ -520,7 +614,15 @@ class ProjectService(Service):
         env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
-        self.boss.cmd('commander', 'execute',
+        if self.opt("autoclose") and target in self._running_targets:
+            # cleanup old reverences of already
+            for old in self._running_targets[target]:
+                if not old.is_alive:
+                    if old.pane:
+                        old.close_view()
+
+        t = self.boss.cmd(
+            'commander', 'execute',
                 commandargs=[
                     'python', script,
                     '--directory', project.source_directory,
@@ -530,6 +632,13 @@ class ProjectService(Service):
                 title=_('%s:%s') % (project.name, target.name),
                 env=env,
                 )
+        if self.opt("autoclose"):
+            self._running_targets[target].append(t)
+            t.pane.connect('remove', self._on_term_remove, t, target)
+
+    def _on_term_remove(self,pane, term, target):
+        self._running_targets[target].remove(term)
+
 
     def execute_last(self):
         if self._target_last:
@@ -573,7 +682,51 @@ class ProjectService(Service):
         if self._current:
             return self._current.name
         return None
+
+    def update_index_file(self, path):
+        """
+        Updates the index of one file
+        """
+        if self._current:
+            self._current.index_path(path)
+
+    def refresh_project(self):
+        """
+        Updates the project cache database
+        """
+        if not self._current:
+            return
+        if self._update_task:
+            self.notify_user(_("Update already running"), title=_("Project"))
+            return
+
+        self.notify_user(_("Update started"), title=_("Project"))
         
+        self._update_task = AsyncTask(
+                work_callback=self._update_job)
+        self._update_task.start()
+
+        
+        def update_done(*args):
+            self.notify_user(_("Update complete"), title=_("Project"))
+            self._current.save_cache()
+            self._update_task = None
+
+    def _update_job(self):
+        not_recalled = []
+
+        for job in self.features['project_refresh']:
+            not_recalled.append(job)
+            self.log.debug('Run update job: %s' % job)
+            def do_callback(job):
+                not_recalled.remove(job)
+                if not len(not_recalled):
+                    gcall(self.notify_user, _("Update complete"), 
+                                           title=_("Project"))
+                    self._update_task = None
+
+            job(partial(do_callback, job))
+
 
 
 # Required Service attribute for service loading

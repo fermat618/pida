@@ -91,7 +91,7 @@ if __name__=="__main__":
 
     if sys.argv[1:]:
         for arg in sys.argv[1:]:
-            validate_ile(arg)
+            validate_file(arg)
     else:
         validate_file("http://www.google.com")
 

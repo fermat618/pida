@@ -9,6 +9,7 @@ import os
 import threading, thread
 import subprocess
 import gobject
+from . import ostools
 
 class AsyncTask(object):
     """
@@ -30,9 +31,11 @@ class AsyncTask(object):
     The loop callback is called inside Gtk+'s main loop and it's where you
     should stick code that affects the UI.
     """
-    def __init__(self, work_callback=None, loop_callback=None):
+    def __init__(self, work_callback=None, loop_callback=None, daemon=True):
         self.counter = 0
         
+        self.daemon = daemon
+
         if work_callback is not None:
             self.work_callback = work_callback
         if loop_callback is not None:
@@ -45,7 +48,12 @@ class AsyncTask(object):
         care there.
         """
         args = (self.counter,) + args
-        threading.Thread(target=self._work_callback, args=args, kwargs=kwargs).start()
+        thread = threading.Thread(
+                target=self._work_callback,
+                args=args, kwargs=kwargs
+                )
+        thread.setDaemon(self.daemon)
+        thread.start()
     
     def work_callback(self):
         pass
@@ -75,6 +83,12 @@ class GeneratorTask(AsyncTask):
     The diference between this task and AsyncTask is that the 'work_callback'
     returns a generator. For each value the generator yields the loop_callback
     is called inside Gtk+'s main loop.
+    
+    @work_callback: callback that returns results
+    @loop_callback: callback inside the gtk thread
+    @priority: gtk priority the loop callback will have
+    @pass_generator: will pass the generator instance as generator_task to the 
+                     worker callback
 
     A simple example::
 
@@ -91,13 +105,18 @@ class GeneratorTask(AsyncTask):
         gtk.main()
     """
     def __init__(self, work_callback, loop_callback, complete_callback=None,
-                 priority=gobject.PRIORITY_DEFAULT_IDLE):
+                 priority=gobject.PRIORITY_DEFAULT_IDLE,
+                 pass_generator=False):
         AsyncTask.__init__(self, work_callback, loop_callback)
         self.priority = priority
         self._complete_callback = complete_callback
+        self._pass_generator = pass_generator
 
     def _work_callback(self, counter, *args, **kwargs):
         self._stopped = False
+        if self._pass_generator:
+            kwargs = kwargs.copy()
+            kwargs['generator_task'] = self
         for ret in self.work_callback(*args, **kwargs):
             if self._stopped:
                 thread.exit()
@@ -109,6 +128,10 @@ class GeneratorTask(AsyncTask):
 
     def stop(self):
         self._stopped = True
+
+    @property
+    def is_stopped(self):
+        return self._stopped
 
 
 class GeneratorSubprocessTask(GeneratorTask):
@@ -140,7 +163,7 @@ class GeneratorSubprocessTask(GeneratorTask):
         GeneratorTask.stop(self)
         try:
             if hasattr(self, '_process'):
-                os.kill(self._process.pid, 9)
+                ostools.kill_pid(self._process.pid)
         except OSError:
             pass
 

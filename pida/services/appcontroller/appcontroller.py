@@ -35,7 +35,7 @@ class AppcontrollerConfig(OptionsConfig):
             'open_workspace_manager',
             _('Always show workspace manager'),
             bool,
-            True,
+            False,
             _('Always open the workspace manager when no workspace name is given'),
         )
 

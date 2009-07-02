@@ -17,3 +17,5 @@ tmp
 docs/_build
 .*\.*~
 externals
+dist
+MANIFEST

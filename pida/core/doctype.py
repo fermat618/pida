@@ -10,65 +10,46 @@
 """
 
 from glob import fnmatch
+import charfinder
+from collections import defaultdict
 
+def ensure_list(data):
+    if not isinstance(data, (list, tuple)):
+        return (data,)
+    if not data:
+        return []
+    return data
 
 class DocType(object):
     """Represents a type of document. Like a python sourcecode file, a xml
     file, etc.
     """
     __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes', 
-                 'section', 'parsers', 'validators')
+                 'section', 'parsers', 'validators', 'support')
 
     def __init__(self, internal, human, aliases = None, extensions = None, 
                  mimes = None, section = 'Others'):
         self.internal = internal
         self.human = human
-        self.aliases = aliases and list(aliases) or []
-        self.extensions = extensions and list(extensions) or []
-        self.mimes = mimes and list(mimes) or []
+        self.aliases = ensure_list(aliases)
+        self.extensions = ensure_list(extensions)
+        self.mimes = ensure_list(mimes)
         self.section = section
+        # the support counter tracs how much support this document type gets
+        # 0 means that he is currently not supported by something special
+        self.support = 0
         
         self.parsers = []
         self.validators = []
 
-    
-#    def _register(self, lst, prio, val):
-#        self.parser.append((prio, val))
-#        self.parser.sort(key=lambda x: x[0], reverse=True)
-#    
-#    def _unregister(self, lst, obj):
-#        dlist = []
-#        for i in lst:
-#            if i[1] == obj:
-#                dlist.append(i)
-#        for i in dlist:
-#            lst.remove(i)
-#    
-#        
-#    def register_parser(self, parser, priority = PRIO_DEFAULT):
-#        self._register(self.parsers, priority, parser)
-#        
-#    def unregister_parser(self, parser):
-#        self._unregister(self.parsers, parser)
-#    
-#    def register_validator(self, validator, priority = PRIO_DEFAULT):
-#        """
-#        Register a Validator for this DocType.
-#        """
-#        self._register(self.validators, priority, validator)
-#        
-#    def unregister_validator(self, validator):
-#        """
-#        Unregister a validator
-#        """
-#        self._unregister(self.validators, validator)
-#
-#
-#    def get_best_parser(self):
-#        if self.parsers:
-#            return self.parsers[0]
-#        return None
-#
+    def inc_support(self):
+        self.support += 1
+
+    def dec_support(self):
+        self.support -= 1
+        # this can only happen if something decs more then supports it
+        assert self.support >= 0
+
     @property
     def tooltip(self):
         rv = " ".join(self.aliases)
@@ -90,18 +71,19 @@ class TypeManager(dict):
     """
 
     def __init__(self):
-        self._globs = {}
-        self._mimetypes = {}
+        self._globs = defaultdict(list)
+        self._mimetypes = defaultdict(list)
 
     def add(self, doctype):
         if self.has_key(doctype.internal):
             raise "doctype already registed"
         self[doctype.internal] = doctype
         for ext in doctype.extensions:
-            if self._globs.has_key(ext):
+            if ext:
                 self._globs[ext].append(doctype)
-            else:
-                self._globs[ext] = [doctype]
+        # we fill the list of known mimetypes as we see them
+        for mime in doctype.mimes:
+            charfinder.text_mime.add(mime)
 
     def _parse_map(self, lst):
         for intname, data in lst.iteritems():
@@ -142,6 +124,11 @@ class TypeManager(dict):
                 if len(test) > len(best_glob):
                     best_glob = test
                     best_list += self._globs[test]
+
+        if best_glob == '':
+            return None
+        return self._globs[best_glob][0]
+        
         if len(best_list) > 1:
             # erks. got more then one result. try different approach
             # guess the mimetype through the python mimetype lib
@@ -156,7 +143,7 @@ class TypeManager(dict):
                 pass
             if gtest:
                 for dt in best_list:
-                    if mtest in dt.mimes:
+                    if gtest in dt.mimes:
                         best = dt
             else:
                 # use the first one as total fallback :(
@@ -166,6 +153,41 @@ class TypeManager(dict):
         
         return best
 
+    def get_fuzzy(self, pattern):
+        """
+        Returns a fuzzy match to the pattern provided.
+        A match is if any alias, the internal or human name
+        match in lower case
 
+        @pattern: string
+        """
+        pattern = pattern.lower()
+        for lang in self.itervalues():
+            if pattern == lang.internal.lower() or \
+               pattern == lang.human.lower() or \
+               any((pattern == x.lower() for x in lang.aliases)):
+                return lang
 
+    def get_fuzzy_list(self, pattern, substr=False):
+        """
+        Returns a list of fuzzy matchei to the pattern provided.
+        A match is if any alias, the internal or human name
+        match in lower case
+
+        @pattern: string
+        @substr: match even if substr is true
+        """
+        rv = []
+        import operator
+        if substr:
+            op = operator.contains
+        else:
+            op = operator.eq
+        pattern = pattern.lower()
+        for lang in self.itervalues():
+            if op(lang.internal.lower(), pattern) or \
+               op(lang.human.lower(), pattern) or \
+               any((op(x.lower(), pattern) for x in lang.aliases)):
+                rv.append(lang)
+        return rv
 

@@ -1,14 +1,13 @@
 
 
-from .test_packer import pida_plugins
+from .test_packer import skeleton_path
 from .metadata import from_plugin, from_dict
 
 def test_metadata_from_plugin():
-    data = from_plugin(pida_plugins, 'skeleton')
-    print data.name
+    data = from_plugin(skeleton_path, 'skeleton')
     assert not data.is_new
     assert data.plugin == 'skeleton'
-    assert data.name == 'Skeleton'
+    assert data.name == '{{name}}'
     
 
 def test_metadata_from_dict():

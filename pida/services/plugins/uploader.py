@@ -52,7 +52,7 @@ def upload_plugin(base, plugin, user, password):
         # content
         'content': io,
         'filetype': 'sdist', #XXX: ???
-        'pyversion': '2.5', #XXX: argh
+        'pyversion': 'source',
         'md5_digest': hashlib.md5(pack).hexdigest(),
     })
 

@@ -28,8 +28,13 @@ try:
     from dbus import Signature
     import _dbus_bindings
 
-    has_dbus = True
-    
+    # Is dbus available?
+    # Throws dbus.exceptions.DBusException if not.
+    dbus.SessionBus()
+
+except dbus.exceptions.DBusException:
+    has_dbus = False
+
 except ImportError:
     def dummy(*k, **kw):
         return lambda x: x
@@ -37,6 +42,9 @@ except ImportError:
     INTROSPECTABLE_IFACE = ""
     has_dbus = False
     Object = object
+
+else:
+    has_dbus = True
 
 class DbusConfigReal(Object):
 
@@ -111,7 +119,7 @@ class DbusOptionsManagerReal(Object):
         if sender == BUS.get_unique_name():
             return
         try:
-            opt = self.get_option(str(name))
+            opt = self.get_extra_option(str(name))
         except KeyError, e:
             return
         if (opt.workspace and workspace_name() == workspace) or \
@@ -119,7 +127,7 @@ class DbusOptionsManagerReal(Object):
             if opt.no_submit:
                 opt.dirty = True
             else:
-                self.set_value(name, value, save=False, dbus_notify=False)
+                self.set_extra_value(name, value, save=False, dbus_notify=False)
 
     def notify_dbus(self, option):
         from .options import OptionItem
@@ -136,11 +144,13 @@ class DbusOptionsManagerReal(Object):
                                     self.dbus_ns,
                                     signal)
             signature = 'ssv'
-            if isinstance(value, (tuple, list)) and \
-               not len(value):
-               # empty lists can't be detected, so we assume 
-               # list of strings
-               signature = "ssas"
+            if isinstance(value, dict) and not len(value):
+                # emptry dicts can't be detected
+                signature = 'a{ss}'
+            elif isinstance(value, (tuple, list)) and not len(value):
+                # empty lists can't be detected, so we assume 
+                # list of strings
+                signature = "ssas"
 
             message.append(workspace_name(),
                            option.name,
@@ -156,7 +166,7 @@ class DbusOptionsManagerReal(Object):
             if issubclass(type_, (BaseChoice, Color)):
                 return 's'
             raise ValueError, "No object type found for %s" %type_
-            
+
     def dbus_custom_introspect(self):
         rv = '  <interface name="%s">\n' %(self.dbus_ns)
         for option in self._options.itervalues():
@@ -222,6 +232,9 @@ class DbusOptionsManagerReal(Object):
                 except Exception, exception:
                     _method_reply_error(connection, message, exception)
                 return
+            elif method_name == 'CONFIG_CHANGED' or \
+                 method_name == 'CONFIG_EXTRA_CHANGED':
+                    return
         # do a normal lookup
         return super(DbusOptionsManagerReal, self)._message_cb(connection, message)
         
@@ -257,6 +270,10 @@ class DbusOptionsManagerReal(Object):
 
 
 class DbusOptionsManagerNoop(object):
+
+    def __init__(self, service):
+        pass
+
     def unload(self):
         pass
 

@@ -1,0 +1,11 @@
+line 1
+line 2
+line 3
+
+
+
+line 7 with more data so that it should return a very long string because it does not cap the length of the line returned and it in up to the caller to do so
+
+
+
+eof line 11 no linebreak

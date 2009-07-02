@@ -61,7 +61,6 @@ class Window(gtk.Window):
     def info_dlg(self, *args, **kw):
         return info(parent = self, *args, **kw)
 
-    @with_gdk_lock
     def error_dlg(self, *args, **kw):
         return error(parent = self, *args, **kw)
 
@@ -147,6 +146,9 @@ class PidaWindow(Window):
     def add_view(self, paned, view, removable=True, present=False, detachable=True):
         self.paned.add_view(paned, view, removable, present, detachable=detachable)
 
+    def get_focus_pane(self):
+        return self.paned.get_focus_pane()
+
     def remove_view(self, view):
         self.paned.remove_view(view)
 
@@ -196,6 +198,8 @@ class PidaWindow(Window):
         else:
             self._statusbar.hide_all()
 
+    def __contains__(self, item):
+        return self.paned.__contains__(item)
 
 class WorkspaceWindow(GladeDelegate):
     gladefile = 'workspace_select'

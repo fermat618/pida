@@ -1,0 +1,178 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="priority_editor">
+        <property name="default_height">450</property>
+        <property name="default_width">640</property>
+        <property name="title" context="yes" translatable="yes">Priority Editor</property>
+        <child>
+            <widget class="GtkVBox" id="vbox1">
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkHPaned" id="category_splitter">
+                        <property name="position">143</property>
+                        <property name="position_set">True</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkVBox" id="vbox3">
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="ObjectTree" id="selection_tree">
+                                        <property name="no_show_all">True</property>
+                                        <property name="selection_mode">single</property>
+                                        <property name="visible">True</property>
+                                        <property name="vscrollbar_policy">automatic</property>
+                                    </widget>
+                                </child>
+                                <child>
+                                    <widget class="GtkCheckButton" id="all_languages">
+                                        <property name="has_tooltip">True</property>
+                                        <property name="is_focus">True</property>
+                                        <property name="label" context="yes" translatable="yes">Show all</property>
+                                        <property name="tooltip_markup" context="yes" translatable="yes">Shows all messages even with no plugins registered</property>
+                                        <property name="tooltip_text" context="yes" translatable="yes">Shows all messages even with no plugins registered</property>
+                                        <property name="visible">True</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="expand">False</property>
+                                        <property name="padding">3</property>
+                                        <property name="position">1</property>
+                                    </packing>
+                                </child>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkVBox" id="vbox2">
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkHBox" id="hbox1">
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="ObjectList" id="priority_list">
+                                                <property name="sensitive">False</property>
+                                                <property name="visible">True</property>
+                                                <property name="vscrollbar_policy">automatic</property>
+                                            </widget>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkVButtonBox" id="vbuttonbox1">
+                                                <property name="layout_style">center</property>
+                                                <property name="visible">True</property>
+                                                <child>
+                                                    <widget class="GtkButton" id="button_move_up">
+                                                        <property name="sensitive">False</property>
+                                                        <property name="visible">True</property>
+                                                        <child>
+                                                            <widget class="GtkImage" id="image11">
+                                                                <property name="stock">gtk-go-up</property>
+                                                                <property name="visible">True</property>
+                                                            </widget>
+                                                        </child>
+                                                    </widget>
+                                                </child>
+                                                <child>
+                                                    <widget class="GtkButton" id="button_move_down">
+                                                        <property name="sensitive">False</property>
+                                                        <property name="visible">True</property>
+                                                        <child>
+                                                            <widget class="GtkImage" id="image12">
+                                                                <property name="sensitive">False</property>
+                                                                <property name="stock">gtk-go-down</property>
+                                                                <property name="visible">True</property>
+                                                            </widget>
+                                                        </child>
+                                                    </widget>
+                                                    <packing>
+                                                        <property name="position">1</property>
+                                                    </packing>
+                                                </child>
+                                            </widget>
+                                            <packing>
+                                                <property name="expand">False</property>
+                                                <property name="position">1</property>
+                                            </packing>
+                                        </child>
+                                    </widget>
+                                </child>
+                                <child>
+                                    <widget class="GtkLabel" id="info">
+                                        <property name="no_show_all">True</property>
+                                        <property name="use_markup">True</property>
+                                        <property name="xalign">0.0</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">1</property>
+                                    </packing>
+                                </child>
+                                <child>
+                                    <widget class="GtkCheckButton" id="customize_button">
+                                        <property name="has_tooltip">True</property>
+                                        <property name="is_focus">True</property>
+                                        <property name="label" context="yes" translatable="yes">Customize</property>
+                                        <property name="tooltip_markup" context="yes" translatable="yes">Allows you to change the order of the plugins in the list</property>
+                                        <property name="tooltip_text" context="yes" translatable="yes">Allows you to change the order of the plugins in the list</property>
+                                        <property name="visible">True</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="expand">False</property>
+                                        <property name="padding">3</property>
+                                        <property name="position">2</property>
+                                    </packing>
+                                </child>
+                            </widget>
+                            <packing>
+                                <property name="resize">True</property>
+                            </packing>
+                        </child>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkHButtonBox" id="hbuttonbox1">
+                        <property name="border_width">2</property>
+                        <property name="homogeneous">True</property>
+                        <property name="layout_style">spread</property>
+                        <property name="spacing">3</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkButton" id="button_apply">
+                                <property name="is_focus">True</property>
+                                <property name="label">gtk-apply</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="button_reset">
+                                <property name="image_position">bottom</property>
+                                <property name="is_focus">True</property>
+                                <property name="label">gtk-revert-to-saved</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="button_close">
+                                <property name="is_focus">True</property>
+                                <property name="label">gtk-close</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">2</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>

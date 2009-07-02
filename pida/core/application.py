@@ -65,15 +65,20 @@ if sys.version_info < (2, 5):
 
 # This can test if PIDA is installed
 try:
-    from pida.core.environment import opts, on_windows
-    from pida.core.boss import Boss
-    from pida import PIDA_VERSION
-
+    import pida
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
+# Prevent PIDA from being run as root.
+if os.getuid() == 0:
+    die_gui("Pida should not be run as root", "Pida is dying")
+
+
 # we have to import pdbus here so it gets initialized very early
 import pida.core.pdbus
+
+from pida.core.environment import opts, on_windows
+from pida.core.boss import Boss
 
 def run_pida():
     b = Boss()
@@ -93,11 +98,6 @@ def run_pida():
     except Exception, e:
         traceback.print_exc()
         return 1
-
-def force_quit(signum, frame):
-    os.kill(os.getpid(), 9)
-
-# Set the signal handler and a 5-second alarm
 
 def set_trace():
     import linecache
@@ -193,35 +193,27 @@ def main():
                         'Not all functions available.', Warning, 'pida', '')
         
     if opts.version:
-        print _('PIDA, version %s') % PIDA_VERSION
+        print _('PIDA, version %s') % pida.version
     elif opts.profile_path:
         print "---- Running in profile mode ----"
-        import hotshot, hotshot.stats, test.pystone
-        prof = hotshot.Profile(opts.profile_path)
-        prof.start()
+        import cProfile
         try:
-            run_pida()
+            cProfile.runctx('run_pida()', globals(), locals(), opts.profile_path)
             #benchtime, stones = prof.runcall(run_pida)
-        finally: 
-            prof.stop()
-            prof.close()
-        
+        finally:
+            pass
         #signal.signal(signal.SIGALRM, force_quit)
         #signal.alarm(3)
         print "---- Top 100 statistic ----"
-        stats = hotshot.stats.load(opts.profile_path)
-        #stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(100)
+        import pstats
+        p = pstats.Stats(opts.profile_path)
+        p.strip_dirs().sort_stats('time', 'cum').print_stats(100)
 
         sys.exit(0)
 
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        if not on_windows:
-            signal.signal(signal.SIGALRM, force_quit)
-            signal.alarm(3)
         sys.exit(exit_val)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -1,8 +1,6 @@
 <ui>
 <popup>
-  <placeholder name="1">
-    <menuitem action="delete-file" name="delete-file"/>
-  </placeholder>
+  <placeholder name="1" />
   <separator/>
   <placeholder name="2">
     <menuitem action="browse-for-file" name="browse-for-file"/>
@@ -10,7 +8,9 @@
   <separator/>
   <placeholder name="3"/>
   <separator/>
-  <placeholder name="4"/>
+  <placeholder name="4">
+      <menuitem action="delete-file" name="delete-file"/>
+  </placeholder>
   <separator/>
 </popup>
 </ui>

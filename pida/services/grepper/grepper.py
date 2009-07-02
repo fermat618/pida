@@ -11,10 +11,12 @@ from glob import fnmatch
 
 from kiwi.ui.objectlist import Column
 from pida.ui.views import PidaGladeView, PidaView
+from pida.core.charfinder import detect_text
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
 from pida.utils.gthreads import GeneratorTask, gcall
 from pida.utils.testing import refresh_gui
@@ -81,7 +83,7 @@ class GrepperItem(object):
         line_pieces.append(self._escape_text(line))
         # strip() the line to give the view more vertical space
         return ''.join(line_pieces).strip()
-            
+
 
 class GrepperActionsConfig(ActionsConfig):
     def create_actions(self):
@@ -115,6 +117,18 @@ class GrepperActionsConfig(ActionsConfig):
             '<Shift><Control><Alt>question'
         )
 
+        self.create_action(
+            'show_grepper_search',
+            TYPE_NORMAL,
+            _('Find in directory'),
+            _('Find in directory'),
+            gtk.STOCK_FIND,
+            self.on_grep_dir_menu
+        )
+
+    def on_grep_dir_menu(self, action):
+        self.svc.show_grepper(action.contexts_kw['dir_name'])
+
     def on_show_grepper(self, action):
         self.svc.show_grepper_in_project_source_directory()
 
@@ -127,8 +141,8 @@ class GrepperActionsConfig(ActionsConfig):
             self.svc.grep_current_word(document.directory)
         else:
             self.svc.error_dlg(_('There is no current document.'))
-        
-    
+
+
 class GrepperView(PidaGladeView):
     gladefile = 'grepper-window'
     locale = locale
@@ -146,11 +160,16 @@ class GrepperView(PidaGladeView):
         # we should set this to the current project I think
         self.path_chooser.set_filename(os.path.expanduser('~/'))
 
+        self._history = gtk.ListStore(gobject.TYPE_STRING)
+        self.pattern_combo.set_model(self._history)
+        self.pattern_combo.set_text_column(0)
         self.recursive.set_active(True)
         self.re_check.set_active(True)
+        self.pattern_entry = self.pattern_combo.child
+        self.pattern_entry.connect('activate', self._on_pattern_entry_activate)
 
         self.task = GeneratorTask(self.svc.grep, self.append_to_matches_list,
-                                  self.grep_complete)
+                                  self.grep_complete, pass_generator=True)
         self.running = False
 
     def on_matches_list__row_activated(self, rowitem, grepper_item):
@@ -170,7 +189,11 @@ class GrepperView(PidaGladeView):
         else:
             self.start_grep()
 
-    def on_pattern_entry__activate(self, entry):
+    def on_current_folder__clicked(self, button):
+        cpath = self.svc.boss.cmd('filemanager', 'get_browsed_path')
+        self.path_chooser.set_current_folder(cpath)
+
+    def _on_pattern_entry_activate(self, entry):
         self.start_grep()
 
     def _translate_glob(self, glob):
@@ -187,11 +210,15 @@ class GrepperView(PidaGladeView):
             self.close()
         else:
             self.pattern_entry.set_text(word)
+            # very unlikely that a selected text is a regex
+            self.re_check.set_active(False)
             self.start_grep()
 
     def start_grep(self):
         self.matches_list.clear()
         pattern = self.pattern_entry.get_text()
+        self._history.insert(0, (pattern,))
+        self.pattern_combo.set_active(0)
         location = self.path_chooser.get_filename()
         if location is None:
             location = self._hacky_extra_location
@@ -282,6 +309,14 @@ class GrepperEvents(EventsConfig):
         self.subscribe_foreign('project', 'project_switched',
             self.svc.set_current_project)
 
+class GrepperFeatures(FeaturesConfig):
+
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('contexts', 'dir-menu',
+            (self.svc.get_action_group(), 'grepper-dir-menu.xml'))
+
+
+
 class Grepper(Service):
     # format this docstring
     """
@@ -293,8 +328,7 @@ class Grepper(Service):
     actions_config = GrepperActionsConfig
     events_config = GrepperEvents
     options_config = GrepperOptions
-
-    BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')
+    features_config = GrepperFeatures
 
     def pre_start(self):
         self.current_project_source_directory = None
@@ -319,10 +353,11 @@ class Grepper(Service):
             view = self.show_grepper_in_project_source_directory()
         else:
             view = self.show_grepper(path)
-        self.boss.editor.cmd('call_with_current_word',
+        self.boss.editor.cmd('call_with_selection_or_word',
                              callback=view.start_grep_for_word)
 
-    def grep(self, top, regex, recursive=False, show_hidden=False):
+    def grep(self, top, regex, recursive=False, show_hidden=False,
+             generator_task=None):
         """
         grep is a wrapper around _grep_file_list and _grep_file.
         """
@@ -333,17 +368,24 @@ class Grepper(Service):
                 yield result
         elif recursive:
             for root, dirs, files in os.walk(top):
+                if generator_task.is_stopped:
+                    return
                 # Remove hidden directories
                 if os.path.basename(root).startswith('.') and not show_hidden:
                     del dirs[:]
                     continue
-                for matches in self._grep_file_list(files, root, regex):
+                for matches in self._grep_file_list(files, root, regex,
+                                                generator_task=generator_task,
+                                                show_hidden=show_hidden):
                     yield matches
         else:
-            for matches in self._grep_file_list(os.listdir(top), top, regex):
+            for matches in self._grep_file_list(os.listdir(top), top, regex,
+                                                generator_task=generator_task,
+                                                show_hidden=show_hidden):
                 yield matches
 
-    def _grep_file_list(self, file_list, root, regex, show_hidden=False):
+    def _grep_file_list(self, file_list, root, regex, show_hidden=False,
+                                               generator_task=None):
         """
         Grep for a list of files.
 
@@ -355,6 +397,8 @@ class Grepper(Service):
         each of them with the supplied arguments.
         """
         for file in file_list:
+            if generator_task and generator_task.is_stopped:
+                return
             if self._result_count > self.opt('maximum_results'):
                 break
             if file.startswith(".") and not show_hidden:
@@ -375,11 +419,12 @@ class Grepper(Service):
         each cycle, that contains the path, line number and matches data.
         """
         try:
-            f = open(filename, 'r')
-            for linenumber, line in enumerate(f):
-                if self.BINARY_RE.search(line):
-                    break
+            if not detect_text(None, filename, None):
+                return
 
+            f = open(filename, 'r')
+
+            for linenumber, line in enumerate(f):
                 # enumerate is 0 based, line numbers are 1 based
                 linenumber = linenumber + 1
 

@@ -13,21 +13,90 @@ import cgi
 import gtk, gobject
 import datetime
 import locale
+import logging
 
 from kiwi.ui.objectlist import Column, ObjectList
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
+from pida.core.features import FeaturesConfig
 from pida.core.options import OptionsConfig, choices
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, 
                                TYPE_REMEMBER_TOGGLE)
 from pida.ui.buttons import create_mini_button
 from pida.utils.gthreads import gcall
+import gobject
+from kiwi.utils import gsignal
 
 # locale
 from pida.core.locale import Locale
 _locale = Locale('notify')
 _ = _locale.gettext
+
+import StringIO
+
+class PidaLogHandler(gobject.GObject, logging.Handler):
+    """
+    The PidaLogHandler saved all log entries to be displayed in a log window,
+    and let the notify service popup a notify on errors
+    """
+
+    gsignal('errors', object)
+
+    def __init__(self, *args, **kwargs):
+        self.error_stack = []
+        self.max_length = kwargs.get('max_length', 50000)
+        self.buffer = gtk.TextBuffer()
+        gobject.GObject.__init__(self)
+        logging.Handler.__init__(self, *args, **kwargs)
+    
+    def emit(self, record):
+        """
+        Emit a record.
+
+        If a formatter is specified, it is used to format the record.
+        The record is then written to the stream with a trailing newline.  If
+        exception information is present, it is formatted using
+        traceback.print_exception and appended to the stream.  If the stream
+        has an 'encoding' attribute, it is used to encode the message before
+        output to the stream.
+        """
+        try:
+            if record.levelno >= logging.ERROR and \
+               isinstance(self.error_stack, list):
+                self.error_stack.append(record)
+                gobject.GObject.emit(self, 'errors', record)
+
+            msg = self.format(record)
+            #stream = self.stream
+            fs = "%s\n"
+            try:
+                if (isinstance(msg, unicode)):
+                    self.buffer.insert(self.buffer.get_end_iter(),
+                                       fs % msg)
+                else:
+                    self.buffer.insert(self.buffer.get_end_iter(),
+                                       fs % msg.encode('UTF-8'))
+
+            except UnicodeError:
+                self.buffer.insert(self.buffer.get_end_iter(),
+                                        fs % msg.encode('UTF-8'))
+        except:
+            self.handleError(record)
+
+        # cleanup size
+        drang = self.buffer.get_char_count() - self.max_length
+        if drang > 0:
+            self.buffer.delete(self.buffer.get_start_iter(),
+                               self.buffer.get_iter_at_offset(drang))
+
+gobject.type_register(PidaLogHandler)
+
+PIDAHANDLER = PidaLogHandler()
+PIDAHANDLER.setFormatter(
+logging.Formatter("%(asctime)s - %(levelname)s -  %(name)s - %(message)s"))
+
+logging.getLogger('').addHandler(PIDAHANDLER)
 
 
 class BaseNotifier(object):
@@ -71,8 +140,8 @@ except ImportError:
 class NotifyItem(object):
 
     def __init__(self, data, title, stock, timeout, callback):
-        self.data = cgi.escape(data)
-        self.title = cgi.escape(title)
+        self.data = cgi.escape(data or "")
+        self.title = cgi.escape(title or "")
         self.stock = stock
         self.timeout = timeout
         try:
@@ -91,6 +160,26 @@ class NotifyItem(object):
     def cb_clicked(self, w, ev):
         if self.callback is not None:
             self.callback(self)
+
+class LogView(PidaView):
+
+    key = "notify.debug"
+
+    label_text = _('Pida Log')
+    icon_name = gtk.STOCK_INDEX
+
+    def create_ui(self):
+        self._hbox = gtk.HBox(spacing=3)
+        self._hbox.set_border_width(6)
+        self.text_view = gtk.TextView(PIDAHANDLER.buffer)
+        self._scroll = gtk.ScrolledWindow()
+        self._scroll.add(self.text_view)
+        self._hbox.add(self._scroll)
+        self.add_main_widget(self._hbox)
+        self._hbox.show_all()
+
+    def can_be_closed(self):
+        self.svc.get_action('show_pida_log').set_active(False)
 
 
 class NotifyView(PidaView):
@@ -305,7 +394,7 @@ class NotifyOptionsConfig(OptionsConfig):
 class NotifyActionsConfig(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        NotifyWindowConfig.action = self.create_action(
             'show_notify',
             TYPE_REMEMBER_TOGGLE,
             _('Show notification _history'),
@@ -314,7 +403,22 @@ class NotifyActionsConfig(ActionsConfig):
             self.on_show_notify,
             '',
         )
+        self.create_action(
+            'show_pida_log',
+            TYPE_REMEMBER_TOGGLE,
+            _('Show Pida Log'),
+            _('Show the log file pida generates'),
+            '',
+            self.on_show_pida_log,
+            '',
+        )
 
+
+    def on_show_pida_log(self, action):
+        if action.get_active():
+            self.svc.show_pida_log()
+        else:
+            self.svc.hide_pida_log()
 
     def on_show_notify(self, action):
         if action.get_active():
@@ -326,6 +430,16 @@ class NotifyCommandsConfig(CommandsConfig):
     def notify(self, data, **kw):
         self.svc.notify(data=data, **kw)
 
+class NotifyWindowConfig(WindowConfig):
+    key = NotifyView.key
+    label_text = NotifyView.label_text
+    description = _("Window with notifications")
+
+class NotifyFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            NotifyWindowConfig)
+
 
 class Notify(Service):
     """
@@ -335,21 +449,27 @@ class Notify(Service):
     actions_config = NotifyActionsConfig
     commands_config = NotifyCommandsConfig
     options_config = NotifyOptionsConfig
-
+    features_config = NotifyFeaturesConfig
     
     def start(self):
+        self._error_handler = PIDAHANDLER.connect('errors', self._on_error)
+
         self._view = NotifyView(self)
+        self._log = LogView(self)
 
         self.notifier = Notifier(self)
 
         self._has_loaded = False
         self._show_notify = self.opt('show_notify')
 
-        acts = self.boss.get_service('window').actions
-        
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
+        # send already occured errors
+        #while True:
+        #    try:
+        #        error = PIDAHANDLER.error_stack.pop()
+        #    except IndexError:
+        #        break
+        #    self._on_error(None, error)
+        #PIDAHANDLER.error_stack = None
 
     def show_notify(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
@@ -359,6 +479,13 @@ class Notify(Service):
     def hide_notify(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
 
+    def show_pida_log(self):
+        self.boss.cmd('window', 'add_view', paned='Terminal', view=self._log)
+
+    def hide_pida_log(self):
+        self.boss.cmd('window', 'remove_view', view=self._log)
+
+
     def add_notify(self, item):
         if not self.started:
             gcall(self.add_notify, item)
@@ -367,16 +494,26 @@ class Notify(Service):
         if self._show_notify:
             self.notifier.notify(item)
 
+    def _on_error(self, handler, msg):
+        self.notify(msg.getMessage(), timeout=20000,
+                    title=_("Pida error occured in %s") %msg.name)
+
+
     def notify(self, data, title='', stock=gtk.STOCK_DIALOG_INFO,
-            timeout=-1, callback=None):
+            timeout=-1, callback=None, quick=False):
         if timeout == -1:
-            timeout = self.opt('timeout')
+            if quick:
+                timeout = 700
+            else:
+                timeout = self.opt('timeout')
         self.add_notify(NotifyItem(data=data, title=title, stock=stock,
             timeout=timeout, callback=callback))
 
     def stop(self):
         if self.get_action('show_notify').get_active():
             self.hide_notify()
+        PIDAHANDLER.disconnect(self._error_handler)
+
 
 
 Service = Notify

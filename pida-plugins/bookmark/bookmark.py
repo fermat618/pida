@@ -38,7 +38,7 @@ from pida.core.environment import get_uidef_path
 
 from pida.core.editors import LineMarker, MarkerInterface
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 
@@ -224,7 +224,7 @@ class BookmarkView(PidaView):
 class BookmarkActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        BookmarkWindowConfig.action = self.create_action(
             'show_bookmark',
             TYPE_REMEMBER_TOGGLE,
             _('Bookmark Viewer'),
@@ -344,6 +344,10 @@ class BookmarkActions(ActionsConfig):
     def on_bookmark_for_dir(self, action):
         self.svc.bookmark_dir(path=action.contexts_kw['dir_name'])
 
+class BookmarkWindowConfig(WindowConfig):
+    key = BookmarkView.key
+    label_text = BookmarkView.label_text
+
 class BookmarkFeatures(FeaturesConfig):
 
     def subscribe_all_foreign(self):
@@ -351,6 +355,8 @@ class BookmarkFeatures(FeaturesConfig):
             (self.svc.get_action_group(), 'bookmark-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'bookmark-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            BookmarkWindowConfig)
 
 class BookmarkEvents(EventsConfig):
 
@@ -383,12 +389,6 @@ class Bookmark(Service, MarkerInterface):
         self._project = None
         self.load()
 
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
-        
     def show_bookmark(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         if not self._has_loaded:

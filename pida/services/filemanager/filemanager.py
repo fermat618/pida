@@ -28,10 +28,10 @@ from pida.core.options import OptionsConfig
 from pida.core.environment import get_uidef_path, on_windows
 from pida.core.log import get_logger
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.utils.path import homedir
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
 from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
@@ -68,6 +68,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         hidden=('pida-fm-hidden', False, True),
         ignored=('pida-fm-ignored', False, True),
         #TODO: better handling of normal directories
+        clean=('pida-fm-clean', False, False), 
         none=('pida-fm-none', False, True), 
         normal=('pida-fm-normal', False, False),
         error=('pida-fm-error', True, True),
@@ -89,21 +90,39 @@ def check_or_home(path):
         return homedir
     return path
 
+class AlwaysSmall(unicode):
+    """
+    Helper class to cheat ordering
+    """
+    def __cmp__(self, other):
+        return -1
 
 
 class FileEntry(object):
     """The model for file entries"""
 
-    def __init__(self, name, parent_path, manager):
+    def __init__(self, name, parent_path, manager, parent_link=False):
         self._manager = manager
         self.state = 'normal'
+        self.parent_link = parent_link
         self.name = name
-        self.lower_name = self.name.lower()
+
+        if parent_link:
+            self.lower_name = AlwaysSmall(self.name.lower())
+            self.name = AlwaysSmall(name)
+            self.path = parent_path
+            self.is_dir = True
+            self.is_dir_sort = AlwaysSmall(self.lower_name)
+        else:
+            self.lower_name = self.name.lower()
+            self.name = name
+            self.path = os.path.join(parent_path, name)
+            self.is_dir = os.path.isdir(self.path)
+            self.is_dir_sort = not self.is_dir, self.lower_name
+
         self.parent_path = parent_path
-        self.path = os.path.join(parent_path, name)
         self.extension = os.path.splitext(self.name)[-1]
         self.extension_sort = self.extension, self.lower_name
-        self.is_dir = os.path.isdir(self.path)
         self.is_dir_sort = not self.is_dir, self.lower_name
         self.visible = False
 
@@ -210,10 +229,13 @@ class FilemanagerView(PidaView):
         self._vbox.pack_start(self._toolbar, expand=False)
         self._toolbar.show_all()
 
-    def add_or_update_file(self, name, basepath, state, select=False):
-        if basepath != self.path:
+    def add_or_update_file(self, name, basepath, state, select=False,
+                           parent_link=False):
+        if basepath != self.path and not parent_link:
             return
-        entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
+        entry = self.entries.setdefault(name,
+                                        FileEntry(name, basepath, self,
+                                                  parent_link=parent_link))
         entry.state = state
 
         self.show_or_hide(entry, select=select)
@@ -228,7 +250,7 @@ class FilemanagerView(PidaView):
             else:
                 return True
 
-        if self.svc.opt('show_hidden'):
+        if self.svc.opt('show_hidden') or entry.parent_link:
             show = True
         else:
             show = all(check(x)
@@ -255,7 +277,14 @@ class FilemanagerView(PidaView):
 
         self.file_list.clear()
         self.entries.clear()
-        
+
+        if self.svc.opt('show_parent'):
+            parent = os.path.normpath(os.path.join(new_path, os.path.pardir))
+            # skip if we are already on the root
+            if parent != new_path:
+                self.add_or_update_file(os.pardir, parent, 
+                                        'normal', parent_link=True)
+
         def work(basepath):
             dir_content = listdir(basepath)
             # add all files from vcs and remove the corresponding items 
@@ -378,8 +407,10 @@ class FilemanagerView(PidaView):
     def _get_ancestors(self, directory):
         ancs = [directory]
         parent = None
-        while directory != parent:
+        while True:
             parent = os.path.dirname(directory)
+            if parent == directory:
+                break
             ancs.append(parent)
             directory = parent
         return ancs
@@ -587,6 +618,11 @@ class FilemanagerCommandsConfig(CommandsConfig):
         self.svc.get_view().update_to_path()
 
 
+class FilemanagerWindowConfig(WindowConfig):
+    key = FilemanagerView.key
+    label_text = FilemanagerView.label_text
+    description = _("Filebrowser")
+
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create(self):
@@ -600,6 +636,8 @@ class FilemanagerFeatureConfig(FeaturesConfig):
             (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
             (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+                               FilemanagerWindowConfig)
 
     # File Hidden Checks
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, _("Hide Dot-Files"))
@@ -625,6 +663,14 @@ class FileManagerOptionsConfig(OptionsConfig):
                 True,
                 _('Shows hidden files'),
                 workspace=True)
+
+        self.create_option(
+                'show_parent',
+                _('Show parent entry'),
+                bool,
+                True,
+                _('Shows a ".." entry in the filebrowser'))
+
         self.create_option(
                 'file_hidden_check',
                 _('Used file hidden checker'),
@@ -769,6 +815,16 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'toolbar_search',
+            TYPE_NORMAL,
+            _('Find in directory'),
+            _('Find in directory'),
+            gtk.STOCK_FIND,
+            self.on_toolbar_find,
+        )
+
+
+        self.create_action(
             'toolbar_projectroot',
             TYPE_NORMAL,
             _('Project Root'),
@@ -794,7 +850,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'user-home',
             self.on_toolbar_home,
         )
-        
+
         self.create_action(
             'toolbar_current_file',
             TYPE_NORMAL,
@@ -849,6 +905,9 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
 
+    def on_toolbar_find(self, action):
+        self.svc.boss.get_service('grepper').show_grepper(self.svc.path)
+
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('browse', new_path=new_path)
@@ -862,7 +921,7 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_show_filebrowser(self, action):
         self.svc.cmd('present_view')
-    
+
     def on_toolbar_create_dir(self, action):
         self.svc.create_dir()
 
@@ -930,11 +989,6 @@ class Filemanager(Service):
 
 
     def start(self):
-        acts = self.boss.get_service('window').actions
-        
-        acts.register_window(self.file_view.key,
-                             self.file_view.label_text)
-        
         self.on_project_switched(self.current_project)
         self.emit('browsed_path_changed', path=self.path)
         self.get_action('toolbar_toggle_hidden').set_active(

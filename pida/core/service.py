@@ -91,6 +91,23 @@ class Service(object):
         False. In this phase all user interaction should take place"""
         return True
 
+    def destroy(self):
+        """
+        Stop and unregisters this service.
+        """
+        try:
+            self.stop()
+        except Exception, e:
+            self.log.exception(e)
+            # big fat warning to the user
+            self.log.error(
+              _('!!!! Warning !!!!\n'
+                'Exception while unloading. Pida is in an unpredictable state.'
+                'Consider a restart'
+                ))
+        finally:
+            self.stop_components()
+
     def stop(self):
         """Override to stop service"""
 

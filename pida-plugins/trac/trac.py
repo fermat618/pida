@@ -35,7 +35,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 from pida.ui.htmltextview import HtmlTextView
 
 from pida.utils.web import fetch_url
@@ -125,7 +125,7 @@ def trac_report(base_address, report_id, callback, auth):
 class TracActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        TracWindowConfig.action = self.create_action(
             'show_trac',
             TYPE_REMEMBER_TOGGLE,
             _('Trac Viewer'),
@@ -142,20 +142,24 @@ class TracActions(ActionsConfig):
         else:
             self.svc.hide_trac()
 
+class TracWindowConfig(WindowConfig):
+    key = TracView.key
+    label_text = TracView.label_text
+
+class TracFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            TracWindowConfig)
+
 # Service class
 class Trac(Service):
     """Describe your Service Here"""
 
     actions_config = TracActions
+    features_config = TracFeaturesConfig
 
     def pre_start(self):
         self._view = TracView(self)
-
-    def start(self):
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_trac(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

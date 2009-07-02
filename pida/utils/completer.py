@@ -236,7 +236,10 @@ class PidaCompleter(gtk.HBox):
     #@property
     def get_model(self):
         return self._model
-    
+
+    def __len__(self):
+        return len(self._modelreal)
+
     def set_model(self, model):
         #model = gtk.(gobject.TYPE_INT, gobject.TYPE_STRING)
         #self._tree.set_model(model)
@@ -347,87 +350,22 @@ class PidaCompleter(gtk.HBox):
         return self._tree_icons.set_visible(value)
 
     def add_str(self, line, type_=None):
-        bt = _PIXMAPS.get(type_, None)
-        self._modelreal.append((bt, line))
+        # we only hold a uniqe list of items
+        # because a later suggestion may give us a better type, we update the
+        # old one
+        for entry in self._modelreal:
+            if entry[1] == line:
+                if entry[0] == None:
+                   entry[0] = _PIXMAPS.get(type_, None)
+                return
+
+        self._modelreal.append((_PIXMAPS.get(type_, None), line))
 
     show_icons = property(get_show_icons, set_show_icons)
 
 gobject.type_register(PidaCompleter)
 
 
-class PidaDocWindow(gtk.Window):
-    def __init__(self, documentation=None, path=None, short=None, long_=None):
-        super(PidaDocWindow, self).__init__(gtk.WINDOW_POPUP)
-        #self.
-        self.set_name('pida-docwindow')
-        #self.set_name('gtk-tooltip')
-#         self.container
-        self.path = path
-        self.short = short
-        self.long_ = long_
-        if documentation:
-            self.short = documentation.short
-            self.long_ = documentation.long_
-            self.path = documentation.path
-        self.build_ui()
-
-    def on_keypress(self, event):
-        if event.type == gtk.gdk.KEY_PRESS and \
-            event.keyval == gtk.keysyms.Escape:
-                self.destroy()
-
-    def build_ui(self):
-        self.container = gtk.VBox()
-        if self.path:
-            sm = gtk.Label()
-            sm.set_name('path')
-            sm.set_justify(gtk.JUSTIFY_CENTER)
-            sm.set_selectable(True)
-            #sm.
-            #sm.select_region(0, 0)
-            #sm.set_label(self.short)
-            sm.set_markup("<b>%s</b>" %self.path)
-            sm.set_alignment(0, 0)
-            self.container.pack_start(sm, expand=True, fill=True, padding=2)
-            #self.container.add(sm)
-            sm.show_all()
-            self.pl = sm
-        if self.short:
-            sm = gtk.Label('bla\nblubb')
-            sm.set_name('short')
-            sm.set_justify(gtk.JUSTIFY_LEFT)
-            sm.set_selectable(True)
-            #sm.
-            #sm.select_region(0, 0)
-            #sm.set_label(self.short)
-            sm.set_markup("<b>%s</b>" %self.short)
-            sm.set_alignment(0, 0)
-            self.container.pack_start(sm, expand=True, fill=True, padding=2)
-            #self.container.add(sm)
-            sm.show()
-            self.sl = sm
-        if self.long_:
-            sm = gtk.Label('test')
-            sm.set_name('long')
-            sm.set_justify(gtk.JUSTIFY_LEFT)
-            sm.set_selectable(True)
-            sm.set_markup("%s" %self.long_)
-            sm.set_alignment(0, 0)
-            self.container.pack_start(sm, expand=True, fill=True, padding=3)
-            self.ll = sm
-            #self.container.add(sm)
-            sm.show()
-        self.container.show()
-        self.add(self.container)
-
-    def present(self):
-        super(PidaDocWindow, self).present()
-        if hasattr(self, 'pl'):
-            self.pl.select_region(0, 0)
-        if hasattr(self, 'll'):
-            self.ll.select_region(0, 0)
-        if hasattr(self, 'sl'):
-            self.sl.select_region(0, 0)
 
 if __name__ == "__main__":
     def accepted(*args):

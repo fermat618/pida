@@ -24,7 +24,7 @@
 
 (defun pida-register-hooks ()
   "Register hooks to inform pida what is happening in emacs"
-  (add-hook 'emacs-startup-hook
+  (add-hook 'window-setup-hook
 	    'pida-emacs-start)
   (add-hook 'find-file-hooks
  	    'pida-find-file)
@@ -199,6 +199,7 @@
 (defun pida-emacs-start ()
   "Hook-Method - emacs starts
   emits a dbus signal"
+  (sit-for 2)
   (dbus-call-method 
    :session
    pida-dbus-ns
@@ -209,19 +210,16 @@
 (defun pida-complete (&optional prefix)
   "calling th e pida code assist
    using dbus"
-  (setq bufstr (buffer-string))
-  (setq bufpos (- (point) 1))
   (setq compl (dbus-call-method :session pida-dbus-ns
  		    "/uk/co/pida/pida/language"
 		    "uk.co.pida.pida.language" 
 		    "get_completions"
-		    "" bufstr bufpos)))
+		    "" (buffer-string) (- (point) 1))))
 
 (defun mycomplete-wrapper (prefix maxnum)
   "Wrapper around `pida-complete',
      to use as a `completion-function'."
   (let ((completions (pida-complete prefix)))
-    (print "call wrapper")
     (when maxnum
       (setq completions
 	    (butlast completions (- (length completions) maxnum))))

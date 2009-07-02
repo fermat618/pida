@@ -42,7 +42,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaGladeView, WindowConfig
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask
 
@@ -111,7 +111,7 @@ class LibraryView(PidaGladeView):
 class LibraryActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        LibraryWindowConfig.action = self.create_action(
             'show_library',
             TYPE_REMEMBER_TOGGLE,
             _('Documentation Library'),
@@ -303,14 +303,22 @@ class BookMark(object):
                 
     def __iter__(self):
             yield None, sub
-        
 
+class LibraryWindowConfig(WindowConfig):
+    key = LibraryView.key
+    label_text = LibraryView.label_text
+
+class LibraryFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            LibraryWindowConfig)
 
 # Service class
 class Library(Service):
     """Describe your Service Here""" 
 
     actions_config = LibraryActions
+    features_config = LibraryFeaturesConfig
 
     def start(self):
         self._view = LibraryView(self)
@@ -319,11 +327,6 @@ class Library(Service):
         self._browser.label_text = _('Documentation')
         self._browser.connect_closed(self._on_close_clicked)
         self._has_loaded = False
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_library(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

@@ -32,7 +32,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
 from pida.utils.gthreads import GeneratorTask, gcall
 
@@ -86,7 +86,7 @@ class TodoActionsConfig(ActionsConfig):
 
     def create_actions(self):
         #XXX: blah
-        self.create_action(
+        TodoWindowConfig.action = self.create_action(
             'show_todo',
             TYPE_REMEMBER_TOGGLE,
             _('Todo Viewer'),
@@ -113,23 +113,28 @@ class TodoEventsConfig(EventsConfig):
     def on_document_changed(self, document):
         self.svc.set_current_document(document)
 
+class TodoWindowConfig(WindowConfig):
+    key = TodoView.key
+    label_text = TodoView.label_text
+
+class TodoFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            TodoWindowConfig)
+
 # Service class
 class Todo(Service):
     """Describe your Service Here""" 
 
     actions_config = TodoActionsConfig
     events_config = TodoEventsConfig
+    features_config = TodoFeaturesConfig
 
     _markers = ['TODO', 'XXX']
 
     def start(self):
         self._current = None
         self._view = TodoView(self)
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_todo(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -144,6 +149,8 @@ class Todo(Service):
     def check_document(self, document):
         """Check the given lines for TODO messages."""
         self._view.clear_items()
+        if not document or not document.lines:
+            return
         for i, line in enumerate(document.lines):
             for marker in self._markers:
                 if marker in line:

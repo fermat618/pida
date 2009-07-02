@@ -14,7 +14,7 @@ from pida.core.environment import pida_home
 # being used.
 try:
     import moo
-    from moo.utils import BigPaned, PaneLabel, PaneParams
+    from moo.utils import BigPaned, PaneLabel, PaneParams, Paned, Pane
     from moo.utils import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     version = moo.version.split('.')
     if ((int(version[0]) > 0) or
@@ -25,7 +25,7 @@ try:
         use_old = True
 
 except ImportError:
-    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams
+    from pida.ui.moo_stub import BigPaned, PaneLabel, PaneParams, Paned, Pane
     from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
@@ -79,23 +79,32 @@ class PidaPaned(BigPaned):
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
 
             pane.props.detachable = detachable
-            #XXX: moo MooParams are not editable :(
-            oparam = pane.get_params()
-            nparam = PaneParams(keep_on_top=True, detached=oparam.detached,
-                                window_position=oparam.window_position,
-                                maximized=oparam.maximized)
-            pane.set_params(nparam)
+            self.set_params(pane, keep_on_top=True)
             view.pane = pane
             pane.view = view
             if not removable:
                 pane.set_property('removable', False)
-            pane.connect('remove', view.on_remove_attempt)
+            view._on_remove_attempt_id = pane.connect('remove', 
+                                                      view.on_remove_attempt)
             view.toplevel.parent.set_name('PidaWindow')
             if present:
                 gcall(self.present_pane, view.get_toplevel())
             self.show_all()
 
+    def __contains__(self, item):
+        if not isinstance(item, Pane):
+            item = item.pane
+        for paned in self.get_all_paneds(True):
+            for pane in paned.list_panes():
+                if pane == item:
+                    return True
+        return False
+
     def remove_view(self, view):
+        # remove the default handler and fire the remove handler
+        # this ensures the remove event is fired at least once
+        view.pane.disconnect(view._on_remove_attempt_id)
+        view.pane.emit('remove')
         self.remove_pane(view.get_toplevel())
         view.pane = None
 
@@ -122,8 +131,77 @@ class PidaPaned(BigPaned):
         pane = paned.get_open_pane()
         return paned, pane
 
-    def switch_next_pane(self, name):
+    def present_pane_if_not_focused(self, pane):
+        """
+        Present a pane if it (means any child) does not have the focus
+        
+        Returns True if the pane was presented
+        """
+        # most top focus candidate
+        if getattr(pane.view, 'focus_ignore', False):
+            return False
+        focus = pane.view.toplevel.get_focus_child()
+        while hasattr(focus, 'get_focus_child'):
+            # we dive into the children until we find a child that has focus
+            # or does not have a child
+            if focus.is_focus():
+                break
+            focus = focus.get_focus_child()
+        if not focus or not focus.is_focus():
+            pane.present()
+            return True
+        return False
+
+    @staticmethod
+    def set_params(pane, **kwargs):
+        """
+        Updates the parameters on a pane.
+        Keyword arguments can be one of the following:
+        
+        @keep_on_top: sets the sticky flag
+        @detached: sets if the window is detached from the main window
+        @window_position: position of the pane in detached mode
+        @maximized: ???
+        """
+        oparam = pane.get_params()
+        nparam = PaneParams(keep_on_top=oparam.keep_on_top, 
+                            detached=kwargs.get('detached', oparam.detached),
+                            window_position=kwargs.get('window_position', oparam.window_position),
+                            maximized=kwargs.get('maximized', oparam.maximized))
+        pane.set_params(nparam)
+        #OMFG don't look at this, 
+        # but changing the params does not work for keep_on_top
+        if oparam.keep_on_top != kwargs.get('keep_on_top', oparam.keep_on_top):
+            try:
+                mbuttons = pane.get_child().get_parent().get_parent().\
+                                get_children()[0].get_children()
+            except Exception:
+                # who knows...
+                return
+            if len(mbuttons) == 5 and isinstance(mbuttons[2], gtk.ToggleButton):
+                # only click works...
+                mbuttons[2].clicked()
+            elif len(mbuttons) == 3 and isinstance(mbuttons[1], gtk.ToggleButton):
+                # only click works...
+                mbuttons[2].clicked()
+
+    def get_focus_pane(self):
+        last_pane = getattr(self, 'focus_child', None)
+        if not isinstance(last_pane, Paned):
+            return
+        while True:
+            child_pane = getattr(last_pane, 'focus_child', None)
+            if isinstance(child_pane, Paned):
+                last_pane = child_pane
+            else:
+                return last_pane.get_open_pane()
+
+    def switch_next_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)
+
+        if needs_focus and pane and self.present_pane_if_not_focused(pane):
+            return
+
         if pane is None:
             num = -1
         else:
@@ -137,8 +215,12 @@ class PidaPaned(BigPaned):
             return
         newpane.present()
 
-    def switch_prev_pane(self, name):
+    def switch_prev_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)
+
+        if needs_focus and pane and self.present_pane_if_not_focused(pane):
+            return
+
         if pane is None:
             num = paned.n_panes()
         else:
@@ -164,7 +246,12 @@ class PidaPaned(BigPaned):
 
     def _center_on_parent(self, view, size):
         gdkwindow = view.get_parent_window()
-        px, py, pw, ph, pbd = view.svc.window.window.get_geometry()
+        try:
+            px, py, pw, ph, pbd = view.svc.window.window.get_geometry()
+        except AttributeError:
+            # this can fail if the window is not yet realized, so skip the 
+            # the renice stuff :-(
+            return
         w, h = size
         cx = (pw - w) / 2
         cy = (ph - h) / 2
@@ -177,17 +264,38 @@ class PidaPaned(BigPaned):
         if fullscreen:
             for pos in self.get_all_pos():
                 paned = self.get_paned(pos)
-                self._fullscreen_vis[pos] = paned.get_open_pane()
+                self._fullscreen_vis[pos] = {
+                     'pane':paned.get_open_pane(),
+                     'sticky': paned.props.sticky_pane
+                     }
+                paned.set_sticky_pane(False)
+                paned.props.sticky_pane = False
                 paned.hide_pane()
-                #self.hide_pane(pan)
         else:
-             for pos in self.get_all_pos():
+             for pos in self.get_all_pos(True):
                 paned = self.get_paned(pos)
                 if self._fullscreen_vis.has_key(pos) and \
-                    self._fullscreen_vis[pos]:
-                    paned.open_pane(self._fullscreen_vis[pos])
+                    self._fullscreen_vis[pos]['pane']:
+                    paned.open_pane(self._fullscreen_vis[pos]['pane'])
+                    paned.set_sticky_pane(self._fullscreen_vis[pos]['sticky'])
         self._fullscreen = fullscreen
 
     def get_fullscreen(self):
         return self._fullscreen
+
+    def is_visible_pane(self, pane):
+        """
+        Test if a pane is visible to the user or not
+        """
+        # detached are always visible
+        if not pane:
+            return False
+        if pane.get_params().detached:
+            return True
+        # this is kinda tricky because the widgets think they are visible
+        # even when they are in a non top pane
+        for paned in self.get_all_paneds(True):
+            if pane == paned.get_open_pane():
+                return True
+        return False
 

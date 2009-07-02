@@ -73,6 +73,8 @@ TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
 
 accelerator_group = gtk.AccelGroup()
 
+accelerator_group.lock()
+
 class ActionsConfig(OptionsConfig):
     # this inherits from options in order to ease storing the mapping betwen
     # actions and accels (keyboard shortcuts)
@@ -116,6 +118,14 @@ class ActionsConfig(OptionsConfig):
         with a call to create_action. These actions will be added to the action
         group for the service, and can be used for any purpose.
         """
+
+    def remove_action(self, action):
+        """
+        Removes a Action from ActionManager
+
+        @param action: Action instance
+        """
+        self._actions.remove_action(action)
 
     def remove_actions(self):
         self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
@@ -184,6 +194,32 @@ class ActionsConfig(OptionsConfig):
         act.set_accel_group(self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
+        # return the option created to allow easy manipulation
+        return opt
+
+# XXX: for some reason this does not work. the changed function gets called
+# when it shouldn't and doesn't detect the wrong path
+# if fixed and the action acceleration is changed the acceleration_group.lock 
+# can be removed
+#         print "subsribe", act, opt
+#         def on_accel_changed(accelgroup, accel_key, accel_mods, closure, nopt, nact):
+#             if (nopt != opt) or (nact != act):
+#                 return
+#             #if act
+#             print nopt, opt, nact, act
+#             print self, accelgroup, accel_key, accel_mods, closure, act, opt, nact
+#             accelerator = gtk.accelerator_name(accel_key, accel_mods)
+#             self.someclosure = closure
+#             print accelerator
+#             exit_soon()
+#             #import sys
+#             #sys.exit(1)
+#             #print act.props.name
+#             pass
+#
+#         self.accelerator_group.connect('accel-changed', on_accel_changed, 
+#                 opt, act)
+
 
     def get_action(self, name):
         """

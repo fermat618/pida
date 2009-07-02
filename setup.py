@@ -3,14 +3,15 @@ The PIDA Installer
 """
 
 import os
+import subprocess
+import sys
+
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
 
-from pida import PIDA_VERSION, PIDA_AUTHOR, PIDA_WEBSITE, \
-                 PIDA_SHORT_DESCRIPTION, PIDA_NAME
+import pida
 
 # Check availability of pygtk 2.0
-import subprocess, sys
 NO_PYGTK_ERROR_MESSAGE = """pkg-config reports your system misses pygtk 2.0.
 PIDA needs pygtk headers at compile time. These can generally be found in the
 python-dev or python-gtk2-dev package of your distribution.
@@ -41,9 +42,10 @@ moo = Extension(
 
 class BuildExt(build_ext):
     def build_extension(self, ext):
-        if ext.name == 'moo_stub':
-            if os.system('cd contrib/moo && make prepare'):
-                raise RuntimeError()
+        if ext.name == 'pida.ui.moo_stub':
+            subprocess.check_call(['make', 'prepare'],
+                cwd=os.path.join(os.path.dirname(__file__),'contrib/moo')
+            )
         build_ext.build_extension(self, ext)
 
 
@@ -99,17 +101,41 @@ all_package_data = get_main_data()
 all_packages = list_pida_packages() + list_pida_services(all_package_data)
 
 setup(
-    name = PIDA_NAME,
-    version = PIDA_VERSION,
+    name = 'pida',
+    version = pida.version,
     packages = all_packages,
     package_data = all_package_data,
     ext_modules = [moo],
     cmdclass={'build_ext': BuildExt},
     scripts=['bin/pida', 'bin/pida-remote', 'bin/pida-build', 'bin/pida-pyshell'],
-    author = PIDA_AUTHOR,
-    author_email = PIDA_AUTHOR,
-    url = PIDA_WEBSITE,
-    download_url = PIDA_WEBSITE + 'download/',
-    description = PIDA_SHORT_DESCRIPTION,
+    author = pida.author,
+    author_email = pida.author,
+    url = pida.website,
+    download_url = pida.website + 'download/',
+    description = pida.short_description,
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: X11 Applications :: GTK',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: POSIX :: BSD',
+        'Operating System :: Microsoft :: Windows :: Windows NT/2000',
+        'Topic :: Software Development',
+        'Topic :: Software Development :: Version Control',
+        'Topic :: Text Editors',
+        'Topic :: Utilities',
+    ],
+    requires = [
+        #XXX: more ?
+        'anyvc (>= 0.2)',
+        'simplejson',
+        'PyGtk (>= 2.14)',
+        #'kiwi-gtk (>= 1.9.23)', #XXX distutils doesnt like the -
+        #'vte',
+        #'dbus ?',
+        #'rope ?',
+        #'moo ?'
+    ]
 )
 
