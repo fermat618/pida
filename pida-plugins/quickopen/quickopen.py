@@ -195,8 +195,8 @@ class QopenActionsConfig(ActionsConfig):
         QopenWindowConfig.action = self.create_action(
             'qopen_show',
             TYPE_NORMAL,
-            _('QOpen'),
-            _('Open QuickOpen window'),
+            _('Open in project'),
+            _('Open file in project.'),
             gtk.STOCK_OPEN,
             self.on_qopen_show,
             ''  # default shortcut or '' to enable shortcut for action
