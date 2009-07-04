@@ -30,14 +30,19 @@ log = get_logger('core.languages')
 if opts.multiprocessing:
     try:
         import multiprocessing
-        from multiprocessing.managers import BaseManager, BaseProxy, SyncManager
+        from multiprocessing.managers import (BaseManager, BaseProxy, 
+            SyncManager, RemoteError)
     except ImportError:
         log.info(_("Can't find multiprocessing, disabled work offload"))
         multiprocessing = None
         BaseManager = BaseProxy = SyncManager = object
+        class RemoteError(Exception):
+            pass
 else:
     multiprocessing = None
     BaseManager = BaseProxy = SyncManager = object
+    class RemoteError(Exception):
+        pass
 
 #FIXME: maybe we should fill the plugin values with a metaclass ???
 # class LanguageMetaclass(type):
@@ -383,9 +388,21 @@ class GeneratorProxy(BaseProxy):
     def __iter__(self):
         return self
     def next(self):
-        return self._callmethod('next')
+        try:
+            return self._callmethod('next')
+        except RemoteError:
+            if getattr(self._manager, 'is_shutdown', False):
+                raise StopIteration
+            else:
+                raise
     def __next__(self):
-        return self._callmethod('__next__')
+        try:
+            return self._callmethod('__next__')
+        except RemoteError:
+            if getattr(self._manager, 'is_shutdown', False):
+                raise StopIteration
+            else:
+                raise
 
 class ExternalMeta(type):
     """
@@ -688,6 +705,7 @@ class JobServer(object):
     def stop(self):
         self.stopped = True
         for i in self._processes:
+            i.is_shutdown = True
             i.shutdown()
 
 class LanguageService(Service):
