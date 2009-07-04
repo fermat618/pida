@@ -175,7 +175,7 @@ class Document(object):
         # we are live
         if hasattr(self, '_doctype'):
             return self._doctype
-        elif self.boss:
+        elif self.boss is not None:
             lmn = self.boss.get_service('language')
             if not lmn:
                 return None
@@ -305,7 +305,7 @@ class Document(object):
         Sets the content of the document.
         If live is True and the document is loaded, it's content is returned
         """
-        if self.boss and hasattr(self.boss.editor, 'set_content') and self.editor:
+        if self.boss is not None and hasattr(self.boss.editor, 'set_content') and self.editor:
             return self.boss.editor.set_content(self.editor, value)
 
         self._str = value
@@ -322,7 +322,7 @@ class Document(object):
         If editor has loaded this document, it's value
         is fetched befor writing to disc
         """
-        if self.boss and hasattr(self.editor, 'get_content') and self.editor:
+        if self.boss is not None and hasattr(self.editor, 'get_content') and self.editor:
             value = self.boss.editor.get_content(self.editor)
         else:
             value = self._str
@@ -445,7 +445,7 @@ class Document(object):
             return None, None
 
         #XXX: move to buffer manager
-        if not self.boss:
+        if self.boss is None:
             return None, os.path.join(*os.path.split(self.directory)[-2:])
         match = self.boss.cmd('project', 'get_project_for_document', document=self)
         if match is None:
