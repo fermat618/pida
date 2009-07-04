@@ -52,6 +52,16 @@ class PidaPaned(BigPaned):
         self._fullscreen_vis = {}
         self.set_property('enable-detaching', True)
         self.set_name('PidaBigPaned')
+        for paned in self.get_all_paneds(True):
+            paned.connect('notify::active-pane', self._active_pane_change)
+
+    @staticmethod
+    def _active_pane_change(paned, dummy):
+        """
+        Remembers the last active pane
+        """
+        if paned and paned.props.active_pane:
+            paned.last_pane = paned.props.active_pane.weak_ref()
 
     def get_all_pos(self, every=False):
         if every:
@@ -199,6 +209,12 @@ class PidaPaned(BigPaned):
     def switch_next_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)
 
+        if not pane and hasattr(paned, 'last_pane'):
+            last_pane = paned.last_pane() #it's a weak ref
+            if last_pane:
+                paned.open_pane(last_pane)
+                return
+
         if needs_focus and pane and self.present_pane_if_not_focused(pane):
             return
 
@@ -217,6 +233,12 @@ class PidaPaned(BigPaned):
 
     def switch_prev_pane(self, name, needs_focus=True):
         paned, pane = self.get_open_pane(name)
+
+        if not pane and hasattr(paned, 'last_pane'):
+            last_pane = paned.last_pane() #it's a weak ref
+            if last_pane:
+                paned.open_pane(last_pane)
+                return
 
         if needs_focus and pane and self.present_pane_if_not_focused(pane):
             return
