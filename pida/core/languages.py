@@ -390,7 +390,7 @@ class GeneratorProxy(BaseProxy):
     def next(self):
         try:
             return self._callmethod('next')
-        except RemoteError:
+        except (RemoteError, EOFError):
             if getattr(self._manager, 'is_shutdown', False):
                 raise StopIteration
             else:
@@ -398,7 +398,7 @@ class GeneratorProxy(BaseProxy):
     def __next__(self):
         try:
             return self._callmethod('__next__')
-        except RemoteError:
+        except (RemoteError, EOFError):
             if getattr(self._manager, 'is_shutdown', False):
                 raise StopIteration
             else:
