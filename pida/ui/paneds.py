@@ -7,6 +7,7 @@
 import os
 
 import gtk
+import gobject
 
 from pida.core.environment import pida_home
 
@@ -29,8 +30,7 @@ except ImportError:
     from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
-
-
+from kiwi.utils import gsignal
 from pida.utils.gthreads import gcall
 
 PANE_TERMINAL = 'Terminal'
@@ -45,6 +45,8 @@ POS_MAP = {
 }
 
 class PidaPaned(BigPaned):
+
+    gsignal('pane-detachment', gobject.TYPE_PYOBJECT, bool)
 
     def __init__(self):
         BigPaned.__init__(self)
@@ -72,6 +74,32 @@ class PidaPaned(BigPaned):
         for pos in self.get_all_pos(every):
             yield self.get_paned(pos)
 
+    def _on_pane_param_changed(self, pane, props):
+        """
+        we save the detached param and send a clean signal so
+        services can do stuff when windows are de/attached
+        """
+        if pane._was_detached != pane.get_params().detached:
+            self.emit('pane-detachment', pane, pane.get_params().detached)
+            pane._was_detached = pane.get_params().detached
+            if pane.get_params().detached:
+                pane.get_child().get_toplevel().connect('focus-in-event',
+                                                        self._on_focus_detached,
+                                                        pane)
+
+    def _on_focus_detached(self, widget, direction, pane):
+        paned = self.get_paned_of_pane(pane)
+        if paned:
+            paned.last_pane = pane.weak_ref()
+
+    def get_paned_of_pane(self, pane):
+        """
+        Returns the paned of a pane. There is no dirct api :(
+        """
+        for paned in self.get_all_paneds(True):
+            if pane in paned.list_panes():
+                return paned
+
     def add_view(self, name, view, removable=True, present=True, detachable=True):
         if name == PANE_EDITOR:
             self.add_child(view.get_toplevel())
@@ -91,6 +119,8 @@ class PidaPaned(BigPaned):
             pane.props.detachable = detachable
             self.set_params(pane, keep_on_top=True)
             view.pane = pane
+            pane._was_detached = False
+            pane.connect('notify::params', self._on_pane_param_changed)
             pane.view = view
             if not removable:
                 pane.set_property('removable', False)
@@ -138,7 +168,15 @@ class PidaPaned(BigPaned):
     def get_open_pane(self, name):
         POS = POS_MAP[name]
         paned = self.get_paned(POS)
-        pane = paned.get_open_pane()
+        if self.get_toplevel().is_active():
+            pane = paned.get_open_pane()
+        else:
+            # we don't have the focus which means that a detached window
+            # may have it.
+            for pane2 in paned.list_panes():
+                if pane2.get_params().detached and \
+                   pane2.get_child().get_toplevel().is_active():
+                    return paned, pane2
         return paned, pane
 
     def present_pane_if_not_focused(self, pane):
@@ -147,6 +185,14 @@ class PidaPaned(BigPaned):
         
         Returns True if the pane was presented
         """
+        # test if it is detached
+        if pane.get_params().detached:
+            if not pane.view.toplevel.get_toplevel().is_active():
+                pane.view.toplevel.get_toplevel().present()
+                return True
+            else:
+                return False
+        
         # most top focus candidate
         if getattr(pane.view, 'focus_ignore', False):
             return False
@@ -207,54 +253,54 @@ class PidaPaned(BigPaned):
                 return last_pane.get_open_pane()
 
     def switch_next_pane(self, name, needs_focus=True):
+        return self._switch_pane(name, 1, needs_focus)
+
+    def switch_prev_pane(self, name, needs_focus=True):
+        return self._switch_pane(name, -1, needs_focus)
+
+    def _switch_pane(self, name, direction, needs_focus):
         paned, pane = self.get_open_pane(name)
 
-        if not pane and hasattr(paned, 'last_pane'):
-            last_pane = paned.last_pane() #it's a weak ref
-            if last_pane:
-                paned.open_pane(last_pane)
-                return
-
-        if needs_focus and pane and self.present_pane_if_not_focused(pane):
+        if not paned.n_panes():
+            # return on empty panes
             return
 
-        if pane is None:
-            num = -1
-        else:
+        def ensure_focus(pane):
+            # make sure the pane is in a window which is active
+            if pane and not pane.get_child().get_toplevel().is_active():
+                pane.get_child().get_toplevel().present()
+            return pane
+
+        if hasattr(paned, 'last_pane'):
+            last_pane = paned.last_pane() #it's a weak ref
+            if last_pane and last_pane.get_params().detached:
+                if not last_pane.get_child().get_toplevel().is_active() and needs_focus:
+                    last_pane.present()
+                    return ensure_focus(last_pane)
+            elif last_pane and not pane:
+                last_pane.present()
+                return ensure_focus(last_pane)
+
+        if needs_focus and pane and self.present_pane_if_not_focused(pane):
+            return ensure_focus(pane)
+
+        num = 0
+        if pane:
             num = pane.get_index()
-        newnum = num + 1
+        newnum = num + direction
+
         if newnum == paned.n_panes():
             newnum = 0
+        elif newnum < 0:
+            newnum = paned.n_panes()-1
+
         newpane = paned.get_nth_pane(newnum)
         if newpane is None:
             # no pane exists
             return
+        paned.last_pane = newpane.weak_ref()
         newpane.present()
-
-    def switch_prev_pane(self, name, needs_focus=True):
-        paned, pane = self.get_open_pane(name)
-
-        if not pane and hasattr(paned, 'last_pane'):
-            last_pane = paned.last_pane() #it's a weak ref
-            if last_pane:
-                paned.open_pane(last_pane)
-                return
-
-        if needs_focus and pane and self.present_pane_if_not_focused(pane):
-            return
-
-        if pane is None:
-            num = paned.n_panes()
-        else:
-            num = pane.get_index()
-        newnum = num - 1
-        if newnum == -1:
-            newnum = paned.n_panes() - 1
-        if newnum < 0:
-            # no pane exists
-            return
-        newpane = paned.get_nth_pane(newnum)
-        newpane.present()
+        return ensure_focus(newpane)
 
     def present_paned(self, name):
         paned, pane = self.get_open_pane(name)

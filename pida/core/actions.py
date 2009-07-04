@@ -72,8 +72,10 @@ TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
 
 
 accelerator_group = gtk.AccelGroup()
-
 accelerator_group.lock()
+# the global accelerator group will be added to detached windows as well
+global_accelerator_group = gtk.AccelGroup()
+global_accelerator_group.lock()
 
 class ActionsConfig(OptionsConfig):
     # this inherits from options in order to ease storing the mapping betwen
@@ -90,6 +92,7 @@ class ActionsConfig(OptionsConfig):
     name = '%s.keys.json'
     dbus_path = "actions"
     accelerator_group = accelerator_group
+    global_accelerator_group = global_accelerator_group
 
     def create(self):
         """
@@ -140,7 +143,7 @@ class ActionsConfig(OptionsConfig):
         pass
 
     def create_action(self, name, atype, label, tooltip, stock_id,
-                      callback=None, accel=None):
+                      callback=None, accel=None, global_=False):
         """
         Create an action for this service.
 
@@ -178,11 +181,12 @@ class ActionsConfig(OptionsConfig):
             act.connect('activate', callback)
 
         if accel is not None:
-            self._create_key_option(act, name, label, tooltip, accel)
+            self._create_key_option(act, name, label, tooltip, accel, 
+                                    global_=global_)
 
         return act
 
-    def _create_key_option(self, act, name, label, tooltip, accel):
+    def _create_key_option(self, act, name, label, tooltip, accel, global_=False):
         opt = self.create_option(name,
                          label, str,
                          accel, tooltip,
@@ -191,7 +195,8 @@ class ActionsConfig(OptionsConfig):
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
         act.opt = opt
-        act.set_accel_group(self.accelerator_group)
+        act.set_accel_group(global_ and self.global_accelerator_group or
+                            self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
         # return the option created to allow easy manipulation

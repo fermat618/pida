@@ -404,7 +404,8 @@ class LanguageActionsConfig(ActionsConfig):
             _('Show outline browser and focus filter entry'),
             '',
             self.on_focus_outline,
-            ''
+            '',
+            global_=True
         )
         self.create_action(
             'show_language_prio',

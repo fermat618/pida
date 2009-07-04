@@ -748,7 +748,7 @@ class FileManagerActionsConfig(ActionsConfig):
             gtk.STOCK_DELETE,
             self.on_delete
         )
-        
+
         self.create_action(
             'browse-for-file',
             TYPE_NORMAL,
@@ -757,7 +757,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'file-manager',
             self.on_browse_for_file,
         )
-        
+
         self.create_action(
             'delete-dir',
             TYPE_NORMAL,
@@ -783,7 +783,8 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Show the file browser view'),
             'file-manager',
             self.on_show_filebrowser,
-            '<Shift><Control>f'
+            '<Shift><Control>f',
+            global_=True
         )
 
         self.create_action(

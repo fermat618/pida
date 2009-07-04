@@ -225,6 +225,7 @@ class BufferActionsConfig(ActionsConfig):
             '',
             self.on_show_buffer,
             '<Shift><Control>b',
+            global_=True
         )
 
         self.create_action(

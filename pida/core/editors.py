@@ -95,6 +95,7 @@ class EditorActionsConfig(ActionsConfig):
             'application-edit',
             self.on_focus_editor,
             '<Shift><Control>e',
+            global_=True
         )
 
 
@@ -118,6 +119,7 @@ class EditorActionsConfig(ActionsConfig):
 
     def on_focus_editor(self, action):
         self.svc.grab_focus()
+        self.svc.window.present()
 
 class EditorCommandsConfig(CommandsConfig):
 

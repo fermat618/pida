@@ -15,7 +15,7 @@ from pida.ui.paneds import PidaPaned
 
 from pida.core.log import log
 from pida.core.environment import get_uidef_path, get_pixmap_path
-from pida.core.actions import accelerator_group
+from pida.core.actions import accelerator_group, global_accelerator_group
 from pida.utils.gthreads import gcall
 
 from functools import wraps
@@ -42,6 +42,7 @@ class Window(gtk.Window):
         gtk.Window.__init__(self, *args, **kw)
         self.set_icon_from_file(get_pixmap_path('pida-icon.png'))
         self.add_accel_group(accelerator_group)
+        self.add_accel_group(global_accelerator_group)
         self.connect('delete-event', self._on_delete_event)
         self.create_all()
 
@@ -162,10 +163,10 @@ class PidaWindow(Window):
         self.paned.present_paned(bookname)
 
     def switch_next_view(self, bookname):
-        self.paned.switch_next_pane(bookname)
+        return self.paned.switch_next_pane(bookname)
 
     def switch_prev_view(self, bookname):
-        self.paned.switch_prev_pane(bookname)
+        return self.paned.switch_prev_pane(bookname)
 
     def set_fullscreen(self, fullscreen):
         self.paned.set_fullscreen(fullscreen)

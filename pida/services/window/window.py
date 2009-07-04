@@ -50,7 +50,7 @@ class ActionWindowMapping(list):
         self.append(config)
         keya = self._genkey(config.key)
         curshort = self.svc.actions.get_extra_value('window-config').\
-                                   get(keya, '')
+                                                                get(keya, '')
 
         act = self.svc.actions.create_action(
             keya,
@@ -59,7 +59,8 @@ class ActionWindowMapping(list):
             config.description or _('Focus %s window') %_(config.label_text),
             "",
             self.svc.actions.on_focus_window,
-            config.default_shortcut
+            config.default_shortcut,
+            global_=True
         )
         act.key = config.key
         act.visible_action = config.action
@@ -174,6 +175,7 @@ class WindowActionsConfig(ActionsConfig):
             gtk.STOCK_GO_FORWARD,
             self.on_switch_next_term,
             '<Alt>Right',
+            global_=True
         )
 
         self.create_action(
@@ -184,6 +186,7 @@ class WindowActionsConfig(ActionsConfig):
             gtk.STOCK_GO_BACK,
             self.on_switch_prev_term,
             '<Alt>Left',
+            global_=True
         )
 
         self.create_action(
@@ -194,6 +197,7 @@ class WindowActionsConfig(ActionsConfig):
             'terminal',
             self.on_focus_terminal,
             '<Shift><Control>i',
+            global_=True
         )
 
         self.create_action(
@@ -204,6 +208,7 @@ class WindowActionsConfig(ActionsConfig):
             gtk.STOCK_CLOSE,
             self.on_close_pane,
             '<Control>F4',
+            global_=True
         )
 
         self.create_action(
@@ -214,6 +219,7 @@ class WindowActionsConfig(ActionsConfig):
             'pin',
             self.on_toggle_sticky,
             '',
+            global_=True
         )
 
         self.create_action(
@@ -269,9 +275,9 @@ class WindowActionsConfig(ActionsConfig):
         # call normal callback
         self._set_action_keypress_from_option(option)
 
-    def _create_key_option(self, act, name, label, tooltip, accel):
+    def _create_key_option(self, act, name, label, tooltip, accel, global_=False):
         opt = super(WindowActionsConfig, self)._create_key_option(act, 
-                                            name, label, tooltip, accel)
+                                            name, label, tooltip, accel, global_=global_)
 
         if name[:14] == 'window_config_':
             # we highjack the callback on the external defined options
@@ -409,6 +415,7 @@ class Window(Service):
         self.boss.window._uim._uim.insert_action_group(self._action_group, -1)
         self.restore_state()
         self.window.paned.connect('config-changed', self.save_state)
+        self.window.paned.connect('pane-detachment', self._on_pane_detachment)
 
     def pre_stop(self):
         self.save_state()
@@ -488,6 +495,14 @@ class Window(Service):
             self.log("Can't open state file %s" %self.state_config)
             return
         simplejson.dump(data, fp, indent=4)
+
+    def _on_pane_detachment(self, bigpaned, pane, detached):
+        if detached:
+            # thanks gtk for not letting me test if accel is already added
+            win = pane.get_child().get_toplevel()
+            if not getattr(win, '_pida_accel_added', False):
+                win.add_accel_group(self.actions.global_accelerator_group)
+                win._pida_accel_added = True
 
     def update_colors(self):
         # set the colors of Document
