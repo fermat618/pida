@@ -30,9 +30,10 @@ STDERR = 2
 
 class Data(unicode):
     __slots__ = ('fd')
-    def __init__(self, s, fd=STDOUT, errors='strict'):
-        self.fd = fd
-        super(Data, self).__init__(s, errors='strict')
+    def __new__(cls, s, fd=STDOUT, errors='strict'):
+        rv = super(Data, cls).__new__(cls, s, errors='strict')
+        rv.fd = fd
+        return rv
 
     def __repr__(self):
         return '<Data %s %s>' %(self.fd, unicode.__repr__(self))
