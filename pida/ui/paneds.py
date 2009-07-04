@@ -46,7 +46,7 @@ POS_MAP = {
 
 class PidaPaned(BigPaned):
 
-    gsignal('pane-detachment', gobject.TYPE_PYOBJECT, bool)
+    gsignal('pane-attachment-changed', gobject.TYPE_PYOBJECT, bool)
 
     def __init__(self):
         BigPaned.__init__(self)
@@ -80,7 +80,7 @@ class PidaPaned(BigPaned):
         services can do stuff when windows are de/attached
         """
         if pane._was_detached != pane.get_params().detached:
-            self.emit('pane-detachment', pane, pane.get_params().detached)
+            self.emit('pane-attachment-changed', pane, pane.get_params().detached)
             pane._was_detached = pane.get_params().detached
             if pane.get_params().detached:
                 pane.get_child().get_toplevel().connect('focus-in-event',

@@ -195,7 +195,7 @@ class ActionsConfig(OptionsConfig):
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
         act.opt = opt
-        act.set_accel_group(global_ and self.global_accelerator_group or
+        act.set_accel_group((global_ and self.global_accelerator_group) or
                             self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()

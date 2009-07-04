@@ -415,7 +415,7 @@ class Window(Service):
         self.boss.window._uim._uim.insert_action_group(self._action_group, -1)
         self.restore_state()
         self.window.paned.connect('config-changed', self.save_state)
-        self.window.paned.connect('pane-detachment', self._on_pane_detachment)
+        self.window.paned.connect('pane-attachment-changed', self._on_pane_detachment)
 
     def pre_stop(self):
         self.save_state()
