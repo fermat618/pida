@@ -106,7 +106,7 @@ status_map= { # 1 is for sucess, 2 for fail
         'success': 'gtk-apply',
         'failure': 'gtk-no',
         'error': 'gtk-cancel',
-        'mixed:': 'gtk-dialog-warning',
+        'mixed': 'gtk-dialog-warning',
         'running': 'gtk-refresh',
         }
 
