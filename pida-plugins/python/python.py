@@ -71,6 +71,8 @@ class PythonEventsConfig(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('buffer', 'document-changed',
                     self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-typchanged',
+                    self.on_document_changed)
 
     def on_document_changed(self, document):
         self.svc.set_document(document)
