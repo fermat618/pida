@@ -139,23 +139,48 @@ class ServiceManager(object):
         self._pre_start_services()
 
     def start_plugin(self, name):
-        plugin = self._plugins.get_one(name)(self._boss)
-        assert not hasattr(plugin, 'started')
-        plugin.started = False # not yet started
-        pixmaps_dir = os.path.join(plugin.__path__, 'pixmaps')
-        if os.path.exists(pixmaps_dir):
-            self._boss._icons.register_file_icons_for_directory(pixmaps_dir)
-        if plugin is not None:
-            self._register(plugin)
-            plugin.create_all()
-            plugin.subscribe_all()
-            plugin.pre_start()
-            plugin.start()
-            assert plugin.started is False # this shouldn't change
-            plugin.started = True
-            return plugin
-        else:
+        plugin_class = self._plugins.get_one(name)
+        if plugin_class is None:
             log.error('Unable to load plugin %s' % name)
+            return
+
+        #XXX: test this more roughly
+        plugin = plugin_class(self._boss)
+        try:
+            if hasattr(plugin, 'started') :
+                log.error("plugin.started shouldn't be set by %r", plugin)
+
+            plugin.started = False # not yet started
+
+            #XXX: unregister?
+            pixmaps_dir = os.path.join(plugin.__path__, 'pixmaps')
+            if os.path.exists(pixmaps_dir):
+                self._boss._icons.register_file_icons_for_directory(pixmaps_dir)
+            self._register(plugin)
+            try:
+                try:
+                    plugin.create_all()
+
+                    #stop_components will handle
+                    plugin.subscribe_all()
+
+                    #XXX: what to do with unrolling those
+                    plugin.pre_start()
+                    plugin.start()
+                    assert plugin.started is False # this shouldn't change
+                    plugin.started = True
+                    return plugin
+                except:
+                    plugin.stop_components()
+                    raise
+            except:
+                del self._reg[name]
+                raise
+
+        except:
+            self._plugins.unload(name)
+            raise
+
 
     def stop_plugin(self, name):
         plugin = self.get_service(name)

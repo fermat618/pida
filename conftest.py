@@ -5,15 +5,13 @@ pytest_plugins = "unittest",
 import py
 from pida.utils.testing.mock import Mock
 
+collect_ignore = ['tools/skeleton']
 
 class PidaClassCollect(py.test.collect.Class):
     def collect(self):
-        try:
-            #XXX: kinda ignore classes that want params
-            self.obj()
+        # ignore classes that want params
+        if not hasattr(self.obj, '__init__'):
             return super(PidaClassCollect, self).collect()
-        except:
-            return []
 
 
 class Module(py.test.collect.Module):
