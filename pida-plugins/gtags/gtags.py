@@ -32,7 +32,6 @@ import re
 from threading import Thread
 
 from kiwi.ui.objectlist import ObjectList, Column
-
 # PIDA Imports
 from pida.core.languages import LanguageService, Completer, \
                                 LanguageServiceFeaturesConfig

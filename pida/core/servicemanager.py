@@ -64,7 +64,10 @@ class ServiceLoader(object):
 
     def get_one(self, name):
         module = '.'.join([self._name, name, name])
-        module = __import__(module, fromlist=['*'], level=0)
+        try:
+            module = __import__(module, fromlist=['*'], level=0)
+        except ImportError, e:
+            raise ServiceModuleError(module), None, None
         self._register_service_env(module)
 
         try:
@@ -171,6 +174,7 @@ class ServiceManager(object):
                     plugin.started = True
                     return plugin
                 except:
+                    log.debug(_('Stop broken components'))
                     plugin.stop_components()
                     raise
             except:
@@ -178,8 +182,9 @@ class ServiceManager(object):
                 raise
 
         except:
+            log.error(_('Could not load plugin %s') %name)
             self._plugins.unload(name)
-            raise
+            raise ServiceLoadingError(name)
 
 
     def stop_plugin(self, name):

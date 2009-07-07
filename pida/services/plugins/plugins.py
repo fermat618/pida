@@ -399,7 +399,7 @@ class Plugins(Service):
             #XXX: support a ui traceback browser?
             self.boss.cmd('notify', 'notify', title=_('Plugins'),
                 data = _('Could not start plugin: %(name)s\n%(error)s' % 
-                    {'error':str(e), 'plugin_path':name}))
+                    {'error':str(e), 'name':name}))
             return False
 
     def stop_plugin(self, name):
