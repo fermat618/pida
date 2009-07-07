@@ -562,7 +562,7 @@ class LanguageDbusConfig(DbusConfig):
         doc = self.svc.boss.cmd('buffer', 'get_current')
         completer = self.svc.get_completer(doc)
         if completer is not None:
-            return completer.get_completions(base, buffer, offset)
+            return list(completer.get_completions(base, buffer, offset))
         else:
             return []
 
