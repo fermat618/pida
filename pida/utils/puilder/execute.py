@@ -28,15 +28,14 @@ def _info(*msg):
 STDOUT = 1
 STDERR = 2
 
-class Data(unicode):
-    __slots__ = ('fd')
-    def __new__(cls, s, fd=STDOUT, errors='strict'):
-        rv = super(Data, cls).__new__(cls, s, errors='strict')
+class Data(str):
+    def __new__(cls, s, fd=STDOUT):
+        rv = super(Data, cls).__new__(cls, s)
         rv.fd = fd
         return rv
 
     def __repr__(self):
-        return '<Data %s %s>' %(self.fd, unicode.__repr__(self))
+        return '<Data %s %s>' %(self.fd, str.__repr__(self))
 
 class OutputBuffer(StringIO):
     """
@@ -45,7 +44,7 @@ class OutputBuffer(StringIO):
     easier to process.
     """
     def write(self, s, fd=STDOUT):
-        line = Data(s, errors='replace')
+        line = Data(s)
         line.fd = fd
         StringIO.write(self, line)
 
