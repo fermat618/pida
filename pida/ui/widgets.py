@@ -43,6 +43,8 @@ class CleverProxyColorButton(ProxyColorButton):
 
     def read(self):
         col = super(CleverProxyColorButton, self).read()
+        if isinstance(col, str):
+            return col
         return gdk_color_to_string(col)
 
 
