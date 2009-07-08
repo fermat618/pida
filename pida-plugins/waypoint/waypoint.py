@@ -181,7 +181,11 @@ class WayStack(list):
         """
         if not len(self):
             return
-        nindex = min(max(self.index(self.current_point)+steps, 0), len(self)-1)
+        try:
+            nindex = min(max(self.index(self.current_point)+steps, 0), len(self)-1)
+        except IndexError:
+            # the current waypoint was deleted for example
+            nindex = 0
         self.current_point = self[nindex]
         self._last_line = self.current_point.line
         self._last_document = self.current_point.document
