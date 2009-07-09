@@ -198,7 +198,7 @@ class Document(object):
         """
         try:
             return os.stat(self.filename)
-        except OSError:
+        except (OSError, TypeError):
             return (0,)*10
 
     @cached_property
@@ -258,7 +258,9 @@ class Document(object):
 
     @property
     def modified_time(self):
-        return self.stat[stat.ST_MTIME]
+        if self.filename:
+            return self.stat[stat.ST_MTIME]
+        return self.creation_time
 
     @property
     def encoding(self):
