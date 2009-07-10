@@ -181,7 +181,8 @@ class ServiceManager(object):
                 del self._reg[name]
                 raise
 
-        except:
+        except Exception, e:
+            log.exception(e)
             log.error(_('Could not load plugin %s') %name)
             self._plugins.unload(name)
             raise ServiceLoadingError(name)
