@@ -130,14 +130,26 @@ class SearchBar(gtk.HBox):
         self.text.show()
         self.pack_start(self.text)
 
-        self.find_button = gtk.Button(stock=gtk.STOCK_FIND)
+        self.find_button = gtk.ToolButton(gtk.STOCK_FIND)
         self.find_button.connect('clicked', self.on_find_button__clicked)
+        self.find_button.set_tooltip_text(_('Find'))
 
-        self.close_button = gtk.Button(stock=gtk.STOCK_CLOSE)
+        self.close_button = gtk.ToolButton(gtk.STOCK_CLOSE)
+        self.close_button.set_tooltip_text(_('Close'))
         self.close_button.connect('clicked', self.on_close_button__clicked)
 
         self.pack_start(self.find_button, expand=False)
         self.find_button.show()
+
+        if html.has_highlight:
+            self.highlight_button = gtk.ToggleToolButton(gtk.STOCK_BOLD)
+            self.highlight_button.set_tooltip_text(_('Highlight'))
+            self.highlight_button.connect('toggled', 
+                                          self.on_highlight_button__toggled)
+            self.highlight_button.set_active(True)
+
+            self.pack_start(self.highlight_button, expand=False)
+            self.highlight_button.show()
 
         self.pack_start(self.close_button, expand=False)
         self.close_button.show()
@@ -164,6 +176,8 @@ class SearchBar(gtk.HBox):
     def on_close_button__clicked(self, button):
         self.end_search()
 
+    def on_highlight_button__toggled(self, button):
+        self.html.set_highlight(button.get_active())
 
 class WebkitHtmlWidget(gtk.VBox):
 
@@ -193,12 +207,19 @@ class WebkitHtmlWidget(gtk.VBox):
         self.progress = gtk.ProgressBar()
         self.progress.set_no_show_all(True)
 
-        self.searchbar = SearchBar(self.html)
+        self.searchbar = SearchBar(self)
 
         self.pack_start(self.sw)
         self.pack_start(self.searchbar, expand=False)
         self.pack_start(self.progress, expand=False)
         self.show_all()
+
+    def search_text(self, search, sensetive=False, forward=True, wrap=True):
+        self.html.search_text(search, sensetive, forward, wrap)
+        if hasattr(self.html, 'unmark_text_matches'):
+            self.html.unmark_text_matches()
+            self.html.mark_text_matches(search, sensetive, 0)
+            self.html.set_highlight_text_matches(True)
 
 
     def load_url(self, url):
@@ -237,6 +258,13 @@ class WebkitHtmlWidget(gtk.VBox):
     def on_key_press(self, html, event):
         if event.keyval in (47, 102):
             self.searchbar.start_search()
+
+    @property
+    def has_highlight(self):
+        return hasattr(self.html, 'unmark_text_matches')
+
+    def set_highlight(self, active):
+        self.html.set_highlight_text_matches(active)
 
 HtmlWidget = None
 
