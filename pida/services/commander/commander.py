@@ -293,8 +293,8 @@ class CommanderFeaturesConfig(FeaturesConfig):
         match = os.path.expanduser(args[0])
 
         if match.find(":") != -1:
-            file_name, line = match.rsplit(":", 1)
-            file_name = kwargs['usr'].get_absolute_path(file_name)
+            rfile_name, line = match.rsplit(":", 1)
+            file_name = kwargs['usr'].get_absolute_path(rfile_name)
             if not file_name:
                 return
             if os.path.isfile(file_name):
@@ -305,6 +305,16 @@ class CommanderFeaturesConfig(FeaturesConfig):
                 self.svc.boss.cmd('filemanager', 'browse', 
                             new_path=file_name)
                 self.svc.boss.cmd('filemanager', 'present_view')
+            else:
+                # fallback. look if there is a open file that matches this filename
+                for doc in self.svc.boss.cmd('buffer', 
+                                             'get_documents').itervalues():
+                    if doc.basename == rfile_name:
+                        self.svc.boss.cmd('buffer', 'open_file', 
+                                            document=doc,
+                                            line=int(line))
+                        break
+
         else:
             file_name = os.path.realpath(kwargs['usr'].get_absolute_path(match))
             if not file_name:
@@ -314,6 +324,13 @@ class CommanderFeaturesConfig(FeaturesConfig):
             elif os.path.isdir(file_name):
                 self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
                 self.svc.boss.cmd('filemanager', 'present_view')
+            else:
+                for doc in self.svc.boss.cmd('buffer',
+                                             'get_documents').itervalues():
+                    if doc.basename == match:
+                        self.svc.boss.cmd('buffer', 'open_file',
+                                          document=doc)
+                        break
 
 
 
