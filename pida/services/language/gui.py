@@ -321,6 +321,8 @@ class BrowserView(PidaGladeView):
             ]
         )
         self.source_tree.set_headers_visible(False)
+        # faster lookups on the id property
+        self.source_tree_ids = {}
         self.sort_box = AttrSortCombo(
             self.source_tree,
             [
@@ -456,6 +458,7 @@ class BrowserView(PidaGladeView):
 
     def clear_items(self):
         self.source_tree.clear()
+        self.source_tree_ids = {}
 
     def get_by_id(self, id_):
         """
@@ -474,11 +477,18 @@ class BrowserView(PidaGladeView):
         if not node:
             return
 
+        if node.id:
+            self.source_tree_ids[node.id] = node
+
         if node.parent:
             parent = node.parent
         elif node.parent_id:
             # only the parent_id was submitted so we have to look the parent up
-            parent = self.get_by_id(node.parent_id)
+            try:
+                parent = self.source_tree_ids[node.parent_id]
+            except KeyError:
+                # try a deep lookup
+                parent = self.get_by_id(node.parent_id)
         else:
             parent = None
 
