@@ -24,12 +24,6 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 from pida.core.environment import on_windows
 from pida.ui.views import PidaGladeView
 
-#FIXME causes memleak and deadlock on win32
-if not on_windows:
-    from pida.utils.launchpadder.gtkgui import PasswordDialog
-    from pida.utils.launchpadder.lplib import save_local_config, get_local_config,\
-        report
-
 from pida.utils.gthreads import AsyncTask, gcall
 
 # locale
@@ -66,6 +60,11 @@ class BugreportView(PidaGladeView):
         buf = self.description_text.get_buffer()
         description = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
         description = 'PIDA %s\n--\n%s' % (pida.version, description)
+        #FIXME causes memleak and deadlock on win32
+        if on_windows:
+            return
+        from pida.utils.launchpadder.lplib import report
+
         return report(None, self.email, self.password, 'pida', title, description)
 
     def report_complete(self, success, data):
@@ -84,6 +83,11 @@ class BugreportView(PidaGladeView):
         return self._pulsing
 
     def get_pass(self):
+        #FIXME causes memleak and deadlock on win32
+        if on_windows:
+            return
+        from pida.utils.launchpadder.gtkgui import PasswordDialog
+
         pass_dlg = PasswordDialog(self.svc.opt('launchpad_email_addr'))
         def pass_response(dlg, resp):
             dlg.hide()
