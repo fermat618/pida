@@ -302,7 +302,7 @@ class BrowserView(PidaGladeView):
     key = 'language.browser'
 
 
-    gladefile = 'outline-browser'
+    gladefile = 'outline_browser'
     locale = locale
     icon_name = 'python-icon'
     label_text = _('Outliner')

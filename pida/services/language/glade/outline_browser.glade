@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--*- mode: xml -*-->
 <interface>
-  <object class="GtkWindow" id="outline-browser">
+  <object class="GtkWindow" id="outline_browser">
     <property name="visible">False</property>
     <child>
       <object class="GtkVBox" id="main_vbox">
