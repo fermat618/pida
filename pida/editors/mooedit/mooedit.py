@@ -236,12 +236,16 @@ class MooeditView(gtk.ScrolledWindow):
     def __init__(self, document):
         gtk.ScrolledWindow.__init__(self)
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.editor = document.editor
-        self.editor.props.buffer.connect('changed', self.on_changed)
+        self.set_editor(document.editor)
         self.document = document
         self.line_markers = []
-        self.add(document.editor)
         self.show_all()
+
+    def set_editor(self, editor):
+        self.editor = editor
+        self.editor.props.buffer.connect('changed', self.on_changed)
+        self.add(self.editor)
+        self.editor.show()
 
     def on_changed(self, textbuffer):
         #FIXME: this doesn't work, nor does connect_after work correctly. 
@@ -304,6 +308,15 @@ class MooeditActionsConfig(EditorActionsConfig):
             gtk.STOCK_SAVE_AS,
             self.on_save_as,
             '<Shift><Control>S'
+        )
+        self.create_action(
+            'mooedit_reload',
+            TYPE_NORMAL,
+            _('Reload'),
+            _('Reload file content'),
+            gtk.STOCK_REFRESH,
+            self.on_reload,
+            ''
         )
         self.create_action(
             'mooedit_preferences',
@@ -478,6 +491,9 @@ class MooeditActionsConfig(EditorActionsConfig):
         moo.utils.prefs_set_string('Editor/last_dir', 
             self.svc.boss.cmd('filemanager', 'get_browsed_path'))
         self.svc._current.editor.save_as()
+
+    def on_reload(self, action):
+        self.svc.reload_document(self.svc._current.document)
 
     def on_find(self, action):
         self.svc._current.editor.emit('find-interactive')
@@ -1270,6 +1286,34 @@ class Mooedit(EditorService):
         self._current = self._embed.get_nth_page(page_num)
         self.boss.cmd('buffer', 'open_file', document=self._current.document)
 
+    def reload_document(self, document):
+        """
+        Reloads a document from disc
+        """
+        # TODO: moo does no export reload functionality, so this really sucks
+        view = self._documents[document.unique_id]
+        buf = document.editor.get_buffer()
+        last_line = buf.get_iter_at_offset(buf.props.cursor_position)\
+                       .get_line() + 1
+
+        document.editor.disconnect_by_func(self._buffer_status_changed)
+        document.editor.disconnect_by_func(self._buffer_renamed)
+        document.editor.get_buffer().disconnect_by_func(self._buffer_changed)
+        closing = document.editor.close()
+        if closing:
+            label = document.editor._label
+            view.remove(document.editor)
+            editor = self._editor_instance.create_doc(document.filename)
+            editor._label = label
+            editor.inputter = PidaMooInput(self, editor, document)
+            document.editor = editor
+            view.set_editor(editor)
+            gcall(editor.move_cursor, last_line, 0, False, True)
+        document.editor.connect("doc_status_changed", self._buffer_status_changed, view)
+        document.editor.connect("filename-changed", self._buffer_renamed, view)
+        document.editor.get_buffer().connect("changed", self._buffer_changed, view)
+        document.editor.emit("doc_status_changed")
+
     def _load_file(self, document):
         try:
             if document is None:
@@ -1310,43 +1354,35 @@ class Mooedit(EditorService):
             if not view._star:
                 s = view.editor._label._markup
                 if view._exclam:
-                    s = s[1:]
                     view._exclam = False
                 ns = "*" + s
                 view.editor._label.set_markup(ns)
-                view.editor._label._markup = ns
                 view._star = True
                 self.get_action('undo').set_sensitive(True)
                 self.get_action('save').set_sensitive(True)
-                
+
         if moo.edit.EDIT_CLEAN & status == moo.edit.EDIT_CLEAN:
-            #print "clean"
-            pass
+            status = 0
         if moo.edit.EDIT_NEW & status == moo.edit.EDIT_NEW:
-            #print "new"
-            pass
+            status = 0
         if moo.edit.EDIT_CHANGED_ON_DISK & status == moo.edit.EDIT_CHANGED_ON_DISK:
             if not view._exclam:
                 s = view.editor._label._markup
                 if view._star:
-                    s = s[1:]
                     view._star = False
                 ns = "!" + s
                 view.editor._label.set_markup(ns)
-                view.editor._label._markup = ns
                 view._exclam = True
                 self.get_action('save').set_sensitive(True)
-                
+
         if status == 0:
             if view._star or view._exclam:
                 s = view.editor._label.get_text()
-                ns = s[1:]
+                ns = view.editor._label._markup
                 view._exclam = False
                 view._star = False
-                view.editor._label._markup = ns
                 view.editor._label.set_markup(ns)
             self.get_action('save').set_sensitive(False)
-                
 
     def _buffer_changed(self, buffer, view):
         self._last_modified = (view, buffer.props.cursor_position)

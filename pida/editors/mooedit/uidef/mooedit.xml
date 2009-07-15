@@ -5,6 +5,7 @@
             <placeholder name="fm1">
                 <menuitem name="save" action="save" />
                 <menuitem name="mooedit_save_as" action="mooedit_save_as" />
+                <menuitem name="mooedit_reload" action="mooedit_reload" />
             </placeholder>
 
         </menu>
