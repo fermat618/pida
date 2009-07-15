@@ -1202,7 +1202,6 @@ class Mooedit(EditorService):
                 good = self._load_file(doc)
             except DocumentException, err:
                 #self.log.exception(err)
-                good = None
                 self.boss.get_service('editor').emit('document-exception', error=err)
         # we open the last good document now normally again to 
         # make system consistent
@@ -1294,7 +1293,7 @@ class Mooedit(EditorService):
         view = self._documents[document.unique_id]
         buf = document.editor.get_buffer()
         last_line = buf.get_iter_at_offset(buf.props.cursor_position)\
-                       .get_line() + 1
+                       .get_line()
 
         document.editor.disconnect_by_func(self._buffer_status_changed)
         document.editor.disconnect_by_func(self._buffer_renamed)
