@@ -42,7 +42,7 @@ class QOpenView(PidaGladeView):
 
     key = 'qopen.view'
     gladefile = 'qopen'
-    label_text = _('QOpen')
+    label_text = _('Quick Open')
 
     def create_ui(self):
         self._history = gtk.ListStore(gobject.TYPE_STRING)
