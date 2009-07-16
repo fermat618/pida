@@ -278,10 +278,11 @@ class GtagsEvents(EventsConfig):
 
 
 class GtagsUpdateThread(Thread):
-    def __init__(self, svc):
+    def __init__(self, svc, project):
         self.svc = svc
+        self.project = project
         self.run_again = True
-        self.callback = None
+        self.callbacks = []
         self.clean = False
         super(GtagsUpdateThread, self).__init__()
         self.daemon = True
@@ -290,7 +291,8 @@ class GtagsUpdateThread(Thread):
         while self.run_again:
             self.run_again = False
 
-            args, cwd = self.svc.build_args(quiet=True, clean=self.clean)
+            args, cwd = self.svc.build_args(quiet=True, clean=self.clean,
+                                            project=self.project)
             if args:
                 self.svc.log.debug(
                             _('Run Gtags with %s in %s') %(args, cwd))
@@ -314,9 +316,17 @@ class GtagsUpdateThread(Thread):
 
                 self.clean = False
 
-                if self.callback:
-                    self.callback()
-                    self.callback = None
+                while self.callbacks:
+                    callback = self.callbacks.pop()
+                    callback()
+                    # only run one callback if there is a run_again, the next
+                    # callback is for the next run
+                    # elsewise clean up by call all of them
+                    if self.run_again:
+                        break
+
+        # cleanup references
+        del self.svc._bg_threads[self.project] 
 
 class GtagsWindowConfig(WindowConfig):
     key = GtagsView.key
@@ -331,8 +341,8 @@ class GtagsFeaturesConfig(LanguageServiceFeaturesConfig):
         self.subscribe_foreign('project', 'project_refresh',
             self.do_refresh)
 
-    def do_refresh(self, callback):
-        self.svc.project_refresh(callback)
+    def do_refresh(self, project, callback):
+        self.svc.project_refresh(project, callback)
     
     do_refresh.priority = REFRESH_PRIORITY.PRE_FILECACHE
 
@@ -364,7 +374,7 @@ class Gtags(LanguageService):
         self.on_project_switched(self.boss.cmd('project', 
                                                'get_current_project'))
         self._ticket = 0
-        self._bg_thread = None
+        self._bg_threads = {}
         self._bd_do_updates = False
         self.task = self._task = None
 
@@ -386,28 +396,31 @@ class Gtags(LanguageService):
         return os.path.exists(os.path.join(self._project.source_directory, 
                                            'GTAGS'))
 
-    def build_args(self, clean=False, quiet=False):
+    def build_args(self, clean=False, quiet=False, project=None):
         """
         Generates the command and cwd the should be run to update database
         """
-        if not self._project:
+        if project is None:
+            project = self._project
+
+        if not project:
             return None, None
 
         commandargs = ['gtags', '-v']
-        if self.have_database() and not clean:
+        if self.have_database(project) and not clean:
             commandargs.append('-i')
         
         if quiet:
             commandargs.append('-q')
 
-        aconf = self._project.get_meta_dir('gtags', filename="gtags.conf")
+        aconf = project.get_meta_dir('gtags', filename="gtags.conf")
         if os.path.exists(aconf):
             commandargs.extend(['--gtagsconf', aconf])
-        afiles = self._project.get_meta_dir('gtags', filename="files")
+        afiles = project.get_meta_dir('gtags', filename="files")
         if os.path.exists(afiles):
             commandargs.extend(['-f', afiles])
 
-        return commandargs, self._project.source_directory
+        return commandargs, project.source_directory
 
     def build_db(self, clean=False):
         """
@@ -448,30 +461,34 @@ class Gtags(LanguageService):
             # we only run updates if a document with doctypes we 
             # handle are saved
             return
-
-        if self._bg_thread and self._bg_thread.is_alive():
+        pro = self._project
+        if not pro:
+            return
+        
+        if pro in self._bg_threads and \
+           self._bg_threads[pro].is_alive():
             # mark that daemon should run again
-            self._bg_thread.run_again = True
+            self._bg_threads[pro].run_again = True
         else:
-            self._bg_thread = GtagsUpdateThread(self)
-            self._bg_thread.start()
+            self._bg_threads[pro] = GtagsUpdateThread(self)
+            self._bg_threads[pro].start()
 
-    def project_refresh(self, callback):
+    def project_refresh(self, project, callback):
         """Runs the gtags update on project refresh"""
-        if not self.have_database():
+        if not self.have_database(project=project):
+            callback()
             return
 
-        if self._bg_thread and self._bg_thread.is_alive():
+        if project in self._bg_threads and self._bg_threads[project].is_alive():
             # mark that daemon should run again
-            self._bg_thread.run_again = True
-            self._bg_thread.callback = callback
-            self._bg_thread.clean = True
+            self._bg_threads[project].run_again = True
+            self._bg_threads[project].callbacks.append(callback)
+            self._bg_threads[project].clean = True
         else:
-            self._bg_thread = GtagsUpdateThread(self)
-            self._bg_thread.callback = callback
-            self._bg_thread.clean = True
-            self._bg_thread.start()
-        
+            self._bg_threads[project] = GtagsUpdateThread(self, project)
+            self._bg_threads[project].callbacks.append(callback)
+            self._bg_threads[project].clean = True
+            self._bg_threads[project].start()
 
     def tag_search_current_word(self):
         self.boss.editor.cmd('call_with_current_word', 

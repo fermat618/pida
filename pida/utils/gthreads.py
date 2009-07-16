@@ -63,7 +63,10 @@ class AsyncTask(object):
     
     def _work_callback(self, counter, *args, **kwargs):
         ret = self.work_callback(*args, **kwargs)
-        gobject.idle_add(self._loop_callback, (counter, ret))
+        if self.loop_callback != AsyncTask.loop_callback:
+            # we don't have to jump into the gtk thread if loop_callback
+            # was not set
+            gobject.idle_add(self._loop_callback, (counter, ret))
 
     def _loop_callback(self, vargs):
         counter, ret = vargs
@@ -88,7 +91,8 @@ class GeneratorTask(AsyncTask):
     @loop_callback: callback inside the gtk thread
     @priority: gtk priority the loop callback will have
     @pass_generator: will pass the generator instance as generator_task to the 
-                     worker callback
+                     worker callback. This is usefull to test and give up work 
+                     when the generator task was stopped.
 
     A simple example::
 

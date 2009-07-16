@@ -375,9 +375,9 @@ class ProjectFeaturesConfig(FeaturesConfig):
         self.subscribe_foreign('window', 'window-config',
             ProjectWindowConfig)
 
-    def do_refresh(self, callback):
-        self.svc._current.index(recrusive=True, rebuild=True)
-        self.svc._current.save_cache()
+    def do_refresh(self, project, callback):
+        project.index(recrusive=True, rebuild=True)
+        project.save_cache()
         callback()
     
     do_refresh.priority = REFRESH_PRIORITY.FILECACHE
@@ -481,7 +481,7 @@ class ProjectService(Service):
 
     def start(self):
         self._projects = []
-        self._update_task = None
+        self._update_tasks = {}
         self._running_targets = defaultdict(list)
         self.set_current_project(None)
         ###
@@ -542,7 +542,7 @@ class ProjectService(Service):
         self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
             project.reload()
-            project.load_cache()
+            loaded = project.load_cache()
             self.emit('project_switched', project=project)
             self.update_execution_menus()
             self.project_properties_view.set_project(project)
@@ -552,6 +552,8 @@ class ProjectService(Service):
             self._target_last = project.options.get('default')
             self.actions.get_action('project_execute_last').props.label = \
                 _('Execute Last Controller')
+            if not loaded:
+                self.refresh_project()
 
     def update_execution_menus(self):
         toolitem = self.get_action('project_execute').get_proxies()[0]
@@ -696,36 +698,40 @@ class ProjectService(Service):
         """
         if not self._current:
             return
-        if self._update_task:
+        if self._current in self._update_tasks:
             self.notify_user(_("Update already running"), title=_("Project"))
             return
 
         self.notify_user(_("Update started"), title=_("Project"))
-        
-        self._update_task = AsyncTask(
+
+        self._update_tasks[self._current] = AsyncTask(
                 work_callback=self._update_job)
-        self._update_task.start()
+        self._update_tasks[self._current].start(self._current)
 
-        
-        def update_done(*args):
-            self.notify_user(_("Update complete"), title=_("Project"))
-            self._current.save_cache()
-            self._update_task = None
-
-    def _update_job(self):
-        not_recalled = []
+    def _update_job(self, project):
+        not_recalled = self.features['project_refresh'][:]
 
         for job in self.features['project_refresh']:
-            not_recalled.append(job)
-            self.log.debug('Run update job: %s' % job)
+            self.log.debug('Run update job: %s of project %s' %(
+                            job, project.source_directory))
             def do_callback(job):
-                not_recalled.remove(job)
+                try:
+                    not_recalled.remove(job)
+                except ValueError:
+                    pass
                 if not len(not_recalled):
+                    self.log.debug('Update job done of %s' %\
+                                        project.source_directory)
                     gcall(self.notify_user, _("Update complete"), 
                                            title=_("Project"))
-                    self._update_task = None
+                    del self._update_tasks[project]
 
-            job(partial(do_callback, job))
+            try:
+                job(project, partial(do_callback, job))
+            except Exception, e:
+                self.log.exception(e)
+                # in case of a exception, we make sure the callback is fired
+                do_callback(job)
 
 
 

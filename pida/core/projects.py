@@ -179,12 +179,11 @@ class Project(Log):
             try:
                 fp = open(path)
                 self._cache = pickle.load(fp)
+                return True
             except Exception, err:
                 self.log.error("can't load cache")
                 os.unlink(path)
-                self.index(recrusive=True, rebuild=True)
-        else:
-            self.index(recrusive=True, rebuild=True)
+        return False
 
     def save_cache(self):
         path = self.get_meta_dir(filename=CACHE_NAME)
@@ -407,3 +406,5 @@ class Project(Log):
                 if filename in self._cache['filenames']:
                     for i in self._cache['filenames'][filename]:
                         yield i
+    def __repr__(self):
+        return "<Project %s>" %self.source_directory
