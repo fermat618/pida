@@ -64,7 +64,7 @@ class PluginsEditView(PidaGladeView):
 
     key = 'plugins.editor'
 
-    gladefile = 'plugins-edit'
+    gladefile = 'plugins_edit'
     locale = locale
     label_text = _('Edit a plugin')
     icon_name = gtk.STOCK_EXECUTE
@@ -111,7 +111,7 @@ class PluginsView(PidaGladeView):
 
     key = 'plugins.view'
 
-    gladefile = 'plugins-manager'
+    gladefile = 'plugins_manager'
     locale = locale
     label_text = _('Plugins manager')
     icon_name = gtk.STOCK_EXECUTE

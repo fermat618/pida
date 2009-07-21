@@ -70,7 +70,7 @@ class OpenWithEditor(PidaGladeView):
 
     key = 'openwith.editor'
 
-    gladefile = 'openwith-editor'
+    gladefile = 'openwith_editor'
     locale = locale
     icon_name = gtk.STOCK_OPEN
     label_text = _('Open With')
