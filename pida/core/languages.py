@@ -32,6 +32,24 @@ if opts.multiprocessing:
         import multiprocessing
         from multiprocessing.managers import (BaseManager, BaseProxy, 
             SyncManager, RemoteError)
+
+#         does not detect work yet :-(
+#         class TestResult(object):
+#             def __init__(self, i):
+#                 self.i = i
+#
+#         class TestManager(BaseManager):
+#             @staticmethod
+#             def test():
+#                 for i in (TestResult(1), TestResult(2)):
+#                     yield i
+#
+#         m = TestManager()
+#         m.start()
+#         for i in m.test():
+#             print i
+#         m.shutdown()
+
     except ImportError:
         log.info(_("Can't find multiprocessing, disabled work offload"))
         multiprocessing = None
@@ -158,7 +176,7 @@ class BaseCachedDocumentHandler(BaseDocumentHandler):
             if iterf is None:
                 return
             for x in iterf:
-                yield x
+                yield xpida/services/openwith/openwith.py
 
 
 class Outliner(BaseCachedDocumentHandler):
@@ -395,6 +413,7 @@ class GeneratorProxy(BaseProxy):
                 raise StopIteration
             else:
                 raise
+
     def __next__(self):
         try:
             return self._callmethod('__next__')
@@ -611,6 +630,18 @@ class MergeCompleter(Completer, Merger):
                 results.add(res)
                 yield res
 
+def safe_remote(func):
+    def safe(self, *args, **kwargs):
+        try:
+            for i in func(self, *args, **kwargs):
+                yield i
+        except:
+            if self.stopped:
+                return
+            raise
+    return safe
+
+
 class JobServer(object):
     """
     The Jobserver dispatches language plugin jobs to external processes it 
@@ -659,44 +690,38 @@ class JobServer(object):
             instances[proxy.document.unique_id][type_] = getattr(manager, type_)(None, proxy.get_external_document())
         return manager, instances[proxy.document.unique_id][type_]
 
-
+    @safe_remote
     def validator_get_validations(self, proxy):
         """Forwards to the external process"""
-        if self.stopped:
-            return
         manager, instance = self.get_instance(proxy, 'validator')
         for i in manager.validator_get_validations(instance):
             yield i
 
+    @safe_remote
     def outliner_get_outline(self, proxy):
         """Forwards to the external process"""
-        if self.stopped:
-            return
         manager, instance = self.get_instance(proxy, 'outliner')
         for i in manager.outliner_get_outline(instance):
             yield i
 
+    @safe_remote
     def definer_get_definition(self, proxy, buffer, offset):
         """Forwards to the external process"""
-        if self.stopped:
-            return
         manager, instance = self.get_instance(proxy, 'definer')
         for i in manager.definer_get_definition(instance, buffer, offset):
             yield i
 
+    @safe_remote
     def documentator_get_documentation(self, proxy, buffer, offset):
         """Forwards to the external process"""
-        if self.stopped:
-            return
         manager, instance = self.get_instance(proxy, 'documentator')
         for i in manager.documentator_get_documentation(instance, buffer,
                                                         offset):
             yield i
 
+    @safe_remote
     def completer_get_completions(self, proxy, base, buffer, offset):
         """Forwards to the external process"""
-        if self.stopped:
-            return
         manager, instance = self.get_instance(proxy, 'completer')
         for i in manager.completer_get_completions(instance, base, buffer,
                                                         offset):
@@ -760,10 +785,10 @@ class LanguageService(Service):
         else:
             self.jobserver = None
 
-    def destroy(self):
+    def stop(self):
         if self.jobserver:
             self.jobserver.stop()
-        super(LanguageService, self).destroy()
+        super(LanguageService, self).stop()
 
 LANGUAGE_PLUGIN_TYPES = {
 'completer': {

@@ -242,8 +242,10 @@ class {{classname}}({% if languageservice %}LanguageService{% else %}Service{%en
 
     def start(self):
         pass
-        
+
     def stop(self):
+        # it is important to call the super stop methode
+        super({{classname}}, self).stop()
         pass
 
 

@@ -12,6 +12,7 @@
 
 import os
 import gtk
+import sys
 
 from pida.core.environment import (is_firstrun, firstrun_filename, is_safe_mode,
     workspace_name)
@@ -84,7 +85,10 @@ class Boss(object):
             return False
 
     def loop_ui(self):
-        gtk.main()
+        try:
+            gtk.main()
+        except KeyboardInterrupt:
+            sys.exit(1)
 
     def get_service(self, servicename):
         return self._sm.get_service(servicename)

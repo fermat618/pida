@@ -369,12 +369,6 @@ class PythonLintService(LanguageService):
             self.notify_user('You need to install pylint')
             raise
 
-    def start(self):
-        pass
-        
-    def stop(self):
-        pass
-
 
 # Required Service attribute for service loading
 Service = PythonLintService
