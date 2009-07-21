@@ -6,7 +6,6 @@ from pida.core.service import Service
 from pida.core.options import OptionsConfig
 from pida.core.commands import CommandsConfig
 
-from pida.core.interfaces import IOptions
 from pida.core.log import log
 
 
