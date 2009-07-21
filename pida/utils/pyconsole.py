@@ -544,6 +544,17 @@ class _Console(_ReadLine, code.InteractiveInterpreter):
         completions.sort()
         return completions
 
+    def flush(self):
+        pass
+    def tell(self):
+        return 0
+    def seek(self, pos):
+        pass
+    def isatty(self):
+        return False
+    def truncate(self):
+        raise IOError, "Illegal seek"
+
 
 def ReadLineType(t=gtk.TextView):
     class readline(t, _ReadLine):
