@@ -470,7 +470,7 @@ class Gtags(LanguageService):
             # mark that daemon should run again
             self._bg_threads[pro].run_again = True
         else:
-            self._bg_threads[pro] = GtagsUpdateThread(self)
+            self._bg_threads[pro] = GtagsUpdateThread(self, pro)
             self._bg_threads[pro].start()
 
     def project_refresh(self, project, callback):
