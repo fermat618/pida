@@ -228,6 +228,14 @@ class Suggestion(unicode):
     # content is the full text of snippet for example
     content = None
 
+    @property
+    def display(self):
+        """
+        Returns the best possible text to display
+        """
+        if self.signature:
+            return self.signature
+        return self
 
 class Documentation(InitObject):
     """

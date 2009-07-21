@@ -14,10 +14,10 @@ import charfinder
 from collections import defaultdict
 
 def ensure_list(data):
-    if not isinstance(data, (list, tuple)):
-        return (data,)
     if not data:
         return []
+    if not isinstance(data, (list, tuple)):
+        return (data,)
     return data
 
 class DocType(object):

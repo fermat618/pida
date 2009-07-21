@@ -515,7 +515,7 @@ DEFMAPPING = {
                 'human': 'Objective-C',
                 'mime': ('text/x-objective-c', 'text/x-objcsrc'),
                 'section': 'Sources'},
- 'Ocaml': {'alias': ('ocaml', 'Objective Caml', 'objective-caml'),
+ 'Ocaml': {'alias': ('ocaml', 'Objective Caml', 'objective-caml', 'caml'),
            'glob': ('*.ml', '*.mli', '*.mll', '*.mly'),
            'human': 'OCaml',
            'mime': ('text/x-ocaml',),
