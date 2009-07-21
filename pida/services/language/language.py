@@ -812,6 +812,8 @@ class Language(LanguageService):
         doctypes = self.doctypes.types_by_filename(document.filename)
         self.current_type = doctypes
         if not doctypes:
+            self._view_outliner.clear()
+            self._view_validator.clear()
             return
 
         self._view_outliner.update_filterview(

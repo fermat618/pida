@@ -743,7 +743,9 @@ class LanguageService(Service):
             if self.external.validator:
                 self.validator_factory = newproxy(self.validator_factory, ExternalValidatorProxy)
             if self.external.outliner:
+                ofac = self.outliner_factory
                 self.outliner_factory = newproxy(self.outliner_factory, ExternalOutlinerProxy)
+                self.outliner_factory.filter_type = ofac.filter_type
             if self.external.documentator:
                 self.documentator_factory = newproxy(self.documentator_factory, ExternalDocumentatorProxy)
             if self.external.definer:
