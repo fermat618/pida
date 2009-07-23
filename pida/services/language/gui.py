@@ -216,7 +216,7 @@ class ValidatorView(PidaView):
             old.priority = PRIO_LOW
 
         self.document = document
-        self.clear_nodes()
+        self.clear()
 
         if self.tasks.has_key(document):
             # set the priority of the current validator higher, so it feels 
@@ -279,7 +279,7 @@ class ValidatorView(PidaView):
             self.errors_ol.append(node)
 
 
-    def clear_nodes(self):
+    def clear(self):
         self.errors_ol.clear()
 
     def _on_errors_ol_selection_changed(self, ol, item):
@@ -395,7 +395,7 @@ class BrowserView(PidaGladeView):
             old.priority = PRIO_DEFAULT
 
         self.document = document
-        self.clear_items()
+        self.clear()
 
         if self.tasks.has_key(document):
             # set the priority of the current validator higher, so it feels 
@@ -456,7 +456,7 @@ class BrowserView(PidaGladeView):
             task.start()
 
 
-    def clear_items(self):
+    def clear(self):
         self.source_tree.clear()
         self.source_tree_ids = {}
 
