@@ -34,5 +34,6 @@ cd externals >/dev/null
 get_or_update rope hg http://www.bitbucket.org/agr/rope/
 get_or_update anyvc hg http://bitbucket.org/RonnyPfannschmidt/anyvc/
 get_or_update kiwi bzr lp:kiwi
+get_or_update pygtkhelpers hg http://bitbucket.org/aafshar/pygtkhelpers-main/
 
 cd ..  >/dev/null
