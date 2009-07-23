@@ -327,8 +327,14 @@ class Project(Log):
             #      if item.basename not in dirs and item.basename not in files:
                         #print "dell", key
                         #del self._cache[key]
-
-        self._rebuild_shortcuts()
+        try:
+            self._rebuild_shortcuts()
+        except RuntimeError:
+            # this happens when a index process is running while a file
+            # is saved in the project of a non indexed directory which will
+            # index the directory and a dictionary changed size during iteration
+            # will most likely raise. they are harmless
+            pass
 
     def query(self, test):
         """
