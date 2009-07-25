@@ -88,11 +88,11 @@ def run_pida():
         handle_signals(b)
     # handle start params
     from pida.core import environment
-    if environment.get_args():
-        from pida.utils.gthreads import gcall
-        gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
     try:
         start_success = b.start()
+        if environment.get_args():
+            from pida.utils.gthreads import gcall
+            gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
         b.loop_ui()
         return 0
     except Exception, e:

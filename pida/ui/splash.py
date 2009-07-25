@@ -30,14 +30,25 @@ class SplashScreen(gtk.Window):
         l.set_alignment(0.5, 0)
         l.show()
         vb.pack_start(l)
+        self.p = gtk.ProgressBar()
+        vb.pack_start(self.p)
+        self.p.show()
         vb.show()
-        self.resize(200, 75)
+        self.resize(200, 90)
         self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 
     def show_splash(self):
         self.show()
         refresh_gui()
 
+    def update_progress(self, percent, what):
+        self.p.set_text(what)
+        if percent:
+            self.p.set_fraction(percent/100.0)
+        else:
+            self.p.set_fraction(0)
+        while gtk.events_pending():
+            gtk.main_iteration_do(block=False)
 
     def hide_splash(self):
         self.hide_all()
