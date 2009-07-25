@@ -117,7 +117,7 @@ class PidaPaned(BigPaned):
                 pane = self.insert_pane(view.get_toplevel(), view.key, lab, POS, POS)
 
             pane.props.detachable = detachable
-            self.set_params(pane, keep_on_top=True)
+            #self.set_params(pane, keep_on_top=True)
             view.pane = pane
             pane._was_detached = False
             pane.connect('notify::params', self._on_pane_param_changed)
@@ -168,6 +168,7 @@ class PidaPaned(BigPaned):
     def get_open_pane(self, name):
         POS = POS_MAP[name]
         paned = self.get_paned(POS)
+        pane = None
         if self.get_toplevel().is_active():
             pane = paned.get_open_pane()
         else:
@@ -220,37 +221,62 @@ class PidaPaned(BigPaned):
         @maximized: ???
         """
         oparam = pane.get_params()
-        nparam = PaneParams(keep_on_top=oparam.keep_on_top, 
+        #OMFG don't look at this, 
+        # but changing the params does not work for keep_on_top
+        try:
+            mbuttons = pane.get_child().get_parent().get_parent().\
+                            get_children()[0].get_children()
+            if len(mbuttons) == 5 and isinstance(mbuttons[2], gtk.ToggleButton):
+                # only click works...
+                is_top = mbuttons[2].get_active()
+            elif len(mbuttons) == 3 and isinstance(mbuttons[1], gtk.ToggleButton):
+                # only click works...
+                is_top = mbuttons[1].get_active()
+            else:
+                is_top = oparam.keep_on_top
+
+            if kwargs.get('keep_on_top', None) is not None and \
+               is_top != kwargs['keep_on_top']:
+                if len(mbuttons) == 5 and isinstance(mbuttons[2], gtk.ToggleButton):
+                    # only click works...
+                    mbuttons[2].clicked()
+                elif len(mbuttons) == 3 and isinstance(mbuttons[1], gtk.ToggleButton):
+                    # only click works...
+                    mbuttons[1].clicked()
+                is_top = not is_top
+
+        except Exception:
+            # who knows...
+            #import traceback
+            #traceback.print_exc()
+            mbuttons = None
+            is_top = oparam.keep_on_top
+
+        nparam = PaneParams(keep_on_top=is_top, 
                             detached=kwargs.get('detached', oparam.detached),
                             window_position=kwargs.get('window_position', oparam.window_position),
                             maximized=kwargs.get('maximized', oparam.maximized))
         pane.set_params(nparam)
-        #OMFG don't look at this, 
-        # but changing the params does not work for keep_on_top
-        if oparam.keep_on_top != kwargs.get('keep_on_top', oparam.keep_on_top):
-            try:
-                mbuttons = pane.get_child().get_parent().get_parent().\
-                                get_children()[0].get_children()
-            except Exception:
-                # who knows...
-                return
-            if len(mbuttons) == 5 and isinstance(mbuttons[2], gtk.ToggleButton):
-                # only click works...
-                mbuttons[2].clicked()
-            elif len(mbuttons) == 3 and isinstance(mbuttons[1], gtk.ToggleButton):
-                # only click works...
-                mbuttons[2].clicked()
 
     def get_focus_pane(self):
-        last_pane = getattr(self, 'focus_child', None)
-        if not isinstance(last_pane, Paned):
-            return
-        while True:
-            child_pane = getattr(last_pane, 'focus_child', None)
-            if isinstance(child_pane, Paned):
-                last_pane = child_pane
-            else:
-                return last_pane.get_open_pane()
+        if self.get_toplevel().is_active():
+            last_pane = getattr(self, 'focus_child', None)
+            if not isinstance(last_pane, Paned):
+                return
+            while True:
+                child_pane = getattr(last_pane, 'focus_child', None)
+                if isinstance(child_pane, Paned):
+                    last_pane = child_pane
+                else:
+                    return last_pane.get_open_pane()
+        else:
+            # we don't have the focus which means that a detached window
+            # may have it.
+            for view in self.list_panes(True):
+                if view.pane.get_params().detached and \
+                   view.pane.get_child().get_toplevel().is_active():
+                    return view.pane
+
 
     def switch_next_pane(self, name, needs_focus=True):
         return self._switch_pane(name, 1, needs_focus)
