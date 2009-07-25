@@ -998,7 +998,9 @@ class Filemanager(Service):
         # I don't get it ! and why the hack is this happening
         for x in self.actions.list_actions():
             for p in x.get_proxies():
-                if x.props.stock_id is not None:
+                if hasattr(x.props, "stock_id") and \
+                   hasattr(p, "set_stock_id") and \
+                   x.props.stock_id is not None:
                     p.set_stock_id(x.props.stock_id)
 
     def get_view(self):
