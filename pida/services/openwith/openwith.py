@@ -4,8 +4,9 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-import os, glob
+import os
 from subprocess import Popen
+from itertools import chain
 
 import gtk
 
@@ -25,46 +26,13 @@ from pida.core.environment import pida_home
 
 from pida.ui.views import PidaGladeView
 
+from .__init__ import OpenWithItem
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('openwith')
 _ = locale.gettext
 
-class OpenWithItem(object):
-
-    def __init__(self, section=None):
-        if section is not None:
-            self.name = section['name']
-            self.command = section['command']
-            self.glob = section['glob']
-            if section.has_key('terminal'):
-                # the bad guy saves a boolean as text in openwith.ini but 
-                # cannot restore it as a boolean later
-                if (isinstance(section['terminal'], str)):
-                    self.terminal = section['terminal'] == 'True'
-                else:
-                    self.terminal = section['terminal']
-            else:
-                # if ini is from an older version without terminal property
-                self.terminal = True
-        else:
-            self.name = _('unnamed')
-            self.command = ''
-            self.glob = '*'
-            self.terminal = True
-
-    def as_dict(self):
-        return dict(
-            name=self.name,
-            command=self.command,
-            glob=self.glob,
-            terminal=self.terminal,
-        )
-
-    def match(self, file_name):
-        if file_name is None:
-            return False
-        return glob.fnmatch.fnmatch(file_name, self.glob)
 
 class OpenWithEditor(PidaGladeView):
 
@@ -202,6 +170,10 @@ class OpenWithActions(ActionsConfig):
         menu.show_all()
 
     def on_open_with(self, action, file_name, item):
+
+        if callable(item.command):
+            return item.command(file_name)
+
         try:
             command = item.command % file_name
         except TypeError, e:
@@ -217,6 +189,9 @@ class OpenWithActions(ActionsConfig):
 
 
 class OpenWithFeatures(FeaturesConfig):
+
+    def create(self):
+        self.publish('file-menu')
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
@@ -256,7 +231,7 @@ class Openwith(Service):
             yield OpenWithItem(self._config[section])
 
     def get_items_for_file(self, file_name):
-        for item in self.get_items():
+        for item in chain(self.features['file-menu'], self.get_items()):
             if item.match(file_name):
                 yield item
 

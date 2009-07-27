@@ -358,8 +358,28 @@ class WebCommands(CommandsConfig):
 class WebFeatures(FeaturesConfig):
 
     def subscribe_all_foreign(self):
+        from pida.services.openwith import OpenWithItem
+        
+        internal = OpenWithItem({'name': "Open in Browser",
+                                 'command': self.open_web_file,
+                                 'glob': '*'})
+        external = OpenWithItem({'name': "Open in External Browser",
+                                 'command': self.open_web_external_file,
+                                 'glob': '*'})
+
         self.subscribe_foreign('contexts', 'url-menu',
             (self.svc.get_action_group(), 'webbrowser-url-menu.xml'))
+
+        self.subscribe_foreign('openwith', 'file-menu',
+            internal)
+        self.subscribe_foreign('openwith', 'file-menu',
+            external)
+
+    def open_web_file(self, file_name):
+        self.svc.browse("file://%s" %file_name)
+
+    def open_web_external_file(self, file_name):
+        webbrowser.open("file://%s" %file_name)
 
 class WebActions(ActionsConfig):
     

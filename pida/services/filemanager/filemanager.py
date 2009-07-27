@@ -642,7 +642,7 @@ class FilemanagerFeatureConfig(FeaturesConfig):
     # File Hidden Checks
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, _("Hide Dot-Files"))
     def dot_files(self, name, path, state):
-        return name[0] != '.'
+        return len(name) and name[0] != '.'
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, 
         _("Hide by User defined Regular Expression"))
