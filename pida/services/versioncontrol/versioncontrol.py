@@ -114,7 +114,7 @@ class VersionControlLog(PidaGladeView):
 
     key = 'versioncontrol.log'
 
-    gladefile = 'version-control-log'
+    gladefile = 'version_control_log'
 
     icon_name = gtk.STOCK_CONNECT
     label_text = _('Version Control Log')
@@ -167,7 +167,7 @@ class CommitViewer(PidaGladeView):
 
     key = 'versioncontrol.commit'
 
-    gladefile = 'commit-dialog'
+    gladefile = 'commit_dialog'
     
     icon_name = gtk.STOCK_GO_UP
     label_text = _('Commit')

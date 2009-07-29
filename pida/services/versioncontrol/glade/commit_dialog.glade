@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--Generated with glade3 3.2.0 on Sun Apr 29 19:07:04 2007 by ali@book-->
 <interface>
-  <object class="GtkWindow" id="commit-dialog">
+  <object class="GtkWindow" id="commit_dialog">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
       <object class="GtkVBox" id="vbox1">

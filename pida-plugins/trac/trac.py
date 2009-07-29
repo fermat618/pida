@@ -50,7 +50,7 @@ class TracView(PidaGladeView):
 
     key = 'trac.browser'
 
-    gladefile = 'trac-browser'
+    gladefile = 'trac_browser'
     locale = locale
     icon_name = 'trac_logo'
     label_text = _('Trac')
