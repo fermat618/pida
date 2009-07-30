@@ -130,7 +130,7 @@ class Todo(Service):
     events_config = TodoEventsConfig
     features_config = TodoFeaturesConfig
 
-    _markers = ['TODO', 'XXX']
+    _markers = ['TODO', 'XXX', 'FIXME']
 
     def start(self):
         self._current = None
