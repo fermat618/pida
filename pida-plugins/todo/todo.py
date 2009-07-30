@@ -80,9 +80,12 @@ class TodoView(PidaView):
         self.svc.get_action('show_todo').set_active(False)
 
 
+#XXX Banana
+
 class TodoActionsConfig(ActionsConfig):
 
     def create_actions(self):
+        #XXX: blah
         TodoWindowConfig.action = self.create_action(
             'show_todo',
             TYPE_REMEMBER_TOGGLE,
@@ -127,7 +130,7 @@ class Todo(Service):
     events_config = TodoEventsConfig
     features_config = TodoFeaturesConfig
 
-    _markers = ['TODO', 'XXX', 'FIXME']
+    _markers = ['TODO', 'XXX']
 
     def start(self):
         self._current = None
@@ -143,54 +146,17 @@ class Todo(Service):
         for row in self.check_document(self._current):
             yield row
 
-    def find_markers_in_comment(self, line_enumeration_number, comment):
-        for marker in self._markers:
-            if marker in comment:
-                pre, post = comment.split(marker, 1)
-                todo = post.strip().strip(':').strip()
-                yield (todo, line_enumeration_number + 1, marker)
-
     def check_document(self, document):
-        """Check comments and documentation strings for TODO messages."""
+        """Check the given lines for TODO messages."""
         self._view.clear_items()
         if not document or not document.lines:
             return
-
-        # Use pygments to find a lexer to search within comments.
-        # If we don't get a lexer, just search every document line
-        # for messages.
-        lexer = None
-        try:
-            from pygments.lexers import get_lexer_for_mimetype
-            from pygments.token import String
-            from pygments.token import Token
-
-            if document.doctype:
-                mimes = document.doctype.mimes
-
-                for m in mimes:
-                    try:
-                        lexer = get_lexer_for_mimetype(m)
-                    except:
-                        lexer = None
-                        self.log("Failed to get lexer for mimetype (%s)." % m)
-                    else:
-                        if not lexer == None:
-                            break
-        except:
-            lexer = None
-            self.log("Pygments isn't available.  Using simple search.")
-
-        if lexer:
-            for i, line in enumerate(document.lines):
-                for n, m in lexer.get_tokens(line):
-                    if n == Token.Comment or n == String.Doc:
-                        for marker in self.find_markers_in_comment(i, m):
-                            yield marker
-        else:
-            for i, line in enumerate(document.lines):
-                for marker in self.find_markers_in_comment(i, line):
-                    yield marker
+        for i, line in enumerate(document.lines):
+            for marker in self._markers:
+                if marker in line:
+                    pre, post = line.split(marker, 1)
+                    todo = post.strip().strip(':').strip()
+                    yield (todo, i + 1, marker)
 
     def add_todo_item(self, todo, line, marker):
         self._view.add_item(todo, line, marker)
