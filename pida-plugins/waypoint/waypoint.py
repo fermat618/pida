@@ -183,7 +183,7 @@ class WayStack(list):
             return
         try:
             nindex = min(max(self.index(self.current_point)+steps, 0), len(self)-1)
-        except IndexError:
+        except (IndexError, ValueError):
             # the current waypoint was deleted for example
             nindex = 0
         self.current_point = self[nindex]
