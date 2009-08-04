@@ -35,6 +35,8 @@ def find_latest_metadata(url):
 def find_latest(url):
     for name, versions in find_plugin_versions(url):
         #XXX: better version key
+        if not versions:
+            continue
         latest = max(versions,key=lambda x:x.split('.'))
         yield name, latest, versions[latest]
 

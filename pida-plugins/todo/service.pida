@@ -1,8 +1,7 @@
 Name: Todo parser
 Author: Ali Afshar <aafshar@gmail.com>
 Version: 0.2.1
-Depends: pida>=0.6, pygments
+Depends: pida>=0.6
 Category: code
 
-Parse current document for TODO, FIXME or XXX tags in comments and
-documentation strings.
+Parse current document for TODO, FIXME or XXX tags
