@@ -27,6 +27,17 @@ get_or_update() {
     cd ../.. >/dev/null
 }
 
+if [ ! `which bzr` ]
+then
+    print "Error: You must install bzr to update Kiwi."
+    exit
+fi
+
+if [ ! `which hg` ]
+then 
+    print "Error: You must install Mercurial to update anyvnc and rope."
+    exit
+fi
 
 mkdir -p externals/src >/dev/null
 cd externals >/dev/null
