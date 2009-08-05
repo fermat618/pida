@@ -254,8 +254,8 @@ class CommanderFeaturesConfig(FeaturesConfig):
                 self.on_highlight_url))
         self.subscribe('match-menu-callback',
             ('dir-match',
-            r'~{0,1}/[a-zA-Z/\-\._]+',
-            r'(~{0,1}/[A-Za-z0-9/\-\._]+)',
+            r'~{0,1}(/|\./)[a-zA-Z/\-\._]+',
+            r'(~{0,1}(/|\./)[A-Za-z0-9/\-\._]+)',
             self.on_highlight_path))
 
     def subscribe_all_foreign(self):
@@ -279,7 +279,19 @@ class CommanderFeaturesConfig(FeaturesConfig):
 
     def on_highlight_path(self, term, event, path, *args, **kw):
         path = os.path.expanduser(path)
+        line = None
+        if path.find(":") != -1:
+            path, line = path.rsplit(":", 1)
+            try:
+                 line = int(line)
+            except ValueError:
+                 line = None
+
         path = kw['usr'].get_absolute_path(path)
+
+        if not path:
+            return []
+
         if os.path.isdir(path):
             return self._mkactlst(self.svc.boss.cmd('contexts',
                                 'get_menu', context='dir-menu', dir_name=path))
@@ -291,47 +303,35 @@ class CommanderFeaturesConfig(FeaturesConfig):
 
     def on_default_match(self, term, event, match, *args, **kwargs):
         match = os.path.expanduser(args[0])
-
+        line = None
         if match.find(":") != -1:
             rfile_name, line = match.rsplit(":", 1)
-            file_name = kwargs['usr'].get_absolute_path(rfile_name)
-            if not file_name:
-                return
-            if os.path.isfile(file_name):
-                self.svc.boss.cmd('buffer', 'open_file', 
-                                    file_name=file_name,
-                                    line=int(line))
-            elif os.path.isdir(file_name):
-                self.svc.boss.cmd('filemanager', 'browse', 
-                            new_path=file_name)
-                self.svc.boss.cmd('filemanager', 'present_view')
-            else:
-                # fallback. look if there is a open file that matches this filename
-                for doc in self.svc.boss.cmd('buffer', 
-                                             'get_documents').itervalues():
-                    if doc.basename == rfile_name:
-                        self.svc.boss.cmd('buffer', 'open_file', 
-                                            document=doc,
-                                            line=int(line))
-                        break
-
+            try:
+                 line = int(line)
+            except ValueError:
+                 line = None
         else:
-            file_name = os.path.realpath(kwargs['usr'].get_absolute_path(match))
-            if not file_name:
-                return
-            if os.path.isfile(file_name):
-                self.svc.boss.cmd('buffer', 'open_file', file_name=file_name)
-            elif os.path.isdir(file_name):
-                self.svc.boss.cmd('filemanager', 'browse', new_path=file_name)
-                self.svc.boss.cmd('filemanager', 'present_view')
-            else:
-                for doc in self.svc.boss.cmd('buffer',
-                                             'get_documents').itervalues():
-                    if doc.basename == match:
-                        self.svc.boss.cmd('buffer', 'open_file',
-                                          document=doc)
-                        break
+            rfile_name = match
+        file_name = kwargs['usr'].get_absolute_path(rfile_name)
 
+        if file_name and os.path.isfile(file_name):
+            self.svc.boss.cmd('buffer', 'open_file', 
+                                file_name=file_name,
+                                line=line)
+        elif file_name and os.path.isdir(file_name):
+            self.svc.boss.cmd('filemanager', 'browse', 
+                        new_path=file_name)
+            self.svc.boss.cmd('filemanager', 'present_view')
+        else:
+            # fallback. look if there is a open file that matches this filename
+            for doc in self.svc.boss.cmd('buffer', 
+                                         'get_documents').itervalues():
+                rfile_name = os.path.basename(rfile_name)
+                if doc.basename == rfile_name:
+                    self.svc.boss.cmd('buffer', 'open_file', 
+                                        document=doc,
+                                        line=line)
+                    break
 
 
 class CommanderEvents(EventsConfig):

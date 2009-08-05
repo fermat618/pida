@@ -164,7 +164,6 @@ class PidaTerminal(Terminal):
         if event.button == 3:
             col, row = self._get_position_from_pointer(event.x, event.y)
             match = self.match_check(col, row)
-            print "right click", match
             if match is not None:
                 match_str, match_num = match
                 self.emit('match-right-clicked', event, match_num, match_str)
