@@ -18,7 +18,7 @@ from gtk import gdk
 # UGLY UGLY workarround as suggested by muntyan_
 # this will be changed someday when therue will be a correct 
 # api for this.
-from pida.core.environment import pida_home
+from pida.core.environment import pida_home, workspace_name
 
 SYS_DATA = os.environ.get("XDG_DATA_DIRS", 
                           "/usr/share:/usr/local/share")
@@ -1081,7 +1081,17 @@ class Mooedit(EditorService):
         try:
             self.script_path = os.path.join(pida_home, 'pida_mooedit.rc')
             self._state_path = os.path.join(pida_home, 'pida_mooedit.state')
-            moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=self._state_path)
+            try:
+                moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=self._state_path)
+            except gobject.GError:
+                pass
+            # if a workspace specific rc file exists, load it and make it the current one
+            if os.path.exists(os.path.join(pida_home, 'pida_mooedit.%s.rc' %workspace_name())):
+                self.script_path = os.path.join(pida_home, 'pida_mooedit.%s.rc' %workspace_name())
+                try:
+                    moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=None)
+                except gobject.GError:
+                    pass
             self._editor_instance = moo.edit.create_editor_instance()
             moo.edit.plugin_read_dirs()
             self._documents = {}
