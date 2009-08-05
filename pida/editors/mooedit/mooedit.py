@@ -181,6 +181,10 @@ class MooeditPreferences(PidaView):
     def _apply(self):
         self._prefs.emit('apply')
         self.svc.save_moo_state()
+        try:
+             self.svc._editor_instance.apply_prefs()
+        except AttributeError:
+             pass
 
     def can_be_closed(self):
         self.svc.get_action('mooedit_preferences').set_active(False)
@@ -592,8 +596,11 @@ class PidaMooInput(object):
         if cmpl:
             for i in cmpl.get_completions(self.svc.get_current_word(), 
                         unicode(self.editor.get_text()), start):
-                if i not in ignore:
-                    yield i
+                try:
+                    if i not in ignore:
+                        yield i
+                except Exception, e:
+                    self.svc.log.exception(e)
 
         #self.update_completer()
         y = 0
@@ -607,15 +614,15 @@ class PidaMooInput(object):
             self.completer_window.window.is_visible():
                 return True
         return False
-    
+
     def set_completer_visible(self, value):
         pass
-    
+
     completer_visible = property(get_completer_visible, set_completer_visible)
-    
+
     def on_do_hide(self, *args, **kwargs):
         self.hide()
-    
+
     def toggle_popup(self):
         if self.completer_visible:
             self.hide()
