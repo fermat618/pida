@@ -478,9 +478,9 @@ class ProjectService(Service):
 
     def pre_start(self):
         self._current = None
+        self._projects = []
 
     def start(self):
-        self._projects = []
         self._update_tasks = {}
         self._running_targets = defaultdict(list)
         self.set_current_project(None)

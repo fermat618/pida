@@ -211,7 +211,7 @@ class Twisted(Bin):
 class PastebinEditorView(PidaGladeView):
 
     key = 'pastebin.editor'
-    gladefile = 'paste-editor'
+    gladefile = 'paste_editor'
     locale = locale
     label_text = _('Paste Editor')
     icon_name = gtk.STOCK_PASTE

@@ -106,7 +106,7 @@ class PidaOptionsView(PidaGladeView):
 
     key = 'optionsmanager.editor'
 
-    gladefile = 'options-editor'
+    gladefile = 'options_editor'
     locale = locale
     label_text = 'Preferences'
 
