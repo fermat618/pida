@@ -310,11 +310,13 @@ class Project(Log):
             if not recrusive:
                 del dirs[:]
             for file_ in files:
-                self.index_path(os.path.join(dirpath, file_), 
-                                update_shortcuts=False)
+                if os.access(os.path.join(dirpath, file_), os.R_OK):
+                    self.index_path(os.path.join(dirpath, file_), 
+                                    update_shortcuts=False)
             for dir_ in dirs:
-                self.index_path(os.path.join(dirpath, dir_), 
-                                update_shortcuts=False)
+                if os.access(os.path.join(dirpath, dir_), os.R_OK | os.X_OK):
+                    self.index_path(os.path.join(dirpath, dir_), 
+                                    update_shortcuts=False)
 
             # delete not existing nodes
             #print current.children, files+dirs

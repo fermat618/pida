@@ -125,7 +125,12 @@ class LibNotifyNotifier(BaseNotifier):
     def notify(self, item):
         n = pynotify.Notification(item.title, item.data, item.stock)
         n.set_timeout(item.timeout)
-        n.show()
+        try:
+            n.show()
+        except:
+            # depending on the notifier daemon, sometimes a glib.GError is raised
+            # here.
+            pass
 
 try:
     import pynotify
