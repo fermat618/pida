@@ -159,7 +159,10 @@ class Service(object):
 
     @cached_property
     def log(self):
-        return get_logger('pida.svc.' + self.get_name())
+        if self.__module__[:14] == 'pida.services.':
+            return get_logger('pida.svc.' + self.get_name())
+        else:
+            return get_logger('pida.plugin.' + self.get_name())
 
 
     # window proxy

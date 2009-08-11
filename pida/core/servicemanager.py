@@ -239,7 +239,7 @@ class ServiceManager(object):
         for i,svc in enumerate(self.get_services()):
             svc.log.debug('Pre Starting Service')
             svc.pre_start()
-            self.update_progress(40+(i+1)*pp, _("Subscribing Components"))
+            self.update_progress(40+(i+1)*pp, _("Prepare Components"))
 
     def start_services(self):
         pp = 40.0/len(self)
