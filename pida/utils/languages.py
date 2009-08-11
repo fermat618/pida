@@ -81,7 +81,7 @@ LANG_IMAGE_MAP = {
     LANG_TYPES.SECTION: 'source-section',
     LANG_TYPES.PARAGRAPH: 'source-paragraph',
     LANG_TYPES.NAMESPACE: 'source-namespace',
-    LANG_TYPES.ELELMENT: 'source-element',
+    LANG_TYPES.ELEMENT: 'source-element',
 }
 
 
