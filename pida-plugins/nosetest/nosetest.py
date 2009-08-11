@@ -148,7 +148,7 @@ class TestResultBrowser(PidaGladeView):
 
     key = 'nosetests.results'
 
-    gladefile = 'python-testresult-browser'
+    gladefile = 'python_testresult_browser'
     locale = locale
     icon_name = 'python-icon'
     label_text = _('TestResults')

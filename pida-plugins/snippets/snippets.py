@@ -65,7 +65,7 @@ class SnippetsManagerView(PidaGladeView):
 
     key = 'snippets.editor'
 
-    gladefile = 'snippets-manager'
+    gladefile = 'snippets_manager'
     locale = locale
     label_text = _('Snippets manager')
     icon_name = gtk.STOCK_INDEX

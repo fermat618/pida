@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--Generated with glade3 3.2.0 on Sun Apr 29 21:06:34 2007 by ali@book-->
 <interface>
-  <object class="GtkWindow" id="python-testresult-browser">
+  <object class="GtkWindow" id="python_testresult_browser">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
       <object class="GtkVBox" id="main_vbox">
