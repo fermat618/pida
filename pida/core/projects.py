@@ -10,7 +10,6 @@
 """
 from __future__ import with_statement
 import os
-from weakref import proxy
 from collections import defaultdict
 
 from pida.core.log import Log

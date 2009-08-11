@@ -546,19 +546,19 @@ class ExternalProxy(object):
         """
         return self._uuid
 
-class ExternalValidatorProxy(Validator, ExternalProxy):
+class ExternalValidatorProxy(ExternalProxy, Validator):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_validations(self):
         for result in self.svc.jobserver.validator_get_validations(self):
             yield result
 
-class ExternalOutlinerProxy(Outliner, ExternalProxy):
+class ExternalOutlinerProxy(ExternalProxy, Outliner):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_outline(self):
         for result in self.svc.jobserver.outliner_get_outline(self):
             yield result
 
-class ExternalDefinerProxy(Definer, ExternalProxy):
+class ExternalDefinerProxy(ExternalProxy, Definer):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_definition(self, buffer, offset):
         rv = self.svc.jobserver.definer_get_definition(self, buffer, offset)
@@ -568,7 +568,7 @@ class ExternalDefinerProxy(Definer, ExternalProxy):
         else:
             yield rv
 
-class ExternalDocumentatorProxy(Documentator, ExternalProxy):
+class ExternalDocumentatorProxy(ExternalProxy, Documentator):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_documentation(self, buffer, offset):
         rv = self.svc.jobserver.documentator_get_documentation(self, buffer,
@@ -579,7 +579,7 @@ class ExternalDocumentatorProxy(Documentator, ExternalProxy):
         else:
             yield rv
 
-class ExternalCompleterProxy(Completer, ExternalProxy):
+class ExternalCompleterProxy(ExternalProxy, Completer):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_completions(self, base, buffer_, offset):
         rv = self.svc.jobserver.completer_get_completions(self, base,

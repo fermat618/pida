@@ -13,6 +13,8 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
+from kiwi.environ import environ
+
 
 class SplashScreen(gtk.Window):
 
@@ -21,20 +23,25 @@ class SplashScreen(gtk.Window):
         self.set_decorated(False)
         vb = gtk.VBox()
         self.add(vb)
-        l = gtk.Label(_('PIDA is starting...'))
-        l.set_alignment(0.5, 1)
-        l.show()
-        vb.pack_start(l)
-        l = gtk.Label()
-        l.set_markup(_('and it <b>loves</b> you!'))
-        l.set_alignment(0.5, 0)
-        l.show()
-        vb.pack_start(l)
+#         l = gtk.Label(_('PIDA is starting...'))
+#         l.set_alignment(0.5, 1)
+#         l.show()
+#         vb.pack_start(l)
+#         l = gtk.Label()
+#         l.set_markup(_('and it <b>loves</b> you!'))
+#         l.set_alignment(0.5, 0)
+#         l.show()
+        self.img = gtk.Image()
+        self.img.set_from_file(environ.find_resource('pixmaps', 'pida-splash.png'))
+        vb.pack_start(self.img)
+        self.img.show()
         self.p = gtk.ProgressBar()
         vb.pack_start(self.p)
         self.p.show()
         vb.show()
-        self.resize(200, 90)
+        self.resize(250, 270)
+        self.p.set_text(_("Initialize"))
+        self.p.set_fraction(0.05)
         self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 
     def show_splash(self):

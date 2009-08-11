@@ -90,12 +90,17 @@ class LanguageSubCategory(Category):
         return len(self.svc.get_plugins(self.lang, self.type_)) > 1
 
     def commit_list(self, lst):
-
-        prio = [{"uuid": x.uuid(),
+        done = []
+        prio = []
+        for x in lst:
+            if x.uuid() in done:
+                continue
+            prio.append({"uuid": x.uuid(),
                  "name": x.display,
                  "plugin": x.plugin,
-                 "description": x.description} 
-                                for x in lst]
+                 "description": x.description})
+            done.append(x.uuid())
+
         self.svc.set_priority_list(self.lang, self.type_, prio, save=False)
 
 
