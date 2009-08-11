@@ -59,6 +59,8 @@ def build_language_list(typemanager):
         return []
     output = output.splitlines()
     rv = []
+    if "C#" in output:
+        output.append("vala")
     for name in output:
         clang = typemanager.get_fuzzy(name)
         if clang:
@@ -172,6 +174,8 @@ class CtagsOutliner(Outliner):
             taglib = os.path.join(self.document.project.get_meta_dir('ctags'),
                                   'lib.ctags')
         # launch ctags
+        if self.document.doctype and self.document.doctype.internal == 'Vala':
+            options = options + ('--language-force=C#',)
         command = ("ctags",) + options + ("-f", taglib, self.document.filename)
         #os.system(command)
         rv = subprocess.check_call(command)
@@ -284,7 +288,7 @@ class CtagsOutliner(Outliner):
             if i == 'e': return LANG_OUTLINER_TYPES.ENUMERATION
             if i == 'f': return LANG_OUTLINER_TYPES.FUNCTION
             if i == 'g': return LANG_OUTLINER_TYPES.ENUMERATION_NAME
-            if i == 'm': return LANG_OUTLINER_TYPES.MEMBER
+            if i == 'n': return LANG_OUTLINER_TYPES.NAMESPACE
             if i == 'p': return LANG_OUTLINER_TYPES.PROTOTYPE
             if i == 's': return LANG_OUTLINER_TYPES.STRUCTURE
             if i == 't': return LANG_OUTLINER_TYPES.TYPEDEF
