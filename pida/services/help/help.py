@@ -38,7 +38,8 @@ class PidaAboutDialog(gtk.AboutDialog):
              'as published by the FSF'
         )
         self.set_wrap_license(True)
-        self.set_authors(pida.authors)
+        self.set_authors([_("Core Developers:")] + pida.dev_core + \
+                         ["", _("Contributors:")] + pida.dev_contrib)
         self.set_website(pida.website)
         self.set_comments(pida.short_description)
 
