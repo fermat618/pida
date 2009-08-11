@@ -127,7 +127,7 @@ class CustomLanguagePrioList(PriorityList, Category):
     @property
     def _keyfnc_default(self):
         return self.get_keyfnc(default=False)
-    
+
     def _sort_iterator(self):
         for x in self._sort_list:
             yield x['uuid']
@@ -135,13 +135,20 @@ class CustomLanguagePrioList(PriorityList, Category):
     def set_sort_list(self, sort_list):
         self.customized = bool(sort_list)
         super(CustomLanguagePrioList, self).set_sort_list(sort_list)
-        
+
     def update_sort_list(self):
-        self.set_sort_list([{"uuid": x.uuid(),
-                             "name": x.name,
-                             "plugin": x.plugin,
-                             "description": x.description} 
-                                 for x in self])
+        lst = []
+        added = set()
+        for x in self:
+            if x.uuid() in added:
+                continue
+            lst.append({"uuid": x.uuid(),
+                        "name": x.name,
+                        "plugin": x.plugin,
+                        "description": x.description})
+            added.add(x.uuid())
+
+        self.set_sort_list(lst)
 
     def get_full_list(self):
         if self._sort_list:
@@ -247,7 +254,7 @@ class CustomLanguageMapping(dict):
     def __init__(self, svc):
         self.svc = svc
         super(CustomLanguageMapping, self).__init__()
-    
+
     def get_or_create(self, language):
         if language not in self:
             #XXX: some things expect a list ?!
@@ -782,14 +789,10 @@ class Language(LanguageService):
 
         # save list in options
         pp = self.options.get_extra_value("plugin_priorities")
-
         if lst:
             if not pp.has_key(lang):
                 pp[lang] = {}
-            if not pp[lang].has_key(type_):
-                pp[lang][type_] = lst
-            else:
-                pp[lang][type_] = lst
+            pp[lang][type_] = lst
 
         else:
             if not pp.has_key(lang):
