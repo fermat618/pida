@@ -21,7 +21,7 @@ try:
     from dbus.lowlevel import SignalMessage
     from dbus.mainloop.glib import DBusGMainLoop
     DBusMainloop = DBusGMainLoop(set_as_default=True)
-    
+
     from dbus.service import (Object, INTROSPECTABLE_IFACE, _method_reply_error,
         _method_reply_return)
     from dbus.service import method, signal
@@ -30,10 +30,12 @@ try:
 
     # Is dbus available?
     # Throws dbus.exceptions.DBusException if not.
-    dbus.SessionBus()
-
-except dbus.exceptions.DBusException:
-    has_dbus = False
+    #XXX: 
+    try:
+        dbus.SessionBus()
+        has_dbus = True
+    except dbus.exceptions.DBusException:
+        has_dbus = False
 
 except ImportError:
     def dummy(*k, **kw):
@@ -42,9 +44,6 @@ except ImportError:
     INTROSPECTABLE_IFACE = ""
     has_dbus = False
     Object = object
-
-else:
-    has_dbus = True
 
 class DbusConfigReal(Object):
 
