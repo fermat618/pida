@@ -315,6 +315,18 @@ class Vim(EditorService):
 
     #def set_content(self, editor, value)
     #def get_content(self, editor)
+
+    @classmethod
+    def get_sanity_errors(cls):
+        from pida.core.pdbus import has_dbus
+        if not has_dbus:
+            return [
+                'dbus python disfunctional',
+                'please repair the python dbus bindings',
+                '(note that it wont work for root)'
+            ]
+        #XXX: check if gvim can do python
+        return
     
 # Required Service attribute for service loading
 Service = Vim
