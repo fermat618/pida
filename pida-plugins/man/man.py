@@ -79,7 +79,6 @@ class ManView(PidaView):
                    Column('description', title=_('Description'),
                        use_markup=True),
                ])
-        self.__list.connect('double-click', self._on_man_double_click)
         self.__list.connect('row-activated', self._on_man_key_pressed)
         self.__list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__hbox.pack_start(self.__entry)
@@ -97,6 +96,9 @@ class ManView(PidaView):
         self._count += 1
         self.__list.append(item)
 
+    def close(self, term, dummy):
+        term.close_view()
+
     def open(self, item):
         commandargs = ['/usr/bin/env', 'man', item.number, item.pattern]
         directory = os.path.dirname(commandargs[0])
@@ -104,6 +106,7 @@ class ManView(PidaView):
                 commandargs=commandargs,
                 cwd=directory,
                 icon='gnome-library',
+                eof_handler=self.close,
                 title='%(pattern)s(%(number)d)' % dict(
                     pattern=item.pattern,
                     number=int(item.number)

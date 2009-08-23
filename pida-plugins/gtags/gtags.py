@@ -438,11 +438,12 @@ class Gtags(LanguageService):
                 title=_('Gtags build...'),
                 eof_handler=self.build_db_finished)
 
-    def build_db_finished(self, dummy):
+    def build_db_finished(self, term, *args):
         self._view.activate(self.have_database())
         self._view._refresh_button.set_sensitive(True)
         self.boss.cmd('notify', 'notify', title=_('Gtags'),
             data=_('Database build complete'))
+        term.on_exited(*args)
 
     def on_project_switched(self, project):
         if project != self._project and project:
