@@ -1,0 +1,7 @@
+Name: ReStructuredText
+Author: Bernhard Leiner <bleiner@gmail.com>
+Version: 0.1
+Depends: pida>=0.6
+Category: code
+
+Show structure of rst file.
