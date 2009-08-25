@@ -85,7 +85,7 @@ def from_dict(**kw):
 def serialize(base, plugin, meta):
     path = os.path.join(base, plugin, 'service.pida')
     with open(path, 'w') as f:
-        f.write(meta.as_string(True))
+        f.write(meta.as_string(False))
 
 def is_plugin(base, plugin):
     return os.path.exists(os.path.join(base, plugin, 'service.pida'))
