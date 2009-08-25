@@ -6,6 +6,8 @@
 
 import gobject
 
+from os.path import exists, isdir, isfile
+
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -19,17 +21,22 @@ from pida.core.locale import Locale
 locale = Locale('filewatcher')
 _ = locale.gettext
 
+have_gio, have_gamin, have_pyinotify=False, False, False
 try:
-    import gamin
-    have_gamin = True
+    import gio
+    have_gio=True
 except ImportError:
-    have_gamin = False
     try:
-        import pyinotify
-        from pyinotify import Notifier, WatchManager, ProcessEvent, IN_DELETE, IN_MODIFY, IN_CREATE, IN_MOVED_FROM, IN_MOVED_TO
-        have_pyinotify=True
-    except:
-        have_pyinotify=False
+        import gamin
+        have_gamin = True
+    except ImportError:
+        have_gamin = False
+        try:
+            import pyinotify
+            from pyinotify import Notifier, WatchManager, ProcessEvent, IN_DELETE, IN_MODIFY, IN_CREATE, IN_MOVED_FROM, IN_MOVED_TO
+            have_pyinotify=True
+        except:
+            have_pyinotify=False
         
 
 class FileWatcherService(Service):
@@ -44,9 +51,126 @@ class FilewatcherEvents(EventsConfig):
         self.subscribe_foreign('filemanager', 'browsed_path_changed',
                                self.svc.on_browsed_path_changed)
 
+if have_gio:
+    class GIOFileWatcherOptions(OptionsConfig):
+
+        def create_options(self):
+            self.create_option(
+                'enable_giofilemon',
+                _('Enable GIOFileMonitor'),
+                bool,
+                False,
+                _('Whether GIOFileMonitor wil be enabled'),
+                self.on_enabled_changed,
+                safe=False
+            )
+
+        def on_enabled_changed(self, option):
+            if option.value:
+                self.svc.start_giofilemon()
+            else:
+                self.svc.stop_giofilemon()
+
+    # Service class
+    class GIOFileWatcher(Service):
+        """the pyinotify File watcher service"""
+
+        events_config = FilewatcherEvents
+        options_config = GIOFileWatcherOptions
+        
+            
+        def callcmd(self, cmd, name):
+                self._callback(cmd, name)
+                
+        def _callback(self, command, name):
+                    self.boss.cmd('filemanager', command, filename=name,
+                        dirname=self.dir)
+                        
+        class GIOFileMonitor(object):
+    
+            def __init__(self, outer, path=None):
+                    self.outer=outer
+                    self.monitors = {}
+                    self.add_path(path)
+            
+            def add_path(self, path):
+                if path is None: return
+                if exists(path):
+                    monitor = None
+                    f=gio.File(path)
+                    if isdir(path):
+                        monitor=f.monitor_directory( gio.FILE_MONITOR_NONE)
+                    elif isfile(path):
+                        monitor=f.monitor_file(gio.FILE_MONITOR_NONE)
+                    
+                    if monitor is not None:
+                        monitor.connect("changed", self.on_changed)
+                        self.monitors[path] = monitor
+
+            def remove_path(self, path):
+                del self.monitors[path]
+                
+            def on_changed(self, mon, file, otherfile, event): 
+                #print file, otherfile, event
+
+                #['FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED', 'FILE_MONITOR_EVENT_CHANGED', 'FILE_MONITOR_EVENT_CHANGES_DONE_HINT', 'FILE_MONITOR_EVENT_CREATED', 'FILE_MONITOR_EVENT_DELETED', 'FILE_MONITOR_EVENT_PRE_UNMOUNT', 'FILE_MONITOR_EVENT_UNMOUNTED', 'FILE_MONITOR_NONE', 'FILE_MONITOR_WATCH_MOUNTS']
+                if event in [gio.FILE_MONITOR_EVENT_DELETED]:
+                    self.outer.callcmd('update_removed_file', file.get_path())
+                elif event in [gio.FILE_MONITOR_EVENT_CHANGED, gio.FILE_MONITOR_EVENT_CREATED]:
+                    self.outer.callcmd('update_file', file.get_path())
+
+            
+        def pre_start(self):
+            self.dir = None
+            self.started = False
+            self.giofilemon= None
+            self.cache = []
+            if have_gio:
+                self.giofilemon=self.GIOFileMonitor(self)
+
+        def start(self):
+            if self.giofilemon and self.opt('enable_giofilemon'):
+                self.start_giofilemon()
+
+        def start_giofilemon(self):
+            if have_gio:
+                self.started = True
+                #gtk.main() #start
+                #gobject.timeout_add(1000, self._period_check)
+        
+        def stop_giofilemon(self):
+            self.started=False
+            
+        def stop(self):
+            self.stop_giofilemon()
+            self.giofilemon = None
+
+        def stop_pyinotify(self):
+            self.started = False
+
+        def on_browsed_path_changed(self, path):
+            self.set_directory(path)
+        
+        def stop_watch(self, path):
+            if self.giofilemon is not None:
+                self.giofilemon.remove_path(path)
+            
+        def set_directory(self, dir):
+            if self.giofilemon is not None:
+                self.giofilemon.add_path(dir)
+
+            # stop watching old directory
+            if self.dir is not None and self.dir != dir:
+                self.stop_watch(self.dir)
+
+            # setting new directory
+            self.dir = dir
+            #self.gamin.watch_directory(self.dir, self._callback)
+            #self.notifier=Notifier(self.watchmanager, self.PDir())
+            
 
 
-if have_gamin:
+elif have_gamin:
 
     class GaminFileWatcherOptions(OptionsConfig):
 
@@ -145,8 +269,8 @@ if have_gamin:
             self.gamin.handle_events()
             return True
 
-
 elif have_pyinotify:
+    
     class PyINotifyFileWatcherOptions(OptionsConfig):
 
         def create_options(self):
@@ -167,34 +291,39 @@ elif have_pyinotify:
                 self.svc.stop_pyinotify()
 
     # Service class
-    class PyINotifyFilewatcher(Service):
+    class PyINotifyFileWatcher(Service):
         """the pyinotify File watcher service"""
 
         events_config = FilewatcherEvents
         options_config = PyINotifyFileWatcherOptions
         
+        
+        def _callback(self, cmd, name):
+                self.boss.cmd('filemanager', command, filename=name,
+                    dirname=self.dir)
+        callcmd=_callback
+        
         class PDir(ProcessEvent):
-            def my_init(self, **kwargs):
+            def my_init(self, outer, **kwargs):
+                self.outer=outer
                 self.mv_cookies={} #{cookie: src}
             
             def process_IN_DELETE(self, event):
-                self._callback('update_removed_file')
+                self._callback('update_removed_file', event.pathname)
                 
             def process_IN_CREATE(self, event):
-                self._callback('update_file')
+                self._callback('update_file', event.pathname)
                 
             def process_IN_MODIFY(self, event):
-                self._callback('update_file')
+                self._callback('update_file', event.pathname)
                    
             def process_IN_MOVED_FROM(self, event):
-                self._callback('update_removed_file')
+                self._callback('update_removed_file', event.pathname)
                 
             def process_IN_MOVED_TO(self, event):
-                self._callback('update_removed_file')
+                self._callback('update_removed_file', event.pathname)
                 
-        def _callback(self, cmd):
-                self.boss.cmd('filemanager', command, filename=name,
-                    dirname=self.dir)
+
             
         def pre_start(self):
             self.dir = None
@@ -202,7 +331,7 @@ elif have_pyinotify:
             self.pyinotify = None
             self.cache = []
             if have_pyinotify:
-                self.watchmanager=pyinotify.watchman
+                self.watchmanager=WatchManager()
                 self.mask=IN_DELETE|IN_CREATE|IN_MOVED_FROM|IN_MOVED_TO|IN_MODIFY
                 #self.gamin = gamin.WatchMonitor()
                 #self.gamin.no_exists()
@@ -233,7 +362,7 @@ elif have_pyinotify:
         def set_directory(self, dir):
             if not self.pyinotify:
                 self.dir = dir
-                self.add_watch(self.dir, self.mask, rec=True)
+                self.watchmanager.add_watch(self.dir, self.mask) #, rec=True)
                 return
 
             # stop watching old directory
@@ -246,25 +375,26 @@ elif have_pyinotify:
             #self.notifier=Notifier(self.watchmanager, self.PDir())
             
 
-        def _period_check(self):
-            if not self.started:
-                return False
-            self.cache = []
-            self.gamin.handle_events()
-            return True
+        #def _period_check(self):
+            #if not self.started:
+                #return False
+            #self.cache = []
+            #self.gamin.handle_events()
+            #return True
 
 
 def watcher_factory():
-    if have_gamin:
+    if have_gio:
+        return GIOFileWatcher
+    elif have_gamin:
         return GaminFilewatcher
     elif have_pyinotify:
         return PyINotifyFilewatcher
     else:
-        raise Exception("[-]Gamin/pyinotify")
+        raise Exception("[-]GIO/Gamin/pyinotify")
 # Required Service attribute for service loading
 
 Service = watcher_factory()
-#Service=GaminFileWatcher or PyINotifyFileWatcher
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
