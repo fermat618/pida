@@ -1,6 +1,6 @@
 Name: Waypoint
 Author: Daniel Poelzleithner
-Version: 0.1
+Version: 0.2
 Depends: pida>=0.6
 Category: ui
 
