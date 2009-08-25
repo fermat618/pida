@@ -208,6 +208,62 @@ class Twisted(Bin):
     def get_syntax_items(cls):
         return [('Python', '')]
 
+
+class HPaste(Bin):
+    PASTE_URL="http://hpaste.org/fastcgi/hpaste.fcgi/save"
+    
+    def create_data_dict(self, title, name, content, syntax):
+        return dict(
+            content=content,
+            author=name,
+            title=title,
+            save='save',      
+            language=syntax,
+            channel='none',
+        )
+    
+    @classmethod
+    def get_syntax_items(cls):
+        return [
+            ("apacheconf","ApacheConf"),
+            ("BBCode", "bbcode"),
+            ("Bash", "bash"),
+            ("C", "c"),
+            ("C#", "csharp"),
+            ("C++", "cpp"),
+            ("CSS", "css"),
+            ("Clojure", "clojure"),
+            ("Common Lisp", "common-lisp"),
+            ("D", "d"),
+            ("HTML", "html"),
+            ("Haskell", "haskell"),
+            ("INI", "ini"),
+            ("Io", "io"),
+            ("Java", "java"),
+            ("JavaScript", "js"),
+            ("Lighttpd configuration file", "lighty"),
+            ("Lua", "lua"),
+            ("Makefile", "make"),
+            ("Objective-C", "objective-c"),
+            ("PHP", "php"),
+            ("Perl", "perl"),
+            ("Python", "python"),
+            ("Python 3", "python3"),
+            ("Python 3.0 Traceback", "py3tb"),
+            ("Python Traceback", "pytb"),
+            ("Python console session", "pycon"),
+            ("Raw token data","raw"),
+            ("Ruby", "rb"),
+            ("SQL", "sql"),
+            ("Scala", "scala"),
+            ("Text only", "text"),
+            ("VimL", "vim"),
+            ("XML", "xml"),
+            ("YAML", "yaml"),
+            ("reStructuredText", "rst"),
+            ("sqlite3con", "sqlite3"),
+        ]
+
 class PastebinEditorView(PidaGladeView):
 
     key = 'pastebin.editor'
@@ -477,7 +533,8 @@ class Pastebin(Service):
         return [
             ('DPaste', Dpaste),
             ('Rafb.net', Rafb),
-            ('LodgeIt', LodgeIt)
+            ('LodgeIt', LodgeIt),
+            ('HPaste', HPaste),
             #('Twisted', Twisted), #Broken for some reason
         ]
 
