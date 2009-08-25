@@ -218,13 +218,13 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs, env=[], cwd=os.getcwd(), title=_('Command'),
+    def execute(self, commandargs, env=(), cwd=os.getcwd(), title=_('Command'),
                       icon='terminal', eof_handler=None, use_python_fork=False,
                       parser_func=None):
         return self.svc.execute(commandargs, env, cwd, title, icon,
                                 eof_handler, use_python_fork, parser_func)
 
-    def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
+    def execute_shell(self, env=(), cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
         shell_args = self.svc.opt('shell_command_args')
         commandargs = [shell_command] + shell_args
@@ -660,7 +660,7 @@ class Commander(Service):
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
-        env_pida = env[:]
+        env_pida = list(env)
         env_pida.append('PIDA_VERSION=%s' % pida.version)
         current_project = self.boss.cmd('project', 'get_current_project')
         if current_project:
