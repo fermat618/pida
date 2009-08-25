@@ -56,6 +56,7 @@ class PluginMessage(Message, object):
 
 
 def from_plugin(base, plugin, enabled=False):
+    #XXX: pkgutil/pkg_resources ?
     path = os.path.join(base, plugin, 'service.pida')
 
     with open(path) as f:
@@ -84,7 +85,7 @@ def from_dict(**kw):
 def serialize(base, plugin, meta):
     path = os.path.join(base, plugin, 'service.pida')
     with open(path, 'w') as f:
-        f.write(meta.to_string(True))
+        f.write(meta.as_string(True))
 
 def is_plugin(base, plugin):
     return os.path.exists(os.path.join(base, plugin, 'service.pida'))
