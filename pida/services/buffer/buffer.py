@@ -68,6 +68,7 @@ class BufferListView(PidaGladeView):
                 ('doctype', _('Document Type')),
                 ('length', _('File Length')),
                 ('modified_time', _('Last Modified')),
+                ('usage', _('View Counter')),
                 #('Project', _('Project_name'))
             ],
             'creation_time' 
@@ -524,6 +525,7 @@ class Buffer(Service):
     def view_document(self, document, line=None, offset=None):
         if document is not None and self._current != document:
             self._current = document
+            self._current.usage += 1
             self._view.set_document(document)
             try:
                 self.boss.editor.cmd('open', document=document)

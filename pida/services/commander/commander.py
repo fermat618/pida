@@ -431,7 +431,7 @@ class TerminalView(PidaView):
         else:
             def eof_wrapper(*args, **kwargs):
                 self._is_alive = False
-                eof_handler(*args, **kwargs)
+                eof_handler(self, *args, **kwargs)
             self.eof_handler = eof_wrapper
         if use_python_fork:
             if parser_func == None:

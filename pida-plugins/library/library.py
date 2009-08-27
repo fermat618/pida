@@ -59,7 +59,7 @@ class LibraryView(PidaGladeView):
         Column('title', expand=True, sorted=True)
     ]
 
-    gladefile = 'library-viewer'
+    gladefile = 'library_viewer'
     locale = locale
     icon_name = 'gtk-library'
     label_text = _('Documentation')

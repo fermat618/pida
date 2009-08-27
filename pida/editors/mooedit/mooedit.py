@@ -50,8 +50,10 @@ _PIXMAPS = {
 }
 
 # Moo Imports
-import moo
-
+try:
+    import moo
+except ImportError:
+    moo = None
 # PIDA Imports
 from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
@@ -1631,6 +1633,15 @@ class Mooedit(EditorService):
 
     def hide_sign(self, type, filename, line):
         pass
+
+
+    @staticmethod
+    def get_sanity_errors():
+        if moo is None:
+            return [
+                "medit python bindings are missing"
+            ]
+        #XXX: version checks
 
 
 

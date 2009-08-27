@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--*- mode: xml -*-->
 <interface>
-  <object class="GtkWindow" id="paste-editor">
+  <object class="GtkWindow" id="paste_editor">
     <property name="default_width">440</property>
     <property name="default_height">250</property>
     <child>

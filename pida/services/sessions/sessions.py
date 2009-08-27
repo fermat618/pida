@@ -155,7 +155,7 @@ class SessionsOptionsConfig(OptionsConfig):
             workspace=True
         )
 
-    gladefile = 'sessions-properties'
+    gladefile = 'sessions_properties'
     label_text = _('Sessions Properties')
     icon_name = 'package_utilities'
 

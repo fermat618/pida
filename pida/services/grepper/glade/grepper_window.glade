@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--Generated with glade3 3.2.0 on Tue May  8 11:07:55 2007 by ali@rogue-->
 <interface>
-  <object class="GtkWindow" id="grepper-window">
+  <object class="GtkWindow" id="grepper_window">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
       <object class="GtkVBox" id="vbox1">

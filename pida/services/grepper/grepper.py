@@ -144,7 +144,7 @@ class GrepperActionsConfig(ActionsConfig):
 
 
 class GrepperView(PidaGladeView):
-    gladefile = 'grepper-window'
+    gladefile = 'grepper_window'
     locale = locale
     label_text = _('Find in Files')
     icon_name = gtk.STOCK_FIND

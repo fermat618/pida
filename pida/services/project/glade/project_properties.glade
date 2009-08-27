@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--Generated with glade3 3.2.0 on Tue Jul  3 11:07:49 2007 by ali@rogue-->
 <interface>
-  <object class="GtkWindow" id="project-properties">
+  <object class="GtkWindow" id="project_properties">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
       <object class="GtkVBox" id="vbox1">

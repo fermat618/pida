@@ -87,6 +87,8 @@ class Document(object):
 
     markup_string = u'<b>%(basename)s</b>'
 
+    usage = 0
+
     @property
     def markup_string_if_project(self):
         if not self.project:
