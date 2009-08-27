@@ -12,6 +12,7 @@ import gobject
 
 from pida.core.document import Document
 
+from pida.core.projects import Project
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.environment import opts
@@ -504,6 +505,7 @@ class ExternalDocument(Document):
     """
     _unique_id = 0
     _project_path = None
+    _project = None
 
     @property
     def uniqueid(self):
@@ -516,6 +518,20 @@ class ExternalDocument(Document):
         if self.filename is None or not self._project_path:
             return None, None
         return get_relative_path(self._project_path, self.filename)
+
+    def _get_project(self):
+        # test if the path changed and forget the old project
+        if self._project and self._project.source_directory != self._project_path:
+            self._project = None
+        if self._project:
+            return self._project
+        if self._project_path:
+            self._project = Project(self._project_path)
+            return self._project
+
+    def _set_project(self, value):
+        pass
+    project = property(_get_project, _set_project)
 
 class ExternalProxy(object):
     """

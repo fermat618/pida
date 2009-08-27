@@ -34,7 +34,7 @@ class SimpleMap(dict):
     """
     simple data mapping for use in SubscriberConfig
     
-    .. warning::
+    warning
         double subscriptions are destructive
     """
 
@@ -43,7 +43,7 @@ class SimpleMap(dict):
 
 class SubscriberConfig(BaseConfig):
     """
-    .. warning::
+    warning
         double subscriptions are ignored
         double unsubscriptions are breaking stuff
     """
@@ -76,7 +76,7 @@ class SubscriberConfig(BaseConfig):
         """subscribe `data` to a subscription `point`
         ignores double subscriptions
 
-        .. note::
+        note
             for the default implementation using set,
             something will have only one element
 

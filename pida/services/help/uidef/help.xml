@@ -25,6 +25,8 @@
         <placeholder name="AddMenu" /> 
 
         <menu name="HelpMenu" action="HelpMenu">
+            <menuitem name="help_doc" action="help_doc" />
+            <separator />
             <menuitem name="help_about" action="help_about" />
         </menu>
     </menubar>

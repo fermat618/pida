@@ -162,7 +162,7 @@ class PidaCompleter(gtk.HBox):
 
     def on_key_press_event(self, widget, event):
         if event.type == gtk.gdk.KEY_PRESS:
-            print "key_pressed ", event.keyval
+            #print "key_pressed ", event.keyval
             #tab 65289
             if event.keyval in self.accept_keys:
                 self._sig_clean("user-accept", self._filter)
@@ -187,7 +187,6 @@ class PidaCompleter(gtk.HBox):
             elif event.keyval == 65362: #key up
                 s = self._tree.get_selection()
                 it = s.get_selected()[1]
-                print it
                 if not it:
                     return True
                 path = self._model.get_path(it)
@@ -196,7 +195,6 @@ class PidaCompleter(gtk.HBox):
                 np = (path[0]-1,)
                 s.select_path(np)
                 self._tree.scroll_to_cell(np, use_align=False, row_align=0.0, col_align=0.0)
-                print self.filter
                 nt = self._model.get_value(self._model.get_iter(np), 1)
                 self._update_sel(nt)
                 return True
