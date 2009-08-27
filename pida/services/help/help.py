@@ -47,8 +47,6 @@ prefix_lst += [os.path.abspath(os.path.join(os.path.dirname(__file__),
               build_path(os.path.expanduser("~")),
               ]
 
-print prefix_lst
-
 class PidaAboutDialog(gtk.AboutDialog):
     """About dialog"""
     def __init__(self, boss):
