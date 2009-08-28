@@ -1,6 +1,6 @@
 Name: Python Lint
 Author: Daniel Poelzleithner <pida@poelzi.org>
-Version: 0.1
+Version: 0.2
 Depends: pida>=0.6
 Category: language
 

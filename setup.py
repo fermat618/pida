@@ -5,11 +5,58 @@ The PIDA Installer
 import os
 import subprocess
 import sys
+from glob import glob
 
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
+from distutils.cmd import Command
+
 
 import pida
+
+cmdclasses = {}
+data_files = []
+
+
+try:
+    from sphinx.setup_command import BuildDoc
+    if not os.path.exists(os.path.join("docs", "_build")):
+        os.mkdir(os.path.join("docs", "_build"))
+    cmdclasses["build_doc"] = BuildDoc
+except ImportError:
+    print "sphinx not found, skipping user docs"
+
+
+class BuildApi(Command):
+    description = 'Builds the documentation'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        epydoc_conf = os.path.join('docs', 'epydoc.conf')
+
+        try:
+            from epydoc import cli
+            old_argv = sys.argv[1:]
+            sys.argv[1:] = [
+                '--config=%s' % epydoc_conf,
+                #'--no-private', # epydoc bug, not read from config
+                '--simple-term',
+                '--debug',
+                '--verbose'
+            ]
+            cli.cli()
+            sys.argv[1:] = old_argv
+
+        except ImportError:
+            print 'epydoc not installed, skipping API documentation.'
+
+cmdclasses['build_api'] = BuildApi
 
 # Check availability of pygtk 2.0
 NO_PYGTK_ERROR_MESSAGE = """pkg-config reports your system misses pygtk 2.0.
@@ -100,13 +147,25 @@ all_package_data = get_main_data()
 
 all_packages = list_pida_packages() + list_pida_services(all_package_data)
 
+cmdclasses['build_ext'] = BuildExt
+
+data_files += [('share/doc/pida/contrib/gtkrc', glob('contrib/gtkrc/*'))]
+
+# add docs
+top = os.path.join(os.path.dirname(__file__), 'docs', '_build', 'html')
+rlen = len(os.path.dirname(__file__))
+for root, dirs, files in os.walk('docs/_build/html'):
+    data_files += [('share/doc/pida/html%s' %root[len(top):], 
+                   [os.path.join(root[rlen:], x) for x in files])]
+
 setup(
     name = 'pida',
     version = pida.version,
+    license='GPL',
     packages = all_packages,
     package_data = all_package_data,
     ext_modules = [moo],
-    cmdclass={'build_ext': BuildExt},
+    cmdclass=cmdclasses,
     scripts=['bin/pida', 'bin/pida-remote', 'bin/pida-build', 'bin/pida-pyshell'],
     author = pida.author,
     author_email = pida.author,
@@ -124,7 +183,10 @@ setup(
         'Topic :: Software Development',
         'Topic :: Software Development :: Version Control',
         'Topic :: Text Editors',
+        'Topic :: Text Editors :: Integrated Development Environments (IDE)',
+        'Topic :: Text Editors :: Emacs',
         'Topic :: Utilities',
+        'Programming Language :: Python'
     ],
     requires = [
         #XXX: more ?
@@ -136,6 +198,7 @@ setup(
         #'dbus ?',
         #'rope ?',
         #'moo ?'
-    ]
+    ],
+    data_files=data_files,
 )
 

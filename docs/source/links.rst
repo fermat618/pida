@@ -41,14 +41,14 @@
 .. S
 .. T
 
-.. _Trac: http://pida.co.uk/trac/wiki
+.. _Trac: http://pida.co.uk/
 
 .. U
 .. V
 .. W
 
-.. _`Windows Installation`: http://pida.co.uk/trac/wiki/WindowsInstallation
-.. _Wiki: http://code.google.com/p/pida/wiki/
+.. _`Windows Installation`: http://pida.co.uk/wiki/WindowsInstallation
+.. _Wiki: http://pida.co.uk/wiki/
 
 .. X
 .. Y

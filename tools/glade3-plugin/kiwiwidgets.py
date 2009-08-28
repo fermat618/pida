@@ -1,6 +1,5 @@
 import gtk
 import gobject
-import glade
 
 from kiwi.ui.hyperlink import HyperLink
 from kiwi.ui.objectlist import ObjectList, ObjectTree, Column
@@ -12,5 +11,3 @@ from kiwi.ui.widgets.entry import ProxyEntry, ProxyDateEntry
 from kiwi.ui.widgets.spinbutton import ProxySpinButton
 from kiwi.ui.widgets.textview import ProxyTextView
 from kiwi.ui.widgets.button import ProxyButton
-
-

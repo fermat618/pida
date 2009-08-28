@@ -66,12 +66,13 @@ class RegextoolkitView(PidaGladeView):
         for chk in self.chks:
             self.flagsdict[chk.get_label()]=True
             
-        self.txtInput.get_buffer().create_tag("red_fg", foreground="red",size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("blue_fg", foreground="blue",  size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("green_fg", foreground="green", size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("darkred_bg", foreground="#BB0A0A", size=15*pango.SCALE )
-        self.txtInput.get_buffer().create_tag("lightbr_fg", foreground="#DBD39C", size=15*pango.SCALE )
-        self.txtInput.get_buffer().create_tag("vi_fg", foreground="#5F4E84", size=15*pango.SCALE )
+        #FIXME: coloring: humm, totally messed with various styles <what should we do?>    
+        self.txtInput.get_buffer().create_tag("red_fg", foreground="red") #,size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("blue_fg", foreground="blue") #,  size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("green_fg", foreground="green") #, size=15*pango.SCALE)
+        self.txtInput.get_buffer().create_tag("darkred_bg", foreground="#BB0A0A") #, size=15*pango.SCALE )
+        self.txtInput.get_buffer().create_tag("lightbr_fg", foreground="#DBD39C") #, size=15*pango.SCALE )
+        self.txtInput.get_buffer().create_tag("vi_fg", foreground="#5F4E84") #, size=15*pango.SCALE )
         
         self.buf_tags=["red_fg", "blue_fg", "green_fg", "lightbr_fg", "vi_fg", "darkred_fg"]
         
@@ -120,7 +121,7 @@ class RegextoolkitView(PidaGladeView):
             self.highlightmatch(ms)
         else:
             self.statusbar.push(1, "[-]NO MATCH")
-            return
+            self.tvResult.set_model(None) #remove the model
 
     def _prep_tv_for_matches(self, ms):
         #self._remove_columns()
