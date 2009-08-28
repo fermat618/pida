@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<glade-catalog name="kiwiwidgets" library="kiwiwidgets" domain="glade-3" depends="gtk+" language="python">
+<!--<glade-catalog name="kiwiwidgets" library="kiwiwidgets" domain="glade-3" depends="gtk+" language="python">-->
+<glade-catalog version="2.16" targetable="2.14,2.12,2.10,2.8" 
+               supports="libglade,gtkbuilder" name="kiwiwidgets" 
+               library="gladepython" icon-prefix="gtk" domain="glade3" 
+               book="gtk">
+
+  <init-function>glade_python_init</init-function>
   <glade-widget-classes>
     
     <glade-widget-class title="Hyper Link"
