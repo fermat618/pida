@@ -7,6 +7,7 @@ from collections import defaultdict
 from pida.core.service import Service
 from pida.core.languages import LanguageService, Outliner
 from pida.utils.languages import OutlineItem, LANG_OUTLINER_TYPES, LANG_PRIO
+from pida.utils.addtypes import Enumeration
 from pida.services.language import DOCTYPES
 
 # docutils imports
@@ -86,9 +87,11 @@ class RSTOutliner(Outliner):
 
     def _recursive_node_walker(self, node, level, parent_name):
         try:
-            name = None
+            new_item = False
             next_parent_name = parent_name
+            item_kwargs = {}
             if isinstance(node, nodes.section):
+                new_item = True
                 name = \
                     str(node.astext().partition(node.child_text_separator)[0])
                 type = (self.section_types[level]
@@ -100,21 +103,24 @@ class RSTOutliner(Outliner):
                 next_parent_name = name
             elif (isinstance(node, nodes.image) or
                   isinstance(node, nodes.figure)):
+                new_item = True
                 name = node.attributes['uri']
-                type = LANG_OUTLINER_TYPES.MEMBER # TODO: create nice graphics!
+                type = LANG_OUTLINER_TYPES.UNKNOWN
                 is_container = False
+                item_kwargs = {'icon_name': 'source-image'}
         except:
             print "Exception while parsing node info; node ignored"
             pass # ignore node if *something goes wrong
         else:
-            if name:
+            if new_item:
                 item = RSTItem(name=name,
                                filename=node.source,
                                linenumber=node.line - 1,
                                type=type,
                                filter_type=type,
                                is_container=is_container,
-                               parent_name=parent_name)
+                               parent_name=parent_name,
+                               **item_kwargs)
                 self.doc_items.add(item)
 
         if len(node.children):
