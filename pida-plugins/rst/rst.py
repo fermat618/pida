@@ -6,12 +6,13 @@ from collections import defaultdict
 # PIDA imports
 from pida.core.service import Service
 from pida.core.languages import LanguageService, Outliner
-from pida.utils.languages import OutlineItem, LANG_OUTLINER_TYPES
+from pida.utils.languages import OutlineItem, LANG_OUTLINER_TYPES, LANG_PRIO
 from pida.services.language import DOCTYPES
 
 # docutils imports
 from docutils import nodes
 from docutils.core import publish_doctree
+
 
 class RSTTokenList(object):
 
@@ -25,7 +26,7 @@ class RSTTokenList(object):
 
     def filter_items(self, filename):
         for i in self._items[filename]:
-            if not i.parent and  i.parent_name:
+            if not i.parent and i.parent_name:
                 i.parent = self.get_parent(i)
             yield i
 
@@ -45,7 +46,7 @@ class RSTTokenList(object):
     def __iter__(self):
         for j in self._items.itervalues():
             for i in j:
-                if not i.parent and  i.parent_name:
+                if not i.parent and i.parent_name:
                     i.parent = self._names[i.filename].get(i.parent_name, None)
                 yield i
 
@@ -59,7 +60,7 @@ class RSTItem(OutlineItem):
     fullname = property(_get_fullname)
 
     def __repr__(self):
-        return "<RSTItem %s %s %d>" % \
+        return "<RSTItem %s %s %s>" % \
                             (self.name, self.parent_name, self.fullname)
 
 
@@ -77,32 +78,48 @@ class RSTOutliner(Outliner):
             return
         self.doc_items = RSTTokenList()
         self._parse_rst(self.document.filename)
+        # TODO: check if this really *does* anything
         if self.document.project:
             self.document.project['rst_cache'] = self.doc_items
         for item in self.doc_items:
             yield item
 
-    def _recursive_node_walker(self, node_type, node, level, parent_name):
-        if isinstance(node, node_type):
-            name = str(node.astext().partition(node.child_text_separator)[0])
-            type = (self.section_types[level]
-                        if level < len(self.section_types)
-                        else self.section_types[-1])
-            item = RSTItem(name=name,
-                           filename=node.source,
-                           linenumber=node.line - 1,  # XXX or line??
-                           type=type,
-                           filter_type=type,
-                           is_container=True,
-                           parent_name=parent_name)
-            self.doc_items.add(item)
-            # increase level and set parent for next section
-            level += 1
-            parent_name = name
+    def _recursive_node_walker(self, node, level, parent_name):
+        try:
+            name = None
+            next_parent_name = parent_name
+            if isinstance(node, nodes.section):
+                name = \
+                    str(node.astext().partition(node.child_text_separator)[0])
+                type = (self.section_types[level]
+                            if level < len(self.section_types)
+                            else self.section_types[-1])
+                is_container = True
+                # increase level and set parent for next section
+                level += 1
+                next_parent_name = name
+            elif (isinstance(node, nodes.image) or
+                  isinstance(node, nodes.figure)):
+                name = node.attributes['uri']
+                type = LANG_OUTLINER_TYPES.MEMBER # TODO: create nice graphics!
+                is_container = False
+        except:
+            print "Exception while parsing node info; node ignored"
+            pass # ignore node if *something goes wrong
+        else:
+            if name:
+                item = RSTItem(name=name,
+                               filename=node.source,
+                               linenumber=node.line - 1,
+                               type=type,
+                               filter_type=type,
+                               is_container=is_container,
+                               parent_name=parent_name)
+                self.doc_items.add(item)
+
         if len(node.children):
             for child in node:
-                self._recursive_node_walker(node_type, child, level,
-                                            parent_name)
+                self._recursive_node_walker(child, level, next_parent_name)
 
     def _parse_rst(self, filename):
         """Use docutils to parse the rst file and save interesting items
@@ -110,9 +127,9 @@ class RSTOutliner(Outliner):
         """
         f = open(filename)
         rst_data = f.read()
-        doctree = publish_doctree (rst_data)
+        doctree = publish_doctree(rst_data)
         f.close()
-        self._recursive_node_walker(nodes.section, doctree, 0, None)
+        self._recursive_node_walker(doctree, 0, None)
 
 
 class RST(LanguageService):
