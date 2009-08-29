@@ -5,6 +5,7 @@
 """
 
 import gobject
+import os
 
 from os.path import exists, isdir, isfile
 
@@ -83,7 +84,8 @@ if have_gio:
                 self._callback(cmd, name)
                 
         def _callback(self, command, name):
-                    self.boss.cmd('filemanager', command, filename=name,
+                    self.boss.cmd('filemanager', command,
+                        filename=os.path.basename(name),
                         dirname=self.dir)
                         
         class GIOFileMonitor(object):
@@ -114,9 +116,11 @@ if have_gio:
                 #print file, otherfile, event
 
                 #['FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED', 'FILE_MONITOR_EVENT_CHANGED', 'FILE_MONITOR_EVENT_CHANGES_DONE_HINT', 'FILE_MONITOR_EVENT_CREATED', 'FILE_MONITOR_EVENT_DELETED', 'FILE_MONITOR_EVENT_PRE_UNMOUNT', 'FILE_MONITOR_EVENT_UNMOUNTED', 'FILE_MONITOR_NONE', 'FILE_MONITOR_WATCH_MOUNTS']
-                if event in [gio.FILE_MONITOR_EVENT_DELETED]:
+                if event in (gio.FILE_MONITOR_EVENT_DELETED,):
                     self.outer.callcmd('update_removed_file', file.get_path())
-                elif event in [gio.FILE_MONITOR_EVENT_CHANGED, gio.FILE_MONITOR_EVENT_CREATED]:
+                elif event in (gio.FILE_MONITOR_EVENT_CHANGED,
+                               gio.FILE_MONITOR_EVENT_CREATED,
+                               gio.FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED):
                     self.outer.callcmd('update_file', file.get_path())
 
             
@@ -259,7 +263,8 @@ elif have_gamin:
             else:
                 command = None
             if command:
-                self.boss.cmd('filemanager', command, filename=name,
+                self.boss.cmd('filemanager', command,
+                    filename=os.path.basename(name),
                     dirname=self.dir)
 
         def _period_check(self):
@@ -299,7 +304,8 @@ elif have_pyinotify:
         
         
         def _callback(self, cmd, name):
-                self.boss.cmd('filemanager', command, filename=name,
+                self.boss.cmd('filemanager', command,
+                    filename=os.path.basename(name),
                     dirname=self.dir)
         callcmd=_callback
         
