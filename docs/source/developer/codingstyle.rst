@@ -20,7 +20,7 @@ Indenting
 
 .. note::
 
-  Emacs users please check your settings,
+Emacs users please check your settings,
   somehow tabs creep into emacs-written code.
 
 Line Width
@@ -28,11 +28,11 @@ Line Width
 
 79 characters, perhaps 78 to be safe.
 This is negotiable, and there are times when 83 character lines are acceptable.
-You can be the judge. We are not sure many people use 80-character terminals these days, 
+You can be the judge. We are not sure many people use 80-character terminals these days,
 so we can be a bit less hard-line than the PEP.
 
 Blank Lines
------------
+----------
 
 As :pep:`8` for 2 lines between top-level classes and functions, with one line
 between methods.

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 # stdlib imports
+import textwrap
 from collections import defaultdict
 
 # PIDA imports
 from pida.core.service import Service
-from pida.core.languages import LanguageService, Outliner
-from pida.utils.languages import OutlineItem, LANG_OUTLINER_TYPES, LANG_PRIO
+from pida.core.languages import LanguageService, Outliner, Validator
+from pida.utils.languages import (LANG_PRIO,
+    LANG_OUTLINER_TYPES, OutlineItem,
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, ValidationError)
 from pida.utils.addtypes import Enumeration
 from pida.services.language import DOCTYPES
 
@@ -14,6 +17,26 @@ from pida.services.language import DOCTYPES
 from docutils import nodes
 from docutils.core import publish_doctree
 
+# --- common plugin code ------------------------------------------------------
+
+class RST(object):
+
+    def _parse_rst(self, filename):
+        """Use docutils to parse the rst file and save the doctree.
+        """
+        self.doctree = None
+
+        f = open(filename)
+        rst_data = f.read()
+        self.doctree = publish_doctree(rst_data)
+        f.close()
+
+        # TODO caching!!!
+        #if self.document.project:
+        #    self.document.project['rst_cache'] = self.doctree ??
+
+
+# --- Outliner support --------------------------------------------------------
 
 class RSTTokenList(object):
 
@@ -65,25 +88,23 @@ class RSTItem(OutlineItem):
                             (self.name, self.parent_name, self.fullname)
 
 
-class RSTOutliner(Outliner):
+class RSTOutliner(Outliner, RST):
 
-    name = "rst"
+    priority = LANG_PRIO.VERY_GOOD
     plugin = "rst"
+    name = "rst outliner"
     description = _("An outliner for ReStructuredText")
 
     section_types = (LANG_OUTLINER_TYPES.SECTION,
                      LANG_OUTLINER_TYPES.PARAGRAPH)
 
     def get_outline(self):
-        if not self.document.filename:
-            return
         self.doc_items = RSTTokenList()
         self._parse_rst(self.document.filename)
-        # TODO: check if this really *does* anything
-        if self.document.project:
-            self.document.project['rst_cache'] = self.doc_items
-        for item in self.doc_items:
-            yield item
+        if self.doctree:
+            self._recursive_node_walker(self.doctree, 0, None)
+            for item in self.doc_items:
+                yield item
 
     def _recursive_node_walker(self, node, level, parent_name):
         try:
@@ -109,7 +130,7 @@ class RSTOutliner(Outliner):
                 type = LANG_OUTLINER_TYPES.UNKNOWN
                 is_container = False
                 # nodes with options have no line attribute
-                linenumber = node.line if node.line else node.parent.line
+                linenumber = node.line or node.parent.line
                 item_kwargs = {'icon_name': 'source-image'}
         except:
             pass # ignore node if *something goes wrong
@@ -117,7 +138,7 @@ class RSTOutliner(Outliner):
             if new_item:
                 item = RSTItem(name=name,
                                filename=node.source,
-                               linenumber=linenumber
+                               linenumber=linenumber,
                                type=type,
                                filter_type=type,
                                is_container=is_container,
@@ -129,23 +150,53 @@ class RSTOutliner(Outliner):
             for child in node:
                 self._recursive_node_walker(child, level, next_parent_name)
 
-    def _parse_rst(self, filename):
-        """Use docutils to parse the rst file and save interesting items
-           as RTSItem instances.
-        """
-        f = open(filename)
-        rst_data = f.read()
-        doctree = publish_doctree(rst_data)
-        f.close()
-        self._recursive_node_walker(doctree, 0, None)
+# --- Validator ---------------------------------------------------------------
 
+class RSTValidator(Validator, RST):
 
-class RST(LanguageService):
+    priority = LANG_PRIO.VERY_GOOD
+    plugin = "rst"
+    name = "rst validator"
+    description = _("A validator for ReStructuredText")
+
+    subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
+
+    def get_validations(self):
+        self._parse_rst(self.document.filename)
+        if self.doctree:
+            for msg in self.doctree.parse_messages :
+                message, type_, filename, lineno = self._parse_error(msg)
+                # TODO need to filter out duplicates with no lineno set
+                # not sure why this happens...
+                if lineno:
+                    yield ValidationError (message=message,
+                                           type_=type_,
+                                           subtype=self.subtype,
+                                           filename=filename,
+                                           lineno=lineno)
+
+    @staticmethod
+    def _parse_error(msg):
+        width = 30  # TODO make configurable?
+        message = textwrap.fill(msg.children[0].children[0].data, width)
+        # docutils defines the following error levels:
+        #     "info/1", '"warning"/"2" (default), "error"/"3", "severe"/"4"
+        type_ = (LANG_VALIDATOR_TYPES.INFO, LANG_VALIDATOR_TYPES.WARNING,
+                 LANG_VALIDATOR_TYPES.ERROR, LANG_VALIDATOR_TYPES.FATAL
+                )[msg['level'] - 1]
+        filename = msg.source
+        lineno = msg.line
+        return (message, type_, filename, lineno)
+
+# --- register plugin services ------------------------------------------------
+
+class RSTService(LanguageService):
 
     language_name = (DOCTYPES.get_fuzzy('reStructuredText')).internal
     outliner_factory = RSTOutliner
+    validator_factory = RSTValidator
 
 # Required Service attribute for service loading
-Service = RST
+Service = RSTService
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
