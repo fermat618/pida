@@ -98,6 +98,7 @@ class RSTOutliner(Outliner):
                             if level < len(self.section_types)
                             else self.section_types[-1])
                 is_container = True
+                linenumber = node.line - 1
                 # increase level and set parent for next section
                 level += 1
                 next_parent_name = name
@@ -107,15 +108,16 @@ class RSTOutliner(Outliner):
                 name = node.attributes['uri']
                 type = LANG_OUTLINER_TYPES.UNKNOWN
                 is_container = False
+                # nodes with options have no line attribute
+                linenumber = node.line if node.line else node.parent.line
                 item_kwargs = {'icon_name': 'source-image'}
         except:
-            print "Exception while parsing node info; node ignored"
             pass # ignore node if *something goes wrong
         else:
             if new_item:
                 item = RSTItem(name=name,
                                filename=node.source,
-                               linenumber=node.line - 1,
+                               linenumber=linenumber
                                type=type,
                                filter_type=type,
                                is_container=is_container,
