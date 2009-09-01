@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import with_statement
+
 # stdlib imports
 import textwrap
 from collections import defaultdict
@@ -21,19 +23,24 @@ from docutils.core import publish_doctree
 
 class RST(object):
 
-    def _parse_rst(self, filename):
-        """Use docutils to parse the rst file and save the doctree.
+    doctree = None
+    _lasttime = 0
+
+    @classmethod
+    def _parse_rst(cls, document):
         """
-        self.doctree = None
-
-        f = open(filename)
-        rst_data = f.read()
-        self.doctree = publish_doctree(rst_data)
-        f.close()
-
-        # TODO caching!!!
-        #if self.document.project:
-        #    self.document.project['rst_cache'] = self.doctree ??
+        Use docutils to parse the rst file and save the doctree. This
+        doctree is cached and can therefor be shared by the RSTOutliner
+        and the RSTValidator.
+        """
+        if not cls._lasttime or cls._lasttime != document.modified_time:
+            print "Need to parse"
+            with open(document.filename) as f:
+                rst_data = f.read()
+                cls.doctree = publish_doctree(rst_data)
+            cls._lasttime = document.modified_time
+        else:
+            print "Use cached version!"
 
 
 # --- Outliner support --------------------------------------------------------
@@ -100,7 +107,7 @@ class RSTOutliner(Outliner, RST):
 
     def get_outline(self):
         self.doc_items = RSTTokenList()
-        self._parse_rst(self.document.filename)
+        self._parse_rst(self.document)
         if self.doctree:
             self._recursive_node_walker(self.doctree, 0, None)
             for item in self.doc_items:
@@ -162,7 +169,7 @@ class RSTValidator(Validator, RST):
     subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
 
     def get_validations(self):
-        self._parse_rst(self.document.filename)
+        self._parse_rst(self.document)
         if self.doctree:
             for msg in self.doctree.parse_messages :
                 message, type_, filename, lineno = self._parse_error(msg)
