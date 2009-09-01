@@ -12,7 +12,6 @@ from pida.core.languages import LanguageService, Outliner, Validator
 from pida.utils.languages import (LANG_PRIO,
     LANG_OUTLINER_TYPES, OutlineItem,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, ValidationError)
-from pida.utils.addtypes import Enumeration
 from pida.services.language import DOCTYPES
 
 # docutils imports
@@ -26,6 +25,7 @@ class RST(object):
     doctree = None
     _lasttime = 0
 
+
     @classmethod
     def _parse_rst(cls, document):
         """
@@ -37,7 +37,8 @@ class RST(object):
             print "Need to parse"
             with open(document.filename) as f:
                 rst_data = f.read()
-                cls.doctree = publish_doctree(rst_data)
+            cls.doctree = publish_doctree(rst_data,
+                                          source_path = document.filename)
             cls._lasttime = document.modified_time
         else:
             print "Use cached version!"
@@ -94,6 +95,12 @@ class RSTItem(OutlineItem):
         return "<RSTItem %s %s %s>" % \
                             (self.name, self.parent_name, self.fullname)
 
+    def get_markup(self):
+        return ('<b>%s</b> <span foreground="#999999"><i>%s%s</i></span>'
+                % (self.name,
+                  (self.filename + ':') if self.external else '',
+                  self.linenumber))
+    markup = property(get_markup)
 
 class RSTOutliner(Outliner, RST):
 
@@ -145,11 +152,12 @@ class RSTOutliner(Outliner, RST):
             if new_item:
                 item = RSTItem(name=name,
                                filename=node.source,
-                               linenumber=linenumber,
+                               linenumber=str(linenumber),
                                type=type,
                                filter_type=type,
                                is_container=is_container,
                                parent_name=parent_name,
+                               external=node.source != self.document.filename,
                                **item_kwargs)
                 self.doc_items.add(item)
 
