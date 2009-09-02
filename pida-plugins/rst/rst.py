@@ -20,29 +20,16 @@ from docutils.core import publish_doctree
 
 # --- common plugin code ------------------------------------------------------
 
-class RST(object):
-
-    doctree = None
-    _lasttime = 0
-
-
-    @classmethod
-    def _parse_rst(cls, document):
-        """
-        Use docutils to parse the rst file and save the doctree. This
-        doctree is cached and can therefor be shared by the RSTOutliner
-        and the RSTValidator.
-        """
-        if not cls._lasttime or cls._lasttime != document.modified_time:
-            print "Need to parse"
-            with open(document.filename) as f:
-                rst_data = f.read()
-            cls.doctree = publish_doctree(rst_data,
-                                          source_path = document.filename)
-            cls._lasttime = document.modified_time
-        else:
-            print "Use cached version!"
-
+# TODO: currently the Validator and the Outliner call this function and parse
+# the complete rst file. Caching the doctree would be cool!
+def parse_rst(document):
+    """
+    Use docutils to parse the rst file and return the doctree.
+    """
+    with open(document.filename) as f:
+        rst_data = f.read()
+    doctree = publish_doctree(rst_data, source_path = document.filename)
+    return doctree
 
 # --- Outliner support --------------------------------------------------------
 
@@ -102,7 +89,7 @@ class RSTItem(OutlineItem):
                   self.linenumber))
     markup = property(get_markup)
 
-class RSTOutliner(Outliner, RST):
+class RSTOutliner(Outliner):
 
     priority = LANG_PRIO.VERY_GOOD
     plugin = "rst"
@@ -114,11 +101,10 @@ class RSTOutliner(Outliner, RST):
 
     def get_outline(self):
         self.doc_items = RSTTokenList()
-        self._parse_rst(self.document)
-        if self.doctree:
-            self._recursive_node_walker(self.doctree, 0, None)
-            for item in self.doc_items:
-                yield item
+        self.doctree = parse_rst(self.document)
+        self._recursive_node_walker(self.doctree, 0, None)
+        for item in self.doc_items:
+            yield item
 
     def _recursive_node_walker(self, node, level, parent_name):
         try:
@@ -167,7 +153,7 @@ class RSTOutliner(Outliner, RST):
 
 # --- Validator ---------------------------------------------------------------
 
-class RSTValidator(Validator, RST):
+class RSTValidator(Validator):
 
     priority = LANG_PRIO.VERY_GOOD
     plugin = "rst"
@@ -177,18 +163,17 @@ class RSTValidator(Validator, RST):
     subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
 
     def get_validations(self):
-        self._parse_rst(self.document)
-        if self.doctree:
-            for msg in self.doctree.parse_messages :
-                message, type_, filename, lineno = self._parse_error(msg)
-                # TODO need to filter out duplicates with no lineno set
-                # not sure why this happens...
-                if lineno:
-                    yield ValidationError (message=message,
-                                           type_=type_,
-                                           subtype=self.subtype,
-                                           filename=filename,
-                                           lineno=lineno)
+        self.doctree = parse_rst(self.document)
+        for msg in self.doctree.parse_messages :
+            message, type_, filename, lineno = self._parse_error(msg)
+            # TODO need to filter out duplicates with no lineno set
+            # not sure why this happens...
+            if lineno:
+                yield ValidationError (message=message,
+                                       type_=type_,
+                                       subtype=self.subtype,
+                                       filename=filename,
+                                       lineno=lineno)
 
     @staticmethod
     def _parse_error(msg):
