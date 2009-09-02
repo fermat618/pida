@@ -318,15 +318,34 @@ class Vim(EditorService):
 
     @classmethod
     def get_sanity_errors(cls):
+        errors = []
         from pida.core.pdbus import has_dbus
         if not has_dbus:
-            return [
+            errors = [
                 'dbus python disfunctional',
                 'please repair the python dbus bindings',
-                '(note that it wont work for root)'
+                '(note that it won\'t work for root)'
             ]
-        #XXX: check if gvim can do python
-        return
+
+        try:
+            import subprocess
+            p = subprocess.Popen(
+                    ['gvim', '--version'],
+                    stdout=subprocess.PIPE,
+                    )
+            data, _ = p.communicate()
+            if 'python' not in data:
+                errors.extend([
+                    'gvim lacks python support',
+                    'please install gvim with python support'
+
+                ])
+        except OSError:
+            errors.extend([
+                'gvim not found',
+                'please install gvim with python support'
+            ])
+        return errors
     
 # Required Service attribute for service loading
 Service = Vim
