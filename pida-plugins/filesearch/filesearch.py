@@ -193,7 +193,8 @@ class SearchView(PidaGladeView):
 
     def add_or_update_file(self, name, basepath, state):
         entry = self.entries.setdefault(path.join(basepath, name),
-                                            SearchMatch(basepath, name))
+                                            SearchMatch(basepath, name, 
+                                                        manager=self))
         entry.state = state
 
         if entry.visible:
