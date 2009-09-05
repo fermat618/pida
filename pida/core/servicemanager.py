@@ -254,6 +254,9 @@ class ServiceManager(object):
     def get_available_editors(self):
         return self._editors.get_all()
 
+    def get_editor(self, name):
+        return self._editors.get_one(name)
+
     def activate_editor(self, name):
         self.load_editor(name)
         self.editor.create_all()

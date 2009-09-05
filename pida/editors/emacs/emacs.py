@@ -303,6 +303,31 @@ class Emacs(EditorService):
     def set_path(self, path):
         return self._client.set_directory(path)
 
+    @classmethod
+    def get_sanity_errors(cls):
+        errors = []
+        from pida.core.pdbus import has_dbus
+        if not has_dbus:
+            errors = [
+                'dbus python disfunctional',
+                'please repair the python dbus bindings',
+                '(note that it won\'t work for root)'
+            ]
+
+        try:
+            import subprocess
+            p = subprocess.Popen(
+                    ['emacs', '--version'],
+                    stdout=subprocess.PIPE,
+                    )
+            data, _ = p.communicate()
+        except OSError:
+            errors.extend([
+                'emacs not found',
+                'please install emacs23 with python support'
+            ])
+        return errors
+
 
 # Required Service attribute for service loading
 Service = Emacs

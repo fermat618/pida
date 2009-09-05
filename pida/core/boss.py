@@ -38,13 +38,28 @@ class Boss(object):
         self._run_first_time()
         self.window = PidaWindow(self)
 
-    def _run_first_time(self):
-        if is_firstrun():
+    def check_editor(self, editor_name):
+        """
+        Check if the current editor passes the sanity check
+        
+        :returns new editor name
+        """
+        try:
+            editor = self._sm.get_editor(editor_name)
+            if editor.get_sanity_errors():
+                return self._run_first_time(True)
+        except ServiceModuleError:
+            return self._run_first_time(True)
+        return editor_name
+
+    def _run_first_time(self, force=False):
+        if is_firstrun() or force:
             from pida.utils.firstrun import FirstTimeWindow
             ft = FirstTimeWindow(self._sm.get_available_editors())
             success, editor = ft.run(firstrun_filename)
             self.override_editor = editor
             self.quit_before_started = not success
+            return editor
         else:
             self.override_editor = None
             self.quit_before_started = False
@@ -58,6 +73,9 @@ class Boss(object):
                 self.get_service('editor').set_opt('editor_type',
                     self.override_editor)
             editor_name = self.get_service('editor').opt('editor_type')
+            editor_name = self.check_editor(editor_name)
+            if self.quit_before_started:
+                return False
             self._sm.activate_editor(editor_name)
             self._icons = IconRegister()
             self.window.start()
