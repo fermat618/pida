@@ -52,8 +52,6 @@ class SearchMatch(object):
         color, b, i = state_style.get(self.state, (None, False, False))
         if self.manager and color:
             #FIXME to_string is missing on win32
-            if color != "pida-fm-normal":
-                print color, self.manager.match_list.style.lookup_color(color)
             color = self.manager.match_list.style.lookup_color(color)
             if not on_windows:
                 color = color.to_string()
