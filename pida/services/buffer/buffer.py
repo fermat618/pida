@@ -7,6 +7,7 @@ import os
 from tempfile import mkstemp
 
 import gtk
+import time
 
 from kiwi.ui.objectlist import Column
 
@@ -69,6 +70,7 @@ class BufferListView(PidaGladeView):
                 ('length', _('File Length')),
                 ('modified_time', _('Last Modified')),
                 ('usage', _('View Counter')),
+                ('last_opend', _('Last Opened')),
                 #('Project', _('Project_name'))
             ],
             'creation_time' 
@@ -526,6 +528,7 @@ class Buffer(Service):
         if document is not None and self._current != document:
             self._current = document
             self._current.usage += 1
+            self._current.last_opend = time.time()
             self._view.set_document(document)
             try:
                 self.boss.editor.cmd('open', document=document)
