@@ -27,7 +27,10 @@ def find_latest_metadata(url):
             log.error('%s-%s doesnt supply a packed plugin', name, version)
             continue
         plugin = name.split('.')[-1]
-        fd = urllib2.urlopen(data['meta'])
+        try:
+            fd = urllib2.urlopen(data['meta'])
+        except urllib2.HTTPError:
+            continue
         meta = metadata.from_string(fd.read(), None, plugin)
         meta.url = data['tar.gz']
         yield meta
