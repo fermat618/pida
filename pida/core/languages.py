@@ -25,7 +25,7 @@ from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
 
-from pida.core.log import get_logger
+from pida.core.log import get_logger, Log
 log = get_logger('core.languages')
 
 if opts.multiprocessing:
@@ -651,6 +651,10 @@ def safe_remote(func):
         try:
             for i in func(self, *args, **kwargs):
                 yield i
+        except RuntimeError, e:
+            log.warning(_("problems running external plugin: %s" %e))
+            self.restart()
+            return
         except:
             if self.stopped:
                 return
@@ -658,7 +662,7 @@ def safe_remote(func):
     return safe
 
 
-class JobServer(object):
+class JobServer(Log):
     """
     The Jobserver dispatches language plugin jobs to external processes it 
     manages.
@@ -668,8 +672,8 @@ class JobServer(object):
         self.max_processes = max_processes
         self.stopped = False
         # we have to map the proxy objects to
-        self._processes = [] 
         self._external = external
+        self._processes = [] 
         self._proxy_map = WeakKeyDictionary()
         self._instances = {}
 
@@ -748,6 +752,15 @@ class JobServer(object):
         for i in self._processes:
             i.is_shutdown = True
             i.shutdown()
+
+    def restart(self):
+        self.log.info(_("restart jobserver"))
+        self.stop()
+        self.stopped = False
+        self._processes = []
+        self._proxy_map = WeakKeyDictionary()
+        self._instances = {}
+
 
 class LanguageService(Service):
     """
