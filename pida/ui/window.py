@@ -62,11 +62,9 @@ class Window(gtk.Window):
         pass
 
     # Dialogs
-    @with_gdk_leave
     def save_dlg(self, *args, **kw):
         return save(parent = self, *args, **kw)
 
-    @with_gdk_leave
     def open_dlg(self, *args, **kw):
         return opendlg(parent = self, *args, **kw)
 
@@ -76,9 +74,8 @@ class Window(gtk.Window):
 
     @with_gdk_leave
     def error_dlg(self, *args, **kw):
-        return error(*args, **kw)
+        return error(parent = self, *args, **kw)
 
-    @with_gdk_leave
     def yesno_dlg(self, *args, **kw):
         return yesno(parent = self, *args, **kw) == gtk.RESPONSE_YES
 
