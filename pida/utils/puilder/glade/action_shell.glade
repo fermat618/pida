@@ -1,80 +1,80 @@
-<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
-<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
-<glade-interface>
-    <widget class="GtkWindow" id="action_shell">
-        <property name="default_height">250</property>
-        <property name="default_width">440</property>
-        <property name="visible">False</property>
+<?xml version="1.0"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkWindow" id="action_shell">
+    <property name="default_height">250</property>
+    <property name="default_width">440</property>
+    <property name="visible">False</property>
+    <child>
+      <object class="GtkHBox" id="hbox1">
+        <property name="spacing">6</property>
+        <property name="visible">True</property>
         <child>
-            <widget class="GtkHBox" id="hbox1">
+          <object class="GtkVBox" id="vbox1">
+            <property name="spacing">6</property>
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkHBox" id="hbox2">
                 <property name="spacing">6</property>
                 <property name="visible">True</property>
                 <child>
-                    <widget class="GtkVBox" id="vbox1">
-                        <property name="spacing">6</property>
-                        <property name="visible">True</property>
-                        <child>
-                            <widget class="GtkHBox" id="hbox2">
-                                <property name="spacing">6</property>
-                                <property name="visible">True</property>
-                                <child>
-                                    <widget class="GtkLabel" id="label1">
-                                        <property name="label" context="yes" translatable="yes">Command:</property>
-                                        <property name="visible">True</property>
-                                        <property name="xalign">0.0</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="expand">False</property>
-                                    </packing>
-                                </child>
-                                <child>
-                                    <widget class="GtkEntry" id="command">
-                                        <property name="is_focus">True</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="position">1</property>
-                                    </packing>
-                                </child>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <widget class="GtkHBox" id="hbox3">
-                                <property name="spacing">12</property>
-                                <property name="visible">True</property>
-                                <child>
-                                    <widget class="GtkCheckButton" id="cwd_on">
-                                        <property name="is_focus">True</property>
-                                        <property name="label" context="yes" translatable="yes">cd</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="expand">False</property>
-                                    </packing>
-                                </child>
-                                <child>
-                                    <widget class="GtkFileChooserButton" id="cwd">
-                                        <property name="action">select-folder</property>
-                                        <property name="sensitive">False</property>
-                                        <property name="title" context="yes" translatable="yes">Select directory to change to</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="position">1</property>
-                                    </packing>
-                                </child>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                                <property name="position">1</property>
-                            </packing>
-                        </child>
-                    </widget>
+                  <object class="GtkLabel" id="label1">
+                    <property context="yes" name="label" translatable="yes">Command:</property>
+                    <property name="visible">True</property>
+                    <property name="xalign">0.0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
                 </child>
-            </widget>
+                <child>
+                  <object class="GtkEntry" id="command">
+                    <property name="is_focus">True</property>
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHBox" id="hbox3">
+                <property name="spacing">12</property>
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkCheckButton" id="cwd_on">
+                    <property name="is_focus">True</property>
+                    <property context="yes" name="label" translatable="yes">cd</property>
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkFileChooserButton" id="cwd">
+                    <property name="action">select-folder</property>
+                    <property name="sensitive">False</property>
+                    <property context="yes" name="title" translatable="yes">Select directory to change to</property>
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
         </child>
-    </widget>
-</glade-interface>
+      </object>
+    </child>
+  </object>
+</interface>
