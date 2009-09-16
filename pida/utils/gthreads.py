@@ -77,7 +77,7 @@ class AsyncTask(object):
             ret = ()
         if not isinstance(ret, tuple):
             ret = (ret,)
-            
+
         self.loop_callback(*ret)
 
 

@@ -7,8 +7,10 @@
 """
 
 import gtk
+import os
 
 # PIDA Imports
+from pida.core.environment import pida_home, workspace_name
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
@@ -23,6 +25,7 @@ from pida.utils.pyconsole import Console
 from pida.core.locale import Locale
 locale = Locale('manhole')
 _ = locale.gettext
+
 
 class ManholeActionsConfig(ActionsConfig):
 
@@ -59,6 +62,12 @@ class ManholeView(PidaView):
         sw.add(console)
         sw.show_all()
         self.add_main_widget(sw)
+        for fname in (os.path.join(os.path.dirname(__file__), "manholerc.py"),
+                      os.path.join(pida_home, "manhole.rc"),
+                      os.path.join(pida_home, "manhole.%s.rc" %workspace_name())):
+            if os.path.exists(fname):
+                #console.do_raw_input(line)
+                console.execfile(fname)
 
     def can_be_closed(self):
         self.svc.get_action('show_manhole').set_active(False)

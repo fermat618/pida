@@ -483,6 +483,18 @@ class _Console(_ReadLine, code.InteractiveInterpreter):
             self.showtraceback()
         sys.stdout = saved
 
+    def execfile(self, filename):
+        saved = sys.stdout
+        sys.stdout = self
+        try:
+            execfile(filename, self.locals)
+        except SystemExit:
+            raise
+        except:
+            self.showtraceback()
+        sys.stdout = saved
+
+
     def complete_attr(self, start, end):
         try:
             obj = eval(start, self.locals)
