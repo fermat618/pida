@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
+<?xml version="1.0"?>
 <!--*- mode: xml -*-->
-<glade-interface>
-  <widget class="GtkWindow" id="main_window">
+<interface>
+  <object class="GtkWindow" id="main_window">
     <property name="default_width">800</property>
     <property name="default_height">600</property>
     <child>
-      <widget class="GtkVBox" id="main_box">
+      <object class="GtkVBox" id="main_box">
         <property name="visible">True</property>
         <child>
-          <widget class="GtkVBox" id="top_box">
+          <object class="GtkVBox" id="top_box">
             <property name="visible">True</property>
             <child>
               <placeholder/>
@@ -20,18 +19,18 @@
             <child>
               <placeholder/>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHPaned" id="main_paned">
+          <object class="GtkHPaned" id="main_paned">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <child>
-              <widget class="GtkVPaned" id="left_paned">
+              <object class="GtkVPaned" id="left_paned">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -41,13 +40,13 @@
                 <child>
                   <placeholder/>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="resize">False</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkVPaned" id="right_paned">
+              <object class="GtkVPaned" id="right_paned">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -57,15 +56,15 @@
                 <child>
                   <placeholder/>
                 </child>
-              </widget>
+              </object>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkVBox" id="bottom_box">
+          <object class="GtkVBox" id="bottom_box">
             <property name="visible">True</property>
             <child>
               <placeholder/>
@@ -76,13 +75,13 @@
             <child>
               <placeholder/>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">2</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-</glade-interface>
+  </object>
+</interface>

@@ -1,65 +1,65 @@
-<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
-<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
-<glade-interface>
-    <widget class="GtkUIManager" id="uimanager">
+<?xml version="1.0"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkUIManager" id="uimanager">
+    <child>
+      <object class="GtkActionGroup" id="test_ag">
         <child>
-            <widget class="GtkActionGroup" id="test_ag">
-                <child>
-                    <widget class="GtkAction" id="test_act">
-                        <property name="name">test_act</property>
-                        <property name="label" translatable="yes">test action</property>
-                    </widget>
-                </child>
-            </widget>
+          <object class="GtkAction" id="test_act">
+            <property name="name">test_act</property>
+            <property name="label" translatable="yes">test action</property>
+          </object>
         </child>
-    </widget>
-    <widget class="GtkWindow" id="test_view">
-        <property name="default_height">250</property>
-        <property name="default_width">440</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="test_view">
+    <property name="default_height">250</property>
+    <property name="default_width">440</property>
+    <child>
+      <object class="GtkVBox" id="vb">
+        <property name="visible">True</property>
         <child>
-            <widget class="GtkVBox" id="vb">
+          <object class="GtkHBox" id="hbox1">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkButton" id="b1">
+                <property name="is_focus">True</property>
+                <property context="yes" name="label" translatable="yes">button1</property>
                 <property name="visible">True</property>
-                <child>
-                    <widget class="GtkHBox" id="hbox1">
-                        <property name="visible">True</property>
-                        <child>
-                            <widget class="GtkButton" id="b1">
-                                <property name="is_focus">True</property>
-                                <property name="label" context="yes" translatable="yes">button1</property>
-                                <property name="visible">True</property>
-                            </widget>
-                        </child>
-                        <child>
-                            <placeholder/>
-                            <packing>
-                                <property name="position">1</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <placeholder/>
-                            <packing>
-                                <property name="position">2</property>
-                            </packing>
-                        </child>
-                    </widget>
-                </child>
-                <child>
-                    <widget class="GtkLabel" id="label1">
-                        <property name="label" context="yes" translatable="yes">I AM A TEST</property>
-                        <property name="visible">True</property>
-                        <property name="xalign">0.0</property>
-                    </widget>
-                    <packing>
-                        <property name="position">1</property>
-                    </packing>
-                </child>
-                <child>
-                    <placeholder/>
-                    <packing>
-                        <property name="position">2</property>
-                    </packing>
-                </child>
-            </widget>
+              </object>
+            </child>
+            <child>
+              <placeholder/>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
         </child>
-    </widget>
-</glade-interface>
+        <child>
+          <object class="GtkLabel" id="label1">
+            <property context="yes" name="label" translatable="yes">I AM A TEST</property>
+            <property name="visible">True</property>
+            <property name="xalign">0.0</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+          <packing>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
