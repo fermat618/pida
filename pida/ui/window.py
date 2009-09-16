@@ -34,7 +34,16 @@ def with_gdk_lock(func):
         finally:
             gdk.threads_leave()
     return _wrapped
-        
+
+def with_gdk_leave(func):
+    @wraps(func)
+    def _wrapped(*k, **kw):
+        try:
+            func(*k, **kw)
+        finally:
+            gdk.threads_leave()
+    return _wrapped
+
 class Window(gtk.Window):
 
     def __init__(self, boss, *args, **kw):
@@ -53,24 +62,31 @@ class Window(gtk.Window):
         pass
 
     # Dialogs
+    @with_gdk_leave
     def save_dlg(self, *args, **kw):
         return save(parent = self, *args, **kw)
 
+    @with_gdk_leave
     def open_dlg(self, *args, **kw):
         return opendlg(parent = self, *args, **kw)
 
+    @with_gdk_leave
     def info_dlg(self, *args, **kw):
         return info(parent = self, *args, **kw)
 
+    @with_gdk_leave
     def error_dlg(self, *args, **kw):
-        return error(parent = self, *args, **kw)
+        return error(*args, **kw)
 
+    @with_gdk_leave
     def yesno_dlg(self, *args, **kw):
         return yesno(parent = self, *args, **kw) == gtk.RESPONSE_YES
 
+    @with_gdk_leave
     def error_list_dlg(self, msg, errs):
         return self.error_dlg('%s\n\n* %s' % (msg, '\n\n* '.join(errs)))
 
+    @with_gdk_leave
     def input_dlg(self, *args, **kw):
         return get_input(parent=self, *args, **kw)
 
