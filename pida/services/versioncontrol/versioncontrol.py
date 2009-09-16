@@ -265,12 +265,13 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
 
         try:
             from anyvc.workdir import all_known
-        except:
+        except ImportError:
             self.svc.log.info('Cant find anyvc')
             all_known = ()
         try:
             from anyvc.exc import NotFoundError
         except ImportError:
+            #XXX: kill that with the anyvc 0.3 release
             NotFoundError = ValueError
         for mgr in all_known:
             self.subscribe('workdir-manager', mgr)
@@ -678,10 +679,14 @@ class Versioncontrol(Service):
         self.on_project_changed(None)
 
     def start(self):
+
         self._log = VersionControlLog(self)
         self._commit = CommitViewer(self)
 
         if not self.features['workdir-manager']:
+            # make the vcs actions insensitive if anyvc is missing
+            self.actions._actions.set_sensitive(False)
+
             self.boss.get_service('notify').notify(
                             "versioncontrol integration disabled",
                             title="Can't find anyvc",
