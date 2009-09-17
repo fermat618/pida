@@ -1247,12 +1247,19 @@ class Mooedit(EditorService):
 
     def save(self):
         """Save the current document"""
+        # man, medit resets the language on save
+        olang = self._current.editor.props.buffer.get_lang()
         self._current.editor.save()
+        self._current.editor.set_lang(olang)
+        gcall(self._current.editor.set_lang, olang)
         self.boss.cmd('buffer', 'current_file_saved')
 
     def save_as(self):
         """Save the current document"""
+        olang = self._current.editor.props.buffer.get_lang()
         self._current.editor.save_as()
+        self._current.editor.set_lang(olang)
+        gcall(self._current.editor.set_lang, olang)
         self.boss.cmd('buffer', 'current_file_saved')
 
     def cut(self):
