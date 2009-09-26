@@ -450,7 +450,6 @@ class TargetActionView(ActionView):
             return
         if self.block:
             return
-        print ['chann', cmb.read()]
         self.action.value = cmb.read()
 
 action_views = {

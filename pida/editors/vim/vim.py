@@ -159,6 +159,7 @@ class Vim(EditorService):
         self._sign_index = 0
         self._signs = {}
         self._current_line = 1
+        self._docwin = None
         if not success:
             err = _( 'There was a problem running the "gvim" '
                      'executable. This is usually because it is not '
@@ -310,6 +311,51 @@ class Vim(EditorService):
         self._com.quit(reply_handler=lambda *a: None,
                        error_handler=lambda *a: None)
         return
+
+    def show_documentation(self):
+        #buf = self._current.editor.props.buffer
+        #rec = self._current.editor.get_iter_location(
+        #        buf.get_iter_at_offset(
+        #            buf.props.cursor_position))
+        #pos = self._current.editor.buffer_to_window_coords(
+        #    gtk.TEXT_WINDOW_WIDGET,
+        #    rec.x, rec.y)
+        #abspos = self._current.editor.window.get_origin()
+        #rpos = (pos[0]+abspos[0], pos[1]+abspos[1])
+        dm = self.boss.get_service('language').get_documentator(
+            self._current.document)
+        if not dm:
+            return
+        docu = dm.get_documentation(self._com.get_buffer_contents(),
+                                    self._com.get_cursor_offset())
+        #print docus
+        if self._docwin:
+            self._docwin.destroy()
+        if not docu:
+            self.boss.get_service('notify').notify(
+                data=_('No documentation found'), timeout=2000)
+            return
+        pd = PidaDocWindow(documentation=docu)
+        if not pd.valid:
+            self.notify_user(_("No documentation found"), 
+                             title=_("Show documentation"),
+                             quick=True)
+            return
+        pd.connect("destroy-event", self.on_doc_destroy)
+        self._current.editor.props.buffer.connect(
+            'cursor-moved', self.do_doc_destroy)
+        #pd.move(rpos[0], rpos[1] + rec.height)
+        self._docwin = pd
+        pd.present()
+
+    def do_doc_destroy(self, *args):
+        if self._docwin:
+            self._docwin.destroy()
+            self._docwin = None
+
+    def on_doc_destroy(self, *args):
+        pass
+
 
     #FIXME list of missing functions
 
