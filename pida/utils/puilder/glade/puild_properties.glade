@@ -290,7 +290,6 @@
                     <property name="visible">True</property>
                     <child>
                       <placeholder/>
-                      <packing/>
                     </child>
                   </object>
                   <packing>
