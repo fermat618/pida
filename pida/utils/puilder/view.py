@@ -339,10 +339,18 @@ class ActionView(GladeSlaveDelegate):
             self.set_action(action)
 
     def set_action(self, action):
-        raise NotImplementedError
+        # call this from subclasses
+        if action.options.get('ignore_fail'):
+            self.ignore_fail.set_active(True)
+        else:
+            self.ignore_fail.set_active(False)
+
+    def on_ignore_fail__toggled(self, check):
+        self.action.options['ignore_fail'] = check.get_active()
 
     def create_ui(self):
         raise NotImplementedError
+
 
 
 
@@ -359,12 +367,14 @@ class ShellActionView(ActionView):
         pass
 
     def set_action(self, action):
+        ActionView.set_action(self, action)
         self.command.set_text(action.value)
-        if action.options.has_key('cwd') and action.options['cwd']:
+        if action.options.get('cwd'):
             self.cwd.set_current_folder(action.options['cwd'])
             self.cwd_on.props.active = True
         else:
             self.cwd_on.props.active = False
+
 
     def on_cwd_on__toggled(self, entry):
         self.cwd.props.sensitive = entry.props.active
@@ -450,7 +460,6 @@ class TargetActionView(ActionView):
             return
         if self.block:
             return
-        print ['chann', cmb.read()]
         self.action.value = cmb.read()
 
 action_views = {

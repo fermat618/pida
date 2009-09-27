@@ -5,7 +5,7 @@
 """
 
 
-import os, sys
+import os, sys, traceback
 from subprocess import Popen, PIPE, STDOUT
 from StringIO import StringIO
 from optparse import OptionParser
@@ -28,6 +28,9 @@ def _info(*msg):
 STDOUT = 1
 STDERR = 2
 
+class ActionBuildError(RuntimeError):
+    pass
+
 class Data(str):
     def __new__(cls, s, fd=STDOUT):
         rv = super(Data, cls).__new__(cls, s)
@@ -47,7 +50,6 @@ class OutputBuffer(StringIO):
         line = Data(s)
         line.fd = fd
         StringIO.write(self, line)
-
 
     def __repr__(self):
         return "<OutputBuffer %r>"%self.getvalue()
@@ -161,14 +163,16 @@ def _execute_external(cmd, cwd):
                       stdout=None, stderr=None)
         stdout, stderr = proc.communicate()
 
-    return buffer
+    return buffer, proc.returncode
 
 
 def execute_shell_action(project, build, action):
     """Execute a shell action"""
     cwd = action.options.get('cwd', project)
     cmd = action.value
-    return _execute_external(cmd, cwd)
+    output, returncode = _execute_external(cmd, cwd)
+    return output, not returncode
+
 
 
 def _execute_python(source_directory, build, value):
@@ -184,12 +188,17 @@ def execute_python_action(project, build, action):
     s = StringIO()
     oldout = sys.stdout
     sys.stdout = s
-    _execute_python(project, build, action.value)
+    try:
+        _execute_python(project, build, action.value)
+        success = True
+    except Exception, e:
+        traceback.print_exc(file=s)
+        success = False
     s.seek(0)
     data = s.read()
     sys.stdout = oldout
     sys.stdout.write(data)
-    return data
+    return data, success
 
 def execute_external_action(project, build, action):
     """Execute an external action"""
@@ -199,7 +208,8 @@ def execute_external_action(project, build, action):
         action.value,
     )
     cwd = action.options.get('cwd', project)
-    return _execute_external(cmd, cwd)
+    data, returncode = _execute_external(cmd, cwd)
+    return data, not returncode
 
 
 executors = {
@@ -293,8 +303,14 @@ def execute_build(build, target_name, project_directory=None):
             _info('--', 'Warning: Circular action ignored: %s' % action.target.name, '--')
         else:
             _info('Executing: [%s]' % action.type, '--', action.value, '--')
-            yield execute_action(build, action, project_directory)
-            _info('--')
+            result, success = execute_action(build, action, project_directory)
+            if success:
+                yield result
+            elif action.options['ignore_fail']:
+                _info('--', 'Ignoring error in action', '--')
+                yield result
+            else:
+                raise ActionBuildError()
 
 
 def execute_target(project_file, target_name, project_directory=None):
@@ -307,8 +323,12 @@ def execute_project(project_directory, target_name):
     project_file = Project.data_dir_path(project_directory, 'project.json')
     _info('Build file path: %s' % project_file, '--')
     sys.path.insert(0, project_directory)
-    for action in execute_target(project_file, target_name, project_directory):
-        pass
+    try:
+        for action in execute_target(project_file, target_name, project_directory):
+            pass
+        _info('--', 'Build completed.')
+    except ActionBuildError:
+        _info('--', 'Error: Build failed.')
 
 
 execute = execute_project

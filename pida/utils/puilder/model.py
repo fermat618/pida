@@ -143,7 +143,9 @@ class Action(object):
     def __init__(self):
         self.type = ''
         self.value = ''
-        self.options = {}
+        self.options = {
+            'ignore_fail': False,
+        }
 
     def for_serialize(self):
         return {
