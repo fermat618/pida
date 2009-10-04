@@ -4,6 +4,7 @@ from __future__ import with_statement
 
 # stdlib imports
 import textwrap
+import os
 from collections import defaultdict
 
 # PIDA imports
@@ -18,6 +19,30 @@ from pida.services.language import DOCTYPES
 from docutils import nodes
 from docutils.core import publish_doctree
 
+# Sphinx imports
+try:
+    # importing the BuildEnvironment will automatically register all Sphinx
+    # specific directives and roles within the already imported docutils.
+    from sphinx.environment import BuildEnvironment as SphinxBuildEnvironment
+    from sphinx.config import Config as SphinxConfig
+    sphinx_available = True
+except ImportError:
+    sphinx_available = False
+
+if sphinx_available:
+# TODO figure out which Sphinx config to use. This is important since we have
+# to enable all necessary extensions. First check if the configuration
+# specifies a conf.py otherwise travel up the directory hierarchy (max to the
+# project root directory) to find it.
+    #use_sphinx = within_sphinx_environment():
+    use_sphinx = True;
+# TODO config option to deactive Sphinx (for performance)
+# elif conf.do_not_use_sphinx:
+#     use_sphinx = False
+else:
+    use_sphinx = False
+
+
 # --- common plugin code ------------------------------------------------------
 
 # TODO: currently the Validator and the Outliner call this function and parse
@@ -28,7 +53,24 @@ def parse_rst(document):
     """
     with open(document.filename) as f:
         rst_data = f.read()
-    doctree = publish_doctree(rst_data, source_path = document.filename)
+    settings_overrides = None
+    if use_sphinx:
+        config = SphinxConfig (None, None, None, None)
+        env = SphinxBuildEnvironment (os.path.dirname(document.filename),
+                                      "", config)
+        # make toctree directive happy (sphinx/directives/other.py)
+        env.docname = document.filename
+        env.found_docs = set([document.filename])
+        settings_overrides = {'env': env}
+
+        # Using the Sphinx mechanism to save a pickled doctree to disc
+        # will speed up a subsequent build but since saving the document is
+        # most probably done more often than building we do not use this
+        # caching method. Or should we? See BuildEnvironment.read_doc()
+
+    doctree = publish_doctree(rst_data,
+                              source_path = document.filename,
+                              settings_overrides = settings_overrides)
     return doctree
 
 # --- Outliner support --------------------------------------------------------
