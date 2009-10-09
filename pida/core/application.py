@@ -81,6 +81,9 @@ from pida.core.environment import opts, on_windows
 from pida.core.boss import Boss
 
 def run_pida():
+    #XXX: nasty compat hack
+    import os
+    os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     b = Boss()
 
     # win32 has no signal support

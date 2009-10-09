@@ -20,7 +20,11 @@ import os, sys
 import vim
 
 # just in case, our pida might not be in the default path
-sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
+path = vim.eval('$PIDA_PATH')
+if path is None:
+    #XXX: hackish, asume we are in the main pida dir
+    path = os.getcwd()
+sys.path.insert(0, os.path.dirname(path))
 
 
 import gtk, gobject

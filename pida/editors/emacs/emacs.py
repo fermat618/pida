@@ -179,7 +179,11 @@ class Emacs(EditorService):
 
 
     def stop(self):
-        self._client.quit()
+        try:
+            self._client.quit()
+        except AttributeError:
+            # gets stopped before the client can register
+            pass
 
     def _get_current_document(self):
         return self._current
