@@ -5,7 +5,7 @@ pytest_plugins = "unittest",
 import py
 from pida.utils.testing.mock import Mock
 
-collect_ignore = ['tools/skeleton']
+collect_ignore = ['tools/skeleton', 'externals']
 
 class Module(py.test.collect.Module):
 
