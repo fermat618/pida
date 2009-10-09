@@ -98,7 +98,7 @@ class RegextoolkitView(PidaGladeView):
 
         buf = self.txtInput.get_buffer()
         buf.remove_all_tags(buf.get_start_iter(), buf.get_end_iter())
-
+        tagscycle=itertools.cycle(self.buf_tags)
         for m in ms:
             for idx in range(len(m.groups())):
                 pos = idx+1
@@ -106,8 +106,7 @@ class RegextoolkitView(PidaGladeView):
 
                 istart=buf.get_iter_at_offset(m.start(pos))
                 iend=buf.get_iter_at_offset(m.end(pos))
-                #buf.apply_tag(buf.get_tag_table().lookup(self.buf_tags[curtagidx]), istart, iend)
-                buf.apply_tag_by_name(self.buf_tags[tag], istart, iend)
+                buf.apply_tag_by_name(tagscycle.next(), istart, iend)
 
     def on_btnExecute_clicked(self, widget, *args):
 
