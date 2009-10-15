@@ -256,6 +256,10 @@ class VimDBUSService(Object):
     @method(DBUS_NS, out_signature='i')
     def get_cursor_offset(self):
         return get_offset()
+
+    @method(DBUS_NS, out_signature='s')
+    def get_buffer_contents(self):
+        return '\n'.join(vim.current.buffer)
     # Signals
 
     @signal(DBUS_NS)

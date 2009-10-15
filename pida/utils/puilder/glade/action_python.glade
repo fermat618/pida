@@ -43,7 +43,14 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+              <object class="GtkCheckButton" id="ignore_fail">
+                <property name="visible">True</property>
+                <property context="yes" name="label" translatable="yes">Continue on failure</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">2</property>
+              </packing>
         </child>
       </object>
     </child>
