@@ -109,11 +109,11 @@ class Document(object):
             self.filename = os.path.realpath(filename)
         else:
             self.filename = None
-        self.project = project
         self.editor = None
         self._list = []
         self._str = ""
         self.creation_time = time.time()
+        self._project = project
 
         if filename is None:
             global new_file_index
@@ -122,12 +122,31 @@ class Document(object):
         else:
             self.newfile_index = None
 
-        if project is None:
-            self.project, self.project_relative_path = self.get_project_relative_path()
-        else:
-            self.project_relative_path = project.get_relative_path_for(filename)
-
         self.clear()
+
+
+    def project_and_path(self):
+        if self.filename is None:
+            return None, None
+        if self.boss is not None:
+            return self.boss.cmd('project', 'get_project_for_document', document=self)
+
+    @property
+    def project(self):
+        if self._project is not None:
+            return self._project
+        pp = self.project_and_path()
+        if pp is not None:
+            self._project = pp[0]
+            return pp[0]
+
+    @property
+    def project_relative_path(self):
+        pp = self.project_and_path()
+        if pp is not None:
+            return pp[1]
+        return os.path.join(*os.path.split(self.directory)[-2:])
+
 
     def clear(self):
         """
@@ -441,24 +460,6 @@ class Document(object):
             return self.project.display_name
         else:
             return ''
-
-    def get_project_relative_path(self):
-        """
-        Returns the relative path to Project's root
-        """
-        if self.filename is None:
-            return None, None
-
-        #XXX: move to buffer manager
-        if self.boss is None:
-            return None, os.path.join(*os.path.split(self.directory)[-2:])
-        match = self.boss.cmd('project', 'get_project_for_document', document=self)
-        if match is None:
-            return None, os.path.join(*os.path.split(self.directory)[-2:])
-        else:
-            project, path = match
-            return project, path
-
 
     @property
     def is_new(self):
