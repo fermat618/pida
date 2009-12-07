@@ -117,13 +117,13 @@ class ProjectSetupView(PidaView):
 
     def create_ui(self):
         self.script_view = PuilderView()
-        self.script_view.show()
+        self.script_view.widget.show() #XXX: why was that here
         self.script_view.set_execute_method(self.test_execute)
         self.script_view.connect('cancel-request',
                                  self._on_script_view__cancel_request)
         self.script_view.connect('project-saved',
                                  self._on_script_view__project_saved)
-        self.add_main_widget(self.script_view.get_toplevel())
+        self.add_main_widget(self.script_view.widget)
 
     def test_execute(self, target, project):
         self.svc.execute_target(None, target, project)

@@ -9,6 +9,7 @@ import gtk, gobject
 from kiwi.ui.delegates import GladeSlaveDelegate, SlaveDelegate
 from kiwi.utils import gsignal, gproperty, type_register, PropertyObject
 
+from pygtkhelpers.delegates import SlaveView
 
 
 from pida.core.environment import get_pixmap_path
@@ -128,33 +129,31 @@ class PidaViewMixin(object):
                                  'which is not in a pane'))
 
 
-class PidaGladeView(GladeSlaveDelegate, PidaViewMixin):
+class PidaView(SlaveView, PidaViewMixin):
+
+    gladefile = None
 
     def __init__(self, service, title=None, icon=None, *args, **kw):
-        if hasattr(self, 'locale') and self.locale is not None:
-            self.locale.bindglade()
+        if not self.builder_file:
+            self.builder_file = self.gladefile
         self.svc = service
-        GladeSlaveDelegate.__init__(self, *args, **kw)
         self.label_text = title or self.label_text
         self.icon_name = icon or self.icon_name
-        self.create_ui()
         if self.key:
-            self.toplevel.set_name(self.key.replace(".", "_"))
+            pass
+            #self.toplevel.set_name(self.key.replace(".", "_"))
+        super(PidaView, self).__init__()
 
-class PidaView(SlaveDelegate, PidaViewMixin):
+    def get_toplevel(self):
+        return self.widget
 
-    def __init__(self, service, title=None, icon=None, *args, **kw):
-        self.svc = service
-        self._main_widget = gtk.VBox()
-        SlaveDelegate.__init__(self, toplevel=self._main_widget, *args, **kw)
-        self.label_text = title or self.label_text
-        self.icon_name = icon or self.icon_name
-        self.create_ui()
-        if self.key:
-            self.toplevel.set_name(self.key.replace(".", "_"))
+    toplevel = property(get_toplevel)
 
     def add_main_widget(self, widget, *args, **kw):
-        self._main_widget.pack_start(widget, *args, **kw)
+        self.widget.pack_start(widget, *args, **kw)
+
+
+PidaGladeView = PidaView
 
 
 class WindowConfig(object):
