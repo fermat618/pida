@@ -182,8 +182,8 @@ def main():
                     gtk.main_quit()
 
         sw = WorkspaceWindow(command=command)
-        sw.show()
-        #this mainloop will exist when the workspacewindow is closes
+        sw.widget.show()
+        #this mainloop will exit when the workspacewindow is closes
         gtk.main()
 
 

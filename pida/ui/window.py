@@ -10,6 +10,8 @@ from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_inpu
 from kiwi.ui.views import BaseView
 from kiwi.ui.delegates import GladeDelegate
 
+from pygtkhelpers.delegates import ToplevelView
+
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
@@ -215,8 +217,8 @@ class PidaWindow(Window):
     def __contains__(self, item):
         return self.paned.__contains__(item)
 
-class WorkspaceWindow(GladeDelegate):
-    gladefile = 'workspace_select'
+class WorkspaceWindow(ToplevelView):
+    builder_file = 'workspace_select'
     
     class Entry(object):
         id = 0
@@ -247,7 +249,7 @@ class WorkspaceWindow(GladeDelegate):
         super(WorkspaceWindow, self).__init__()
 
         #self.set_role('workspace') 
-        self.toplevel.set_name('Pidaworkspace')
+        self.widget.set_name('Pidaworkspace')
 
         from kiwi.environ import environ
         self.pic_on = gtk.gdk.pixbuf_new_from_file(
