@@ -6,7 +6,6 @@ from kiwi.environ import Library
 lib = Library('pida.utils.puilder', root='.')
 lib.add_global_resources(glade='glade')
 
-from kiwi.ui.delegates import GladeDelegate, GladeSlaveDelegate
 from pygtkhelpers.delegates import SlaveView, ToplevelView, gsignal
 
 from kiwi.ui.objectlist import Column
