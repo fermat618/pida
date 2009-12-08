@@ -86,7 +86,7 @@ class PidaViewWidget(PropertyObject, gtk.VBox):
         self.add_main_widget(widget)
 
 
-class PidaViewMixin(object):
+class PidaView(SlaveView):
 
     # Set this to make your views memorable.
     key = None
@@ -102,11 +102,8 @@ class PidaViewMixin(object):
     def create_tab_label_icon(self):
         return gtk.image_new_from_stock(self.icon_name, gtk.ICON_SIZE_MENU)
 
-    def get_tab_label_text(self):
-        return self.label_text
-
     def get_parent_window(self):
-        return self.get_toplevel().get_parent_window()
+        return self.toplevel.get_parent_window()
 
     parent_window = property(get_parent_window)
 
@@ -115,21 +112,6 @@ class PidaViewMixin(object):
 
     def can_be_closed(self):
         return False
-
-    def set_pane_label(self, label_text=None, icon_name=None):
-        if self.pane is not None:
-            if icon_name is None:
-                icon_name = self.icon_name
-            if label_text is None:
-                label_text = self.label_text
-            label = PaneLabel(icon_name, None, label_text)
-            self.pane.set_property('label', label)
-        else:
-            self.svc.log.error(_('Attempted to set a pane label on a view '
-                                 'which is not in a pane'))
-
-
-class PidaView(SlaveView, PidaViewMixin):
 
     gladefile = None
 
