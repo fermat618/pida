@@ -10,7 +10,7 @@ import gtk, gobject
 from glob import fnmatch
 
 from kiwi.ui.objectlist import Column
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaView
 from pida.core.charfinder import detect_text
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
@@ -18,8 +18,7 @@ from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask, gcall
-from pida.utils.testing import refresh_gui
+from pida.utils.gthreads import GeneratorTask
 
 # locale
 from pida.core.locale import Locale
@@ -143,7 +142,7 @@ class GrepperActionsConfig(ActionsConfig):
             self.svc.error_dlg(_('There is no current document.'))
 
 
-class GrepperView(PidaGladeView):
+class GrepperView(PidaView):
     gladefile = 'grepper_window'
     locale = locale
     label_text = _('Find in Files')
