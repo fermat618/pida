@@ -12,11 +12,7 @@ import os
 # PIDA Imports
 from pida.core.environment import pida_home, workspace_name
 from pida.core.service import Service
-from pida.core.features import FeaturesConfig
-from pida.core.commands import CommandsConfig
-from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.ui.views import PidaView
 
 from pida.utils.pyconsole import Console
@@ -32,7 +28,7 @@ class ManholeActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_manhole',
-            TYPE_TOGGLE,
+            gtk.ToggleAction,
             _('PIDA Internal Shell'),
             _('Open the PIDA Internal Shell'),
             'face-monkey',
