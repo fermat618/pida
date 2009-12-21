@@ -7,18 +7,9 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-# gtk import(s)
 import gtk
-import gobject
-
-# pida core import(s)
-from pida.core.base import BaseConfig
 from pida.core.options import OptionsConfig
-import warnings
-
-# kiwi imports
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
-
 
 
 class PidaMenuToolAction(gtk.Action):
