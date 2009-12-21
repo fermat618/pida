@@ -6,11 +6,10 @@
 
 import gtk
 from gtk import gdk
-from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
-from kiwi.ui.views import BaseView
-from kiwi.ui.delegates import GladeDelegate
+from kiwi.ui.dialogs import save, open as opendlg
 
 from pygtkhelpers.delegates import ToplevelView
+from pygtkhelpers.ui.dialogs import error, info, yesno
 
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
