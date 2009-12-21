@@ -21,7 +21,7 @@ from kiwi.ui.widgets.colorbutton import ProxyColorButton
 from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
 from kiwi.utils import gsignal
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 from pida.core.options import Color
 
