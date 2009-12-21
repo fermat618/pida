@@ -14,9 +14,6 @@ import sys
 import warnings
 import traceback
 
-
-from pida.core.signalhandler import handle_signals
-
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -84,9 +81,6 @@ def run_pida():
     os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     b = Boss()
 
-    # win32 has no signal support
-    if not environment.on_windows:
-        handle_signals(b)
     # handle start params
     try:
         start_success = b.start()
