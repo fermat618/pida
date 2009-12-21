@@ -515,7 +515,6 @@ class Plugins(Service):
         # this will gracefully ignore not installed plugins
         self.delete(item, force=True)
         
-        import tarfile
         io = StringIO.StringIO(content)
         tar = tarfile.TarFile.gzopen(None, fileobj=io)
         tar.extractall(plugins_dir)

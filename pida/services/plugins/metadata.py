@@ -8,8 +8,6 @@
 
 """
 from __future__ import with_statement
-from simplejson import loads
-import urllib2
 
 import os
 

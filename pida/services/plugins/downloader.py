@@ -2,10 +2,8 @@
 
 import re
 import urllib2
-from xml.etree import ElementTree
 from . import metadata
 from urllib import basejoin
-from collections import defaultdict
 import logging
 log = logging.getLogger('pida.services.plugins.downloader')
 #XXX: ugly hack to avout dealing with html trees
@@ -73,7 +71,7 @@ def find_urls(url,):
     try:
         fd = urllib2.urlopen(url)
     except urllib2.URLError, e:
-        log.warning(_("Can't contact plugin website"))
+        log.warning("Can't contact plugin website")
         return ()
     data = fd.read()
     return link_re.findall(data)
