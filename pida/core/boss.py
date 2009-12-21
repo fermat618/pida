@@ -10,14 +10,11 @@
     :copyright: 2005-2008 by The PIDA Project
 """
 
-import os
 import gtk
 import sys
 
-from pida.core.environment import (is_firstrun, firstrun_filename, is_safe_mode,
-    workspace_name)
-from .options import OptionsManager
-from pida.core.servicemanager import ServiceManager
+from pida.core.environment import (is_firstrun, firstrun_filename)
+from pida.core.servicemanager import ServiceManager, ServiceModuleError
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
