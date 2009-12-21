@@ -6,10 +6,9 @@
 
 import gtk
 from gtk import gdk
-from kiwi.ui.dialogs import save, open as opendlg
 
 from pygtkhelpers.delegates import ToplevelView
-from pygtkhelpers.ui.dialogs import error, info, yesno
+from pygtkhelpers.ui.dialogs import error, info, yesno, save, open as opendlg
 
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
