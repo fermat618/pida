@@ -11,8 +11,6 @@
 """
 
 
-import os
-import warnings
 import logging
 import logging.handlers
 
