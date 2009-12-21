@@ -590,15 +590,15 @@ class Window(Service):
         for pane in self.boss.window.paned.list_panes(every=True):
             action_name = "show_window_%s" %i
             act = gtk.Action(action_name,
-                "_%s" %pane.view.label_text,
+                "_%s" %pane.label_text,
                 '',
                 '')
-            act.connect('activate', self._on_window_action, pane.view)
+            act.connect('activate', self._on_window_action, pane)
             self._action_group.add_action(act)
             self.boss.window._uim._uim.add_ui(
                 self._window_list_id,
                 "ui/menubar/AddMenu/WindowMenu/window_list", 
-                "_%s" %pane.view.label_text, 
+                "_%s" %pane.label_text, 
                 action_name, 
                 gtk.UI_MANAGER_MENUITEM, 
                 False)            #mi = act.create_menu_item()
