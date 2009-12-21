@@ -53,10 +53,7 @@ class FileInfo(object):
         self.relpath = relpath
         self.basename = os.path.basename(relpath)
         self.dirname = os.path.dirname(relpath)
-        if "." in self.basename:
-            self.ext = self.basename[self.basename.rfind(os.path.extsep)+1:]
-        else:
-            self.ext = ""
+        self.ext = os.path.splitext(self.basename)[1]
         self.doctype = None
         self.is_dir = os.path.isdir(path)
         self.is_file = os.path.isfile(path)
