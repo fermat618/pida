@@ -4,7 +4,7 @@
     :license: GPL2 or later
 """
 
-import os, os.path
+import os
 from pida.core.projects import Project
 from .project import ProjectService
 from pida.utils.testing.mock import Mock

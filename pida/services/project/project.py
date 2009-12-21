@@ -9,7 +9,8 @@
     :license: GPL 2 or later
 """
 from __future__ import with_statement
-import os, sys, os.path
+import os
+import sys
 from collections import defaultdict
 from functools import partial
 
