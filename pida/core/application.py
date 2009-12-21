@@ -11,7 +11,6 @@
 # system import(s)
 import os
 import sys
-import signal
 import warnings
 import traceback
 
@@ -46,15 +45,15 @@ except ImportError, e:
 
 
 try:
-    from kiwi.ui.dialogs import error
+    from pygtkhelpers.ui.dialogs import error
     def die_gui(message, exception):
         """Die in a GUI way."""
         error(_('Fatal error, cannot start PIDA'), 
               long='%s\n%s' % (message, exception))
         die_cli(message)
-
+    import kiwi #XXX: kill later
 except ImportError, e:
-    die_cli(_('Kiwi needs to be installed to run PIDA'), e)
+    die_cli(_('pygtkhelpers/kiwi needs to be installed to run PIDA'), e)
 
 
 # Python 2.5
@@ -63,21 +62,20 @@ if sys.version_info < (2, 5):
         {'major':sys.version_info[:2][0], 'minor':sys.version_info[:2][1]})
 
 
-# This can test if PIDA is installed
-try:
-    import pida
-except ImportError, e:
-    die_gui(_('The pida package could not be found.'), e)
-
 # Prevent PIDA from being run as root.
 if os.getuid() == 0:
     die_gui("Pida should not be run as root", "Pida is dying")
 
+# This can test if PIDA is installed
+# also we have to import pdbus here so it gets initialized very early
+try:
+    import pida.core.pdbus
+except ImportError, e:
+    die_gui(_('The pida package could not be found.'), e)
 
-# we have to import pdbus here so it gets initialized very early
-import pida.core.pdbus
 
-from pida.core.environment import opts, on_windows
+
+from pida.core import environment
 from pida.core.boss import Boss
 
 def run_pida():
@@ -87,10 +85,9 @@ def run_pida():
     b = Boss()
 
     # win32 has no signal support
-    if not on_windows:
+    if not environment.on_windows:
         handle_signals(b)
     # handle start params
-    from pida.core import environment
     try:
         start_success = b.start()
         if environment.get_args():
@@ -120,15 +117,12 @@ def set_trace():
 
 def main():
     global opts
-    from pida.core import environment
     environment.parse_args(sys.argv)
     opts = environment.opts
-    
-    from pida.core import options
 
     #options.create_default_manager(pida.core.environment.workspace_name())
-    import pida.core.log
-    pida.core.log.setup()
+    from pida.core import log
+    log.setup()
     
     if not opts.debug:
         warnings.filterwarnings("ignore")
@@ -143,7 +137,6 @@ def main():
     om = OptionsManager(workspace="default")
 
     def do_workspace_manager():
-        from pida.utils.pdbus import list_pida_instances
         from pida.ui.window import WorkspaceWindow
 
         def kill(sm):
