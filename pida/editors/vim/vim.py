@@ -279,20 +279,30 @@ class Vim(EditorService):
         return self._current_line
 
     def delete_current_word(self):
-        self._com.delete_cword(self.server)
+        self._com.delete_cword()
 
     def insert_text(self, text):
-        self._com.insert_text(self.server, text)
+        self._com.insert_text(text)
 
     def call_with_current_word(self, callback):
-        return self._com.get_cword(self.server, callback)
+        return self._com.get_current_word(
+                reply_handler=callback,
+                error_handler=self.log.exception,
+                )
 
     def call_with_selection_or_word(self, callback):
         #FIXME: test for selection
-        return self._com.get_cword(self.server, callback)
-
+        return self._com.get_current_word(
+                reply_handler=callback,
+                error_handler=self.log.exception,
+                )
+        
     def call_with_selection(self, callback):
-        return self._com.get_selection(self.server, callback)
+        
+        return self._com.get_selection(
+                reply_handler=callback,
+                error_handler=self.log.exception,
+                )
 
     def set_path(self, path):
         return self._com.cd(path)
