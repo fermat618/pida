@@ -23,7 +23,6 @@ from shutil import rmtree
 import simplejson
 
 
-from os import path
 import os
 
 # locale
@@ -55,8 +54,8 @@ def list_workspaces():
     """Returns a list with all workspace names """
     workspaces = get_settings_path('workspaces')
     return [ x for x in os.listdir(workspaces)
-                if path.isdir(
-                    path.join(workspaces, x)
+                if os.path.isdir(
+                    os.path.join(workspaces, x)
                 )
             ]
 
