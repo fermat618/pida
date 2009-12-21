@@ -109,11 +109,6 @@ class ApplicationDbus(DbusConfig):
     def PONG_PIDA_INSTANCE(self, uid):
         pass
 
-
-    @LSIGNAL(signature="sissi")
-    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, workspace, project, opened_files):
-        pass
-
     @LSIGNAL(signature="sissi")
     def PONG_PIDA_INSTANCE_EXT(self, uid, pid, workspace, project, opened_files):
         pass
