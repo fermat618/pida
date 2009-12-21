@@ -19,11 +19,11 @@ _ = locale.gettext
 
 def handle_signals(boss):
 
-    def SIGTERM(self, signum, frame):
+    def SIGTERM(signum, frame):
         log.error(_('PIDA stopped by SIGTERM')) 
         boss.stop(force=True)
 
-    def SIGINT(self, signum, frame):
+    def SIGINT(signum, frame):
         log.info(_('PIDA stopped by SIGINT')) 
         boss.stop(force=True)
 

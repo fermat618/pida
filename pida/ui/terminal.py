@@ -19,7 +19,7 @@ import subprocess
 import gtk
 from collections import defaultdict
 
-from kiwi.utils import gsignal
+from pygtkhelpers.utils import gsignal
 #FIXME win32 should get a terminal
 if sys.platform != 'win32':
     from vte import Terminal
