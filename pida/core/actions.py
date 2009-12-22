@@ -6,7 +6,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 from pida.core.options import OptionsConfig
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
@@ -101,7 +101,8 @@ class ActionsConfig(OptionsConfig):
         if self.svc.boss is not None:
             self.ui_merge_id = self.svc.boss.add_action_group_and_ui(
                 self._actions,
-                '%s.xml' % self.svc.get_name()
+                self.svc.__package__,
+                'uidef/%s.xml' % self.svc.get_name(),
             )
 
     def create_actions(self):

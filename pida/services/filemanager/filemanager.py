@@ -3,7 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 
 from os import listdir, path
@@ -25,7 +25,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.core.environment import get_uidef_path, on_windows
+from pida.core.environment import on_windows
 from pida.core.log import get_logger
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
@@ -221,7 +221,10 @@ class FilemanagerView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('filemanager-toolbar.xml'))
+        self._uim.add_ui_from_string(
+                pkgutil.get_data(
+                    __name__,
+                    'uidef/filemanager-toolbar.xml'))
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
@@ -633,9 +636,9 @@ class FilemanagerFeatureConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
+            (self.svc, 'filemanager-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
+            (self.svc, 'filemanager-dir-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
                                FilemanagerWindowConfig)
 

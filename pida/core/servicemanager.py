@@ -67,6 +67,7 @@ class ServiceLoader(object):
         try:
             module = __import__(module, fromlist=['*'], level=0)
         except ImportError, e:
+            log.exception(e)
             raise ServiceModuleError(module), None, None
         self._register_service_env(module)
 
@@ -74,6 +75,7 @@ class ServiceLoader(object):
             service = module.Service
             service.__path__ = os.path.dirname(module.__file__) #XXX: hack
             service.__loader__ = self
+            service.__package__ = '%s.%s'%(self._name, name)
             return service
         except AttributeError, e:
 

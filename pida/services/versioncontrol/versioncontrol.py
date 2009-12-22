@@ -281,9 +281,9 @@ class VersioncontrolFeaturesConfig(FeaturesConfig):
         self.subscribe_foreign('filemanager', 'file_hidden_check', 
             self.versioncontrol)
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'versioncontrol-file-menu.xml'))
+            (self.svc, 'versioncontrol-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'versioncontrol-dir-menu.xml'))
+            (self.svc, 'versioncontrol-dir-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
             VersioncontrolCommitWindowConfig)
         self.subscribe_foreign('window', 'window-config',

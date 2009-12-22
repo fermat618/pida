@@ -31,9 +31,6 @@ library.add_global_resource('data', 'resources/data')
 def get_resource_path(resource, name):
     return environ.find_resource(resource, name)
 
-def get_uidef_path(name):
-    return get_resource_path('uidef', name)
-
 def get_glade_path(name):
     return get_resource_path('glade', name)
 

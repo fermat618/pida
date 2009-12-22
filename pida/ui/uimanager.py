@@ -1,7 +1,6 @@
 
+import pkgutil
 import gtk
-
-from pida.core.environment import get_uidef_path
 
 # locale
 from pida.core.locale import Locale
@@ -31,8 +30,8 @@ class PidaUIManager(object):
         self._load_base_ui()
 
     def _load_base_ui(self):
-        uidef = get_uidef_path('base.xml')
-        self.add_ui_from_file(uidef)
+        uidef = pkgutil.get_data('pida', 'resources/uidef/base.xml')
+        self.add_ui_from_string(uidef)
 
     def _load_base_actions(self):
         self._base_ag = gtk.ActionGroup(name='base_actions')

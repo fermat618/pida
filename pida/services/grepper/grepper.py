@@ -312,7 +312,7 @@ class GrepperFeatures(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'grepper-dir-menu.xml'))
+            (self.svc, 'grepper-dir-menu.xml'))
 
 
 

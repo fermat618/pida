@@ -34,7 +34,6 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
-from pida.core.environment import get_uidef_path
 
 from pida.core.editors import LineMarker, MarkerInterface
 
@@ -194,7 +193,8 @@ class BookmarkView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('bookmark-toolbar.xml'))
+        uidef_data = pkgutil.get_data(__name__, 'uidef/bookmark-toolbar.xml')
+        self._uim.add_ui_from_string(uidef_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
@@ -352,9 +352,9 @@ class BookmarkFeatures(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'bookmark-file-menu.xml'))
+            (self.svc, 'bookmark-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'bookmark-dir-menu.xml'))
+            (self.svc, 'bookmark-dir-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
             BookmarkWindowConfig)
 

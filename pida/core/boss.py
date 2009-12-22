@@ -125,9 +125,9 @@ class Boss(object):
     def stop_plugin(self, name):
         return self._sm.stop_plugin(name)
 
-    def add_action_group_and_ui(self, actiongroup, uidef):
+    def add_action_group_and_ui(self, actiongroup, package, path):
         self.window.add_action_group(actiongroup)
-        return self.window.add_uidef(uidef)
+        return self.window.add_uidef(package, path)
 
     def remove_action_group_and_ui(self, actiongroup, ui_merge_id):
         self.window.remove_uidef(ui_merge_id)

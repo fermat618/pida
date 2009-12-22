@@ -3,7 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 from gtk import gdk
 
@@ -14,7 +14,7 @@ from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
 from pida.core.log import log
-from pida.core.environment import get_uidef_path, get_pixmap_path
+from pida.core.environment import get_pixmap_path
 from pida.core.actions import accelerator_group, global_accelerator_group
 from pida.utils.gthreads import gcall
 
@@ -141,13 +141,13 @@ class PidaWindow(Window):
     def add_action_group(self, actiongroup):
         self._uim.add_action_group(actiongroup)
 
-    def add_uidef(self, filename):
+    def add_uidef(self, package, path):
         try:
-            uifile = get_uidef_path(filename)
-            return self._uim.add_ui_from_file(uifile)
+            content = pkgutil.get_data(package, path)
+            return self._uim.add_ui_from_string(content)
         except Exception, e:
-            log.debug('unable to get %s resource: %s' %
-                                (filename, e))
+            log.debug('unable to get %s: %r resource: %s' %
+                                (package, path, e))
 
     def remove_action_group(self, actiongroup):
         self._uim.remove_action_group(actiongroup)

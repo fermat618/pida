@@ -24,6 +24,7 @@ from __future__ import with_statement
 
 import gtk
 import os
+import pkgutil
 import simplejson
 
 from pida.ui.objectlist import AttrSortCombo
@@ -37,7 +38,6 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
-from pida.core.environment import get_uidef_path
 
 from pida.ui.views import PidaView, WindowConfig
 from pida.utils.unique import create_unique_id
@@ -139,7 +139,8 @@ class ChecklistView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('checklist-toolbar.xml'))
+        uim_data = pkgutil.get_data((__name__, 'uidef/checklist-toolbar.xml')
+        self._uim.add_ui_from_string(uim_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)

@@ -372,7 +372,7 @@ class ProjectFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'project-dir-menu.xml'))
+            (self.svc, 'project-dir-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
             ProjectWindowConfig)
 
