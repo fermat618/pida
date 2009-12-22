@@ -6,6 +6,7 @@
 import pkgutil
 import gtk
 from gtk import gdk
+import os
 
 from pygtkhelpers.delegates import ToplevelView
 from pygtkhelpers.ui.dialogs import error, info, yesno, save, open as opendlg
@@ -14,7 +15,6 @@ from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
 from pida.core.log import log
-from pida.core.environment import get_pixmap_path
 from pida.core.actions import accelerator_group, global_accelerator_group
 from pida.utils.gthreads import gcall
 
@@ -49,7 +49,9 @@ class Window(gtk.Window):
     def __init__(self, boss, *args, **kw):
         self._boss = boss
         gtk.Window.__init__(self, *args, **kw)
-        self.set_icon_from_file(get_pixmap_path('pida-icon.png'))
+        self.set_icon_from_file(os.path.join(
+            os.path.dirname(__file__),
+            '../resources/pixmaps/pida-icon.png'))
         self.add_accel_group(accelerator_group)
         self.add_accel_group(global_accelerator_group)
         self.connect('delete-event', self._on_delete_event)
