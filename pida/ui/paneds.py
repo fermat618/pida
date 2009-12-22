@@ -3,13 +3,8 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
-import os
-
 import gtk
 import gobject
-
-from pida.core.environment import pida_home
 
 # Don't import moo twice from different locations when the full editor is
 # being used.
@@ -30,7 +25,7 @@ except ImportError:
     from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
-from kiwi.utils import gsignal
+from pygtkhelpers.utils import gsignal
 from pida.utils.gthreads import gcall
 
 PANE_TERMINAL = 'Terminal'

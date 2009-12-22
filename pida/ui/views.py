@@ -4,14 +4,9 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-import gtk, gobject
-
-from kiwi.utils import gsignal, gproperty, type_register, PropertyObject
+import gtk
 
 from pygtkhelpers.delegates import SlaveView
-
-from pida.utils.unique import create_unique_id
-from pida.ui.paneds import PaneLabel
 
 # locale
 from pida.core.locale import Locale
