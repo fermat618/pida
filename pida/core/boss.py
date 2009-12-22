@@ -11,7 +11,9 @@
 """
 
 import gtk
+import os
 import sys
+import pida
 
 from pida.core.environment import (is_firstrun, firstrun_filename)
 from pida.core.servicemanager import ServiceManager, ServiceModuleError
@@ -65,6 +67,12 @@ class Boss(object):
         if self.quit_before_started:
             return False
         else:
+            self._icons = IconRegister()
+            self._icons.register_file_icons_for_directory(
+                os.path.abspath(os.path.join(
+                    pida.__path__[0],
+                    'resources/pixmaps'
+                )))
             self._sm.activate_services()
             if self.override_editor is not None:
                 self.get_service('editor').set_opt('editor_type',
@@ -74,7 +82,6 @@ class Boss(object):
             if self.quit_before_started:
                 return False
             self._sm.activate_editor(editor_name)
-            self._icons = IconRegister()
             self.window.start()
             self._sm.start_services()
             self._sm.start_editor()

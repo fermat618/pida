@@ -17,11 +17,6 @@ class IconRegister(object):
         self._factory = gtk.IconFactory()
         self._factory.add_default()
         self._register_theme_icons()
-        self._register_file_icons()
-
-    def _register_file_icons(self):
-        for directory in environ.get_resource_paths('pixmaps'):
-            self.register_file_icons_for_directory(directory)
 
     def register_file_icons_for_directory(self, directory):
         for filename in os.listdir(directory):
