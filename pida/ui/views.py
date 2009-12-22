@@ -10,9 +10,6 @@ from kiwi.utils import gsignal, gproperty, type_register, PropertyObject
 
 from pygtkhelpers.delegates import SlaveView
 
-
-from pida.core.environment import get_pixmap_path
-
 from pida.utils.unique import create_unique_id
 from pida.ui.paneds import PaneLabel
 

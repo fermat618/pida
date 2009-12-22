@@ -15,8 +15,6 @@ from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL
 
-from pida.core.environment import get_pixmap_path
-
 
 # locale
 from pida.core.locale import Locale
@@ -68,7 +66,10 @@ class PidaAboutDialog(gtk.AboutDialog):
 
     def _create_logo(self):
         pb = gdk.pixbuf_new_from_file_at_size(
-            get_pixmap_path('pida-icon.svg'), 128, 128)
+            os.path.join(
+                pida.__path__[0], 
+                'resources/pixmaps/pida-icon.svg'),
+            128, 128)
         return pb
 
 class HelpActionsConfig(ActionsConfig):
