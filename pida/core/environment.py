@@ -16,6 +16,7 @@ from optparse import OptionParser
 
 from kiwi.environ import Library, environ
 
+import pida
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -31,22 +32,19 @@ library.add_global_resource('data', 'resources/data')
 def get_resource_path(resource, name):
     return environ.find_resource(resource, name)
 
-def get_glade_path(name):
-    return get_resource_path('glade', name)
-
 def get_pixmap_path(name):
     return get_resource_path('pixmaps', name)
 
 def get_data_path(name):
-    return get_resource_path('data', name)
+    #XXX: hack
+    return os.path.join(pida.__path__[0], 'resources/data', name)
 
 pida_home = os.path.expanduser('~/.pida2')
 firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
 plugins_dir = os.path.join(pida_home, 'plugins')
 settings_dir = os.path.join(pida_home, 'settings')
 
-pida_root_path = os.path.abspath(os.path.join(
-    __file__, os.path.pardir, os.path.pardir, os.path.pardir))
+pida_root_path = os.path.dirname(os.path.abspath(pida.__path__[0]))
 
 for path in pida_home, plugins_dir:
     if not os.path.exists(path):
@@ -60,7 +58,6 @@ gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
 gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
 #XXX: development hack
-import pida
 buildin_plugins_dir = os.path.join(
         os.path.dirname(pida.__path__[0]),
         'pida-plugins')
