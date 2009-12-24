@@ -6,6 +6,14 @@ The events are asynchronous call back for the service. So any other service can
 subscribe its call back to an event, and it will get called back once the event
 occurs.
 
+.. note::
+
+  plugins should avoid publishing own services
+  due to the lack of plugin dependencies
+
+
+
+
 Events definition
 -----------------
 
@@ -35,18 +43,18 @@ So, once you have your 'EventsConfig' ready, you need to implement the
 create_events method so you can have your own new events.::
 
         def create_events(self):
-            self.create_event('myevent')                     # (1)
-            self.subscribe_event('myevent', self.on_myevent) # (2)
-            self.create_event('my_foreign_event')
+            self.publish('myevent')                     # (1)
+            self.subscribe('myevent', self.on_myevent) # (2)
+            self.publish('my_foreign_event')
 
         def on_myevent(self, param=None):                     # (3)
             print 'myevent receipt'
             if param != None:
                 print 'with param:', param
 
-Three steps are needed to create an event :
+Three steps are needed to create and use an event :
 
-    (1) You call self.create_event() on the event name
+    (1) You call self.publish(event_name)e
     (2) You subscribe a new callback to the event you just made
     (3) You implement the new event's callback so it acts when it is emitted.
 
@@ -59,18 +67,18 @@ your own service. But you often need to interact with other services
 as well. To do so, you need to implement the subscribe_foreign_events()
 method the following way::
 
-        def subscribe_foreign_events(self):
-            self.subscribe_foreign_event('editor', 'started',
+        def subscribe_all_foreign(self):
+            self.subscribe_foreign('editor', 'started',
                                          self.on_editor_startup)
 
 for each event you want to bind a call back, you need to call the
-subscribe_foreign_event() method. In the example above, when the editor
+subscribe_foreign method. In the example above, when the editor
 service launches the started event, self.on_editor_startup() gets called.::
 
-    self.subscribe_foreign_event('SERVICE_NAME', 'EVENT_NAME', CALLBACK_FUNCTION)
+    self.subscribe_foreign(service_name, event_name, callback)
 
-where *SERVICE_NAME* is the destination service, *EVENT_NAME* the event to bind to,
-*CALLBACK_FUNCTION* the function to be called when the event is emitted.
+where *serice_name* is the destination service, *event_name* the event to bind to,
+*callback* the function to be called when the event is emitted.
 
 Now suppose you want to give other services' programmers an event of your own 
 service. To do so, you need to call create_event() in create_events() with the
@@ -79,9 +87,9 @@ name of your event (ie see 'my_foreign_event' above).
 Then in the foreign service, in the subscribe_foreign_events() method you just
 need to subscribe to the event::
 
-    def subscribe_foreign_events(self):
-        self.subscribe_foreign_event('myservice', 'my_foreign_event',
-                                     self.on_myservice_foreign_event)
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('myservice', 'my_foreign_event',
+                                self.on_myservice_foreign_event)
 
 and finally define your callback.
 
@@ -91,7 +99,12 @@ Emitting Events
 
 Now you have defined and bound all your events in your service and all
 you need is to emit them when you need them to be executed. Well, it's
-fairly simple, just call the emit() method::
+fairly simple, just call the emit() method.
+
+.. XXX outdated
+
+
+.. code-block::
 
         [...]
         self.emit('myevent')

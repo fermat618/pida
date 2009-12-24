@@ -18,8 +18,8 @@ Commands are called on a service using the `cmd` method of a service. Calling co
 For example, execute a shell from a service::
 
     self.boss.cmd(
-        'commander',        <1>
-        'execute_shell',    <2>
+        'commander',        #<1>
+        'execute_shell',    #<2>
     )
 
 1. The target service name
