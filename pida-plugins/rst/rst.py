@@ -87,10 +87,6 @@ def parse_rst(document):
         # trigger the build which will update *all* doctrees if necessary
         sphinx.build(True, '')
         # load the pickeled doctree
-        print "-----------------------"
-        print doctreedir
-        print document.filename
-        print "-----------------------"
 
         doctreefile = os.path.join \
             (doctreedir,
