@@ -3,8 +3,10 @@
 from __future__ import with_statement
 
 # stdlib imports
-import textwrap
 import os
+import sys
+import pickle
+import textwrap
 from collections import defaultdict
 
 # PIDA imports
@@ -20,10 +22,9 @@ from docutils.core import publish_doctree
 
 # Sphinx imports
 try:
-    # importing the BuildEnvironment will automatically register all Sphinx
+    # importing Sphinx will automatically register all Sphinx
     # specific directives and roles within the already imported docutils.
-    from sphinx.environment import BuildEnvironment as SphinxBuildEnvironment
-    from sphinx.config import Config as SphinxConfig
+    from sphinx.application import Sphinx
     sphinx_available = True
 except ImportError:
     sphinx_available = False
@@ -41,8 +42,18 @@ if sphinx_available:
 else:
     use_sphinx = False
 
+# TODO: we need a GUI for this project specific values and a method to save
+# them to disc
+SPHINX_CONFIG = \
+    {'basedir':
+        '/home/bernhard/Documents/src/pida-rst-plugin/pida-plugins/rst/test',
+      'builddir': '_build',
+      'doctreedir': 'doctrees'}
 
 # --- common plugin code ------------------------------------------------------
+
+def do_nothing(*args, **kwargs):
+    pass
 
 # TODO: currently the Validator and the Outliner call this function and parse
 # the complete rst file. Caching the doctree would be cool!
@@ -50,26 +61,45 @@ def parse_rst(document):
     """
     Use docutils to parse the rst file and return the doctree.
     """
+
     with open(document.filename) as f:
         rst_data = f.read()
     settings_overrides = None
-    if use_sphinx:
-        config = SphinxConfig (None, None, None, None)
-        env = SphinxBuildEnvironment (os.path.dirname(document.filename),
-                                      "", config)
-        # make toctree directive happy (sphinx/directives/other.py)
-        env.docname = document.filename
-        env.found_docs = set([document.filename])
-        settings_overrides = {'env': env}
+    if not use_sphinx:
+        # use plain docutils functionality
+        doctree = publish_doctree(rst_data, source_path = document.filename)
+    else:
 
-        # Using the Sphinx mechanism to save a pickled doctree to disc
-        # will speed up a subsequent build but since saving the document is
-        # most probably done more often than building we do not use this
-        # caching method. Or should we? See BuildEnvironment.read_doc()
+        srcdir = confdir = SPHINX_CONFIG['basedir']
+        outdir = os.path.join(confdir, SPHINX_CONFIG['builddir'])
+        doctreedir = os.path.join(outdir, 'doctrees')
+        buildername = "html" # does not really matter
+        confoverrides = {}
+        status = sys.stdout
+        warning = sys.stderr # TODO catch and display in PIDA context!
+        sphinx = Sphinx(srcdir, confdir, outdir, doctreedir, buildername,
+                        confoverrides, status, warning, freshenv=False,
+                        warningiserror=False, tags=None)
+        # overwrite some builder methods to prevent actual output production
+        sphinx.builder.write = do_nothing
+        sphinx.builder.finish = do_nothing
+        sphinx.builder.cleanup = do_nothing
+        # trigger the build which will update *all* doctrees if necessary
+        sphinx.build(True, '')
+        # load the pickeled doctree
+        print "-----------------------"
+        print doctreedir
+        print document.filename
+        print "-----------------------"
 
-    doctree = publish_doctree(rst_data,
-                              source_path = document.filename,
-                              settings_overrides = settings_overrides)
+        doctreefile = os.path.join \
+            (doctreedir,
+             "%s.doctree" % os.path.splitext
+                (os.path.relpath(document.filename, srcdir))[0]
+            )
+        with open(doctreefile) as f:
+            doctree = pickle.load(f)
+
     return doctree
 
 # --- Outliner support --------------------------------------------------------
