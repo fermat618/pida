@@ -8,7 +8,6 @@ import os
 from collections import defaultdict
 
 # PIDA imports
-from pida.core.service import Service
 from pida.core.languages import LanguageService, Outliner, Validator
 from pida.utils.languages import (LANG_PRIO,
     LANG_OUTLINER_TYPES, OutlineItem,
@@ -232,13 +231,10 @@ class RSTValidator(Validator):
 
 # --- register plugin services ------------------------------------------------
 
-class RSTService(LanguageService):
+class Service(LanguageService):
 
     language_name = (DOCTYPES.get_fuzzy('reStructuredText')).internal
     outliner_factory = RSTOutliner
     validator_factory = RSTValidator
-
-# Required Service attribute for service loading
-Service = RSTService
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
