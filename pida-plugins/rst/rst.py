@@ -42,63 +42,64 @@ if sphinx_available:
 else:
     use_sphinx = False
 
-# TODO: we need a GUI for this project specific values and a method to save
-# them to disc
-SPHINX_CONFIG = \
-    {'basedir':
-        '/home/bernhard/Documents/src/pida-rst-plugin/pida-plugins/rst/test',
-      'builddir': '_build',
-      'doctreedir': 'doctrees'}
-
 # --- common plugin code ------------------------------------------------------
 
-def do_nothing(*args, **kwargs):
-    pass
+class RSTPlugin(object):
 
-# TODO: currently the Validator and the Outliner call this function and parse
-# the complete rst file. Caching the doctree would be cool!
-def parse_rst(document):
-    """
-    Use docutils to parse the rst file and return the doctree.
-    """
+    def __init__(self):
+        # TODO: we need a GUI for this project specific values and a method to
+        # save them to disc
+        self.basedir = \
+            '/home/bernhard/Documents/src/pida-rst-plugin/pida-plugins/rst/test'
+        self.builddir = '_build'
+        self.doctreedir = 'doctrees'
 
-    with open(document.filename) as f:
-        rst_data = f.read()
-    settings_overrides = None
-    # Use plain docutils if sphinx is not available/not activated or if the
-    # current document is outside the sphinx directory structure (realtive
-    # path startes with '..')
-    if (not use_sphinx or
-        os.path.relpath(document.filename,
-                        SPHINX_CONFIG['basedir'])[0:2] == '..'):
-        doctree = publish_doctree(rst_data, source_path = document.filename)
-    else:
-        srcdir = confdir = SPHINX_CONFIG['basedir']
-        outdir = os.path.join(confdir, SPHINX_CONFIG['builddir'])
-        doctreedir = os.path.join(outdir, 'doctrees')
-        buildername = "html" # does not really matter
-        confoverrides = {}
-        status = sys.stdout
-        warning = sys.stderr # TODO catch and display in PIDA context!
-        sphinx = Sphinx(srcdir, confdir, outdir, doctreedir, buildername,
-                        confoverrides, status, warning, freshenv=False,
-                        warningiserror=False, tags=None)
-        # overwrite some builder methods to prevent actual output production
-        sphinx.builder.write = do_nothing
-        sphinx.builder.finish = do_nothing
-        sphinx.builder.cleanup = do_nothing
-        # trigger the build which will update *all* doctrees if necessary
-        sphinx.build(True, '')
-        # load the pickeled doctree
-        doctreefile = os.path.join \
-            (doctreedir,
-             "%s.doctree" % os.path.splitext
-                (os.path.relpath(document.filename, srcdir))[0]
-            )
-        with open(doctreefile) as f:
-            doctree = pickle.load(f)
+    @staticmethod
+    def _do_nothing(*args, **kwargs):
+        pass
 
-    return doctree
+    # TODO: currently the Validator and the Outliner call this function and
+    # parse the complete rst file. Caching the doctree would be cool!
+    def parse_rst(self, document):
+        """Use docutils to parse the rst file and return the doctree."""
+
+        with open(document.filename) as f:
+            rst_data = f.read()
+        settings_overrides = None
+        # Use plain docutils if sphinx is not available/not activated or if the
+        # current document is outside the sphinx directory structure (realtive
+        # path startes with '..')
+        if (not use_sphinx or
+            os.path.relpath(document.filename, self.basedir)[0:2] == '..'):
+            doctree = publish_doctree(rst_data, source_path = document.filename)
+        else:
+            srcdir = self.basedir
+            confdir = self.basedir
+            outdir = os.path.join(srcdir, self.builddir)
+            doctreedir = os.path.join(outdir, 'doctrees')
+            buildername = "html" # does not really matter
+            confoverrides = {}
+            status = sys.stdout
+            warning = sys.stderr # TODO catch and display in PIDA context!
+            sphinx = Sphinx(srcdir, confdir, outdir, doctreedir, buildername,
+                            confoverrides, status, warning, freshenv=False,
+                            warningiserror=False, tags=None)
+            # overwrite some builder methods to prevent actual output production
+            sphinx.builder.write = self._do_nothing
+            sphinx.builder.finish = self._do_nothing
+            sphinx.builder.cleanup = self._do_nothing
+            # trigger the build which will update *all* doctrees if necessary
+            sphinx.build(True, '')
+            # load the pickeled doctree
+            doctreefile = os.path.join \
+                (doctreedir,
+                 "%s.doctree" % os.path.splitext
+                    (os.path.relpath(document.filename, srcdir))[0]
+                )
+            with open(doctreefile) as f:
+                doctree = pickle.load(f)
+
+        return doctree
 
 # --- Outliner support --------------------------------------------------------
 
@@ -170,7 +171,8 @@ class RSTOutliner(Outliner):
 
     def get_outline(self):
         self.doc_items = RSTTokenList()
-        self.doctree = parse_rst(self.document)
+        self.rstplugin = RSTPlugin()
+        self.doctree = self.rstplugin.parse_rst(self.document)
         self._recursive_node_walker(self.doctree, 0, None)
         for item in self.doc_items:
             yield item
@@ -202,7 +204,7 @@ class RSTOutliner(Outliner):
                 linenumber = node.line or node.parent.line
                 item_kwargs = {'icon_name': 'source-image'}
         except:
-            pass # ignore node if *something goes wrong
+            pass # ignore node if *something* goes wrong
         else:
             if new_item:
                 item = RSTItem(name=name,
@@ -232,7 +234,8 @@ class RSTValidator(Validator):
     subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
 
     def get_validations(self):
-        self.doctree = parse_rst(self.document)
+        self.rstplugin = RSTPlugin()
+        self.doctree = self.rstplugin.parse_rst(self.document)
         for msg in self.doctree.parse_messages :
             message, type_, filename, lineno = self._parse_error(msg)
             # TODO need to filter out duplicates with no lineno set
