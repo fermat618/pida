@@ -7,6 +7,7 @@ import os
 import sys
 import pickle
 import textwrap
+import simplejson
 from collections import defaultdict
 
 # PIDA imports
@@ -46,13 +47,36 @@ else:
 
 class RSTPlugin(object):
 
-    def __init__(self):
-        # TODO: we need a GUI for this project specific values and a method to
-        # save them to disc
-        self.basedir = \
-            '/home/bernhard/Documents/src/pida-rst-plugin/pida-plugins/rst/test'
-        self.builddir = '_build'
-        self.doctreedir = 'doctrees'
+    def __init__(self, service):
+        self.load(service)
+
+    def save(self, service):
+        # TODO: GUI for config with save button?
+        pro = service.boss.cmd('project', 'get_current_project')
+        if not pro:
+            return
+        else:
+            datadir = pro.get_meta_dir('rst')
+            datafile = os.path.join(datadir, 'rst.json')
+        try:
+            fp = open(datafile, "w")
+            simplejson.dump(self.config, fp, indent=1)
+        except Exception, e:
+            service.log.exception(e)
+
+    def load(self, service):
+        self.config = {}
+        pro = service.boss.cmd('project', 'get_current_project')
+        if not pro:
+            return
+        datadir = pro.get_meta_dir('rst')
+        datafile = os.path.join(datadir, 'rst.json')
+        if os.path.isfile(datafile):
+            try:
+                fp = open(datafile, "r")
+                self.config = simplejson.load(fp)
+            except Exception, e:
+                service.log.exception(e)
 
     @staticmethod
     def _do_nothing(*args, **kwargs):
@@ -66,16 +90,19 @@ class RSTPlugin(object):
         with open(document.filename) as f:
             rst_data = f.read()
         settings_overrides = None
-        # Use plain docutils if sphinx is not available/not activated or if the
-        # current document is outside the sphinx directory structure (realtive
-        # path startes with '..')
+        # Use plain docutils if:
+        # - sphinx is not available/not activated
+        # - no sphinx config has been found
+        # - current document is outside the sphinx directory structure
         if (not use_sphinx or
-            os.path.relpath(document.filename, self.basedir)[0:2] == '..'):
+            not self.config or
+            os.path.relpath(document.filename,
+                            self.config['basedir'])[0:2] == '..'):
             doctree = publish_doctree(rst_data, source_path = document.filename)
         else:
-            srcdir = self.basedir
-            confdir = self.basedir
-            outdir = os.path.join(srcdir, self.builddir)
+            srcdir = self.config['basedir']
+            confdir = self.config['basedir']
+            outdir = os.path.join(srcdir, self.config['builddir'])
             doctreedir = os.path.join(outdir, 'doctrees')
             buildername = "html" # does not really matter
             confoverrides = {}
@@ -171,7 +198,7 @@ class RSTOutliner(Outliner):
 
     def get_outline(self):
         self.doc_items = RSTTokenList()
-        self.rstplugin = RSTPlugin()
+        self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
         self._recursive_node_walker(self.doctree, 0, None)
         for item in self.doc_items:
@@ -234,7 +261,7 @@ class RSTValidator(Validator):
     subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
 
     def get_validations(self):
-        self.rstplugin = RSTPlugin()
+        self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
         for msg in self.doctree.parse_messages :
             message, type_, filename, lineno = self._parse_error(msg)
