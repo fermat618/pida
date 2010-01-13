@@ -7,18 +7,25 @@ Must Have
 * persistent, project specific configuration (necessary for using Sphinx)
 * GUI for setting this configurations
 * Option to use docutils only, or in other words: use docutils only per default,
-  checkflag to activate Sphinx. As soon as you activate Sphnix you must set some
+  checkflag to activate Sphinx. As soon as you activate Sphinx you must set some
   config values like the location of the conf.py file, etc.
 
 Nice to Have
 ------------
 
-* Always fall back to plain docutils if a document not below the sphinx srcdir
-  is opened
+* tests!!
 * Expand the outliner per default (option)
+* catch Sphinx errors/warnings that are not included in the doctree
+  parse_messages
 * Option to have the *full* Sphinx hierarchy in the outliner (not only the
   current document)
+* Maybe an option to hide a certain number of levels in the outliner. Both for
+  upper level as for leaves
 * Performance improvements (doctree caching!)
-* Maybe an option to not show the title of a document in the outliner (already
-  true if only plain docutils is used)
+
+Known Bugs
+----------
+
+* Headings with "&" in it do not work! They show up in the outliner with the
+  same name than the previous heading
 
