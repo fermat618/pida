@@ -65,11 +65,14 @@ def parse_rst(document):
     with open(document.filename) as f:
         rst_data = f.read()
     settings_overrides = None
-    if not use_sphinx:
-        # use plain docutils functionality
+    # Use plain docutils if sphinx is not available/not activated or if the
+    # current document is outside the sphinx directory structure (realtive
+    # path startes with '..')
+    if (not use_sphinx or
+        os.path.relpath(document.filename,
+                        SPHINX_CONFIG['basedir'])[0:2] == '..'):
         doctree = publish_doctree(rst_data, source_path = document.filename)
     else:
-
         srcdir = confdir = SPHINX_CONFIG['basedir']
         outdir = os.path.join(confdir, SPHINX_CONFIG['builddir'])
         doctreedir = os.path.join(outdir, 'doctrees')
@@ -87,7 +90,6 @@ def parse_rst(document):
         # trigger the build which will update *all* doctrees if necessary
         sphinx.build(True, '')
         # load the pickeled doctree
-
         doctreefile = os.path.join \
             (doctreedir,
              "%s.doctree" % os.path.splitext
