@@ -96,8 +96,10 @@ class FirstTimeWindow(object):
         f.close()
 
 if __name__ == '__main__':
-    ftw = FirstTimeWindow([])
-    print ftw.run('/home/ali/firstrun')
+    from pida.editors.vim.vim import Vim
+    from pida.editors.mooedit.mooedit import Mooedit
+    ftw = FirstTimeWindow([Vim, Mooedit])
+    print ftw.run('~/firstrun')
 
 
 
