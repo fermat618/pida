@@ -6,7 +6,7 @@
 
 import gtk
 from pida.ui.views import PidaGladeView
-from kiwi.ui.objectlist import Column
+from kiwi.ui.objectlist import Column, COL_MODEL
 
 # locale
 from pida.core.locale import Locale
@@ -71,18 +71,15 @@ def display_or_repr(obj):
     return unicode(obj)
 
 
-from kiwi.environ import environ
-pic_unedited = gtk.gdk.pixbuf_new_from_file(
-            environ.find_resource('pixmaps', 'unedited.png'))
-pic_edited = gtk.gdk.pixbuf_new_from_file(
-            environ.find_resource('pixmaps', 'edited.png'))
-#print pic_edited
-def customized_icon(obj):
-    if obj is None:
-        return None
-    if obj:
-        return pic_edited
-    return pic_unedited
+class EditedColumn(Column):
+    def cell_data_func(self, tree_column, renderer, model, treeiter,
+                               (column, renderer_prop)):
+        obj = model[treeiter][COL_MODEL]
+        if obj is None:
+            return None
+        if obj:
+            renderer.set_property('stock-id', 'edited')
+        return renderer.set_property('stock-id', 'unedited')
 
 class PriorityEditorView(PidaGladeView):
     gladefile = 'priority_editor'
@@ -94,9 +91,8 @@ class PriorityEditorView(PidaGladeView):
         self.simple = kwargs.pop('simple', False)
         super(PriorityEditorView, self).__init__(*args, **kwargs)
         self.selection_tree.set_columns([
-            Column('customized', title=' ',
-                   data_type=gtk.gdk.Pixbuf,
-                   format_func=customized_icon, expand=False,
+            EditedColumn('customized', title=' ',
+                   use_stock=True,
                    justify=gtk.JUSTIFY_RIGHT,
                    ),
             Column('display', title=_('Category'), 
