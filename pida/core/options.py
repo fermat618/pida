@@ -19,6 +19,7 @@ from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
 from .pdbus import DbusOptionsManager
 from pango import Font
+from gtk.gdk import Color
 from shutil import rmtree
 import simplejson
 
@@ -112,8 +113,6 @@ def choices(choices):
         options = choices
 
     return Choices
-
-class Color(str): """Option which is a color in RGB Hex"""
 
 
 class OptionItem(object):
