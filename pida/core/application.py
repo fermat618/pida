@@ -79,17 +79,19 @@ def run_pida():
     #XXX: nasty compat hack
     import os
     os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    b = Boss()
+    b = Boss() #XXX: relocate firstrun
 
     # handle start params
     try:
-        start_success = b.start()
+        #XXX: this sucks, needs propper errors
+        b.start() # might raise runtime error
         if environment.get_args():
             from pida.utils.gthreads import gcall
             gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
         b.loop_ui()
         return 0
     except Exception, e:
+        die_gui("startup breakdown", e)
         traceback.print_exc()
         return 1
 

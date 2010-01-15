@@ -65,7 +65,8 @@ class Boss(object):
 
     def start(self):
         if self.quit_before_started:
-            return False
+            sys.exit() #XXX: errors?
+            raise RuntimeError('quit_before_started was set #XXX: better error')
         else:
             self._icons = IconRegister()
             self._icons.register_file_icons_for_directory(
@@ -79,13 +80,10 @@ class Boss(object):
                     self.override_editor)
             editor_name = self.get_service('editor').opt('editor_type')
             editor_name = self.check_editor(editor_name)
-            if self.quit_before_started:
-                return False
             self._sm.activate_editor(editor_name)
             self.window.start()
             self._sm.start_services()
             self._sm.start_editor()
-            return True
 
     def stop(self, force=False, kill=False):
         """
