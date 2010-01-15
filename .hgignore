@@ -1,4 +1,5 @@
 ^build
+.coverage
 moo_stub.so
 moo/.*.o
 moo/moo-pygtk.c
