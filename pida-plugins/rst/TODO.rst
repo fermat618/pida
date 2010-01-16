@@ -4,11 +4,7 @@ TODO, roughly in order of priority
 Must Have
 ---------
 
-* persistent, project specific configuration (necessary for using Sphinx)
-* GUI for setting this configurations
-* Option to use docutils only, or in other words: use docutils only per default,
-  checkflag to activate Sphinx. As soon as you activate Sphinx you must set some
-  config values like the location of the conf.py file, etc.
+* GUI for setting configurations
 
 Nice to Have
 ------------
@@ -28,4 +24,3 @@ Known Bugs
 
 * Headings with "&" in it do not work! They show up in the outliner with the
   same name than the previous heading
-
