@@ -98,7 +98,7 @@ class RSTPlugin(object):
         except Exception, e:
             service.log.exception()  # TODO: hint that sphinx config is invalid
 
-    def create_sphinx_environment(self):
+    def create_sphinx_env(self):
         """trigger the creation of the pickled environment and *all* pickled
            doctrees.
         """
@@ -106,7 +106,7 @@ class RSTPlugin(object):
 
     # TODO: currently the Validator and the Outliner call this function and
     # parse the complete rst file. Caching the doctree would be cool!
-    def parse_rst(self, document):
+    def parse_rst(self, document, sphinx_env = False):
         """Parse the rst file and return the doctree. Parsing is be done by
            plain docutils, docutils witch some sphinx specific settings or by
            using a pickled doctree from a full sphinx build."""
@@ -140,7 +140,7 @@ class RSTPlugin(object):
                     doctree = pickle.load(f)
             else:
                 # rst file within the sphinx project but not included in any
-                # doctree. Fall back again.
+                # doctree. Fall back.
                 doctree = sphinx_docutils(filename)
             return doctree
 
@@ -152,8 +152,14 @@ class RSTPlugin(object):
         elif not self.config['sphinx']:
             doctree = sphinx_docutils(document.filename)
         else:
-            self.create_sphinx_environment()
-            doctree = sphinx_full(document.filename)
+            if sphinx_env:
+                # TODO: This will give better results (toctree is resolved, ...)
+                # but I think there are race conditions if both the outliner
+                # and the validator are activated.
+                self.create_sphinx_env()
+                doctree = sphinx_full(document.filename)
+            else:
+                doctree = sphinx_docutils(document.filename)
         return doctree
 
 # --- Outliner support --------------------------------------------------------
