@@ -29,16 +29,15 @@ def get_bus_name(uid):
 
 def get_vim(uid):
     session = dbus.SessionBus()
-    proxy = None
     for _try in range(10):
         try:
             log.debug('trying vim connect #%s', _try)
-            proxy = session.get_object(get_bus_name(uid), '/vim')
+            return dbus.Interface(
+                    session.get_object(get_bus_name(uid), '/vim'),
+                    'uk.co.pida.vim')
         except dbus.DBusException:
             log.debug('vim connect failed, retrying')
-            proxy = None
             time.sleep(0.1)
-    return proxy
 
 def connect_cb(proxy, cb):
     for evt in ['VimEnter', 'VimLeave', 'BufEnter', 'BufDelete', 'BufWritePost',
