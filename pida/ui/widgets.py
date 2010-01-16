@@ -4,10 +4,7 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-from cgi import escape
-
 import gtk
-import gobject
 import pango
 
 from kiwi.ui.gadgets import gdk_color_to_string
@@ -20,8 +17,6 @@ from kiwi.ui.widgets.checkbutton import ProxyCheckButton
 from kiwi.ui.widgets.colorbutton import ProxyColorButton
 from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
 from kiwi.utils import gsignal
-
-from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 from pida.core.options import Color
 
