@@ -26,28 +26,20 @@ try:
     # importing Sphinx will automatically register all Sphinx
     # specific directives and roles within the already imported docutils.
     from sphinx.application import Sphinx
+    from sphinx.environment import BuildEnvironment as SphinxBuildEnvironment
+    from sphinx.config import Config as SphinxConfig
     sphinx_available = True
 except ImportError:
     sphinx_available = False
-
-if sphinx_available:
-# TODO figure out which Sphinx config to use. This is important since we have
-# to enable all necessary extensions. First check if the configuration
-# specifies a conf.py otherwise travel up the directory hierarchy (max to the
-# project root directory) to find it.
-    #use_sphinx = within_sphinx_environment():
-    use_sphinx = True;
-# TODO config option to deactive Sphinx (for performance)
-# elif conf.do_not_use_sphinx:
-#     use_sphinx = False
-else:
-    use_sphinx = False
 
 # --- common plugin code ------------------------------------------------------
 
 class RSTPlugin(object):
 
     def __init__(self, service):
+        self.config = {'sphinx' : False,
+                       'basedir': '',
+                       'builddir': ''}
         self.load(service)
 
     def save(self, service):
@@ -65,7 +57,6 @@ class RSTPlugin(object):
             service.log.exception(e)
 
     def load(self, service):
-        self.config = {}
         pro = service.boss.cmd('project', 'get_current_project')
         if not pro:
             return
@@ -85,21 +76,27 @@ class RSTPlugin(object):
     # TODO: currently the Validator and the Outliner call this function and
     # parse the complete rst file. Caching the doctree would be cool!
     def parse_rst(self, document):
-        """Use docutils to parse the rst file and return the doctree."""
+        """Parse the rst file and return the doctree. Parsing is be done by
+           plain docutils, docutils witch some sphinx specific settings or by
+           using a pickled doctree from a full sphinx build."""
 
-        with open(document.filename) as f:
-            rst_data = f.read()
-        settings_overrides = None
-        # Use plain docutils if:
-        # - sphinx is not available/not activated
-        # - no sphinx config has been found
-        # - current document is outside the sphinx directory structure
-        if (not use_sphinx or
-            not self.config or
-            os.path.relpath(document.filename,
-                            self.config['basedir'])[0:2] == '..'):
-            doctree = publish_doctree(rst_data, source_path = document.filename)
-        else:
+        def plain_docutils(filename):
+            return publish_doctree(rst_data, source_path = filename)
+
+        def sphinx_docutils(filename):
+            # importing sphinx has side-effects on docutils since roles and
+            # directives get registered. We have to do some sphinx specific
+            # setup to make at least the doctree directive happy. Note that
+            # this code is a bit fragile since no official sphinx API is used.
+            config = SphinxConfig (None, None, None, None)
+            env = SphinxBuildEnvironment (os.path.dirname(filename), "", config)
+            env.docname = filename
+            env.found_docs = set([filename])
+            settings_overrides = {'env': env}
+            return publish_doctree(rst_data, source_path = filename,
+                                   settings_overrides = {'env': env})
+
+        def sphinx_full(filename):
             srcdir = self.config['basedir']
             confdir = self.config['basedir']
             outdir = os.path.join(srcdir, self.config['builddir'])
@@ -121,11 +118,26 @@ class RSTPlugin(object):
             doctreefile = os.path.join \
                 (doctreedir,
                  "%s.doctree" % os.path.splitext
-                    (os.path.relpath(document.filename, srcdir))[0]
+                    (os.path.relpath(filename, srcdir))[0]
                 )
-            with open(doctreefile) as f:
-                doctree = pickle.load(f)
+            if os.path.isfile(doctreefile):
+                with open(doctreefile) as f:
+                    doctree = pickle.load(f)
+            else:
+                # rst file within the sphinx project but not included in any
+                # doctree. Fall back again.
+                doctree = sphinx_docutils(filename)
+            return doctree
 
+        doctree = None
+        with open(document.filename) as f:
+            rst_data = f.read()
+        if not sphinx_available:
+            doctree = plain_docutils(document.filename)
+        elif not self.config['sphinx']:
+            doctree = sphinx_docutils(document.filename)
+        else:
+            doctree = sphinx_full(document.filename)
         return doctree
 
 # --- Outliner support --------------------------------------------------------
@@ -200,9 +212,10 @@ class RSTOutliner(Outliner):
         self.doc_items = RSTTokenList()
         self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
-        self._recursive_node_walker(self.doctree, 0, None)
-        for item in self.doc_items:
-            yield item
+        if self.doctree:
+            self._recursive_node_walker(self.doctree, 0, None)
+            for item in self.doc_items:
+                yield item
 
     def _recursive_node_walker(self, node, level, parent_name):
         try:
@@ -263,16 +276,17 @@ class RSTValidator(Validator):
     def get_validations(self):
         self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
-        for msg in self.doctree.parse_messages :
-            message, type_, filename, lineno = self._parse_error(msg)
-            # TODO need to filter out duplicates with no lineno set
-            # not sure why this happens...
-            if lineno:
-                yield ValidationError (message=message,
-                                       type_=type_,
-                                       subtype=self.subtype,
-                                       filename=filename,
-                                       lineno=lineno)
+        if self.doctree:
+            for msg in self.doctree.parse_messages :
+                message, type_, filename, lineno = self._parse_error(msg)
+                # TODO need to filter out duplicates with no lineno set
+                # not sure why this happens...
+                if lineno:
+                    yield ValidationError (message=message,
+                                           type_=type_,
+                                           subtype=self.subtype,
+                                           filename=filename,
+                                           lineno=lineno)
 
     @staticmethod
     def _parse_error(msg):
