@@ -41,6 +41,8 @@ class RSTPlugin(object):
                        'basedir': '',
                        'builddir': ''}
         self.load(service)
+        if self.config['sphinx']:
+            self.set_up_sphinx(service)
 
     def save(self, service):
         # TODO: GUI for config with save button?
@@ -73,6 +75,35 @@ class RSTPlugin(object):
     def _do_nothing(*args, **kwargs):
         pass
 
+    def set_up_sphinx(self, service):
+        """Create a Sphinx application. This registers all extension roles and
+        directives in docutils.
+        """
+        try:
+            srcdir = self.config['basedir']
+            confdir = self.config['basedir']
+            outdir = os.path.join(srcdir, self.config['builddir'])
+            doctreedir = os.path.join(outdir, 'doctrees')
+            buildername = "html" # does not really matter
+            confoverrides = {}
+            status = sys.stdout
+            warning = sys.stderr # TODO catch and display in PIDA context!
+            self.sphinx = Sphinx(srcdir, confdir, outdir, doctreedir, buildername,
+                            confoverrides, status, warning, freshenv=False,
+                            warningiserror=False, tags=None)
+            # overwrite some builder methods to prevent actual output production
+            self.sphinx.builder.write = self._do_nothing
+            self.sphinx.builder.finish = self._do_nothing
+            self.sphinx.builder.cleanup = self._do_nothing
+        except Exception, e:
+            service.log.exception()  # TODO: hint that sphinx config is invalid
+
+    def create_sphinx_environment(self):
+        """trigger the creation of the pickled environment and *all* pickled
+           doctrees.
+        """
+        self.sphinx.build(True, '')
+
     # TODO: currently the Validator and the Outliner call this function and
     # parse the complete rst file. Caching the doctree would be cool!
     def parse_rst(self, document):
@@ -97,29 +128,13 @@ class RSTPlugin(object):
                                    settings_overrides = {'env': env})
 
         def sphinx_full(filename):
+            # load the pickeled doctree
             srcdir = self.config['basedir']
-            confdir = self.config['basedir']
             outdir = os.path.join(srcdir, self.config['builddir'])
             doctreedir = os.path.join(outdir, 'doctrees')
-            buildername = "html" # does not really matter
-            confoverrides = {}
-            status = sys.stdout
-            warning = sys.stderr # TODO catch and display in PIDA context!
-            sphinx = Sphinx(srcdir, confdir, outdir, doctreedir, buildername,
-                            confoverrides, status, warning, freshenv=False,
-                            warningiserror=False, tags=None)
-            # overwrite some builder methods to prevent actual output production
-            sphinx.builder.write = self._do_nothing
-            sphinx.builder.finish = self._do_nothing
-            sphinx.builder.cleanup = self._do_nothing
-            # trigger the build which will update *all* doctrees if necessary
-            sphinx.build(True, '')
-            # load the pickeled doctree
-            doctreefile = os.path.join \
-                (doctreedir,
-                 "%s.doctree" % os.path.splitext
-                    (os.path.relpath(filename, srcdir))[0]
-                )
+            doctreefile = os.path.join (doctreedir,
+                                        "%s.doctree" % os.path.splitext
+                                            (os.path.relpath(filename, srcdir))[0])
             if os.path.isfile(doctreefile):
                 with open(doctreefile) as f:
                     doctree = pickle.load(f)
@@ -137,6 +152,7 @@ class RSTPlugin(object):
         elif not self.config['sphinx']:
             doctree = sphinx_docutils(document.filename)
         else:
+            self.create_sphinx_environment()
             doctree = sphinx_full(document.filename)
         return doctree
 
