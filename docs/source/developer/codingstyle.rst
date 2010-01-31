@@ -28,7 +28,7 @@ Line Width
 
 79 characters, perhaps 78 to be safe.
 This is negotiable, and there are times when 83 character lines are acceptable.
-You can be the judge. We are not sure many people use 80-character terminals these days, 
+You can be the judge. We are not sure many people use 80-character terminals these days,
 so we can be a bit less hard-line than the PEP.
 
 Blank Lines
