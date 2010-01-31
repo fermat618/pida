@@ -375,12 +375,15 @@ class Vim(EditorService):
 
         try:
             import subprocess
+            import pty
+            master, slave = pty.openpty()
             p = subprocess.Popen(
                     ['gvim', '--version'],
                     stdout=subprocess.PIPE,
+                    stderr=slave,
                     )
             data, _ = p.communicate()
-            if 'python' not in data:
+            if '+python' not in data:
                 errors.extend([
                     'gvim lacks python support',
                     'please install gvim with python support'
