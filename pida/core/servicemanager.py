@@ -75,7 +75,6 @@ class ServiceLoader(object):
             service = module.Service
             service.__path__ = os.path.dirname(module.__file__) #XXX: hack
             service.__loader__ = self
-            service.__package__ = '%s.%s'%(self._name, name)
             return service
         except AttributeError, e:
 

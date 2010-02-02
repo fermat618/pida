@@ -101,7 +101,7 @@ class ActionsConfig(OptionsConfig):
         if self.svc.boss is not None:
             self.ui_merge_id = self.svc.boss.add_action_group_and_ui(
                 self._actions,
-                self.svc.__package__,
+                self.svc.__class__.__module__,
                 'uidef/%s.xml' % self.svc.get_name(),
             )
 
