@@ -293,7 +293,7 @@ class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'buffer-file-menu.xml'))
+            (self.svc, 'buffer-file-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
             BufferListConfig)
 
@@ -366,8 +366,8 @@ class BufferCommandsConfig(CommandsConfig):
         view.buffers_ol.grab_focus()
 
     def get_document_by_id(self, document_id=None):
-        if id_:
-            return self.svc._documents.get(id_, None)
+        if document_id:
+            return self.svc._documents.get(document_id, None)
 
 class BufferDbusConfig(DbusConfig):
     

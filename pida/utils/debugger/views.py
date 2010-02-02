@@ -3,13 +3,12 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 
 from kiwi.ui.objectlist import ObjectTree, ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import get_uidef_path
 from pida.utils.gthreads import gcall
 
 from pida.ui.views import PidaView
@@ -185,7 +184,9 @@ class DebuggerStackView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('debugger_stackview_toolbar.xml'))
+        uidef_data = pkgutil.get_data(__name__,
+                'debugger_stackview_toolbar.xml')
+        self._uim.add_ui_from_string(uidef_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)

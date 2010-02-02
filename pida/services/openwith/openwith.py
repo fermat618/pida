@@ -195,7 +195,7 @@ class OpenWithFeatures(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'openwith-file-menu.xml'))
+            (self.svc, 'openwith-file-menu.xml'))
 
 # Service class
 class Openwith(Service):

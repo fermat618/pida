@@ -13,6 +13,7 @@ from functools import partial
 
 import gtk
 import gobject
+import pkgutil
 import os
 
 from kiwi.ui.objectlist import Column
@@ -20,7 +21,7 @@ from kiwi.ui.objectlist import ObjectList, COL_MODEL
 
 from .outlinefilter import FILTERMAP
 
-from pida.core.environment import on_windows, get_pixmap_path
+from pida.core.environment import on_windows
 from pida.core.languages import LANGUAGE_PLUGIN_TYPES
 from pida.core.log import get_logger
 
@@ -545,8 +546,16 @@ class BrowserView(PidaGladeView):
                 if not on_windows:
                     tool_button.set_tooltip_text(FILTERMAP[f]['display'])
                 tool_button.connect("toggled", self.on_filter_toggled,outliner)
+                image_name = FILTERMAP[f]['icon']
+
+                #XXX: put into pygtkhelpers?
+                image_data = pkgutil.get_data(__name__, 'pixmaps/%s.png'%image_name)
+                loader = gtk.gdk.PixbufLoader()
+                loader.write(image_data)
+                loader.close()
+
                 im = gtk.Image()
-                im.set_from_file(get_pixmap_path(FILTERMAP[f]['icon']))
+                im.set_from_pixbuf(loader.get_pixbuf())
                 tool_button.set_icon_widget(im)
                 self.filter_toolbar.insert(tool_button, 0)
         #self.options_vbox.add(self.filter_toolbar)

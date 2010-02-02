@@ -36,10 +36,10 @@ Actions
 Other files and directories
 ===========================
 
-__init__.py
+:file:`__init__.py`
   This file is required so that Python recognises the directory as a legitimate Python package.
 
-service.pida
+:file:`service.pida`
   This empty file is just present to identify the package as a PIDA service.
 
 data/

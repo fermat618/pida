@@ -260,9 +260,9 @@ class CommanderFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'commander-file-menu.xml'))
+            (self.svc, 'commander-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'commander-dir-menu.xml'))
+            (self.svc, 'commander-dir-menu.xml'))
 
     def _mkactlst(self, lst):
         rv = []

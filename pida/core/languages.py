@@ -156,28 +156,28 @@ class BaseCachedDocumentHandler(BaseDocumentHandler):
         Default implementation of outline cache.
         We cache as long as the file on disk does not change
         """
-        if not self.__dict__.has_key('_cache_'):
-            self._cache_ = []
-            self._lastmtime_ = 0
+        if not hasattr(self, '_cache'):
+            self._cache = []
+            self._lastmtime = 0
         if not self.document.is_new:
-            if self.document.modified_time != self._lastmtime_:
-                self._cache_ = []
+            if self.document.modified_time != self._lastmtime:
+                self._cache = []
                 iterf = fnc()
                 if iterf is None:
                     return
                 for x in fnc():
-                    self._cache_.append(x)
+                    self._cache.append(x)
                     yield x
-                self._lastmtime_ = self.document.modified_time
+                self._lastmtime = self.document.modified_time
             else:
-                for x in self._cache_:
+                for x in self._cache:
                     yield x
         else:
             iterf = fnc()
             if iterf is None:
                 return
             for x in iterf:
-                yield xpida/services/openwith/openwith.py
+                yield x
 
 
 class Outliner(BaseCachedDocumentHandler):

@@ -7,8 +7,6 @@
 from textwrap import wrap
 
 import gtk
-from weakref import proxy
-
 
 # PIDA Imports
 from pida.core.service import Service

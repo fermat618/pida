@@ -8,8 +8,6 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-import time
-
 from base import SubscriberConfig
 
 class EventsConfig(SubscriberConfig):

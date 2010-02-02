@@ -1,10 +1,8 @@
 # licence gpl2 or later
 #XXX: this code is ugly like hell
 import os
-import sys
 import StringIO
 import urllib2
-import base64
 import hashlib
 
 from optparse import OptionParser

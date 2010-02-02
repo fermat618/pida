@@ -3,7 +3,7 @@
 import urllib
 import urllib2
 import mimetools, mimetypes
-import os, stat
+import os
 import StringIO
 import logging
 log = logging.getLogger('pida.http')
@@ -76,7 +76,7 @@ def encode_multipart(vars, files, boundary):
 
 
 if __name__=="__main__":
-    import tempfile, sys
+    import sys
     validator = "http://validator.w3.org/check"
     opener = urllib2.build_opener(MultipartPostHandler)
 

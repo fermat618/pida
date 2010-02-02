@@ -6,11 +6,10 @@ from kiwi.environ import Library
 lib = Library('pida.utils.puilder', root='.')
 lib.add_global_resources(glade='glade')
 
-from kiwi.ui.delegates import GladeDelegate, GladeSlaveDelegate
+from pygtkhelpers.delegates import SlaveView, ToplevelView, gsignal
 
 from kiwi.ui.objectlist import Column
 from kiwi.ui.dialogs import yesno
-from kiwi.utils import gsignal
 
 from pida.utils.puilder.model import action_types
 from pida.utils.gthreads import gcall
@@ -38,18 +37,14 @@ def create_source_tv(tv):
     tv.connect('content-changed', on_changed)
 
 
-class PuilderView(GladeSlaveDelegate):
+class PuilderView(SlaveView):
 
-    gladefile = 'puild_properties'
+    builder_file = 'puild_properties'
 
     parent_window = None
 
     gsignal('cancel-request')
     gsignal('project-saved', gobject.TYPE_PYOBJECT)
-
-    def __init__(self, *args, **kw):
-       GladeSlaveDelegate.__init__(self, *args, **kw)
-       self.create_ui()
 
     def create_ui(self):
         def format_default(obj):
@@ -167,14 +162,14 @@ class PuilderView(GladeSlaveDelegate):
     def create_action_views(self):
         for name in action_views:
             v = self.action_views[name] = action_views[name]()
-            self.acts_holder.append_page(v.get_toplevel())
+            self.acts_holder.append_page(v.widget)
 
         noview = gtk.Label()
         self.acts_holder.append_page(noview)
         self.action_views['noview'] = noview
 
     def switch_action_view(self, name):
-        n = self.acts_holder.page_num(self.action_views[name].get_toplevel())
+        n = self.acts_holder.page_num(self.action_views[name].widget)
         self.acts_holder.set_current_page(n)
         self.acts_type.update(name)
 
@@ -326,12 +321,11 @@ class PuilderView(GladeSlaveDelegate):
         return yesno(question, parent=self.parent_window)
 
 
-class ActionView(GladeSlaveDelegate):
+class ActionView(SlaveView):
 
     def __init__(self, *args, **kw):
-        GladeSlaveDelegate.__init__(self)
+        SlaveView.__init__(self)
         self.action = None
-        self.create_ui()
 
     def _set_action(self, action):
         self.action = action
@@ -357,7 +351,7 @@ class ActionView(GladeSlaveDelegate):
 
 class ShellActionView(ActionView):
 
-    gladefile = 'action_shell'
+    builder_file = 'action_shell'
 
     def create_ui(self):
         #self.env_list.set_columns([
@@ -396,7 +390,7 @@ class ShellActionView(ActionView):
 
 class PythonActionView(ActionView):
 
-    gladefile = 'action_python'
+    builder_file = 'action_python'
 
     def create_ui(self):
         create_source_tv(self.text)
@@ -415,7 +409,7 @@ external_system_types = [
 
 class ExternalActionView(ActionView):
 
-    gladefile = 'action_external'
+    builder_file = 'action_external'
 
     def create_ui(self):
         self.action = None
@@ -440,7 +434,7 @@ class ExternalActionView(ActionView):
 
 class TargetActionView(ActionView):
 
-    gladefile = 'action_target'
+    builder_file = 'action_target'
 
     def create_ui(self):
         self.block = False

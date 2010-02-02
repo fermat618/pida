@@ -175,7 +175,8 @@ class BookManager(object):
             tab_label = self._create_tab_label(
                 bookname,
                 view.create_tab_label_icon(),
-                view.get_tab_label_text())
+                view.label_text,
+                )
             book.append_page(view.get_toplevel(),
                 tab_label=tab_label)
             book.set_current_page(-1)

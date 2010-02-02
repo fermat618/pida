@@ -3,18 +3,18 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 from gtk import gdk
-from kiwi.ui.dialogs import save, open as opendlg, info, error, yesno#, get_input
-from kiwi.ui.views import BaseView
-from kiwi.ui.delegates import GladeDelegate
+import os
+
+from pygtkhelpers.delegates import ToplevelView
+from pygtkhelpers.ui.dialogs import error, info, yesno, save, open as opendlg
 
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
 from pida.core.log import log
-from pida.core.environment import get_uidef_path, get_pixmap_path
 from pida.core.actions import accelerator_group, global_accelerator_group
 from pida.utils.gthreads import gcall
 
@@ -49,7 +49,9 @@ class Window(gtk.Window):
     def __init__(self, boss, *args, **kw):
         self._boss = boss
         gtk.Window.__init__(self, *args, **kw)
-        self.set_icon_from_file(get_pixmap_path('pida-icon.png'))
+        self.set_icon_from_file(os.path.join(
+            os.path.dirname(__file__),
+            '../resources/pixmaps/pida-icon.png'))
         self.add_accel_group(accelerator_group)
         self.add_accel_group(global_accelerator_group)
         self.connect('delete-event', self._on_delete_event)
@@ -141,13 +143,13 @@ class PidaWindow(Window):
     def add_action_group(self, actiongroup):
         self._uim.add_action_group(actiongroup)
 
-    def add_uidef(self, filename):
+    def add_uidef(self, package, path):
         try:
-            uifile = get_uidef_path(filename)
-            return self._uim.add_ui_from_file(uifile)
+            content = pkgutil.get_data(package, path)
+            return self._uim.add_ui_from_string(content)
         except Exception, e:
-            log.debug('unable to get %s resource: %s' %
-                                (filename, e))
+            log.debug('unable to get %s: %r resource: %s' %
+                                (package, path, e))
 
     def remove_action_group(self, actiongroup):
         self._uim.remove_action_group(actiongroup)
@@ -215,8 +217,8 @@ class PidaWindow(Window):
     def __contains__(self, item):
         return self.paned.__contains__(item)
 
-class WorkspaceWindow(GladeDelegate):
-    gladefile = 'workspace_select'
+class WorkspaceWindow(ToplevelView):
+    builder_file = 'workspace_select'
     
     class Entry(object):
         id = 0
@@ -247,7 +249,7 @@ class WorkspaceWindow(GladeDelegate):
         super(WorkspaceWindow, self).__init__()
 
         #self.set_role('workspace') 
-        self.toplevel.set_name('Pidaworkspace')
+        self.widget.set_name('Pidaworkspace')
 
         from kiwi.environ import environ
         self.pic_on = gtk.gdk.pixbuf_new_from_file(

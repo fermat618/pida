@@ -11,12 +11,8 @@
 # system import(s)
 import os
 import sys
-import signal
 import warnings
 import traceback
-
-
-from pida.core.signalhandler import handle_signals
 
 # locale
 from pida.core.locale import Locale
@@ -46,15 +42,15 @@ except ImportError, e:
 
 
 try:
-    from kiwi.ui.dialogs import error
+    from pygtkhelpers.ui.dialogs import error
     def die_gui(message, exception):
         """Die in a GUI way."""
         error(_('Fatal error, cannot start PIDA'), 
               long='%s\n%s' % (message, exception))
         die_cli(message)
-
+    import kiwi #XXX: kill later
 except ImportError, e:
-    die_cli(_('Kiwi needs to be installed to run PIDA'), e)
+    die_cli(_('pygtkhelpers/kiwi needs to be installed to run PIDA'), e)
 
 
 # Python 2.5
@@ -63,42 +59,39 @@ if sys.version_info < (2, 5):
         {'major':sys.version_info[:2][0], 'minor':sys.version_info[:2][1]})
 
 
-# This can test if PIDA is installed
-try:
-    import pida
-except ImportError, e:
-    die_gui(_('The pida package could not be found.'), e)
-
 # Prevent PIDA from being run as root.
 if os.getuid() == 0:
     die_gui("Pida should not be run as root", "Pida is dying")
 
+# This can test if PIDA is installed
+# also we have to import pdbus here so it gets initialized very early
+try:
+    import pida.core.pdbus
+except ImportError, e:
+    die_gui(_('The pida package could not be found.'), e)
 
-# we have to import pdbus here so it gets initialized very early
-import pida.core.pdbus
 
-from pida.core.environment import opts, on_windows
+
+from pida.core import environment
 from pida.core.boss import Boss
 
 def run_pida():
     #XXX: nasty compat hack
     import os
     os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    b = Boss()
+    b = Boss() #XXX: relocate firstrun
 
-    # win32 has no signal support
-    if not on_windows:
-        handle_signals(b)
     # handle start params
-    from pida.core import environment
     try:
-        start_success = b.start()
+        #XXX: this sucks, needs propper errors
+        b.start() # might raise runtime error
         if environment.get_args():
             from pida.utils.gthreads import gcall
             gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
         b.loop_ui()
         return 0
     except Exception, e:
+        die_gui("startup breakdown", e)
         traceback.print_exc()
         return 1
 
@@ -120,15 +113,12 @@ def set_trace():
 
 def main():
     global opts
-    from pida.core import environment
     environment.parse_args(sys.argv)
     opts = environment.opts
-    
-    from pida.core import options
 
     #options.create_default_manager(pida.core.environment.workspace_name())
-    import pida.core.log
-    pida.core.log.setup()
+    from pida.core import log
+    log.setup()
     
     if not opts.debug:
         warnings.filterwarnings("ignore")
@@ -143,7 +133,6 @@ def main():
     om = OptionsManager(workspace="default")
 
     def do_workspace_manager():
-        from pida.utils.pdbus import list_pida_instances
         from pida.ui.window import WorkspaceWindow
 
         def kill(sm):
@@ -182,8 +171,8 @@ def main():
                     gtk.main_quit()
 
         sw = WorkspaceWindow(command=command)
-        sw.show()
-        #this mainloop will exist when the workspacewindow is closes
+        sw.widget.show()
+        #this mainloop will exit when the workspacewindow is closes
         gtk.main()
 
 

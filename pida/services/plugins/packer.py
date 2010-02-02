@@ -10,7 +10,6 @@ import os
 from os import path
 from tarfile import TarFile
 from StringIO import StringIO
-import urllib2
 
 def find_files(base, service):
     base = path.normpath(base)

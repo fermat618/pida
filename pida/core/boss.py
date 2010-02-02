@@ -10,14 +10,13 @@
     :copyright: 2005-2008 by The PIDA Project
 """
 
-import os
 import gtk
+import os
 import sys
+import pida
 
-from pida.core.environment import (is_firstrun, firstrun_filename, is_safe_mode,
-    workspace_name)
-from .options import OptionsManager
-from pida.core.servicemanager import ServiceManager
+from pida.core.environment import (is_firstrun, firstrun_filename)
+from pida.core.servicemanager import ServiceManager, ServiceModuleError
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
 from pida.ui.splash import SplashScreen
@@ -66,22 +65,25 @@ class Boss(object):
 
     def start(self):
         if self.quit_before_started:
-            return False
+            sys.exit() #XXX: errors?
+            raise RuntimeError('quit_before_started was set #XXX: better error')
         else:
+            self._icons = IconRegister()
+            self._icons.register_file_icons_for_directory(
+                os.path.abspath(os.path.join(
+                    pida.__path__[0],
+                    'resources/pixmaps'
+                )))
             self._sm.activate_services()
             if self.override_editor is not None:
                 self.get_service('editor').set_opt('editor_type',
                     self.override_editor)
             editor_name = self.get_service('editor').opt('editor_type')
             editor_name = self.check_editor(editor_name)
-            if self.quit_before_started:
-                return False
             self._sm.activate_editor(editor_name)
-            self._icons = IconRegister()
             self.window.start()
             self._sm.start_services()
             self._sm.start_editor()
-            return True
 
     def stop(self, force=False, kill=False):
         """
@@ -128,9 +130,9 @@ class Boss(object):
     def stop_plugin(self, name):
         return self._sm.stop_plugin(name)
 
-    def add_action_group_and_ui(self, actiongroup, uidef):
+    def add_action_group_and_ui(self, actiongroup, package, path):
         self.window.add_action_group(actiongroup)
-        return self.window.add_uidef(uidef)
+        return self.window.add_uidef(package, path)
 
     def remove_action_group_and_ui(self, actiongroup, ui_merge_id):
         self.window.remove_uidef(ui_merge_id)

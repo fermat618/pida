@@ -19,11 +19,11 @@ from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
 from .pdbus import DbusOptionsManager
 from pango import Font
+from gtk.gdk import Color
 from shutil import rmtree
 import simplejson
 
 
-from os import path
 import os
 
 # locale
@@ -55,8 +55,8 @@ def list_workspaces():
     """Returns a list with all workspace names """
     workspaces = get_settings_path('workspaces')
     return [ x for x in os.listdir(workspaces)
-                if path.isdir(
-                    path.join(workspaces, x)
+                if os.path.isdir(
+                    os.path.join(workspaces, x)
                 )
             ]
 
@@ -113,8 +113,6 @@ def choices(choices):
         options = choices
 
     return Choices
-
-class Color(str): """Option which is a color in RGB Hex"""
 
 
 class OptionItem(object):

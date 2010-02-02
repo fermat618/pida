@@ -24,11 +24,12 @@ import os
 import gtk
 import re
 import urllib
+import pkgutil
 
 from kiwi.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import pida_home, get_uidef_path
+from pida.core.environment import pida_home
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
 from pida.core.features import FeaturesConfig
@@ -82,7 +83,8 @@ class RfcView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('rfc-toolbar.xml'))
+        uidef_data = pkgutil.get_data(__name__, 'uidef/rfc-toolbar.xml')
+        self._uim.add_ui_from_string(uidef_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)

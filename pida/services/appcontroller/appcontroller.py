@@ -8,13 +8,8 @@ import gtk
 
 # PIDA Imports
 from pida.core.service import Service
-from pida.core.features import FeaturesConfig
-from pida.core.commands import CommandsConfig
-from pida.core.pdbus import DbusConfig
 from pida.core.options import OptionsConfig
-from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 from pida.core.environment import workspace_name
@@ -46,7 +41,7 @@ class AppcontrollerActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'quit_pida',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Quit PIDA'),
             _('Exit the application'),
             gtk.STOCK_QUIT,
@@ -107,11 +102,6 @@ class ApplicationDbus(DbusConfig):
 
     @LSIGNAL(signature="s")
     def PONG_PIDA_INSTANCE(self, uid):
-        pass
-
-
-    @LSIGNAL(signature="sissi")
-    def PONG_PIDA_INSTANCE_EXT(self, uid, pid, workspace, project, opened_files):
         pass
 
     @LSIGNAL(signature="sissi")

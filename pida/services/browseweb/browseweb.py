@@ -368,7 +368,7 @@ class WebFeatures(FeaturesConfig):
                                  'glob': '*'})
 
         self.subscribe_foreign('contexts', 'url-menu',
-            (self.svc.get_action_group(), 'webbrowser-url-menu.xml'))
+            (self.svc, 'webbrowser-url-menu.xml'))
 
         self.subscribe_foreign('openwith', 'file-menu',
             internal)
