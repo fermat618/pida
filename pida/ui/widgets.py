@@ -43,11 +43,6 @@ class CleverProxyColorButton(ProxyColorButton):
         return gdk_color_to_string(col)
 
 
-class ProxyStringListItem(object):
-
-    def __init__(self, value):
-        self.value = value
-
 class ProxyStringList(gtk.VBox):
 
     gsignal('content-changed')
