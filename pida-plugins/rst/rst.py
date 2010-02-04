@@ -23,8 +23,11 @@ from docutils.core import publish_doctree
 
 # Sphinx imports
 try:
-    # importing Sphinx will automatically register all Sphinx
-    # specific directives and roles within the already imported docutils.
+    # TODO importing Sphinx will automatically register all Sphinx
+    # specific directives and roles within the already imported docutils
+    # and therefor has side effects even if it's not used afterwards.
+    # It might be a better idea to import only if the usage of Sphinx has
+    # been configured.
     from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment as SphinxBuildEnvironment
     from sphinx.config import Config as SphinxConfig
@@ -45,7 +48,7 @@ class RSTPlugin(object):
             self.set_up_sphinx(service)
 
     def save(self, service):
-        # TODO: GUI for config with save button?
+        # TODO: not used yet, GUI for config?
         pro = service.boss.cmd('project', 'get_current_project')
         if not pro:
             return
@@ -88,15 +91,15 @@ class RSTPlugin(object):
             confoverrides = {}
             status = sys.stdout
             warning = sys.stderr # TODO catch and display in PIDA context!
-            self.sphinx = Sphinx(srcdir, confdir, outdir, doctreedir, buildername,
-                            confoverrides, status, warning, freshenv=False,
-                            warningiserror=False, tags=None)
+            self.sphinx = Sphinx(srcdir, confdir, outdir, doctreedir,
+                            buildername, confoverrides, status, warning,
+                            freshenv=False, warningiserror=False, tags=None)
             # overwrite some builder methods to prevent actual output production
             self.sphinx.builder.write = self._do_nothing
             self.sphinx.builder.finish = self._do_nothing
             self.sphinx.builder.cleanup = self._do_nothing
         except Exception, e:
-            service.log.exception()  # TODO: hint that sphinx config is invalid
+            service.log.exception()  # TODO: hint that Sphinx config is invalid
 
     def create_sphinx_env(self):
         """trigger the creation of the pickled environment and *all* pickled
@@ -105,20 +108,33 @@ class RSTPlugin(object):
         self.sphinx.build(True, '')
 
     # TODO: currently the Validator and the Outliner call this function and
-    # parse the complete rst file. Caching the doctree would be cool!
+    # parse the complete rst file. Caching the doctree would be cool but I have
+    # no idea how to do that since they are running in different processes (?)
     def parse_rst(self, document, sphinx_env = False):
         """Parse the rst file and return the doctree. Parsing is be done by
-           plain docutils, docutils witch some sphinx specific settings or by
-           using a pickled doctree from a full sphinx build."""
+           using one of the following three methods:
+
+           1. plain docutils
+           2. docutils witch some Sphinx specific settings
+           3. using a pickled doctree from a full Sphinx build.
+        """
 
         def plain_docutils(filename):
+            """Use plain docutils method for generating the doctree. No Sphinx
+               specific markup has been registered.
+            """
             return publish_doctree(rst_data, source_path = filename)
 
         def sphinx_docutils(filename):
-            # importing sphinx has side-effects on docutils since roles and
-            # directives get registered. We have to do some sphinx specific
-            # setup to make at least the doctree directive happy. Note that
-            # this code is a bit fragile since no official sphinx API is used.
+            """Use docutils function to generate the doctree. If
+               :func:`set_up_sphinx()` has been called during initialization
+               all Sphinx specific markup including extensions have
+               been registered in docutils. Otherwise, extension specific
+               markup is missing.
+
+               Note that this code is a bit fragile since no official Sphinx
+               API is used.
+            """
             config = SphinxConfig (None, None, None, None)
             env = SphinxBuildEnvironment (os.path.dirname(filename), "", config)
             env.docname = filename
@@ -128,13 +144,15 @@ class RSTPlugin(object):
                                    settings_overrides = {'env': env})
 
         def sphinx_full(filename):
-            # load the pickeled doctree
+            """Load a pickled doctree (created by a full sphinx build) from
+               disk.
+            """
             srcdir = self.config['basedir']
             outdir = os.path.join(srcdir, self.config['builddir'])
             doctreedir = os.path.join(outdir, 'doctrees')
             doctreefile = os.path.join (doctreedir,
                                         "%s.doctree" % os.path.splitext
-                                            (os.path.relpath(filename, srcdir))[0])
+                                        (os.path.relpath(filename, srcdir))[0])
             if os.path.isfile(doctreefile):
                 with open(doctreefile) as f:
                     doctree = pickle.load(f)
@@ -156,6 +174,9 @@ class RSTPlugin(object):
                 # TODO: This will give better results (toctree is resolved, ...)
                 # but I think there are race conditions if both the outliner
                 # and the validator are activated.
+                # TODO: loading all doctrees and displaying the *full* structure
+                # of a complete Sphinx project in the Outliner would be a cool
+                # feature.
                 self.create_sphinx_env()
                 doctree = sphinx_full(document.filename)
             else:
@@ -265,7 +286,7 @@ class RSTOutliner(Outliner):
                 # nodes with options have no line attribute
                 linenumber = node.line or node.parent.line
                 item_kwargs = {'icon_name': 'source-image'}
-        except:
+        except Exception, e:
             pass # ignore node if *something* goes wrong
         else:
             if new_item:
