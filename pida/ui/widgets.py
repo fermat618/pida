@@ -16,7 +16,6 @@ from kiwi.ui.widgets.fontbutton import ProxyFontButton
 from kiwi.ui.widgets.checkbutton import ProxyCheckButton
 from kiwi.ui.widgets.colorbutton import ProxyColorButton
 from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
-from kiwi.utils import gsignal
 
 from pida.core.options import Color
 from pygtkhelpers.ui.widgets import StringList
