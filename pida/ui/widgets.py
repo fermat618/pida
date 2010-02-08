@@ -7,78 +7,83 @@
 import gtk
 import pango
 
-from kiwi.ui.gadgets import gdk_color_to_string
-from kiwi.ui.widgets.entry import ProxyEntry
-from kiwi.ui.widgets.label import ProxyLabel
-from kiwi.ui.widgets.combo import ProxyComboBox
-from kiwi.ui.widgets.spinbutton import ProxySpinButton
-from kiwi.ui.widgets.fontbutton import ProxyFontButton
-from kiwi.ui.widgets.checkbutton import ProxyCheckButton
-from kiwi.ui.widgets.colorbutton import ProxyColorButton
-from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
-
 from pida.core.options import Color
 from pygtkhelpers.ui.widgets import StringList
+from pygtkhelpers import proxy
+
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
 
-class CleverProxyColorButton(ProxyColorButton):
+class CleverColorButtonProxy(proxy.GtkColorButtonProxy):
 
     def update(self, val):
         col = gtk.gdk.color_parse(val)
-        # kiwi api seems incompatible so we have to try :(
-        try:
-            super(CleverProxyColorButton, self).update(col)
-        except TypeError:
-            super(CleverProxyColorButton, self).update(col.to_string())
+        super(CleverColorButtonProxy, self).update(col)
 
     def read(self):
-        col = super(CleverProxyColorButton, self).read()
+        col = super(CleverColorButtonProxy, self).read()
         if isinstance(col, str):
             return col
-        return gdk_color_to_string(col)
+        return col.to_string()
 
 
 def _file_widget():
-    w = ProxyFileChooserButton(_('Select File'))
+    w = gtk.FileChooserButton(_('Select File'))
     w.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
     return w
 
 def _integer_adjustment():
-    w = ProxySpinButton()
+    w = gtk.SpinButton()
     w.set_adjustment(gtk.Adjustment(0, 0, 10000, 1))
     return w
 
 
 type_to_proxy = {
     int: _integer_adjustment,
-    bool: ProxyCheckButton,
+    bool: gtk.CheckButton,
     list: StringList,
     file: _file_widget,
-    Color: CleverProxyColorButton,
-    pango.Font: ProxyFontButton,
+    Color: gtk.ColorButton,
+    pango.Font: gtk.FontButton,
     # readonly items?
     # choosing a directory?
     # choosing a readonly file? FILE_CHOOSER_ACTION_SAVE "Select File"
     # range
     }
 
+def get_proxy_for_widget(widget):
+    if isinstance(widget, gtk.ColorButton):
+        return CleverColorButtonProxy(widget)
+    return proxy.widget_proxies[widget.__class__](widget)
+
+
 def get_widget_for_type(typ):
     if typ in type_to_proxy:
         return type_to_proxy[typ]()
     if issubclass(typ, str) and typ is not str:
-        w = ProxyComboBox()
+        w = gtk.ComboBox()
+        model = gtk.ListStore(str, str)
+        w.set_model(model)
+
         if isinstance(typ.options, dict):
-            w.prefill([(l, v) for (v, l) in typ.options.iteritems()])
+            items = [[l, v] for (v, l) in typ.options.iteritems()]
         else:
-            w.prefill([(v, v) for v in typ.options])
+            items = [[v, v] for v in typ.options]
+        for item in items:
+            model.append(item)
+
+        cell = gtk.CellRendererText()
+        w.pack_start(cell, True)
+        w.add_attribute(cell, 'text', 0)
+
         return w
         
     else:
-        w = ProxyEntry(data_type=str)
+        w = gtk.Entry()
         w.set_width_chars(18)
         return w
  #elif type.__name__ is 'intrange':

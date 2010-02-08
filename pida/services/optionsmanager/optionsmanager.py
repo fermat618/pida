@@ -15,7 +15,8 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE
 
 from pida.ui.views import PidaGladeView
-from pida.ui.widgets import get_widget_for_type
+from pida.ui.widgets import get_widget_for_type, get_proxy_for_widget
+
 
 from kiwi import ValueUnset
 # locale
@@ -26,6 +27,9 @@ _ = locale.gettext
 
 
 class OptionsPage(gtk.VBox):
+    #XXX: this should be a slaveview
+    #     it should try to use the options.ui from a service
+    #     and add other items below
     def __init__(self, view, svc):
         gtk.VBox.__init__(self, spacing=0)
         self.set_border_width(6)
@@ -33,6 +37,7 @@ class OptionsPage(gtk.VBox):
         self.view = view
         self.svc = svc
         self.widgets = {}
+        self.proxies = {}
 
         label = gtk.Label()
         label.set_markup('<big><b>%s</b></big>' % svc.get_label())
@@ -75,30 +80,32 @@ class OptionsPage(gtk.VBox):
             optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
-            optwidget = get_widget_for_type(opt.type)
-            widgetsizer.add_widget(optwidget)
-            hb.pack_start(optwidget, expand=True)
-            optwidget.update(opt.value)
-            optwidget.connect('content-changed', self._on_option_changed, opt)
-            self.widgets[opt.name] = optwidget
+
+            opt_widget = get_widget_for_type(opt.type)
+            opt_proxy = get_proxy_for_widget(opt_widget)
+            widgetsizer.add_widget(opt_widget)
+            hb.pack_start(opt_widget, expand=True)
+            opt_proxy.update(opt.value)
+            opt_proxy.connect('changed', self._on_option_changed, opt)
+            self.widgets[opt.name] = opt_widget
+            self.proxies[opt.name] = opt_proxy
             view._tips.set_tip(eb, doc)
 
-    def _on_option_changed(self, widget, option):
-        widgval = widget.read()
+    def _on_option_changed(self, proxy, value, option):
         optval = option.value
         # various hacks
-        if widgval is None:
+        if value is None:
             return
-        if widgval == ValueUnset:
+        if value == ValueUnset:
             widgval = ''
-        if widgval != optval:
-            option.group.set_value(option.name, widgval)
+        if value != optval:
+            option.group.set_value(option.name, value)
 
     def _on_option_changed_elsewhere(self, option):
-        widgval = self.widgets[option.name].read()
+        widgval = self.proxies[option.name].read()
         optval = option.value
         if optval != widgval:
-            self.widgets[option.name].update(option.value)
+            self.proxies[option.name].update(option.value)
 
 class PidaOptionsView(PidaGladeView):
 
