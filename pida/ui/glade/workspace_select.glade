@@ -34,7 +34,7 @@
         <property name="spacing">2</property>
         <property name="visible">True</property>
         <child>
-          <object class="ObjectList" id="workspace_view">
+          <object class="PyGTKHelpersObjectList" id="workspace_view">
             <property name="can_default">True</property>
             <property name="has_default">True</property>
             <property name="receives_default">True</property>

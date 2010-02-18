@@ -10,6 +10,7 @@ import os
 
 from pygtkhelpers.delegates import ToplevelView
 from pygtkhelpers.ui.dialogs import error, info, yesno, save, open as opendlg
+from pygtkhelpers.ui.objectlist import Column
 
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
@@ -257,15 +258,14 @@ class WorkspaceWindow(ToplevelView):
         self.pic_off = gtk.gdk.pixbuf_new_from_file(
                     environ.find_resource('pixmaps', 'offline.png'))
 
-        from kiwi.ui.objectlist import Column
 
         self.workspace_view.set_columns([
             Column('id', visible=False),
             Column('pid', visible=False),
-            Column('status', title=' ', width=30, data_type=gtk.gdk.Pixbuf, expand=False, expander=False),
-            Column('workspace', title=_('Workspace'), searchable=True, sorted=True, expand=True),
+            Column('status', title=' ', width=30, type=gtk.gdk.Pixbuf), #, expand=False, expander=False),
+            Column('workspace', title=_('Workspace'),),# searchable=True, sorted=True, expand=True),
             Column('project', title=_('Project'), expand=True),
-            Column('open_files', title=_('Open Files'), data_type=int),
+            Column('open_files', title=_('Open Files'), type=int),
         ])
 
         gcall(self.update_workspaces)
@@ -322,7 +322,7 @@ class WorkspaceWindow(ToplevelView):
 
             self.workspace_view.append(entry)
         if select:
-            self.workspace_view.select(select)
+            self.workspace_view.selected_item = select
             self.workspace_view.grab_focus()
 
     def on_workspace_view__row_activated(self, widget, obj):
@@ -375,7 +375,7 @@ class WorkspaceWindow(ToplevelView):
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
 
-    def on_workspace_view__right_click(self, ol, target, event):
+    def on_workspace_view__item_right_clicked(self, ol, target, event):
         self._create_popup(event, self.UseWorkspace, None, self.DelWorkspace)
 
     def on_quit__clicked(self, *args):
