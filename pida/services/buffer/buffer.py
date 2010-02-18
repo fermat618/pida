@@ -138,7 +138,7 @@ class BufferListView(PidaGladeView):
         self.select_buffer_by_index(newindex)
 
     def sort(self):
-        self._sort_combo._sort()
+        self.buffers_ol.get_model().sort_column_changed()
 
 class BufferActionsConfig(ActionsConfig):
 
