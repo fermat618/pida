@@ -36,12 +36,10 @@ MOO_DATA_DIRS=os.pathsep.join((
 
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
 
-from kiwi.environ import environ
-
-environ.add_resource('pixmaps', os.path.join(os.path.dirname(__file__), 'pixmaps'))
-
 def _load_pix(fn):
-    return gtk.gdk.pixbuf_new_from_file(environ.find_resource('pixmaps', fn))
+    #XXX: not zip save
+    path = os.path.join(os.path.dirname(__file__), 'pixmaps', fn)
+    return gtk.gdk.pixbuf_new_from_file(path)
 
 _PIXMAPS = {
     'bookmark':              _load_pix('bookmark.png'),
