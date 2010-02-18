@@ -251,12 +251,13 @@ class WorkspaceWindow(ToplevelView):
 
         #self.set_role('workspace') 
         self.widget.set_name('Pidaworkspace')
-
-        from kiwi.environ import environ
+        
+        import pida #XXX: not zip save
+        base = os.path.join(pida.__path__[0], 'resources', 'pixmaps')
         self.pic_on = gtk.gdk.pixbuf_new_from_file(
-                    environ.find_resource('pixmaps', 'online.png'))
+                    os.path.join(base, 'online.png'))
         self.pic_off = gtk.gdk.pixbuf_new_from_file(
-                    environ.find_resource('pixmaps', 'offline.png'))
+                    os.path.join(base, 'offline.png'))
 
 
         self.workspace_view.set_columns([
