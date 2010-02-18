@@ -224,7 +224,7 @@ def _get_target(build, name):
     if targets:
         return targets[0]
     else:
-        raise KeyError
+        raise KeyError(name)
 
 
 class CircularAction(object):
