@@ -52,58 +52,53 @@ t = dict(
     options = {}
 )
 
-def _get_test_build():
+def pytest_funcarg__json(request):
     json = dumps(t, sort_keys=False, indent=2)
-    return Build.loads(json), json
+
+def pytest_funcarg__b(request):
+    json = dumps(t, sort_keys=False, indent=2)
+    return Build.loads(json)
 
 def _build_test(f):
-    b, j = _get_test_build()
-    def _f():
-        return f(b)
-    _f.__name__ = f.__name__
-    return _f
+    return f
+
+def pytest_funcarg__t(request):
+    b = request.getfuncargvalue('b')
+    return b.targets[0]
+
 
 def _target_test(name='test'):
     def _decorator(f):
-        b, j = _get_test_build()
-        t = b.targets[0]
-        def _f():
-            return f(t)
-        _f.__name__ = f.__name__
-        return _f
+        f.target = name
+        return f
     return _decorator
 
-
+def pytest_funcarg__a(request):
+    t = request.getfuncargvalue('t')
+    return t.actions[0]
 
 def _action_test(f):
-    b, j = _get_test_build()
-    t = b.targets[0]
-    a = t.actions[0]
-    def _f():
-        return f(a)
-    _f.__name__ = f.__name__
-    return _f
+    return f
 
+def pytest_funcarg__g(request):
+    b = request.getfuncargvalue('b')
+    return generate_execution_graph(b, request.function.graph)
 
 def _graph_test(target_name='test'):
     def _decorator(f):
-        b, j = _get_test_build()
-        g = generate_execution_graph(b, target_name)
-        def _f():
-            return f(g)
-        _f.__name__ = f.__name__
-        return _f
+        f.graph = target_name
+        return f
     return _decorator
 
+def pytest_funcarg__res(request):
+    b = request.getfuncargvalue('b')
+    target = request.function.target
+    return list(execute_build(b, target))
 
 def _execution_result_test(target_name='test'):
     def _decorator(f):
-        b, j = _get_test_build()
-        res = list(execute_build(b, target_name))
-        def _f():
-            return f(res)
-        _f.__name__ = f.__name__
-        return _f
+        f.target = target_name
+        return f
     return _decorator
 
 
@@ -277,8 +272,10 @@ def test_main_view_actions(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
-    v.targets_list.select(v.targets_list[1])
+    v.targets_list.selected_item = v.targets_list[1]
     refresh_gui()
+    print list(v.acts_list)
+    print v.targets_list[1].actions
     assert list(v.acts_list) == v.targets_list[1].actions
 
 
@@ -294,7 +291,7 @@ def test_main_view_add_action(b):
     assert len(v.acts_list) > t
     assert v.acts_list[-1].value == ''
     assert v.acts_list[-1].type == 'shell'
-    assert v.acts_list[-1] in v.targets_list.get_selected().actions
+    assert v.acts_list[-1] in v.targets_list.selected_item.actions
 
 
 @_build_test
@@ -347,8 +344,8 @@ def test_main_view_action_view(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
-    act = v.acts_list.get_selected()
-    shouldbe = v.acts_holder.page_num(v.action_views[act.type].get_toplevel())
+    act = v.acts_list.selected_item
+    shouldbe = v.acts_holder.page_num(v.action_views[act.type].widget)
     assert shouldbe == v.acts_holder.get_current_page()
 
 
@@ -357,9 +354,12 @@ def test_main_view_select_action(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
-    v.targets_list.select(v.targets_list[1])
-    v.acts_list.select(v.acts_list[1])
+    print list(v.targets_list)
+    v.targets_list.selected_item = v.targets_list[1]
     refresh_gui()
-    shouldbe = v.acts_holder.page_num(v.action_views['target'].get_toplevel())
+    print list(v.acts_list)
+    v.acts_list.selected_item = v.acts_list[1]
+    refresh_gui()
+    shouldbe = v.acts_holder.page_num(v.action_views['target'].widget)
     assert shouldbe == v.acts_holder.get_current_page()
 

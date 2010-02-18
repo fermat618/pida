@@ -218,7 +218,7 @@
                     <property name="shadow_type">in</property>
                     <property name="visible">True</property>
                     <child>
-                      <object class="ObjectList" id="targets_list">
+                      <object class="PyGTKHelpersObjectList" id="targets_list">
                         <property name="border_width">3</property>
                         <property name="visible">True</property>
                         <property name="vscrollbar_policy">automatic</property>
@@ -233,7 +233,7 @@
                     <property name="shadow_type">in</property>
                     <property name="visible">True</property>
                     <child>
-                      <object class="ObjectList" id="acts_list">
+                      <object class="PyGTKHelpersObjectList" id="acts_list">
                         <property name="border_width">3</property>
                         <property name="visible">True</property>
                         <property name="vscrollbar_policy">automatic</property>

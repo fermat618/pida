@@ -139,6 +139,9 @@ class Target(object):
 
 class Action(object):
     """A single action"""
+    
+    def __repr__(self):
+        return '<puild-action %s %r>' % (self.type, self.value)
 
     def __init__(self):
         self.type = ''

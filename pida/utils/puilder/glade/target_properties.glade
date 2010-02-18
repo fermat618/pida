@@ -37,7 +37,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="ObjectList" id="acts_list">
+                  <object class="PyGTKHelpersObjectList" id="acts_list">
                     <property name="visible">True</property>
                     <property name="vscrollbar_policy">automatic</property>
                   </object>
@@ -141,7 +141,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="ObjectList" id="objectlist1">
+                  <object class="PyGTKHelpersObjectList" id="objectlist1">
                     <property name="visible">True</property>
                     <property name="vscrollbar_policy">automatic</property>
                   </object>

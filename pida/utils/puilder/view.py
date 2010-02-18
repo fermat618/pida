@@ -1,15 +1,11 @@
 
 import gtk, gobject
 
-from kiwi.environ import Library
-
-lib = Library('pida.utils.puilder', root='.')
-lib.add_global_resources(glade='glade')
 
 from pygtkhelpers.delegates import SlaveView, ToplevelView, gsignal
 
-from kiwi.ui.objectlist import Column
-from kiwi.ui.dialogs import yesno
+from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui.dialogs import yesno
 
 from pida.utils.puilder.model import action_types
 from pida.utils.gthreads import gcall
@@ -148,11 +144,11 @@ class PuilderView(SlaveView):
         menu.popup(None, None, None, event.button, event.time)
 
 
-    def on_targets_list__right_click(self, ol, target, event):
+    def on_targets_list__item_right_clicked(self, ol, target, event):
         self._create_popup(event, self.AddTarget, None, self.SetDefault, 
                            self.ExecuteTargets, None, self.DelCurrentTarget)
 
-    def on_acts_list__right_click(self, ol, action, event):
+    def on_acts_list__item_right_clicked(self, ol, action, event):
         self.act_up_act.set_sensitive(self.acts_list.index(action) > 0)
         self.act_down_act.set_sensitive(
             self.acts_list.index(action) < (len(self.acts_list) - 1))
@@ -175,9 +171,10 @@ class PuilderView(SlaveView):
 
     def set_build(self, build):
         self.build = build
-        self.targets_list.add_list(self.build.targets, clear=True)
+        self.targets_list.clear()
+        self.targets_list.extend(self.build.targets)
         if len(self.targets_list):
-            self.targets_list.select(self.targets_list[0])
+            self.targets_list.selected_item = self.targets_list[0]
 
         for v in self.action_views.values():
             v.build = build
@@ -194,10 +191,11 @@ class PuilderView(SlaveView):
         self.acts_list.set_sensitive(selected)
 
         if selected:
-            self.acts_list.add_list(target.actions, clear=True)
+            self.acts_list.clear()
+            self.acts_list.extend(target.actions)
 
             if len(self.acts_list):
-                self.acts_list.select(self.acts_list[0])
+                self.acts_list.selected_item = self.acts_list[0]
 
         else:
             self.acts_list.clear()
@@ -223,9 +221,10 @@ class PuilderView(SlaveView):
             self.acts_holder.remove(c)
 
     def revert(self):
-        self.project.reload()
-        self.set_project(self.project)
-        self.set_build(self.project.build)
+        if self.project:
+            self.project.reload()
+            self.set_project(self.project)
+            self.set_build(self.project.build)
 
     def on_save_button__clicked(self, button):
         self.build.dumpf(self.project.project_file)
@@ -238,8 +237,8 @@ class PuilderView(SlaveView):
     def on_revert_button__clicked(self, button):
         self.revert()
 
-    def on_targets_list__selection_changed(self, ol, target):
-        self.target_changed(target)
+    def on_targets_list__selection_changed(self, ol):
+        self.target_changed(ol.selected_item)
 
     def on_AddTarget__activate(self, button):
         t = self.build.create_new_target('New Target')
@@ -260,13 +259,13 @@ class PuilderView(SlaveView):
         self.acts_list.append(a, select=True)
 
     def on_DelCurrentTarget__activate(self, button):
-        t = self.targets_list.get_selected()
+        t = self.targets_list.selected_item
         if self.confirm('Are you sure you want to delete target "%s"' % t.name):
             self.build.targets.remove(t)
             self.targets_list.remove(t)
 
     def on_AddActs__activate(self, button):
-        target = self.targets_list.get_selected()
+        target = self.targets_list.selected_item
         if target is None:
             return
         act = target.create_new_action()
@@ -287,8 +286,8 @@ class PuilderView(SlaveView):
     def on_act_down_act__activate(self, action):
         pass
 
-    def on_acts_list__selection_changed(self, ol, act):
-        self.action_changed(act)
+    def on_acts_list__selection_changed(self, ol):
+        self.action_changed(ol.selected_item)
 
     def on_acts_type__content_changed(self, cmb):
         act = self.acts_list.get_selected()
