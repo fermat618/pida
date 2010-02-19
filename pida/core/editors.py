@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """
     Editor Base Classes
     ~~~~~~~~~~~~~~~~~~~
@@ -125,7 +125,7 @@ class EditorCommandsConfig(CommandsConfig):
 
     def open(self, document):
         self.svc.open(document)
-        
+
     def open_list(self, documents):
         self.svc.open_list(documents)
 
@@ -170,12 +170,12 @@ class EditorCommandsConfig(CommandsConfig):
 
 
 class EditorService(Service):
-    
+
     actions_config = EditorActionsConfig
     commands_config = EditorCommandsConfig
-    
+
     def __repr__(self):
-        return '<Editor: %s>'%self.__class__.__name__
+        return '<Editor: %s>' % self.__class__.__name__
 
     def _open_single(self, docs):
         if not docs:
@@ -187,12 +187,12 @@ class EditorService(Service):
             self.log.exception(err)
             self.emit('document-exception', error=err)
         return True
-    
+
     def open_list(self, documents):
         #XXX: this way is not acceptable, and only the fallback
         # solution for editors not implementing the open_list interface
-        
-        # make a copy of the file list as we modify it and 
+
+        # make a copy of the file list as we modify it and
         # this could cause side effects very hard to debug
         documents_c = documents[:]
         gobject.timeout_add(100, self._open_single, documents_c)
@@ -212,12 +212,12 @@ class LineMarker(object):
     """
     LineMarker is a class used to mark lines with specific informations
     like bookmarks, breakpoints etc.
-    
+
     LineMarkers are managed through an MarkerInterface instance.
-    
-    If a LineMark is marked for beeing deleted it's line number is 
+
+    If a LineMark is marked for beeing deleted it's line number is
     changed to -1.
-    
+
     """
     def __init__(self, filename, lineno, type_):
         self.filename = filename
@@ -234,26 +234,26 @@ class LineMarker(object):
 
     def get_line(self):
         return int(self._lineno)
-    
+
     line = property(get_line, set_line)
 
     def update(self, newlineno):
         """
         This function is called when the lineno changes. This should update
         the views etc.
-        
+
         Must be overloaded by the real implementation.
         """
         pass
-    
+
     def __repr__(self):
-        return '<LineMarker %s %s>' %(self.filename, self._lineno)
+        return '<LineMarker %s %s>' % (self.filename, self._lineno)
 
 class MarkerInterface(object):
     """
     The MarkerInterface is used by the editor component to
     receive LineMarkers from a plugin.
-    
+
     To register a MakerInterface put an in the features of the Editor.
     """
 

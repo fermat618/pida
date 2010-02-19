@@ -156,7 +156,7 @@ class ServiceManager(object):
         #XXX: test this more roughly
         plugin = plugin_class(self._boss)
         try:
-            if hasattr(plugin, 'started') :
+            if hasattr(plugin, 'started'):
                 log.error("plugin.started shouldn't be set by %r", plugin)
 
             plugin.started = False # not yet started
@@ -189,7 +189,7 @@ class ServiceManager(object):
 
         except Exception, e:
             log.exception(e)
-            log.error(_('Could not load plugin %s') %name)
+            log.error(_('Could not load plugin %s'), name)
             self._plugins.unload(name)
             raise ServiceLoadingError(name)
 
@@ -210,46 +210,46 @@ class ServiceManager(object):
     def _register_services(self):
         # len of self is not yet available
         classes = self._services.get_all()
-        pp = 20.0/len(classes)
+        pp = 20.0 / len(classes)
         for i, service in enumerate(classes):
             service_instance = service(self._boss)
             #XXX: check for started
             service.started = False
             self._register(service_instance)
-            self.update_progress((i+1)*pp, _("Register Components"))
+            self.update_progress((i + 1) * pp, _("Register Components"))
 
     def _register(self, service):
         self._reg[service.get_name()] = service
 
     def _create_services(self):
-        pp = 10.0/len(self)
+        pp = 10.0 / len(self)
         for i, svc in enumerate(self.get_services()):
             svc.log.debug('Creating Service')
             svc.create_all()
-            self.update_progress(20+(i+1)*pp, _("Creating Components"))
+            self.update_progress(20 + (i + 1) * pp, _("Creating Components"))
 
     def _subscribe_services(self):
-        pp = 10.0/len(self)
+        pp = 10.0 / len(self)
         for i, svc in enumerate(self.get_services()):
             svc.log.debug('Subscribing Service')
             svc.subscribe_all()
-            self.update_progress(30+(i+1)*pp, _("Subscribing Components"))
+            self.update_progress(30 + (i + 1) * pp, _("Subscribing Components"))
 
     def _pre_start_services(self):
-        pp = 20.0/len(self)
-        for i,svc in enumerate(self.get_services()):
+        pp = 20.0 / len(self)
+        for i, svc in enumerate(self.get_services()):
             svc.log.debug('Pre Starting Service')
             svc.pre_start()
-            self.update_progress(40+(i+1)*pp, _("Prepare Components"))
+            self.update_progress(40 + (i + 1) * pp, _("Prepare Components"))
 
     def start_services(self):
-        pp = 40.0/len(self)
+        pp = 40.0 / len(self)
         for i, svc in enumerate(self.get_services()):
             svc.log.debug('Starting Service')
             svc.start()
             #XXX: check if its acceptable here
             svc.started = True
-            self.update_progress(60+(i+1)*pp, _("Start Components"))
+            self.update_progress(60 + (i + 1) * pp, _("Start Components"))
         self.started = True
 
     def get_available_editors(self):
@@ -271,7 +271,7 @@ class ServiceManager(object):
         self.update_progress(98, _("Start Editor"))
 
     def load_editor(self, name):
-        assert not hasattr(self, 'editor') , "can't load a second editor"
+        assert not hasattr(self, 'editor'), "can't load a second editor"
         editor = self._editors.get_one(name)
         self.editor = editor(self._boss)
         self.editor.started = False
@@ -281,7 +281,7 @@ class ServiceManager(object):
         for svc in self:
             # in force mode we down't care about the return value.
             if not svc.pre_stop() and not force:
-                log.info('Shutdown prevented by: %s' %svc.get_name())
+                log.info('Shutdown prevented by: %s', svc.get_name())
                 return False
 
         for svc in self:

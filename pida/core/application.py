@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """
     pida.core.application
     ~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +36,7 @@ try:
     gdk.threads_enter() # need to ensure threadsavety before any ui drawing
     if gtk.pygtk_version < (2, 8):
         die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
-                % {'major':gtk.pygtk_version[:2][0], 'minor':gtk.pygtk_version[:2][1]})
+                % {'major': gtk.pygtk_version[:2][0], 'minor': gtk.pygtk_version[:2][1]})
 except ImportError, e:
     die_cli(_('PIDA requires Python GTK bindings. They were not found.'), e)
 
@@ -45,7 +45,7 @@ try:
     from pygtkhelpers.ui.dialogs import error
     def die_gui(message, exception):
         """Die in a GUI way."""
-        error(_('Fatal error, cannot start PIDA'), 
+        error(_('Fatal error, cannot start PIDA'),
               long='%s\n%s' % (message, exception))
         die_cli(message)
     import kiwi #XXX: kill later
@@ -56,7 +56,7 @@ except ImportError, e:
 # Python 2.5
 if sys.version_info < (2, 5):
     die_gui(_('Python 2.5 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
-        {'major':sys.version_info[:2][0], 'minor':sys.version_info[:2][1]})
+        {'major': sys.version_info[:2][0], 'minor': sys.version_info[:2][1]})
 
 
 # Prevent PIDA from being run as root.
@@ -69,8 +69,6 @@ try:
     import pida.core.pdbus
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
-
-
 
 from pida.core import environment
 from pida.core.boss import Boss
@@ -119,7 +117,7 @@ def main():
     #options.create_default_manager(pida.core.environment.workspace_name())
     from pida.core import log
     log.setup()
-    
+
     if not opts.debug:
         warnings.filterwarnings("ignore")
 
@@ -183,7 +181,7 @@ def main():
         except ImportError:
             warnings.warn_explicit('python DBus bindings not available. '
                         'Not all functions available.', Warning, 'pida', '')
-        
+
     if opts.version:
         print _('PIDA, version %s') % pida.version
     elif opts.profile_path:

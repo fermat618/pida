@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     pida.core.document
@@ -32,7 +32,7 @@ new_file_index = 1
 class Document(object):
     """
     Represents a document.
-    
+
     A document can eighter be just a file. Or be opened by the editor component
     and is then a live document (live is True).
 
@@ -40,7 +40,6 @@ class Document(object):
     however does have its tailing newline character as it's supposed not
     to alter data.
 
-    
     """
 
     markup_prefix = ''
@@ -49,7 +48,7 @@ class Document(object):
     markup_color_noproject = "#FF0000"
 
     markup_attributes = ['project_name', 'project_relative_path', 'basename',
-                         'markup_project_color', 'markup_directory_color', 
+                         'markup_project_color', 'markup_directory_color',
                          'filename', 'directory', 'markup_color_noproject']
 
     markup_string_project = (
@@ -63,7 +62,7 @@ class Document(object):
                      u'<span color="%(markup_directory_color)s">'
                      u'%(directory)s/</span>'
                      u'<b>%(basename)s</b>')
-    
+
     markup_string_tworow = (
                      u'<b>%(basename)s</b>\n'
                      u'<small>%(markup_inc)s</small>')
@@ -99,7 +98,7 @@ class Document(object):
     def __init__(self, boss, filename=None, project=None):
         """
         Create a new Document instance.
-        
+
         @boss: boss this document belongs to
         @filename: path to the file or None (unamed buffer)
         @project: project this document belongs to
@@ -193,7 +192,7 @@ class Document(object):
 
 
     def _get_doctype(self):
-        #FIXME: need a interface to pull doctype from the editor if 
+        #FIXME: need a interface to pull doctype from the editor if
         # we are live
         if hasattr(self, '_doctype'):
             return self._doctype
@@ -221,7 +220,7 @@ class Document(object):
         try:
             return os.stat(self.filename)
         except (OSError, TypeError):
-            return (0,)*10
+            return (0,) * 10
 
     @cached_property
     def mimetype(self):
@@ -245,19 +244,19 @@ class Document(object):
 
     def __repr__(self):
         if self.filename is None:
-            return u'<New Document %d (%s)>' %(self.newfile_index, self.unique_id)
+            return u'<New Document %d (%s)>' % (self.newfile_index, self.unique_id)
         else:
-            return u'<Document %r (%s)>' %(self.filename, self.unique_id)
+            return u'<Document %r (%s)>' % (self.filename, self.unique_id)
 
     def __unicode__(self):
         if self.filename is None:
             if self.newfile_index > 1:
-                return _(u'Untitled (%d)') %(self.newfile_index)
+                return _(u'Untitled (%d)') % (self.newfile_index)
             return _(u'Untitled')
         else:
             if self.project:
-                return u'%s:%s/%s' %(self.project_name,
-                                     self.project_relative_path, self.basename)
+                return u'%s:%s/%s' % (self.project_name,
+                                      self.project_relative_path, self.basename)
             else:
                 return os.path.basename(self.filename)
 
@@ -268,15 +267,16 @@ class Document(object):
         """
         if self.filename is None:
             if self.newfile_index > 1:
-                return _(u'<b>Untitled (%d)</b>') %(self.newfile_index)
+                return _(u'<b>Untitled (%d)</b>') % (self.newfile_index)
             return _(u'<b>Untitled</b>')
         else:
             if self.project:
-                return u'%s:%s/<b>%s</b>' %(escape(self.project_name),
-                                     escape(self.project_relative_path), 
-                                     escape(self.basename))
+                return u'%s:%s/<b>%s</b>' % (
+                        escape(self.project_name),
+                        escape(self.project_relative_path),
+                        escape(self.basename))
             else:
-                return '<b>%s</b>' %escape(os.path.basename(self.filename))
+                return '<b>%s</b>' % escape(os.path.basename(self.filename))
 
     @property
     def modified_time(self):
@@ -432,7 +432,7 @@ class Document(object):
             mark = self.get_markup(self.markup_string_tworow_project)
         else:
             mark = self.get_markup(self.markup_string_tworow_fullpath)
-        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
+        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict={
             'markup_inc': mark
             }, style=style)
         return rv

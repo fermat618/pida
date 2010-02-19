@@ -90,7 +90,7 @@ op.add_option('', '--killsettings', action="store_true",
 op.add_option('', '--disable-multiprocessing', action="store_false",
     dest='multiprocessing',
     help=_('Disable usage of external python instances'))
-op.add_option('', '--force-multiprocessing', action="store_true", 
+op.add_option('', '--force-multiprocessing', action="store_true",
     dest='multiprocessing',
     help=_('Disable usage of external python instances'))
 

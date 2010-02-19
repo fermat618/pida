@@ -63,9 +63,9 @@ class Service(object):
     def __repr__(self):
         #XXX: bad factoring, get better types
         if self.__class__.__module__.startswith('pida.service'):
-            return '<Service: %s>'%self.__class__.__name__
+            return '<Service: %s>' % self.__class__.__name__
         else:
-            return '<Plugin: %s>'%self.__class__.__name__
+            return '<Plugin: %s>' % self.__class__.__name__
 
     @classmethod
     def get_name(cls):

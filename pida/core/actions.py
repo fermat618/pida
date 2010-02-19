@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     Action support for PIDA services.
@@ -173,7 +173,7 @@ class ActionsConfig(OptionsConfig):
             act.connect('activate', callback)
 
         if accel is not None:
-            self._create_key_option(act, name, label, tooltip, accel, 
+            self._create_key_option(act, name, label, tooltip, accel,
                                     global_=global_)
 
         return act
@@ -196,7 +196,7 @@ class ActionsConfig(OptionsConfig):
 
 # XXX: for some reason this does not work. the changed function gets called
 # when it shouldn't and doesn't detect the wrong path
-# if fixed and the action acceleration is changed the acceleration_group.lock 
+# if fixed and the action acceleration is changed the acceleration_group.lock
 # can be removed
 #         print "subsribe", act, opt
 #         def on_accel_changed(accelgroup, accel_key, accel_mods, closure, nopt, nact):
@@ -214,7 +214,7 @@ class ActionsConfig(OptionsConfig):
 #             #print act.props.name
 #             pass
 #
-#         self.accelerator_group.connect('accel-changed', on_accel_changed, 
+#         self.accelerator_group.connect('accel-changed', on_accel_changed,
 #                 opt, act)
 
 

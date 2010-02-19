@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     pida.core.log
@@ -32,12 +32,12 @@ def setup():
         get_logger().setLevel(logging.DEBUG)
     else:
         get_logger().setLevel(logging.INFO)
-    
+
 class Log(object):
-    
+
     def get_name(self):
-        return '%s.%s' %(self.__module__, self.__class__.__name__)
-    
+        return '%s.%s' % (self.__module__, self.__class__.__name__)
+
     @cached_property
     def log(self):
         return get_logger(self.get_name())

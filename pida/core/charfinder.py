@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     Chartype detection
@@ -89,8 +89,8 @@ try:
 
 except AttributeError, e:
     print "can't load magic module"
-    magic_detect = lambda *k: None
-    magic_test = lambda *k: None
+    magic_detect = lambda * k: None
+    magic_test = lambda * k: None
 
 
 try:
@@ -107,7 +107,7 @@ try:
         return detector.result["encoding"]
 
 except ImportError:
-    chardet_sniff = lambda *k: None
+    chardet_sniff = lambda * k: None
 
 mime_detectors = {
     ('text', 'x-python'): python_detect,

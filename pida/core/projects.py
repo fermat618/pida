@@ -39,8 +39,8 @@ RESULT = Enumeration("RESULT",
              "ABORT"))
 
 REFRESH_PRIORITY = Enumeration("REFRESH_PRIORITY",
-            (("PRE_FILECACHE", 400), ("FILECACHE", 350), 
-            ("POST_FILECACHE", 300), ("EARLY", 200), ("NORMAL", 100), 
+            (("PRE_FILECACHE", 400), ("FILECACHE", 350),
+            ("POST_FILECACHE", 300), ("EARLY", 200), ("NORMAL", 100),
             ("LATE", 0)))
 
 
@@ -61,7 +61,7 @@ class FileInfo(object):
         self.children = {}
 
     def __repr__(self):
-        return "<FileInfo %s >" %self.relpath
+        return "<FileInfo %s >" % self.relpath
 
 class Project(Log):
     """
@@ -105,7 +105,7 @@ class Project(Log):
                 os.mkdir(self.data_dir)
             except OSError, err:
                 self.log.exception(err)
-                
+
         #XXX: this might need wrappers for reload
         for mod in self.__data.values():
             if hasattr(mod, 'reload'):
@@ -170,7 +170,7 @@ class Project(Log):
 
     def load_cache(self):
         path = self.get_meta_dir(filename=CACHE_NAME)
-        
+
         if os.path.isfile(path):
             try:
                 fp = open(path)
@@ -188,16 +188,16 @@ class Project(Log):
             pickle.dump(self._cache, fp)
             fp.close()
         except OSError, err:
-            self.log.error("can't save cache: %s" %err)
+            self.log.error("can't save cache: %s", err)
 
     @staticmethod
     def _init_cache():
         return {
-                "paths":{},
-                "dirs":{},
-                "files":{},
-                "filenames":defaultdict(list),
-                "dirnames":defaultdict(list),
+                "paths": {},
+                "dirs": {},
+                "files": {},
+                "filenames": defaultdict(list),
+                "dirnames": defaultdict(list),
                }
 
     def _rebuild_shortcuts(self):
@@ -218,7 +218,7 @@ class Project(Log):
     def index_path(self, path, update_shortcuts=True):
         """
         Update the index of a single file/directory
-        
+
         @path is an absolute path
         """
         from pida.services.language import DOCTYPES
@@ -241,7 +241,7 @@ class Project(Log):
                 return
         info.doctype = doctype and doctype.internal or None
         self._cache["paths"][info.relpath] = info
-        
+
         if update_shortcuts:
             if info.is_dir:
                 if info not in self._cache["dirnames"][info.basename]:
@@ -251,7 +251,7 @@ class Project(Log):
                 if info not in self._cache["filenames"][info.basename]:
                     self._cache["filenames"][info.basename].append(info)
                 self._cache["files"][info.relpath] = info
-                
+
         if info.dirname != info.basename:
             if not info.dirname in self._cache["paths"]:
                 self.index(info.dirname, recrusive=False)
@@ -269,7 +269,7 @@ class Project(Log):
                 del parent.children[info.basename]
 
         if info.is_dir:
-            match = "%s%s" %(info.relpath, os.path.sep)
+            match = "%s%s" % (info.relpath, os.path.sep)
             todel = []
             for key in self._cache['paths'].iterkeys():
                 if key[:len(match)] == match:
@@ -288,7 +288,7 @@ class Project(Log):
         """
         if path == "" and rebuild:
             self._cache = self._init_cache()
-        
+
         if os.path.isabs(path):
             rpath = self.get_relative_path_for(path)
         else:
@@ -307,16 +307,16 @@ class Project(Log):
                 del dirs[:]
             for file_ in files:
                 if os.access(os.path.join(dirpath, file_), os.R_OK):
-                    self.index_path(os.path.join(dirpath, file_), 
+                    self.index_path(os.path.join(dirpath, file_),
                                     update_shortcuts=False)
             for dir_ in dirs:
                 if os.access(os.path.join(dirpath, dir_), os.R_OK | os.X_OK):
-                    self.index_path(os.path.join(dirpath, dir_), 
+                    self.index_path(os.path.join(dirpath, dir_),
                                     update_shortcuts=False)
 
             # delete not existing nodes
             #print current.children, files+dirs
-            for old in [x for x in current.children if x not in files+dirs]:
+            for old in [x for x in current.children if x not in files + dirs]:
                 self._del_info(current.children[old])
             #match = "%s%s" %(current.relpath, os.path.sep)
             #for key, item in self._cache['paths'].iteritems():
@@ -337,11 +337,11 @@ class Project(Log):
     def query(self, test):
         """
         Get results from the file index.
-        
+
         The test function returns a value from the RESULT object.
-        
+
         This is the most powerfull but slowest test.
-        
+
         @test: callable which gets a FileInfo object passed and returns an int
         """
         paths = self._cache['paths'].keys()[:]
@@ -362,13 +362,13 @@ class Project(Log):
                 break
 
 
-    def query_basename(self, filename, glob=False, files=True, dirs=False, 
+    def query_basename(self, filename, glob=False, files=True, dirs=False,
                        case=False):
         """
         Get results from the file index. It looks only at the basename of entries.
-        
+
         If files and directories are requested, directories are returned first
-        
+
         @filename: pattern to search for or None for all
         @glob: pattern is a glob pattern, case insensitive
         @files: search for a file
@@ -411,4 +411,4 @@ class Project(Log):
                     for i in self._cache['filenames'][filename]:
                         yield i
     def __repr__(self):
-        return "<Project %s>" %self.source_directory
+        return "<Project %s>" % self.source_directory

@@ -32,7 +32,7 @@ class Boss(object):
 
     def __init__(self):
         self.show_splash()
-        self._sm = ServiceManager(self, 
+        self._sm = ServiceManager(self,
                                   update_progress=self._splash.update_progress)
         self._run_first_time()
         self.window = PidaWindow(self)
@@ -40,7 +40,7 @@ class Boss(object):
     def check_editor(self, editor_name):
         """
         Check if the current editor passes the sanity check
-        
+
         :returns new editor name
         """
         try:
@@ -88,7 +88,7 @@ class Boss(object):
     def stop(self, force=False, kill=False):
         """
         Stop pida.
-        @force: on True: doesn't ask the user to quite, but a service may ask 
+        @force: on True: doesn't ask the user to quite, but a service may ask
                 for actions. Services can't stop the shutdown process
         @kill: on True: kill pida hard, nothing is informed or saved
         """
