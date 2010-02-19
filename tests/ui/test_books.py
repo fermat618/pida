@@ -7,6 +7,7 @@ from pida.ui.books import BookConfigurator, BookManager
 from pida.ui.books import ORIENTATION_SIDEBAR_LEFT, ORIENTATION_SIDEBAR_RIGHT
 from pida.ui.books import BOOK_TERMINAL, BOOK_EDITOR, BOOK_BUFFER, BOOK_PLUGIN
 
+from pida.ui.views import PidaView
 from pida.utils.testing import refresh_gui
 from pida.utils.testing.mock import Mock
 
@@ -177,17 +178,15 @@ class TestBookManager(TestCase):
         w.show_all()
 
         refresh_gui()
-
-        self._mview1 = Mock(
-            dict(
-                get_toplevel = gtk.Label('1')
-            )
-        )
-        self._mview2 = Mock(
-            dict(
-                get_toplevel = gtk.Label('2')
-            )
-        )
+        def mock_label(l):
+            mock = Mock()
+            mock.get_toplevel.return_value = gtk.Label(l)
+            mock.create_tab_label_icon.return_value = gtk.image_new_from_stock(
+                    gtk.STOCK_INFO, gtk.ICON_SIZE_MENU)
+            mock.label_text = 'l'
+            return mock
+        self._mview1 = mock_label('1')
+        self._mview2 = mock_label('2')
 
     def test_add_view(self):
         self._man.add_view(BOOK_TERMINAL, self._mview1)
