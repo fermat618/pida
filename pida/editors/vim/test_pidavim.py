@@ -13,11 +13,7 @@ from .client import get_vim, log
 log.setLevel(logging.WARNING)
 
 mainloop = DBusGMainLoop(set_as_default=True)
-
-
-
 vim_script = os.path.abspath('pida/resources/data/pida.vim')
-
 
 def refresh_ui():
     while gtk.events_pending():
@@ -34,15 +30,9 @@ def _start_vim(sid, uuid):
         env=env)
     return p
 
-
-def _make_test_file():
-    fd, fn = tempfile.mkstemp(prefix='pidavim-tests-')
-    os.write(fd, 'This is some test text\n')
-    os.close(fd)
-    return fn
-
 def pytest_funcarg__vim_process(request):
     w = gtk.Window()
+    w.set_title(request.function.__name__)
     s = gtk.Socket()
     w.add(s)
     w.set_size_request(600, 600)
@@ -52,7 +42,7 @@ def pytest_funcarg__vim_process(request):
             s.get_id(),
             request.function.__name__)
     process._win_ = w
-    request.addfinalizer(w.hide)
+    request.addfinalizer(w.destroy)
     return process
 
 def pytest_funcarg__vim(request):
@@ -70,12 +60,11 @@ def pytest_funcarg__vim(request):
 
 
 def pytest_funcarg__files(request):
-    files =  [_make_test_file() for i in range(5)]
-    def clean():
-        for item in files:
-            os.unlink(item)
-    request.addfinalizer(clean)
-    return files
+    tmpdir = request.getfuncargvalue('tmpdir')
+    files = [tmpdir.ensure('file_%s.txt' % i) for i in range(5)]
+    for file in files:
+        file.write('This is some test text\n')
+    return [str(x) for x in files]
 
 def test_get_cwd(vim):
     path = vim.get_cwd()
@@ -207,7 +196,7 @@ def test_insert_text_at_linestart(vim):
     vim.insert_at_linestart("byebye")
     assert vim.get_current_line() == 'byebyehello'
 
-def test_current_word(vim):
+def test_current_word(vim, files):
     vim.open_file(files[0])
     refresh_ui()
     assert vim.get_current_word() == 'This'
@@ -218,12 +207,12 @@ def test_replace_current_word(vim, files):
     vim.replace_current_word('Banana')
     assert vim.get_current_word() == 'Banana'
 
-def test_select_current_word(vim):
+def test_select_current_word(vim, files):
     vim.open_file(files[0])
     refresh_ui()
     vim.select_current_word()
-    #XXX
-    assert vim.eval('getreg("*")') == 'This'
+    val = vim.get_selection()
+    assert val == 'This'
 
 def test_get_selection(vim, files):
     vim.open_file(files[0])
@@ -231,7 +220,7 @@ def test_get_selection(vim, files):
     vim.select_current_word()
     assert vim.get_selection() == 'This'
 
-def test_copy(self):
+def test_copy(vim, files):
     vim.open_file(files[0])
     vim.select_current_word()
     vim.copy()
