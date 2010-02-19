@@ -11,8 +11,8 @@ from tempfile import mktemp
 
 def document(*k, **kw):
     mock = Mock()
-    mock.log = Mock()
-    return document_class(mock, *k, **kw)
+    mock.boss.cmd().return_value = None
+    return document_class(None, *k, **kw)
 
 def c():
     tmp = mktemp()
