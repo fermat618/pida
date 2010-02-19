@@ -4,29 +4,22 @@ from pida.core.document import Document as document_class
 from pida.core.document import DocumentException
 #from pida.core.testing import test, assert_equal, assert_notequal
 
-from pida.utils.testing.mock import Mock
-
-from unittest import TestCase
 from tempfile import mktemp
 
 def document(*k, **kw):
-    mock = Mock()
-    mock.boss.cmd().return_value = None
     return document_class(None, *k, **kw)
 
-def c():
-    tmp = mktemp()
-    f = open(tmp, 'w')
-    txt ="""Hello I am a document
-               vlah blah"""
-    f.write(txt)
-    f.close()
-    doc = document(filename=tmp)
-    return doc, tmp, txt
 
-def d(x):
-    os.remove(x)
+def pytest_funcarg__file(request):
+    dir = request.getfuncargvalue('tmpdir')
+    file = dir.ensure('file.txt')
+    file.write("""Hello I am a document
+               vlah blah""")
+    return file
 
+def pytest_funcarg__doc(request):
+    file = request.getfuncargvalue('file')
+    return document(filename=str(file))
 
 
 def test_new_document():
@@ -51,42 +44,27 @@ def test_unique_id():
     doc2 = document()
     assert doc.unique_id != doc2.unique_id
 
-def test_real_file():
-    doc, tmp, txt = c()
-    assert doc.filename == tmp
-    d(tmp)
+def test_real_file(file, doc):
+    assert doc.filename == file
 
-def test_file_text():
-    doc, tmp, txt = c()
-    assert doc.content == txt
-    d(tmp)
+def test_file_text(file, doc):
+    assert doc.content == file.read()
 
-def test_file_lines():
-    doc, tmp, txt = c()
+def test_file_lines(doc):
     assert len(doc.lines) == 2
-    d(tmp)
 
-def test_file_len():
-    doc, tmp, txt = c()
-    assert doc.filesize == len(txt)
-    d(tmp)
+def test_file_len(file, doc):
+    assert doc.filesize == file.size()
 
-def test_directory():
-    doc, tmp, txt = c()
-    assert doc.directory == '/tmp'
-    d(tmp)
+def test_directory(file, doc):
+    assert doc.directory == file.dirpath()
 
 
-def test_directory_basename():
-    doc, tmp, txt = c()
-    assert doc.directory_basename, 'tmp'
-    d(tmp)
+def test_directory_basename(doc, file):
+    assert doc.directory_basename, file.dirpath().basename
 
-
-def test_basename():
-    doc, tmp, txt = c()
-    assert doc.basename == os.path.basename(tmp)
-    d(tmp)
+def test_basename(file, doc):
+    assert doc.basename == file.basename
 
 def test_file_missing_load():
     doc = document(filename='/this_is_hopefully_missing_for_sure')
@@ -108,7 +86,7 @@ def test_repr_known():
     doc = document(filename='test')
     expected = "<Document '%s' (%s)>" % (os.path.abspath('test'), id(doc))
     assert repr(doc) == expected
-    
+
 def test_unicode_new():
     from pida.core import document as document_module
     doc = document()
@@ -117,7 +95,7 @@ def test_unicode_new():
 def test_unicode_knows():
     doc = document(filename='test')
     assert unicode(doc) == doc.basename
-    
+
 def test_content_nonlife(tmpdir):
     tempfile = tmpdir.ensure('foo')
     name = str(tempfile)
@@ -136,5 +114,4 @@ def test_content_nonlife(tmpdir):
     del d
     d = document(filename=name)
     assert d.content == "%s%s" %(STR2, STR1)
-    os.unlink(name)
 
