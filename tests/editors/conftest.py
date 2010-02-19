@@ -1,37 +1,31 @@
 import py
 from pida.utils.testing.mock import Mock
+from pida.core.boss import Boss
+from pida.core.events import EventsConfig
 from pida.ui.window import PidaWindow
 editors = 'vim', 'emacs', 'mooedit'
+#XXX: ronny cant really test the 2 others atm
+editors = 'vim',
 
 def pytest_generate_tests(metafunc):
     if 'editor' in metafunc.funcargnames:
         for editor in editors:
             metafunc.addcall(id=editor, param=editor)
 
-class MockConfig(object):
-    def subscribe(self, point, *data):
-        pass
 
-class MockService(object):
-    def __init__(self, name):
-        self.name = name
+def mock_service(name):
+    self = Mock()
+    self.name = name
+    self.events = Mock(spec=EventsConfig)
+    return self
 
-    events = MockConfig()
+def mock_boss():
+    self = Mock(spec=Boss)
+    self.window = PidaWindow(self)
+    self.window.start()
+    self.get_service.side_effect = mock_service
+    return self
 
-class MockBoss(object):
-    def __init__(self):
-        self.window = PidaWindow(self)
-        self.window.start()
-
-    def add_action_group_and_ui(self, actions, ui):
-        pass
-
-    remove_action_group_and_ui = add_action_group_and_ui
-
-    def get_service(self, service):
-        return MockService(service)
-    
-    window = Mock()
 
 def pytest_funcarg__editor(request):
     e = request.param, request.param
@@ -40,7 +34,7 @@ def pytest_funcarg__editor(request):
     #XXX: py.test stdio redirection will break vim version guessing
     if (request.param != 'vim') and e:
         py.test.skip(e)
-    boss = MockBoss()
+    boss = mock_boss()
     service = module.Service(boss)
     service.create_all()
     service.subscribe_all()
