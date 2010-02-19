@@ -13,7 +13,8 @@ from pida.core.servicemanager import ServiceLoader, ServiceManager
 
 from pida.utils.testing.mock import Mock
 
-from pida.core.environment import get_glade_path
+#XXX: replace with something better
+from pida.core.environment import get_resource_path
 
 test_service = '''
 from pida.core.service import Service as BaseService
@@ -127,7 +128,7 @@ class ServiceLoadTest(TestCase):
 
     def __borked__test_env(self):
         self.loader.load_all_services([self._tdir5], None)
-        gp = get_glade_path('banana.glade')
+        gp = get_resource_path('glade', 'banana.glade')
         self.assertEqual(gp, self._dumglade)
 
     def tearDown(self):
