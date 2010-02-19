@@ -1,14 +1,10 @@
 from pida.core.projects import Project, DATA_DIR, RESULT
 import os
-from unittest import TestCase
-from tempfile import mkdtemp
-from functools import partial
-
 
 main = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 def test_create():
-    p = Project(main)
+    Project(main)
 
 
 def mkfile(path):
@@ -22,8 +18,6 @@ def rmdir(top):
         for name in dirs:
             os.rmdir(os.path.join(root, name))
     os.rmdir(top)
-
-pf = lambda *x: os.path.sep.join(x)
 
 def make_project_files(tmpdir):
     dirs = [
@@ -68,7 +62,7 @@ def test_meta_dir(project, tmpdir):
     assert os.path.exists(m2)
 
 def test_relpath(project, tmpdir):
-    check = str(tmpdir.join('something','else.py'))
+    check = str(tmpdir.join('something', 'else.py'))
     relative = project.get_relative_path_for(check)
     assert relative == ["something", "else.py"]
 
@@ -87,7 +81,7 @@ def test_cache(project, tmpdir):
     assert len(c['paths']) == 3
     assert len(c['dirnames']) == 2
     assert len(c['files']) == 1
-    assert len(c['filenames']) ==1
+    assert len(c['filenames']) == 1
 
     tmpdir.ensure('src', dir=True)
     tmpdir.ensure('lib', dir=True)
@@ -187,17 +181,15 @@ def test_cache(project, tmpdir):
 
 
 def test_query(project, tmpdir):
-    pp = partial(os.path.join, project.source_directory)
-
     make_project_files(tmpdir)
 
     project.index(recrusive=True)
     def query(*k, **kw):
-        return [x.relpath for x in project.query_basename(*k,**kw)]
+        return [x.relpath for x in project.query_basename(*k, **kw)]
 
     assert query('source.c') == ['src/source.c']
     rel = query('source.c')[0]
-    assert rel== project._cache['filenames']['source.c'][0].relpath
+    assert rel == project._cache['filenames']['source.c'][0].relpath
 
     # non existing through wrong case
     assert query('source.c2') == []
@@ -209,7 +201,7 @@ def test_query(project, tmpdir):
 
     # test for directories
     assert query('lib') == []
-    infos = query('lib', dirs=True) == ['lib']
+    assert query('lib', dirs=True) == ['lib']
     assert query('liB', dirs=True) == []
 
     assert query('lib', dirs=True, glob=True) == ['lib']
@@ -235,22 +227,22 @@ def test_query(project, tmpdir):
     # test query interface
 
     # test for a filetype
-    def testc(info):
+    def find_file(info):
         if info.doctype == "C":
             return RESULT.YES
         return RESULT.NO
 
-    bases = [x.basename for x in project.query(testc)]
+    bases = [x.basename for x in project.query(find_file)]
     assert bases == ['source.c', 'source2.c', 'source2.h']
 
     # test subdir check
-    def testc(info):
+    def find_subdir(info):
         if info.basename == "lib":
             return RESULT.NO_NOCHILDS
         elif info.is_dir:
             return RESULT.YES
 
-    bases = [x.relpath for x in project.query(testc)]
+    bases = [x.relpath for x in project.query(find_subdir)]
     print bases
 
     assert bases == ['', '.SVN', '.pida-metadata', 'src', 'src/.SVN',

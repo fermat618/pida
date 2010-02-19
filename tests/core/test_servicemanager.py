@@ -11,8 +11,6 @@ from os.path import join
 
 from pida.core.servicemanager import ServiceLoader, ServiceManager
 
-from pida.utils.testing.mock import Mock
-
 #XXX: replace with something better
 from pida.core.environment import get_resource_path
 
@@ -29,15 +27,15 @@ class PseudoPackage(object):
     """very hacky thing to get service"""
     def __init__(self, name):
         self.name = name
-        self.mod = imp.new_module('pida_oblivious_test.'+name)
+        self.mod = imp.new_module('pida_oblivious_test.' + name)
         self.mod.__self__ = self
         self.path = join(mkdtemp(), name)
 
         os.mkdir(self.path)
-        open(join(self.path,'__init__.py'), 'w').close()
+        open(join(self.path, '__init__.py'), 'w').close()
         self.mod.__path__ = [self.path]
         self.loader = ServiceLoader(self.mod)
-        
+
         sys.modules[self.base.__name__] = self.base
         sys.modules[self.mod.__name__] = self.mod
         setattr(self.base, name, self.mod)
@@ -45,9 +43,9 @@ class PseudoPackage(object):
 
 
     def gen_files(self, sname, *names, **kw):
-        content = kw.get('content','')
+        content = kw.get('content', '')
         for name in names:
-            f = open(join(self.path, sname, name),'w')
+            f = open(join(self.path, sname, name), 'w')
             try:
                 f.write(content)
             finally:
@@ -58,7 +56,7 @@ class PseudoPackage(object):
         spath = join(self.path, name)
         os.mkdir(spath)
         self.gen_files(name, '__init__.py', 'service.pida')
-        self.gen_files(name, altname or name+'.py', content=service)
+        self.gen_files(name, altname or name + '.py', content=service)
         return spath
 
     def clean(self):
@@ -76,7 +74,7 @@ class ServiceLoadTest(TestCase):
         self.p1 = p1 = PseudoPackage('t1')
         gen(p1, 'testservice')
         gen(p1, 'testservice2')
-        
+
         self.p2 = p2 = PseudoPackage('t2')
         gen(p2, 'testservice2',
             service=(
@@ -98,7 +96,7 @@ class ServiceLoadTest(TestCase):
         self._dumglade = os.path.join(self._gladedir, 'banana.glade')
         f = open(self._dumglade, 'w')
         f.close()
-        
+
         self.l1 = p1.loader
         self.l2 = p2.loader
         self.l3 = p3.loader
@@ -108,12 +106,12 @@ class ServiceLoadTest(TestCase):
 
     def test_get(self):
         services = self.l1.get_all()
-        self.assertEqual(   services[0].__name__, 'TestService')
+        self.assertEqual(services[0].__name__, 'TestService')
 
     def test_get_both(self):
         services = self.l1.get_all()
         self.assertEqual(len(services), 2)
-        
+
     def test_bad_load(self):
         services = self.l2.get_all()
         self.assertEqual(services, [])
@@ -147,7 +145,7 @@ class ServiceManagerTest(TestCase):
                 return 'MyService'
 
         self.svc = MyService()
-        
+
         self.sm = ServiceManager(None)
         self.sm._loader = p.loader #XXX internal hack
 

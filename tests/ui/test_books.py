@@ -5,9 +5,8 @@ import gtk
 
 from pida.ui.books import BookConfigurator, BookManager
 from pida.ui.books import ORIENTATION_SIDEBAR_LEFT, ORIENTATION_SIDEBAR_RIGHT
-from pida.ui.books import BOOK_TERMINAL, BOOK_EDITOR, BOOK_BUFFER, BOOK_PLUGIN
+from pida.ui.books import BOOK_TERMINAL, BOOK_EDITOR
 
-from pida.ui.views import PidaView
 from pida.utils.testing import refresh_gui
 from pida.utils.testing.mock import Mock
 
@@ -20,17 +19,17 @@ class TestConfig(TestCase):
         self._SR = BookConfigurator(ORIENTATION_SIDEBAR_RIGHT)
 
         self._nbSL = dict(
-            tl_book = gtk.Notebook(),
-            tr_book = gtk.Notebook(),
-            bl_book = gtk.Notebook(),
-            br_book = gtk.Notebook(),
+            tl_book=gtk.Notebook(),
+            tr_book=gtk.Notebook(),
+            bl_book=gtk.Notebook(),
+            br_book=gtk.Notebook(),
         )
 
         self._nbSR = dict(
-            tl_book = gtk.Notebook(),
-            tr_book = gtk.Notebook(),
-            bl_book = gtk.Notebook(),
-            br_book = gtk.Notebook(),
+            tl_book=gtk.Notebook(),
+            tr_book=gtk.Notebook(),
+            bl_book=gtk.Notebook(),
+            br_book=gtk.Notebook(),
         )
 
         for name, book in self._nbSL.iteritems():
@@ -99,7 +98,7 @@ class TestConfig(TestCase):
         self.assertEqual(self._nbSR['br_book'],
             self._SR.get_book('Plugin'))
 
-    def test_Editor_tab_pos(self):
+    def test_Plugin_tab_pos(self):
         self.assertEqual(
             self._SL.get_book('Plugin').get_tab_pos(),
             gtk.POS_RIGHT
@@ -109,7 +108,7 @@ class TestConfig(TestCase):
             gtk.POS_LEFT
         )
 
-    def test_Editor_tab_vis(self):
+    def test_Plugin_tab_vis(self):
         self.assertEqual(
             self._SL.get_book('Plugin').get_show_tabs(),
             True
@@ -125,7 +124,7 @@ class TestConfig(TestCase):
         self.assertEqual(self._nbSR['tr_book'],
             self._SR.get_book('Buffer'))
 
-    def test_Editor_tab_pos(self):
+    def test_Buffer_tab_pos(self):
         self.assertEqual(
             self._SL.get_book('Buffer').get_tab_pos(),
             gtk.POS_RIGHT
@@ -135,7 +134,7 @@ class TestConfig(TestCase):
             gtk.POS_LEFT
         )
 
-    def test_Editor_tab_vis(self):
+    def test_Buffer_tab_vis(self):
         self.assertEqual(
             self._SL.get_book('Buffer').get_show_tabs(),
             True
@@ -144,7 +143,7 @@ class TestConfig(TestCase):
             self._SR.get_book('Buffer').get_show_tabs(),
             True
         )
-    
+
     def test_bad_name(self):
         def b():
             self._SL.get_book('banana')
@@ -157,10 +156,10 @@ class TestBookManager(TestCase):
         self._SL = BookConfigurator(ORIENTATION_SIDEBAR_LEFT)
 
         self._nbSL = dict(
-            tl_book = gtk.Notebook(),
-            tr_book = gtk.Notebook(),
-            bl_book = gtk.Notebook(),
-            br_book = gtk.Notebook(),
+            tl_book=gtk.Notebook(),
+            tr_book=gtk.Notebook(),
+            bl_book=gtk.Notebook(),
+            br_book=gtk.Notebook(),
         )
 
         w = gtk.Window()
@@ -172,7 +171,7 @@ class TestBookManager(TestCase):
 
         for name, book in self._nbSL.iteritems():
             self._SL.configure_book(name, book)
-        
+
         self._man = BookManager(self._SL)
 
         w.show_all()
@@ -261,4 +260,3 @@ class TestBookManager(TestCase):
         book = self._man._get_book(BOOK_TERMINAL)
         self.assertEqual(book.get_n_pages(), 2)
 
-        

@@ -1,7 +1,5 @@
 from unittest import TestCase
-import os
 from pida.core.options import OptionsManager, OptionsConfig
-from pida.utils.testing.mock import Mock
 from tempfile import mktemp
 from .test_services import MockBoss
 from pida.core.service import Service
@@ -13,7 +11,7 @@ boss = MockBoss()
 class MYService(Service):
 
     options_config = OptionsConfig
-    
+
     def __init__(self, boss):
         Service.__init__(self, boss)
         self.something = False
@@ -38,8 +36,8 @@ class OptionConfigTest(TestCase):
         #opt = OptionsConfig(service)
         opt = service.options
         opt.SUPPORTS_MULTIPLE_CONNECTIONS = True
-        opt.register_extra_option('test', ['default'], 
-                      callback=self.extra_callback, 
+        opt.register_extra_option('test', ['default'],
+                      callback=self.extra_callback,
                       safe=True, workspace=False, path=self.path)
         self.assertEqual(opt.get_extra_value('test'), ['default'])
         opt.set_extra_value('test', [2])
@@ -56,3 +54,4 @@ class OptionConfigTest(TestCase):
         service.destroy()
 
         #opt2 = OptionsConfig(service)
+

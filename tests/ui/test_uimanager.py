@@ -22,16 +22,16 @@ class UIMSetupTestCase(TestCase):
 
     def test_menu_edit(self):
         self.assert_('EditMenu' in self.uim._uim.get_ui())
-    
+
     def test_menu_project(self):
         self.assert_('ProjectMenu' in self.uim._uim.get_ui())
-    
+
     def test_menu_tools(self):
         self.assert_('ToolsMenu' in self.uim._uim.get_ui())
-    
+
     def test_menu_view(self):
         self.assert_('ViewMenu' in self.uim._uim.get_ui())
-    
+
     def test_menu_help(self):
         self.assert_('HelpMenu' in self.uim._uim.get_ui())
 
@@ -71,6 +71,7 @@ class UIMSetupTestCase(TestCase):
 
     def test_toolbar(self):
         toolbar = self.uim.get_toolbar()
+        toolbar # pyflakes
         refresh_gui()
 
     def test_add_ui(self):

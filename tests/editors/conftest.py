@@ -29,7 +29,7 @@ def mock_boss():
 
 def pytest_funcarg__editor(request):
     e = request.param, request.param
-    module = __import__('pida.editors.%s.%s'%e, fromlist=['*'])
+    module = __import__('pida.editors.%s.%s' % e, fromlist=['*'])
     e = module.Service.get_sanity_errors()
     #XXX: py.test stdio redirection will break vim version guessing
     if (request.param != 'vim') and e:

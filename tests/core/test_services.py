@@ -50,7 +50,7 @@ class TestOptions(TestCase):
 
     def setUp(self):
         pass
-    
+
     def test_options_setup(self):
         svc = MYService(boss=MockBoss())
         svc.create_all()

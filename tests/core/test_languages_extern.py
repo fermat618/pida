@@ -5,8 +5,8 @@ import os
 from pida.utils.languages import OutlineItem, ValidationError, Definition, \
     Suggestion, Documentation
 from pida.core.languages import (Validator, Outliner, External, JobServer,
-    ExternalValidatorProxy, ExternalOutlinerProxy, ExternalDocumentatorProxy,
-    ExternalDefinerProxy, Documentator, Definer, Completer, LanguageService)
+    ExternalValidatorProxy, ExternalOutlinerProxy,
+    Documentator, Definer, Completer, LanguageService)
 from pida.core.document import Document
 
 from .test_services import MockBoss
@@ -19,14 +19,14 @@ class TestExternalValidator(Validator):
     def get_validations(self):
         yield os.getpid()
         for i in xrange(50):
-            yield ValidationError(message="error %s" %i)
+            yield ValidationError(message="error %s" % i)
 
 class TestExternalOutliner(Outliner):
 
     def get_outline(self):
         yield os.getpid()
         for i in xrange(50):
-            yield OutlineItem(name="run %s" %i, line=i)
+            yield OutlineItem(name="run %s" % i, line=i)
 
 class TestDocumentator(Documentator):
     def get_documentation(self, buffer, offset):
@@ -34,8 +34,8 @@ class TestDocumentator(Documentator):
         yield buffer
         yield offset
         for i in xrange(50):
-            yield Documentation(path="run %s" %i, short="short %s" %i,
-                                long=buffer[i:i+5])
+            yield Documentation(path="run %s" % i, short="short %s" % i,
+                                long=buffer[i:i + 5])
 
 class TestCompleter(Completer):
 
@@ -45,7 +45,7 @@ class TestCompleter(Completer):
         yield buffer
         yield offset
         for i in xrange(30):
-            yield Suggestion("run %s" %i)
+            yield Suggestion("run %s" % i)
 
 
 class TestDefiner(Definer):
@@ -55,7 +55,7 @@ class TestDefiner(Definer):
         yield buffer
         yield offset
         for i in xrange(30):
-            yield Definition(line="run %s" %i, offset=i)
+            yield Definition(line="run %s" % i, offset=i)
 
 
 class MyExternal(External):
@@ -82,16 +82,16 @@ class MYService(LanguageService):
 class TestExternal(TestCase):
 
     def test_service(self):
-        boss=MockBoss()
+        boss = MockBoss()
         svc = MYService(boss)
         svc.create_all()
         if svc.jobserver is None:
             print "Skipping external language plugins: no multiprocessing"
             return
         self.assertTrue(isinstance(svc.jobserver, JobServer))
-        self.assertTrue(issubclass(svc.validator_factory, 
+        self.assertTrue(issubclass(svc.validator_factory,
                                    ExternalValidatorProxy))
-        self.assertTrue(issubclass(svc.outliner_factory, 
+        self.assertTrue(issubclass(svc.outliner_factory,
                                    ExternalOutlinerProxy))
         # test iterators
         doc = Document(boss, __file__)
@@ -101,7 +101,7 @@ class TestExternal(TestCase):
                 self.assertNotEqual(os.getpid(), v)
             else:
                 self.assertTrue(isinstance(v, OutlineItem))
-                self.assertEqual("run %s" %(i-1), v.name)
+                self.assertEqual("run %s" % (i-1), v.name)
 
         validator = svc.validator_factory(svc, doc)
         for i, v in enumerate(validator.get_validations()):
@@ -109,10 +109,10 @@ class TestExternal(TestCase):
                 self.assertNotEqual(os.getpid(), v)
             else:
                 self.assertTrue(isinstance(v, ValidationError))
-                self.assertEqual("error %s" %(i-1), v.message)
-        
+                self.assertEqual("error %s" % (i-1), v.message)
+
         completer = svc.completer_factory(svc, doc)
-        for i, v in enumerate(completer.get_completions('base', 
+        for i, v in enumerate(completer.get_completions('base',
                               'some text', 3)):
             if i == 0:
                 self.assertNotEqual(os.getpid(), v)
@@ -124,10 +124,10 @@ class TestExternal(TestCase):
                 self.assertEqual(3, v)
             else:
                 self.assertTrue(isinstance(v, Suggestion))
-                self.assertEqual("run %s" %(i-4), v)
+                self.assertEqual("run %s" % (i-4), v)
 
         documentator = svc.documentator_factory(svc, doc)
-        for i, v in enumerate(documentator.get_documentation('base', 
+        for i, v in enumerate(documentator.get_documentation('base',
                               'some text')):
             if i == 0:
                 self.assertNotEqual(os.getpid(), v)
@@ -137,8 +137,8 @@ class TestExternal(TestCase):
                 self.assertEqual('some text', v)
             else:
                 self.assertTrue(isinstance(v, Documentation))
-                self.assertEqual("short %s" %(i-3), v.short)
-                self.assertEqual("run %s" %(i-3), v.path)
+                self.assertEqual("short %s" % (i-3), v.short)
+                self.assertEqual("run %s" % (i-3), v.path)
 
         definer = svc.definer_factory(svc, doc)
         for i, v in enumerate(definer.get_definition('some text', 4)):
@@ -151,4 +151,4 @@ class TestExternal(TestCase):
             else:
                 self.assertTrue(isinstance(v, Definition))
                 self.assertEqual(i-3, v.offset)
-                self.assertEqual("run %s" %(i-3), v.line)
+                self.assertEqual("run %s" % (i-3), v.line)

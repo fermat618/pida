@@ -1,10 +1,7 @@
 
 import os
 from pida.core.document import Document as document_class
-from pida.core.document import DocumentException
 #from pida.core.testing import test, assert_equal, assert_notequal
-
-from tempfile import mktemp
 
 def document(*k, **kw):
     return document_class(None, *k, **kw)
@@ -72,7 +69,7 @@ def test_file_missing_load():
 
 def test_file_missing_stat():
     doc = document(filename='/this_is_hopefully_missing_for_sure')
-    assert doc.stat == (0,)*10
+    assert doc.stat == (0,) * 10
 
 def test_repr_new():
     from pida.core import document as document_module
@@ -90,7 +87,7 @@ def test_repr_known():
 def test_unicode_new():
     from pida.core import document as document_module
     doc = document()
-    assert unicode(doc) == u'Untitled (%d)' %(document_module.new_file_index-1)
+    assert unicode(doc) == u'Untitled (%d)' % (document_module.new_file_index-1)
 
 def test_unicode_knows():
     doc = document(filename='test')
@@ -110,8 +107,8 @@ def test_content_nonlife(tmpdir):
     d.content = STR2
     assert d.content == STR2
     d.content += STR1
-    assert d.content == "%s%s" %(STR2, STR1)
+    assert d.content == "%s%s" % (STR2, STR1)
     del d
     d = document(filename=name)
-    assert d.content == "%s%s" %(STR2, STR1)
+    assert d.content == "%s%s" % (STR2, STR1)
 

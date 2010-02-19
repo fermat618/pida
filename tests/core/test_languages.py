@@ -1,18 +1,15 @@
 
-import os
 #from pida.core.doctype import DocType
 #from pida.core.testing import test, assert_equal, assert_notequal
 from pida.core.languages import Outliner
-from pida.services.language.language import (CustomLanguageMapping, 
+from pida.services.language.language import (CustomLanguageMapping,
     CustomLanguagePrioList, LanguageService)
 from pida.services.language import DOCTYPES
 from pida.services.language.disabled import NoopOutliner
 
 from .test_services import MockBoss
-from pida.utils.testing.mock import Mock
 
 from unittest import TestCase
-from tempfile import mktemp
 
 class TestOutliner(Outliner):
     priority = 10
@@ -36,18 +33,18 @@ TEST_SERVICE.doctypes = DOCTYPES
 
 class PriorityTest(TestCase):
 
-    default_sort_list = {'test': [  
-                            {'description': 'DESCRIPTION MISSING', 
-                             'plugin': 'PLUGIN MISSING', 
-                             'uuid': 'tests.core.test_languages.TestOutliner2', 
-                             'name': 'NAME MISSING'}, 
-                            {'description': 'DESCRIPTION MISSING', 
-                             'plugin': 'PLUGIN MISSING', 
-                             'uuid': 'tests.core.test_languages.TestOutliner', 
+    default_sort_list = {'test': [
+                            {'description': 'DESCRIPTION MISSING',
+                             'plugin': 'PLUGIN MISSING',
+                             'uuid': 'tests.core.test_languages.TestOutliner2',
                              'name': 'NAME MISSING'},
-                            {'description': 'DESCRIPTION MISSING', 
-                             'plugin': 'PLUGIN MISSING', 
-                             'uuid': 'tests.core.test_languages.TestOutliner3', 
+                            {'description': 'DESCRIPTION MISSING',
+                             'plugin': 'PLUGIN MISSING',
+                             'uuid': 'tests.core.test_languages.TestOutliner',
+                             'name': 'NAME MISSING'},
+                            {'description': 'DESCRIPTION MISSING',
+                             'plugin': 'PLUGIN MISSING',
+                             'uuid': 'tests.core.test_languages.TestOutliner3',
                              'name': 'NAME MISSING'}]}
 
     def test_priority(self):
@@ -59,59 +56,59 @@ class PriorityTest(TestCase):
         # it's not customized yet, so it's not empty
         self.assertEqual(lm.dump(), {})
         print lm['test']
-        self.assertEqual(lm['test'], 
+        self.assertEqual(lm['test'],
             [TestOutliner3, TestOutliner2, TestOutliner])
         lm['test'].customized = True
         lm['test'].update_sort_list()
         self.assertEqual(lm.dump(),
-            {'test': [  {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner3', 
-                         'name': 'NAME MISSING'}, 
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner2', 
-                         'name': 'NAME MISSING'}, 
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner', 
+            {'test':   [{'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner3',
+                         'name': 'NAME MISSING'},
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner2',
+                         'name': 'NAME MISSING'},
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner',
                          'name': 'NAME MISSING'}]})
 
     def test_load(self):
         lm = CustomLanguageMapping(TEST_SERVICE)
-        sort_list = {'test': [  
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner3', 
-                         'name': 'NAME MISSING'}, 
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner', 
+        sort_list = {'test': [
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner3',
                          'name': 'NAME MISSING'},
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner2', 
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner',
+                         'name': 'NAME MISSING'},
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner2',
                          'name': 'NAME MISSING'}]}
         lm.load(sort_list)
         lm.add('test', TestOutliner2)
-        self.assertEqual(lm['test'], 
+        self.assertEqual(lm['test'],
             [TestOutliner2])
-        self.assertEqual(lm.dump(),sort_list)
+        self.assertEqual(lm.dump(), sort_list)
 
         lm.add('test', TestOutliner)
-        self.assertEqual(lm['test'], 
+        self.assertEqual(lm['test'],
             [TestOutliner, TestOutliner2])
-        self.assertEqual(lm.dump(),sort_list)
+        self.assertEqual(lm.dump(), sort_list)
 
         lm.add('test', TestOutliner3)
-        self.assertEqual(lm['test'], 
+        self.assertEqual(lm['test'],
             [TestOutliner3, TestOutliner, TestOutliner2])
-        self.assertEqual(lm.dump(),sort_list)
+        self.assertEqual(lm.dump(), sort_list)
 
         lm.add('test2', TestOutliner)
         lm.add('test2', TestOutliner)
         lm.add('test2', TestOutliner3)
-        self.assertEqual(lm.dump(),sort_list)
+        self.assertEqual(lm.dump(), sort_list)
 
     def test_def_priority(self):
         lm = CustomLanguageMapping(TEST_SERVICE)
@@ -129,18 +126,18 @@ class PriorityTest(TestCase):
 
 
     def test_movement(self):
-        sort_list = {'test': [  
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner3', 
-                         'name': 'NAME MISSING'}, 
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner', 
+        sort_list = {'test': [
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner3',
                          'name': 'NAME MISSING'},
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutliner2', 
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner',
+                         'name': 'NAME MISSING'},
+                        {'description': 'DESCRIPTION MISSING',
+                         'plugin': 'PLUGIN MISSING',
+                         'uuid': 'tests.core.test_languages.TestOutliner2',
                          'name': 'NAME MISSING'}]}
         lm = CustomLanguageMapping(TEST_SERVICE)
         lm['test'] = CustomLanguagePrioList(sort_list=sort_list['test'])
@@ -157,11 +154,11 @@ class PriorityTest(TestCase):
         self.assertEqual(lm, {'test':
                               [TestOutliner4, NoopOutliner, TestOutliner]})
         self.assertEqual(lm.dump(),
-                {'test': 
+                {'test':
                     [{'description': 'DESCRIPTION MISSING',
                       'plugin': 'PLUGIN MISSING',
                       'uuid': 'tests.core.test_languages.TestOutliner4',
-                      'name': 'NAME MISSING'}, 
+                      'name': 'NAME MISSING'},
                      {'description': 'Disables the functionality',
                       'plugin': 'language',
                       'uuid': 'pida.services.language.disabled.NoopOutliner',
@@ -172,11 +169,12 @@ class PriorityTest(TestCase):
                       'name': 'NAME MISSING'}]})
 
     def test_update(self):
-        sort_list = [  
-                        {'description': 'DESCRIPTION MISSING', 
-                         'plugin': 'PLUGIN MISSING', 
-                         'uuid': 'tests.core.test_languages.TestOutlinerUp', 
-                         'name': 'NAME MISSING'},]
+        sort_list = [{
+            'description': 'DESCRIPTION MISSING',
+            'plugin': 'PLUGIN MISSING',
+            'uuid': 'tests.core.test_languages.TestOutlinerUp',
+            'name': 'NAME MISSING',
+            }]
         lm = CustomLanguageMapping(TEST_SERVICE)
         lm.add('test', TestOutlinerUp)
         lm['test'].set_sort_list(sort_list)
@@ -184,7 +182,7 @@ class PriorityTest(TestCase):
         TestOutlinerUp.description = "Somedesc"
         TestOutlinerUp.plugin = "langtest"
         self.assertEqual(lm.dump(),
-                {'test': 
+                {'test':
                     [{'description': 'Somedesc',
                       'plugin': 'langtest',
                       'uuid': 'tests.core.test_languages.TestOutlinerUp',
@@ -209,7 +207,8 @@ class PriorityTest(TestCase):
 class LanguageTest(TestCase):
 
     def test_uuid(self):
-        self.assertEqual(TestOutliner.uuid(), 
+        self.assertEqual(TestOutliner.uuid(),
                          'tests.core.test_languages.TestOutliner')
-        self.assertEqual(TestOutliner2.uuid(), 
+        self.assertEqual(TestOutliner2.uuid(),
                          'tests.core.test_languages.TestOutliner2')
+

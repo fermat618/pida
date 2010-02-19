@@ -14,7 +14,7 @@ class MyActions(ActionsConfig):
 
     def my_handler(self, action):
         self.svc.banana = True
-        
+
 
 
 class ActionTestCase(TestCase):
