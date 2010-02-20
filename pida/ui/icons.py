@@ -3,12 +3,8 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
 import os
-
-import gtk, gtk.gdk
- 
-from kiwi.environ import environ
+import gtk
 
 
 class IconRegister(object):
@@ -51,8 +47,8 @@ class IconRegister(object):
             icon_set = gtk.IconSet(pb)
             self._register_icon_set(icon_set, name)
         except:
-	    #XXX: there is a image loader missing
-	    #     for *.svg its librsvg + its gtk pixmap loader
+            #XXX: there is a image loader missing
+            #     for *.svg its librsvg + its gtk pixmap loader
             print filename
         # this is broken for some reason
         #gtk.icon_theme_add_builtin_icon(name, gtk.ICON_SIZE_SMALL_TOOLBAR, pb)
