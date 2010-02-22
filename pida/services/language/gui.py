@@ -16,8 +16,7 @@ import gobject
 import pkgutil
 import os
 
-from kiwi.ui.objectlist import Column
-from kiwi.ui.objectlist import ObjectList, COL_MODEL
+from pygtkhelpers.ui.objectlist import Column, ObjectList
 
 from .outlinefilter import FILTERMAP
 
@@ -105,6 +104,14 @@ class LanguageSubCategory(Category):
         self.svc.set_priority_list(self.lang, self.type_, prio, save=False)
 
 
+#XXX: solve this one in pygtkhelpers
+class FakeModelSource(object):
+    def __init__(self, model):
+        self.model = model
+    def get_model(self):
+        return self.model
+
+
 class LanguageCategory(Category):
     def __init__(self, svc, lang):
         self.svc = svc
@@ -186,19 +193,20 @@ class ValidatorView(PidaView):
         self.document = None
         self.tasks = {}
         self.restart = False
-        self.errors_ol = ObjectList(
+        self.errors_ol = ObjectList([
             Column('markup', use_markup=True)
-        )
+        ])
         self.errors_ol.set_headers_visible(False)
-        self.errors_ol.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.add_main_widget(self.errors_ol)
-        self.errors_ol.connect('double-click', self._on_errors_double_clicked)
-        self.errors_ol.connect('row-activated', self._on_errors_double_clicked)
-        self.errors_ol.connect('selection-changed', 
-                               self._on_errors_ol_selection_changed)
+        self.scrolled_window = gtk.ScrolledWindow()
+        self.scrolled_window.show()
+        self.scrolled_window.add(self.errors_ol)
+
+        self.scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.add_main_widget(self.scrolled_window)
+
         self.errors_ol.show_all()
         self.sort_combo = AttrSortCombo(
-            self.errors_ol,
+            FakeModelSource(self.errors_ol.model),
             [
                 ('lineno', _('Line Number')),
                 ('message', _('Message')),
@@ -248,12 +256,13 @@ class ValidatorView(PidaView):
                 # background and the document already switched
                 # this way we still can fill up the cache by letting the task run
                 # sometimes args have a lengh of 0 so we have to catch this
-                if self.document == document and len(args):
-                    self.add_node(args[0])
+                if self.document == document and args:
+                    item = args[0]
+                    self.add_node(item)
                     if self._last_selected:
                         if self._last_selected[0] == self.document:
-                            if args[0].lineno == self._last_selected[1]:
-                                self.errors_ol.select(args[0])
+                            if item.lineno == self._last_selected[1]:
+                                self.errors_ol.selected_item = item
 
             def on_complete(document, validator):
                 del self.tasks[document]
@@ -267,7 +276,7 @@ class ValidatorView(PidaView):
             radd = partial(wrap_add_node, document)
             rcomp = partial(on_complete, document, validator)
 
-            if self.svc.boss.window.paned.is_visible_pane(self.pane):
+            if self.svc.boss.window.paned.is_visible_pane(self. pane):
                 prio = PRIO_FOREGROUND
             else:
                 prio = PRIO_DEFAULT
@@ -288,12 +297,10 @@ class ValidatorView(PidaView):
     def clear(self):
         self.errors_ol.clear()
 
-    def _on_errors_ol_selection_changed(self, ol, item):
-        if not item:
-            return
-        self._last_selected = (self.document, item.lineno)
+    def on_errors_ol__selection_changed(self, ol):
+        self._last_selected = (self.document, ol.selected_item.lineno)
 
-    def _on_errors_double_clicked(self, ol, item):
+    def on_errors_ol__item_activated(self, ol, item):
         self.svc.boss.editor.cmd('goto_line', line=item.lineno)
 
     def can_be_closed(self):
@@ -317,20 +324,19 @@ class BrowserView(PidaGladeView):
         self.document = None
         self.tasks = {}
         self.restart = False
-        self.source_tree.set_columns(
-            [
-                Column('icon_name', use_stock=True),
-                Column('markup', use_markup=True, expand=True),
-                Column('type_markup', use_markup=True),
-                Column('sort_hack', visible=False),
-                Column('line_sort_hack', visible=False),
-            ]
-        )
+        self.source_tree.set_columns([
+            Column('icon_name', use_stock=True),
+            Column('markup', use_markup=True, expand=True),
+            Column('type_markup', use_markup=True),
+            Column('sort_hack', visible=False),
+            Column('line_sort_hack', visible=False),
+        ])
         self.source_tree.set_headers_visible(False)
         # faster lookups on the id property
         self.source_tree_ids = {}
+
         self.sort_box = AttrSortCombo(
-            self.source_tree,
+            FakeModelSource(self.source_tree.model),
             [
                 ('sort_hack', _('Alphabetical by type')),
                 ('line_sort_hack', _('Line Number')),
@@ -340,20 +346,13 @@ class BrowserView(PidaGladeView):
         )
         self.sort_box.show()
         self.sort_vbox.pack_start(self.sort_box, expand=False)
-        self.filter_model = self.source_tree.get_model().filter_new()
+        self.filter_model = self.source_tree.model_filter
         #FIXME this causes a total crash on win32
-        if not on_windows:
-            self.source_tree.get_treeview().set_model(self.filter_model)
-        self.filter_model.set_visible_func(self._visible_func)
-        self.source_tree.get_treeview().connect('key-press-event',
-            self.on_treeview_key_pressed)
-        self.source_tree.get_treeview().connect('row-activated',
-                                     self.do_treeview__row_activated)
+        self.source_tree.set_visible_func(self._visible_func)
 
         self._last_expanded = None
 
-    def _visible_func(self, model, iter_):
-        node = model[iter_][0]
+    def _visible_func(self, node):
         # FIXME: None objects shouldn't be here, but why ????
         if not node:
             return False
@@ -388,9 +387,9 @@ class BrowserView(PidaGladeView):
             if (node.name and node.name.lower().find(ftext) != -1) or \
                 (model.iter_has_child(iter_) and any_child(iter_)):
                 return if_type(node)
-            
+
             return False
-        
+
         return if_type(node)
 
     def set_outliner(self, outliner, document):
@@ -403,7 +402,7 @@ class BrowserView(PidaGladeView):
         self.document = document
         self.clear()
 
-        if self.tasks.has_key(document):
+        if document in self.tasks:
             # set the priority of the current validator higher, so it feels 
             # faster on the current view
             if self.svc.boss.window.paned.is_visible_pane(self.pane):
@@ -420,7 +419,7 @@ class BrowserView(PidaGladeView):
 
         self.restart = False
 
-        if outliner:
+        if outliner: 
 #            if self.task:
 #                self.task.stop()
 #            self.task = GeneratorTask(outliner.get_outline_cached, self.add_node)
@@ -432,7 +431,7 @@ class BrowserView(PidaGladeView):
                 # background and the document already switched
                 # this way we still can fill up the cache by letting the task run
                 # sometimes args have a lengh of 0 so we have to catch this
-                if self.document == document and len(args):
+                if self.document == document and args:
                     self.add_node(*args)
 
             def on_complete(document, outliner):
@@ -499,7 +498,7 @@ class BrowserView(PidaGladeView):
             parent = None
 
         try:
-            self.source_tree.append(parent, node)
+            self.source_tree.append(node, parent=parent)
         except Exception, e:
             import traceback
             traceback.print_exc()
@@ -509,7 +508,7 @@ class BrowserView(PidaGladeView):
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
 
-    def do_treeview__row_activated(self, treeview, path, view_column):
+    def on_source_tree__row_activated(self, treeview, path, view_column):
         "After activated (double clicked or pressed enter) on a row"
         # we have to use this hand connected version as the kiwi one
         # used the wrong model and not our filtered one :(
@@ -519,7 +518,7 @@ class BrowserView(PidaGladeView):
             print 'path %s was not found in model: %s' % (
                 path, map(list, self._model))
             return
-        item = row[COL_MODEL]
+        item = row[0]
         if item.filename is not None:
             self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename,
                                                      line=item.linenumber)
@@ -581,24 +580,21 @@ class BrowserView(PidaGladeView):
 
         self.filter_model.refilter()
 
-    def on_treeview_key_pressed(self, tree, event):
+    def on_source_tree__key_press_event(self, tree, event):
         if event.keyval == gtk.keysyms.space:
-            # FIXME: who to do this right ??
-            cur = self.source_tree.get_selected()
+            # FIXME: how to do this right ??
+            cur = self.source_tree.selected_item
             if self._last_expanded == cur:
                 self._last_expanded = None
-                self.source_tree.collapse(
-                    cur)
+                self.source_tree.collapse_item(cur)
             else:
-                self.source_tree.expand(
-                    cur, 
-                    open_all=False)
+                self.source_tree.expand_item(cur, open_all=False)
                 self._last_expanded = cur
             return True
 
     def on_type_changed(self):
         pass
-        
+
 #    def read_options(self):
 #        return {}
 
@@ -616,24 +612,22 @@ class DefinitionView(PidaGladeView):
 
     def create_ui(self):
         self._project = None
-        self.list.set_columns(
-                [
-                    Column('icon_name', title=' ', width=35, use_stock=True,
-                            expand=False),
-                    Column('signature', data_type=str, title=_('Symbol'),
-                           format_func=self.format_signature,
-                           expander=True, searchable=True),
-                    Column('file_name', data_type=str, title=_('Filename'),
-                           format_func=self.format_path,
-                           expander=True, searchable=True),
-                    Column('line', data_type=int, title=_('Line'))
-                ]
-        )
+        self.list.set_columns([
+            Column('icon_name', title=' ', width=35, use_stock=True, expand=False),
+            Column('signature', data_type=str, title=_('Symbol'),
+                    format_func=self.format_signature,
+                    expander=True, searchable=True),
+            Column('file_name', data_type=str, title=_('Filename'),
+                    format_func=self.format_path,
+                    expander=True, searchable=True),
+            Column('line', data_type=int, title=_('Line'))
+        ])
+
     def grab_focus(self):
         self.list.grab_focus()
         if len(self.list):
-            self.list.select(self.list[0], scroll=True)
-            self.list.get_treeview().grab_focus()
+            self.list.selectected_item = self.list[0]
+            #XXX: scroll to it ? scroll=True)
 
     def format_signature(self, value):
         if value:
@@ -641,6 +635,8 @@ class DefinitionView(PidaGladeView):
         return ''
 
     def format_path(self, path):
+        #XXX: should look up for all projects
+        #XXX: _project is broken
         if not self._project:
             return path
         comps = self._project.get_relative_path_for(path)
@@ -649,6 +645,7 @@ class DefinitionView(PidaGladeView):
         return path
 
     def set_list(self, lst):
+        #XXX: _project is broken
         self._project = self.svc.boss.cmd('project', 'get_current_project')
         self.list.clear()
         for i in lst:
