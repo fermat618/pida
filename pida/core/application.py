@@ -89,8 +89,8 @@ def run_pida():
         b.loop_ui()
         return 0
     except Exception, e:
-        die_gui("startup breakdown", e)
         traceback.print_exc()
+        die_gui("startup breakdown", e)
         return 1
 
 def set_trace():
