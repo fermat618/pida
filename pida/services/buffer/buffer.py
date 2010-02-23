@@ -9,7 +9,7 @@ from tempfile import mkstemp
 import gtk
 import time
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -34,15 +34,9 @@ _ = locale.gettext
 
 LEXPORT = EXPORT(suffix='buffer')
 
-LIST_COLUMNS = {
-'onerow': [
-            Column('markup', use_markup=True),
-            Column("basename", visible=False, searchable=True),
-          ],
-'tworow': [
-            Column('markup_tworow', use_markup=True),
-            Column("basename", visible=False, searchable=True),
-          ]
+attributes = {
+    'onerow': 'markup',
+    'tworow': 'markup_tworow',
 }
 
 class BufferListView(PidaGladeView):
@@ -54,11 +48,13 @@ class BufferListView(PidaGladeView):
 
     label_text = _('Buffers')
 
-    list_columns = LIST_COLUMNS
+    def create_ui(self ):
+        self.buffers_ol.set_columns([
+            Column('markup', use_markup=True),
+            Column('markup_tworow', use_markup=True, visible=False),
+            Column("basename", visible=False, searchable=True),
+        ])
 
-    def create_ui(self):
-        val = self.svc.opt('display_type')
-        self.buffers_ol.set_columns(LIST_COLUMNS[val])
         self.buffers_ol.set_headers_visible(False)
         self._sort_combo = AttrSortCombo(self.buffers_ol,
             [
@@ -76,7 +72,7 @@ class BufferListView(PidaGladeView):
             'creation_time' 
         )
         self._sort_combo.show()
-        self.main_vbox.pack_start(self._sort_combo, expand=False)
+        self.toplevel.pack_start(self._sort_combo, expand=False)
 
     def add_document(self, document):
         self.buffers_ol.append(document)
@@ -85,20 +81,20 @@ class BufferListView(PidaGladeView):
         self.buffers_ol.remove(document)
 
     def set_document(self, document):
-        if self.buffers_ol.get_selected() is not document:
-            self.buffers_ol.select(document)
+        if self.buffers_ol.selected_item is not document:
+            self.buffers_ol.selected_item = document
 
     def view_document(self, document):
         self.svc.view_document(document)
         self.svc.boss.editor.cmd('grab_focus')
 
-    def on_buffers_ol__double_click(self, ol, item):
+    def on_buffers_ol__item_double_clicked(self, ol, item):
         self.view_document(item)
 
-    def on_buffers_ol__row_activated(self, ol, item):
+    def on_buffers_ol__item_activated(self, ol, item):
         self.view_document(item)
 
-    def on_buffers_ol__right_click(self, ol, item, event=None):
+    def on_buffers_ol__item_right_clicked(self, ol, item, event=None):
         menu = self.svc.boss.cmd('contexts', 'get_menu', context='file-menu',
                                  document=item, file_name=item.filename)
 
@@ -139,6 +135,14 @@ class BufferListView(PidaGladeView):
 
     def sort(self):
         self.buffers_ol.get_model().sort_column_changed()
+
+    def set_display_attr(self, newattr):
+        print 'set disp attr', newattr
+        for attr in attributes.values():
+            for col in self.buffers_ol._viewcols_for_attr(attr):
+                print col.get_title(), 'now gets visible=', attr==newattr
+                col.props.visible = attr==newattr
+
 
 class BufferActionsConfig(ActionsConfig):
 
@@ -325,8 +329,7 @@ class BufferOptionsConfig(OptionsConfig):
         )
 
     def on_display_type_change(self, option):
-        self.svc.get_view().buffers_ol.set_columns(
-            LIST_COLUMNS[option.value])
+        self.svc.get_view().set_display_attr(attributes[option.value])
 
 
 class BufferCommandsConfig(CommandsConfig):
