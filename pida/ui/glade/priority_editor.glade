@@ -17,11 +17,16 @@
               <object class="GtkVBox" id="vbox3">
                 <property name="visible">True</property>
                 <child>
-                  <object class="ObjectTree" id="selection_tree">
-                    <property name="no_show_all">True</property>
-                    <property name="selection_mode">single</property>
+                  <object class="GtkVBox" id="selection_scroll">
                     <property name="visible">True</property>
                     <property name="vscrollbar_policy">automatic</property>
+                    <child>
+                      <object class="PyGTKHelpersObjectTree" id="selection_tree">
+                        <property name="no_show_all">True</property>
+                        <property name="selection_mode">single</property>
+                        <property name="visible">True</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
@@ -48,10 +53,15 @@
                   <object class="GtkHBox" id="hbox1">
                     <property name="visible">True</property>
                     <child>
-                      <object class="ObjectList" id="priority_list">
-                        <property name="sensitive">False</property>
+                      <object class="GtkScrolledWindow" id="priority_scroll">
                         <property name="visible">True</property>
                         <property name="vscrollbar_policy">automatic</property>
+                        <child>
+                          <object class="PyGTKHelpersObjectList" id="priority_list">
+                            <property name="sensitive">False</property>
+                            <property name="visible">True</property>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
