@@ -88,7 +88,7 @@ class BufferListView(PidaGladeView):
         self.svc.view_document(document)
         self.svc.boss.editor.cmd('grab_focus')
 
-    def on_buffers_ol__item_double_clicked(self, ol, item):
+    def on_buffers_ol__item_double_clicked(self, ol, item, ev=None):
         self.view_document(item)
 
     def on_buffers_ol__item_activated(self, ol, item):
