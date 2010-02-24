@@ -66,7 +66,6 @@ class MyExternal(External):
     definer = TestDefiner
 
 
-
 class MYService(LanguageService):
 
     # only test if it gets overridden
@@ -101,7 +100,7 @@ class TestExternal(TestCase):
                 self.assertNotEqual(os.getpid(), v)
             else:
                 self.assertTrue(isinstance(v, OutlineItem))
-                self.assertEqual("run %s" % (i-1), v.name)
+                self.assertEqual("run %s" % (i - 1), v.name)
 
         validator = svc.validator_factory(svc, doc)
         for i, v in enumerate(validator.get_validations()):
@@ -109,7 +108,7 @@ class TestExternal(TestCase):
                 self.assertNotEqual(os.getpid(), v)
             else:
                 self.assertTrue(isinstance(v, ValidationError))
-                self.assertEqual("error %s" % (i-1), v.message)
+                self.assertEqual("error %s" % (i - 1), v.message)
 
         completer = svc.completer_factory(svc, doc)
         for i, v in enumerate(completer.get_completions('base',
@@ -124,7 +123,7 @@ class TestExternal(TestCase):
                 self.assertEqual(3, v)
             else:
                 self.assertTrue(isinstance(v, Suggestion))
-                self.assertEqual("run %s" % (i-4), v)
+                self.assertEqual("run %s" % (i - 4), v)
 
         documentator = svc.documentator_factory(svc, doc)
         for i, v in enumerate(documentator.get_documentation('base',
@@ -137,8 +136,8 @@ class TestExternal(TestCase):
                 self.assertEqual('some text', v)
             else:
                 self.assertTrue(isinstance(v, Documentation))
-                self.assertEqual("short %s" % (i-3), v.short)
-                self.assertEqual("run %s" % (i-3), v.path)
+                self.assertEqual("short %s" % (i - 3), v.short)
+                self.assertEqual("run %s" % (i - 3), v.path)
 
         definer = svc.definer_factory(svc, doc)
         for i, v in enumerate(definer.get_definition('some text', 4)):
@@ -150,5 +149,5 @@ class TestExternal(TestCase):
                 self.assertEqual(4, v)
             else:
                 self.assertTrue(isinstance(v, Definition))
-                self.assertEqual(i-3, v.offset)
-                self.assertEqual("run %s" % (i-3), v.line)
+                self.assertEqual(i - 3, v.offset)
+                self.assertEqual("run %s" % (i - 3), v.line)

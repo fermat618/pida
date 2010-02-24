@@ -10,8 +10,6 @@ from pida.ui.books import BOOK_TERMINAL, BOOK_EDITOR
 from pida.utils.testing import refresh_gui
 from pida.utils.testing.mock import Mock
 
-
-
 class TestConfig(TestCase):
 
     def setUp(self):

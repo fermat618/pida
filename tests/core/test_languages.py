@@ -124,7 +124,6 @@ class PriorityTest(TestCase):
         self.assertEqual(lm, {'test':
                               [TestOutliner2, TestOutliner4, NoopOutliner]})
 
-
     def test_movement(self):
         sort_list = {'test': [
                         {'description': 'DESCRIPTION MISSING',
@@ -201,7 +200,6 @@ class PriorityTest(TestCase):
         lm.add(None, TestOutliner2)
         self.assertEqual(lm.get_best('test'), TestOutliner2)
         self.assertEqual(lm.get_best(None), TestOutliner2)
-
 
 
 class LanguageTest(TestCase):

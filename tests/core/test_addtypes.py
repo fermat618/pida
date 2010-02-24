@@ -51,7 +51,6 @@ class PriorityListTest(TestCase):
                 sort_list=(2, 3, 'test', 1, 4))
         self.assertEqual(pl, [2, 3, 'test', 1, 4])
 
-
     def test_prio_list2(self):
         pl = PriorityList('test', 1, 2, 3, 4,
                 sort_list=(2, 3, 7, 'test', 1, 4, 6))

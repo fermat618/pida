@@ -76,7 +76,7 @@ def test_repr_new():
     doc = document()
     rep = repr(doc)
     expected = '<New Document %d (%s)>' % (
-            document_module.new_file_index-1, id(doc))
+            document_module.new_file_index - 1, id(doc))
     assert rep == expected
 
 def test_repr_known():
@@ -87,7 +87,7 @@ def test_repr_known():
 def test_unicode_new():
     from pida.core import document as document_module
     doc = document()
-    assert unicode(doc) == u'Untitled (%d)' % (document_module.new_file_index-1)
+    assert unicode(doc) == u'Untitled (%d)' % (document_module.new_file_index - 1)
 
 def test_unicode_knows():
     doc = document(filename='test')

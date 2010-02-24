@@ -17,7 +17,6 @@ class DoctypeTest(TestCase):
         from pida.services.language import deflang
         self.doctypes._parse_map(deflang.DEFMAPPING)
 
-
     def test_new_doctype(self):
         self.assertRaises(TypeError, DocType)
         doc = DocType('test', 'Some Test')

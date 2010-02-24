@@ -15,13 +15,13 @@ class MyActions(ActionsConfig):
     def my_handler(self, action):
         self.svc.banana = True
 
-
-
 class ActionTestCase(TestCase):
 
-    def log(self, *k): #XXX: ignore log attempts of OptionsConfig
+    #XXX: ignore log attempts of OptionsConfig
+    def log(self, *k):
         pass
     log.debug = log
+
     def setUp(self):
         self.banana = False
         self.boss = None

@@ -40,8 +40,6 @@ class PseudoPackage(object):
         sys.modules[self.mod.__name__] = self.mod
         setattr(self.base, name, self.mod)
 
-
-
     def gen_files(self, sname, *names, **kw):
         content = kw.get('content', '')
         for name in names:
@@ -50,7 +48,6 @@ class PseudoPackage(object):
                 f.write(content)
             finally:
                 f.close()
-
 
     def gen_service(self, name, service=test_service, altname=None):
         spath = join(self.path, name)
@@ -84,7 +81,7 @@ class ServiceLoadTest(TestCase):
                 ))
         self.p3 = p3 = PseudoPackage('t3')
         e = gen(p3, 'testservice')
-        os.unlink(join(e, 'service.pida')) # dont load on missing service file
+        os.unlink(join(e, 'service.pida'))  # dont load on missing service file
 
         self.p4 = p4 = PseudoPackage('t4')
         gen(p4, 'nottestservice', altname='testservice.py')
@@ -102,7 +99,6 @@ class ServiceLoadTest(TestCase):
         self.l3 = p3.loader
         self.l4 = p4.loader
         self.l5 = p5.loader
-
 
     def test_get(self):
         services = self.l1.get_all()
@@ -147,7 +143,8 @@ class ServiceManagerTest(TestCase):
         self.svc = MyService()
 
         self.sm = ServiceManager(None)
-        self.sm._loader = p.loader #XXX internal hack
+        #XXX internal hack
+        self.sm._loader = p.loader
 
     def tearDown(self):
         self.p.clean()

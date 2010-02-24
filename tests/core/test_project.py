@@ -69,11 +69,10 @@ def test_relpath(project, tmpdir):
     assert project.get_relative_path_for(project.source_directory) == []
 
 
-
-
 def test_cache(project, tmpdir):
     project.load_cache()
-    project.index('', recrusive=True) #XXX: added cause of fucked cache
+    #XXX: added cause of fucked cache
+    project.index('', recrusive=True)
 
     c = project._cache
     #the empty cache should contain the root elements and the metadata
@@ -114,7 +113,6 @@ def test_cache(project, tmpdir):
     assert len(c['filenames']['Makefile']) == 2
     assert len(c['dirnames']['src']) == 1
     assert len(c['dirnames']['CVS']) == 2
-
 
     # start removing files
     tmpdir.join('lib', 'bla').remove(rec=True)
@@ -157,7 +155,7 @@ def test_cache(project, tmpdir):
     # save the state and reload
     project.save_cache()
     assert project.load_cache()
-    c = project._cache # loadin sets the cache
+    c = project._cache  # loadin sets the cache
 
     assert set(files).issubset(c['files'])
     assert set(dirs).issubset(c['dirs'])

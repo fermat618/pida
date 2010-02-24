@@ -47,7 +47,5 @@ def pytest_funcarg__editor(request):
         service.stop_components()
         service.boss.window.destroy()
     request.addfinalizer(finalizer)
-
-
     return service
 

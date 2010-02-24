@@ -14,7 +14,6 @@ class BaseTests(object):
     def setup_method(self, method):
         self.setUp()
 
-
     def test_setget_text(self):
         txt = 'some text to test with\nwith two lines'
         self.textview.get_buffer().set_text(txt)
@@ -45,7 +44,7 @@ class BaseTests(object):
             event = gtk.gdk.Event(gtk.gdk.KEY_PRESS)
             event.keyval = gtk.keysyms.a
             #event.state = gtk.gdk.SHIFT_MASK
-            event.window = self.textview.window#self.textview.get_to
+            event.window = self.textview.window
 
             #widget.emit('key-press-event', event)
 

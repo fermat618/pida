@@ -15,7 +15,7 @@ class TestCategory(Category):
         self._entries = []
         if name != 'cat0':
             self._entries.extend(self._make_entries())
-        self._subcats = [TestCategory("%ssub%s" % (name, i), 0) 
+        self._subcats = [TestCategory("%ssub%s" % (name, i), 0)
                         for i in range(sub)]
 
     def _make_entries(self, default=False):
@@ -52,8 +52,6 @@ def test_category_entries():
     Category.get_entries(t)
     Category.get_subcategories(t)
 
-
-
 def test_has_toplevel(view):
     assert view.get_toplevel() is not None
 
@@ -81,7 +79,7 @@ def test_move_entries(view):
     a, b = Entry(a=1), Entry(a=2)
 
     pl.clear()
-    pl.extend((a,b))
+    pl.extend((a, b))
     assert list(pl) == [a, b]
 
     pl.selected_item = a

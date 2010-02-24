@@ -71,7 +71,7 @@ class UIMSetupTestCase(TestCase):
 
     def test_toolbar(self):
         toolbar = self.uim.get_toolbar()
-        toolbar # pyflakes
+        toolbar  # pyflakes
         refresh_gui()
 
     def test_add_ui(self):
