@@ -24,7 +24,7 @@
           </packing>
         </child>
         <child>
-          <object class="ProxyComboBox" id="targets_combo">
+          <object class="PyGTKHelpersSimpleComboBox" id="targets_combo">
             <property name="visible">True</property>
             <property name="model_attribute">targets_combo</property>
           </object>

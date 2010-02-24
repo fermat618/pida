@@ -5,8 +5,9 @@ import gtk, gobject
 from pygtkhelpers.delegates import SlaveView, ToplevelView, gsignal
 
 from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui.widgets import SimpleComboBox
 from pygtkhelpers.ui.dialogs import yesno
-
+from pygtkhelpers.proxy import GtkComboBoxProxy, GtkTextViewProxy
 from pida.utils.puilder.model import action_types
 from pida.utils.gthreads import gcall
 
@@ -21,18 +22,6 @@ def start_editing_tv(tv):
     gcall(_start)
 
 
-def create_source_tv(tv):
-    b = tv.get_buffer()
-
-    tt = b.create_tag('tt', family='Monospace')
-
-    def on_changed(tv):
-        b.remove_all_tags(b.get_start_iter(), b.get_end_iter())
-        b.apply_tag(tt, b.get_start_iter(), b.get_end_iter())
-
-    tv.connect('content-changed', on_changed)
-
-
 class PuilderView(SlaveView):
 
     builder_file = 'puild_properties'
@@ -42,7 +31,7 @@ class PuilderView(SlaveView):
     gsignal('cancel-request')
     gsignal('project-saved', gobject.TYPE_PYOBJECT)
 
-    def create_ui(self):
+    def create_ui(self): 
         def format_default(obj):
             return obj and _('<i>default</i>') or ''
     
@@ -60,8 +49,9 @@ class PuilderView(SlaveView):
         ])
         self.acts_list.set_headers_visible(False)
 
-        self.acts_type.prefill(action_types)
-
+        self.acts_type.set_choices(action_types, None)
+        self.proxy = GtkComboBoxProxy(self.acts_type)
+        self.proxy.connect_widget()
         self.target_changed(None)
         self.action_changed(None)
 
@@ -289,12 +279,11 @@ class PuilderView(SlaveView):
     def on_acts_list__selection_changed(self, ol):
         self.action_changed(ol.selected_item)
 
-    def on_acts_type__content_changed(self, cmb):
+    def on_proxy__changed(self, cmb, obj):
         act = self.acts_list.get_selected()
         if not act:
             return
-        name = cmb.read()
-        act.type = name
+        act.type = obj
         self.action_type_changed(act)
 
     def on_name_edit_button__clicked(self, button):
@@ -392,13 +381,20 @@ class PythonActionView(ActionView):
     builder_file = 'action_python'
 
     def create_ui(self):
-        create_source_tv(self.text)
+        self.tag = self.text.get_buffer().create_tag('tt', family='Monospace')
+        self.proxy = GtkTextViewProxy(self.text)
+        self.proxy.connect_widget()
 
     def set_action(self, action):
-        self.text.update(action.value)
+        self.proxy.update(action.value)
 
-    def on_text__content_changed(self, textview):
-        self.action.value = self.text.read()
+    def on_proxy__changed(self, p, value):
+        self.action.value = value
+        b = self.text.get_buffer()
+        b.remove_all_tags(b.get_start_iter(), b.get_end_iter())
+        b.apply_tag(self.tag, b.get_start_iter(), b.get_end_iter())
+
+
 
 
 external_system_types = [
@@ -412,17 +408,20 @@ class ExternalActionView(ActionView):
 
     def create_ui(self):
         self.action = None
-        self.system_types.prefill(external_system_types)
+        self.system_types.set_choices(external_system_types, None)
+        self.proxy = GtkComboBoxProxy(self.system_types)
+        self.proxy.connect_widget()
+
 
     def set_action(self, action):
-        self.system_types.update(action.options.get('system', 'make'))
+        self.proxy.update(action.options.get('system', 'make'))
         self.external_name.set_text(action.value)
         self.build_args.set_text(action.options.get('build_args', ''))
 
-    def on_system_types__content_changed(self, cmb):
+    def on_proxy__changed(self, cmb, obj):
         if self.action is None:
             return
-        self.action.options['system'] = cmb.read()
+        self.action.options['system'] = obj
 
     def on_external_name__changed(self, entry):
         self.action.value = entry.get_text()
@@ -437,23 +436,25 @@ class TargetActionView(ActionView):
 
     def create_ui(self):
         self.block = False
+        self.proxy = GtkComboBoxProxy(self.targets_combo)
+        self.proxy.connect_widget()
 
     def set_action(self, action):
         self.block = True
-        items = [('', None)] + [(t.name, t.name) for t in self.build.targets]
-        self.targets_combo.prefill(items)
+        items = [('', '')] + [(t.name, t.name) for t in self.build.targets]
+        self.targets_combo.set_choices(items, '')
         try:
-            self.targets_combo.update(action.value)
+            self.proxy.update(action.value)
         except KeyError:
-            self.targets_combo.update(None)
+            self.proxy.update(None)
         self.block = False
 
-    def on_targets_combo__content_changed(self, cmb):
+    def on_proxy__changed(self, cmb, obj):
         if self.action is None:
             return
         if self.block:
             return
-        self.action.value = cmb.read()
+        self.action.value = obj
 
 action_views = {
     'shell': ShellActionView,

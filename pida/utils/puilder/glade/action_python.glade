@@ -29,7 +29,7 @@
             <property name="vscrollbar_policy">automatic</property>
             <property name="shadow_type">in</property>
             <child>
-              <object class="ProxyTextView" id="text">
+              <object class="GtkTextView" id="text">
                 <property name="visible">True</property>
                 <property name="left_margin">6</property>
                 <property name="right_margin">6</property>

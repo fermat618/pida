@@ -268,8 +268,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="ProxyComboBox" id="acts_type">
-                        <property name="model_attribute">acts_type</property>
+                      <object class="PyGTKHelpersSimpleComboBox" id="acts_type">
                         <property name="visible">True</property>
                       </object>
                       <packing>

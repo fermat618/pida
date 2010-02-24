@@ -54,9 +54,8 @@
               </packing>
             </child>
             <child>
-              <object class="ProxyComboBox" id="system_types">
+              <object class="PyGTKHelpersSimpleComboBox" id="system_types">
                 <property name="visible">True</property>
-                <property name="model_attribute">system_types</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>

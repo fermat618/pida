@@ -246,8 +246,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="ProxyComboBox" id="controllers_combo">
-                    <property name="model_attribute"/>
+                  <object class="PyGTKHelpersSimpleComboBox" id="controllers_combo">
                     <property name="visible">True</property>
                   </object>
                   <packing>
