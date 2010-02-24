@@ -112,48 +112,66 @@ class PidaOptionsView(PidaGladeView):
 
     key = 'optionsmanager.editor'
 
-    gladefile = 'options_editor'
     locale = locale
     label_text = 'Preferences'
 
     icon_name = 'gnome-settings'
 
     def create_ui(self):
+        self.service_list = gtk.ListStore(str, object)
+        self.service_combo = gtk.ComboBox(self.service_list)
+        self.service_proxy = get_proxy_for_widget(self.service_combo)
+        self.service_proxy.connect_widget()
+        renderer = gtk.CellRendererText()
+        self.service_combo.pack_start(renderer)
+        self.service_combo.add_attribute(renderer, 'text', 0)
+
+        self.options_book = ob = gtk.Notebook()
+        ob.set_property('width-request',400)
+        ob.set_property('border-width', 6)
+        ob.set_property('show_tabs', False)
+
+        self.widget.pack_start(self.service_combo, expand=False)
+        self.widget.pack_start(ob)
+        self.widget.show_all()
         self.svc.events.subscribe('option_changed',
                                   self._on_option_changed_elsewhere)
         self.current = None
+
         self.refresh_ui()
 
     def clear_ui(self):
         while self.options_book.get_n_pages():
             self.options_book.remove_page(-1)
-        self._services_display = []
         self._service_pages = {}
         self._service_page_widgets = {}
+        self._services = []
+        self.service_list.clear()
 
     def refresh_ui(self):
         current = self.current
         self.clear_ui()
-        self._services = []
 
         for svc in self.svc.boss.get_services():
             if svc.options:
+                print svc
                 self._services.append(svc)
-                self._services_display.append(
+                self.service_list.append(
                     (svc.get_label(), svc),
                 )
 
         self._services.sort(key=Service.sort_key)
 
         self._tips = gtk.Tooltips()
+        if current:
+            self.service_proxy.update(current)
 
-        self.service_combo.prefill(self._services_display)
 
         if current is not None:
             try:
-                self.service_combo.update(current)
+                self.service_proxy.update(current)
             except KeyError:
-                self.service_combo.update(self.current)
+                self.service_proxy.update(self.current)
 
     def _add_service(self, svc):
         self._service_pages[svc.get_name()] = self.options_book.get_n_pages()
@@ -162,8 +180,8 @@ class PidaOptionsView(PidaGladeView):
         self.options_book.append_page(page)
         self.options_book.show_all()
 
-    def on_service_combo__content_changed(self, cmb):
-        self.current = svc = self.service_combo.read()
+    def on_service_proxy__changed(self, p, svc):
+        self.current = svc
         if not svc:
             return # no service was selected
         if not svc.get_name() in self._service_pages:
