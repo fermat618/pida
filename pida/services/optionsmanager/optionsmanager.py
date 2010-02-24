@@ -83,6 +83,7 @@ class OptionsPage(gtk.VBox):
 
             opt_widget = get_widget_for_type(opt.type)
             opt_proxy = get_proxy_for_widget(opt_widget)
+            opt_proxy.connect_widget()
             widgetsizer.add_widget(opt_widget)
             hb.pack_start(opt_widget, expand=True)
             opt_proxy.update(opt.value)
