@@ -508,17 +508,7 @@ class BrowserView(PidaGladeView):
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
 
-    def on_source_tree__row_activated(self, treeview, path, view_column):
-        "After activated (double clicked or pressed enter) on a row"
-        # we have to use this hand connected version as the kiwi one
-        # used the wrong model and not our filtered one :(
-        try:
-            row = self.filter_model[path]
-        except IndexError:
-            print 'path %s was not found in model: %s' % (
-                path, map(list, self._model))
-            return
-        item = row[0]
+    def on_source_tree__item_activated(self, ol, item):
         if item.filename is not None:
             self.svc.boss.cmd('buffer', 'open_file', file_name=item.filename,
                                                      line=item.linenumber)
@@ -526,7 +516,6 @@ class BrowserView(PidaGladeView):
         elif item.linenumber:
             self.svc.boss.editor.cmd('goto_line', line=item.linenumber)
             self.svc.boss.editor.cmd('grab_focus')
-        return True
 
     def update_filterview(self, outliner):
         if outliner:
