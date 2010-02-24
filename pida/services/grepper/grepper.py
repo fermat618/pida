@@ -9,7 +9,7 @@ import gtk, gobject
 
 from glob import fnmatch
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 from pida.ui.views import PidaView
 from pida.core.charfinder import detect_text
 from pida.core.commands import CommandsConfig
@@ -17,7 +17,7 @@ from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, TYPE_TOGGLE
+from pida.core.actions import ActionsConfig
 from pida.utils.gthreads import GeneratorTask
 
 # locale
@@ -88,7 +88,7 @@ class GrepperActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'show_grepper',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Find _in files'),
             _('Show the grepper view'),
             gtk.STOCK_FIND,
@@ -98,7 +98,7 @@ class GrepperActionsConfig(ActionsConfig):
 
         self.create_action(
             'grep_current_word',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Find word in _project'),
             _('Find the current word in the current project'),
             gtk.STOCK_FIND,
@@ -108,7 +108,7 @@ class GrepperActionsConfig(ActionsConfig):
 
         self.create_action(
             'grep_current_word_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Find word in document _directory'),
             _('Find the current word in current document directory'),
             gtk.STOCK_FIND,
@@ -118,7 +118,7 @@ class GrepperActionsConfig(ActionsConfig):
 
         self.create_action(
             'show_grepper_search',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Find in directory'),
             _('Find in directory'),
             gtk.STOCK_FIND,
@@ -171,9 +171,9 @@ class GrepperView(PidaView):
                                   self.grep_complete, pass_generator=True)
         self.running = False
 
-    def on_matches_list__row_activated(self, rowitem, grepper_item):
-        self.svc.boss.cmd('buffer', 'open_file', file_name=grepper_item.path, 
-                                                 line=grepper_item.linenumber)
+    def on_matches_list__item_activated(self, ol, item):
+        self.svc.boss.cmd('buffer', 'open_file', file_name=item.path,
+                                                 line=item.linenumber)
         self.svc.boss.editor.cmd('grab_focus')
 
     def append_to_matches_list(self, grepper_item):
@@ -225,9 +225,6 @@ class GrepperView(PidaView):
 
         # needs a patched kiwi
         self.matches_list.grab_focus()
-        # so do this evil hack for now
-        # TODO: remove this when kiwi patch is accepted!
-        self.matches_list._treeview.grab_focus()
 
         # data checking is done here as opposed to in the grep functions
         # because of threading
