@@ -14,30 +14,46 @@ import os
 import sys
 from optparse import OptionParser
 
-from kiwi.environ import Library, environ
-
 import pida
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-library = Library('pida', root='../')
 
-library.add_global_resource('glade', 'resources/glade')
-library.add_global_resource('uidef', 'resources/uidef')
-library.add_global_resource('pixmaps', 'resources/pixmaps')
-library.add_global_resource('data', 'resources/data')
+base_path = pida.__path__[0]
+def bp(p):
+    return os.path.join(base_path, 'resources', p)
+
+
+lib = {}
+
+for kind in 'glade uidef pixmaps data'.split():
+    lib[kind] = [bp(kind)]
+
+
+class FakeLibrary(object):
+    def find_resource(self, resource, name):
+        for item in lib[resource]:
+            full = os.path.join(item, name)
+            if os.path.exists(full):
+                return full
+        raise EnvironmentError('Could not find %s resource: %s' % (
+                                resource, name))
+
+    def add_global_resource(self, kind, path):
+        lib[kind].append(path)
+
+library = FakeLibrary()
 
 def get_resource_path(resource, name):
-    return environ.find_resource(resource, name)
+    return library.find_resource(resource, name)
 
 def get_pixmap_path(name):
     return get_resource_path('pixmaps', name)
 
 def get_data_path(name):
-    #XXX: hack
-    return os.path.join(pida.__path__[0], 'resources/data', name)
+    return get_resource_path('data', name)
 
 pida_home = os.path.expanduser('~/.pida2')
 firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
