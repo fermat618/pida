@@ -223,7 +223,6 @@ class GrepperView(PidaView):
             location = self._hacky_extra_location
         recursive = self.recursive.get_active()
 
-        # needs a patched kiwi
         self.matches_list.grab_focus()
 
         # data checking is done here as opposed to in the grep functions
