@@ -12,7 +12,7 @@ import gtk
 
 from pida.utils.configobj import ConfigObj
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -95,8 +95,8 @@ class OpenWithEditor(PidaGladeView):
             self.items_ol.remove(self._current, select=True)
             self.save_button.set_sensitive(True)
 
-    def on_items_ol__selection_changed(self, ol, item):
-        self.set_current(item)
+    def on_items_ol__selection_changed(self, ol):
+        self.set_current(ol.selected_item)
 
     def on_name_entry__changed(self, entry):
         if not self._block_changed:
