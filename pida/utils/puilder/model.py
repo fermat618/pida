@@ -167,10 +167,10 @@ class Action(object):
 
 
 action_types = [
-    ('Shell Command', 'shell'),
-    ('Python Script', 'python'),
-    ('Existing Target', 'target'),
-    ('External Build', 'external'),
+    ('shell', 'Shell Command'),
+    ('python', 'Python Script'),
+    ('target', 'Existing Target'),
+    ('external', 'External Build')
 ]
 
 

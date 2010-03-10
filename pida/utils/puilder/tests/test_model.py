@@ -300,6 +300,13 @@ def test_main_view_action_view(b):
     assert shouldbe == v.acts_holder.get_current_page()
 
 
+def test_main_view_switch_to_action(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    v.proxy.update('test1')
+
+
 def test_main_view_select_action(b):
     v = PuilderView()
     v.set_build(b)

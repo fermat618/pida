@@ -157,7 +157,9 @@ class PuilderView(SlaveView):
     def switch_action_view(self, name):
         n = self.acts_holder.page_num(self.action_views[name].widget)
         self.acts_holder.set_current_page(n)
-        self.acts_type.update(name)
+        #XXX: block off a endless recursion WHY?
+        if self.proxy.read() != name:
+            self.proxy.update(name)
 
     def set_build(self, build):
         self.build = build
@@ -262,8 +264,8 @@ class PuilderView(SlaveView):
         self.acts_list.append(act, select=True)
 
     def on_DelCurrentActs__activate(self, button):
-        act = self.acts_list.get_selected()
-        target = self.targets_list.get_selected()
+        act = self.acts_list.selected_item
+        target = self.targets_list.selected_item
         if act is None or target is None:
             return
         if self.confirm('Are you sure you want to remove this action?'):
@@ -280,9 +282,11 @@ class PuilderView(SlaveView):
         self.action_changed(ol.selected_item)
 
     def on_proxy__changed(self, cmb, obj):
-        act = self.acts_list.get_selected()
+        act = self.acts_list.selected_item
         if not act:
             return
+        print obj
+        print cmb
         act.type = obj
         self.action_type_changed(act)
 
