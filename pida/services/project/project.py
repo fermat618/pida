@@ -16,7 +16,7 @@ from functools import partial
 
 import gtk
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -76,33 +76,29 @@ class ProjectListView(PidaGladeView):
     icon_name = 'package_utilities'
 
     def create_ui(self):
-        self.project_ol.set_headers_visible(False)
         self.project_ol.set_columns([Column('markup', use_markup=True)])
-        self._sort_combo = AttrSortCombo(self.project_ol,
-            [
+        self._sort_combo = AttrSortCombo(self.project_ol, [
                 ('display_name', 'Name'),
                 ('source_directory', 'Full Path'),
                 ('name', 'Directory Name'),
-            ],
-            'display_name'
-        )
+                ], 'display_name')
         self._sort_combo.show()
         self.main_vbox.pack_start(self._sort_combo, expand=False)
 
-    def on_project_ol__selection_changed(self, ol, project):
-        self.svc.set_current_project(project)
+    def on_project_ol__selection_changed(self, ol):
+        self.svc.set_current_project(ol.selected_item)
 
-    def on_project_ol__double_click(self, ol, project):
+    def on_project_ol__item_activated(self, ol, project):
         self.svc.boss.cmd('filemanager', 'browse', new_path=project.source_directory)
         self.svc.boss.cmd('filemanager', 'present_view')
 
-    def on_project_ol__right_click(self, ol, project, event):
+    def on_project_ol__item_right_clicked(self, ol, project, event):
         self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
             dir_name=project.source_directory, event=event,
             project=project)
 
     def set_current_project(self, project):
-        self.project_ol.select(project)
+        self.project_ol.selected_item = project
 
     def update_project(self, project):
         self.project_ol.update(project)
