@@ -6,7 +6,7 @@
 import pkgutil
 import gtk
 
-from kiwi.ui.objectlist import ObjectTree, ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectTree, ObjectList, Column
 
 # PIDA Imports
 from pida.utils.gthreads import gcall
@@ -28,14 +28,12 @@ class DebuggerBreakPointsView(PidaView):
     def create_ui(self):
         self._prebreakpoints = {}
         self._breakpoints = {}
-        self._breakpoint_list = ObjectList(
-            [
+        self._breakpoint_list = ObjectList([
                 Column('line'),
                 Column('file', sorted=True),
                 Column('status')
-            ]
-        )
-        self._breakpoint_list.connect('double-click', self._on_breakpoint_double_click)
+        ])
+        self._breakpoint_list.connect('item-activated', self._on_breakpoint_double_click)
         self.add_main_widget(self._breakpoint_list)
         self._breakpoint_list.show_all()
 
@@ -151,16 +149,14 @@ class DebuggerStackView(PidaView):
         self.create_toolbar()
 
         # Tree
-        self._stack_list = ObjectTree(
-            [
-                Column('thread'), 
-                Column('frame'), 
-                Column('line'),
-                Column('function'),
-                Column('file'),
-            ]
-        )
-        self._stack_list.connect('double-click', self._on_frame_double_click)
+        self._stack_list = ObjectTree([
+            Column('thread'),
+            Column('frame'),
+            Column('line'),
+            Column('function'),
+            Column('file'),
+        ])
+        self._stack_list.connect('item-activated', self._on_frame_double_click)
 
         # Arrange the UI
         self._vbox = gtk.VBox()
