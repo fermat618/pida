@@ -18,7 +18,6 @@ from pida.ui.views import PidaGladeView
 from pida.ui.widgets import get_widget_for_type, get_proxy_for_widget
 
 
-from kiwi import ValueUnset
 # locale
 from pida.core.locale import Locale
 locale = Locale('optionsmanager')
@@ -97,8 +96,6 @@ class OptionsPage(gtk.VBox):
         # various hacks
         if value is None:
             return
-        if value == ValueUnset:
-            widgval = ''
         if value != optval:
             option.group.set_value(option.name, value)
 
