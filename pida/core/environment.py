@@ -3,8 +3,7 @@
     Environment
     ~~~~~~~~~~~
 
-    This module provides some basic environment informations and
-    the kiwi resource libraries.
+    This module provides some basic environment informations
 
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
