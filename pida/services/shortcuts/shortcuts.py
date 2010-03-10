@@ -5,7 +5,7 @@
 """
 import gtk
 
-from kiwi.ui.objectlist import ObjectTree, Column
+from pygtkhelpers.ui.objectlist import ObjectTree, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -26,6 +26,7 @@ class ServiceListItem(object):
         self.svc = svc
         self.label = self.no_mnemomic_label = svc.get_name().capitalize()
         self.doc = ''
+        self.value = ''
         self.stock_id = ''
         
 
@@ -49,7 +50,7 @@ class ShortcutsView(PidaView):
         self._current = None
         self.shortcuts_list.connect('selection-changed',
                                     self._on_selection_changed)
-        self.shortcuts_list.connect('double-click',
+        self.shortcuts_list.connect('item-activated',
                                     self._on_list_double_click)
         vbox = gtk.VBox(spacing=6)
         vbox.set_border_width(6)
@@ -95,14 +96,12 @@ class ShortcutsView(PidaView):
                                 self.svc.boss.editor]:
             if len(service.get_keyboard_options()):
                 sli = ServiceListItem(service)
-                self.shortcuts_list.append(None, sli)
+                self.shortcuts_list.append(sli)
                 for opt in service.get_keyboard_options().values():
-                    self.shortcuts_list.append(sli, opt)
+                    self.shortcuts_list.append(opt, parent=sli)
 
-    def decorate_service(self, service):
-        return ServiceListItem(service)
-
-    def _on_selection_changed(self, otree, item):
+    def _on_selection_changed(self, otree):
+        item = otree.selected_item
         if isinstance(item, ServiceListItem):
             self._current = None
             self._capture_entry.set_sensitive(False)
