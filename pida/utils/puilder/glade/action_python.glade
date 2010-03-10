@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <interface>
   <!-- interface-requires gtk+ 2.12 -->
-  <requires lib="kiwiwidgets" version="2.16"/>
   <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkWindow" id="action_python">
     <property name="default_width">440</property>
