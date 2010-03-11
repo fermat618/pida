@@ -27,7 +27,7 @@ import os
 import shutil
 import pida.plugins
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 from pida.ui.views import PidaGladeView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
@@ -80,9 +80,8 @@ class PluginsEditView(PidaGladeView):
 
     def create_ui(self):
         self.attr_list.set_columns([
-            Column('name', title=_('Name'), data_type=str),
-            Column('value', title=_('Value'), 
-                   data_type=str,
+            Column('name', title=_('Name')),
+            Column('value', title=_('Value'),
                    editable=True,
                    expand=True),
             ])
@@ -98,7 +97,7 @@ class PluginsEditView(PidaGladeView):
         ]
         self.attr_list.add_list(listing, clear=True)
 
-    def on_attr_list__cell_edited(self, w, item, value):
+    def on_attr_list__item_changed(self, w, item, attr, value):
         setattr(self.item, getattr(item, 'key'), getattr(item, 'value'))
         self.svc._view.update_publish_infos()
         self.svc.write_informations(self.item)
@@ -122,15 +121,14 @@ class PluginsView(PidaGladeView):
         self.installed_item = None
         self.first_start = True
         self.installed_list.set_columns([
-            Column('name', title=_('Plugin'), sorted=True, data_type=str,
-                expand=True),
-            Column('enabled', title=_('Enabled'), data_type=bool,
-                editable=True)
+            Column('name', title=_('Plugin'), sorted=True, expand=True),
+            Column('enabled', title=_('Enabled'), type=bool,
+                              editable=True, use_checkbox=True)
             ])
         self.available_list.set_columns([
-            Column('markup', title=_('Plugin'), sorted=True, data_type=str,
+            Column('markup', title=_('Plugin'), sorted=True,
                 expand=True, use_markup=True),
-            Column('version', title=_('Version'), data_type=str),
+            Column('version', title=_('Version')),
             ])
         #XXX: reenable ui publisher after making a newui
     
@@ -164,11 +162,11 @@ class PluginsView(PidaGladeView):
         else:
             self.svc.update_installed_plugins()
 
-    def on_available_list__selection_changed(self, ot, item):
-        self._current = item
+    def on_available_list__selection_changed(self,  ot):
+        self._current = item = ot.selected_item
 
         # no item, clear fields
-        if item is None:
+        if item is None: 
             self.available_title.set_text(_('No plugin selected'))
             self.available_description.get_buffer().set_text('')
             self.available_install_button.set_sensitive(False)
@@ -180,11 +178,11 @@ class PluginsView(PidaGladeView):
         self.available_description.get_buffer().set_text(item.description)
         self.available_install_button.set_sensitive(True)
 
-    def on_installed_list__selection_changed(self, ot, item):
-        self.installed_item = item
+    def on_installed_list__selection_changed(self, ot):
+        self.installed_item = item = ot.selected_item
 
         # no item, clear fields
-        if item is None:
+        if item is None: 
             self.installed_title.set_text(_('No plugin selected'))
             self.installed_description.get_buffer().set_text('')
             self.installed_delete_button.set_sensitive(False)
@@ -217,10 +215,10 @@ class PluginsView(PidaGladeView):
             return
         self.svc.download(self._current)
 
-    def on_installed_list__cell_edited(self, w, item, value):
-        if value != 'enabled':
+    def on_installed_list__item_changed(self, w, item, attr, value):
+        if attr != 'enabled': 
             return
-        if item.enabled:
+        if item.enabled: 
             success = self.svc.start_plugin(item.plugin)
             item.enabled = success
         else:
