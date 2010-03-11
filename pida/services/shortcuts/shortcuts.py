@@ -98,6 +98,13 @@ class ShortcutsView(PidaView):
                 sli = ServiceListItem(service)
                 self.shortcuts_list.append(sli)
                 for opt in service.get_keyboard_options().values():
+                    if opt in self.shortcuts_list:
+                        self.svc.log.warning(
+                            'service %s has keyboard option %s twice',
+                            service,
+                            opt,
+                        )
+                        continue
                     self.shortcuts_list.append(opt, parent=sli)
 
     def _on_selection_changed(self, otree):
