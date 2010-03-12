@@ -24,7 +24,7 @@ from urlparse import urljoin
 
 import gtk
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -56,12 +56,10 @@ class TracView(PidaGladeView):
     label_text = _('Trac')
 
     def create_ui(self):
-        self.tickets_list.set_columns(
-            [
-                Column('ticket', sorted=True, data_type=int),
-                Column('summary'),
-            ]
-        )
+        self.tickets_list.set_columns([
+            Column('ticket', sorted=True, type=int),
+            Column('summary'),
+        ])
         self.set_base_address('http://pida.co.uk/trac/')
         self.item_text = HtmlTextView()
         self.item_text_holder.add(self.item_text)
@@ -81,7 +79,8 @@ class TracView(PidaGladeView):
         trac_report(self.get_base_address(), 1, self.report_received,
                     self.get_auth_data())
 
-    def on_tickets_list__selection_changed(self, ol, item):
+    def on_tickets_list__selection_changed(self, ol):
+        item = ol.selected_item
         self.item_text.clear_html()
         self.item_text.display_html(item.description.strip())
 
