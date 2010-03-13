@@ -622,13 +622,13 @@ class PythonView(PidaView):
         self.add_main_widget(self._box)
 
     def execute(self, file_=None, cwd=os.getcwd()):
-        command = os.path.join(environment.pida_root_path, "pida", "utils", "pycons", "main.py")
-        commandargs = [self.svc.opt('python_path'), command, "--embed",
-                       "--socket=%s" %self._socket.get_id()]
-        if self.svc.opt('use_ipython'):
-            commandargs.append('--ipython')
+        commandargs = [
+            self.svc.opt('python_path'),
+            '-m', 'bpython.gtk_',
+            '--socket-id=%s' %self._socket.get_id(),
+            ]
         if file_:
-            commandargs.append(file_)
+            commandargs.extend(['-i', file_])
         self.popen = p = subprocess.Popen(commandargs, cwd=cwd, close_fds=True)
         self._pid = p.pid
 
