@@ -151,7 +151,6 @@ class PidaOptionsView(PidaGladeView):
 
         for svc in self.svc.boss.get_services():
             if svc.options:
-                print svc
                 self._services.append(svc)
                 self.service_list.append(
                     (svc.get_label(), svc),
