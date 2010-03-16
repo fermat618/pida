@@ -336,7 +336,7 @@ def _test():
     mp = ModuleParser(__file__)
 
     def create_ui():
-        from kiwi.ui.objectlist import ObjectTree, Column
+        from pygtkhelpers.ui.objectlist import ObjectTree, Column
         source_tree = ObjectTree()
         source_tree.set_columns(
             [
