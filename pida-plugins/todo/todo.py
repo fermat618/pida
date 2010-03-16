@@ -21,7 +21,7 @@
 #SOFTWARE.
 
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -56,14 +56,11 @@ class TodoView(PidaView):
     icon_name =  'accessories-text-editor'
 
     def create_ui(self):
-        self.todo_list = ObjectList(
-            [
-                Column('line', sorted=True),
-                Column('todo'),
-                Column('marker'),
-            ]
-        )
-        self.todo_list.connect('double-click', self._on_todo_double_click)
+        self.todo_list = ObjectList([
+            Column('line', sorted=True),
+            Column('todo'),
+            Column('marker'),
+        ])
         self.add_main_widget(self.todo_list)
         self.todo_list.show_all()
 
@@ -73,7 +70,7 @@ class TodoView(PidaView):
     def add_item(self, todo, line, marker):
         self.todo_list.append(TodoItem(todo, line, marker))
 
-    def _on_todo_double_click(self, olist, item):
+    def on_todo_list__item_activated(self, olist, item):
         self.svc.boss.editor.cmd('goto_line', line=item.line)
 
     def can_be_closed(self):
