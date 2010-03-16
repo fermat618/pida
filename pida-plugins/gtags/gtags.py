@@ -31,7 +31,7 @@ import gtk
 import re
 from threading import Thread
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 # PIDA Imports
 from pida.core.languages import LanguageService, Completer, \
                                 LanguageServiceFeaturesConfig
@@ -98,8 +98,6 @@ class GtagsView(PidaView):
         self.create_toolbar()
         self._hbox.show_all()
 
-        self._count = 0
-
     def create_searchbar(self):
         h = gtk.HBox(spacing=3)
         h.set_border_width(2)
@@ -129,19 +127,16 @@ class GtagsView(PidaView):
         self._bar.show_all()
 
     def create_list(self):
-        self._list = ObjectList(
-                [
-                    Column('symbol', data_type=str, title=_('Symbol'),
-                        use_markup=True),
-                    Column('filename', data_type=str, title=_('Location'),
-                        use_markup=True),
-                    Column('dataline', data_type=str, title=_('Data'),
-                        use_markup=True)
-                ]
-        )
-        self._list.connect('double-click', self._on_list_double_click)
-        self._vbox.pack_start(self._list)
-        self._list.show_all()
+        self._list = ObjectList([
+            Column('symbol', title=_('Symbol'), use_markup=True),
+            Column('filename', title=_('Location'), use_markup=True),
+            Column('dataline', title=_('Data'), use_markup=True),
+            ])
+        self._scroll = gtk.ScrolledWindow()
+        self._scroll.add(self._list)
+        self._list.connect('item-double-clicked', self._on_list_double_click)
+        self._vbox.pack_start(self._scroll)
+        self._scroll.show_all()
 
     def create_progressbar(self):
         self._progressbar = gtk.ProgressBar()
@@ -159,17 +154,14 @@ class GtagsView(PidaView):
             self._progressbar.show()
         else:
             self._progressbar.hide()
+
     def add_item(self, item):
         self._list.append(item)
-        self._count += 1
-        if self._count == 1:
-            self._info.set_text(_('%d match') % self._count)
-        else:
-            self._info.set_text(_('%d matchs') % self._count)
+        #XXX: ngettext
+        self._info.set_text('%d matches' % len(self._list))
 
     def clear_items(self):
         self._list.clear()
-        self._count = 0
         self._info.set_text('-')
 
     def activate(self, activate):
@@ -519,7 +511,7 @@ class Gtags(LanguageService):
             self._view.add_item(GtagsItem(file=data[2],
                 line=data[1], dataline=data[3],
                 symbol=data[0], search=pattern))
-            if self._view._count > 200:
+            if len(self._view._list) > 200:
                 self._task.stop()
 
         #FIXME this is not portable
