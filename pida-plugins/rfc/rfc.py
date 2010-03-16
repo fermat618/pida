@@ -26,7 +26,7 @@ import re
 import urllib
 import pkgutil
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.environment import pida_home
@@ -95,13 +95,14 @@ class RfcView(PidaView):
     def create_list(self):
         self._list = ObjectList(
                 [
-                    Column('number', data_type=str, title=_('Number')),
-                    Column('description', data_type=str,
-                        title=_('Description'))
+                    Column('number', title=_('Number')),
+                    Column('description', title=_('Description'))
                 ]
         )
-        self._list.connect('double-click', self._on_list_double_click)
-        self._vbox.pack_start(self._list)
+        self._scroll = gtk.ScrolledWindow()
+        self._scroll.add(self._list)
+        self._list.connect('item-activated', self._on_list_double_click)
+        self._vbox.pack_start(self._scroll)
         self._list.show_all()
 
     def create_progressbar(self):
@@ -123,7 +124,7 @@ class RfcView(PidaView):
             self._progressbar.hide()
 
     def set_items(self, items):
-        self._list.add_list(items, True)
+        self._list.extend(items)
 
     def clear(self):
         self._list.clear()
@@ -199,7 +200,7 @@ class Rfc(Service):
     actions_config = RfcActions
     features_config = RfcFeaturesConfig
 
-    url_rfcindex = 'http://www.ietf.org/iesg/1rfc_index.txt'
+    url_rfcindex = 'http://www.ietf.org/download/rfc-index.txt'
     url_rfctmpl = 'http://tools.ietf.org/html/rfc'
     buffer_len = 16384
 
