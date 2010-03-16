@@ -26,7 +26,7 @@ import commands
 import re
 import cgi
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -65,36 +65,32 @@ class ManView(PidaView):
     label_text = 'Man'
 
     def create_ui(self):
-        self._count = 0
-        self.__vbox = gtk.VBox(spacing=3)
-        self.__vbox.set_border_width(6)
-        self.__hbox = gtk.HBox()
-        self.__entry = gtk.Entry()
-        self.__entry.connect('changed', self.cb_entry_changed)
-        self.__check = gtk.CheckButton(label='-k')
-        self.__check.connect('toggled', self.cb_entry_changed)
-        self.__list = ObjectList([
+        self.vbox = gtk.VBox(spacing=3)
+        self.vbox.set_border_width(6)
+        self.hbox = gtk.HBox()
+        self.entry = gtk.Entry()
+        self.check = gtk.CheckButton(label='-k')
+        self.list = ObjectList([
                    Column('markup', title=_('Man page'), sorted=True,
                        use_markup=True),
                    Column('description', title=_('Description'),
                        use_markup=True),
                ])
-        self.__list.connect('row-activated', self._on_man_key_pressed)
-        self.__list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.__hbox.pack_start(self.__entry)
-        self.__hbox.pack_start(self.__check, expand=False)
-        self.__vbox.pack_start(self.__hbox, expand=False)
-        self.__vbox.pack_start(self.__list)
-        self.add_main_widget(self.__vbox)
-        self.__vbox.show_all()
+        self.scroll = gtk.ScrolledWindow()
+        self.scroll.add(self.list)
+        self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.hbox.pack_start(self.entry)
+        self.hbox.pack_start(self.check, expand=False)
+        self.vbox.pack_start(self.hbox, expand=False)
+        self.vbox.pack_start(self.scroll)
+        self.add_main_widget(self.vbox)
+        self.vbox.show_all()
 
     def clear_items(self):
-        self._count = 0
-        self.__list.clear()
+        self.list.clear()
 
     def add_item(self, item):
-        self._count += 1
-        self.__list.append(item)
+        self.list.append(item)
 
     def close(self, term, dummy):
         term.close_view()
@@ -111,17 +107,17 @@ class ManView(PidaView):
                     pattern=item.pattern,
                     number=int(item.number)
                 ))
-    
-    def _on_man_double_click(self, olist, item):
-        self.open(item)
-    def _on_man_key_pressed(self, olist, item):
+
+    def on_list__item_activated(self, olist, item):
         self.open(item)
 
-    def cb_entry_changed(self, w):
-        options = '-f'
-        if self.__check.get_active():
+    def on_entry__changed(self, w):
+        if self.check.get_active():
             options = '-k'
-        self.svc.cmd_find(options=options, pattern=self.__entry.get_text())
+        else:
+            options = '-f'
+        self.svc.cmd_find(options=options, pattern=self.entry.get_text())
+    on_check__toggled = on_entry__changed
 
     def can_be_closed(self):
         self.svc.get_action('show_man').set_active(False)
@@ -189,22 +185,31 @@ class Man(Service):
 
         # prepare command
         cmd = '/usr/bin/env man %s "%s"' % (options, pattern)
-        reman = re.compile('[(]([\d]+)[)]')
+        #XXX: unittest
+        reman = re.compile(r'''
+            (?P<name>\w+)
+            \s*(\[\])\s* #whitespace and gentoo brackets
+            \((?P<group>[\w\d]+)\)
+            \s*-\s*
+            (?P<desc>.*)
+            ''', re.VERBOSE)
 
         # match and add each line
         def _line(result):
-            list = reman.findall(result)
-            if not len(list):
-                return
-            name = result.split('(')[0].strip()
-            res = result.split('- ',1)
-
-            # avoid too much result
-            if self._view._count > 100:
+            # avoid too many results
+            if len(self._view.list) > 100:
                 self.task.stop()
 
+            match = reman.match(result)
+            if not match:
+                return
+            name = match.group('name')
+            group = match.group('group')
+            desc = match.group('desc')
+
+
             # add in list
-            self._view.add_item(ManItem(name, list[0], res[1], pattern))
+            self._view.add_item(ManItem(name, group, desc, pattern))
 
         # launch man subprocess
         self.task = GeneratorSubprocessTask(_line)
