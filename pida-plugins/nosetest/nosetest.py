@@ -30,7 +30,7 @@ from xml.etree.ElementTree import iterparse
 import gtk
 
 # kiwi
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 
 # PIDA Imports
 
@@ -189,7 +189,7 @@ class TestResultBrowser(PidaGladeView):
                 cwd=src,
         )
 
-    def on_source_tree__double_click(self, tv, item):
+    def on_source_tree__item_activated(self, tv, item):
             self.svc.show_result(item.output)
 
     def start_test(self, test):
