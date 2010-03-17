@@ -2,25 +2,16 @@ import gtk
 from pida.services.language import DOCTYPES
 
 __package__ = 'pida.ui.besttextview'
-import pida.ui.besttextview
+from pida.ui.besttextview import views, import_view
 
 if __name__ == '__main__':
-    try:
-        from .mooview import MooTextView
-    except ImportError:
-        MooTextView = None
 
-    try:
-        from .sourceview import SourceTextView
-    except ImportError:
-        SourceTextView = None
-
-    try:
-        from .textview import SimpleTextView
-    except ImportError:
-        SimpleTextView = None
-
-    allw = (x for x in (MooTextView, SourceTextView, SimpleTextView) if x)
+    allw = []
+    for view in views:
+        try:
+            allw.append(import_view(view))
+        except ImportError:
+            pass
 
     win = gtk.Window()
     box = gtk.VBox()

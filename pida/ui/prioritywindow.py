@@ -225,7 +225,6 @@ if __name__ == "__main__":
     from pida.core import environment
     from tests.ui.test_priorityeditor import TestRootCategory
     import sys
-    import gtk
     environment.parse_args(sys.argv)
     twin = gtk.Window()
     twin.connect('delete-event', gtk.main_quit)
