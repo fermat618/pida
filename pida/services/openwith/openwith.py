@@ -10,8 +10,7 @@ from itertools import chain
 
 import gtk
 
-from pida.utils.configobj import ConfigObj
-
+import json
 from pygtkhelpers.ui.objectlist import Column
 
 # PIDA Imports
@@ -34,6 +33,13 @@ locale = Locale('openwith')
 _ = locale.gettext
 
 
+default = {
+    'name': "See",
+    'glob': "*",
+    'command': "see %s",
+    'terminal': True
+    }
+
 class OpenWithEditor(PidaGladeView):
 
     key = 'openwith.editor'
@@ -53,10 +59,8 @@ class OpenWithEditor(PidaGladeView):
         self._current = None
         self._block_changed = False
 
-    def prefill(self, config):
-        for section in config:
-            item = OpenWithItem(config[section])
-            self.items_ol.append(item)
+    def prefill(self, items):
+        self.items_ol.extend(items)
 
     def set_current(self, item):
         self._current = item
@@ -83,7 +87,7 @@ class OpenWithEditor(PidaGladeView):
         self.save_button.set_sensitive(True)
 
     def on_save_button__clicked(self, button):
-        self.svc.save([i for i in self.items_ol])
+        self.svc.save([i.as_dict() for i in self.items_ol])
         self.save_button.set_sensitive(False)
 
     def on_close_button__clicked(self, button):
@@ -203,15 +207,13 @@ class Openwith(Service):
     actions_config = OpenWithActions
     features_config = OpenWithFeatures
 
+    _filename = os.path.join(pida_home, 'openwith.json')
+
     def pre_start(self):
-        self._filename = os.path.join(pida_home, 'openwith.ini')
-        self._config = ConfigObj(self._filename)
         if not os.path.exists(self._filename):
-            default = self.create_default_item()
-            self._config[default.name] = default.as_dict()
-            self._config.write()
+            self.save([default])
         self._view = OpenWithEditor(self)
-        self._view.prefill(self._config)
+        self._view.prefill(self.get_items())
 
     def show_editor(self):
         self.boss.cmd('window', 'add_view', paned='Plugin',
@@ -219,27 +221,23 @@ class Openwith(Service):
 
     def hide_editor(self):
         self.boss.cmd('window', 'remove_view', view=self._view)
-        
+
     def save(self, items):
-        self._config.clear()
-        for item in items:
-            self._config[item.name] = item.as_dict()
-            self._config.write()
+        #XXX: list option
+        json.dump(items,
+            open(self._filename, 'w'),
+            indent=2,
+            )
 
     def get_items(self):
-        for section in self._config:
-            yield OpenWithItem(self._config[section])
+        for section in json.load(open(self._filename)):
+            yield OpenWithItem(section)
 
     def get_items_for_file(self, file_name):
         for item in chain(self.features['file-menu'], self.get_items()):
             if item.match(file_name):
                 yield item
 
-    def create_default_item(self):
-        print "create_default_item"
-        return OpenWithItem(dict(name="See", glob="*", command="see %s",
-            terminal=True))
-        
 
 # Required Service attribute for service loading
 Service = Openwith
