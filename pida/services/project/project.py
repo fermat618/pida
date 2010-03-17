@@ -499,7 +499,7 @@ class ProjectService(Service):
             try:
                 self._load_project(dirname)
             except Exception, e: #XXX: specific?!
-                self.log("couldn't load project from %s", dirname)
+                self.log.warn("couldn't load project from %s", dirname)
                 self.log.exception(e)
 
     def _save_options(self):
