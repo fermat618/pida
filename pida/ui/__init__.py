@@ -6,8 +6,3 @@
 
 import icons
 
-from kiwi.ui.widgets.combo import ProxyComboBox
-from kiwi.ui.widgets.textview import ProxyTextView
-from kiwi.ui.objectlist import ObjectList, ObjectTree
-
-

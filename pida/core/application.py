@@ -48,9 +48,8 @@ try:
         error(_('Fatal error, cannot start PIDA'),
               long='%s\n%s' % (message, exception))
         die_cli(message)
-    import kiwi #XXX: kill later
 except ImportError, e:
-    die_cli(_('pygtkhelpers/kiwi needs to be installed to run PIDA'), e)
+    die_cli(_('pygtkhelpers needs to be installed to run PIDA'), e)
 
 
 # Python 2.5
