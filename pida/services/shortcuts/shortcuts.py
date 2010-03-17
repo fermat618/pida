@@ -21,14 +21,16 @@ locale = Locale('shortcuts')
 _ = locale.gettext
 
 class ServiceListItem(object):
-    
+
     def __init__(self, svc):
         self.svc = svc
         self.label = self.no_mnemomic_label = svc.get_name().capitalize()
         self.doc = ''
         self.value = ''
         self.stock_id = ''
-        
+
+    def __repr__(self):
+        return '<SLI %s>' % self.label.lower()
 
 class ShortcutsView(PidaView):
 
@@ -38,14 +40,12 @@ class ShortcutsView(PidaView):
     label_text = _('Shortcuts')
 
     def create_ui(self):
-        self.shortcuts_list = ObjectTree(
-            [
-                Column('stock_id', use_stock=True),
-                Column('no_mnemomic_label', sorted=True, searchable=True),
-                Column('value', searchable=True),
-                Column('doc', searchable=True),
-            ]
-        )
+        self.shortcuts_list = ObjectTree([
+            Column('stock_id', use_stock=True),
+            Column('no_mnemomic_label', sorted=True, searchable=True),
+            Column('value', searchable=True),
+            Column('doc', searchable=True),
+        ])
         self.shortcuts_list.set_headers_visible(False)
         self._current = None
         self.shortcuts_list.connect('selection-changed',
@@ -92,19 +92,12 @@ class ShortcutsView(PidaView):
 
     def update(self):
         self.shortcuts_list.clear()
-        for service in self.svc.boss.get_services() + [
-                                self.svc.boss.editor]:
-            if len(service.get_keyboard_options()):
+        for service in self.svc.boss.get_services():
+            opts = service.get_keyboard_options().values()
+            if opts:
                 sli = ServiceListItem(service)
                 self.shortcuts_list.append(sli)
-                for opt in service.get_keyboard_options().values():
-                    if opt in self.shortcuts_list:
-                        self.svc.log.warning(
-                            'service %s has keyboard option %s twice',
-                            service,
-                            opt,
-                        )
-                        continue
+                for opt in opts:
                     self.shortcuts_list.append(opt, parent=sli)
 
     def _on_selection_changed(self, otree):

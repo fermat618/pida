@@ -275,6 +275,7 @@ class ServiceManager(object):
         editor = self._editors.get_one(name)
         self.editor = editor(self._boss)
         self.editor.started = False
+        self._reg[name] = self.editor
         return self.editor
 
     def stop(self, force=False):

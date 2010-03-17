@@ -140,7 +140,10 @@ class OptionItem(object):
         return self.label.replace("_", "", 1)
 
     def __repr__(self):
-        return '<OptionItem %s %s:%s>' % (self.group, self.name, self.type)
+        return '<OI %s %s:%s>' % (
+                self.group.svc.get_name(),
+                self.name, self.type.__name__,
+                )
 
     no_mnemomic_label = property(_get_nlabel)
 
