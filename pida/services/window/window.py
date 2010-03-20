@@ -393,15 +393,17 @@ class Window(Service):
     actions_config = WindowActionsConfig
     events_config = WindowEvents
     features_config = WindowFeatures
-    
+
     def pre_start(self):
         self._title_template = None
         self._last_focus = None
         super(Window, self).pre_start()
         self.update_colors()
-        self.state_config = os.path.join(settings_dir, 'workspaces', 
-                                         workspace_name(), "window.state.json")
         self.restore_state(pre=True)
+
+    @property
+    def state_config(self):
+        return os.path.join(settings_dir, 'workspaces', workspace_name(), "window.state.json")
 
     def start(self):
         # Explicitly add the permanent views
@@ -428,7 +430,8 @@ class Window(Service):
         try:
             fp = open(self.state_config, "r")
         except (OSError, IOError), e:
-            self.log("Can't open state file %s" %self.state_config)
+            self.log.warning("Can't open window state file %s",
+                                    self.state_config)
             return
         data = simplejson.load(fp)
 
@@ -456,14 +459,15 @@ class Window(Service):
             return
 
         for service in self.boss.get_services():
-            if not data.has_key(service.get_name()):
+            name = service.get_name()
+            info = data.get(name, {})
+
+            if not info:
                 continue
             for action in service.actions.list_actions():
                 if isinstance(action, TYPE_REMEMBER_TOGGLE):
-                    try:
-                        action.set_active(data[service.get_name()][action.get_name()])
-                    except KeyError:
-                        pass
+                    if action.get_name() in info:
+                        action.set_active(data[name][action.get_name()])
 
     def save_state(self, *args):
         if not self.started:
