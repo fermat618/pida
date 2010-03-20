@@ -494,7 +494,7 @@ class ProjectService(Service):
         for dirname in self.opt('project_dirs'):
             dirname = os.path.realpath(dirname)
             if not os.path.exists(dirname):
-                self.log("%s does not exist", dirname)
+                self.log.warn("%s does not exist", dirname)
                 continue
             try:
                 self._load_project(dirname)

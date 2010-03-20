@@ -37,5 +37,27 @@ def test_loaded_event():
     got = project_service._load_project(DEVPATH) #XXX: hack
     assert got is caught[0]
 
+def test_load_of_missing_project(tmpdir, monkeypatch):
+    #XXX: log entries
+    boss = Mock()
+    boss.return_value = [str(tmpdir.join('missing-dir'))]
+    svc = ProjectService(boss)
+    monkeypatch.setattr(svc, 'opt', boss)
+
+    svc._read_options()
+
+
+def test_load_project_just_path(tmpdir, monkeypatch):
+    boss = Mock()
+    boss.return_value = [str(tmpdir)]
+    svc = ProjectService(boss)
+    monkeypatch.setattr(svc, 'opt', boss)
+
+
+    def mock_load_project(dirname):
+        assert dirname == tmpdir
+    monkeypatch.setattr(svc, '_load_project', mock_load_project)
+    svc._read_options()
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
