@@ -739,7 +739,6 @@ class Versioncontrol(Service):
 
     def execute(self, action, path, stock_id, **kw):
         vc = self.get_workdir_manager_for_path(path)
-        self.log(str(locals()))
         if vc is None:
             return self.error_dlg(_('File or directory is not versioned.'))
         self._log.append_action(action.capitalize(), path, stock_id)
