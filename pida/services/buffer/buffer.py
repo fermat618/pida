@@ -479,7 +479,7 @@ class Buffer(Service):
         else:
             filename = ""
         self.notify_user(error.message, title=_("Can't load file %s") % filename )
-        self.log('error loading file(s): %s' %error.message)
+        self.log.warning('error loading file(s): %s' %error.message)
         if error.document:
             self._remove_document(error.document)
         # switch to the first doc to make sure editor gets consistent
