@@ -103,15 +103,6 @@ class LanguageSubCategory(Category):
 
         self.svc.set_priority_list(self.lang, self.type_, prio, save=False)
 
-
-#XXX: solve this one in pygtkhelpers
-class FakeModelSource(object):
-    def __init__(self, model):
-        self.model = model
-    def get_model(self):
-        return self.model
-
-
 class LanguageCategory(Category):
     def __init__(self, svc, lang):
         self.svc = svc
@@ -206,7 +197,7 @@ class ValidatorView(PidaView):
 
         self.errors_ol.show_all()
         self.sort_combo = AttrSortCombo(
-            FakeModelSource(self.errors_ol.model),
+            self.errors_ol,
             [
                 ('lineno', _('Line Number')),
                 ('message', _('Message')),
@@ -301,7 +292,7 @@ class ValidatorView(PidaView):
         self._last_selected = (self.document, ol.selected_item.lineno)
 
     def on_errors_ol__item_activated(self, ol, item):
-        self.svc.boss.editor.cmd('goto_line', line=item.lineno)
+        self.svc.boss.editor.cmd('goto_line', line=int(item.lineno))
 
     def can_be_closed(self):
         self.svc.get_action('show_validator').set_active(False)
@@ -336,7 +327,7 @@ class BrowserView(PidaGladeView):
         self.source_tree_ids = {}
 
         self.sort_box = AttrSortCombo(
-            FakeModelSource(self.source_tree.model),
+            self.source_tree,
             [
                 ('sort_hack', _('Alphabetical by type')),
                 ('line_sort_hack', _('Line Number')),
