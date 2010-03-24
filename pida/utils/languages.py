@@ -170,6 +170,7 @@ class OutlineItem(InitObject):
     parent_id = None
     line = 0
     filter_type = None
+    type_markup = ''
 
     def get_markup(self):
         return '<b>%s</b>' % self.name
@@ -181,6 +182,14 @@ class OutlineItem(InitObject):
         self._icon_name_set = value
     icon_name = property(_get_icon_name, _set_icon_name)
 
+    #XXX: these 2 hacks need tests!!!
+    @property
+    def sort_hack(self):
+        return self.name
+
+    @property
+    def line_sort_hack(self):
+        return str(self.linenumber)
 
 class Definition(InitObject):
     """Returned by a Definer instance"""
