@@ -81,7 +81,7 @@ class OptionsManager(object):
             with open(get_settings_path('appcontroller.json')) as file:
                 data = simplejson.load(file)
                 return bool(data.get('open_workspace_manager', False))
-        except Exception, e:
+        except Exception:
             return False
 
     def _set_workspace(self, value):
@@ -354,7 +354,7 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
                 return simplejson.load(file)
         except IOError:
             return default
-        except Exception, e:
+        except Exception:
             return default
 
     def dump_data(self, filename, data):
