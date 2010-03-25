@@ -21,7 +21,7 @@ from .pdbus import DbusOptionsManager
 from pango import Font
 from gtk.gdk import Color
 from shutil import rmtree
-import simplejson
+import pida.utils.serialize as simplejson
 
 import os
 

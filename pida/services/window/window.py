@@ -7,7 +7,7 @@
 import os
 import gtk
 import string
-import simplejson
+import pida.utils.serialize as simplejson
 from functools import partial
 
 # PIDA Imports

@@ -7,7 +7,7 @@ import os
 import sys
 import pickle
 import textwrap
-import simplejson
+import import pida.utils.serialize as simplejson
 from collections import defaultdict
 
 # PIDA imports

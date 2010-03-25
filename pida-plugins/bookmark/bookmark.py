@@ -41,7 +41,7 @@ from pida.ui.views import PidaView, WindowConfig
 
 from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
 
-import simplejson
+import pida.utils.serialize as simplejson
 
 # locale
 from pida.core.locale import Locale

@@ -25,7 +25,7 @@ from __future__ import with_statement
 import gtk
 import os
 import pkgutil
-import simplejson
+import pida.utils.serialize as simplejson
 
 from pida.ui.objectlist import AttrSortCombo
 from kiwi.ui.objectlist import ObjectList, Column

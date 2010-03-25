@@ -1,6 +1,6 @@
 
 import py
-from simplejson import dumps
+from pida.utils.serialize import dumps
 
 from pida.utils.testing import refresh_gui
 
