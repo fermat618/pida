@@ -191,7 +191,10 @@ setup(
     requires = [
         #XXX: more ?
         'anyvc (>= 0.2)',
-        'simplejson',
+        'mercurial',
+        'dulwich',
+        #XXX: still needed on 2.5
+        #'simplejson',
         'PyGtk (>= 2.14)',
         #'kiwi-gtk (>= 1.9.23)', #XXX distutils doesnt like the -
         #'vte',
