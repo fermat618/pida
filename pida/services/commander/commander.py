@@ -169,16 +169,6 @@ class CommanderActionsConfig(ActionsConfig):
         )
 
         self.create_action(
-            'python_shell_extern',
-            TYPE_NORMAL,
-            _('_Run Extern Python Shell'),
-            _('Open a python shell as extra window'),
-            'terminal',
-            self.execute_python_shell_extern,
-            '',
-        )
-
-        self.create_action(
             'terminal-for-file',
             TYPE_NORMAL,
             _('Shell in file directory'),
@@ -204,8 +194,6 @@ class CommanderActionsConfig(ActionsConfig):
         self.svc.cmd('execute_python_shell',
                      cwd=self.svc.get_current_project_directory())
 
-    def execute_python_shell_extern(self, action):
-        self.svc.execute_python_extern()
 
     def on_terminal_for_file(self, action):
         cwd = os.path.dirname(action.contexts_kw['file_name'])
@@ -690,17 +678,6 @@ class Commander(Service):
         self._terminals.append(t)
         t.pane.connect('remove', self._on_termclose)
         return t
-
-    def execute_python_extern(self, file_=None, cwd=os.getcwd()):
-        command = os.path.join(environment.pida_root_path, "pida", "utils", "pycons", "main.py")
-        commandargs = [self.opt('python_path'), command]
-        if self.opt('use_ipython'):
-            commandargs.append('--ipython')
-        if file_:
-            commandargs.append(file_)
-        self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
-                cwd))))
-        subprocess.Popen(commandargs, cwd=cwd).pid
 
     def _on_termclose(self, pane):
         for term in self._terminals:
