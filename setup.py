@@ -166,7 +166,11 @@ setup(
     package_data = all_package_data,
     ext_modules = [moo],
     cmdclass=cmdclasses,
-    scripts=['bin/pida', 'bin/pida-remote', 'bin/pida-build', 'bin/pida-pyshell'],
+    scripts = [
+        'bin/pida',
+        'bin/pida-remote',
+        'bin/pida-build',
+    ],
     author = pida.author,
     author_email = pida.author,
     url = pida.website,
