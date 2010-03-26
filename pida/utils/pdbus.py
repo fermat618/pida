@@ -71,11 +71,11 @@ def list_pida_instances(include_this=False, callback=None, callback_done=None,
         ping = 'PING_PIDA_INSTANCE'
     session = dbus.SessionBus()
     
-    if not _CALLBACKS.has_key(rec_pida_pong):
+    if rec_pida_pong not in _CALLBACKS:
         _CALLBACKS[rec_pida_pong] = session.add_signal_receiver(
             rec_pida_pong, pong, dbus_interface=DBUS_NS('appcontroller'))
     
-    if not _CALLBACKS.has_key(callback):
+    if callback not in _CALLBACKS:
         # this is ugly but needed to prevent multi registration
         _CALLBACKS[callback] = session.add_signal_receiver(
             callback, pong, dbus_interface=DBUS_NS('appcontroller'))
@@ -136,7 +136,7 @@ class PidaRemote(object):
 
         ns = fpath.replace("/", ".")[1:]
 
-        if kwargs.has_key('signature'):
+        if 'signature' in kwargs:
             sig = kwargs['signature']
         else:
             sig = MethodCallMessage.guess_signature(*args)
@@ -166,7 +166,7 @@ class PidaRemote(object):
 
         ns = fpath.replace("/", ".")[1:]
 
-        if kwargs.has_key('signature'):
+        if 'signature' in kwargs:
             sig = kwargs['signature']
         else:
             sig = MethodCallMessage.guess_signature(*args)
