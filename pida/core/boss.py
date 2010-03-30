@@ -146,6 +146,8 @@ class Boss(object):
         self._splash.show_splash()
 
     def hide_splash(self):
+        if not hasattr(self, "_splash"):
+            return
         self._sm.update_progress = None
         self._splash.hide_splash()
         del self._splash
