@@ -139,9 +139,8 @@ class PuilderView(SlaveView):
                            self.ExecuteTargets, None, self.DelCurrentTarget)
 
     def on_acts_list__item_right_clicked(self, ol, action, event):
-        self.act_up_act.set_sensitive(self.acts_list.index(action) > 0)
-        self.act_down_act.set_sensitive(
-            self.acts_list.index(action) < (len(self.acts_list) - 1))
+        self.act_up_act.set_sensitive(action is not self.acts_list[0])
+        self.act_down_act.set_sensitive(action is not self.acts_list[-1])
         self._create_popup(event, self.AddActs, None, self.act_up_act,
                            self.act_down_act, None, self.DelCurrentActs)
 
@@ -273,10 +272,12 @@ class PuilderView(SlaveView):
             self.acts_list.remove(act)
 
     def on_act_up_act__activate(self, action):
-        pass
+        act = self.acts_list.selected_item
+        self.acts_list.move_item_up(act)
 
     def on_act_down_act__activate(self, action):
-        pass
+        act = self.acts_list.selected_item
+        self.acts_list.move_item_down(act)
 
     def on_acts_list__selection_changed(self, ol):
         self.action_changed(ol.selected_item)

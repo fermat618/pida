@@ -14,7 +14,8 @@ t = dict(
         dict(
             name = 'test',
             actions = [
-                dict(type='shell',value='echo 123', options={})
+                dict(type='shell',value='echo 123', options={}),
+                dict(type='shell',value='echo 234', options={})
             ],
         ),
         dict(
@@ -91,11 +92,14 @@ def test_target_name(t):
     assert t.name == 'test'
 
 def test_target_actions(t):
-    assert(len(t.actions) == 1)
+    assert(len(t.actions) == 2)
 
 def test_target_serialise(t):
     assert t.for_serialize() == {'name':u'test',
-        'actions':[{'type':u'shell','value':u'echo 123','options':{}}]}
+        'actions':[
+            {'type':u'shell','value':u'echo 123','options':{}},
+            {'type':u'shell','value':u'echo 234','options':{}},
+        ]}
 
 def test_action_type(a):
     assert a.type == 'shell'
@@ -111,16 +115,16 @@ def test_action_serialize(a):
 
 def test_create_graph(b):
     root = generate_execution_graph(b, 'test')
-    assert len(root.children) == 1
-    assert len(root.actions) == 1
+    assert len(root.children) == 2
+    assert len(root.actions) == 2
 
 
 def test_simple_children(g):
-    assert len(g.children) == 1
+    assert len(g.children) == 2
 
 
 def test_simple_actions(g):
-    assert len(g.actions) == 1
+    assert len(g.actions) == 2
 
 
 @py.test.mark.target('test4')
@@ -319,4 +323,32 @@ def test_main_view_select_action(b):
     refresh_gui()
     shouldbe = v.acts_holder.page_num(v.action_views['target'].widget)
     assert shouldbe == v.acts_holder.get_current_page()
+
+
+def test_main_view_reorder_targets(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    choosen = v.acts_list[0]
+    print list(v.acts_list)
+
+    v.acts_list.selected_item = choosen
+    v.act_down_act.activate()
+    v.acts_list.move_item_down(choosen)
+    refresh_gui()
+    print list(v.acts_list)
+
+    assert v.acts_list[0] is not choosen
+    assert v.acts_list[1] is choosen
+    assert v.acts_list.selected_item is choosen
+
+    v.act_up_act.activate()
+    refresh_gui()
+    print list(v.acts_list)
+
+    assert v.acts_list[0] is choosen
+    assert v.acts_list[1] is not choosen
+    assert v.acts_list.selected_item is choosen
+
+
 
