@@ -217,7 +217,7 @@ def test_main_view_targets(b):
     assert list(v.targets_list) == list(b.targets)
 
 
-def test_main_view_actions(b):
+def test_main_view_set_build(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
@@ -276,7 +276,7 @@ def test_main_view_add_target_shell(b):
     assert b.targets[-1].actions[0].type == 'shell'
 
 
-def test_main_view_add_target_shell(b):
+def test_main_view_add_target_python(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
