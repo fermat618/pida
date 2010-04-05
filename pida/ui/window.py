@@ -285,7 +285,7 @@ class WorkspaceWindow(ToplevelView):
                     row.workspace = args[2]
                     row.project = args[3]
                     row.open_files = args[4]
-            self.workspace_view.refresh()
+                self.workspace_view.update(row)
         elif len(args) and isinstance(args[0], dbus.lowlevel.ErrorMessage):
             self.list_complete = True
 

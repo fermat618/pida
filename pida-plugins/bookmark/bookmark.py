@@ -23,6 +23,7 @@
 import gtk
 import os
 import cgi
+import pkgutil
 
 from kiwi.ui.objectlist import ObjectList, Column
 
