@@ -220,7 +220,7 @@ class PidaWindow(Window):
 
 class WorkspaceWindow(ToplevelView):
     builder_file = 'workspace_select'
-    
+
     class Entry(object):
         id = 0
         pid = 0
@@ -326,14 +326,17 @@ class WorkspaceWindow(ToplevelView):
             self.workspace_view.selected_item = select
             self.workspace_view.grab_focus()
 
-    def on_workspace_view__row_activated(self, widget, obj):
+    def _use_workspace(self, item):
         self.user_action = "select"
-
-        self.new_workspace = obj.workspace
-
+        self.new_workspace = item.workspace
         if self.command:
-            self.command(self, obj)
+            self.command(self, item)
 
+    def _use_selected_workspace(self):
+        self._use_workspace(self.workspace_view.selected_item)
+
+    def on_workspace_view__item_double_clicked(self, widget, item, event):
+        self._use_workspace(item)
 
     def on_new_workspace__clicked(self, widget):
         # ask for new workspace name
@@ -346,12 +349,10 @@ class WorkspaceWindow(ToplevelView):
             self.command(self)
 
     def on_use_workspace__clicked(self, widget):
-        self.on_workspace_view__row_activated(widget, 
-                                              self.workspace_view.get_selected())
+        self._use_selected_workspace()
 
     def on_UseWorkspace__activate(self, widget):
-        self.on_workspace_view__row_activated(widget,
-                                              self.workspace_view.get_selected())
+        self._use_selected_workspace()
 
     def on_DelWorkspace__activate(self, *args, **kwargs):
         opt = self.workspace_view.get_selected()
