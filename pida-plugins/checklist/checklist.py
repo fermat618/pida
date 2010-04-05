@@ -139,7 +139,7 @@ class ChecklistView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        uim_data = pkgutil.get_data((__name__, 'uidef/checklist-toolbar.xml')
+        uim_data = pkgutil.get_data(__name__, 'uidef/checklist-toolbar.xml')
         self._uim.add_ui_from_string(uim_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
