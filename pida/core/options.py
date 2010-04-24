@@ -201,6 +201,10 @@ class OptionsConfig(BaseConfig):
     def __init__(self, service, *args, **kwargs):
         BaseConfig.__init__(self, service, *args, **kwargs)
 
+
+    def unload(self):
+        pass #XXX: stub
+
     def create(self):
         self.name = self.__class__.name % self.svc.get_name()
         add_directory('workspaces', manager.workspace)
