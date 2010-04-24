@@ -50,6 +50,7 @@ class Service(object):
         self.options = self.options_config(self)
         self.features = self.features_config(self)
         self.actions = self.actions_config(self)
+
         if self.dbus_config:
             self.dbus = self.dbus_config(self)
         else:
