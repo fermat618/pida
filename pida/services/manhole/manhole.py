@@ -15,7 +15,7 @@ from pida.core.service import Service
 from pida.core.actions import ActionsConfig
 from pida.ui.views import PidaView
 
-from pida.utils.pyconsole import Console
+from pygtkhelpers.debug.console import Console
 
 # locale
 from pida.core.locale import Locale
