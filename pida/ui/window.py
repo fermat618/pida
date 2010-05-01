@@ -335,7 +335,7 @@ class WorkspaceWindow(ToplevelView):
     def _use_selected_workspace(self):
         self._use_workspace(self.workspace_view.selected_item)
 
-    def on_workspace_view__item_double_clicked(self, widget, item, event):
+    def on_workspace_view__item_activated(self, widget, item):
         self._use_workspace(item)
 
     def on_new_workspace__clicked(self, widget):
