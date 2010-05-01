@@ -39,7 +39,7 @@ class SuggestionsList(gtk.ListStore):
     @staticmethod
     def from_dbus(args):
         rv = list(args)
-        if _PIXMAPS.has_key(args[0]):
+        if args[0] in _PIXMAPS:
             rv[0] = _PIXMAPS[args[0]]
         else:
             rv[0] = _PIXMAPS[LANG_COMPLETER_TYPES.UNKNOWN]

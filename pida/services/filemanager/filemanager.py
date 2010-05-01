@@ -966,9 +966,10 @@ class Filemanager(Service):
     options_config = FileManagerOptionsConfig
     features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
-    dbus_config = FilemanagerDbusConfig
     commands_config = FilemanagerCommandsConfig
     actions_config = FileManagerActionsConfig
+    #XXX: disabled
+    #dbus_config = FilemanagerDbusConfig
 
     def pre_start(self):
         self.path = check_or_home(self.opt('last_browsed'))

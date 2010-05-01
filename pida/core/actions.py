@@ -81,7 +81,6 @@ class ActionsConfig(OptionsConfig):
     instance.
     """
     name = '%s.keys.json'
-    dbus_path = "actions"
     accelerator_group = accelerator_group
     global_accelerator_group = global_accelerator_group
 

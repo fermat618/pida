@@ -17,7 +17,6 @@ from __future__ import with_statement
 from functools import partial
 from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
-from .pdbus import DbusOptionsManager
 from pango import Font
 from gtk.gdk import Color
 from shutil import rmtree
@@ -193,16 +192,18 @@ class ExtraOptionItem(object):
 
 manager = OptionsManager()
 
-class OptionsConfig(BaseConfig, DbusOptionsManager):
+class OptionsConfig(BaseConfig):
 
     #enable reuse for keyboard shortcuts that need different name
     name = '%s.json'
     name_extra = "%s_extra_%s.json"
-    dbus_path = "options"
 
     def __init__(self, service, *args, **kwargs):
-        DbusOptionsManager.__init__(self, service)
         BaseConfig.__init__(self, service, *args, **kwargs)
+
+
+    def unload(self):
+        pass #XXX: stub
 
     def create(self):
         self.name = self.__class__.name % self.svc.get_name()
@@ -338,7 +339,8 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
             option.callback(option)
 
         if dbus_notify:
-            self.notify_dbus(option)
+            pass #XXX: handle somewhere else
+            #self.notify_dbus(option)
 
         self._emit_change_notification(option)
 
