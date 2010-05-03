@@ -5,7 +5,7 @@
 """
 
 from functools import partial, wraps
-
+import os
 
 import dbus
 from dbus.service import BusName
@@ -15,7 +15,7 @@ DBUS_NS_PREFIX = 'uk.co.pida.pida'
 DBUS_PATH_PREFIX = '/uk/co/pida/pida'
 
 BUS = dbus.SessionBus()
-UUID = "p" + BUS.get_unique_name()[1:].replace(".","_")
+UUID = "p" + str(os.getpid())
 
 def DBUS_NS(*path):
     return ".".join((DBUS_NS_PREFIX, ) + path)
