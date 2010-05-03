@@ -23,7 +23,6 @@ def DBUS_NS(*path):
 def DBUS_PATH(*path, **kwargs):
     return "/".join((DBUS_PATH_PREFIX,) + path)
 
-BUS_NAME = BusName(DBUS_NS(UUID), bus=dbus.SessionBus())
 
 def _dbus_decorator(f, ns=None, suffix=None):
     @wraps(f)

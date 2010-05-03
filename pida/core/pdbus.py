@@ -32,7 +32,9 @@ try:
     # Throws dbus.exceptions.DBusException if not.
     #XXX:
     try:
-        dbus.SessionBus()
+        BUS_NAME = dbus.service.BusName(
+                'uk.co.pida.pida.p%s' % os.getpid(),
+                bus=dbus.SessionBus())
         has_dbus = True
     except dbus.exceptions.DBusException:
         has_dbus = False
@@ -288,7 +290,7 @@ class DbusOptionsManagerNoop(object):
 if has_dbus:
 
     from pida.utils.pdbus import (UUID, DBUS_PATH, DBUS_NS, EXPORT,
-        SIGNAL, BUS_NAME, BUS)
+        SIGNAL, BUS)
     from dbus.mainloop.glib import DBusGMainLoop
 
     DBusMainloop = DBusGMainLoop(set_as_default=True)

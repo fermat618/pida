@@ -9,7 +9,7 @@ DBusGMainLoop(set_as_default=True)
 
 os.environ['PIDA_PATH'] = os.path.dirname(os.path.abspath(pida.__file__))
 
-from pida.utils.pdbus import BUS_NAME, DBUS_NS, DBUS_PATH_PREFIX, \
+from pida.utils.pdbus import DBUS_NS, DBUS_PATH_PREFIX, \
                             list_pida_instances, PidaRemote
 from pida.core import environment
 import dbus
