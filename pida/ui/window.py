@@ -271,39 +271,21 @@ class WorkspaceWindow(ToplevelView):
 
         gcall(self.update_workspaces)
 
-    def _rcv_pida_workspace(self, *args):
-        # this is the callback from the dbus signal call
-        import dbus
-        # list: busname, pid, on/off pic, workspace, project, open files
-        # args:  uid, pid, workspace, project, opened_files
-        if len(args) > 4 and not isinstance(args[0], dbus.lowlevel.ErrorMessage):
-            for row in self.workspace_view:
-                if row.workspace == args[2]:
-                    row.id = args[0]
-                    row.pid = args[1]
-                    row.status = self.pic_on
-                    row.workspace = args[2]
-                    row.project = args[3]
-                    row.open_files = args[4]
-                self.workspace_view.update(row)
-        elif len(args) and isinstance(args[0], dbus.lowlevel.ErrorMessage):
-            self.list_complete = True
-
     def update_workspaces(self):
         from pida.utils.pdbus import list_pida_instances, PidaRemote
-    
+
         from pida.core.options import OptionsManager, list_workspaces
         from pida.core import environment
         # we need a new optionsmanager so the default manager does not workspace
         # lookup yet
         self.list_complete = False
-        lst = list_workspaces()
+        workspaces = list_workspaces()
         # start the dbus message so we will know which ones are running
-        list_pida_instances(callback=self._rcv_pida_workspace)
+        instances = list_pida_instances()
 
         self.workspace_view.clear()
         select = None
-        for workspace in lst:
+        for workspace in workspaces:
 
             pid = 0
             # we could find this things out of the config
@@ -311,14 +293,22 @@ class WorkspaceWindow(ToplevelView):
             count = 0
 
             entry = self.Entry()
-            entry.id = ""
-            entry.pid = pid
-            entry.status = self.pic_off
+
             entry.workspace = workspace
-            entry.project = project
-            entry.open_files = count
-            
-            if entry.workspace == "default":
+            current_instances = [x for x in instances if x['workspace'] == workspace]
+            if current_instances:
+                #XXX: aggregate ?!
+                entry.pid = current_instances[0]['pid']
+                entry.status = self.pic_on
+                entry.project = current_instances[0]['project']
+                entry.open_files = len(current_instances[0]['buffers'])
+            else:
+                entry.pid = 0
+                entry.status = self.pic_off
+                entry.project = ''
+                entry.open_files = 0
+
+            if workspace == "default":
                 select = entry
 
             self.workspace_view.append(entry)

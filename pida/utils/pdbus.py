@@ -10,6 +10,7 @@ import os
 import dbus
 from dbus.service import BusName
 from dbus.lowlevel import MethodCallMessage
+from pida.utils.serialize import loads
 
 DBUS_NS_PREFIX = 'uk.co.pida.pida'
 DBUS_PATH_PREFIX = '/uk/co/pida/pida'
@@ -43,60 +44,47 @@ def _dbus_decorator(f, ns=None, suffix=None):
 EXPORT = partial(_dbus_decorator, dbus.service.method)
 SIGNAL = partial(_dbus_decorator, dbus.service.signal)
 
-_ACTIVE_PIDAS = {}
-_CALLBACKS = {}
-
 def rec_pida_pong(*args):
     global _ACTIVE_PIDAS
     _ACTIVE_PIDAS[str(args[0])] = args
 
 
-def list_pida_instances(include_this=False, callback=None, callback_done=None,
-                        ext=True, timeout=1, block=False):
+
+def list_pida_bus_names(include_self=False):
+    session = dbus.SessionBus()
+    bus_names = map(str, session.list_names())
+    return [ name for name in bus_names 
+             if 'pida.pida' in name and
+             (include_self or UUID not in name) ]
+
+def list_pida_instances(include_this=False, timeout=1):
     """
     Return a tuple of running pida session identifiers.
     Each of this identifiers can be used to connect to a remote Pida
     instance
     """
-    global _ACTIVE_PIDAS
-    if not callback:
-        callback = rec_pida_pong
-        _ACTIVE_PIDAS = {}
-    if ext:
-        pong = 'PONG_PIDA_INSTANCE_EXT'
-        ping = 'PING_PIDA_INSTANCE_EXT'
-    else:
-        pong = 'PONG_PIDA_INSTANCE'
-        ping = 'PING_PIDA_INSTANCE'
+
+    pida_names = list_pida_bus_names(include_self=include_this)
+
     session = dbus.SessionBus()
-    
-    if rec_pida_pong not in _CALLBACKS:
-        _CALLBACKS[rec_pida_pong] = session.add_signal_receiver(
-            rec_pida_pong, pong, dbus_interface=DBUS_NS('appcontroller'))
-    
-    if callback not in _CALLBACKS:
-        # this is ugly but needed to prevent multi registration
-        _CALLBACKS[callback] = session.add_signal_receiver(
-            callback, pong, dbus_interface=DBUS_NS('appcontroller'))
-    m = dbus.lowlevel.SignalMessage('/', DBUS_NS('appcontroller'), ping)
+    result = []
+    for name in pida_names:
+        #XXX: this is sync, that may be evil
+        # we asume that only active and 
+        # working instances expose the object
+        try:
+            app = session.get_object(
+                name,
+                '/uk/co/pida/pida/appcontroller',
+                )
+            stat = app.get_instance_status(timeout=1)
+            result.append(loads(stat))
+        except:
+            #XXX: log
+            print 'failed to aks state of', name
+    return result
 
-    if block:
-        # this is ugly, but blocking calls with send_message doesn't work
-        import gtk
 
-        def gq(rep):
-            gtk.main_quit()
-
-        session.send_message_with_reply(m, gq, timeout)
-
-        gtk.main()
-        return _ACTIVE_PIDAS.values()
-    if callback_done:
-        session.send_message_with_reply(m, callback_done, timeout)
-    else:
-        session.send_message(m)
-
-    return None
 
 
 class PidaRemote(object):
