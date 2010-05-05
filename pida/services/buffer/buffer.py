@@ -362,6 +362,9 @@ class BufferCommandsConfig(CommandsConfig):
     def get_documents(self):
         return self.svc.get_documents()
 
+    def get_buffer_names(self):
+        return [x.filename for x in self.get_documents().itervalues()]
+
     def present_view(self):
         view = self.svc.get_view()
         return self.svc.boss.cmd('window', 'present_view',

@@ -65,11 +65,14 @@ class ApplicationDbus(DbusConfig):
 
     @LEXPORT(out_signature='s')
     def get_instance_status(self):
+
         return dumps({
             'pid': os.getpid(),
             'workspace': workspace_name(),
-            'buffers': [], #XXX add later.
-            'project': "", #XXX add later
+            'buffers': self.svc.boss.cmd('buffer', 'get_buffer_names'),
+            'project': getattr(
+                self.svc.boss.cmd('project','get_current_project'),
+                'name', ''),
             }, indent=2)
 
     @LEXPORT()
