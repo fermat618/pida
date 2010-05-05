@@ -19,7 +19,7 @@ import re
 session = dbus.SessionBus()
 
 # check if pida is running
-lst = list_pida_instances(block=True)
+lst = list_pida_instances()
 
 
 environment.parse_args(sys.argv)
@@ -96,7 +96,7 @@ elif len(lst) == 0:
     spawn(None)
 
 elif len(lst) == 1:
-    call_open(lst[0][0])
+    call_open('p%d' % lst[0]['pid'])
 
 else:
     open_session()

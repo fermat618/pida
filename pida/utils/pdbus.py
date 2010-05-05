@@ -77,8 +77,9 @@ def list_pida_instances(include_this=False, timeout=1):
                 name,
                 '/uk/co/pida/pida/appcontroller',
                 )
-            stat = app.get_instance_status(timeout=1)
-            result.append(loads(stat))
+            stat = loads(app.get_instance_status(timeout=1))
+            stat['name'] = name
+            result.append(stat)
         except:
             #XXX: log
             print 'failed to aks state of', name
@@ -91,24 +92,20 @@ class PidaRemote(object):
     """
     Constructs a proxy object to a remote pida instance
     """
-    def __init__(self, pid, 
+    def __init__(self, pid,
                     object_path=(),
-                    conn=dbus.SessionBus(), 
+                    conn=dbus.SessionBus(),
                     bus_name=None):
 
         self._path = DBUS_PATH(*object_path)
-        assert len(pid)
+        assert pid
         # pid seem to be of 
-        if pid[0] == "p":
-            pid = ":" + pid[1:].replace("_", ".")
-            self._bus_name = pid
-        elif pid[0] == ":":
+        if bus_name:
+            self._bus_name = bus_name
+        elif pid[0] == ":": # a dbus unique name
             self._bus_name = pid
         else:
-            if not bus_name:
-                self._bus_name=DBUS_NS(pid)
-            else:
-                self._bus_name=bus_name
+            self._bus_name = DBUS_NS(pid)
 
         self._pid = pid
         self._conn = conn
