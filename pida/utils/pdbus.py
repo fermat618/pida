@@ -80,8 +80,9 @@ def list_pida_instances(include_this=False, timeout=1):
             stat = loads(app.get_instance_status(timeout=1))
             stat['name'] = name
             result.append(stat)
-        except:
+        except Exception, e:
             #XXX: log
+            print e
             print 'failed to aks state of', name
     return result
 
