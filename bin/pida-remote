@@ -72,8 +72,7 @@ def open_workspace():
     import gtk
 
     view = WorkspaceWindow(command=command)
-    view.show_all()
-    gtk.main()
+    view.show_and_run()
     sys.exit(0)
 
 from pida.core.options import OptionsManager
