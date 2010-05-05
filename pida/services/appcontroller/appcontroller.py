@@ -13,7 +13,7 @@ from pida.core.actions import ActionsConfig
 
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 from pida.core.environment import workspace_name
-from pida.utils.serialize import dumps
+from pida.utils.serialize import loads, dumps
 
 # locale
 from pida.core.locale import Locale
@@ -54,6 +54,18 @@ class AppcontrollerActions(ActionsConfig):
         self.svc.boss.stop()
 
 class ApplicationDbus(DbusConfig):
+
+
+    @LEXPORT(in_signature='s', out_signature='s')
+    def cmd(self, json_dump):
+        data = loads(json_dump)
+        result = self.svc.boss.cmd(
+                data['service'],
+                data['method'],
+                **data['kwargs']
+                )
+        #XXX: error checking
+        return dumps(result, indent=2)
 
     @LEXPORT(out_signature="i")
     def get_pid(self):
