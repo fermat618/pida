@@ -476,7 +476,7 @@ class FilemanagerView(PidaView):
             toolitem.set_menu(menu)
 
     def get_selected_filename(self):
-        fileentry = self.file_list.get_selected()
+        fileentry = self.file_list.selected_item
         if fileentry is not None:
             return fileentry.path
 
