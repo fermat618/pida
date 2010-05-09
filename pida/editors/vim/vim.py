@@ -58,7 +58,6 @@ class VimCallback(object):
     def vim_BufDelete(self, file_name):
         if file_name == '':
             return
-        #self.svc.remove_file(file_name)
         self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
     def vim_VimLeave(self):
@@ -69,7 +68,6 @@ class VimCallback(object):
 
     def vim_CursorMoved(self):
         pass
-
 
 
 # Service class
@@ -257,10 +255,11 @@ class Vim(EditorService):
                 'please install gvim with python support'
             ])
         return errors
-    
+
+
 # Required Service attribute for service loading
 Service = Vim
 
 
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+
