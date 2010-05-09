@@ -127,7 +127,7 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='i')
     def close_buffer_id(self, bufid):
-        if int(vim.eval("bufexists('%s')")):
+        if int(vim.eval("bufexists(%s)" % bufid)):
             vim.command('confirm bd%s' % bufid)
 
     @method(DBUS_NS)
