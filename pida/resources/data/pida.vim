@@ -157,6 +157,10 @@ class VimDBUSService(Object):
         return vim.current.buffer[vim.current.window.cursor[0] - 1]
 
     @method(DBUS_NS)
+    def get_current_linenumber(self):
+        return vim.current.window.cursor[0] - 1
+
+    @method(DBUS_NS)
     def get_current_character(self):
         y, x = vim.current.window.cursor
         return self.get_current_line()[x]
