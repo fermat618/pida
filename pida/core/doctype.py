@@ -13,13 +13,6 @@ from glob import fnmatch
 import charfinder
 from collections import defaultdict
 
-def ensure_list(data):
-    if not data:
-        return []
-    if not isinstance(data, (list, tuple)):
-        return (data,)
-    return data
-
 class DocType(object):
     """Represents a type of document. Like a python sourcecode file, a xml
     file, etc.
@@ -31,9 +24,9 @@ class DocType(object):
                  mimes=None, section='Others'):
         self.internal = internal
         self.human = human
-        self.aliases = ensure_list(aliases)
-        self.extensions = ensure_list(extensions)
-        self.mimes = ensure_list(mimes)
+        self.aliases = aliases
+        self.extensions = extensions
+        self.mimes = mimes
         self.section = section
         # the support counter tracs how much support this document type gets
         # 0 means that he is currently not supported by something special
@@ -75,7 +68,7 @@ class TypeManager(dict):
         self._mimetypes = defaultdict(list)
 
     def add(self, doctype):
-        if self.has_key(doctype.internal):
+        if doctype.internal in self:
             raise "doctype already registed"
         self[doctype.internal] = doctype
         for ext in doctype.extensions:
