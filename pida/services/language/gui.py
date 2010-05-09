@@ -289,7 +289,8 @@ class ValidatorView(PidaView):
         self.errors_ol.clear()
 
     def on_errors_ol__selection_changed(self, ol):
-        self._last_selected = (self.document, ol.selected_item.lineno)
+        item = ol.selected_item # may be None
+        self._last_selected = (self.document, getattr(item, 'lineno', 0))
 
     def on_errors_ol__item_activated(self, ol, item):
         self.svc.boss.editor.cmd('goto_line', line=int(item.lineno))
