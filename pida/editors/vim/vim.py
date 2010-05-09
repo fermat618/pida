@@ -60,7 +60,7 @@ class VimCallback(object):
     def vim_BufDelete(self, file_name):
         if file_name == '':
             return
-        self.svc.remove_file(file_name)
+        #self.svc.remove_file(file_name)
         self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
 
     def vim_VimLeave(self):
@@ -171,8 +171,6 @@ class Vim(EditorService):
 
     def open(self, document):
         """Open a document"""
-
-
         if document is not self._current:
             if document.editor_buffer_id is not None:
                 self._com.open_buffer_id(document.editor_buffer_id,
@@ -195,9 +193,9 @@ class Vim(EditorService):
         pass
 
     def close(self, document):
-        if document.unique_id in self._documents:
-            self._remove_document(document)
-            self._com.close_buffer(document.filename, **nothing_async)
+        if document.editor_buffer_id is not None:
+            self._com.close_buffer_id(document.editor_buffer_id,
+                                      **nothing_async)
         return True
 
     def remove_file(self, file_name):
@@ -205,8 +203,6 @@ class Vim(EditorService):
         if document is not None:
             self._remove_document(document)
 
-    def _remove_document(self, document):
-        del self._documents[document.unique_id]
 
     def _get_document_for_filename(self, file_name):
         for uid, doc in self._documents.iteritems():
