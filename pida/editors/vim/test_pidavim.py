@@ -47,7 +47,6 @@ def pytest_funcarg__vim_process(request):
 
 def pytest_funcarg__vim(request):
     process = request.getfuncargvalue('vim_process')
-    time.sleep(.4)
     vim = get_vim(request.function.__name__)
     refresh_ui()
     def quit():
