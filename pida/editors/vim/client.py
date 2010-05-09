@@ -27,17 +27,24 @@ DBUS_NS = 'uk.co.pida.vim'
 def get_bus_name(uid):
     return '.'.join([DBUS_NS, uid])
 
+
+
 def get_vim(uid):
+    name = get_bus_name(uid)
     session = dbus.SessionBus()
-    for _try in range(10):
-        try:
-            log.debug('trying vim connect #%s', _try)
-            return dbus.Interface(
-                    session.get_object(get_bus_name(uid), '/vim'),
-                    'uk.co.pida.vim')
-        except dbus.DBusException:
-            log.debug('vim connect failed, retrying')
-            time.sleep(0.1)
+    def cb(bn):
+        if bn: #XXX: may be empty
+            gtk.main_quit()
+    watch = session.watch_name_owner(name, cb)
+    gtk.main()
+    try:
+        log.debug('trying vim connect')
+        return dbus.Interface(
+                session.get_object(name, '/vim'),
+                'uk.co.pida.vim')
+    except dbus.DBusException:
+        log.debug('vim connect failed')
+        raise SystemExit('vim failed')
 
 def connect_cb(proxy, cb):
     for evt in ['VimEnter', 'VimLeave', 'BufEnter', 'BufDelete', 'BufWritePost',
