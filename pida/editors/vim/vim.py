@@ -111,8 +111,6 @@ class Vim(EditorService):
         pass
 
     def close(self, document):
-        print 'document'
-        print document.editor_buffer_id
         if document.editor_buffer_id is not None:
             self._com.close_buffer_id(document.editor_buffer_id,
                                       **_ignore)
