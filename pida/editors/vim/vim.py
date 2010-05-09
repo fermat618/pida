@@ -174,11 +174,18 @@ class Vim(EditorService):
 
 
         if document is not self._current:
-            fn = document.filename
-            if document.unique_id in self._documents:
-                self._com.open_buffer(fn, **nothing_async)
+            if document.editor_buffer_id is not None:
+                self._com.open_buffer_id(document.editor_buffer_id,
+                                         **nothing_async)
             else:
-                self._com.open_file(fn, **nothing_async)
+
+                def tag_document(document=document):
+                    document.editor_buffer_id = self._com.get_buffer_number(
+                        document.filename)
+
+                self._com.open_file(document.filename,
+                                    reply_handler=tag_document,
+                                    error_handler=lambda *a: None)
                 self._documents[document.unique_id] = document
             self._current = document
 

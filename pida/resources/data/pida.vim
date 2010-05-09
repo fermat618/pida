@@ -101,10 +101,13 @@ class VimDBUSService(Object):
     def get_buffer_number(self, path):
         return int(vim.eval("bufnr('%s')" % path))
 
-
     @method(DBUS_NS, in_signature='s')
     def open_buffer(self, path):
         vim.command('b!%s' % self.get_buffer_number(path))
+
+    @method(DBUS_NS, in_signature='i')
+    def open_buffer_id(self, bufnum):
+        vim.command('b!%s' % bufnum)
 
     # Saving
 
