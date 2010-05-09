@@ -89,6 +89,8 @@ class Document(object):
     usage = 0
     last_opened = 0
 
+    editor_buffer_id = None
+
     @property
     def markup_string_if_project(self):
         if not self.project:

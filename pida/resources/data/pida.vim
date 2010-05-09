@@ -101,10 +101,13 @@ class VimDBUSService(Object):
     def get_buffer_number(self, path):
         return int(vim.eval("bufnr('%s')" % path))
 
-
     @method(DBUS_NS, in_signature='s')
     def open_buffer(self, path):
         vim.command('b!%s' % self.get_buffer_number(path))
+
+    @method(DBUS_NS, in_signature='i')
+    def open_buffer_id(self, bufid):
+        vim.command('b!%s' % bufid)
 
     # Saving
 
@@ -121,6 +124,11 @@ class VimDBUSService(Object):
     @method(DBUS_NS, in_signature='s')
     def close_buffer(self, path):
         vim.command('confirm bd%s' % self.get_buffer_number(path))
+
+    @method(DBUS_NS, in_signature='i')
+    def close_buffer_id(self, bufid):
+        if int(vim.eval("bufexists('%s')")):
+            vim.command('confirm bd%s' % bufid)
 
     @method(DBUS_NS)
     def close_current_buffer(self):
@@ -147,6 +155,10 @@ class VimDBUSService(Object):
     @method(DBUS_NS)
     def get_current_line(self):
         return vim.current.buffer[vim.current.window.cursor[0] - 1]
+
+    @method(DBUS_NS)
+    def get_current_linenumber(self):
+        return vim.current.window.cursor[0] - 1
 
     @method(DBUS_NS)
     def get_current_character(self):
@@ -271,8 +283,8 @@ class VimDBUSService(Object):
         pass
 
     @signal(DBUS_NS, signature='s')
-    def BufDelete(self, filename):
-        print 'BufDelete'
+    def BufDelete(self, file_name):
+        pass
 
     @signal(DBUS_NS)
     def VimEnter(self):
