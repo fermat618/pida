@@ -899,7 +899,7 @@ class Language(LanguageService):
                 'None',
                 'No specific document type',
                 gtk.STOCK_NEW,
-                hash(None)
+                0
                 )
         a.set_data('doctype', None)
         
@@ -907,18 +907,18 @@ class Language(LanguageService):
         menu.add(gtk.SeparatorMenuItem())
         show_all = self.get_action('show_all_types').get_active()
 
-        for target in self.doctypes.itervalues():
+        for index, target in enumerate(self.doctypes.itervalues()):
             if not show_all and target.support < 1:
                 continue
             act = gtk.RadioAction(target.internal,
                 target.human or target.internal,
                 target.tooltip,
                 '',
-                hash(target))
+                index+1)
             act.set_group(a)
             act.set_data('doctype', target)
             mi = act.create_menu_item()
-            if not sections.has_key(target.section):
+            if target.section not in sections:
                 sections[target.section] = gtk.Menu()
                 #menu.add(sections[target.section])
                 ms = gtk.MenuItem(target.section)
@@ -926,11 +926,10 @@ class Language(LanguageService):
                 menu.add(ms)
 
             sections[target.section].add(mi)
-        if doc and act:
-            if doc.doctype:
-                act.set_current_value(hash(doc.doctype))
-            elif doc.doctype is None:
-                act.set_current_value(hash(None))
+            if doc and doc.doctype == target:
+                a.set_current_value(index+1)
+        if doc and not doc.doctype:
+            a.set_current_value(0)
         menu.show_all() 
         a.connect('changed', self.change_doctype)
 
