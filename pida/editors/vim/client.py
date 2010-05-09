@@ -33,10 +33,10 @@ def get_vim(uid):
     name = get_bus_name(uid)
     session = dbus.SessionBus()
     def cb(bn):
-        if bn: #XXX: may be empty
+        if bn: # may be empty
             gtk.main_quit()
     watch = session.watch_name_owner(name, cb)
-    gtk.main()
+    gtk.main() #XXX: this might kill us if vim somehow fails
     try:
         log.debug('trying vim connect')
         return dbus.Interface(
