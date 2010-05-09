@@ -196,7 +196,8 @@ class GrepperView(PidaView):
         self.start_grep()
 
     def _translate_glob(self, glob):
-        return fnmatch.translate(glob).rstrip('$')
+        # ensure we dont just match the end of the string
+        return fnmatch.translate(glob).rstrip('$').replace(r'\Z', '')
 
     def set_location(self, location):
         self.path_chooser.set_filename(location)
