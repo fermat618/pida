@@ -86,4 +86,7 @@ def serialize(base, plugin, meta):
         f.write(meta.as_string(False))
 
 def is_plugin(base, plugin):
-    return os.path.exists(os.path.join(base, plugin, 'service.pida'))
+    p = os.path.join(base, plugin, 'service.pida')
+    if os.path.exists(p):
+        with open(p) as f:
+            return f.read(1) != '[' # pida 0.5
