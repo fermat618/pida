@@ -223,23 +223,21 @@ class RSTTokenList(object):
 
 
 class RSTItem(OutlineItem):
-
-    def _get_fullname(self):
+    @property
+    def fullname(self):
         if not self.parent_name:
             return self.name
         return "%s.%s" %(self.parent_name, self.name)
-    fullname = property(_get_fullname)
 
     def __repr__(self):
         return "<RSTItem %s %s %s>" % \
                             (self.name, self.parent_name, self.fullname)
-
-    def get_markup(self):
+    @property
+    def markup(self):
         return ('<b>%s</b> <span foreground="#999999"><i>%s%s</i></span>'
                 % (self.name,
                   (self.filename + ':') if self.external else '',
                   self.linenumber))
-    markup = property(get_markup)
 
 class RSTOutliner(Outliner):
 
