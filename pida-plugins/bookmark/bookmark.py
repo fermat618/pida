@@ -492,7 +492,10 @@ class Bookmark(Service, MarkerInterface):
             if not data.has_key(t.group):
                 data[t.group] = []
             if t.group == 'file':
-                path = self._project.get_relative_path_for(t.data)
+                if self._project:
+                    path = self._project.get_relative_path_for(t.data)
+                else:
+                    path = None
                 if path:
                     path = os.path.sep.join(path)
                 else:
