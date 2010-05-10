@@ -22,7 +22,7 @@
 
 from urlparse import urljoin
 
-import gtk
+import gtk, webkit
 
 from pygtkhelpers.ui.objectlist import Column
 
@@ -61,11 +61,12 @@ class TracView(PidaGladeView):
             Column('summary'),
         ])
         self.set_base_address('http://pida.co.uk/trac/')
-        self.item_text = HtmlTextView()
+        self.item_text = webkit.WebView()
         self.item_text_holder.add(self.item_text)
         self.item_text.show()
 
     def set_base_address(self, address):
+        self._address = address
         self.address_entry.set_text(address)
 
     def get_base_address(self):
@@ -81,8 +82,7 @@ class TracView(PidaGladeView):
 
     def on_tickets_list__selection_changed(self, ol):
         item = ol.selected_item
-        self.item_text.clear_html()
-        self.item_text.display_html(item.description.strip())
+        self.item_text.load_html_string(item.description.strip(), self._address)
 
     def on_toggle_auth__toggled(self, btn):
         self.auth_box.set_sensitive(btn.get_active())
