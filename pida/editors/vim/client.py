@@ -48,7 +48,7 @@ def get_vim(uid):
 
 def connect_cb(proxy, cb):
     for evt in ['VimEnter', 'VimLeave', 'BufEnter', 'BufDelete', 'BufWritePost',
-    'CursorMoved']:
+    'CursorMoved', 'BufNew']:
         proxy.connect_to_signal(evt, getattr(cb, 'vim_%s' % evt))
 
 def VimCom(cb, uid):

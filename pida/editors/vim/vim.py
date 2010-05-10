@@ -49,16 +49,29 @@ class VimCallback(object):
     def vim_VimEnter(self):
         self.svc.boss.get_service('editor').emit('started')
 
-    def vim_BufEnter(self):
-        fn = self.svc._com.get_current_buffer()
-        cwd = self.svc._com.get_cwd()
-        path = os.path.realpath(os.path.join(cwd, fn))
-        self.svc.boss.cmd('buffer', 'open_file', file_name=path)
+    def vim_BufEnter(self, bufid, filename):
+        path = unicode(filename)
+        print ['enter', path, bufid]
+        if not path:
+            path = None
+        elif os.path.isdir(path):
+            path = None
+        else:
+            cwd = self.svc._com.get_cwd()
+            path = os.path.realpath(os.path.join(cwd, path))
+        bufid = int(bufid)
+        self.svc.boss.cmd('buffer', 'open_file', file_name=path,
+                           editor_buffer_id=bufid, do_open=False)
 
-    def vim_BufDelete(self, file_name):
-        if file_name == '':
-            return
-        self.svc.boss.get_service('buffer').cmd('close_file', file_name=file_name)
+    def vim_BufNew(self, bufid):
+        print ['new', bufid]
+        self.svc.boss.cmd('buffer', 'new_file', do_open=False,
+                           with_editor_id=int(bufid))
+
+    def vim_BufDelete(self, bufid):
+        print ['delete', bufid]
+        print self.svc.boss.get_service('buffer').cmd('close_file',
+            editor_buffer_id=int(bufid))
 
     def vim_VimLeave(self):
         self.svc.boss.stop(force=True)
@@ -93,22 +106,36 @@ class Vim(EditorService):
     def open(self, document):
         """Open a document"""
         if document.editor_buffer_id is not None:
+            print ['vim switching', document]
             self._com.open_buffer_id(document.editor_buffer_id,
                                      **_ignore)
         else:
             def tag_document(document=document):
-                document.editor_buffer_id = self._com.get_buffer_number(
-                    document.filename)
+                document.editor_buffer_id = int(self._com.get_buffer_number(
+                    document.filename))
+                print ['tag', document, document.editor_buffer_id]
 
-            self._com.open_file(document.filename,
-                                reply_handler=tag_document,
-                                error_handler=lambda *a: None)
+            def tag_new(document=document):
+                print 'taggiong', self._com.get_current_buffer_id()
+                document.editor_buffer_id = int(self._com.get_current_buffer_id())
+            def error(*args):
+                print 'error', args
+            if document.is_new:
+                print 'doingg'
+                self._com.new_file(reply_handler=tag_new,
+                                   error_handler=error)
+            else:
+                print ['vim opening;', document]
+                self._com.open_file(document.filename,
+                                    reply_handler=tag_document,
+                                    error_handler=lambda *a: None)
 
     def open_many(self, documents):
         """Open a few documents"""
         pass
 
     def close(self, document):
+        print ['vimclose', document, document.editor_buffer_id]
         if document.editor_buffer_id is not None:
             self._com.close_buffer_id(document.editor_buffer_id,
                                       **_ignore)
@@ -119,11 +146,21 @@ class Vim(EditorService):
 
     def save(self):
         """Save the current document"""
-        self._com.save_current_buffer()
+        name = self._com.get_current_buffer()
+        if name:
+            self._com.save_current_buffer()
+        else:
+            self.save_as()
 
-    def save_as(self, filename):
+    def save_as(self):
         """Save the current document as another filename"""
-        self._com.save_as_current_buffer(filename)
+        current_folder = self.boss.cmd('filemanager', 'get_browsed_path')
+        file_name = self.boss.window.save_dlg(folder=current_folder)
+        if file_name:
+            document = self.boss.cmd('buffer', 'get_current')
+            document.filename = file_name
+            self._com.save_as_current_buffer(file_name)
+            self.boss.cmd('buffer', 'open_file', document=document)
 
     def revert():
         """Revert to the loaded version of the file"""
