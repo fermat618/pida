@@ -185,11 +185,20 @@ class OutlineItem(InitObject):
     #XXX: these 2 hacks need tests!!!
     @property
     def sort_hack(self):
-        return self.name
+        try:
+            #XXX: python only?!
+            return '%s%s' % (self.options.position, self.name)
+        except: #XXX: evil handling
+            return self.name
 
     @property
     def line_sort_hack(self):
-        return str(self.linenumber)
+        if self.filename:
+            return 'yyy%s%s' % (self.filename, self.linenumber)
+        elif self.linenumber:
+            return str(self.linenumber)
+        else:
+            return 'zzz'
 
 class Definition(InitObject):
     """Returned by a Definer instance"""

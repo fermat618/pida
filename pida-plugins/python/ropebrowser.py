@@ -15,9 +15,9 @@ from rope.base.project import Project, get_no_project
 from rope.base import pynames, pyobjects, builtins
 
 from pida.utils.languages import LANG_OUTLINER_TYPES, OutlineItem
-from pida.utils.unique import counter
+from itertools import count
 
-OUTLINE_COUNTER = counter()
+OUTLINE_COUNTER = count()
 
 def markup_italic(text):
     """Make some italic pango"""
@@ -245,7 +245,6 @@ class SourceTreeItem(OutlineItem):
     def __init__(self, mod, name, node, parent, parent_obj=None):
         self.name = name
         #self.node = None #node
-        self.id = OUTLINE_COUNTER()
         if parent:
             self.parent_id = parent.id
 
@@ -260,17 +259,6 @@ class SourceTreeItem(OutlineItem):
             self.filename =  None
 
         self.options = get_option_for_item(self, node, obj, parent_obj=parent_obj)
-
-        self.sort_hack = '%s%s' % (self.options.position, self.name)
-
-        if self.filename:
-            self.line_sort_hack = 'yyy%s%s' % (self.filename, self.linenumber)
-        else:
-            if not self.linenumber:
-                self.line_sort_hack = 'zzz'
-            else:
-                self.line_sort_hack = '%s' % self.linenumber
-
         self.type_markup = markup_type(self.options.type_name,
                                        self.options.type_color)
 
@@ -297,9 +285,9 @@ class ModuleParser(object):
         self.filename = filename
         self.modname = basename(filename)[:-3]
         if project:
-            if not project.has_key('python'):
+            if 'python' not in project:
                 project['python'] = {}
-            if not project['python'].has_key('ropeproject'):
+            if 'ropeproject' not in project['python']:
                 project['python']['ropeproject'] = Project(
                     project.source_directory, 
                     ropefolder=PidaProject.data_dir_path('', 'python'))
