@@ -311,6 +311,22 @@ class BufferEventsConfig(EventsConfig):
         self.subscribe('document-changed', self.on_document_change)
         self.subscribe('document-typchanged', self.on_document_change)
 
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('editor', 'started', self.on_editor_started)
+
+    def on_editor_started(self, *k, **kw):
+        print 'editor started'
+
+        try:
+            #XXX: will mess wuth the signaling doe opening files
+            #     will create inconsistent state while the default impl is
+            #     working
+            files = self.svc.opt('open_files')
+            print 'opening', files
+            self.svc.open_files(files)
+        except Exception as e:
+            self.svc.log.exception(e)
+
     def on_document_change(self, *args, **kwargs):
         # we have to update the document buffer when one doc changes as
         # the list should be sorted all the time
@@ -327,6 +343,13 @@ class BufferOptionsConfig(OptionsConfig):
             _('Type to display in the Buffer window'),
             self.on_display_type_change
         )
+        self.create_option(
+            'open_files',
+            'the currently open files',
+            list,
+            [],
+            ''
+            )
 
     def on_display_type_change(self, option):
         self.svc.get_view().set_display_attr(attributes[option.value])
@@ -433,6 +456,12 @@ class Buffer(Service):
         self._view = BufferListView(self)
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
+
+    def pre_stop(self):
+        self.set_opt('open_files', [
+            d.filename for d in self._documents.itervalues()
+            if d.filename is not None
+            ])
 
     def get_view(self):
         return self._view
