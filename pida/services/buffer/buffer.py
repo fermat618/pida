@@ -137,10 +137,8 @@ class BufferListView(PidaGladeView):
         self.buffers_ol.get_model().sort_column_changed()
 
     def set_display_attr(self, newattr):
-        print 'set disp attr', newattr
         for attr in attributes.values():
             for col in self.buffers_ol._viewcols_for_attr(attr):
-                print col.get_title(), 'now gets visible=', attr==newattr
                 col.props.visible = attr==newattr
 
 
@@ -383,7 +381,7 @@ class BufferCommandsConfig(CommandsConfig):
             return self.svc._documents.get(document_id, None)
 
 class BufferDbusConfig(DbusConfig):
-    
+
     @LEXPORT(in_signature='s')
     def open_file(self, file_name):
         self.svc.open_file(file_name)
@@ -410,7 +408,7 @@ class BufferDbusConfig(DbusConfig):
                        {})
                   for x in self.svc._documents.itervalues()
                ]
-               
+
 
 # Service class
 class Buffer(Service):
@@ -442,40 +440,17 @@ class Buffer(Service):
             self.get_action(action_name).set_sensitive(len(self._documents) > 0)
 
     def new_file(self, do_open=True, with_editor_id=None):
-        # some editors don't support the new_file feature, so we have to 
-        # fall back and create a tmp file
-        if 0:#temp_file or not 'new_file' in self.boss.editor.features:
-            fd, file_name = mkstemp()
-            os.close(fd)
-            self.open_file(file_name)
-        else:
-            print 'creating'
-            #document = Document(self.boss)
-            return self.open_file(editor_buffer_id=with_editor_id)
-            return
-            self._add_document(document)
-            self._current = document
-            self._view.set_document(document)
-            if do_open:
-                self.boss.editor.cmd('open', document=document)
-            else:
-                document.editor_buffer_id = with_editor_id
-            self.emit('document-changed', document=document)
-            self.emit('document-opened', document=document)
-        return document
+        return self.open_file(editor_buffer_id=with_editor_id)
 
     def open_file(self, file_name=None, document=None, line=None, offset=None,
                   editor_buffer_id=None, do_open=True):
         if file_name:
             file_name = os.path.realpath(file_name)
-        print ['open', file_name, document, editor_buffer_id]
         if document is None:
             # try to find the document
             if editor_buffer_id is not None:
                 document = self._get_document_for_editor_id(editor_buffer_id)
-                print ['getting bufid', editor_buffer_id, document]
             if document is None and file_name is not None:
-                print ['getting fn', file_name]
                 document = self._get_document_for_filename(file_name)
             elif file_name is None and editor_buffer_id is not None:
                 #XXX new file just switched, can't know, have to guess!
@@ -488,25 +463,11 @@ class Buffer(Service):
                 document = Document(self.boss, file_name)
                 if editor_buffer_id is not None:
                     document.editor_buffer_id = editor_buffer_id
-                print ['cant find', document, file_name, editor_buffer_id]
                 self._add_document(document)
         self.view_document(document, line=line, offset=offset, do_open=do_open)
         self.emit('document-opened', document=document)
         return document
 
-
-        #if file_name:
-        #    file_name = os.path.realpath(file_name)
-        #if not document:
-        #    document = self._get_document_for_filename(file_name)
-        #if document is None:
-        #    if not os.path.isfile(file_name):
-        #        return False
-        #    document = Document(self.boss, file_name)
-        #    self._add_document(document)
-        #self.view_document(document, line=line, offset=offset)
-        #self.emit('document-opened', document=document)
-        #return document
 
     def open_files(self, files):
         if not files:
@@ -538,7 +499,6 @@ class Buffer(Service):
 
     def close_current(self):
         document = self._current
-        print ['close current', document]
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
@@ -552,7 +512,6 @@ class Buffer(Service):
                 document = self._get_document_for_editor_id(editor_buffer_id)
             if not document and file_name is not None:
                 document = self._get_document_for_filename(file_name)
-        print ['close', file_name, editor_buffer_id, document]
         if document is not None:
             if editor_buffer_id is not None:
                 self._remove_document(document)
@@ -595,7 +554,6 @@ class Buffer(Service):
         self._refresh_buffer_action_sensitivities()
 
     def view_document(self, document, line=None, offset=None, do_open=True):
-        print ['view', document.filename]
         self._view.buffers_ol.update(document)
         if document is not None and self._current != document:
             self._current = document
