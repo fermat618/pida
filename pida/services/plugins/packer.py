@@ -39,8 +39,10 @@ def find_files(base, service):
     paths.insert(1, service_file)
     return paths
 
+def _default_notify(text):
+    print text
 
-def pack_plugin(base, service, notify=lambda x:None):
+def pack_plugin(base, service, notify=_default_notify):
     service_file = path.join(base, service, 'service.pida')
     base_len = len(base)
     if not path.exists(service_file):
