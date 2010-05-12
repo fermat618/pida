@@ -40,18 +40,28 @@ class VimView(PidaView):
     def grab_input_focus(self):
          self._vim.grab_input_focus()
 
+def _debug(f):
+    def _wrapped(*args, **kw):
+        print f.__name__, args, kw
+        return f(*args, **kw)
+    return _wrapped
 
 class VimCallback(object):
 
     def __init__(self, svc):
         self.svc = svc
 
+
+    def connect(self, proxy):
+        for k in dir(self):
+            if k.startswith('vim_'):
+                proxy.connect_to_signal(k[4:], getattr(self, k))
+
     def vim_VimEnter(self):
         self.svc.boss.get_service('editor').emit('started')
 
     def vim_BufEnter(self, bufid, filename):
         path = unicode(filename)
-        print ['enter', path, bufid]
         if not path:
             path = None
         elif os.path.isdir(path):
@@ -64,19 +74,40 @@ class VimCallback(object):
                            editor_buffer_id=bufid, do_open=False)
 
     def vim_BufNew(self, bufid):
-        print ['new', bufid]
-        self.svc.boss.cmd('buffer', 'new_file', do_open=False,
-                           with_editor_id=int(bufid))
+        pass
+
+    def vim_BufUnload(self, bufid):
+        pass
+
+    def vim_BufLeave(self, bufid):
+        pass
+
+    def vim_BufWipeout(self, bufid):
+        pass
 
     def vim_BufDelete(self, bufid):
-        print ['delete', bufid]
-        print self.svc.boss.get_service('buffer').cmd('close_file',
-            editor_buffer_id=int(bufid))
+        self.svc.boss.get_service('buffer').cmd('close_file',
+                                    editor_buffer_id=int(bufid))
+
+    def vim_BufReadPre(self, bufid):
+        pass
+
+    def vim_BufReadPost(self, bufid):
+        pass
+
+    def vim_BufWritePre(self, bufid):
+        pass
+
+    def vim_BufNewFile(self, bufid):
+        pass
+
+    def vim_BufAdd(self, bufid):
+        pass
 
     def vim_VimLeave(self):
         self.svc.boss.stop(force=True)
 
-    def vim_BufWritePost(self):
+    def vim_BufWritePost(self, bufid):
         self.svc.boss.cmd('buffer', 'current_file_saved')
 
     def vim_CursorMoved(self):
@@ -106,26 +137,23 @@ class Vim(EditorService):
     def open(self, document):
         """Open a document"""
         if document.editor_buffer_id is not None:
-            print ['vim switching', document]
             self._com.open_buffer_id(document.editor_buffer_id,
                                      **_ignore)
         else:
             def tag_document(document=document):
                 document.editor_buffer_id = int(self._com.get_buffer_number(
                     document.filename))
-                print ['tag', document, document.editor_buffer_id]
 
             def tag_new(document=document):
-                print 'taggiong', self._com.get_current_buffer_id()
                 document.editor_buffer_id = int(self._com.get_current_buffer_id())
+
             def error(*args):
-                print 'error', args
+                pass
+
             if document.is_new:
-                print 'doingg'
                 self._com.new_file(reply_handler=tag_new,
                                    error_handler=error)
             else:
-                print ['vim opening;', document]
                 self._com.open_file(document.filename,
                                     reply_handler=tag_document,
                                     error_handler=lambda *a: None)

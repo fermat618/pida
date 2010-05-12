@@ -46,14 +46,9 @@ def get_vim(uid):
         log.debug('vim connect failed')
         raise SystemExit('vim failed')
 
-def connect_cb(proxy, cb):
-    for evt in ['VimEnter', 'VimLeave', 'BufEnter', 'BufDelete', 'BufWritePost',
-    'CursorMoved', 'BufNew']:
-        proxy.connect_to_signal(evt, getattr(cb, 'vim_%s' % evt))
-
 def VimCom(cb, uid):
     proxy = get_vim(uid)
-    connect_cb(proxy, cb)
+    cb.connect(proxy)
     return proxy
 
 
