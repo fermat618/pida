@@ -89,7 +89,7 @@ def run_pida():
         return 0
     except Exception, e:
         traceback.print_exc()
-        die_gui("startup breakdown", e)
+        die_gui("Pida has failed to start",  traceback.format_exc())
         return 1
 
 def set_trace():
