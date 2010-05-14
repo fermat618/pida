@@ -171,6 +171,8 @@ class OutlineItem(InitObject):
     line = 0
     filter_type = None
     type_markup = ''
+    _sort_hack = None
+    _line_sort_hack = None
 
     def get_markup(self):
         return '<b>%s</b>' % self.name
@@ -182,15 +184,29 @@ class OutlineItem(InitObject):
         self._icon_name_set = value
     icon_name = property(_get_icon_name, _set_icon_name)
 
-    #XXX: these 2 hacks need tests!!!
-    @property
-    def sort_hack(self):
-        return self.name
+    #XXX these properties need testing
 
-    @property
-    def line_sort_hack(self):
-        return str(self.linenumber)
+    def get_sort_hack(self):
+        if self._sort_hack is None:
+            return self.name
+        else:
+            return self._sort_hack
 
+    def set_sort_hack(self, value):
+        self._sort_hack = value
+
+    sort_hack = property(get_sort_hack, set_sort_hack)
+
+    def get_line_sort_hack(self):
+        if self._line_sort_hack is None:
+            return str(self.linenumber)
+        else:
+            return self._line_sort_hack
+
+    def set_line_sort_hack(self, value):
+        self._line_sort_hack = value
+
+    line_sort_hack = property(get_line_sort_hack, set_line_sort_hack)
 class Definition(InitObject):
     """Returned by a Definer instance"""
     type = LANG_TYPES.UNKNOWN
