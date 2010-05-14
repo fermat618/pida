@@ -137,10 +137,8 @@ class BufferListView(PidaGladeView):
         self.buffers_ol.get_model().sort_column_changed()
 
     def set_display_attr(self, newattr):
-        print 'set disp attr', newattr
         for attr in attributes.values():
             for col in self.buffers_ol._viewcols_for_attr(attr):
-                print col.get_title(), 'now gets visible=', attr==newattr
                 col.props.visible = attr==newattr
 
 
@@ -334,18 +332,25 @@ class BufferOptionsConfig(OptionsConfig):
 
 class BufferCommandsConfig(CommandsConfig):
 
-    def open_file(self, file_name=None, document=None, line=None, offset=None):
-        if not file_name and not document:
-            return
-        self.svc.open_file(file_name, document, line=line, offset=offset)
+    def new_file(self, do_open=True, with_editor_id=None):
+        self.svc.new_file(do_open, with_editor_id)
+
+    def open_file(self, file_name=None, document=None, line=None, offset=None,
+                  editor_buffer_id=None, do_open=True):
+        #if not file_name and not document and not editor_buffer_id:
+        #    return
+        self.svc.open_file(file_name, document, line=line, offset=offset,
+                           editor_buffer_id=editor_buffer_id, do_open=do_open)
 
     def open_files(self, files):
         self.svc.open_files(files)
 
-    def close_file(self, file_name=None, document=None):
-        if not file_name and not document:
-            return
-        self.svc.close_file(file_name=file_name, document=document)
+    def close_file(self, file_name=None, document=None,
+                   editor_buffer_id=None):
+        #if not file_name and not document:
+        #    return
+        self.svc.close_file(file_name=file_name, document=document,
+                            editor_buffer_id=editor_buffer_id)
 
     def close_all(self):
         self.svc.close_all()
@@ -376,7 +381,7 @@ class BufferCommandsConfig(CommandsConfig):
             return self.svc._documents.get(document_id, None)
 
 class BufferDbusConfig(DbusConfig):
-    
+
     @LEXPORT(in_signature='s')
     def open_file(self, file_name):
         self.svc.open_file(file_name)
@@ -403,7 +408,7 @@ class BufferDbusConfig(DbusConfig):
                        {})
                   for x in self.svc._documents.itervalues()
                ]
-               
+
 
 # Service class
 class Buffer(Service):
@@ -421,6 +426,8 @@ class Buffer(Service):
     def pre_start(self):
         self._documents = {}
         self._current = None
+        #XXX hideous hack for vim
+        self._last_added_document = None
         self._view = BufferListView(self)
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
@@ -432,35 +439,35 @@ class Buffer(Service):
         for action_name in ['switch_next_buffer', 'switch_prev_buffer']:
             self.get_action(action_name).set_sensitive(len(self._documents) > 0)
 
-    def new_file(self, temp_file=False):
-        # some editors don't support the new_file feature, so we have to 
-        # fall back and create a tmp file
-        if temp_file or not 'new_file' in self.boss.editor.features:
-            fd, file_name = mkstemp()
-            os.close(fd)
-            self.open_file(file_name)
-        else:
-            document = Document(self.boss)
-            self._add_document(document)
-            self._current = document
-            self._view.set_document(document)
-            self.boss.editor.cmd('open', document=document)
-            self.emit('document-changed', document=document)
-            self.emit('document-opened', document=document)
+    def new_file(self, do_open=True, with_editor_id=None):
+        return self.open_file(editor_buffer_id=with_editor_id)
 
-    def open_file(self, file_name=None, document=None, line=None, offset=None):
+    def open_file(self, file_name=None, document=None, line=None, offset=None,
+                  editor_buffer_id=None, do_open=True):
         if file_name:
             file_name = os.path.realpath(file_name)
-        if not document:
-            document = self._get_document_for_filename(file_name)
         if document is None:
-            if not os.path.isfile(file_name):
-                return False
-            document = Document(self.boss, file_name)
-            self._add_document(document)
-        self.view_document(document, line=line, offset=offset)
+            # try to find the document
+            if editor_buffer_id is not None:
+                document = self._get_document_for_editor_id(editor_buffer_id)
+            if document is None and file_name is not None:
+                document = self._get_document_for_filename(file_name)
+            elif file_name is None and editor_buffer_id is not None:
+                #XXX new file just switched, can't know, have to guess!
+                # normally fall back to filename
+                if self._last_added_document and self._last_added_document.is_new:
+                    document = self._last_added_document
+                    self._last_added_document = None
+            # can't find it
+            if document is None:
+                document = Document(self.boss, file_name)
+                if editor_buffer_id is not None:
+                    document.editor_buffer_id = editor_buffer_id
+                self._add_document(document)
+        self.view_document(document, line=line, offset=offset, do_open=do_open)
         self.emit('document-opened', document=document)
         return document
+
 
     def open_files(self, files):
         if not files:
@@ -497,13 +504,22 @@ class Buffer(Service):
                 self._remove_document(document)
                 self.emit('document-closed', document=document)
 
-    def close_file(self, file_name = None, document = None):
+    def close_file(self, file_name = None, document = None,
+                   editor_buffer_id=None):
+
         if not document:
-            document = self._get_document_for_filename(file_name)
+            if editor_buffer_id is not None:
+                document = self._get_document_for_editor_id(editor_buffer_id)
+            if not document and file_name is not None:
+                document = self._get_document_for_filename(file_name)
         if document is not None:
-            if self.boss.editor.cmd('close', document=document):
+            if editor_buffer_id is not None:
                 self._remove_document(document)
                 self.emit('document-closed', document=document)
+            else:
+                if self.boss.editor.cmd('close', document=document):
+                    self._remove_document(document)
+                    self.emit('document-closed', document=document)
 
     def close_all(self):
         docs = self._documents.values()[:]
@@ -519,7 +535,14 @@ class Buffer(Service):
             if doc.filename == file_name:
                 return doc
 
+    def _get_document_for_editor_id(self, bufid):
+        for uid, doc in self._documents.iteritems():
+            if doc.editor_buffer_id == bufid:
+                return doc
+
+
     def _add_document(self, document):
+        self._last_added_document = document
         self._documents[document.unique_id] = document
         self._view.add_document(document)
         self._refresh_buffer_action_sensitivities()
@@ -530,14 +553,16 @@ class Buffer(Service):
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
-    def view_document(self, document, line=None, offset=None):
+    def view_document(self, document, line=None, offset=None, do_open=True):
+        self._view.buffers_ol.update(document)
         if document is not None and self._current != document:
             self._current = document
             self._current.usage += 1
             self._current.last_opend = time.time()
             self._view.set_document(document)
             try:
-                self.boss.editor.cmd('open', document=document)
+                if do_open:
+                    self.boss.editor.cmd('open', document=document)
             except DocumentException, e:
                 # document can't be loaded. we have to remove the document from 
                 # the system

@@ -77,6 +77,17 @@ class VimDBUSService(Object):
 
     # File opening
 
+    @method(DBUS_NS)
+    def new_file(self):
+        buf = vim.current.buffer
+        #XXX yet another vim hack
+        if len(buf) == 1 and buf[0:1] == [''] and buf.name is None:
+            buf[0] = 'a'
+            vim.command('confirm enew')
+            buf[0] = ''
+        else:
+            vim.command('confirm enew')
+
     @method(DBUS_NS, in_signature='s')
     def open_file(self, path):
         vim.command('confirm e %s' % path)
@@ -147,6 +158,10 @@ class VimDBUSService(Object):
     @method(DBUS_NS, out_signature='s')
     def get_current_buffer(self):
         return vim.current.buffer.name or ''
+
+    @method(DBUS_NS, out_signature='i')
+    def get_current_buffer_id(self):
+        return int(vim.current.buffer.number)
 
     @method(DBUS_NS)
     def quit(self):
@@ -278,12 +293,40 @@ class VimDBUSService(Object):
         return '\n'.join(vim.current.buffer)
     # Signals
 
-    @signal(DBUS_NS)
-    def BufEnter(self):
+    @signal(DBUS_NS, signature='ss')
+    def BufEnter(self, bufid, filename):
         pass
 
     @signal(DBUS_NS, signature='s')
-    def BufDelete(self, file_name):
+    def BufNew(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufDelete(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufWipeout(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufLeave(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufUnload(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufHidden(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufAdd(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufNewFile(self, bufid):
         pass
 
     @signal(DBUS_NS)
@@ -295,7 +338,19 @@ class VimDBUSService(Object):
         pass
 
     @signal(DBUS_NS)
-    def BufWritePost(self):
+    def BufWritePre(self, signature='s'):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufWritePost(self, bufid):
+        pass
+
+    @signal(DBUS_NS)
+    def BufReadPre(self, bufid):
+        pass
+
+    @signal(DBUS_NS)
+    def BufReadPost(self, bufid):
         pass
 
     @signal(DBUS_NS)
@@ -338,13 +393,28 @@ endpython
 " Now the vim events
 silent augroup VimCommsDBus
 silent au! VimCommsDBus
-silent au VimCommsDBus BufEnter * silent call VimSignal('BufEnter')
-silent au VimCommsDBus BufDelete * silent call VimSignal('BufDelete', expand('<amatch>'))
+silent au VimCommsDBus BufEnter * silent call VimSignal('BufEnter', expand('<abuf>'), expand('<amatch>'))
+silent au VimCommsDBus BufNew * silent call VimSignal('BufNew', expand('<abuf>'))
+silent au VimCommsDBus BufNewFile * silent call VimSignal('BufNewFile', expand('<abuf>'))
+
+silent au VimCommsDBus BufReadPre * silent call VimSignal('BufReadPre', expand('<abuf>'))
+silent au VimCommsDBus BufReadPost * silent call VimSignal('BufReadPost', expand('<abuf>'))
+
+silent au VimCommsDBus BufWritePre * silent call VimSignal('BufWritePre', expand('<abuf>'))
+silent au VimCommsDBus BufWritePost * silent call VimSignal('BufWritePost', expand('<abuf>'))
+
+silent au VimCommsDBus BufAdd * silent call VimSignal('BufAdd', expand('<abuf>'))
+silent au VimCommsDBus BufDelete * silent call VimSignal('BufDelete', expand('<abuf>'))
+silent au VimCommsDBus BufUnload * silent call VimSignal('BufUnload', expand('<abuf>'))
+silent au VimCommsDBus BufUnload * silent call VimSignal('BufHidden', expand('<abuf>'))
+silent au VimCommsDBus BufWipeout * silent call VimSignal('BufWipeout', expand('<abuf>'))
+
 silent au VimCommsDBus VimLeave * silent call VimSignal('VimLeave')
 silent au VimCommsDBus VimEnter * silent call VimSignal('VimEnter')
-silent au VimCommsDBus BufWritePost * silent call VimSignal('BufWritePost')
 silent au VimCommsDBus CursorMovedI,CursorMoved * silent call VimSignal('CursorMoved')
-silent au VimCommsDBus SwapExists * silent call VimSignal('SwapExists')
+silent au VimCommsDBus SwapExists * let v:swapchoice='d'
+
+set hidden
 
 " Some UI Stuffs
 set nomore
