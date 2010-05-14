@@ -333,7 +333,7 @@ class WorkspaceWindow(ToplevelView):
         self.user_action = "new"
         from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
         opts = DialogOptions().add('name', label=_("Workspace name"), value="")
-        create_gtk_dialog(opts, parent=self.toplevel).run()
+        create_gtk_dialog(opts, parent=self.widget).run()
         if opts.name and self.command:
             self.new_workspace = opts.name
             self.command(self)

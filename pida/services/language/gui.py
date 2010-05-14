@@ -343,6 +343,7 @@ class BrowserView(PidaGladeView):
         self.source_tree.set_visible_func(self._visible_func)
 
         self._last_expanded = None
+        self._last_outliner = None
 
     def _visible_func(self, node):
         # FIXME: None objects shouldn't be here, but why ????
@@ -510,7 +511,9 @@ class BrowserView(PidaGladeView):
             self.svc.boss.editor.cmd('grab_focus')
 
     def update_filterview(self, outliner):
-        if outliner:
+        if ((outliner and not self._last_outliner) or
+            (self._last_outliner.name != outliner.name)):
+            self._last_outliner = outliner
             def rmchild(widget):
                 self.filter_toolbar.remove(widget)
             self.filter_toolbar.foreach(rmchild)
