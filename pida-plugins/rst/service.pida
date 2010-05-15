@@ -1,6 +1,6 @@
 Name: ReStructuredText
 Author: Bernhard Leiner <bleiner@gmail.com>
-Version: 0.2
+Version: 0.3
 Depends: pida>=0.6
 Category: documentation
 

@@ -1,6 +1,6 @@
 Name: Python Debugger
 Author: Ali Afshar <aafshar@gmail.com>
-Version: 0.3
+Version: 0.4
 Depends: pida>=0.6
 Category: code
 
