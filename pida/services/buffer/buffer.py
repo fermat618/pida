@@ -460,6 +460,7 @@ class Buffer(Service):
             d.filename for d in self._documents.itervalues()
             if d.filename is not None
             ])
+        return True
 
     def get_view(self):
         return self._view
