@@ -512,7 +512,7 @@ class BrowserView(PidaGladeView):
 
     def update_filterview(self, outliner):
         if ((outliner and not self._last_outliner) or
-            (self._last_outliner.name != outliner.name)):
+            (self._last_outliner and self._last_outliner.name != outliner.name)):
             self._last_outliner = outliner
             def rmchild(widget):
                 self.filter_toolbar.remove(widget)
