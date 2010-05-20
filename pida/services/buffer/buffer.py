@@ -113,25 +113,24 @@ class BufferListView(PidaGladeView):
         menu.connect('deactivate', on_deactivate)
 
     def get_current_buffer_index(self):
-        return self.buffers_ol.index(self.svc.get_current())
+        return self.buffers_ol.selected_item
 
     def select_buffer_by_index(self, index):
         self.buffers_ol.select(self.buffers_ol[index])
         self.view_document(self.buffers_ol[index])
 
+    # note current is the current buffer, not the current selected buffer
     def next_buffer(self):
-        index = self.get_current_buffer_index()
-        newindex = index + 1
-        if newindex == len(self.buffers_ol):
-            newindex = 0
-        self.select_buffer_by_index(newindex)
+        next = self.buffers_ol.item_after(self.svc.get_current())
+        if next is None:
+            next = self.buffers_ol[0]
+        self.svc.open_file(document=next)
 
     def prev_buffer(self):
-        index = self.get_current_buffer_index()
-        newindex = index - 1
-        if newindex == -1:
-            newindex = len(self.buffers_ol) - 1
-        self.select_buffer_by_index(newindex)
+        prev = self.buffers_ol.item_before(self.svc.get_current())
+        if prev is None:
+            prev = self.buffers_ol[-1]
+        self.svc.open_file(document=prev)
 
     def sort(self):
         self.buffers_ol.get_model().sort_column_changed()
