@@ -16,6 +16,7 @@ moo/test
 .*\.pyc
 tmp
 .pida-metadata
+pida.egg-info
 docs/_build
 .*\.*~
 externals
