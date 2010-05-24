@@ -7,11 +7,8 @@ import subprocess
 import sys
 from glob import glob
 
-from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
-from distutils.cmd import Command
-
-
+from setuptools import setup, Extension
 import pida
 
 cmdclasses = {}
@@ -26,37 +23,6 @@ try:
 except ImportError:
     print "sphinx not found, skipping user docs"
 
-
-class BuildApi(Command):
-    description = 'Builds the documentation'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        epydoc_conf = os.path.join('docs', 'epydoc.conf')
-
-        try:
-            from epydoc import cli
-            old_argv = sys.argv[1:]
-            sys.argv[1:] = [
-                '--config=%s' % epydoc_conf,
-                #'--no-private', # epydoc bug, not read from config
-                '--simple-term',
-                '--debug',
-                '--verbose'
-            ]
-            cli.cli()
-            sys.argv[1:] = old_argv
-
-        except ImportError:
-            print 'epydoc not installed, skipping API documentation.'
-
-cmdclasses['build_api'] = BuildApi
 
 # Check availability of pygtk 2.0
 NO_PYGTK_ERROR_MESSAGE = """pkg-config reports your system misses pygtk 2.0.
@@ -108,15 +74,22 @@ def listpackages(root):
     return packages
 
 
-def list_pida_packages():
-    packages = []
-    for package in ['pida', 'pida/core', 'pida/ui', 'pida/utils']:
-        packages.extend(listpackages(package))
-    return packages
 
-
-
-def list_pida_services(package_data):
+def get_package_data():
+    package_data = {
+        'pida': [
+            'resources/glade/*',
+            'resources/pixmaps/*',
+            'resources/uidef/*',
+            'resources/data/*',
+        ],
+        'pida.utils.puilder': [
+            'glade/*',
+        ],
+        'pida.ui': [
+            'glade/*'
+        ]
+    }
     packages = listpackages('pida/services') + listpackages('pida/editors')
     for package in packages:
         package_data[package] = [
@@ -127,25 +100,8 @@ def list_pida_services(package_data):
             'data/*',
             'locale/fr_FR/LC_MESSAGES/*',
         ]
-    return packages
+    return package_data
 
-
-def get_main_data():
-    return {
-        'pida':
-        [
-            'resources/glade/*',
-            'resources/pixmaps/*',
-            'resources/uidef/*',
-            'resources/data/*',
-            'resources/locale/fr_FR/LC_MESSAGES/*',
-            'utils/puilder/glade/*',
-        ]
-    }
-
-all_package_data = get_main_data()
-
-all_packages = list_pida_packages() + list_pida_services(all_package_data)
 
 cmdclasses['build_ext'] = BuildExt
 
@@ -162,8 +118,8 @@ setup(
     name = 'pida',
     version = pida.version,
     license='GPL',
-    packages = all_packages,
-    package_data = all_package_data,
+    packages = listpackages('pida'),
+    package_data = get_package_data(),
     ext_modules = [moo],
     cmdclass=cmdclasses,
     scripts = [
@@ -174,7 +130,6 @@ setup(
     author = pida.author,
     author_email = pida.author,
     url = pida.website,
-    download_url = pida.website + 'download/',
     description = pida.short_description,
     classifiers = [
         'Development Status :: 4 - Beta',
@@ -192,19 +147,18 @@ setup(
         'Topic :: Utilities',
         'Programming Language :: Python'
     ],
-    requires = [
-        #XXX: more ?
-        'anyvc (>= 0.2)',
+    install_requires = [
+        'anyvc>=0.3',
         'mercurial',
         'dulwich',
         #XXX: still needed on 2.5
         #'simplejson',
-        'PyGtk (>= 2.14)',
-        #'kiwi-gtk (>= 1.9.23)', #XXX distutils doesnt like the -
+        'pygtkhelpers',
         #'vte',
         #'dbus ?',
         #'rope ?',
         #'moo ?'
+        #XXX: more ?
     ],
     data_files=data_files,
 )
