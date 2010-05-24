@@ -22,7 +22,7 @@
 
 import gtk, gobject
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
