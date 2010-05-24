@@ -98,7 +98,6 @@ def get_package_data():
             'pixmaps/*',
             'uidef/*',
             'data/*',
-            'locale/fr_FR/LC_MESSAGES/*',
         ]
     return package_data
 
@@ -149,8 +148,6 @@ setup(
     ],
     install_requires = [
         'anyvc>=0.3',
-        'mercurial',
-        'dulwich',
         #XXX: still needed on 2.5
         #'simplejson',
         'pygtkhelpers',
