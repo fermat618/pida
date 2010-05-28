@@ -24,7 +24,7 @@ def find_latest_metadata(url):
         if 'tar.gz' not in data:
             log.error('%s-%s doesnt supply a packed plugin', name, version)
             continue
-        plugin = name.split('.')[-1]
+        plugin = name.split('.')[-1].rstrip('/')
         try:
             fd = urllib2.urlopen(data['meta'])
         except urllib2.HTTPError:
