@@ -2,7 +2,11 @@
 The Python Integrated Development Application IDE Framework
 """
 
-version = '0.6.1'
+try:
+    version = __import__('pkg_resources') \
+            .get_distribution('pida').version
+except:
+    version = 'unknown'
 
 copyright = 'Copyright (c) 2005-2009 The PIDA Project'
 

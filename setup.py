@@ -1,6 +1,7 @@
 """
 The PIDA Installer
 """
+import hgdistver
 
 import os
 import subprocess
@@ -115,7 +116,7 @@ for root, dirs, files in os.walk('docs/_build/html'):
 
 setup(
     name = 'pida',
-    version = pida.version,
+    version = hgdistver.get_version(),
     license='GPL',
     packages = listpackages('pida'),
     package_data = get_package_data(),
