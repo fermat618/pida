@@ -32,6 +32,15 @@ locale = Locale('versioncontrol')
 _ = locale.gettext
 
 
+try:
+    from anyvc import workdir
+except ImportError:
+    
+    def workdir(path):
+        pass
+    workdir.open = workdir
+
+
 from pida.ui.besttextview import BestTextView
 
 
@@ -260,22 +269,6 @@ class VersioncontrolCommitWindowConfig(WindowConfig):
 
 class VersioncontrolFeaturesConfig(FeaturesConfig):
 
-    def create(self):
-        self.publish('workdir-manager')
-
-        try:
-            from anyvc.workdir import all_known
-        except ImportError:
-            self.svc.log.info('Cant find anyvc')
-            all_known = ()
-        try:
-            from anyvc.exc import NotFoundError
-        except ImportError:
-            #XXX: kill that with the anyvc 0.3 release
-            NotFoundError = ValueError
-        for mgr in all_known:
-            self.subscribe('workdir-manager', mgr)
-            mgr.NOTFOUND = NotFoundError
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('filemanager', 'file_hidden_check', 
@@ -312,12 +305,12 @@ class VersionControlEvents(EventsConfig):
         if (context == 'file-menu'):
             path = kw['file_name']
             if path is not None:
-                under_vc = self.svc.get_workdir_manager_for_path(path) is not None
+                under_vc = workdir.open(path) is not None
             self.svc.get_action('diff_for_file').set_visible(under_vc)
             self.svc.get_action('revert_for_file').set_visible(under_vc)
         elif (context == 'dir-menu'):
             path = kw['dir_name']
-            under_vc = self.svc.get_workdir_manager_for_path(path) is not None
+            under_vc = workdir.open(path) is not None
             self.svc.get_action('diff_for_directory').set_visible(under_vc)
             self.svc.get_action('revert_for_dir').set_visible(under_vc)
         self.svc.get_action('more_vc_menu').set_visible(under_vc)
@@ -329,7 +322,7 @@ class VersionControlEvents(EventsConfig):
 class VersioncontrolCommandsConfig(CommandsConfig):
     
     def get_workdirmanager(self,path):
-        return self.svc.get_workdir_manager_for_path(path)
+        return workdir.open(path)
 
     def list_file_states(self, path):
         return self.svc.list_file_states(path)
@@ -683,7 +676,7 @@ class Versioncontrol(Service):
         self._log = VersionControlLog(self)
         self._commit = CommitViewer(self)
 
-        if not self.features['workdir-manager']:
+        if hasattr(workdir, '__call__'): # the fake is a function
             # make the vcs actions insensitive if anyvc is missing
             self.actions._actions.set_sensitive(False)
 
@@ -697,27 +690,14 @@ class Versioncontrol(Service):
     def ignored_file_checker(self, path, name, state):
         return not ( state == "hidden" or state == "ignored")
 
-    def get_workdir_manager_for_path(self, path):
-        found_vcm = None
-        for vcm in self.features['workdir-manager']:
-            try:
-                vcm_instance = vcm(path) #TODO: this shouldnt need an exception
-                if (not found_vcm 
-                    or len(vcm_instance.base_path) > len(found_vcm.base_path)):
-                    found_vcm = vcm_instance
-            except vcm.NOTFOUND:
-                pass
-        return found_vcm
 
     def list_file_states(self, path):
-        workdir = self.get_workdir_manager_for_path(path)
+        wd = workdir.open(path)
 
-        if workdir is not None: 
-            for item in workdir.status(paths=[path], recursive=False):
-                abspath = item.abspath
-                name = os.path.basename (abspath)
-                path = os.path.dirname(abspath)
-                yield name, path, item.state
+        if wd is not None: 
+            for item in wd.status(paths=[path], recursive=False):
+                path = item.abspath
+                yield path.basename, path.dirpath().strpath, item.state
 
     def diff_path(self, path):
         self._log.append_action('Diffing', path, gtk.STOCK_COPY)
@@ -725,7 +705,7 @@ class Versioncontrol(Service):
         task.start(path)
 
     def _do_diff(self, path):
-        vc = self.get_workdir_manager_for_path(path)
+        vc = workdir.open(path)
         if vc is None:
             return (None,)
         return vc.diff(paths=[path])
@@ -738,7 +718,7 @@ class Versioncontrol(Service):
         view.set_diff(diff)
 
     def execute(self, action, path, stock_id, **kw):
-        vc = self.get_workdir_manager_for_path(path)
+        vc = workdir.open(path)
         if vc is None:
             return self.error_dlg(_('File or directory is not versioned.'))
         self._log.append_action(action.capitalize(), path, stock_id)
@@ -766,7 +746,7 @@ class Versioncontrol(Service):
         self.execute('commit', path, gtk.STOCK_GO_UP, message=message)
 
     def commit_path_dialog(self, path):
-        vc = self.get_workdir_manager_for_path(path)
+        vc = workdir.open(path)
         if vc is None:
             return self.error_dlg(_('File or directory is not versioned.'))
         self._commit.set_path(path)
