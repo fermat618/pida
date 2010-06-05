@@ -612,7 +612,7 @@ class PythonView(PidaView):
     def execute(self, file_=None, cwd=os.getcwd()):
         commandargs = [
             'bpython-gtk',
-            '--socket-id', str(self._socket.get_id()),
+            '--socket-id=%s' % self._socket.get_id(),
             ]
         if file_:
             commandargs.extend(['-i', file_])
