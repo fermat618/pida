@@ -611,13 +611,12 @@ class PythonView(PidaView):
 
     def execute(self, file_=None, cwd=os.getcwd()):
         commandargs = [
-            self.svc.opt('python_path'),
-            '-m', 'bpython.gtk_',
-            '--socket-id=%s' %self._socket.get_id(),
+            'bpython-gtk',
+            '--socket-id', str(self._socket.get_id()),
             ]
         if file_:
             commandargs.extend(['-i', file_])
-        self.popen = p = subprocess.Popen(commandargs, cwd=cwd, close_fds=True)
+        self.popen = p = subprocess.Popen(commandargs, cwd=cwd)
         self._pid = p.pid
 
     def can_be_closed(self):
