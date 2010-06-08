@@ -13,6 +13,7 @@ import mimetypes
 mimetypes.init() # expensive shit to keep mimetypes.guess_type threadsave
 import stat
 import time
+import itertools
 
 from charfinder import detect_encoding
 import codecs
@@ -27,7 +28,7 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-new_file_index = 1
+new_file_counter = itertools.count(1)
 
 class Document(object):
     """
@@ -108,20 +109,16 @@ class Document(object):
         self.boss = boss
         if filename is not None:
             self.filename = os.path.realpath(filename)
+            self.newfile_index = None
         else:
             self.filename = None
+            self.newfile_index = next(new_file_counter)
+
         self.editor = None
         self._list = []
         self._str = ""
         self.creation_time = time.time()
         self._project = project
-
-        if filename is None:
-            global new_file_index
-            self.newfile_index = new_file_index
-            new_file_index = new_file_index + 1
-        else:
-            self.newfile_index = None
 
         self.clear()
 
