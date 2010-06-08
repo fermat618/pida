@@ -75,13 +75,13 @@ def test_repr_new():
     from pida.core import document as document_module
     doc = document()
     rep = repr(doc)
-    expected = '<New Document %d (%s)>' % (
+    expected = '<New Document {0:d} at 0x{1:x}>'.format(
             next(document_module.new_file_counter) - 1, id(doc))
     assert rep == expected
 
 def test_repr_known():
     doc = document(filename='test')
-    expected = "<Document '%s' (%s)>" % (os.path.abspath('test'), id(doc))
+    expected = "<Document '%s' at 0x%x>" % (os.path.abspath('test'), id(doc))
     assert repr(doc) == expected
 
 def test_unicode_new():

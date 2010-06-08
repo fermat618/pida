@@ -243,9 +243,9 @@ class Document(object):
 
     def __repr__(self):
         if self.filename is None:
-            return u'<New Document %d (%s)>' % (self.newfile_index, self.unique_id)
+            return u'<New Document %d at 0x%x>' % (self.newfile_index, id(self))
         else:
-            return u'<Document %r (%s)>' % (self.filename, self.unique_id)
+            return u'<Document %r at 0x%x>' % (self.filename, id(self))
 
     def __unicode__(self):
         if self.filename is None:
