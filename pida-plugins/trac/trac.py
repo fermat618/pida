@@ -60,6 +60,7 @@ class TracView(PidaGladeView):
             Column('ticket', sorted=True, type=int),
             Column('summary'),
         ])
+        self.tickets_list.connect('item-double-clicked', self.on_tickets_list__item_double_clicked)
         self.set_base_address('http://pida.co.uk/trac/')
         self.item_text = webkit.WebView()
         self.item_text_holder.add(self.item_text)
@@ -83,6 +84,9 @@ class TracView(PidaGladeView):
     def on_tickets_list__selection_changed(self, ol):
         item = ol.selected_item
         self.item_text.load_html_string(item.description.strip(), self._address)
+
+    def on_tickets_list__item_double_clicked(self, ot, item, event):
+        self.svc.browse(url=item.link)
 
     def on_toggle_auth__toggled(self, btn):
         self.auth_box.set_sensitive(btn.get_active())
@@ -109,6 +113,7 @@ class ReportItem(object):
         self.ticket = int(ticket.strip('#').strip())
         self.summary = summary.strip()
         self.description = entry['description']
+        self.link = entry['link']
 
 
 def parse_report(data):
@@ -116,10 +121,12 @@ def parse_report(data):
     for entry in feed.entries:
         yield ReportItem(entry)
 
+
 def trac_report(base_address, report_id, callback, auth):
     action_fragment = 'report/%s?format=rss' % report_id
     action_url = urljoin(base_address, action_fragment)
     fetch_url(action_url, callback, auth=auth)
+
 
 class TracActions(ActionsConfig):
 
@@ -134,21 +141,23 @@ class TracActions(ActionsConfig):
             '<Shift><Control>j',
         )
 
-
     def on_show_trac(self, action):
         if action.get_active():
             self.svc.show_trac()
         else:
             self.svc.hide_trac()
 
+
 class TracWindowConfig(WindowConfig):
     key = TracView.key
     label_text = TracView.label_text
+
 
 class TracFeaturesConfig(FeaturesConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('window', 'window-config',
             TracWindowConfig)
+
 
 # Service class
 class Trac(Service):
@@ -175,6 +184,10 @@ class Trac(Service):
     def stop(self):
         if self.get_action('show_trac').get_active():
             self.hide_trac()
+
+    def browse(self, url):
+        self.boss.cmd('browseweb', 'browse', url=url)
+
 
 
 # Required Service attribute for service loading
