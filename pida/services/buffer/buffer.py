@@ -423,7 +423,7 @@ class BufferDbusConfig(DbusConfig):
     @LEXPORT(out_signature='a(isiia{ss})')
     def get_documents(self):
         return [
-                 (x.unique_id, x.filename, 
+                 (id(x), x.filename, 
                        x.doctype and x.doctype.internal or '', 
                        x.creation_time,
                        # extended values
@@ -466,7 +466,7 @@ class Buffer(Service):
 
     def _refresh_buffer_action_sensitivities(self):
         for action_name in ['switch_next_buffer', 'switch_prev_buffer']:
-            self.get_action(action_name).set_sensitive(len(self._documents) > 0)
+            self.get_action(action_name).set_sensitive(bool(self._documents))
 
     def new_file(self, do_open=True, with_editor_id=None):
         return self.open_file(editor_buffer_id=with_editor_id)
@@ -572,13 +572,13 @@ class Buffer(Service):
 
     def _add_document(self, document):
         self._last_added_document = document
-        self._documents[document.unique_id] = document
+        self._documents[id(document)] = document
         self._view.add_document(document)
         self._refresh_buffer_action_sensitivities()
 
     def _remove_document(self, document):
         "_remove_doc", document
-        del self._documents[document.unique_id]
+        del self._documents[id(document)]
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
