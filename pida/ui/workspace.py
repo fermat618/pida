@@ -61,19 +61,17 @@ class WorkspaceWindow(ToplevelView):
         gcall(self.update_workspaces)
 
     def update_workspaces(self):
-        from pida.utils.pdbus import list_pida_instances, PidaRemote
+        from pida.utils.pdbus import list_pida_instances
+        from pida.core.options import list_workspaces
 
-        from pida.core.options import OptionsManager, list_workspaces
-        from pida.core import environment
-        # we need a new optionsmanager so the default manager does not workspace
-        # lookup yet
         self.list_complete = False
+
         workspaces = list_workspaces()
-        # start the dbus message so we will know which ones are running
         instances = list_pida_instances()
 
         self.workspace_view.clear()
         select = None
+
         for workspace in workspaces:
 
             pid = 0
