@@ -167,7 +167,7 @@ def main():
                     sw.hide_and_quit()
                     gtk.main_quit()
 
-        from pida.ui.worspace import WorkspaceWindow
+        from pida.ui.workspace import WorkspaceWindow
         sw = WorkspaceWindow(command=command)
         sw.widget.show()
         #this mainloop will exit when the workspacewindow is closes
