@@ -13,9 +13,12 @@ import os
 import sys
 import warnings
 import traceback
+from pida.core.locale import Locale
+
+from pida.core import environment
+from pida.core.boss import Boss
 
 # locale
-from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
@@ -69,8 +72,6 @@ try:
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
-from pida.core import environment
-from pida.core.boss import Boss
 
 def run_pida():
     #XXX: nasty compat hack
@@ -130,7 +131,6 @@ def main():
     om = OptionsManager(workspace="default")
 
     def do_workspace_manager():
-        from pida.ui.window import WorkspaceWindow
 
         def kill(sm):
             sm.hide_and_quit()
@@ -167,6 +167,7 @@ def main():
                     sw.hide_and_quit()
                     gtk.main_quit()
 
+        from pida.ui.worspace import WorkspaceWindow
         sw = WorkspaceWindow(command=command)
         sw.widget.show()
         #this mainloop will exit when the workspacewindow is closes
