@@ -55,10 +55,10 @@ except ImportError, e:
     die_cli(_('pygtkhelpers needs to be installed to run PIDA'), e)
 
 
-# Python 2.5
-if sys.version_info < (2, 5):
-    die_gui(_('Python 2.5 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
-        {'major': sys.version_info[:2][0], 'minor': sys.version_info[:2][1]})
+# Python 2.6
+if sys.version_info < (2, 6):
+    die_gui(_('Python 2.6 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
+        {'major': sys.version_info[0], 'minor': sys.version_info[1]})
 
 
 # Prevent PIDA from being run as root.
