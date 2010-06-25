@@ -74,7 +74,7 @@ def test_cache(project, tmpdir):
     #XXX: added cause of fucked cache
     project.index('', recrusive=True)
 
-    c = project._cache
+    c = project.indexer.cache
     #the empty cache should contain the root elements and the metadata
     assert len(c['dirs']) == 2
     assert len(c['paths']) == 3
@@ -155,7 +155,7 @@ def test_cache(project, tmpdir):
     # save the state and reload
     project.save_cache()
     assert project.load_cache()
-    c = project._cache  # loadin sets the cache
+    c = project.indexer.cache # loadin sets the cache
 
     assert set(files).issubset(c['files'])
     assert set(dirs).issubset(c['dirs'])
@@ -187,7 +187,7 @@ def test_query(project, tmpdir):
 
     assert query('source.c') == ['src/source.c']
     rel = query('source.c')[0]
-    assert rel == project._cache['filenames']['source.c'][0].relpath
+    assert rel == project.indexer.cache['filenames']['source.c'][0].relpath
 
     # non existing through wrong case
     assert query('source.c2') == []

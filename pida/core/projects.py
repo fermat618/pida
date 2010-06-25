@@ -13,16 +13,12 @@ import os
 from collections import defaultdict
 
 from pida.core.log import Log
+from pida.core.indexer import Indexer, RESULT
 from pida.utils.path import get_relative_path
 from pida.utils.addtypes import Enumeration
-from glob import fnmatch
 
 from pida.utils.puilder.model import Build
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 # locale
 from pida.core.locale import Locale
@@ -34,9 +30,6 @@ _ = locale.gettext
 DATA_DIR = ".pida-metadata"
 CACHE_NAME = "FILECACHE"
 
-RESULT = Enumeration("RESULT",
-            ("YES", "NO", "YES_NOCHILDS", "NO_NOCHILDS",
-             "ABORT"))
 
 REFRESH_PRIORITY = Enumeration("REFRESH_PRIORITY",
             (("PRE_FILECACHE", 400), ("FILECACHE", 350),
@@ -48,20 +41,6 @@ class RefreshCall(object):
     priority = REFRESH_PRIORITY.NORMAL
     call = None
 
-class FileInfo(object):
-    def __init__(self, path, relpath):
-        self.relpath = relpath
-        self.basename = os.path.basename(relpath)
-        self.dirname = os.path.dirname(relpath)
-        self.ext = os.path.splitext(self.basename)[1]
-        self.doctype = None
-        self.is_dir = os.path.isdir(path)
-        self.is_file = os.path.isfile(path)
-        self.mtime = os.path.getmtime(path)
-        self.children = {}
-
-    def __repr__(self):
-        return "<FileInfo %s >" % self.relpath
 
 class Project(Log):
     """
@@ -75,7 +54,7 @@ class Project(Log):
     def __init__(self, source_dir):
         self.source_directory = source_dir
         self.name = os.path.basename(source_dir)
-        self._cache = self._init_cache()
+        self.indexer = Indexer(self)
         self.__data = {}
         self.reload()
 
@@ -167,49 +146,12 @@ class Project(Log):
 
     def load_cache(self):
         path = self.get_meta_dir(filename=CACHE_NAME)
+        return self.indexer.load_cache(path)
 
-        if os.path.isfile(path):
-            try:
-                fp = open(path)
-                self._cache = pickle.load(fp)
-                return True
-            except Exception, err:
-                self.log.error("can't load cache")
-                os.unlink(path)
-        return False
 
     def save_cache(self):
         path = self.get_meta_dir(filename=CACHE_NAME)
-        try:
-            fp = open(path, "w")
-            pickle.dump(self._cache, fp)
-            fp.close()
-        except OSError, err:
-            self.log.error("can't save cache: %s", err)
-
-    @staticmethod
-    def _init_cache():
-        return {
-                "paths": {},
-                "dirs": {},
-                "files": {},
-                "filenames": defaultdict(list),
-                "dirnames": defaultdict(list),
-               }
-
-    def _rebuild_shortcuts(self):
-        self._cache["dirs"] = {}
-        self._cache["files"] = {}
-        self._cache["filenames"] = defaultdict(list)
-        self._cache["dirnames"] = defaultdict(list)
-
-        for info in self._cache["paths"].itervalues():
-            if info.is_dir:
-                self._cache["dirs"][info.relpath] = info
-                self._cache["dirnames"][info.basename].append(info)
-            elif info.is_file:
-                self._cache["files"][info.relpath] = info
-                self._cache["filenames"][info.basename].append(info)
+        self.indexer.save_cache(path)
 
 
     def index_path(self, path, update_shortcuts=True):
@@ -218,63 +160,9 @@ class Project(Log):
 
         @path is an absolute path
         """
-        from pida.services.language import DOCTYPES
-        doctype = DOCTYPES.type_by_filename(path)
-        rel = self.get_relative_path_for(path)
-        if rel is None:
-            return
-        rpath = os.sep.join(self.get_relative_path_for(path))
 
-        if rpath is None:
-            #document outside of project
-            return
-        if rpath in self._cache['paths']:
-            info = self._cache['paths'][rpath]
-        else:
-            try:
-                info = FileInfo(path, rpath)
-            except OSError, err:
-                self.log.info(_("Error indexing %s:%s") % (path, err))
-                return
-        info.doctype = doctype and doctype.internal or None
-        self._cache["paths"][info.relpath] = info
+        self.indexer.index_path(path, update_shortcuts)
 
-        if update_shortcuts:
-            if info.is_dir:
-                if info not in self._cache["dirnames"][info.basename]:
-                    self._cache["dirnames"][info.basename].append(info)
-                self._cache["dirs"][info.relpath] = info
-            if info.is_file:
-                if info not in self._cache["filenames"][info.basename]:
-                    self._cache["filenames"][info.basename].append(info)
-                self._cache["files"][info.relpath] = info
-
-        if info.dirname != info.basename:
-            if not info.dirname in self._cache["paths"]:
-                self.index(info.dirname, recrusive=False)
-                self.log.info(_('Project refresh highly suggested'))
-            self._cache["paths"][info.dirname].children[info.basename] = info
-
-        return info
-
-    def _del_info(self, info):
-        """Delete info and all children if any recrusivly"""
-        #raise Exception()
-        if info.dirname:
-            parent = self._cache['paths'][info.dirname]
-            if info in parent.children:
-                del parent.children[info.basename]
-
-        if info.is_dir:
-            match = "%s%s" % (info.relpath, os.path.sep)
-            todel = []
-            for key in self._cache['paths'].iterkeys():
-                if key[:len(match)] == match:
-                    todel.append(key)
-            for key in todel:
-                del self._cache['paths'][key]
-
-        del self._cache['paths'][info.relpath]
 
     def index(self, path="", recrusive=False, rebuild=False):
         """
@@ -283,53 +171,7 @@ class Project(Log):
         @path: relative path under project root, or absolute
         @recrusive: update recrusive under root
         """
-        if path == "" and rebuild:
-            self._cache = self._init_cache()
-
-        if os.path.isabs(path):
-            rpath = self.get_relative_path_for(path)
-        else:
-            rpath = os.path.join(self.source_directory, path)
-
-        if os.path.isfile(rpath):
-            return self.index_path(rpath)
-
-        #creat the root node
-        self.index_path(rpath, update_shortcuts=False)
-
-        for dirpath, dirs, files in os.walk(rpath):
-            current = self._cache['paths'][
-                             os.sep.join(self.get_relative_path_for(dirpath))]
-            if not recrusive:
-                del dirs[:]
-            for file_ in files:
-                if os.access(os.path.join(dirpath, file_), os.R_OK):
-                    self.index_path(os.path.join(dirpath, file_),
-                                    update_shortcuts=False)
-            for dir_ in dirs:
-                if os.access(os.path.join(dirpath, dir_), os.R_OK | os.X_OK):
-                    self.index_path(os.path.join(dirpath, dir_),
-                                    update_shortcuts=False)
-
-            # delete not existing nodes
-            #print current.children, files+dirs
-            for old in [x for x in current.children if x not in files + dirs]:
-                self._del_info(current.children[old])
-            #match = "%s%s" %(current.relpath, os.path.sep)
-            #for key, item in self._cache['paths'].iteritems():
-            #    print key, match, key[:len(match)]
-            #    if key[:len(match)] == match:
-            #      if item.basename not in dirs and item.basename not in files:
-                        #print "dell", key
-                        #del self._cache[key]
-        try:
-            self._rebuild_shortcuts()
-        except RuntimeError:
-            # this happens when a index process is running while a file
-            # is saved in the project of a non indexed directory which will
-            # index the directory and a dictionary changed size during iteration
-            # will most likely raise. they are harmless
-            pass
+        self.indexer.index(path, recrusive, rebuild)
 
     def query(self, test):
         """
@@ -341,71 +183,11 @@ class Project(Log):
 
         @test: callable which gets a FileInfo object passed and returns an int
         """
-        paths = self._cache['paths'].keys()[:]
-        paths.sort()
-        skip = None
-        for path in paths:
-            if skip and path[:len(skip)] == skip:
-                continue
-            item = self._cache['paths'][path]
-            res = test(item)
-            if res == RESULT.YES or res == RESULT.YES_NOCHILDS:
-                yield item
-
-            if res == RESULT.NO_NOCHILDS or res == RESULT.YES_NOCHILDS:
-                skip = "%s%s" % (path, os.path.sep)
-
-            if res == RESULT.ABORT:
-                break
+        return self.indexer.query(test)
 
 
-    def query_basename(self, filename, glob=False, files=True, dirs=False,
-                       case=False):
-        """
-        Get results from the file index. It looks only at the basename of entries.
+    def query_basename(self, *k, **kw):
+        return self.indexer.query_basename(*k, **kw)
 
-        If files and directories are requested, directories are returned first
-
-        @filename: pattern to search for or None for all
-        @glob: pattern is a glob pattern, case insensitive
-        @files: search for a file
-        @dirs: search for a directory
-        @case: if True a case sensetive glob is used
-        """
-        if case:
-            match = fnmatch.fnmatchcase
-        else:
-            match = fnmatch.fnmatch
-
-        if filename is None:
-            glob = True
-
-        if dirs:
-            if glob:
-                lst = self._cache['dirnames'].keys()
-                lst.sort()
-                for item in lst:
-                    if filename is None or \
-                       match(item, filename):
-                        for i in self._cache['dirnames'][item]:
-                            yield i
-            else:
-                if filename in self._cache['dirnames']:
-                    for i in self._cache['dirnames'][filename]:
-                        yield i
-
-        if files:
-            if glob:
-                lst = self._cache['filenames'].keys()
-                lst.sort()
-                for item in lst:
-                    if filename is None or \
-                       match(item, filename):
-                        for i in self._cache['filenames'][item]:
-                            yield i
-            else:
-                if filename in self._cache['filenames']:
-                    for i in self._cache['filenames'][filename]:
-                        yield i
     def __repr__(self):
         return "<Project %s>" % self.source_directory
