@@ -173,20 +173,19 @@ class Project(Log):
 
         if os.path.isfile(path):
             try:
-                fp = open(path)
-                self._cache = pickle.load(fp)
+                with open(path) as fp:
+                    self._cache = pickle.load(fp)
                 return True
             except Exception, err:
-                self.log.error("can't load cache")
+                self.log.error("can't load cache of %r", self)
                 os.unlink(path)
         return False
 
     def save_cache(self):
         path = self.get_meta_dir(filename=CACHE_NAME)
         try:
-            fp = open(path, "w")
-            pickle.dump(self._cache, fp)
-            fp.close()
+            with open(path, "w") as fp:
+                pickle.dump(self._cache, fp)
         except OSError, err:
             self.log.error("can't save cache: %s", err)
 
@@ -344,8 +343,7 @@ class Project(Log):
 
         @test: callable which gets a FileInfo object passed and returns an int
         """
-        paths = self._cache['paths'].keys()[:]
-        paths.sort()
+        paths = sorted(self._cache['paths'])
         skip = None
         for path in paths:
             if skip and path[:len(skip)] == skip:
@@ -385,8 +383,7 @@ class Project(Log):
 
         if dirs:
             if glob:
-                lst = self._cache['dirnames'].keys()
-                lst.sort()
+                lst = sorted(self._cache['dirnames'])
                 for item in lst:
                     if filename is None or \
                        match(item, filename):
@@ -399,8 +396,7 @@ class Project(Log):
 
         if files:
             if glob:
-                lst = self._cache['filenames'].keys()
-                lst.sort()
+                lst = sorted(self._cache['filenames'])
                 for item in lst:
                     if filename is None or \
                        match(item, filename):
