@@ -1,3 +1,4 @@
+
 import os
 import fnmatch
 from collections import defaultdict
@@ -6,11 +7,7 @@ try:
 except ImportError:
     import pickle
 
-#XXX: kill this for a tuple
-from pida.utils.addtypes import Enumeration
-RESULT = Enumeration("RESULT",
-            ("YES", "NO", "YES_NOCHILDS", "NO_NOCHILDS",
-             "ABORT"))
+from pida.core.log import Log
 
 class Result(object):
     __slots__ = "accept", "recurse", "abort"
@@ -37,7 +34,7 @@ class FileInfo(object):
         return "<FileInfo %s >" % self.relpath
 
 
-class Indexer(object):
+class Indexer(Log):
     def __init__(self, project):
         self.project = project
         self.reset_cache()
@@ -50,10 +47,6 @@ class Indexer(object):
                 "filenames": defaultdict(list),
                 "dirnames": defaultdict(list),
                }
-
-    @property
-    def log(self):
-        return self.project.log
 
     def save_cache(self, path):
         try:
