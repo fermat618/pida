@@ -255,9 +255,7 @@ class Suggestion(unicode):
         """
         Returns the best possible text to display
         """
-        if self.signature:
-            return self.signature
-        return self
+        return self.signature or self
 
 class Documentation(InitObject):
     """
