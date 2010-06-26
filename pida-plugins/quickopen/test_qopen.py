@@ -20,13 +20,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-from pida.utils.testing.mock import Mock
-from unittest import TestCase
-
-class Test(TestCase):
-
-    def test_plugin(self):
-        pass
 
 
 

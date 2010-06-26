@@ -24,7 +24,7 @@ from pida.core.actions import (ActionsConfig, TYPE_NORMAL)
 from pida.core.options import OptionsConfig
 from pida.ui.views import PidaGladeView, WindowConfig
 from pida.services.language import DOCTYPES
-from pida.core.projects import RESULT
+from pida.core.indexer import Result
 from pida.utils.gthreads import gcall
 import time
 
@@ -88,7 +88,7 @@ class QOpenView(PidaGladeView):
 
         def do_filter(item):
             if len(self.olist) > 200:
-                RESULT.ABORT
+                Result(abort=True)
             if not len(item.basename) or not len(item.relpath):
                 return
             if "/." in item.relpath or item.relpath[0] == ".":
@@ -102,9 +102,9 @@ class QOpenView(PidaGladeView):
                all((x in item.basename for x in fnames)):
                 if len(ftypes):
                     if item.doctype in ftypes:
-                        return RESULT.YES
+                        return Result(accept=True)
                 else:
-                    return RESULT.YES
+                    return Result(accept=True)
 
         project = self.svc.boss.cmd('project', 'get_current_project')
         if not project:

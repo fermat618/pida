@@ -13,7 +13,7 @@ import os
 from collections import defaultdict
 
 from pida.core.log import Log
-from pida.core.indexer import Indexer, RESULT
+from pida.core.indexer import Indexer
 from pida.utils.path import get_relative_path
 from pida.utils.addtypes import Enumeration
 

@@ -1,4 +1,5 @@
-from pida.core.projects import Project, DATA_DIR, RESULT
+from pida.core.projects import Project, DATA_DIR
+from pida.core.indexer import Result
 import os
 
 main = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -227,8 +228,8 @@ def test_query(project, tmpdir):
     # test for a filetype
     def find_file(info):
         if info.doctype == "C":
-            return RESULT.YES
-        return RESULT.NO
+            return Result(accept=True)
+        return Result(accept=False)
 
     bases = [x.basename for x in project.query(find_file)]
     assert bases == ['source.c', 'source2.c', 'source2.h']
@@ -236,9 +237,9 @@ def test_query(project, tmpdir):
     # test subdir check
     def find_subdir(info):
         if info.basename == "lib":
-            return RESULT.NO_NOCHILDS
+            return Result(accept=False, recurse=False)
         elif info.is_dir:
-            return RESULT.YES
+            return Result(accept=True)
 
     bases = [x.relpath for x in project.query(find_subdir)]
     print bases
@@ -248,8 +249,8 @@ def test_query(project, tmpdir):
 
     def testc(info):
         if info.basename == "lib":
-            return RESULT.YES_NOCHILDS
-        return RESULT.YES
+            return Result(accept=True, recurse=False)
+        return Result(accept=True)
 
     bases = [x.relpath for x in project.query(testc)]
     assert bases == ['', '.SVN', '.hiddenfile', '.pida-metadata',

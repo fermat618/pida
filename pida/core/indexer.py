@@ -1,7 +1,6 @@
 import os
 import fnmatch
 from collections import defaultdict
-
 try:
     import cPickle as pickle
 except ImportError:
@@ -12,6 +11,15 @@ from pida.utils.addtypes import Enumeration
 RESULT = Enumeration("RESULT",
             ("YES", "NO", "YES_NOCHILDS", "NO_NOCHILDS",
              "ABORT"))
+
+class Result(object):
+    __slots__ = "accept", "recurse", "abort"
+
+    def __init__(self, accept=True, recurse=True, abort=False):
+        self.accept = accept
+        self.recurse = recurse
+        self.abort = abort
+
 
 class FileInfo(object):
     def __init__(self, path, relpath):
@@ -209,13 +217,16 @@ class Indexer(object):
                 continue
             item = self.cache['paths'][path]
             res = test(item)
-            if res == RESULT.YES or res == RESULT.YES_NOCHILDS:
+            if res is None:
+                # asume not accepted, but recurse on no result
+                res = Result(accept=False, recurse=True)
+            if res.accept:
                 yield item
 
-            if res == RESULT.NO_NOCHILDS or res == RESULT.YES_NOCHILDS:
+            if not res.recurse:
                 skip = "%s%s" % (path, os.path.sep)
 
-            if res == RESULT.ABORT:
+            if res.abort:
                 break
 
     def query_basename(self, filename, glob=False, files=True, dirs=False,
