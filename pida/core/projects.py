@@ -10,7 +10,6 @@
 """
 from __future__ import with_statement
 import os
-from collections import defaultdict
 
 from pida.core.log import Log
 from pida.core.indexer import Indexer
@@ -35,11 +34,6 @@ REFRESH_PRIORITY = Enumeration("REFRESH_PRIORITY",
             (("PRE_FILECACHE", 400), ("FILECACHE", 350),
             ("POST_FILECACHE", 300), ("EARLY", 200), ("NORMAL", 100),
             ("LATE", 0)))
-
-
-class RefreshCall(object):
-    priority = REFRESH_PRIORITY.NORMAL
-    call = None
 
 
 class Project(Log):
