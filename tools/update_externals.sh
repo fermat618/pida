@@ -35,5 +35,7 @@ cd externals >/dev/null
 get_or_update rope http://www.bitbucket.org/agr/rope/
 get_or_update anyvc http://bitbucket.org/RonnyPfannschmidt/anyvc/
 get_or_update pygtkhelpers http://bitbucket.org/aafshar/pygtkhelpers-main/
+get_or_update py http://bitbucket.org/hpk42/py-trunk/
+get_or_update execnet http://bitbucket.org/hpk42/execnet/
 
 cd $FROM_WD
