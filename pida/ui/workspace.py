@@ -1,7 +1,7 @@
 import os
 import gtk
 from pygtkhelpers.delegates import ToplevelView
-from pygtkhelpers.ui.dialogs import error, yesno
+from pygtkhelpers.ui import dialogs
 from pygtkhelpers.ui.objectlist import Column
 from pida.ui.window import _
 from pida.utils.gthreads import gcall
@@ -118,11 +118,9 @@ class WorkspaceWindow(ToplevelView):
     def on_new_workspace__clicked(self, widget):
         # ask for new workspace name
         self.user_action = "new"
-        from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
-        opts = DialogOptions().add('name', label=_("Workspace name"), value="")
-        create_gtk_dialog(opts, parent=self.widget).run()
-        if opts.name and self.command:
-            self.new_workspace = opts.name
+        name = dialogs.input('Workspace name', label='Workspace Name')
+        if name is not None and self.command:
+            self.new_workspace = name
             self.command(self)
 
     def on_use_workspace__clicked(self, widget):
@@ -134,9 +132,9 @@ class WorkspaceWindow(ToplevelView):
     def on_DelWorkspace__activate(self, *args, **kwargs):
         opt = self.workspace_view.get_selected()
         if opt.id:
-            error(_("You can't delete a running workspace"))
+            dialogs.error(_("You can't delete a running workspace"))
         else:
-            if yesno(
+            if dialogs.yesno(
               _('Do you really want to delete workspace %s ?') %opt.workspace,
                 parent = self.toplevel) == gtk.RESPONSE_YES:
                 from pida.core.options import OptionsManager

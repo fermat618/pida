@@ -34,8 +34,8 @@ from pida.utils.path import homedir
 from pida.ui.views import PidaView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
-from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
 from pygtkhelpers.ui.objectlist import Column, ObjectList
+from pygtkhelpers.ui import dialogs
 
 import filehiddencheck
 
@@ -340,15 +340,15 @@ class FilemanagerView(PidaView):
 
     def create_dir(self, name=None):
         if not name:
-            opts = DialogOptions().add('name', label=_("Directory name"), value="")
-            create_gtk_dialog(opts, parent=self.svc.boss.window).run()
-            name = opts.name
+            #XXX: inputdialog or filechooser
+            name = dialogs.input('Create New Directory',
+                                 label=_("Directory name"))
         if name:
-            npath = os.path.join(self.path, opts.name)
+            npath = os.path.join(self.path, name)
             if not os.path.exists(npath):
                 os.mkdir(npath)
-            self.update_single_file(opts.name, self.path, select=True)
-             
+            self.update_single_file(name, self.path, select=True)
+
     def on_file_activated(self, ol, fileentry):
         if os.path.exists(fileentry.path): 
             if fileentry.is_dir: 
