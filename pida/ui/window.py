@@ -8,16 +8,13 @@ import gtk
 from gtk import gdk
 import os
 
-from pygtkhelpers.delegates import ToplevelView
-from pygtkhelpers.ui.dialogs import error, info, yesno, save, open as opendlg
-from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui import dialogs
 
 from pida.ui.uimanager import PidaUIManager
 from pida.ui.paneds import PidaPaned
 
 from pida.core.log import log
 from pida.core.actions import accelerator_group, global_accelerator_group
-from pida.utils.gthreads import gcall
 
 from functools import wraps
 
@@ -29,11 +26,8 @@ _ = locale.gettext
 def with_gdk_lock(func):
     @wraps(func)
     def _wrapped(*k, **kw):
-        try:
-            gdk.threads_enter()
+        with gdk.lock:
             func(*k, **kw)
-        finally:
-            gdk.threads_leave()
     return _wrapped
 
 def with_gdk_leave(func):
@@ -66,21 +60,21 @@ class Window(gtk.Window):
 
     # Dialogs
     def save_dlg(self, *args, **kw):
-        return save(parent = self, *args, **kw)
+        return dialogs.save(parent = self, *args, **kw)
 
     def open_dlg(self, *args, **kw):
-        return opendlg(parent = self, *args, **kw)
+        return dialogs.open(parent = self, *args, **kw)
 
     @with_gdk_leave
     def info_dlg(self, *args, **kw):
-        return info(parent = self, *args, **kw)
+        return dialogs.info(parent = self, *args, **kw)
 
     @with_gdk_leave
     def error_dlg(self, *args, **kw):
-        return error(parent = self, *args, **kw)
+        return dialogs.error(parent = self, *args, **kw)
 
     def yesno_dlg(self, *args, **kw):
-        return yesno(parent = self, *args, **kw) == gtk.RESPONSE_YES
+        return dialogs.yesno(parent = self, *args, **kw) == gtk.RESPONSE_YES
 
     @with_gdk_leave
     def error_list_dlg(self, msg, errs):
@@ -88,7 +82,7 @@ class Window(gtk.Window):
 
     @with_gdk_leave
     def input_dlg(self, *args, **kw):
-        return get_input(parent=self, *args, **kw)
+        return dialogs.input(parent=self, *args, **kw)
 
 
 class PidaWindow(Window):
