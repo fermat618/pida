@@ -748,7 +748,7 @@ class LanguageService(Service):
             # language factories to the proxy objects
             def newproxy(old, factory):
                 if old is None:
-                    return
+                    return factory
                 class NewProxy(factory):
                     pass
                 NewProxy._uuid = old.uuid()

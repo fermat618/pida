@@ -122,7 +122,6 @@ def test_validator(svc, doc):
             assert "error %s" % (i - 1) == v.message
 
 
-@py.test.mark.xfail(reason='unimplemented')
 def test_completer(svc, doc):
     completer = svc.completer_factory(svc, doc)
     for i, v in enumerate(completer.get_completions('base',
@@ -140,34 +139,32 @@ def test_completer(svc, doc):
             assert "run %s" % (i - 4) == v
 
 
-@py.test.mark.xfail(reason='unimplemented')
 def test_documenter(svc, doc):
     documentator = svc.documentator_factory(svc, doc)
     for i, v in enumerate(documentator.get_documentation('base',
                           'some text')):
         if i == 0:
-            self.assertNotEqual(os.getpid(), v)
+            assert v != os.getpid()
         elif i == 1:
-            self.assertEqual('base', v)
+            assert 'base' == v
         elif i == 2:
-            self.assertEqual('some text', v)
+            assert 'some text' == v
         else:
-            self.assertTrue(isinstance(v, Documentation))
-            self.assertEqual("short %s" % (i - 3), v.short)
-            self.assertEqual("run %s" % (i - 3), v.path)
+            assert isinstance(v, Documentation)
+            assert "short %s" % (i - 3) == v.short
+            assert "run %s" % (i - 3) == v.path
 
 
-@py.test.mark.xfail(reason='unimplemented')
 def test_definer(svc, doc):
     definer = svc.definer_factory(svc, doc)
     for i, v in enumerate(definer.get_definition('some text', 4)):
         if i == 0:
-            self.assertNotEqual(os.getpid(), v)
+            assert os.getpid() != v
         elif i == 1:
-            self.assertEqual('some text', v)
+            assert 'some text' == v
         elif i == 2:
-            self.assertEqual(4, v)
+            assert v == 4
         else:
-            self.assertTrue(isinstance(v, Definition))
-            self.assertEqual(i - 3, v.offset)
-            self.assertEqual("run %s" % (i - 3), v.line)
+            assert isinstance(v, Definition)
+            assert i - 3 == v.offset
+            assert "run %s" % (i - 3) == v.line
