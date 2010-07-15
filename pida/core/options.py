@@ -13,17 +13,19 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-from __future__ import with_statement
+
+import os
+import json
+
 from functools import partial
-from .base import BaseConfig
-from .environment import is_safe_mode, killsettings, settings_dir
+
+
 from pango import Font
 from gtk.gdk import Color
 from shutil import rmtree
-import pida.utils.serialize as simplejson
 
-import os
-
+from .base import BaseConfig
+from .environment import is_safe_mode, killsettings, settings_dir
 # locale
 from pida.core.locale import Locale
 locale = Locale('core')
@@ -78,7 +80,7 @@ class OptionsManager(object):
         data = {}
         try:
             with open(get_settings_path('appcontroller.json')) as file:
-                data = simplejson.load(file)
+                data = json.load(file)
                 return bool(data.get('open_workspace_manager', False))
         except Exception:
             return False
@@ -248,7 +250,7 @@ class OptionsConfig(BaseConfig):
         Registers an aditional option file a service uses.
 
         The object stored in the extra file is only one object which
-        can be serialized by simplejson.
+        can be serialized by json.
 
         All further accesses to the data object should happen over
         get_extra_value(name) which will make sure that other pida
@@ -353,7 +355,7 @@ class OptionsConfig(BaseConfig):
     def read_extra(self, filename, default):
         try:
             with open(filename) as file:
-                return simplejson.load(file)
+                return json.load(file)
         except IOError:
             return default
         except Exception:
@@ -362,7 +364,7 @@ class OptionsConfig(BaseConfig):
     def dump_data(self, filename, data):
         try:
             with open(filename, 'w') as out:
-                simplejson.dump(data, out)
+                json.dump(data, out)
         except Exception, e:
             self.svc.log.exception(e)
 
@@ -372,7 +374,7 @@ class OptionsConfig(BaseConfig):
         for f in (self.global_path, self.workspace_path):
             try:
                 with open(f) as file_:
-                    data.update(simplejson.load(file_))
+                    data.update(json.load(file_))
             except ValueError, e:
                 self.svc.log.error(_('Settings file corrupted: %s'), f)
             except IOError:
@@ -390,7 +392,7 @@ class OptionsConfig(BaseConfig):
             f = self.global_path
 
         with open(f, 'w') as out:
-            simplejson.dump(data, out, sort_keys=True, indent=2)
+            json.dump(data, out, sort_keys=True, indent=2)
 
     def __len__(self):
         return len(self._options)
