@@ -1,8 +1,0 @@
-Name: Python Debugger
-Author: Ali Afshar <aafshar@gmail.com>
-Version: 0.4
-Depends: pida>=0.6
-Category: code
-
-Python Debugger based on RPDB2 the WinPDB Back End
-
