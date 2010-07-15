@@ -22,7 +22,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.utils.gthreads import AsyncTask
+from pygtkhelpers.gthreads import AsyncTask
 from pida.utils import ostools
 
 from pida.ui.views import PidaView

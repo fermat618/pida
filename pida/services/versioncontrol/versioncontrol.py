@@ -22,7 +22,7 @@ from pida.ui.views import PidaView, PidaGladeView, WindowConfig
 
 from pida.ui.htmltextview import HtmlTextView
 
-from pida.utils.gthreads import AsyncTask, gcall
+from pygtkhelpers.gthreads import AsyncTask, gcall
 
 import pida.services.filemanager.filehiddencheck as filehiddencheck
 

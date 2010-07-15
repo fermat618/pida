@@ -40,7 +40,7 @@ from pida.core.editors import LineMarker, MarkerInterface
 
 from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 
 import pida.utils.serialize as simplejson
 

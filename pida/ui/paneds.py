@@ -26,7 +26,7 @@ except ImportError:
     use_old = False
 
 from pygtkhelpers.utils import gsignal
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 PANE_TERMINAL = 'Terminal'
 PANE_EDITOR = 'Editor'

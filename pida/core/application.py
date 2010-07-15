@@ -84,7 +84,7 @@ def run_pida():
         #XXX: this sucks, needs propper errors
         b.start() # might raise runtime error
         if environment.get_args():
-            from pida.utils.gthreads import gcall
+            from pygtkhelpers.gthreads import gcall
             gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
         b.loop_ui()
         return 0

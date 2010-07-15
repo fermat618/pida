@@ -12,7 +12,7 @@
 
 import os
 from pango import Font
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 from pida.core.environment import workspace_name
 
 try:

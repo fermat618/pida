@@ -36,7 +36,7 @@ from pida.core.actions import TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, gcall
 from pida.utils.web import fetch_url
 from pida.utils.feedparser import parse
 

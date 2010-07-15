@@ -43,7 +43,7 @@ from pida.core.pdbus import DbusConfig, EXPORT
 from pida.ui.views import PidaView, PidaGladeView
 
 # utils
-from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask
 
 # locale
 from pida.core.locale import Locale

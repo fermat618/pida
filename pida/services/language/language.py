@@ -16,7 +16,7 @@ import gtk
 from pida.core.doctype import DocType
 from pida.core.languages import LanguageInfo
 
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 #from pida.utils.languages import LANG_OUTLINER_TYPES
 from pida.utils.addtypes import PriorityList
 

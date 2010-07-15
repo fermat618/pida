@@ -28,7 +28,7 @@ from pida.core.options import OptionsConfig
 from pida.core.environment import on_windows
 from pida.core.log import get_logger
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.utils.path import homedir
 
 from pida.ui.views import PidaView, WindowConfig

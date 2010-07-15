@@ -4,7 +4,7 @@ from pygtkhelpers.delegates import ToplevelView
 from pygtkhelpers.ui import dialogs
 from pygtkhelpers.ui.objectlist import Column
 from pida.ui.window import _
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 
 class WorkspaceWindow(ToplevelView):

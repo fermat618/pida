@@ -45,7 +45,7 @@ from pida.core.environment import get_pixmap_path
 
 from pida.ui.views import PidaView
 from pida.ui.terminal import PidaTerminal
-from pida.utils.gthreads import AsyncTask
+from pygtkhelpers.gthreads import AsyncTask
 
 #from pida.utils import rpdb2
 import rpdb2

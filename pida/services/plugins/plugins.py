@@ -35,7 +35,7 @@ from pida.core.events import EventsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 
 from pida.core.environment import plugins_dir

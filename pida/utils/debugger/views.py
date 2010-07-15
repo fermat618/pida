@@ -9,7 +9,7 @@ import gtk
 from pygtkhelpers.ui.objectlist import ObjectTree, ObjectList, Column
 
 # PIDA Imports
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 from pida.ui.views import PidaView
 

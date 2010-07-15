@@ -25,7 +25,7 @@ from pida.core.options import OptionsConfig
 from pida.ui.views import PidaGladeView, WindowConfig
 from pida.services.language import DOCTYPES
 from pida.core.indexer import Result
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 import time
 
 

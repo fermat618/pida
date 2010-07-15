@@ -18,7 +18,7 @@ from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.actions import ActionsConfig
-from pida.utils.gthreads import GeneratorTask
+from pygtkhelpers.gthreads import GeneratorTask
 
 # locale
 from pida.core.locale import Locale

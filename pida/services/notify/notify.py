@@ -25,7 +25,7 @@ from pida.core.options import OptionsConfig, choices
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, 
                                TYPE_REMEMBER_TOGGLE)
 from pida.ui.buttons import create_mini_button
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 import gobject
 
 # locale

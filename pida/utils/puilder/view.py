@@ -9,7 +9,7 @@ from pygtkhelpers.ui.widgets import SimpleComboBox
 from pygtkhelpers.ui.dialogs import yesno
 from pygtkhelpers.proxy import GtkComboBoxProxy, GtkTextViewProxy
 from pida.utils.puilder.model import action_types
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 import gettext
 gettext.install('pida.puild')

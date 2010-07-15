@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 
+from pygtkhelpers.gthreads import GeneratorTask, gcall
 from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
@@ -34,7 +35,6 @@ from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO,
 
 from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, gcall
 
 # locale
 from pida.core.locale import Locale

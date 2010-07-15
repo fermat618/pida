@@ -25,7 +25,7 @@ from pida.ui.views import PidaGladeView, WindowConfig
 from pida.ui.objectlist import AttrSortCombo
 from pida.core.document import Document, DocumentException
 
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 # locale
 from pida.core.locale import Locale

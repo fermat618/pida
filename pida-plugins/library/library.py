@@ -44,7 +44,7 @@ from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO,
 
 from pida.ui.views import PidaGladeView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask
 
 # locale
 from pida.core.locale import Locale

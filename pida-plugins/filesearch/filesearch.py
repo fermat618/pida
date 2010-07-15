@@ -26,7 +26,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.utils.gthreads import GeneratorTask
+from pygtkhelpers.gthreads import GeneratorTask
 
 from filters import ValidationError, FileNameMatchesFilter
 from search import get_filters, do_search, SearchMatch

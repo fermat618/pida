@@ -32,7 +32,7 @@ from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
 
 from pida.utils.puilder.view import PuilderView
-from pida.utils.gthreads import AsyncTask, gcall
+from pygtkhelpers.gthreads import AsyncTask, gcall
 
 from pida.core.projects import REFRESH_PRIORITY
 

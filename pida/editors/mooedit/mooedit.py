@@ -61,7 +61,7 @@ from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
 from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
     SuggestionsList)
-from pida.utils.gthreads import GeneratorTask, gcall, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, gcall, AsyncTask
 from pida.core.languages import Suggestion
 from pida.ui.languages import PidaDocWindow
 

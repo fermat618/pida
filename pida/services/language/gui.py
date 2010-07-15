@@ -24,7 +24,7 @@ from pida.core.environment import on_windows
 from pida.core.languages import LANGUAGE_PLUGIN_TYPES
 from pida.core.log import get_logger
 
-from pida.utils.gthreads import GeneratorTask
+from pygtkhelpers.gthreads import GeneratorTask
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
