@@ -32,8 +32,9 @@ from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.utils.path import homedir
 
 from pida.ui.views import PidaView, WindowConfig
-from pida.ui.objectlist import AttrSortCombo
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
+
+from pygtkhelpers.ui.widgets import AttrSortCombo
 from pygtkhelpers.ui.objectlist import Column, ObjectList
 from pygtkhelpers.ui import dialogs
 

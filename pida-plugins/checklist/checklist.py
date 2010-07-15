@@ -27,7 +27,7 @@ import os
 import pkgutil
 import pida.utils.serialize as simplejson
 
-from pida.ui.objectlist import AttrSortCombo
+from pygtkhelpers.ui.widgets import AttrSortCombo
 from kiwi.ui.objectlist import ObjectList, Column
 from kiwi.python import enum
 

@@ -17,6 +17,7 @@ from functools import partial
 import gtk
 
 from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui.widgets import AttrSortCombo
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -27,7 +28,6 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.projects import Project
 from pida.ui.views import PidaGladeView, PidaView, WindowConfig
-from pida.ui.objectlist import AttrSortCombo
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
 

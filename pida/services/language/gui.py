@@ -17,6 +17,7 @@ import pkgutil
 import os
 
 from pygtkhelpers.ui.objectlist import Column, ObjectList
+from pygtkhelpers.ui.widgets import AttrSortCombo
 
 from .outlinefilter import FILTERMAP
 
@@ -28,7 +29,6 @@ from pygtkhelpers.gthreads import GeneratorTask
 
 # ui
 from pida.ui.views import PidaView, PidaGladeView
-from pida.ui.objectlist import AttrSortCombo
 from pida.ui.prioritywindow import Category, Entry, PriorityEditorView
 from pida.core.languages import (PRIO_DEFAULT, PRIO_FOREGROUND, 
                                  PRIO_FOREGROUND_HIGH, PRIO_LOW)
