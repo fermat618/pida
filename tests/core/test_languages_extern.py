@@ -95,7 +95,7 @@ def pytest_funcarg__doc(request):
     return doc
 
 
-def test_service(svc):
+def test_service_override(svc):
     assert isinstance(svc.jobserver, JobServer)
     assert issubclass(svc.validator_factory, ExternalValidatorProxy)
     assert issubclass(svc.outliner_factory, ExternalOutlinerProxy)
