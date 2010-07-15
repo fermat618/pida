@@ -62,11 +62,10 @@ class Service(object):
         self.actions.subscribe_keyboard_shortcuts()
 
     def __repr__(self):
-        #XXX: bad factoring, get better types
-        if self.__class__.__module__.startswith('pida.service'):
-            return '<Service: %s>' % self.__class__.__name__
-        else:
-            return '<Plugin: %s>' % self.__class__.__name__
+        return '<{kind}: {name}>'.format(
+            kind=self.__class__.__module__.split('.')[1].capitalize().rstrip('s'),
+            name=self.__class__.__name__,
+        )
 
     @classmethod
     def get_name(cls):
