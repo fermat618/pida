@@ -25,7 +25,6 @@ from __future__ import with_statement
 import gtk
 import os
 import pkgutil
-import pida.utils.serialize as simplejson
 
 from pygtkhelpers.ui.widgets import AttrSortCombo
 from kiwi.ui.objectlist import ObjectList, Column
@@ -326,7 +325,7 @@ class Checklist(Service):
         if not os.path.exists(fname):
             return
         with open(fname, "r") as fp:
-            data = simplejson.load(fp)
+            data = json.load(fp)
             if data:
                 self._unserialize(data)
 
@@ -335,7 +334,7 @@ class Checklist(Service):
         with open(fname, "w") as fp:
             data = self._serialize()
             if data:
-                simplejson.dump(data, fp)
+                json.dump(data, fp)
 
     def stop(self):
         if self.get_action('show_checklist').get_active():

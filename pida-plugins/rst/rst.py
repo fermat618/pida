@@ -7,7 +7,7 @@ import os
 import sys
 import pickle
 import textwrap
-import pida.utils.serialize as simplejson
+import json
 from collections import defaultdict
 
 # PIDA imports
@@ -57,7 +57,7 @@ class RSTPlugin(object):
             datafile = os.path.join(datadir, 'rst.json')
         try:
             fp = open(datafile, "w")
-            simplejson.dump(self.config, fp, indent=1)
+            json.dump(self.config, fp, indent=1)
         except Exception, e:
             service.log.exception(e)
 
@@ -70,7 +70,7 @@ class RSTPlugin(object):
         if os.path.isfile(datafile):
             try:
                 fp = open(datafile, "r")
-                self.config = simplejson.load(fp)
+                self.config = json.load(fp)
             except Exception, e:
                 service.log.exception(e)
 

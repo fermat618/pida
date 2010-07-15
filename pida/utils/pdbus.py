@@ -10,7 +10,7 @@ import os
 import dbus
 from dbus.service import BusName
 from dbus.lowlevel import MethodCallMessage
-from pida.utils.serialize import loads
+from json import loads
 
 DBUS_NS_PREFIX = 'uk.co.pida.pida'
 DBUS_PATH_PREFIX = '/uk/co/pida/pida'

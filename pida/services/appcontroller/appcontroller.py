@@ -13,7 +13,7 @@ from pida.core.actions import ActionsConfig
 
 from pida.core.pdbus import DbusConfig, SIGNAL, EXPORT, BUS, DBUS_NS
 from pida.core.environment import workspace_name
-from pida.utils.serialize import loads, dumps
+from json import loads, dumps
 
 # locale
 from pida.core.locale import Locale

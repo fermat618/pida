@@ -24,6 +24,7 @@ import gtk
 import os
 import cgi
 import pkgutil
+import json
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -42,7 +43,6 @@ from pida.ui.views import PidaView, WindowConfig
 
 from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 
-import pida.utils.serialize as simplejson
 
 # locale
 from pida.core.locale import Locale
@@ -530,7 +530,7 @@ class Bookmark(Service, MarkerInterface):
         if os.path.isfile(datafile):
             try:
                 fp = open(datafile, "r")
-                data = simplejson.load(fp)
+                data = json.load(fp)
                 self._unserialize(data)
             except Exception, e:
                 self.log.exception(e)
@@ -549,7 +549,7 @@ class Bookmark(Service, MarkerInterface):
             datafile = os.path.join(datadir, 'bookmark.json')
         try:
             fp = open(datafile, "w")
-            simplejson.dump(data, fp, indent=1)
+            json.dump(data, fp, indent=1)
         except Exception, e:
             self.log.exception(e)
             
