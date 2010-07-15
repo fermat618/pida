@@ -7,7 +7,7 @@
 import os
 import gtk
 import string
-import pida.utils.serialize as simplejson
+import json
 from functools import partial
 
 # PIDA Imports
@@ -433,7 +433,7 @@ class Window(Service):
             self.log.warning("Can't open window state file %s",
                                     self.state_config)
             return
-        data = simplejson.load(fp)
+        data = json.load(fp)
 
         if pre:
             # in pre mode we restore the paned config and the window position/size, etc
@@ -495,7 +495,7 @@ class Window(Service):
         
         try:
             fp = open(self.state_config, "w")
-            simplejson.dump(data, fp, indent=4)
+            json.dump(data, fp, indent=4)
         except (OSError, IOError), e:
             self.log.warning("Can't open state file %s" %self.state_config)
 
