@@ -1,7 +1,7 @@
 
 # Very basic build system. Designed to be friendly for UI generation.
 
-from pida.utils.serialize import dumps, loads
+from json import dumps, loads
 
 def dump(data):
     return dumps(data, sort_keys=False, indent=2, separators=(',',':'))
