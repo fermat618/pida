@@ -1,4 +1,4 @@
-
+import py
 import os
 #from pida.core.doctype import DocType
 #from pida.core.testing import test, assert_equal, assert_notequal
@@ -10,8 +10,6 @@ from pida.core.languages import (Validator, Outliner, External, JobServer,
 from pida.core.document import Document
 
 from .test_services import MockBoss
-
-from unittest import TestCase
 
 
 class TestExternalValidator(Validator):
@@ -70,6 +68,7 @@ class MYService(LanguageService):
 
     # only test if it gets overridden
     outliner_factory = TestExternalOutliner
+    validator_factory = TestExternalValidator
 
     external = MyExternal
 
@@ -78,76 +77,97 @@ class MYService(LanguageService):
         self.something = False
         self.started = False
 
-class TestExternal(TestCase):
 
-    def test_service(self):
-        boss = MockBoss()
-        svc = MYService(boss)
-        svc.create_all()
-        if svc.jobserver is None:
-            print "Skipping external language plugins: no multiprocessing"
-            return
-        self.assertTrue(isinstance(svc.jobserver, JobServer))
-        self.assertTrue(issubclass(svc.validator_factory,
-                                   ExternalValidatorProxy))
-        self.assertTrue(issubclass(svc.outliner_factory,
-                                   ExternalOutlinerProxy))
-        # test iterators
-        doc = Document(boss, __file__)
-        outliner = svc.outliner_factory(svc, doc)
-        for i, v in enumerate(outliner.get_outline()):
-            if i == 0:
-                self.assertNotEqual(os.getpid(), v)
-            else:
-                self.assertTrue(isinstance(v, OutlineItem))
-                self.assertEqual("run %s" % (i - 1), v.name)
 
-        validator = svc.validator_factory(svc, doc)
-        for i, v in enumerate(validator.get_validations()):
-            if i == 0:
-                self.assertNotEqual(os.getpid(), v)
-            else:
-                self.assertTrue(isinstance(v, ValidationError))
-                self.assertEqual("error %s" % (i - 1), v.message)
+def pytest_funcarg__svc(request):
+    boss = MockBoss()
+    svc = MYService(boss)
+    svc.create_all()
+    return svc
 
-        completer = svc.completer_factory(svc, doc)
-        for i, v in enumerate(completer.get_completions('base',
-                              'some text', 3)):
-            if i == 0:
-                self.assertNotEqual(os.getpid(), v)
-            elif i == 1:
-                self.assertEqual('base', v)
-            elif i == 2:
-                self.assertEqual('some text', v)
-            elif i == 3:
-                self.assertEqual(3, v)
-            else:
-                self.assertTrue(isinstance(v, Suggestion))
-                self.assertEqual("run %s" % (i - 4), v)
 
-        documentator = svc.documentator_factory(svc, doc)
-        for i, v in enumerate(documentator.get_documentation('base',
-                              'some text')):
-            if i == 0:
-                self.assertNotEqual(os.getpid(), v)
-            elif i == 1:
-                self.assertEqual('base', v)
-            elif i == 2:
-                self.assertEqual('some text', v)
-            else:
-                self.assertTrue(isinstance(v, Documentation))
-                self.assertEqual("short %s" % (i - 3), v.short)
-                self.assertEqual("run %s" % (i - 3), v.path)
+def pytest_funcarg__doc(request):
+    svc = request.getfuncargvalue('svc')
+    doc = Document(svc.boss, __file__)
+    mkp = request.getfuncargvalue('monkeypatch')
+    mkp.setattr(Document, 'project', None)
+    doc.project = None
+    return doc
 
-        definer = svc.definer_factory(svc, doc)
-        for i, v in enumerate(definer.get_definition('some text', 4)):
-            if i == 0:
-                self.assertNotEqual(os.getpid(), v)
-            elif i == 1:
-                self.assertEqual('some text', v)
-            elif i == 2:
-                self.assertEqual(4, v)
-            else:
-                self.assertTrue(isinstance(v, Definition))
-                self.assertEqual(i - 3, v.offset)
-                self.assertEqual("run %s" % (i - 3), v.line)
+
+def test_service(svc):
+    assert isinstance(svc.jobserver, JobServer)
+    assert issubclass(svc.validator_factory, ExternalValidatorProxy)
+    assert issubclass(svc.outliner_factory, ExternalOutlinerProxy)
+
+
+def test_outliner(svc, doc):
+    # test iterators
+    outliner = svc.outliner_factory(svc, doc)
+    for i, v in enumerate(outliner.get_outline()):
+        if i == 0:
+            assert os.getpid() != v
+        else:
+            assert isinstance(v, OutlineItem)
+            assert "run %s" % (i - 1) == v.name
+
+
+def test_validator(svc, doc):
+    validator = svc.validator_factory(svc, doc)
+    for i, v in enumerate(validator.get_validations()):
+        if i == 0:
+            assert os.getpid() != v
+        else:
+            assert isinstance(v, ValidationError)
+            assert "error %s" % (i - 1) == v.message
+
+
+@py.test.mark.xfail(reason='unimplemented')
+def test_completer(svc, doc):
+    completer = svc.completer_factory(svc, doc)
+    for i, v in enumerate(completer.get_completions('base',
+                          'some text', 3)):
+        if i == 0:
+            assert os.getpid() != v
+        elif i == 1:
+            assert v == 'base'
+        elif i == 2:
+            assert v == 'some text'
+        elif i == 3:
+            assert v == 3
+        else:
+            assert isinstance(v, Suggestion)
+            assert "run %s" % (i - 4) == v
+
+
+@py.test.mark.xfail(reason='unimplemented')
+def test_documenter(svc, doc):
+    documentator = svc.documentator_factory(svc, doc)
+    for i, v in enumerate(documentator.get_documentation('base',
+                          'some text')):
+        if i == 0:
+            self.assertNotEqual(os.getpid(), v)
+        elif i == 1:
+            self.assertEqual('base', v)
+        elif i == 2:
+            self.assertEqual('some text', v)
+        else:
+            self.assertTrue(isinstance(v, Documentation))
+            self.assertEqual("short %s" % (i - 3), v.short)
+            self.assertEqual("run %s" % (i - 3), v.path)
+
+
+@py.test.mark.xfail(reason='unimplemented')
+def test_definer(svc, doc):
+    definer = svc.definer_factory(svc, doc)
+    for i, v in enumerate(definer.get_definition('some text', 4)):
+        if i == 0:
+            self.assertNotEqual(os.getpid(), v)
+        elif i == 1:
+            self.assertEqual('some text', v)
+        elif i == 2:
+            self.assertEqual(4, v)
+        else:
+            self.assertTrue(isinstance(v, Definition))
+            self.assertEqual(i - 3, v.offset)
+            self.assertEqual("run %s" % (i - 3), v.line)

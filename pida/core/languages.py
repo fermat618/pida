@@ -28,50 +28,12 @@ _ = locale.gettext
 from pida.core.log import get_logger, Log
 log = get_logger('core.languages')
 
-if opts.multiprocessing:
-    try:
-        import multiprocessing
-        from multiprocessing.managers import (BaseManager, BaseProxy,
-            SyncManager, RemoteError)
+import multiprocessing
+from multiprocessing.managers import (
+    BaseManager, BaseProxy,
+    SyncManager, RemoteError,
+)
 
-#         does not detect work yet :-(
-#         class TestResult(object):
-#             def __init__(self, i):
-#                 self.i = i
-#
-#         class TestManager(BaseManager):
-#             @staticmethod
-#             def test():
-#                 for i in (TestResult(1), TestResult(2)):
-#                     yield i
-#
-#         m = TestManager()
-#         m.start()
-#         for i in m.test():
-#             print i
-#         m.shutdown()
-
-    except ImportError:
-        log.info(_("Can't find multiprocessing, disabled work offload"))
-        multiprocessing = None
-        BaseManager = BaseProxy = SyncManager = object
-        class RemoteError(Exception):
-            pass
-else:
-    multiprocessing = None
-    BaseManager = BaseProxy = SyncManager = object
-    class RemoteError(Exception):
-        pass
-
-#FIXME: maybe we should fill the plugin values with a metaclass ???
-# class LanguageMetaclass(type):
-#     def __new__(meta, name, bases, dct):
-#         print "Creating class %s using CustomMetaclass" % name
-#         print meta, name, bases, dct
-#         klass = type.__new__(meta, name, bases, dct)
-#         #meta.addParentContent(klass)
-#         klass.plugin = dct['__module__']
-#         return klass
 
 # priorities for running language plugins
 
@@ -703,12 +665,12 @@ class JobServer(Log):
             manager = self.get_process(proxy)
             self._proxy_map[proxy] = manager
         instances = self._instances[manager]
-        if proxy.document.unique_id not in instances:
-            instances[proxy.document.unique_id] = manager.dict()
-        if type_ not in instances[proxy.document.unique_id]:
+        if id(proxy.document) not in instances:
+            instances[id(proxy.document)] = manager.dict()
+        if type_ not in instances[id(proxy.document)]:
             #no = getattr(manager, type_)(manager)(None, proxy.document)
-            instances[proxy.document.unique_id][type_] = getattr(manager, type_)(None, proxy.get_external_document())
-        return manager, instances[proxy.document.unique_id][type_]
+            instances[id(proxy.document)][type_] = getattr(manager, type_)(None, proxy.get_external_document())
+        return manager, instances[id(proxy.document)][type_]
 
     @safe_remote
     def validator_get_validations(self, proxy):
@@ -785,6 +747,8 @@ class LanguageService(Service):
             # if we have multiprocessing support we exchange the
             # language factories to the proxy objects
             def newproxy(old, factory):
+                if old is None:
+                    return
                 class NewProxy(factory):
                     pass
                 NewProxy._uuid = old.uuid()
