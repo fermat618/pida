@@ -45,7 +45,7 @@ import subprocess
 
 from pida.ui.views import PidaView, WindowConfig
 
-from pygtkhelpers.gthreads import GeneratorSubprocessTask
+from pida.utils.gthreads import GeneratorSubprocessTask
 
 # locale
 from pida.core.locale import Locale
