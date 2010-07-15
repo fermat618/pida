@@ -26,7 +26,6 @@ import commands
 import re
 import cgi
 
-from pygtkhelpers.gthreads import GeneratorSubprocessTask
 from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
@@ -37,6 +36,7 @@ from pida.core.actions import TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import PidaView, WindowConfig
 
+from pida.utils.gthreads import GeneratorSubprocessTask
 
 # locale
 from pida.core.locale import Locale
