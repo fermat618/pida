@@ -32,7 +32,7 @@ class Boss(object):
 
     def __init__(self):
         self.show_splash()
-        self._sm = ServiceManager(self,
+        self.servicemanager = ServiceManager(self,
                                   update_progress=self._splash.update_progress)
         self._run_first_time()
         self.window = PidaWindow(self)
@@ -44,7 +44,7 @@ class Boss(object):
         :returns new editor name
         """
         try:
-            editor = self._sm.get_editor(editor_name)
+            editor = self.servicemanager.get_editor(editor_name)
             if editor.get_sanity_errors():
                 return self._run_first_time(True)
         except ServiceModuleError:
@@ -54,7 +54,7 @@ class Boss(object):
     def _run_first_time(self, force=False):
         if is_firstrun() or force:
             from pida.utils.firstrun import FirstTimeWindow
-            ft = FirstTimeWindow(self._sm.get_available_editors())
+            ft = FirstTimeWindow(self.servicemanager.get_available_editors())
             success, editor = ft.run(firstrun_filename)
             self.override_editor = editor
             self.quit_before_started = not success
@@ -74,16 +74,16 @@ class Boss(object):
                     pida.__path__[0],
                     'resources/pixmaps'
                 )))
-            self._sm.activate_services()
+            self.servicemanager.activate_services()
             if self.override_editor is not None:
                 self.get_service('editor').set_opt('editor_type',
                     self.override_editor)
             editor_name = self.get_service('editor').opt('editor_type')
             editor_name = self.check_editor(editor_name)
-            self._sm.activate_editor(editor_name)
+            self.servicemanager.activate_editor(editor_name)
             self.window.start()
-            self._sm.start_services()
-            self._sm.start_editor()
+            self.servicemanager.start_services()
+            self.servicemanager.start_editor()
 
     def stop(self, force=False, kill=False):
         """
@@ -95,12 +95,12 @@ class Boss(object):
         if kill:
             gtk.main_quit()
         if force:
-            self._sm.stop(force=force)
+            self.servicemanager.stop(force=force)
             gtk.main_quit()
         elif self.window.yesno_dlg(_('Are you sure you want to quit PIDA ?')):
             # in non force mode we only kill ourself if service manager
             # returns True
-            if self._sm.stop():
+            if self.servicemanager.stop():
                 gtk.main_quit()
         else:
             return False
@@ -112,23 +112,23 @@ class Boss(object):
             sys.exit(1)
 
     def get_service(self, servicename):
-        return self._sm.get_service(servicename)
+        return self.servicemanager.get_service(servicename)
 
     def get_services(self):
-        return self._sm.get_services()
+        return self.servicemanager.get_services()
 
     @property
     def editor(self):
-        return self._sm.editor
+        return self.servicemanager.editor
 
     def get_plugins(self):
-        return self._sm.get_plugins()
+        return self.servicemanager.get_plugins()
 
     def start_plugin(self, name):
-        return self._sm.start_plugin(name)
+        return self.servicemanager.start_plugin(name)
 
     def stop_plugin(self, name):
-        return self._sm.stop_plugin(name)
+        return self.servicemanager.stop_plugin(name)
 
     def add_action_group_and_ui(self, actiongroup, package, path):
         self.window.add_action_group(actiongroup)
@@ -148,7 +148,7 @@ class Boss(object):
     def hide_splash(self):
         if not hasattr(self, "_splash"):
             return
-        self._sm.update_progress = None
+        self.servicemanager.update_progress = None
         self._splash.hide_splash()
         del self._splash
 
