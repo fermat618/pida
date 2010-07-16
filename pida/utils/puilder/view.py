@@ -176,7 +176,7 @@ class PuilderView(SlaveView):
 
     def set_project(self, project):
         self.project = project
-        self.project_label.set_markup(self.format_project(label))
+        self.project_label.set_markup(self.format_project(project))
         self.project_name_entry.set_text(project.display_name)
 
     def target_changed(self, target):
