@@ -170,9 +170,13 @@ class PuilderView(SlaveView):
         for v in self.action_views.values():
             v.build = build
 
+    @staticmethod
+    def format_project(proj):
+        return '<b>%s</b>\n%s' % (proj.display_name, proj.source_directory)
+
     def set_project(self, project):
         self.project = project
-        self.project_label.set_markup(project.markup)
+        self.project_label.set_markup(self.format_project(label))
         self.project_name_entry.set_text(project.display_name)
 
     def target_changed(self, target):

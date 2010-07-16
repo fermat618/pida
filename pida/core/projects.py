@@ -89,10 +89,6 @@ class Project(Log):
     def targets(self):
         return self.build.targets
 
-    @property
-    def markup(self):
-        return '<b>%s</b>\n%s' % (self.display_name, self.source_directory)
-
     def get_meta_dir(self, *args, **kwargs):
         path = Project.data_dir_path(self.source_directory, *args)
         if kwargs.get('mkdir', True):
