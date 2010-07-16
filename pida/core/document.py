@@ -43,60 +43,10 @@ class Document(object):
 
     """
 
-    markup_prefix = ''
-    markup_directory_color = '#FFFF00'
-    markup_project_color = '#FF0000'
-    markup_color_noproject = "#FF0000"
-
-    markup_attributes = ['project_name', 'project_relative_path', 'basename',
-                         'markup_project_color', 'markup_directory_color',
-                         'filename', 'directory', 'markup_color_noproject']
-
-    markup_string_project = (
-                     u'<span color="%(markup_project_color)s">'
-                     u'%(project_name)s</span><tt>:</tt>'
-                     u'<span color="%(markup_directory_color)s">'
-                     u'%(project_relative_path)s/</span>'
-                     u'<b>%(basename)s</b>')
-
-    markup_string_fullpath = (
-                     u'<span color="%(markup_directory_color)s">'
-                     u'%(directory)s/</span>'
-                     u'<b>%(basename)s</b>')
-
-    markup_string_tworow = (
-                     u'<b>%(basename)s</b>\n'
-                     u'<small>%(markup_inc)s</small>')
-
-    markup_string_tworow_project = (
-                     u'<span foreground="%(markup_project_color)s">'
-                     u'%(project_name)s</span><tt>:</tt>'
-                     u'<span foreground="%(markup_directory_color)s">'
-                     u'%(project_relative_path)s/</span>'
-                     u'%(basename)s')
-
-    markup_string_tworow_fullpath = (
-                     u'<span foreground="%(markup_directory_color)s">'
-                     u'%(directory)s/</span>'
-                     u'%(basename)s')
-
-    markup_string_noproject_file = (
-                     u'<span foreground="%(markup_color_noproject)s">'
-                     u'<b>%(basename)s</b></span>'
-                     )
-
-    markup_string = u'<b>%(basename)s</b>'
-
     usage = 0
     last_opened = 0
 
     editor_buffer_id = None
-
-    @property
-    def markup_string_if_project(self):
-        if not self.project:
-            return self.markup_string_noproject_file
-        return self.markup_string
 
     def __init__(self, boss, filename=None, project=None):
         """
@@ -396,32 +346,8 @@ class Document(object):
         return os.path.basename(self.filename)
 
     @property
-    def directory_colour(self):
-        return self.markup_directory_color
-
-    @property
     def unique_id(self):
         return id(self)
-
-    def get_markup(self, markup_string=None, style=None):
-        """
-        Returns a markup version the Document designed for
-        beeing embedded in gtk views
-        """
-        if markup_string is None:
-            if self.project:
-                markup_string = self.markup_string_project
-            else:
-                markup_string = self.markup_string
-
-        prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
-        if self.filename is not None:
-            s = markup_string % self._build_markup_dict(style=style)
-        else:
-            s = u'<b>%s</b>' % escape(self.__unicode__())
-        return '%s%s' % (prefix, s)
-
-    markup = property(get_markup)
 
     def get_markup_tworow(self, style=None):
         """
@@ -438,17 +364,6 @@ class Document(object):
 
     markup_tworow = property(get_markup_tworow)
 
-    def _build_markup_dict(self, markup_dict=None, style=None):
-        if not markup_dict:
-            markup_dict = {}
-        for attr in self.markup_attributes:
-            var = getattr(self, attr)
-            if var:
-                markup_dict[attr] = escape(var)
-            else:
-                markup_dict[attr] = ''
-
-        return markup_dict
 
     @property
     def project_name(self):

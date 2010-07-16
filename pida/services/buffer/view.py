@@ -1,6 +1,8 @@
 
+from functools import partial
+from xml.sax.saxutils import escape
 
-from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column, Cell
 from pygtkhelpers.ui.widgets import AttrSortCombo
 
 from pida.ui.views import PidaView
@@ -10,6 +12,71 @@ attributes = {
     'onerow': 'markup',
     'tworow': 'markup_tworow',
 }
+
+markup_extras = {
+    'directory_color': '#FFFF00',
+    'project_color': '#FF0000',
+    'noproject': '#FF0000',
+}
+
+markup_attributes = [
+    'project_name',
+    'project_relative_path',
+    'basename',
+    'filename',
+    'directory',
+]
+markup_strings = {
+    'onerow_project': (
+        u'<span color="{project_color}">'
+        u'{project_name}</span><tt>:</tt>'
+        u'<span color="{directory_color}">'
+        u'{project_relative_path}/</span>'
+        u'<b>{basename}</b>'
+    ),
+    'onerow_fullpath': (
+        u'<span color="{directory_color}">'
+        u'{directory}/</span>'
+        u'<b>{basename}</b>'
+    ),
+    'tworow_project': (
+        u'<b>{basename}</b>\n'
+        u'<small>'
+        u'<span foreground="{project_color}">'
+        u'{project_name}</span><tt>:</tt>'
+        u'<span foreground="{directory_color}">'
+        u'{project_relative_path}/</span>'
+        u'{basename}'
+        u'</small>'
+    ),
+    'tworow_fullpath': (
+        u'<b>{basename}</b>\n'
+        u'<small>'
+        u'<span foreground="{directory_color}">'
+        u'{directory}/</span>'
+        u'{basename}'
+        u'</small>'
+    ),
+
+}
+
+
+def markup_dict(doc, **kw):
+    for attr in markup_attributes:
+        var = getattr(doc, attr)
+        kw[attr] = escape(var) if var else ''
+    return kw
+
+
+def render(doc, markup):
+    if doc.project:
+        markup = markup_strings['%s_project' % markup]
+    else:
+        markup = markup_strings['%s_fullpath' % markup]
+    data = markup_dict(doc)
+    data.update(markup_extras)
+    return markup.format(**data)
+
 
 class BufferListView(PidaView):
 
@@ -22,8 +89,14 @@ class BufferListView(PidaView):
 
     def create_ui(self ):
         self.buffers_ol.set_columns([
-            Column('markup', use_markup=True),
-            Column('markup_tworow', use_markup=True, visible=False),
+            Column('markup', cells=[
+                Cell(None, use_markup=True,
+                     format_func=partial(render, markup='onerow'))
+            ]),
+            Column('markup_tworow', visible=False, cells=[
+                Cell(None, use_markup=True,
+                     format_func=partial(render, markup='tworow'))
+            ]),
             Column("basename", visible=False, searchable=True),
         ])
 
