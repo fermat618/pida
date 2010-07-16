@@ -4,7 +4,6 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 import os
-from tempfile import mkstemp
 
 import gtk
 import time
@@ -20,7 +19,6 @@ from pida.core.options import OptionsConfig, choices
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
 from pida.ui.views import PidaGladeView, WindowConfig
 from pida.core.document import Document, DocumentException
@@ -146,7 +144,7 @@ class BufferActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'open_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Open File'),
             _('Open a file with a graphical file browser'),
             gtk.STOCK_OPEN,
@@ -156,7 +154,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'open-for-file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Open File'),
             _('Open this file'),
             gtk.STOCK_OPEN,
@@ -165,7 +163,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'new_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_New File'),
             _('Create a new file'),
             gtk.STOCK_NEW,
@@ -175,7 +173,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'create_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Cr_eate File'),
             _('Create a new file'),
             gtk.STOCK_ADD,
@@ -185,7 +183,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'close',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Close Document'),
             _('Close the current document'),
             gtk.STOCK_CLOSE,
@@ -195,7 +193,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'close_all',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Close all Documents'),
             _('Close all documents'),
             '',
@@ -204,7 +202,7 @@ class BufferActionsConfig(ActionsConfig):
         )
         self.create_action(
             'switch_next_buffer',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Next Buffer'),
             _('Switch to the next buffer'),
             gtk.STOCK_GO_DOWN,
@@ -214,7 +212,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'switch_prev_buffer',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Previous Buffer'),
             _('Switch to the previous buffer'),
             gtk.STOCK_GO_UP,
@@ -223,7 +221,7 @@ class BufferActionsConfig(ActionsConfig):
         )
         self.create_action(
             'show_buffer_list',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Show _buffer browser'),
             _('Displays the buffer window'),
             '',
@@ -234,7 +232,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'close_selected',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Close Document'),
             _('Close the selected document'),
             gtk.STOCK_CLOSE,
