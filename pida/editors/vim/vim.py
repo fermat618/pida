@@ -14,7 +14,7 @@ from pida.core.editors import EditorService, _
 from pida.ui.views import PidaView
 
 from .embed import VimEmbedWidget
-from .client import VimCom
+from .client import get_vim
 
 _ignore = dict(reply_handler=lambda *a: None,
                error_handler=lambda *a: None)
@@ -132,7 +132,8 @@ class Vim(EditorService):
             self.error_dlg(VIM_LAUNCH_ERR)
             raise RuntimeError(err)
         self._cb = VimCallback(self)
-        self._com = VimCom(self._cb, os.environ['PIDA_DBUS_UUID'])
+        self._com = get_vim(os.environ['PIDA_DBUS_UUID'])
+        self._cb.connect(self._com)
 
     def open(self, document):
         """Open a document"""
@@ -163,7 +164,7 @@ class Vim(EditorService):
         pass
 
     def close(self, document):
-        print ['vimclose', document, document.editor_buffer_id]
+        self.log.info('close %s %s', document, document.editor_buffer_id)
         if document.editor_buffer_id is not None:
             self._com.close_buffer_id(document.editor_buffer_id,
                                       **_ignore)

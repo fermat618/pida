@@ -22,15 +22,10 @@ except ImportError:
     pass
 
 
-DBUS_NS = 'uk.co.pida.vim'
-
-def get_bus_name(uid):
-    return '.'.join([DBUS_NS, uid])
-
-
+DBUS_NS = 'uk.co.pida.vim.{uid}'
 
 def get_vim(uid):
-    name = get_bus_name(uid)
+    name = DBUS_NS.format(uid=uid)
     session = dbus.SessionBus()
     def cb(bn):
         if bn: # may be empty
@@ -38,18 +33,11 @@ def get_vim(uid):
     watch = session.watch_name_owner(name, cb)
     gtk.main() #XXX: this might kill us if vim somehow fails
     try:
-        log.debug('trying vim connect')
+        log.info('trying vim connect')
         return dbus.Interface(
                 session.get_object(name, '/vim'),
                 'uk.co.pida.vim')
     except dbus.DBusException:
-        log.debug('vim connect failed')
+        log.info('vim connect failed')
         raise SystemExit('vim failed')
-
-def VimCom(cb, uid):
-    proxy = get_vim(uid)
-    cb.connect(proxy)
-    return proxy
-
-
 
