@@ -18,7 +18,6 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL
 
 from pida.ui.views import PidaView
 
@@ -282,7 +281,7 @@ class WebActions(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'open_url_for_url',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Open URL'),
             _('Open a url in the builtin browser'),
             gtk.STOCK_OPEN,
@@ -291,7 +290,7 @@ class WebActions(ActionsConfig):
 
         self.create_action(
             'copy_clipboard_for_url',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Copy URL to clipboard'),
             _('Copy this URL to the clipboard'),
             gtk.STOCK_COPY,
@@ -300,7 +299,7 @@ class WebActions(ActionsConfig):
 
         self.create_action(
             'open_url_external_for_url',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Open URL in external web browser'),
             _('Open the selected URL in an external web browser'),
             'internet',
