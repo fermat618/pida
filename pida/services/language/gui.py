@@ -493,10 +493,7 @@ class BrowserView(PidaGladeView):
         try:
             self.source_tree.append(node, parent=parent)
         except Exception, e:
-            import traceback
-            traceback.print_exc()
-            print "exc", e
-            print "add", parent, node
+            self.log.exception(e)
 
     def can_be_closed(self):
         self.svc.get_action('show_outliner').set_active(False)
@@ -528,11 +525,11 @@ class BrowserView(PidaGladeView):
                 #FIXME no tooltip on win32
                 if not on_windows:
                     tool_button.set_tooltip_text(FILTERMAP[f]['display'])
-                tool_button.connect("toggled", self.on_filter_toggled,outliner)
+                tool_button.connect("toggled", self.on_filter_toggled, outliner)
                 image_name = FILTERMAP[f]['icon']
 
                 #XXX: put into pygtkhelpers?
-                image_data = pkgutil.get_data(__name__, 'pixmaps/%s.png'%image_name)
+                image_data = pkgutil.get_data(__name__, 'pixmaps/%s.png' % image_name)
                 loader = gtk.gdk.PixbufLoader()
                 loader.write(image_data)
                 loader.close()
