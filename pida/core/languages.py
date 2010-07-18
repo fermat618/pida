@@ -15,7 +15,6 @@ from pida.core.document import Document
 from pida.core.projects import Project
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
-from pida.core.environment import opts
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
@@ -25,8 +24,7 @@ from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
 
-from pida.core.log import get_logger, Log
-log = get_logger('core.languages')
+from pida.core.log import Log
 
 import multiprocessing
 from multiprocessing.managers import (
@@ -614,7 +612,7 @@ def safe_remote(func):
             for i in func(self, *args, **kwargs):
                 yield i
         except RuntimeError, e:
-            log.warning(_("problems running external plugin: %s"), e)
+            self.log.warning(_("problems running external plugin: %s"), e)
             self.restart()
             return
         except:
