@@ -478,10 +478,7 @@ class BrowserView(PidaGladeView):
         if node.id:
             self.source_tree_ids[node.id] = node
 
-        if node.parent:
-            parent = node.parent
-        elif node.parent_id:
-            # only the parent_id was submitted so we have to look the parent up
+        if node.parent_id:
             try:
                 parent = self.source_tree_ids[node.parent_id]
             except KeyError:
