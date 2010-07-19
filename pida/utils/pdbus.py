@@ -13,7 +13,7 @@ from dbus.lowlevel import MethodCallMessage
 from json import loads
 
 DBUS_NS_PREFIX = 'uk.co.pida.pida'
-DBUS_PATH_PREFIX = '/uk/co/pida/pida'
+DBUS_PATH_PREFIX = ('/uk/co/pida/pida',)
 
 BUS = dbus.SessionBus()
 UUID = "p" + str(os.getpid())
@@ -22,7 +22,7 @@ def DBUS_NS(*path):
     return ".".join((DBUS_NS_PREFIX, ) + path)
 
 def DBUS_PATH(*path, **kwargs):
-    return "/".join((DBUS_PATH_PREFIX,) + path)
+    return "/".join(DBUS_PATH_PREFIX + path)
 
 
 def _dbus_decorator(f, ns=None, suffix=None):
@@ -43,11 +43,6 @@ def _dbus_decorator(f, ns=None, suffix=None):
 
 EXPORT = partial(_dbus_decorator, dbus.service.method)
 SIGNAL = partial(_dbus_decorator, dbus.service.signal)
-
-def rec_pida_pong(*args):
-    global _ACTIVE_PIDAS
-    _ACTIVE_PIDAS[str(args[0])] = args
-
 
 
 def list_pida_bus_names(include_self=False):
@@ -70,7 +65,7 @@ def list_pida_instances(include_this=False, timeout=1):
     result = []
     for name in pida_names:
         #XXX: this is sync, that may be evil
-        # we asume that only active and 
+        # we asume that only active and
         # working instances expose the object
         try:
             app = session.get_object(
