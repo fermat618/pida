@@ -93,6 +93,7 @@ class DbusOptionsManagerReal(Object):
 
     def unload(self):
         self.config_match.remove()
+        self.config_extra_match.remove()
         self.remove_from_connection()
 
     def on_config_changed(self, workspace, name, value, sender=None):
