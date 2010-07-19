@@ -243,6 +243,7 @@ def get_option_for_item(item, node, obj, parent_obj=None):
 class SourceTreeItem(OutlineItem):
 
     def __init__(self, mod, name, node, parent, parent_obj=None):
+        self.id = OUTLINE_COUNTER.next()
         self.name = name
         #self.node = None #node
         if parent:
