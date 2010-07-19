@@ -9,7 +9,6 @@ import os
 import threading, thread
 import subprocess
 import gobject
-from . import ostools
 
 class AsyncTask(object):
     """
@@ -167,7 +166,7 @@ class GeneratorSubprocessTask(GeneratorTask):
         GeneratorTask.stop(self)
         try:
             if hasattr(self, '_process'):
-                ostools.kill_pid(self._process.pid)
+                self._process.kill()
         except OSError:
             pass
 
