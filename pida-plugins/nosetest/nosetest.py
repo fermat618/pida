@@ -38,7 +38,7 @@ from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.pdbus import DbusConfig, EXPORT
 
 # ui
-from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.views import PidaView
 
 # utils
 from pygtkhelpers.gthreads import GeneratorTask, AsyncTask
@@ -142,7 +142,7 @@ class TestItem(object):
     def output(self):
         return getattr(self, trace, 'Nothing is wrong directly here, i think')
 
-class TestResultBrowser(PidaGladeView):
+class TestResultBrowser(PidaView):
 
     key = 'nosetests.results'
 
@@ -152,7 +152,7 @@ class TestResultBrowser(PidaGladeView):
     label_text = _('TestResults')
 
     def __init__(self,* k,**kw):
-        PidaGladeView.__init__(self,*k,**kw)
+        PidaView.__init__(self,*k,**kw)
         self.clear()
 
     def create_ui(self):

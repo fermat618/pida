@@ -33,7 +33,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaView
 
 from pida.utils.web import fetch_url
 
@@ -264,7 +264,7 @@ class HPaste(Bin):
             ("sqlite3con", "sqlite3"),
         ]
 
-class PastebinEditorView(PidaGladeView):
+class PastebinEditorView(PidaView):
 
     key = 'pastebin.editor'
     gladefile = 'paste_editor'

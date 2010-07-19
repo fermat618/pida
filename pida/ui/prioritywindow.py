@@ -5,7 +5,7 @@
 """
 
 import gtk
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaView
 from pygtkhelpers.ui.objectlist import Column
 
 # locale
@@ -75,7 +75,7 @@ def edited(obj):
     return 'edited' if obj else 'unedited'
 
 
-class PriorityEditorView(PidaGladeView):
+class PriorityEditorView(PidaView):
     gladefile = 'priority_editor'
     locale = locale
 

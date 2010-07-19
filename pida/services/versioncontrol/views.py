@@ -9,7 +9,7 @@ from pygtkhelpers.gthreads import gcall
 
 from pida.ui.htmltextview import HtmlTextView
 from pida.ui.besttextview import BestTextView
-from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.views import PidaView
 
 from .versioncontrol import _
 
@@ -89,7 +89,7 @@ else:
     DiffViewer = TextDiffViewer
 
 
-class VersionControlLog(PidaGladeView):
+class VersionControlLog(PidaView):
 
     key = 'versioncontrol.log'
 
@@ -143,7 +143,7 @@ class VersionControlLog(PidaGladeView):
         self.svc.get_action('show_vc_log').set_active(False)
 
 
-class CommitViewer(PidaGladeView):
+class CommitViewer(PidaView):
 
     key = 'versioncontrol.commit'
 

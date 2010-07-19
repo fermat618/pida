@@ -23,7 +23,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGL
 
 from pida.core.environment import pida_home
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaView
 
 from .__init__ import OpenWithItem
 
@@ -40,7 +40,7 @@ default = {
     'terminal': True
     }
 
-class OpenWithEditor(PidaGladeView):
+class OpenWithEditor(PidaView):
 
     key = 'openwith.editor'
 

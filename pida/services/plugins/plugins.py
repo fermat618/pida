@@ -28,7 +28,7 @@ import shutil
 import pida.plugins
 
 from pygtkhelpers.ui.objectlist import Column
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
@@ -60,7 +60,7 @@ class PluginsEditItem(object):
         self.name = name
         self.value = value
 
-class PluginsEditView(PidaGladeView):
+class PluginsEditView(PidaView):
 
     key = 'plugins.editor'
 
@@ -106,7 +106,7 @@ class PluginsEditView(PidaGladeView):
         self.svc.hide_plugins_edit()
 
 
-class PluginsView(PidaGladeView):
+class PluginsView(PidaView):
 
     key = 'plugins.view'
 

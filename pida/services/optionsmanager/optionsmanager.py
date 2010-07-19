@@ -14,7 +14,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaView
 from pida.ui.widgets import get_widget_for_type, get_proxy_for_widget
 
 
@@ -105,7 +105,7 @@ class OptionsPage(gtk.VBox):
         if optval != widgval:
             self.proxies[option.name].update(option.value)
 
-class PidaOptionsView(PidaGladeView):
+class PidaOptionsView(PidaView):
 
     key = 'optionsmanager.editor'
 

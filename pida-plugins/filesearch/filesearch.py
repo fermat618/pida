@@ -19,7 +19,7 @@ from os import path
 from kiwi.ui.objectlist import Column
 
 from pida.core.locale import Locale
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
@@ -36,7 +36,7 @@ locale = Locale('filesearch')
 _ = locale.gettext
 
 
-class SearchView(PidaGladeView):
+class SearchView(PidaView):
 
     key = 'filesearch.form'
 

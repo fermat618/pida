@@ -64,9 +64,6 @@ class PidaView(SlaveView):
         self.widget.pack_start(widget, *args, **kw)
 
 
-PidaGladeView = PidaView
-
-
 class WindowConfig(object):
     """
     WindowConfig objects are used to register

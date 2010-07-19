@@ -22,7 +22,7 @@ from pida.core.features import FeaturesConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL)
 from pida.core.options import OptionsConfig
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 from pida.services.language import DOCTYPES
 from pida.core.indexer import Result
 from pygtkhelpers.gthreads import gcall
@@ -38,7 +38,7 @@ class QItem(object):
     name = ''
     path = ''
 
-class QOpenView(PidaGladeView):
+class QOpenView(PidaView):
 
     key = 'qopen.view'
     gladefile = 'qopen'

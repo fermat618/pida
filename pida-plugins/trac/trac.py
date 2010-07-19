@@ -35,7 +35,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 from pida.ui.htmltextview import HtmlTextView
 
 from pida.utils.web import fetch_url
@@ -46,7 +46,7 @@ from pida.core.locale import Locale
 locale = Locale('trac')
 _ = locale.gettext
 
-class TracView(PidaGladeView):
+class TracView(PidaView):
 
     key = 'trac.browser'
 

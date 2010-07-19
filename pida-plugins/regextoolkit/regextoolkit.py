@@ -32,7 +32,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaView
 from regextoolkitlib import flags_from_dict, all_matches, capture_groups
 import re
 import gtk
@@ -46,7 +46,7 @@ locale = Locale('regextoolkit')
 _ = locale.gettext
 
 
-class RegextoolkitView(PidaGladeView):
+class RegextoolkitView(PidaView):
     key="gregextoolkitwindow.form"
     gladefile="gregextoolkitwindow"
     locale = locale

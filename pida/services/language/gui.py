@@ -28,7 +28,7 @@ from pida.core.log import get_logger
 from pygtkhelpers.gthreads import GeneratorTask
 
 # ui
-from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.views import PidaView
 from pida.ui.prioritywindow import Category, Entry, PriorityEditorView
 from pida.core.languages import (PRIO_DEFAULT, PRIO_FOREGROUND, 
                                  PRIO_FOREGROUND_HIGH, PRIO_LOW)
@@ -299,7 +299,7 @@ class ValidatorView(PidaView):
         self.svc.get_action('show_validator').set_active(False)
 
 
-class BrowserView(PidaGladeView):
+class BrowserView(PidaView):
     """
     Window with the outliner
     """
@@ -576,7 +576,7 @@ class BrowserView(PidaGladeView):
 #    def read_options(self):
 #        return {}
 
-class DefinitionView(PidaGladeView):
+class DefinitionView(PidaView):
     """
     List of Definitions if language plugin returns more then one result
     """
