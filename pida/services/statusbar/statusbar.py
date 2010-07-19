@@ -34,12 +34,10 @@ class StatusbarEvents(EventsConfig):
     def on_document_changed(self, document):
         if document.is_new:
             self.svc.set_label('document', (_('New Document'),''))
-            self.svc.set_label('document_encoding', 'Unknown')
             self.svc.set_label('document_mtime', '')
             self.svc.set_label('document_size', '%d' %0)
         else:
             self.svc.set_label('document', (document.basename, document))
-            self.svc.set_label('document_encoding', document.encoding)
 
             dt = datetime.datetime.fromtimestamp(document.modified_time)
             #FIXME local seems broken on win32 
@@ -168,9 +166,6 @@ class Statusbar(Service):
         w = gtk.Label()
         w.set_padding(5, 0)
         self.add_status('document_mtime', widget=w)
-        w = gtk.Label()
-        w.set_padding(5, 0)
-        self.add_status('document_encoding', widget=w)
         w = gtk.Label()
         w.set_padding(5, 0)
         self.add_status('document_size', widget=w)
