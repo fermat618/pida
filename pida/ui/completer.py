@@ -7,7 +7,7 @@
 import gtk
 import gobject
 import os
-from languages import LANG_COMPLETER_TYPES
+from pida.utils.languages import LANG_COMPLETER_TYPES
 
 def _load_pix(fn):
     return gtk.gdk.pixbuf_new_from_file(

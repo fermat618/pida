@@ -59,7 +59,7 @@ from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.events import EventsConfig
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
-from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
+from pida.ui.completer import (PidaCompleter, PidaCompleterWindow, 
     SuggestionsList)
 from pygtkhelpers.gthreads import GeneratorTask, gcall, AsyncTask
 from pida.core.languages import Suggestion
