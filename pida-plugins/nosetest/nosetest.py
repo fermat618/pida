@@ -23,9 +23,7 @@
 # stdlib
 import subprocess
 import os
-from xml.sax.saxutils import escape
 
-from xml.etree.ElementTree import iterparse
 # gtk
 import gtk
 
