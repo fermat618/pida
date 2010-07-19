@@ -51,12 +51,8 @@ class DbusConfigReal(Object):
 
     def __init__(self, service):
         self.svc = service
-        if hasattr(self, 'export_name'):
-            path = DBUS_PATH(self.export_name)
-            ns = DBUS_NS(self.export_name)
-        else:
-            path = DBUS_PATH(service.get_name())
-            ns = DBUS_NS(service.get_name())
+        path = DBUS_PATH(service.get_name())
+        ns = DBUS_NS(service.get_name())
         self.dbus_ns = ns
         Object.__init__(self, BUS_NAME, path)
 
@@ -82,12 +78,8 @@ class DbusOptionsManagerReal(Object):
 
     def __init__(self, service):
         self.svc = service
-        if hasattr(self, 'export_name'):
-            path = DBUS_PATH(self.export_name, self.dbus_path)
-            ns = DBUS_NS(self.export_name, self.dbus_path)
-        else:
-            path = DBUS_PATH(service.get_name(), self.dbus_path)
-            ns = DBUS_NS(service.get_name(), self.dbus_path)
+        path = DBUS_PATH(service.get_name(), self.dbus_path)
+        ns = DBUS_NS(service.get_name(), self.dbus_path)
         self.dbus_ns = ns
         self.dbus_path = path
         Object.__init__(self, BUS_NAME, path)
