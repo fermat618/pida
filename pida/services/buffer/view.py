@@ -14,9 +14,8 @@ attributes = {
 }
 
 markup_extras = {
-    'directory_color': '#FFFF00',
-    'project_color': '#FF0000',
-    'noproject': '#FF0000',
+    'directory_color': 'blue',
+    'project_color': 'darkviolet',
 }
 
 markup_attributes = [
