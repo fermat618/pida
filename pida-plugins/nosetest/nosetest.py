@@ -140,7 +140,7 @@ class TestItem(object):
 
     @property
     def output(self):
-        return getattr(self, trace, 'Nothing is wrong directly here, i think')
+        return getattr(self, 'trace', 'Nothing is wrong directly here, i think')
 
 class TestResultBrowser(PidaView):
 
@@ -151,16 +151,13 @@ class TestResultBrowser(PidaView):
     icon_name = 'python-icon'
     label_text = _('TestResults')
 
-    def __init__(self,* k,**kw):
-        PidaView.__init__(self,*k,**kw)
-        self.clear()
-
     def create_ui(self):
         self.source_tree.set_columns([
                 Column('icon', use_stock=True, justify=gtk.JUSTIFY_LEFT),
                 Column('short_name', title='status',),
             ])
         self.source_tree.set_headers_visible(False)
+        self.clear()
 
     def clear(self):
         self.source_tree.clear()
@@ -192,9 +189,9 @@ class TestResultBrowser(PidaView):
 
     def start_test(self, test):
         item = TestItem(test, self.stack[-1])
-        self.source_tree.append(self.stack[-1], item)
+        self.source_tree.append(item, parent=self.stack[-1])
         self.stack.append(item)
-        self.source_tree.expand(item.parent)
+        self.source_tree.expand_item(item.parent)
 
     def stop_test(self):
         self.source_tree.update(self.stack[-1])
@@ -219,10 +216,10 @@ class TestResultBrowser(PidaView):
     def start_context(self, name, file):
         item = TestItem(name, self.stack[-1])
         item.file = file
-        self.source_tree.append(self.stack[-1], item)
+        self.source_tree.append(item, parent=self.stack[-1])
         self.stack.append(item)
         if item.parent is not None:
-            self.source_tree.expand(item.parent)
+            self.source_tree.expand_item(item.parent)
 
     def stop_context(self):
         #XXX: new status
@@ -239,7 +236,7 @@ class TestResultBrowser(PidaView):
 
         self.source_tree.update(current)
         if current.status == 'success':
-            self.source_tree.collapse(current)
+            self.source_tree.collapse_item(current)
 
 
 class TestOutputView(PidaView):
