@@ -11,7 +11,6 @@ from glob import fnmatch
 
 from pygtkhelpers.ui.objectlist import Column
 from pida.ui.views import PidaView
-from pida.core.charfinder import detect_text
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
@@ -415,20 +414,19 @@ class Grepper(Service):
         each cycle, that contains the path, line number and matches data.
         """
         try:
-            if not detect_text(None, filename, None):
-                return
+            with open(filename) as fp:
+                # simple guess for binaries
+                if '\0' in fp.read(4096):
+                    return
+                fp.seek(0)
+                for linenumber, line in enumerate(fp):
 
-            f = open(filename, 'r')
+                    line_matches = regex.findall(line)
 
-            for linenumber, line in enumerate(f):
-                # enumerate is 0 based, line numbers are 1 based
-                linenumber = linenumber + 1
-
-                line_matches = regex.findall(line)
-
-                if line_matches:
-                    self._result_count += 1
-                    yield GrepperItem(filename, self, linenumber, line, line_matches)
+                    if line_matches:
+                        self._result_count += 1
+                        # enumerate is 0 based, line numbers are 1 based
+                        yield GrepperItem(filename, self, linenumber+1, line, line_matches)
         except IOError:
             pass
 
