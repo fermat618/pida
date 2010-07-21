@@ -179,7 +179,8 @@ class ServiceManager(object):
                     assert plugin.started is False # this shouldn't change
                     plugin.started = True
                     return plugin
-                except:
+                except Exception, e:
+                    log.exception(e)
                     log.debug(_('Stop broken components'))
                     plugin.stop_components()
                     raise
