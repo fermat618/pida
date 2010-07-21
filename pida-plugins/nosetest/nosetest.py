@@ -14,7 +14,7 @@ from . import pidanose
 # core
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
-from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column, Cell
 
 # ui
 from pida.ui.views import PidaView
@@ -28,21 +28,35 @@ locale = Locale('nosetest')
 _ = locale.gettext
 
 
+status_map= { # 1 is for sucess, 2 for fail
+              # used for fast tree updates
+    'success': 'gtk-apply',
+    'failure': 'gtk-no',
+    'error': 'gtk-cancel',
+    'mixed': 'gtk-dialog-warning',
+    'running': 'gtk-refresh',
+}
+
+
+mapping = {
+    'success': 'add_success',
+    'error': 'add_error',
+    'failure': 'add_failure',
+    'start_ctx': 'start_context',
+    'stop_ctx': 'stop_context',
+    'start': 'start_test',
+    'stop': 'stop_test',
+}
+
 
 class NoseTester(object):
-    def __init__(self, tests, channel):
-        self.tests = tests
-        self.channel = channel
+    def __init__(self, view, channel):
+        self.tree = {}
+        self.stack = [ None ]
 
-    mapping = {
-        'success': 'add_success',
-        'error': 'add_error',
-        'failure': 'add_failure',
-        'start_ctx': 'start_context',
-        'stop_ctx': 'stop_context',
-        'start': 'start_test',
-        'stop': 'stop_test',
-    }
+        self.view = view
+        self.channel = channel
+        channel.setcallback(lambda msg: self.callback(*msg))
 
     def __repr__(self):
         return '<test dispatcher %s>' % (self.channel,)
@@ -59,18 +73,59 @@ class NoseTester(object):
         if message is self:
             return # end of stream
         else:
-            method = getattr(self.tests, self.mapping[kind])
-            method(*message)
+            method = getattr(self, mapping[kind])
+            gcall(method, *message)
 
+    def start_test(self, test, *ignored):
+        item = TestItem(test, self.stack[-1])
+        self.view.append(item, parent=self.stack[-1])
+        self.stack.append(item)
+        self.view.expand_item(item.parent)
 
-status_map= { # 1 is for sucess, 2 for fail
-              # used for fast tree updates
-        'success': 'gtk-apply',
-        'failure': 'gtk-no',
-        'error': 'gtk-cancel',
-        'mixed': 'gtk-dialog-warning',
-        'running': 'gtk-refresh',
-        }
+    def stop_test(self, *ignored):
+        self.view.update(self.stack[-1])
+        self.stack.pop()
+
+    def add_success(self, test, error):
+        if self.stack[-1]:
+            self.stack[-1].status = 'success'
+
+    def add_error(self, test, error):
+        if self.stack[-1]:
+            item = self.stack[-1]
+            item.status = 'error'
+            item.trace = error
+
+    def add_failure(self, test, error):
+        if self.stack[-1]:
+            item = self.stack[-1]
+            item.status = 'failure'
+            item.trace = error
+
+    def start_context(self, name, file):
+        item = TestItem(name, self.stack[-1])
+        item.file = file
+        self.view.append(item, parent=self.stack[-1])
+        self.stack.append(item)
+        if item.parent is not None:
+            self.view.expand_item(item.parent)
+
+    def stop_context(self):
+        #XXX: new status
+        current = self.stack.pop()
+        if not current.children:
+            self.view.remove(current)
+            return
+
+        states = set(x.status for x in current.children.itervalues())
+        if len(states) > 1:
+            current.status = 'mixed'
+        else:
+            current.status = iter(states).next()
+
+        self.view.update(current)
+        if current.status == 'success':
+            self.view.collapse_item(current)
 
 def parse_test_name (self, name):
     if '(' in name:
@@ -118,17 +173,15 @@ class TestResultBrowser(PidaView):
     def create_ui(self):
         self.tester = None
         self._group = execnet.Group()
-        self.source_tree.set_columns([
-                Column('icon', use_stock=True, justify=gtk.JUSTIFY_LEFT),
-                Column('short_name', title='status',),
-            ])
+        self.source_tree.set_columns([Column(title='Result', cells=[
+                Cell('icon', use_stock=True, expand=False),
+                Cell('short_name', title='status',),
+            ])])
         self.source_tree.set_headers_visible(False)
         self.clear()
 
     def clear(self):
         self.source_tree.clear()
-        self.tree = {}
-        self.stack = [ None ]
 
 
     def can_be_closed(self):
@@ -148,63 +201,10 @@ class TestResultBrowser(PidaView):
         gw = self._group.makegateway()
         channel = gw.remote_exec(pidanose)
         channel.send(str(src))
-        self.tester = NoseTester(self, channel)
-        print(self.tester)
-        GeneratorTask(self.tester.task, self.tester.callback).start()
+        self.tester = NoseTester(self.source_tree, channel)
 
     def on_source_tree__item_activated(self, tv, item):
             self.svc.show_result(item.output)
-
-    def start_test(self, test, *ignored):
-        item = TestItem(test, self.stack[-1])
-        self.source_tree.append(item, parent=self.stack[-1])
-        self.stack.append(item)
-        self.source_tree.expand_item(item.parent)
-
-    def stop_test(self, *ignored):
-        self.source_tree.update(self.stack[-1])
-        self.stack.pop()
-
-    def add_success(self, test, error):
-        if self.stack[-1]:
-            self.stack[-1].status = 'success'
-
-    def add_error(self, test, error):
-        if self.stack[-1]:
-            item = self.stack[-1]
-            item.status = 'error'
-            item.trace = error
-
-    def add_failure(self, test, error):
-        if self.stack[-1]:
-            item = self.stack[-1]
-            item.status = 'failure'
-            item.trace = error
-
-    def start_context(self, name, file):
-        item = TestItem(name, self.stack[-1])
-        item.file = file
-        self.source_tree.append(item, parent=self.stack[-1])
-        self.stack.append(item)
-        if item.parent is not None:
-            self.source_tree.expand_item(item.parent)
-
-    def stop_context(self):
-        #XXX: new status
-        current = self.stack.pop()
-        if not current.children:
-            self.source_tree.remove(current)
-            return
-
-        states = set(x.status for x in current.children.itervalues())
-        if len(states) > 1:
-            current.status = 'mixed'
-        else:
-            current.status = iter(states).next()
-
-        self.source_tree.update(current)
-        if current.status == 'success':
-            self.source_tree.collapse_item(current)
 
 
 class TestOutputView(PidaView):
