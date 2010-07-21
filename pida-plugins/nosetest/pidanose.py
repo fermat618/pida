@@ -1,52 +1,45 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys, os
+import io
 
+if __name__ == '__channelexec__':
+    sys.stdout = io.BytesIO()
 import nose
 from nose.core import TestProgram
 from nose.config import Config, all_config_files
 from nose.plugins import Plugin
-from nose.plugins.manager import PluginManager, DefaultPluginManager, \
-     RestrictedPluginManager
 import traceback
 ### configure paths, etc here
-import dbus
 
-class DBusReport(Plugin):
+def send(kind, test=None, err=None):
+    if err:
+        err = ''.join(traceback.format_exception(*err))
+    if test:
+        description = test.shortDescription() or str(test)
+    else:
+        description = None
+    channel.send((kind, description, err))
 
-    name = 'dbus-reporter'
-    score = 2 # run late
+class ChannelReporter(Plugin):
+    name = 'execnet'
+    @property
+    def enabled(self):
+        return True
 
-    def __init__(self):
-        super(DBusReport, self).__init__()
-        bus = dbus.SessionBus()
-        object = bus.get_object(
-            'uk.co.pida.pida.'+os.environ['PIDA_DBUS_UUID'],
-            '/uk/co/pida/pida/nosetest'
-            )
-        self.proxy = dbus.Interface(object, 'uk.co.pida.pida.nosetest')
-        self.proxy.beginProcess(os.getcwd())
+    @enabled.setter
+    def enabled(self, val):
+        pass
 
 
     def addSuccess(self, test):
-        description = test.shortDescription() or str(test)
-        self.proxy.addSuccess(description)
+        send('success', test)
 
     def addError(self, test, err):
-        err = self.formatErr(err)
-        description = test.shortDescription() or str(test)
-        self.proxy.addError(description, err)
+        send('error', test, err)
 
     def addFailure(self, test, err):
-        err = self.formatErr(err)
-        description = test.shortDescription() or str(test)
-        self.proxy.addFailure(description, err)
-
-    def finalize(self, result):
-        self.proxy.endProcess()
-
-    def formatErr(self, err):
-        exctype, value, tb = err
-        return ''.join(traceback.format_exception(exctype, value, tb))
+        send('failure', test, err)
 
     def startContext(self, ctx):
         try:
@@ -57,33 +50,24 @@ class DBusReport(Plugin):
             path = ctx.__file__.replace('.pyc', '.py')
         except AttributeError:
             path = ''
-        self.proxy.startContext(n, path)
+        channel.send(('start_ctx', n, path))
 
     def stopContext(self, ctx):
-        self.proxy.stopContext()
+        channel.send(('stop_ctx',))
 
     def startTest(self, test):
-        description = test.shortDescription() or str(test)
-        self.proxy.startTest(description)
+        send('start', test)
 
     def stopTest(self, test):
-        self.proxy.stopTest()
+        send('stop')
 
 
-class PidaTest(TestProgram):
-    def makeConfig(self, env, plugins=None):
-        """Load a Config, pre-filled with user config files if any are
-        found.
-        """
-        cfg_files = all_config_files()
-        if plugins:
-            manager = PluginManager(plugins=plugins)
-        else:
-            manager = DefaultPluginManager()
-        manager.addPlugin(DBusReport())
-        return Config(
-            env=env, files=cfg_files, plugins=manager)
+if __name__ == '__channelexec__':
+    cwd = channel.receive()
+    os.chdir(cwd)
+    prog = TestProgram(
+        exit=False,
+        argv=['--with-execnet'],
+        plugins=[ChannelReporter()],
+        )
 
-sys.exit(PidaTest().sucess)
-
-### do other stuff here

@@ -1,84 +1,67 @@
 # -*- coding: utf-8 -*- 
 
-
+from __future__ import print_function
 # stdlib
 import subprocess
 import os
 
-# gtk
+import execnet
 import gtk
 
-# kiwi
-from pygtkhelpers.ui.objectlist import Column
-
 # PIDA Imports
+from . import pidanose
 
 # core
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
-from pida.core.pdbus import DbusConfig, EXPORT
+from pygtkhelpers.ui.objectlist import Column
 
 # ui
 from pida.ui.views import PidaView
 
 # utils
-from pygtkhelpers.gthreads import GeneratorTask, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('nosetest')
 _ = locale.gettext
 
-export = EXPORT(suffix='nosetest')
 
 
+class NoseTester(object):
+    def __init__(self, tests, channel):
+        self.tests = tests
+        self.channel = channel
 
-class NosetestDBusConfig(DbusConfig):
+    mapping = {
+        'success': 'add_success',
+        'error': 'add_error',
+        'failure': 'add_failure',
+        'start_ctx': 'start_context',
+        'stop_ctx': 'stop_context',
+        'start': 'start_test',
+        'stop': 'stop_test',
+    }
 
-    @export(sender_keyword='sender',  in_signature='s')
-    def beginProcess(self, cwd, sender):
-        self.svc.log.info('beginning suite of %s in %s', sender, cwd)
-        self.sender = sender
-        self.svc._tests.clear()
+    def __repr__(self):
+        return '<test dispatcher %s>' % (self.channel,)
 
-    @export(sender_keyword='sender')
-    def endProcess(self, sender):
-        pass
+    def close(self):
+        self.channel.close()
 
-    @export(sender_keyword='sender', in_signature='s')
-    def addSuccess(self, test, sender):
-        if sender == self.sender:
-            self.svc._tests.add_success(test)
+    def task(self):
+        for item in self.channel:
+            print(item)
+            yield item
 
-    @export(sender_keyword='sender', in_signature='ss')
-    def addError(self, test, err, sender):
-        if sender == self.sender:
-            self.svc._tests.add_error(test, err)
+    def callback(self, kind, *message):
+        if message is self:
+            return # end of stream
+        else:
+            method = getattr(self.tests, self.mapping[kind])
+            method(*message)
 
-    @export(sender_keyword='sender', in_signature='ss')
-    def addFailure(self, test, err, sender):
-        if sender == self.sender:
-            self.svc._tests.add_failure(test, err)
-
-    @export(sender_keyword='sender', in_signature='ss')
-    def startContext(self, name, file, sender):
-        if sender == self.sender:
-            self.svc._tests.start_context(name, file)
-
-    @export(sender_keyword='sender')
-    def stopContext(self, sender):
-        if sender == self.sender:
-            self.svc._tests.stop_context()
-
-    @export(sender_keyword='sender', in_signature='s')
-    def startTest(self, test, sender):
-        if sender == self.sender:
-            self.svc._tests.start_test(test)
-
-    @export(sender_keyword='sender')
-    def stopTest(self, sender):
-        if sender == self.sender:
-            self.svc._tests.stop_test()
 
 status_map= { # 1 is for sucess, 2 for fail
               # used for fast tree updates
@@ -133,6 +116,8 @@ class TestResultBrowser(PidaView):
     label_text = _('TestResults')
 
     def create_ui(self):
+        self.tester = None
+        self._group = execnet.Group()
         self.source_tree.set_columns([
                 Column('icon', use_stock=True, justify=gtk.JUSTIFY_LEFT),
                 Column('short_name', title='status',),
@@ -150,35 +135,37 @@ class TestResultBrowser(PidaView):
         self.svc.get_action('show_test_python').set_active(False)
 
     def run_tests(self):
+        if self.tester:
+            self.tester.close()
+            self.tester = None
+        self.clear()
         project = self.svc.boss.cmd('project','get_current_project')
         if not project:
             self.svc.notify_user(_("No project found"))
             return
         src = project.source_directory
-        def call(*k, **kw): 
-            subprocess.call(*k, **kw)
 
-        AsyncTask(call).start([
-                    os.path.join(os.path.dirname(__file__), 'pidanose.py'),
-                    '--with-dbus-reporter', '-q',
-                ],
-                cwd=src,
-        )
+        gw = self._group.makegateway()
+        channel = gw.remote_exec(pidanose)
+        channel.send(str(src))
+        self.tester = NoseTester(self, channel)
+        print(self.tester)
+        GeneratorTask(self.tester.task, self.tester.callback).start()
 
     def on_source_tree__item_activated(self, tv, item):
             self.svc.show_result(item.output)
 
-    def start_test(self, test):
+    def start_test(self, test, *ignored):
         item = TestItem(test, self.stack[-1])
         self.source_tree.append(item, parent=self.stack[-1])
         self.stack.append(item)
         self.source_tree.expand_item(item.parent)
 
-    def stop_test(self):
+    def stop_test(self, *ignored):
         self.source_tree.update(self.stack[-1])
         self.stack.pop()
 
-    def add_success(self, test):
+    def add_success(self, test, error):
         if self.stack[-1]:
             self.stack[-1].status = 'success'
 
@@ -258,7 +245,7 @@ class PythonActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'test_python',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Python Unit Tester'),
             _('Run the python unitTester'),
             'gtk-apply',
@@ -266,7 +253,7 @@ class PythonActionsConfig(ActionsConfig):
         )
         self.create_action(
             'show_test_python',
-            TYPE_TOGGLE,
+            gtk.ToggleAction,
             _('Python Unit Tester'),
             _('Show the python unitTester'),
             'none',
@@ -291,9 +278,8 @@ class PythonTestResults(Service):
     """Service for all things Python""" 
 
     actions_config = PythonActionsConfig
-    dbus_config = NosetestDBusConfig
 
-    def pre_start(self):
+    def start(self):
         """Start the service"""
         self._tests = TestResultBrowser(self)
         self.output_visible = False
