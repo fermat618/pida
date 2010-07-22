@@ -73,7 +73,7 @@ class ProjectSetupView(PidaView):
                                  self._on_script_view__cancel_request)
         self.script_view.connect('project-saved',
                                  self._on_script_view__project_saved)
-        self.add_main_widget(self.script_view.widget)
+        self.add_slave(self.script_view, 'widget')
 
     def test_execute(self, target, project):
         self.svc.execute_target(None, target, project)
