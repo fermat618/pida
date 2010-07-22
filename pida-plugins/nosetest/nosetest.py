@@ -56,7 +56,7 @@ class NoseTester(object):
 
         self.view = view
         self.channel = channel
-        channel.setcallback(lambda msg: self.callback(*msg))
+        channel.setcallback(lambda msg: gcall(self.callback, *msg))
 
     def __repr__(self):
         return '<test dispatcher %s>' % (self.channel,)
@@ -74,7 +74,7 @@ class NoseTester(object):
             return # end of stream
         else:
             method = getattr(self, mapping[kind])
-            gcall(method, *message)
+            method(*message)
 
     def start_test(self, test, *ignored):
         item = TestItem(test, self.stack[-1])
