@@ -17,7 +17,7 @@ except ImportError:
 
 from pida.core.projects import Project
 
-from pida.utils.puilder.model import Build
+from .model import Build
 
 
 
@@ -318,9 +318,10 @@ def execute_target(project_file, target_name, project_directory=None):
     return execute_build(build, target_name, project_directory)
 
 
-def execute_project(project_directory, target_name):
+def execute_project(project_directory, target_name, project_file=None):
     _info('Working dir: %s' % project_directory)
-    project_file = Project.data_dir_path(project_directory, 'project.json')
+    if not project_file:
+        project_file = Project.data_dir_path(project_directory, 'project.json')
     _info('Build file path: %s' % project_file, '--')
     sys.path.insert(0, project_directory)
     try:
