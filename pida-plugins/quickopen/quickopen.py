@@ -109,7 +109,7 @@ class QOpenView(PidaView):
         project = self.svc.boss.cmd('project', 'get_current_project')
         if not project:
             return
-        for result in project.query(do_filter):
+        for result in project.indexer.query(do_filter):
             self.olist.append(result)
 
         return False

@@ -288,8 +288,8 @@ class ProjectFeaturesConfig(FeaturesConfig):
             ProjectWindowConfig)
 
     def do_refresh(self, project, callback):
-        project.index(recrusive=True, rebuild=True)
-        project.save_cache()
+        project.indexer.index(recrusive=True, rebuild=True)
+        project.indexer.save_cache()
         callback()
     
     do_refresh.priority = REFRESH_PRIORITY.FILECACHE
@@ -403,7 +403,7 @@ class ProjectService(Service):
 
     def stop(self):
         if self._current:
-            self._current.save_cache()
+            self._current.indexer.save_cache()
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
@@ -454,7 +454,7 @@ class ProjectService(Service):
         self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
             project.reload()
-            loaded = project.load_cache()
+            loaded = project.indexer.load_cache()
             self.emit('project_switched', project=project)
             self.update_execution_menus()
             self.project_properties_view.set_project(project)
@@ -600,7 +600,7 @@ class ProjectService(Service):
         Updates the index of one file
         """
         if self._current:
-            self._current.index_path(path)
+            self._current.indexer.index_path(path)
 
     def refresh_project(self):
         """

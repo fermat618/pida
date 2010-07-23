@@ -27,7 +27,6 @@ _ = locale.gettext
 
 #FIXME: win32 fixup
 DATA_DIR = ".pida-metadata"
-CACHE_NAME = "FILECACHE"
 
 
 REFRESH_PRIORITY = Enumeration("REFRESH_PRIORITY",
@@ -132,52 +131,6 @@ class Project(Log):
     @staticmethod
     def data_dir_path(project_directory, *args):
         return os.path.join(project_directory, DATA_DIR, *args)
-
-
-    def load_cache(self):
-        path = self.get_meta_dir(filename=CACHE_NAME)
-        return self.indexer.load_cache(path)
-
-
-    def save_cache(self):
-        path = self.get_meta_dir(filename=CACHE_NAME)
-        self.indexer.save_cache(path)
-
-
-    def index_path(self, path, update_shortcuts=True):
-        """
-        Update the index of a single file/directory
-
-        @path is an absolute path
-        """
-
-        self.indexer.index_path(path, update_shortcuts)
-
-
-    def index(self, path="", recrusive=False, rebuild=False):
-        """
-        Updates the Projects filelist.
-
-        @path: relative path under project root, or absolute
-        @recrusive: update recrusive under root
-        """
-        self.indexer.index(path, recrusive, rebuild)
-
-    def query(self, test):
-        """
-        Get results from the file index.
-
-        The test function returns a value from the RESULT object.
-
-        This is the most powerfull but slowest test.
-
-        @test: callable which gets a FileInfo object passed and returns an int
-        """
-        return self.indexer.query(test)
-
-
-    def query_basename(self, *k, **kw):
-        return self.indexer.query_basename(*k, **kw)
 
     def __repr__(self):
         return "<Project %s>" % self.source_directory

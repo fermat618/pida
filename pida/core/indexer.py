@@ -9,6 +9,9 @@ except ImportError:
 
 from pida.core.log import Log
 
+CACHE_NAME = "FILECACHE"
+
+
 class Result(object):
     __slots__ = "accept", "recurse", "abort"
 
@@ -48,14 +51,16 @@ class Indexer(Log):
                 "dirnames": defaultdict(list),
                }
 
-    def save_cache(self, path):
+    def save_cache(self):
+        path = self.project.get_meta_dir(filename=CACHE_NAME)
         try:
             with open(path, "w") as fp:
                 pickle.dump(self.cache, fp)
         except OSError, err:
             self.log.error("can't save cache: %s", err)
 
-    def load_cache(self, path):
+    def load_cache(self):
+        path = self.project.get_meta_dir(filename=CACHE_NAME)
         if os.path.isfile(path):
             try:
                 with open(path) as fp:
@@ -82,6 +87,11 @@ class Indexer(Log):
                 self.cache["filenames"][info.basename].append(info)
 
     def index_path(self, path, update_shortcuts=False):
+        """
+        Update the index of a single file/directory
+
+        @path is an absolute path
+        """
         from pida.services.language import DOCTYPES
         doctype = DOCTYPES.type_by_filename(path)
         rel = self.project.get_relative_path_for(path)
@@ -142,6 +152,12 @@ class Indexer(Log):
 
 
     def index(self, path="", recrusive=False, rebuild=False):
+        """
+        Updates the Projects filelist.
+
+        @path: relative path under project root, or absolute
+        @recrusive: update recrusive under root
+        """
 
         if path == "" and rebuild:
             self.reset_cache()
@@ -196,12 +212,11 @@ class Indexer(Log):
     def query(self, test):
         """
         Get results from the file index.
-
-        The test function returns a value from the RESULT object.
-
         This is the most powerfull but slowest test.
 
-        @test: callable which gets a FileInfo object passed and returns an int
+        :param test:
+            callable which gets a FileInfo object passed 
+            and returns a :class:`Result` object
         """
         paths = sorted(self.cache['paths'])
         skip = None
