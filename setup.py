@@ -148,9 +148,9 @@ setup(
         'Programming Language :: Python'
     ],
     install_requires = [
-        'anyvc>=0.3',
-        #XXX: still needed on 2.5
-        #'simplejson',
+        'anyvc>=0.3.1',
+        'py>=1.3',
+        'bpython>=0.9.7',
         'pygtkhelpers',
         #'vte',
         #'dbus ?',
