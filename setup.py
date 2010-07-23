@@ -12,18 +12,6 @@ from distutils.command.build_ext import build_ext
 from setuptools import setup, Extension
 import pida
 
-cmdclasses = {}
-data_files = []
-
-
-try:
-    from sphinx.setup_command import BuildDoc
-    if not os.path.exists(os.path.join("docs", "_build")):
-        os.mkdir(os.path.join("docs", "_build"))
-    cmdclasses["build_doc"] = BuildDoc
-except ImportError:
-    print "sphinx not found, skipping user docs"
-
 
 # Check availability of pygtk 2.0
 NO_PYGTK_ERROR_MESSAGE = """pkg-config reports your system misses pygtk 2.0.
@@ -103,9 +91,7 @@ def get_package_data():
     return package_data
 
 
-cmdclasses['build_ext'] = BuildExt
-
-data_files += [('share/doc/pida/contrib/gtkrc', glob('contrib/gtkrc/*'))]
+data_files = [('share/doc/pida/contrib/gtkrc', glob('contrib/gtkrc/*'))]
 
 # add docs
 top = os.path.join(os.path.dirname(__file__), 'docs', '_build', 'html')
@@ -121,7 +107,7 @@ setup(
     packages = listpackages('pida'),
     package_data = get_package_data(),
     ext_modules = [moo],
-    cmdclass=cmdclasses,
+    cmdclass={'build_ext': BuildExt},
     scripts = [
         'bin/pida',
         'bin/pida-remote',
