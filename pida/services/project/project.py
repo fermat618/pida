@@ -523,8 +523,6 @@ class ProjectService(Service):
             _('Execute: %s') %target.name
         self._target_last = target
 
-        script = environment.get_data_path('project_execute.py')
-
         env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
@@ -538,9 +536,9 @@ class ProjectService(Service):
         t = self.boss.cmd(
             'commander', 'execute',
                 commandargs=[
-                    'python', script,
-                    '--directory', project.source_directory,
-                    '--target', target.name
+                    'python',
+                        '-m', 'pida.utils.puilder.execute',
+                        target.name,
                 ],
                 cwd=project.source_directory,
                 title=_('%s:%s') % (project.name, target.name),
