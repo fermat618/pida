@@ -335,10 +335,12 @@ def execute_project(project_directory, target_name, project_file=None):
 execute = execute_project
 
 
-def list_project_targets(project_directory):
+def list_project_targets(project_directory, script_path):
     _info('Listing targets', '--')
     _info('Working dir: %s' % project_directory)
-    project_file = Project.data_dir_path(project_directory, 'project.json')
+    # project file is the absolute script path 
+    # or the join of the project dir with the default
+    project_file = os.path.join(project_directory, script_path)
     _info('Build file path: %s' % project_file, '--')
     build = Build.loadf(project_file)
     _info(*[t.name for t in build.targets])
@@ -350,17 +352,20 @@ def main():
 
     parser.add_option('-l', '--list', dest='do_list', action='store_true',
                       help='list targets')
+    parser.add_option('-s', '--script', dest='script',
+                      help='name of the script file',
+                     default='.pida-metadata/project.json')
     opts, args = parser.parse_args(sys.argv)
 
     project_directory = os.getcwd()
 
     if opts.do_list or len(args) < 2:
-        list_project_targets(project_directory)
+        list_project_targets(project_directory, opts.script)
         _info('--', 'Run with target name to execute.')
         return 0
 
     target_name = args[1]
-    execute_project(project_directory, target_name)
+    execute_project(project_directory, target_name, opts.script)
 
 
 if __name__ == '__main__':
