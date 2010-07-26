@@ -16,7 +16,6 @@ import traceback
 from pida.core.locale import Locale
 
 from pida.core import environment
-from pida.core.boss import Boss
 
 # locale
 locale = Locale('pida')
@@ -77,6 +76,7 @@ def run_pida():
     #XXX: nasty compat hack
     import os
     os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    from pida.core.boss import Boss
     b = Boss() #XXX: relocate firstrun
 
     # handle start params
