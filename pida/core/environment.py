@@ -23,7 +23,7 @@ _ = locale.gettext
 
 
 base_path = os.path.abspath(os.path.dirname(pida.__file__))
-resources = dict(glade=[], uidef=[], pixmaps=[], data=[])
+resources = dict(uidef=[], pixmaps=[], data=[])
 
 def find_resource(kind, name):
     for item in resources[kind]:
@@ -33,7 +33,7 @@ def find_resource(kind, name):
     raise EnvironmentError('Could not find %s resource: %s' % (kind, name))
 
 def add_global_base(service_path):
-    for kind in 'glade', 'uidef', 'pixmaps', 'data':
+    for kind in 'uidef', 'pixmaps', 'data':
         path = os.path.join(service_path, kind)
         if os.path.isdir(path):
             resources[kind].append(path)
