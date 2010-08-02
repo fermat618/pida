@@ -12,7 +12,7 @@ from os.path import join
 from pida.core.servicemanager import ServiceLoader, ServiceManager
 
 #XXX: replace with something better
-from pida.core.environment import get_resource_path
+from pida.core.environment import get_pixmap_path
 
 test_service = '''
 from pida.core.service import Service as BaseService
@@ -88,9 +88,9 @@ class ServiceLoadTest(TestCase):
 
         self.p5 = p5 = PseudoPackage('t5')
         self._spath5 = gen(p5, 'testservice')
-        self._gladedir = os.path.join(self._spath5, 'glade')
+        self._gladedir = os.path.join(self._spath5, 'pixmapa')
         os.mkdir(self._gladedir)
-        self._dumglade = os.path.join(self._gladedir, 'banana.glade')
+        self._dumglade = os.path.join(self._gladedir, 'fun.jpg')
         f = open(self._dumglade, 'w')
         f.close()
 
@@ -122,7 +122,7 @@ class ServiceLoadTest(TestCase):
 
     def __borked__test_env(self):
         self.loader.load_all_services([self._tdir5], None)
-        gp = get_resource_path('glade', 'banana.glade')
+        gp = get_pixmap_path('fun.jpg')
         self.assertEqual(gp, self._dumglade)
 
     def tearDown(self):

@@ -40,9 +40,8 @@ def add_global_base(service_path):
 
 add_global_base(os.path.join(base_path, 'resources'))
 
-get_resource_path = find_resource
-get_pixmap_path = partial(get_resource_path, 'pixmaps')
-get_data_path = partial(get_resource_path, 'data')
+get_pixmap_path = partial(find_resource, 'pixmaps')
+get_data_path = partial(find_resource, 'data')
 
 
 pida_home = None
