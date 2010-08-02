@@ -23,26 +23,24 @@ _ = locale.gettext
 
 
 base_path = os.path.abspath(os.path.dirname(pida.__file__))
+resources = dict(glade=[], uidef=[], pixmaps=[], data=[])
 
-class FakeLibrary(dict):
-    def find_resource(self, resource, name):
-        for item in self[resource]:
-            full = os.path.join(item, name)
-            if os.path.exists(full):
-                return full
-        raise EnvironmentError('Could not find %s resource: %s' % (
-                                resource, name))
+def find_resource(kind, name):
+    for item in resources[kind]:
+        full = os.path.join(item, name)
+        if os.path.exists(full):
+            return full
+    raise EnvironmentError('Could not find %s resource: %s' % (kind, name))
 
-    def add_global_base(self, service_path):
-        for kind in 'glade', 'uidef', 'pixmaps', 'data':
-            path = os.path.join(service_path, kind)
-            if os.path.isdir(path):
-                self[kind].append(path)
+def add_global_base(service_path):
+    for kind in 'glade', 'uidef', 'pixmaps', 'data':
+        path = os.path.join(service_path, kind)
+        if os.path.isdir(path):
+            resources[kind].append(path)
 
-library = FakeLibrary(glade=[], uidef=[], pixmaps=[], data=[])
-library.add_global_base(os.path.join(base_path, 'resources'))
+add_global_base(os.path.join(base_path, 'resources'))
 
-get_resource_path = library.find_resource
+get_resource_path = find_resource
 get_pixmap_path = partial(get_resource_path, 'pixmaps')
 get_data_path = partial(get_resource_path, 'data')
 

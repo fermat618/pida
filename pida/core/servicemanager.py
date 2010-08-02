@@ -11,7 +11,7 @@ import os
 import sys
 
 from pida.core.service import Service
-from pida.core.environment import library
+from pida.core import environment
 
 # log
 import logging
@@ -104,7 +104,7 @@ class ServiceLoader(object):
 
     def _register_service_env(self, module):
         service_path = os.path.dirname(module.__file__)
-        library.add_global_base(service_path)
+        environment.add_global_base(service_path)
 
 
 class ServiceManager(object):
