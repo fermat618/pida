@@ -11,7 +11,7 @@
 
 import os
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 from functools import partial
 
 import pida
@@ -72,27 +72,36 @@ else:
     plugins_path = [plugins_dir]
 
 
-op = OptionParser()
-op.add_option('-v', '--version', action='store_true',
+parser = ArgumentParser()
+parser.add_argument(
+    '-v', '--version', action='store_true',
     help=_('Print version information and exit.'))
-op.add_option('-D', '--debug', action='store_true',
+parser.add_argument(
+    '-D', '--debug', action='store_true',
     help=_('Run PIDA with added debug information.'))
-op.add_option('-T', '--trace', action='store_true',
+parser.add_argument(
+    '-T', '--trace', action='store_true',
     help=_('Run PIDA with tracing.'))
-op.add_option('-F', '--firstrun', action='store_true',
+parser.add_argument(
+    '-F', '--firstrun', action='store_true',
     help=_('Run the PIDA first run wizard.'))
-op.add_option('--safe_mode', action='store_true',
+parser.add_argument(
+    '--safe_mode', action='store_true',
     help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
-op.add_option('-P', '--profile', dest="profile_path",
+parser.add_argument(
+    '-P', '--profile', dest="profile_path",
     help=_('Generate profile data on path.'))
-op.add_option('-w', '--workspace', dest="workspace",
+parser.add_argument(
+    '-w', '--workspace', dest="workspace",
     help=_('Use workspace name'))
-op.add_option('-m', '--manager', action='store_true',
+parser.add_argument(
+    '-m', '--manager', action='store_true',
     help=_('Show workspace Manager'))
-op.add_option('', '--killsettings', action="store_true",
+parser.add_argument(
+    '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
 
-opts, args = op.parse_args([])
+opts, args = parser.parse_known_args([])
 
 env = dict(os.environ)
 
@@ -100,7 +109,7 @@ on_windows = sys.platform == 'win32' #XXX: checked only on xp
 
 def parse_args(argv):
     global opts, args
-    opts, args = op.parse_args(argv)
+    opts, args = parser.parse_known_args(argv)
 
     if opts.killsettings:
         opts.firstrun = True
