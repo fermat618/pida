@@ -524,7 +524,7 @@ class ProjectService(Service):
             _('Execute: %s') %target.name
         self._target_last = target
 
-        env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
+        env = ['PYTHONPATH=%s%s%s' %(environment.base_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
         if self.opt("autoclose") and target in self._running_targets:

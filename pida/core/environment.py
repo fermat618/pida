@@ -14,6 +14,7 @@ import sys
 from argparse import ArgumentParser
 from functools import partial
 
+import gtk
 import pida
 # locale
 from pida.core.locale import Locale
@@ -21,7 +22,7 @@ locale = Locale('pida')
 _ = locale.gettext
 
 
-base_path = os.path.dirname(pida.__file__)
+base_path = os.path.abspath(os.path.dirname(pida.__file__))
 
 class FakeLibrary(dict):
     def find_resource(self, resource, name):
@@ -45,31 +46,33 @@ get_resource_path = library.find_resource
 get_pixmap_path = partial(get_resource_path, 'pixmaps')
 get_data_path = partial(get_resource_path, 'data')
 
-pida_home = os.path.expanduser('~/.pida2')
-firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
-plugins_dir = os.path.join(pida_home, 'plugins')
-settings_dir = os.path.join(pida_home, 'settings')
 
-pida_root_path = os.path.dirname(os.path.abspath(pida.__path__[0]))
+def setup_paths(home):
+    global pida_home, firstrun_filename, settings_dir
+    global plugins_path, plugins_dir
+    pida_home = os.path.expanduser('~/.pida2')
+    firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
+    plugins_dir = os.path.join(pida_home, 'plugins')
+    settings_dir = os.path.join(pida_home, 'settings')
 
-for path in pida_home, plugins_dir:
-    if not os.path.exists(path):
-        os.mkdir(path)
 
-import gtk
+    if not os.path.exists(plugins_dir):
+        os.makedirs(plugins_dir)
 
-gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
-gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
-# we have to force reload the settings
-gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
+    #XXX: development hack
+    buildin_plugins_dir = os.path.join(base_path, 'pida-plugins')
 
-#XXX: development hack
-buildin_plugins_dir = os.path.join(base_path, 'pida-plugins')
+    if os.path.exists(buildin_plugins_dir):
+        plugins_path = [plugins_dir, buildin_plugins_dir]
+    else:
+        plugins_path = [plugins_dir]
 
-if os.path.exists(buildin_plugins_dir):
-    plugins_path = [plugins_dir, buildin_plugins_dir]
-else:
-    plugins_path = [plugins_dir]
+def parse_gtk_rcfiles():
+    gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
+    gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
+    # we have to force reload the settings
+    gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
+
 
 
 parser = ArgumentParser()
@@ -100,8 +103,8 @@ parser.add_argument(
 parser.add_argument(
     '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
+parser.add_argument('--pida-home', default='~/.pida2')
 
-opts, args = parser.parse_known_args([])
 
 env = dict(os.environ)
 
@@ -113,6 +116,12 @@ def parse_args(argv):
 
     if opts.killsettings:
         opts.firstrun = True
+
+    setup_paths(opts.pida_home)
+    parse_gtk_rcfiles()
+
+
+parse_args([])
 
 
 def is_debug():
