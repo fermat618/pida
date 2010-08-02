@@ -104,10 +104,7 @@ class ServiceLoader(object):
 
     def _register_service_env(self, module):
         service_path = os.path.dirname(module.__file__)
-        for name in 'glade', 'uidef', 'pixmaps', 'data':
-            path = os.path.join(service_path, name)
-            if os.path.isdir(path):
-                library.add_global_resource(name, path)
+        library.add_global_base(service_path)
 
 
 class ServiceManager(object):

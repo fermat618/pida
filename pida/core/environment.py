@@ -12,6 +12,7 @@
 import os
 import sys
 from optparse import OptionParser
+from functools import partial
 
 import pida
 # locale
@@ -20,39 +21,29 @@ locale = Locale('pida')
 _ = locale.gettext
 
 
-base_path = pida.__path__[0]
-def bp(p):
-    return os.path.join(base_path, 'resources', p)
+base_path = os.path.dirname(pida.__file__)
 
-
-lib = {}
-
-for kind in 'glade uidef pixmaps data'.split():
-    lib[kind] = [bp(kind)]
-
-
-class FakeLibrary(object):
+class FakeLibrary(dict):
     def find_resource(self, resource, name):
-        for item in lib[resource]:
+        for item in self[resource]:
             full = os.path.join(item, name)
             if os.path.exists(full):
                 return full
         raise EnvironmentError('Could not find %s resource: %s' % (
                                 resource, name))
 
-    def add_global_resource(self, kind, path):
-        lib[kind].append(path)
+    def add_global_base(self, service_path):
+        for kind in 'glade', 'uidef', 'pixmaps', 'data':
+            path = os.path.join(service_path, kind)
+            if os.path.isdir(path):
+                self[kind].append(path)
 
-library = FakeLibrary()
+library = FakeLibrary(glade=[], uidef=[], pixmaps=[], data=[])
+library.add_global_base(os.path.join(base_path, 'resources'))
 
-def get_resource_path(resource, name):
-    return library.find_resource(resource, name)
-
-def get_pixmap_path(name):
-    return get_resource_path('pixmaps', name)
-
-def get_data_path(name):
-    return get_resource_path('data', name)
+get_resource_path = library.find_resource
+get_pixmap_path = partial(get_resource_path, 'pixmaps')
+get_data_path = partial(get_resource_path, 'data')
 
 pida_home = os.path.expanduser('~/.pida2')
 firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
@@ -73,9 +64,7 @@ gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
 gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
 #XXX: development hack
-buildin_plugins_dir = os.path.join(
-        os.path.dirname(pida.__path__[0]),
-        'pida-plugins')
+buildin_plugins_dir = os.path.join(base_path, 'pida-plugins')
 
 if os.path.exists(buildin_plugins_dir):
     plugins_path = [plugins_dir, buildin_plugins_dir]
