@@ -56,8 +56,19 @@ class ProjectListView(PidaView):
     def update_project(self, project):
         self.project_ol.update(project)
 
+    def remove(self, project):
+        # each may be None, we get the desired behavior in all cases
+        # desired = if not first item select the one before
+        #           else try to select the one after
+        #           if empty select none
+        before = self.project_ol.item_before(project)
+        after = self.project_ol.item_after(project)
+        self.project_ol.selected_item = before or after
+        self.project_ol.remove(project)
+
     def can_be_closed(self):
         self.svc.get_action('project_properties').set_active(False)
+
 
 class ProjectSetupView(PidaView):
 

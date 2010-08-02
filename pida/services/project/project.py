@@ -510,7 +510,8 @@ class ProjectService(Service):
             % project.name
         ):
             self._projects.remove(project)
-            self.project_list.project_ol.remove(project, select=True)
+            self.project_list.remove(project)
+
             self._save_options()
             return True
 
