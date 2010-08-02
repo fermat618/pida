@@ -71,9 +71,9 @@ def test_relpath(project, tmpdir):
 
 
 def test_cache(project, tmpdir):
-    project.load_cache()
+    project.indexer.load_cache()
     #XXX: added cause of fucked cache
-    project.index('', recrusive=True)
+    project.indexer.index('', recrusive=True)
 
     c = project.indexer.cache
     #the empty cache should contain the root elements and the metadata
@@ -86,13 +86,13 @@ def test_cache(project, tmpdir):
     tmpdir.ensure('src', dir=True)
     tmpdir.ensure('lib', dir=True)
 
-    project.index(recrusive=True)
+    project.indexer.index(recrusive=True)
     assert sorted(c['dirnames']) == ['', '.pida-metadata', 'lib', 'src']
     assert sorted(c['dirs']) == ['', '.pida-metadata', 'lib', 'src']
 
     tmpdir.ensure("src", "test", dir=True)
     tmpdir.ensure("outside", dir=True)
-    project.index("src", recrusive=True)
+    project.indexer.index("src", recrusive=True)
 
     print sorted(c['dirs'])
     assert sorted(c['dirnames']) == ['', '.pida-metadata', 'lib', 'src', 'test']
@@ -103,7 +103,7 @@ def test_cache(project, tmpdir):
 
     #generate dummy data
     make_project_files(tmpdir)
-    project.index("", recrusive=True)
+    project.indexer.index("", recrusive=True)
 
     # test doctypes
     assert c['files']['LICENSE'].doctype is None
@@ -118,7 +118,7 @@ def test_cache(project, tmpdir):
     # start removing files
     tmpdir.join('lib', 'bla').remove(rec=True)
     assert not tmpdir.join('lib', 'bla').check()
-    project.index('lib', recrusive=True)
+    project.indexer.index('lib', recrusive=True)
 
     assert 'bla' not in c['dirnames']
     assert 'bla' not in c['paths']
@@ -154,8 +154,8 @@ def test_cache(project, tmpdir):
     assert set(dirs).issubset(c['paths'])
 
     # save the state and reload
-    project.save_cache()
-    assert project.load_cache()
+    project.indexer.save_cache()
+    assert project.indexer.load_cache()
     c = project.indexer.cache # loadin sets the cache
 
     assert set(files).issubset(c['files'])
@@ -170,8 +170,8 @@ def test_cache(project, tmpdir):
     # add new file
     tmpdir.ensure('src/blubb')
     tmpdir.ensure('src/noho', dir=True)
-    project.index('src/blubb')
-    project.index('src/noho')
+    project.indexer.index('src/blubb')
+    project.indexer.index('src/noho')
     assert len(c['filenames']['blubb']) == 1
     assert c['files']['src/blubb'].relpath == 'src/blubb'
 
@@ -182,9 +182,9 @@ def test_cache(project, tmpdir):
 def test_query(project, tmpdir):
     make_project_files(tmpdir)
 
-    project.index(recrusive=True)
+    project.indexer.index(recrusive=True)
     def query(*k, **kw):
-        return [x.relpath for x in project.query_basename(*k, **kw)]
+        return [x.relpath for x in project.indexer.query_basename(*k, **kw)]
 
     assert query('source.c') == ['src/source.c']
     rel = query('source.c')[0]
@@ -231,7 +231,7 @@ def test_query(project, tmpdir):
             return Result(accept=True)
         return Result(accept=False)
 
-    bases = [x.basename for x in project.query(find_file)]
+    bases = [x.basename for x in project.indexer.query(find_file)]
     assert bases == ['source.c', 'source2.c', 'source2.h']
 
     # test subdir check
@@ -241,7 +241,7 @@ def test_query(project, tmpdir):
         elif info.is_dir:
             return Result(accept=True)
 
-    bases = [x.relpath for x in project.query(find_subdir)]
+    bases = [x.relpath for x in project.indexer.query(find_subdir)]
     print bases
 
     assert bases == ['', '.SVN', '.pida-metadata', 'src', 'src/.SVN',
@@ -252,7 +252,7 @@ def test_query(project, tmpdir):
             return Result(accept=True, recurse=False)
         return Result(accept=True)
 
-    bases = [x.relpath for x in project.query(testc)]
+    bases = [x.relpath for x in project.indexer.query(testc)]
     assert bases == ['', '.SVN', '.hiddenfile', '.pida-metadata',
                     '.pida-metadata/project.json', 'LICENSE', 'lib',
                     'src', 'src/.SVN', 'src/CVS', 'src/Makefile',
