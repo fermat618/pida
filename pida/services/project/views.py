@@ -84,7 +84,13 @@ class ProjectSetupView(PidaView):
                                  self._on_script_view__cancel_request)
         self.script_view.connect('project-saved',
                                  self._on_script_view__project_saved)
-        self.add_slave(self.script_view, 'widget')
+
+
+        self.add_tool('Puilder', self.script_view)
+
+    def add_tool(self, name, widget):
+        #XXX: real implementation
+        self.add_slave(widget, 'widget')
 
     def test_execute(self, target, project):
         self.svc.execute_target(None, target, project)
