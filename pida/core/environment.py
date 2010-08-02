@@ -47,6 +47,9 @@ get_pixmap_path = partial(get_resource_path, 'pixmaps')
 get_data_path = partial(get_resource_path, 'data')
 
 
+pida_home = None
+firstrun_filename = None
+
 def setup_paths(home):
     global pida_home, firstrun_filename, settings_dir
     global plugins_path, plugins_dir
@@ -109,6 +112,8 @@ parser.add_argument('--pida-home', default='~/.pida2')
 env = dict(os.environ)
 
 on_windows = sys.platform == 'win32' #XXX: checked only on xp
+opts = None
+args = None
 
 def parse_args(argv):
     global opts, args
