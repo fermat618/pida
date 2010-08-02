@@ -5,8 +5,12 @@ The Python Integrated Development Application IDE Framework
 try:
     version = __import__('pkg_resources') \
             .get_distribution('pida').version
-except:
-    version = 'unknown'
+except Exception:  # DistributionNotFound
+    try:
+        import hgdistver
+        version = hgdistver.get_version()
+    except ImportError:
+        version = 'unknown'
 
 copyright = 'Copyright (c) 2005-2009 The PIDA Project'
 
