@@ -6,6 +6,8 @@ import imp
 import os
 import shutil
 import sys
+import py
+
 
 from os.path import join
 
@@ -88,7 +90,7 @@ class ServiceLoadTest(TestCase):
 
         self.p5 = p5 = PseudoPackage('t5')
         self._spath5 = gen(p5, 'testservice')
-        self._gladedir = os.path.join(self._spath5, 'pixmapa')
+        self._gladedir = os.path.join(self._spath5, 'pixmaps')
         os.mkdir(self._gladedir)
         self._dumglade = os.path.join(self._gladedir, 'fun.jpg')
         f = open(self._dumglade, 'w')
@@ -129,9 +131,9 @@ class ServiceLoadTest(TestCase):
         self.p1.clean()
 
 
-class ServiceManagerTest(TestCase):
+class TestServiceManager(object):
 
-    def setUp(self):
+    def setup_method(self, method):
         # A working service
         self.p = p = PseudoPackage('m1')
         gen(p, 'testservice')
@@ -146,31 +148,17 @@ class ServiceManagerTest(TestCase):
         #XXX internal hack
         self.sm._loader = p.loader
 
-    def tearDown(self):
+    def teardown_method(self, method):
         self.p.clean()
 
-    #FIXME
-    def __borked__test_service_manager_register(self):
+    def test_service_manager_register(self):
         service = self.sm._loader.get_one('testservice')
+        print service.get_name()
         self.sm._register(service)
-        self.assertEqual(
-            self.sm.get_service('myservice').get_name(),
-            self.svc.get_name()
-        )
-        self.assertEqual(
-            self.sm.get_services()[0],
-            self._svc
-        )
+        assert self.sm.get_service('testservice') is service
 
-    #FIXME
-    def __borked__test_service_manager_load(self):
-        self._sm._loader.get_all(self._spath)
-        self.assertEqual(
-            self._sm.get_service('testservice').__class__.__name__,
-            'Service'
-        )
-        self.assertEqual(
-            [s for s in self._sm.get_services()][0].__class__.__name__,
-            'Service'
-        )
+    def test_service_manager_load(self):
+        print self.sm._loader.get_all()
+        service = self.sm._loader.get_one('testservice')
+        assert service.get_name() == 'testservice'
 
