@@ -59,8 +59,8 @@ def get_line_from_file(file_name, line=None, offset=None):
     """
     fp = open(file_name)
     if line is not None:
-        for fline in enumerate(fp):
-            if i == line:
+        for i, fline in enumerate(fp):
+            if i+1 == line:
                 return fline.strip()
     elif offset is not None:
         fp.seek(offset)
