@@ -626,6 +626,7 @@ class Window(Service):
                 gtk.UI_MANAGER_MENUITEM, 
                 False)
             i += 1
+        self.boss.window._uim.ensure_update()
         return None
 
 # Required Service attribute for service loading
