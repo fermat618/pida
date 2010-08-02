@@ -41,7 +41,14 @@ class PluginMessage(Message, object):
     description = property(
         Message.get_payload, 
         Message.set_payload)
-    
+
+    @property
+    def directory(self):
+        try:
+            return os.path.join(self.base, self.plugin)
+        except AttibuteError:
+            return None
+
     def __repr__(self):
         return '<Plugin metadata %s: %s>'%(getattr(self, 'plugin', None), self.name)
 

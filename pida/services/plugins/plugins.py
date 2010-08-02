@@ -198,7 +198,6 @@ class PluginsView(PidaView):
         directory = self.publish_directory.get_filename()
         if self.svc.is_plugin_directory(directory):
             self.item = self.svc.read_plugin_informations(directory)
-            self.item.directory = directory
             self.publish_button.set_sensitive(True)
             self.publish_edit_button.set_sensitive(True)
             self.svc._viewedit.set_item(self.item)
@@ -508,7 +507,6 @@ class Plugins(Service):
 
     def install(self, item, content):
         item.base = plugins_dir
-        item.directory = os.path.join(plugins_dir, item.plugin)
 
         # this will gracefully ignore not installed plugins
         self.delete(item, force=True)
