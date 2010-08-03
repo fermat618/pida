@@ -55,8 +55,10 @@ LEXPORT = EXPORT(suffix='language')
 # we have to put our type database here, as plugins may need it long before
 # registering
 from .__init__ import DOCTYPES
-from .gui import (ValidatorView, BrowserView, LanguageEntry,
-                 LanguagePriorityView, DefinitionView)
+from .views import (
+    ValidatorView, BrowserView, DefinitionView,
+    LanguageEntry, LanguagePriorityView,
+)
 
 def get_value(tab, key):
     return tab.get(key, None)
