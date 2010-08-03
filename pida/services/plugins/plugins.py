@@ -15,7 +15,6 @@
 
     :license: GPL2 or later
 """
-from __future__ import with_statement
 import StringIO
 
 
@@ -603,20 +602,18 @@ class Plugins(Service):
         self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
-        markup = '<b>%s</b>' % cgi.escape(item.name or str(item))
-        if item.version:
-            markup += '\n<b>%s</b> : %s' % (_('Version'),
-                    cgi.escape(item.version))
-        if item.author:
-            markup += '\n<b>%s</b> : %s' % (_('Author'),
-                    cgi.escape(item.author))
-        if item.category:
-            markup += '\n<b>%s</b> : %s' % (_('Category'),
-                    cgi.escape(item.category))
-        if item.depends:
-            markup += '\n<b>%s</b> : %s' % (_('Depends'),
-                    cgi.escape(item.depends))
-        return markup
+        markup = ['<b>%s</b>' % cgi.escape(item.name or str(item))]
+        addstr = '<b>%s</b> : %s'
+        def maybe_markup(name, label):
+            attr = getattr(item, name)
+            if attr:
+                attr = cgi.escape(attr)
+                markup.append(addstr % (label, attr))
+        maybe_markup('version', _('Version'))
+        maybe_markup('author', _('Author'))
+        maybe_markup('category', _('Category'))
+        maybe_markup('depends', _('Depends'))
+        return '\n'.join(markup)
 
 
     def check_for_updates(self, check):
