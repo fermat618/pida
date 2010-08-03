@@ -22,7 +22,6 @@ from pida.core.log import Log
 
 from pida.core.languages import (LanguageService, Validator, External)
 from pida.utils.languages import (
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
    Definition, Suggestion, Documentation, ValidationError)
 
 # locale
@@ -90,16 +89,15 @@ except ImportError:
 #         pass
 
 SUBTYPE_MAPPING = {
-'W0511': LANG_VALIDATOR_SUBTYPES.FIXME,
-'W0622': LANG_VALIDATOR_SUBTYPES.REDEFINED,
-'W0611': LANG_VALIDATOR_SUBTYPES.UNUSED,
-'W0612': LANG_VALIDATOR_SUBTYPES.UNUSED,
-'E1101': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
-'W0201': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
-'W0212': LANG_VALIDATOR_SUBTYPES.PROTECTION,
-'W0703': LANG_VALIDATOR_SUBTYPES.DANGEROUS,
-'W0107': LANG_VALIDATOR_SUBTYPES.UNUSED,
-
+    'W0511': 'fixme',
+    'W0622': 'redefined',
+    'W0611': 'unused',
+    'W0612': 'unused',
+    'E1101': 'undefined',
+    'W0201': 'undefined',
+    'W0212': 'protection',
+    'W0703': 'dangerous',
+    'W0107': 'unused',
 }
 
 
@@ -122,11 +120,11 @@ class PythonError(ValidationError, Log):
                 message_string = self.message
         else:
             message_string = self.message
-        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
+        if self.type_ == 'error':
             typec = self.lookup_color('pida-val-error')
-        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
+        elif self.type_ == 'error':
             typec = self.lookup_color('pida-val-info')
-        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
+        elif self.type_ == 'warning':
             typec = self.lookup_color('pida-val-warning')
         else:
             typec = self.lookup_color('pida-val-def')
@@ -144,10 +142,9 @@ class PythonError(ValidationError, Log):
     """>:<span style="italic">%(subtype)s</span>  -  """
     """<span size="small" style="italic">%(msg_id)s</span>\n%(message)s""" % 
                       {'lineno':self.lineno,
-                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
-                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
-                                    self.subtype).capitalize()),
-                      'message':message_string,
+                      'type': self.level.capitalize(),
+                      'subtype': self.kind.capitalize(),
+                      'message': message_string,
                       'linecolor': linecolor,
                       'typec': typec,
                       'msg_id': self.msg_id
@@ -225,26 +222,26 @@ class PidaLinter(PyLinter, Log):
             return        
         # update stats
         if msg_id[0] == 'I':
-            ty = LANG_VALIDATOR_TYPES.INFO
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'info'
+            sty = 'unknown'
         elif msg_id[0] == 'C':
-            ty = LANG_VALIDATOR_TYPES.INFO
-            sty = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+            ty = 'info'
+            sty = 'badstyle'
         elif msg_id[0] == 'R':
-            ty = LANG_VALIDATOR_TYPES.WARNING
-            sty = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+            ty = 'info'
+            sty = 'badstyle'
         elif msg_id[0] == 'W':
-            ty = LANG_VALIDATOR_TYPES.WARNING
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'warning'
+            sty = 'unknown'
         elif msg_id[0] == 'E':
-            ty = LANG_VALIDATOR_TYPES.ERROR
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'error'
+            sty = 'unknown'
         elif msg_id[0] == 'F':
-            ty = LANG_VALIDATOR_TYPES.FATAL
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'fatal'
+            sty = 'unknown'
         else:
-            ty = LANG_VALIDATOR_TYPES.UNKNOWN
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'unknown'
+            sty = 'unknown'
 
         #msg_cat = MSG_TYPES[msg_id[0]]
         #self.stats[msg_cat] += 1
@@ -269,8 +266,8 @@ class PidaLinter(PyLinter, Log):
             path = node.root().file
         # add the message
         cmsg = PythonError( message = msg,
-                            type_ = ty,
-                            subtype = sty,
+                            level = ty,
+                            kind = sty,
                             filename = path,
                             message_args = args or (),
                             lineno = line or 1,

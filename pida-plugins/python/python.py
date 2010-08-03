@@ -38,8 +38,8 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
     Documentator, External)
 
 from pida.utils.languages import (
-    COMPLETER,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, 
+    COMPLETER, VALIDATOR_LEVEL, VALIDATOR_KIND,
+    LANG_OUTLINER_TYPES, 
     LANG_PRIO, Definition, Suggestion, Documentation, ValidationError)
 
 # services
@@ -223,50 +223,12 @@ def _create_exception_validation(e):
     msg.lineno = lineno
     msg.message_args = (line,)
     msg.message = '<tt>%%s</tt>\n<tt>%s^</tt>' % (' ' * (offset - 2))
-    msg.type_ = LANG_VALIDATOR_TYPES.ERROR
+    msg.type_ = 'error'
     if isinstance(e, SyntaxError):
-        msg.subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
+        msg.kind = 'syntax'
     else:
-        msg.subtype = LANG_VALIDATOR_SUBTYPES.INDENTATION
+        msg.kind = 'indentation'
     return [msg]
-
-class PythonError(ValidationError):
-    def get_markup(self):
-        args = [('<b>%s</b>' % arg) for arg in self.message_args]
-        message_string = self.message % tuple(args)
-        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
-            typec = self.lookup_color('pida-val-error')
-        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
-            typec = self.lookup_color('pida-val-info')
-        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
-            typec = self.lookup_color('pida-val-warning')
-        else:
-            typec = self.lookup_color('pida-val-def')
-        
-        if typec:
-            typec = typec.to_string()
-        else:
-            typec = "black"
-        
-        linecolor = self.lookup_color('pida-lineno')
-        if linecolor:
-            linecolor = linecolor.to_string()
-        else:
-            linecolor = "black"
-        
-        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
-    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno, 
-                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
-                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
-                                    self.subtype).capitalize()),
-                      'message':message_string,
-                      'linecolor': linecolor,
-                      'typec': typec,
-                      })
-        return markup
-    markup = property(get_markup)
 
 class PythonValidator(Validator):
 
@@ -286,33 +248,34 @@ class PythonValidator(Validator):
             w = Checker(tree, filename)
             messages = w.messages
         for m in messages:
-            type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
-            subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
 
             #FIXME add pyflakes 0.3 types
             #FIXME make mapping
             if isinstance(m, pyflakes.messages.UnusedImport):
-                type_ = LANG_VALIDATOR_TYPES.INFO
-                subtype = LANG_VALIDATOR_SUBTYPES.UNUSED
+                level = VALIDATOR_LEVEL.INFO
+                kind = VALIDATOR_KIND.UNUSED
             elif isinstance(m, pyflakes.messages.RedefinedWhileUnused):
-                type_ = LANG_VALIDATOR_TYPES.WARNING
-                subtype = LANG_VALIDATOR_SUBTYPES.REDEFINED
+                level = VALIDATOR_LEVEL.WARNING
+                kind = VALIDATOR_KIND.REDEFINED
             elif isinstance(m, pyflakes.messages.ImportStarUsed):
-                type_ = LANG_VALIDATOR_TYPES.WARNING
-                subtype = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+                level = VALIDATOR_LEVEL.WARNING
+                kind = VALIDATOR_KIND.BADSTYLe
             elif isinstance(m, pyflakes.messages.UndefinedName):
-                type_ = LANG_VALIDATOR_TYPES.ERROR
-                subtype = LANG_VALIDATOR_SUBTYPES.UNDEFINED
+                level = VALIDATOR_LEVEL.ERROR
+                kind = VALIDATOR_KIND.UNDEFINED
             elif isinstance(m, pyflakes.messages.DuplicateArgument):
-                type_ = LANG_VALIDATOR_TYPES.ERROR
-                subtype = LANG_VALIDATOR_SUBTYPES.DUPLICATE
+                type_ = VALIDATOR_LEVEL.ERROR
+                kind = VALIDATOR_KIND.DUPLICATE
+            else:
+                level = VALIDATOR_LEVEL.UNKNOWN
+                kind = VALIDATOR_KIND.UNKNOWN
 
-            ve = PythonError(
+            ve = ValidationError(
                 message=m.message,
                 message_args=m.message_args,
                 lineno=m.lineno,
-                type_=type_,
-                subtype=subtype,
+                level=level,
+                kind=kind,
                 filename=filename
                 )
             yield ve

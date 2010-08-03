@@ -41,14 +41,13 @@ COMPLETER = Symbols('completer', [
 
 
 
-# main types
-LANG_VALIDATOR_TYPES = Enumeration('LANG_TYPES',
-    ('UNKNOWN', 'INFO', 'WARNING', 'ERROR', 'FATAL'))
+VALIDATOR_KIND = Symbols('validation errors',
+    ('unknown', 'syntax', 'indentation', 'undefined', 'redefined', 'badstyle',
+     'duplicate', 'unused', 'fixme', 'protection', 'dangerous'))
 
-# validation sub types
-LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
-    ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
-     'DUPLICATE', 'UNUSED', 'FIXME', 'PROTECTION', 'DANGEROUS'))
+VALIDATOR_LEVEL = Symbols('validation level',
+    ('unknown', 'info', 'warning', 'error', 'fatal'))
+
 
 # validation sub types
 
@@ -116,8 +115,8 @@ class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
     message_args = None
-    type_ = LANG_VALIDATOR_TYPES.UNKNOWN
-    subtype = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+    level = VALIDATOR_LEVEL.UNKNOWN
+    kind = VALIDATOR_KIND.UNKNOWN
     filename = None
     lineno = None
 
@@ -134,41 +133,25 @@ class ValidationError(InitObject):
         pass
 
     def get_markup(self):
-        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
-            typec = self.lookup_color('pida-val-error')
-        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
-            typec = self.lookup_color('pida-val-info')
-        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
-            typec = self.lookup_color('pida-val-warning')
-        else:
-            typec = self.lookup_color('pida-val-def')
-        
+        mapping = {
+            VALIDATOR_LEVEL.ERROR: 'pida-val-error',
+            VALIDATOR_LEVEL.INFO: 'pida-val-info',
+            VALIDATOR_LEVEL.WARNING: 'pida-val-warning',
+        }
+        typec = mapping.get(self.kind, 'pida-val-def')
+
         markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
     """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
     """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
                       {'lineno':self.lineno, 
-                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
-                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
-                                    self.subtype).capitalize()),
+                      'type': self.level.capitalize(),
+                      'subtype': self.kind.capitalize(),
                       'message':self.message,
                       'linecolor': color_to_string(self.lookup_color('pida-lineno')),
                       'typec': color_to_string(typec),
                       })
         return markup
     markup = property(get_markup)
-#     def get_markup(self):
-#         #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-#         #message_string = self.message % tuple(args)
-#         #msg.name = msg.__class__.__name__
-#         markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
-#                       (self.lineno, 
-#                       LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
-#                       LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
-#                       self.message))
-#         return markup
-#     
-#     markup = property(get_markup)
-
 
 
 
