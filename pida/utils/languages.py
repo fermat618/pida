@@ -8,9 +8,11 @@ List of general Language classes.
 
 """
 from .addtypes import Enumeration
+from .symbols import Symbols
 from .path import get_line_from_file
 from .descriptors import cached_property
 
+import itertools
 
 
 #!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -20,12 +22,23 @@ from .descriptors import cached_property
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+COMPLETER = Symbols('completer', [
+    'unknown',
+    'attribute',
+    'class',
+    'method',
+    'function',
+    'module',
+    'property',
+    'extramethod',
+    'variable',
+    'import',
+    'parameter',
+    'builtin',
+    'keyword',
+    'snippet',
+])
 
-# completer types
-LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
-    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 
-    'PROPERTY', 'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
-    'KEYWORD', 'SNIPPET'))
 
 
 # main types
@@ -237,7 +250,7 @@ class Suggestion(unicode):
     """
     Suggestions are returned by an Completer class
     """
-    type_ = LANG_TYPES.UNKNOWN
+    type_ = COMPLETER.UNKNOWN
     doc = None
     docpath = None
     signature = None

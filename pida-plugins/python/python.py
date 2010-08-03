@@ -37,7 +37,8 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, 
     Documentator, External)
 
-from pida.utils.languages import (LANG_COMPLETER_TYPES,
+from pida.utils.languages import (
+    COMPLETER,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, 
     LANG_PRIO, Definition, Suggestion, Documentation, ValidationError)
 
@@ -342,22 +343,15 @@ class PythonCompleter(Completer):
                 r = Suggestion(c.name)
                 #'variable', 'class', 'function', 'imported' , 'paramter'
                 if keyword.iskeyword(c.name):
-                    r.type_ = LANG_COMPLETER_TYPES.KEYWORD
-                elif c.type == 'variable':
-                    r.type_ = LANG_COMPLETER_TYPES.VARIABLE
-                elif c.type == 'class':
-                    r.type_ = LANG_COMPLETER_TYPES.CLASS
-                elif c.type == 'builtin':
-                    r.type_ = LANG_COMPLETER_TYPES.BUILTIN
-                elif c.type == 'function':
-                    r.type_ = LANG_COMPLETER_TYPES.FUNCTION
-                elif c.type == 'parameter':
-                    r.type_ = LANG_COMPLETER_TYPES.PARAMETER
+                    r.type_ = COMPLETER.KEYWORD
+                elif c.type in ('variable','class', 'builtin',
+                                'function', 'parameter',):
+                    r.type_ = getattr(COMPLETER, c.type.upper())
                 elif c.type == None:
                     if c.kind == "parameter_keyword":
-                        r.type_ = LANG_COMPLETER_TYPES.PARAMETER
+                        r.type_ = COMPLETER.PARAMETER
                 else:
-                    r.type_ = LANG_COMPLETER_TYPES.UNKNOWN
+                    r.type_ = COMPLETER.UNKNOWN
                 yield r
 
 class PythonDefiner(Definer):
