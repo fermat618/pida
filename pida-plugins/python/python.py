@@ -39,7 +39,6 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
 
 from pida.utils.languages import (
     COMPLETER, VALIDATOR_LEVEL, VALIDATOR_KIND,
-    LANG_OUTLINER_TYPES, 
     LANG_PRIO, Definition, Suggestion, Documentation, ValidationError)
 
 # services
@@ -132,14 +131,10 @@ class PythonOutliner(Outliner):
     description = _("A very deep and precises, but slow outliner")
 
 
-    filter_type = (LANG_OUTLINER_TYPES.IMPORT,
-                    LANG_OUTLINER_TYPES.BUILTIN,
-                    LANG_OUTLINER_TYPES.METHOD,
-                    LANG_OUTLINER_TYPES.FUNCTION,
-                    LANG_OUTLINER_TYPES.PROPERTY,
-                    LANG_OUTLINER_TYPES.ATTRIBUTE,
-                    LANG_OUTLINER_TYPES.SUPERMETHOD,
-                    )
+    filter_type = (
+        'import', 'builtin', 'method', 'function',
+        'property', 'attribute', 'supermethod',
+        )
 
     def get_outline(self):
         from rope.base.exceptions import RopeError

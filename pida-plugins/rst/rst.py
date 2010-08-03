@@ -13,7 +13,7 @@ from collections import defaultdict
 # PIDA imports
 from pida.core.languages import LanguageService, Outliner, Validator
 from pida.utils.languages import (
-    LANG_PRIO, LANG_OUTLINER_TYPES,
+    LANG_PRIO,
     VALIDATOR_LEVEL, VALIDATOR_KIND,
     OutlineItem, ValidationError,
 )
@@ -248,8 +248,7 @@ class RSTOutliner(Outliner):
     name = "rst outliner"
     description = _("An outliner for ReStructuredText")
 
-    section_types = (LANG_OUTLINER_TYPES.SECTION,
-                     LANG_OUTLINER_TYPES.PARAGRAPH)
+    section_types = ('section', 'paragraph')
 
     def get_outline(self):
         self.doc_items = RSTTokenList()
@@ -281,7 +280,7 @@ class RSTOutliner(Outliner):
                   isinstance(node, nodes.figure)):
                 new_item = True
                 name = node.attributes['uri']
-                type = LANG_OUTLINER_TYPES.UNKNOWN
+                type = 'unknown'
                 is_container = False
                 # nodes with options have no line attribute
                 linenumber = node.line or node.parent.line

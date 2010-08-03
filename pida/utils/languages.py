@@ -51,14 +51,13 @@ VALIDATOR_LEVEL = Symbols('validation level',
 
 # validation sub types
 
-LANG_TYPES = Enumeration('LANG_TYPES',
- ('', 'UNKNOWN', 
- 'ATTRIBUTE', 'BUILTIN', 'CLASS', 'DEFINE', 'ENUMERATION',
- 'ENUMERATION_NAME', 'FUNCTION', 'IMPORT', 'MEMBER', 'METHOD', 'PROPERTY',
- 'PROTOTYPE', 'STRUCTURE', 'SUPERMETHOD', 'SUPERPROPERTY', 'TYPEDEF', 'UNION',
- 'VARIABLE', 'NAMESPACE', 'ELEMENT', 'SECTION', 'CHAPTER', 'PARAGRAPH'))
+OUTLINER = Symbols('outline',
+ ('unknown',
+ 'attribute', 'builtin', 'class', 'define', 'enumeration',
+ 'enumeration_name', 'function', 'import', 'member', 'method', 'property',
+ 'prototype', 'structure', 'supermethod', 'superproperty', 'typedef', 'union',
+ 'variable', 'namespace', 'element', 'section', 'chapter', 'paragraph'))
 
-LANG_OUTLINER_TYPES = LANG_TYPES
 
 LANG_PRIO = Enumeration('LANG_PRIORITIES',
 (
@@ -72,29 +71,29 @@ LANG_PRIO = Enumeration('LANG_PRIORITIES',
 
 
 LANG_IMAGE_MAP = {
-    LANG_TYPES.ATTRIBUTE: 'source-attribute',
-    LANG_TYPES.BUILTIN: 'source-attribute',
-    LANG_TYPES.CLASS: 'source-class',
-    LANG_TYPES.DEFINE: 'source-define',
-    LANG_TYPES.ENUMERATION: 'source-enum',
-    LANG_TYPES.ENUMERATION_NAME: 'source-enumarator',
-    LANG_TYPES.FUNCTION: 'source-function',
-    LANG_TYPES.IMPORT: 'source-import',
-    LANG_TYPES.MEMBER: 'source-member',
-    LANG_TYPES.METHOD: 'source-method',
-    LANG_TYPES.PROTOTYPE: 'source-interface',
-    LANG_TYPES.PROPERTY: 'source-property',
-    LANG_TYPES.METHOD: 'source-method',
-    LANG_TYPES.SUPERMETHOD: 'source-extramethod',
+    OUTLINER.ATTRIBUTE: 'source-attribute',
+    OUTLINER.BUILTIN: 'source-attribute',
+    OUTLINER.CLASS: 'source-class',
+    OUTLINER.DEFINE: 'source-define',
+    OUTLINER.ENUMERATION: 'source-enum',
+    OUTLINER.ENUMERATION_NAME: 'source-enumarator',
+    OUTLINER.FUNCTION: 'source-function',
+    OUTLINER.IMPORT: 'source-import',
+    OUTLINER.MEMBER: 'source-member',
+    OUTLINER.METHOD: 'source-method',
+    OUTLINER.PROTOTYPE: 'source-interface',
+    OUTLINER.PROPERTY: 'source-property',
+    OUTLINER.METHOD: 'source-method',
+    OUTLINER.SUPERMETHOD: 'source-extramethod',
     #FIXME: superproperty icon
-    LANG_TYPES.SUPERPROPERTY: 'source-property',
-    LANG_TYPES.TYPEDEF: 'source-typedef',
-    LANG_TYPES.UNION: 'source-union',
-    LANG_TYPES.VARIABLE: 'source-variable',
-    LANG_TYPES.SECTION: 'source-section',
-    LANG_TYPES.PARAGRAPH: 'source-paragraph',
-    LANG_TYPES.NAMESPACE: 'source-namespace',
-    LANG_TYPES.ELEMENT: 'source-element',
+    OUTLINER.SUPERPROPERTY: 'source-property',
+    OUTLINER.TYPEDEF: 'source-typedef',
+    OUTLINER.UNION: 'source-union',
+    OUTLINER.VARIABLE: 'source-variable',
+    OUTLINER.SECTION: 'source-section',
+    OUTLINER.PARAGRAPH: 'source-paragraph',
+    OUTLINER.NAMESPACE: 'source-namespace',
+    OUTLINER.ELEMENT: 'source-element',
 }
 
 
@@ -159,7 +158,7 @@ class OutlineItem(InitObject):
     """
     Outlines are returned by an Outliner class
     """
-    type = LANG_TYPES.UNKNOWN
+    type = OUTLINER.UNKNOWN
     name = ''
     parent = None
     id = None
@@ -196,7 +195,7 @@ class OutlineItem(InitObject):
 
 class Definition(InitObject):
     """Returned by a Definer instance"""
-    type = LANG_TYPES.UNKNOWN
+    type = OUTLINER.UNKNOWN
     file_name = None
     offset = None
     length = None

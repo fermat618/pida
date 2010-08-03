@@ -14,7 +14,7 @@ from pida.core.projects import Project as PidaProject
 from rope.base.project import Project, get_no_project
 from rope.base import pynames, pyobjects, builtins
 
-from pida.utils.languages import LANG_OUTLINER_TYPES, OutlineItem
+from pida.utils.languages import OutlineItem
 from itertools import count
 
 OUTLINE_COUNTER = count()
@@ -70,7 +70,7 @@ class TreeOptions(object):
     position = 0
     has_children = False
     icon_name = 'source-property'
-    filter_type =  LANG_OUTLINER_TYPES.UNKNOWN
+    filter_type = 'unknown'
 
     def __init__(self, treeitem, obj):
         pass
@@ -91,7 +91,7 @@ class FunctionOptions(TreeOptions):
     icon_name = 'source-function'
     type_color = '#900000'
     position = 2
-    filter_type = LANG_OUTLINER_TYPES.UNKNOWN
+    filter_type = 'unknown'
 
     def __init__(self, item, obj):
         decs = []
@@ -126,13 +126,13 @@ class EvaluatedOptions(TreeOptions):
     type_name = 'p'
     icon_name = 'source-property'
     type_color = '#900090'
-    filter_type = LANG_OUTLINER_TYPES.PROPERTY
+    filter_type = 'property'
 
 class MethodOptions(FunctionOptions):
 
     type_name = 'm'
     icon_name = 'source-method'
-    filter_type = LANG_OUTLINER_TYPES.METHOD
+    filter_type = 'method'
 
 
 class SuperMethodOptions(MethodOptions):
@@ -140,7 +140,7 @@ class SuperMethodOptions(MethodOptions):
     type_name = '(m)'
     icon_name = 'source-extramethod'
     position = 6
-    filter_type = LANG_OUTLINER_TYPES.SUPERMETHOD
+    filter_type = 'supermethod'
 
 
 class ClassMethodOptions(MethodOptions):
@@ -188,7 +188,7 @@ class AssignedOptions(TreeOptions):
     icon_name = 'source-attribute'
     type_color = '#009000'
     position = 5
-    filter_type = LANG_OUTLINER_TYPES.ATTRIBUTE
+    filter_type = 'attribute'
 
 
 class BuiltinOptions(TreeOptions):
@@ -197,7 +197,7 @@ class BuiltinOptions(TreeOptions):
     icon_name = None
     type_color = '#999999'
     position = 7
-    filter_type = LANG_OUTLINER_TYPES.BUILTIN
+    filter_type = 'builtin'
 
 
 class ImportedOptions(TreeOptions):
@@ -206,7 +206,7 @@ class ImportedOptions(TreeOptions):
     icon_name = 'source-import'
     type_color = '#999999'
     position = 8
-    filter_type = LANG_OUTLINER_TYPES.IMPORT
+    filter_type = 'import'
 
 
 def get_option_for_item(item, node, obj, parent_obj=None):
