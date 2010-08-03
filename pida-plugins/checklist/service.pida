@@ -1,5 +1,5 @@
 Name: Todo manager
-Version: 0.4
+Version: 0.5
 Author: Mathieu Virbel <tito@bankiz.org>
 Depends: pida>=0.6
 Category: user

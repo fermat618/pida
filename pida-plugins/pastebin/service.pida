@@ -1,6 +1,6 @@
 Name: Pastebin
 Author: Ali Afshar <aafshar@gmail.com>
-Version: 0.2.7
+Version: 0.2.8
 Depends: pida>=0.6
 Category: code
 

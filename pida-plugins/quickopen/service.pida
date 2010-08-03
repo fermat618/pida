@@ -1,6 +1,6 @@
 Name: QuickOpen
 Author: Daniel Poelzleithner <pida@poelzi.org>
-Version: 0.2
+Version: 0.3
 Depends: pida>=0.6
 Category: ui
 
