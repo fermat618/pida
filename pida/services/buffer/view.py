@@ -80,7 +80,7 @@ def render(doc, markup):
 class BufferListView(PidaView):
 
     key = 'buffer.list'
-    gladefile = 'buffer_list'
+    builder_file = 'buffer_list'
     locale = locale
     icon_name = 'package_office'
 

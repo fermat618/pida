@@ -307,7 +307,7 @@ class BrowserView(PidaView):
     key = 'language.browser'
 
 
-    gladefile = 'outline_browser'
+    builder_file = 'outline_browser'
     locale = locale
     icon_name = 'python-icon'
     label_text = _('Outliner')
@@ -583,7 +583,7 @@ class DefinitionView(PidaView):
 
     key = 'language.definition'
 
-    gladefile = 'definition'
+    builder_file = 'definition'
     #icon_name = 'python-icon'
     label_text = _('Definition')
 

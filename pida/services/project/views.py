@@ -17,7 +17,7 @@ class ProjectListView(PidaView):
 
     key = 'project.list'
 
-    gladefile = 'project_list'
+    builder_file = 'project_list'
     locale = locale
     label_text = _('Projects')
 
