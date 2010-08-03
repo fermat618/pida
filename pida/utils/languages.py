@@ -9,6 +9,7 @@ List of general Language classes.
 """
 from .addtypes import Enumeration
 from .path import get_line_from_file
+from .descriptors import cached_property
 
 
 
@@ -175,12 +176,9 @@ class OutlineItem(InitObject):
     def get_markup(self):
         return '<b>%s</b>' % self.name
 
-    def _get_icon_name(self):
-        return getattr(self, '_icon_name_set', 
-                                    LANG_IMAGE_MAP.get(self.type, ''))
-    def _set_icon_name(self, value):
-        self._icon_name_set = value
-    icon_name = property(_get_icon_name, _set_icon_name)
+    @cached_property
+    def icon_name(self):
+        return LANG_IMAGE_MAP.get(self.type, '')
 
     #XXX: these 2 hacks need tests!!!
     @property
@@ -218,13 +216,9 @@ class Definition(InitObject):
             where = " line %s " % self.line
         return '<Definition %s%s>' % (self.file_name, where)
 
-    def _get_icon_name(self):
-        return getattr(self, '_icon_name_set', 
-                                    LANG_IMAGE_MAP.get(self.type, ''))
-    def _set_icon_name(self, value):
-        self._icon_name_set = value
-
-    icon_name = property(_get_icon_name, _set_icon_name)
+    @cached_property
+    def icon_name(self):
+        return LANG_IMAGE_MAP.get(self.type, '')
 
     def _get_signature(self):
         if self.line is None and self.offset is None:
