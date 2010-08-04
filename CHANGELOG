@@ -1,0 +1,39 @@
+
+
+
+changes before 0.6.2
+---------------------
+
+ * switch to hgdistver
+ * switch back to setuptools
+   * kill our build_doc command, build_sphinx works
+ * bump the required python version to 2.6
+   * settings are now stored using stdlib json
+   * puilder uses stdlib json
+   * window state is now stored in json
+ * add execnet/py to the depends
+   * port the nosetest plugin from dbus to execnet
+ * remove the last uses of the gtkforms module for pygtkhelpers
+ * fix up various transition-leftovers of the kiwi to pygtkhelpers switch
+ * ignore locales/translations for now
+ * switch to the most recent anyvc api
+ * use the real bpython-gtk since its availiable now
+ * beef up various core datatypes
+   * remove document.unique_id
+   * kill the buffer list markup helpers in document
+   * move indexer functionality from project to a dedicated type
+
+ * kill the bugtracker service since we dont use launchpad any more
+ * bugfixes in the trac plugin (thanks Christopher)
+ * remove all parts of pida.utils.gthreads we have in pygtkhelpers
+ * remove the gtkhtml fallbacks of browseweb - webkit is the future
+ * removed the document encoding from the statusbar
+ * kill the PidaGladeView alias
+ * better logging of service failures
+ * fix incorrect handling of missing libs on startup
+ * fix project removal (#411)
+ * revise the internal resource-finder
+
+
+
+
