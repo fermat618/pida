@@ -134,10 +134,10 @@ setup(
         'Programming Language :: Python'
     ],
     install_requires = [
-        'anyvc>=0.3.1',
+        'anyvc>=0.3.2',
         'py>=1.3',
         'bpython>=0.9.7',
-        'pygtkhelpers',
+        'pygtkhelpers>0.4.1'
         'argparse',
         #'vte',
         #'dbus ?',
