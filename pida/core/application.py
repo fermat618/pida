@@ -73,9 +73,6 @@ except ImportError, e:
 
 
 def run_pida():
-    #XXX: nasty compat hack
-    import os
-    os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     from pida.core.boss import Boss
     b = Boss() #XXX: relocate firstrun
 
