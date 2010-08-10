@@ -35,7 +35,8 @@ from .views import (
 
 try:
     from anyvc import workdir
-except ImportError:
+    workdir.open
+except (ImportError, AttributeError):
 
     def workdir(path):
         pass
@@ -590,3 +591,4 @@ Service = Versioncontrol
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+
