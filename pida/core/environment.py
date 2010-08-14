@@ -104,23 +104,24 @@ parser.add_argument(
     '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
 parser.add_argument('--pida-home', default='~/.pida2')
+parser.add_argument('files', nargs='*', default=[])
 
 
 env = dict(os.environ)
 
 on_windows = sys.platform == 'win32' #XXX: checked only on xp
 opts = None
-args = None
 
 def parse_args(argv):
-    global opts, args
-    opts, args = parser.parse_known_args(argv)
+    global opts
+    opts = parser.parse_args(argv)
 
     if opts.killsettings:
         opts.firstrun = True
 
     setup_paths(opts.pida_home)
     parse_gtk_rcfiles()
+    return opts
 
 
 parse_args([])
@@ -148,9 +149,6 @@ def workspace_manager():
 
 def killsettings():
     return opts.killsettings
-
-def get_args():
-    return args
 
 def get_plugin_global_settings_path(name, filename=None):
     path = os.path.join(pida_home, name)
