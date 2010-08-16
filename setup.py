@@ -82,7 +82,6 @@ def get_package_data():
     packages = listpackages('pida/services') + listpackages('pida/editors')
     for package in packages:
         package_data[package] = [
-            'service.pida',
             'glade/*',
             'pixmaps/*',
             'uidef/*',
