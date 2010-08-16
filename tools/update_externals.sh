@@ -37,5 +37,6 @@ get_or_update anyvc http://bitbucket.org/RonnyPfannschmidt/anyvc/
 get_or_update pygtkhelpers http://bitbucket.org/aafshar/pygtkhelpers-main/
 get_or_update py http://bitbucket.org/hpk42/py-trunk/
 get_or_update execnet http://bitbucket.org/hpk42/execnet/
+get_or_update flatland http://bitbucket.org/jek/flatland/
 
 cd $FROM_WD

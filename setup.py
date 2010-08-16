@@ -139,6 +139,7 @@ setup(
         'bpython>=0.9.7',
         'pygtkhelpers>0.4.1'
         'argparse',
+        'flatland',
         #'vte',
         #'dbus ?',
         #'rope ?',
