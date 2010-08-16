@@ -13,16 +13,12 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
-import os
 import json
 
-from functools import partial
-
+import py
 
 from pango import Font
 from gtk.gdk import Color
-from shutil import rmtree
 
 from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
@@ -31,19 +27,16 @@ from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
 
-get_settings_path = partial(os.path.join, settings_dir)
+settings_dir = py.path.local(settings_dir)
 
 def add_directory(*parts):
-    dirn = get_settings_path(*parts)
-    if not os.path.exists(dirn):
-        os.makedirs(dirn)
-    return dirn
+    return settings_dir.ensure(*parts, dir=True)
 
 def unset_directory(*parts):
     #XXX: reload=!
-    path = get_settings_path(*parts)
-    if os.path.exists(path):
-        rmtree(get_settings_path(*parts))
+    path = settings_dir.join(*parts)
+    if path.check():
+        path.remove()
 
 def initialize():
     add_directory('keyboard_shortcuts')
@@ -51,12 +44,8 @@ def initialize():
 
 def list_workspaces():
     """Returns a list with all workspace names """
-    workspaces = get_settings_path('workspaces')
-    return [x for x in os.listdir(workspaces)
-                if os.path.isdir(
-                    os.path.join(workspaces, x)
-                )
-            ]
+    workspaces = settings_dir.join('workspaces')
+    return [x.basename for x in workspaces.listdir() if x.check(dir=True)]
 
 class OptionsManager(object):
 
@@ -77,9 +66,8 @@ class OptionsManager(object):
         add_directory('workspaces', self.workspace)
 
     def open_workspace_manager(self):
-        data = {}
         try:
-            with open(get_settings_path('appcontroller.json')) as file:
+            with settings_dir.join('appcontroller.json').open() as file:
                 data = json.load(file)
                 return bool(data.get('open_workspace_manager', False))
         except Exception:
@@ -210,9 +198,9 @@ class OptionsConfig(BaseConfig):
     def create(self):
         self.name = self.__class__.name % self.svc.get_name()
         add_directory('workspaces', manager.workspace)
-        self.workspace_path = get_settings_path('workspaces',
+        self.workspace_path = settings_dir.join('workspaces',
                                                 manager.workspace, self.name)
-        self.global_path = get_settings_path(self.name)
+        self.global_path = settings_dir.join(self.name)
         self._options = {}
         self._extra_files = {}
         self._exports = {}
@@ -265,11 +253,9 @@ class OptionsConfig(BaseConfig):
         if not path:
             path = self.__class__.name_extra % (self.svc.get_name(), name)
             if workspace:
-                path = get_settings_path('workspaces', manager.workspace, path)
+                path = settings_dir.join('workspaces', manager.workspace, path)
             else:
-                path = get_settings_path(path)
-
-        assert os.path.isabs(path)
+                path = settings_dir.join(path)
 
         opt = ExtraOptionItem(self, path, default, callback, workspace,
                               notify=notify)
@@ -352,19 +338,17 @@ class OptionsConfig(BaseConfig):
             if hasattr(optionsmanager, 'events'):
                 optionsmanager.emit('option_changed', option=option)
 
-    def read_extra(self, filename, default):
+    def read_extra(self, path, default):
         try:
-            with open(filename) as file:
-                return json.load(file)
-        except IOError:
-            return default
-        except Exception:
+            with path.open() as fp:
+                return json.load(fp)
+        except: #XXX: handle corrupt files better
             return default
 
-    def dump_data(self, filename, data):
+    def dump_data(self, path, data):
         try:
-            with open(filename, 'w') as out:
-                json.dump(data, out)
+            with path.open('w') as out:
+                json.dump(data, out, indent=2)
         except Exception, e:
             self.svc.log.exception(e)
 
@@ -373,11 +357,11 @@ class OptionsConfig(BaseConfig):
         data = {}
         for f in (self.global_path, self.workspace_path):
             try:
-                with open(f) as file_:
-                    data.update(json.load(file_))
+                with f.open() as fp:
+                    data.update(json.load(fp))
             except ValueError, e:
                 self.svc.log.error(_('Settings file corrupted: %s'), f)
-            except IOError:
+            except py.error.ENOENT:
                 pass
             except Exception, e:
                 self.svc.log.exception(e)
@@ -391,7 +375,7 @@ class OptionsConfig(BaseConfig):
         else:
             f = self.global_path
 
-        with open(f, 'w') as out:
+        with f.open('w') as out:
             json.dump(data, out, sort_keys=True, indent=2)
 
     def __len__(self):
