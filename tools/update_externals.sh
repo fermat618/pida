@@ -1,24 +1,19 @@
 #!/bin/sh
 get_or_update() {
     name=$1;repo=$2;
-    echo -n syncing $name \ 
+    echo -n syncing $name :\ 
     if [ ! -d "src/$name" ]
     then
-        echo -n checkout\ 
+        echo checkout
         hg clone -q $repo src/$name
     else
-        echo -n update\ 
+        echo update
         cd src/$name >/dev/null
-        hg pull -uq
+        HGPLAIN=1 hg pull -uq
         cd ../.. >/dev/null
     fi
 
     ln -sf src/$name/$name $name #XXX: asume normal forms
-    cd src/$name >/dev/null
-    echo -n build\ 
-    python setup.py build_ext -i >/dev/null
-    echo done
-    cd ../.. >/dev/null
 }
 
 if [ ! `which hg` ]
