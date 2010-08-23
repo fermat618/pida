@@ -221,10 +221,6 @@ class Emacs(EditorService):
                     self._documents[document.unique_id] = document
             self.current_document = document
 
-    def open_many(self, documents):
-        """Open a few documents"""
-        pass
-    
     def close(self, document):
         if document.unique_id in self._documents:
             self._remove_document(document)

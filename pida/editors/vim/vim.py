@@ -159,10 +159,6 @@ class Vim(EditorService):
                                     reply_handler=tag_document,
                                     error_handler=lambda *a: None)
 
-    def open_many(self, documents):
-        """Open a few documents"""
-        pass
-
     def close(self, document):
         self.log.info('close %s %s', document, document.editor_buffer_id)
         if document.editor_buffer_id is not None:
