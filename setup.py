@@ -24,7 +24,12 @@ if subprocess.call(['pkg-config', '--exists', 'pygtk-2.0']) != 0:
 
 
 # Moo Extension
-from dsutils import pkc_get_include_dirs, pkc_get_libraries, pkc_get_library_dirs
+from commands import getoutput
+
+def pkc_get_dirs(option, *names):
+    output = getoutput(' '.join(['pkg-config', option] + list(names)))
+    return output.replace(option[-2:], '').split()
+
 moo = Extension(
     'pida.ui.moo_stub', 
     [ 'contrib/moo/%s'%c for c in [
@@ -36,9 +41,9 @@ moo = Extension(
         'moo-stub.c',
         'moopython-utils.c',
     ]],
-    include_dirs=pkc_get_include_dirs('gtk+-2.0', 'pygtk-2.0'),
-    libraries=pkc_get_libraries('gtk+-2.0', 'pygtk-2.0'),
-    library_dirs=pkc_get_library_dirs('gtk+-2.0', 'pygtk-2.0'),
+    include_dirs=pkc_get_dirs('--cflags-only-I', 'gtk+-2.0', 'pygtk-2.0'),
+    libraries=pkc_get_dirs('--libs-only-l', 'gtk+-2.0', 'pygtk-2.0'),
+    library_dirs=pkc_get_dirs('--libs-only-L', 'gtk+-2.0', 'pygtk-2.0'),
 )
 
 
