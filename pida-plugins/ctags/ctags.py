@@ -43,7 +43,34 @@ from pida.utils.languages import (LANG_PRIO, LANG_OUTLINER_TYPES, OutlineItem )
 from pida.core.locale import Locale
 locale = Locale('python')
 _ = locale.gettext
+from subprocess import Popen, PIPE
 
+
+def build_language_list(typemanager):
+    """
+    Build a list of language internal names from the output of 
+    ctags --list-languages
+    """
+    try:
+        output = Popen(["ctags", "--list-languages"], 
+                       stdout=PIPE).communicate()[0]
+    except OSError, e:
+        # can't find ctags -> no support :-)
+        return []
+    output = output.splitlines()
+    rv = []
+    if "C#" in output:
+        output.append("vala")
+    for name in output:
+        clang = typemanager.get_fuzzy(name)
+        if clang:
+            rv.append(clang)
+
+    return rv
+
+from pida.services.language import DOCTYPES
+
+SUPPORTED_LANGS = build_language_list(DOCTYPES)
 # class PythonActionsConfig(ActionsConfig):
 #
 #     def create_actions(self):
@@ -114,6 +141,9 @@ class CtagItem(OutlineItem):
 class CtagsOutliner(Outliner):
 
     priority = LANG_PRIO.GOOD
+    name = "ctags"
+    plugin = "ctags"
+    description = _("A very fast but only shallow outliner")
 
     def get_outline(self):
         if not self.document.filename:
@@ -132,7 +162,7 @@ class CtagsOutliner(Outliner):
             yield node
 
 
-    def _update_tagfile(self, options = ("-n", "-a"), temp=False):
+    def _update_tagfile(self, options = ("-n",), temp=False):
         """ filestr is a string, could be *.* or explicit paths """
 
         # create tempfile
@@ -144,6 +174,8 @@ class CtagsOutliner(Outliner):
             taglib = os.path.join(self.document.project.get_meta_dir('ctags'),
                                   'lib.ctags')
         # launch ctags
+        if self.document.doctype and self.document.doctype.internal == 'Vala':
+            options = options + ('--language-force=C#',)
         command = ("ctags",) + options + ("-f", taglib, self.document.filename)
         #os.system(command)
         rv = subprocess.check_call(command)
@@ -256,7 +288,7 @@ class CtagsOutliner(Outliner):
             if i == 'e': return LANG_OUTLINER_TYPES.ENUMERATION
             if i == 'f': return LANG_OUTLINER_TYPES.FUNCTION
             if i == 'g': return LANG_OUTLINER_TYPES.ENUMERATION_NAME
-            if i == 'm': return LANG_OUTLINER_TYPES.MEMBER
+            if i == 'n': return LANG_OUTLINER_TYPES.NAMESPACE
             if i == 'p': return LANG_OUTLINER_TYPES.PROTOTYPE
             if i == 's': return LANG_OUTLINER_TYPES.STRUCTURE
             if i == 't': return LANG_OUTLINER_TYPES.TYPEDEF
@@ -320,7 +352,7 @@ class CtagsOutliner(Outliner):
 
 class Ctags(LanguageService):
 
-    language_name = None
+    language_name = [x.internal for x in SUPPORTED_LANGS]
     outliner_factory = CtagsOutliner
 
 

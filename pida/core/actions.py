@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     Action support for PIDA services.
@@ -6,19 +6,10 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
-# gtk import(s)
+import pkgutil
 import gtk
-import gobject
-
-# pida core import(s)
-from pida.core.base import BaseConfig
 from pida.core.options import OptionsConfig
-import warnings
-
-# kiwi imports
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
-
 
 
 class PidaMenuToolAction(gtk.Action):
@@ -72,6 +63,10 @@ TYPE_DROPDOWNMENUTOOL = PidaDropDownMenuToolAction
 
 
 accelerator_group = gtk.AccelGroup()
+accelerator_group.lock()
+# the global accelerator group will be added to detached windows as well
+global_accelerator_group = gtk.AccelGroup()
+global_accelerator_group.lock()
 
 class ActionsConfig(OptionsConfig):
     # this inherits from options in order to ease storing the mapping betwen
@@ -86,8 +81,8 @@ class ActionsConfig(OptionsConfig):
     instance.
     """
     name = '%s.keys.json'
-    dbus_path = "actions"
     accelerator_group = accelerator_group
+    global_accelerator_group = global_accelerator_group
 
     def create(self):
         """
@@ -105,7 +100,8 @@ class ActionsConfig(OptionsConfig):
         if self.svc.boss is not None:
             self.ui_merge_id = self.svc.boss.add_action_group_and_ui(
                 self._actions,
-                '%s.xml' % self.svc.get_name()
+                self.svc.__class__.__module__,
+                'uidef/%s.xml' % self.svc.get_name(),
             )
 
     def create_actions(self):
@@ -116,6 +112,14 @@ class ActionsConfig(OptionsConfig):
         with a call to create_action. These actions will be added to the action
         group for the service, and can be used for any purpose.
         """
+
+    def remove_action(self, action):
+        """
+        Removes a Action from ActionManager
+
+        @param action: Action instance
+        """
+        self._actions.remove_action(action)
 
     def remove_actions(self):
         self.svc.boss.remove_action_group_and_ui(self._actions, self.ui_merge_id)
@@ -130,7 +134,7 @@ class ActionsConfig(OptionsConfig):
         pass
 
     def create_action(self, name, atype, label, tooltip, stock_id,
-                      callback=None, accel=None):
+                      callback=None, accel=None, global_=False):
         """
         Create an action for this service.
 
@@ -168,11 +172,12 @@ class ActionsConfig(OptionsConfig):
             act.connect('activate', callback)
 
         if accel is not None:
-            self._create_key_option(act, name, label, tooltip, accel)
+            self._create_key_option(act, name, label, tooltip, accel,
+                                    global_=global_)
 
         return act
 
-    def _create_key_option(self, act, name, label, tooltip, accel):
+    def _create_key_option(self, act, name, label, tooltip, accel, global_=False):
         opt = self.create_option(name,
                          label, str,
                          accel, tooltip,
@@ -181,9 +186,36 @@ class ActionsConfig(OptionsConfig):
         opt.stock_id = act.get_property('stock-id')
         self._keyboard_options[name] = opt
         act.opt = opt
-        act.set_accel_group(self.accelerator_group)
+        act.set_accel_group((global_ and self.global_accelerator_group) or
+                            self.accelerator_group)
         act.set_accel_path(self._create_accel_path(name))
         act.connect_accelerator()
+        # return the option created to allow easy manipulation
+        return opt
+
+# XXX: for some reason this does not work. the changed function gets called
+# when it shouldn't and doesn't detect the wrong path
+# if fixed and the action acceleration is changed the acceleration_group.lock
+# can be removed
+#         print "subsribe", act, opt
+#         def on_accel_changed(accelgroup, accel_key, accel_mods, closure, nopt, nact):
+#             if (nopt != opt) or (nact != act):
+#                 return
+#             #if act
+#             print nopt, opt, nact, act
+#             print self, accelgroup, accel_key, accel_mods, closure, act, opt, nact
+#             accelerator = gtk.accelerator_name(accel_key, accel_mods)
+#             self.someclosure = closure
+#             print accelerator
+#             exit_soon()
+#             #import sys
+#             #sys.exit(1)
+#             #print act.props.name
+#             pass
+#
+#         self.accelerator_group.connect('accel-changed', on_accel_changed,
+#                 opt, act)
+
 
     def get_action(self, name):
         """

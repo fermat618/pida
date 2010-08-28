@@ -1,20 +1,18 @@
 
-import gtk
+import gtk, gobject
 
-from kiwi.environ import Library
 
-lib = Library('pida.utils.puilder', root='.')
-lib.add_global_resources(glade='glade')
+from pygtkhelpers.delegates import SlaveView, ToplevelView, gsignal
 
-from kiwi.ui.delegates import GladeDelegate, GladeSlaveDelegate
-
-from kiwi.ui.objectlist import Column
-from kiwi.ui.dialogs import yesno
-from kiwi.utils import gsignal
-
+from pygtkhelpers.ui.objectlist import Column
+from pygtkhelpers.ui.widgets import SimpleComboBox
+from pygtkhelpers.ui.dialogs import yesno
+from pygtkhelpers.proxy import GtkComboBoxProxy, GtkTextViewProxy
 from pida.utils.puilder.model import action_types
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
+import gettext
+gettext.install('pida.puild')
 
 def start_editing_tv(tv):
     def _start(tv=tv):
@@ -24,33 +22,23 @@ def start_editing_tv(tv):
     gcall(_start)
 
 
-def create_source_tv(tv):
-    b = tv.get_buffer()
+class PuilderView(SlaveView):
 
-    tt = b.create_tag('tt', family='Monospace')
-
-    def on_changed(tv):
-        b.remove_all_tags(b.get_start_iter(), b.get_end_iter())
-        b.apply_tag(tt, b.get_start_iter(), b.get_end_iter())
-
-    tv.connect('content-changed', on_changed)
-
-
-class PuilderView(GladeSlaveDelegate):
-
-    gladefile = 'puild_properties'
+    builder_file = 'puild_properties'
 
     parent_window = None
 
     gsignal('cancel-request')
+    gsignal('project-saved', gobject.TYPE_PYOBJECT)
 
-    def __init__(self, *args, **kw):
-       GladeSlaveDelegate.__init__(self, *args, **kw)
-       self.create_ui()
-
-    def create_ui(self):
+    def create_ui(self): 
+        def format_default(obj):
+            return obj and _('<i>default</i>') or ''
+    
         self.targets_list.set_columns([
             Column('name', editable=True, expand=True),
+            Column('is_default', format_func=format_default, 
+                                 use_markup=True, title='Default'),
             Column('action_count', title='Actions'),
         ])
         self.targets_list.set_headers_visible(False)
@@ -61,8 +49,9 @@ class PuilderView(GladeSlaveDelegate):
         ])
         self.acts_list.set_headers_visible(False)
 
-        self.acts_type.prefill(action_types)
-
+        self.acts_type.set_choices(action_types, None)
+        self.proxy = GtkComboBoxProxy(self.acts_type)
+        self.proxy.connect_widget()
         self.target_changed(None)
         self.action_changed(None)
 
@@ -102,6 +91,11 @@ class PuilderView(GladeSlaveDelegate):
     def set_execute_method(self, f):
         self.execute_method = f
 
+    def on_SetDefault__activate(self, action):
+        t = self.targets_list.get_selected()
+        self.build.default = t
+        self.targets_list.refresh()
+
     def on_ExecuteTargets__activate(self, action):
         t = self.targets_list.get_selected()
         if t is not None:
@@ -140,43 +134,49 @@ class PuilderView(GladeSlaveDelegate):
         menu.popup(None, None, None, event.button, event.time)
 
 
-    def on_targets_list__right_click(self, ol, target, event):
-        self._create_popup(event, self.AddTarget, None, self.ExecuteTargets,
-                           None, self.DelCurrentTarget)
+    def on_targets_list__item_right_clicked(self, ol, target, event):
+        self._create_popup(event, self.AddTarget, None, self.SetDefault, 
+                           self.ExecuteTargets, None, self.DelCurrentTarget)
 
-    def on_acts_list__right_click(self, ol, action, event):
-        self.act_up_act.set_sensitive(self.acts_list.index(action) > 0)
-        self.act_down_act.set_sensitive(
-            self.acts_list.index(action) < (len(self.acts_list) - 1))
+    def on_acts_list__item_right_clicked(self, ol, action, event):
+        self.act_up_act.set_sensitive(action is not self.acts_list[0])
+        self.act_down_act.set_sensitive(action is not self.acts_list[-1])
         self._create_popup(event, self.AddActs, None, self.act_up_act,
                            self.act_down_act, None, self.DelCurrentActs)
 
     def create_action_views(self):
         for name in action_views:
             v = self.action_views[name] = action_views[name]()
-            self.acts_holder.append_page(v.get_toplevel())
+            self.acts_holder.append_page(v.widget)
 
         noview = gtk.Label()
         self.acts_holder.append_page(noview)
         self.action_views['noview'] = noview
 
     def switch_action_view(self, name):
-        n = self.acts_holder.page_num(self.action_views[name].get_toplevel())
+        n = self.acts_holder.page_num(self.action_views[name].widget)
         self.acts_holder.set_current_page(n)
-        self.acts_type.update(name)
+        #XXX: block off a endless recursion WHY?
+        if self.proxy.read() != name:
+            self.proxy.update(name)
 
     def set_build(self, build):
         self.build = build
-        self.targets_list.add_list(self.build.targets, clear=True)
+        self.targets_list.clear()
+        self.targets_list.extend(self.build.targets)
         if len(self.targets_list):
-            self.targets_list.select(self.targets_list[0])
+            self.targets_list.selected_item = self.targets_list[0]
 
         for v in self.action_views.values():
             v.build = build
 
+    @staticmethod
+    def format_project(proj):
+        return '<b>%s</b>\n%s' % (proj.display_name, proj.source_directory)
+
     def set_project(self, project):
         self.project = project
-        self.project_label.set_markup(project.markup)
+        self.project_label.set_markup(self.format_project(project))
         self.project_name_entry.set_text(project.display_name)
 
     def target_changed(self, target):
@@ -186,10 +186,11 @@ class PuilderView(GladeSlaveDelegate):
         self.acts_list.set_sensitive(selected)
 
         if selected:
-            self.acts_list.add_list(target.actions, clear=True)
+            self.acts_list.clear()
+            self.acts_list.extend(target.actions)
 
             if len(self.acts_list):
-                self.acts_list.select(self.acts_list[0])
+                self.acts_list.selected_item = self.acts_list[0]
 
         else:
             self.acts_list.clear()
@@ -215,22 +216,24 @@ class PuilderView(GladeSlaveDelegate):
             self.acts_holder.remove(c)
 
     def revert(self):
-        self.project.reload()
-        self.set_project(self.project)
-        self.set_build(self.project.build)
+        if self.project:
+            self.project.reload()
+            self.set_project(self.project)
+            self.set_build(self.project.build)
 
     def on_save_button__clicked(self, button):
         self.build.dumpf(self.project.project_file)
+        self.emit('project-saved', self.project)
 
-    def on_cancel_button__clicked(self, button):
+    def on_close_button__clicked(self, button):
         self.revert()
         self.emit('cancel-request')
 
     def on_revert_button__clicked(self, button):
         self.revert()
 
-    def on_targets_list__selection_changed(self, ol, target):
-        self.target_changed(target)
+    def on_targets_list__selection_changed(self, ol):
+        self.target_changed(ol.selected_item)
 
     def on_AddTarget__activate(self, button):
         t = self.build.create_new_target('New Target')
@@ -251,21 +254,21 @@ class PuilderView(GladeSlaveDelegate):
         self.acts_list.append(a, select=True)
 
     def on_DelCurrentTarget__activate(self, button):
-        t = self.targets_list.get_selected()
+        t = self.targets_list.selected_item
         if self.confirm('Are you sure you want to delete target "%s"' % t.name):
             self.build.targets.remove(t)
             self.targets_list.remove(t)
 
     def on_AddActs__activate(self, button):
-        target = self.targets_list.get_selected()
+        target = self.targets_list.selected_item
         if target is None:
             return
         act = target.create_new_action()
         self.acts_list.append(act, select=True)
 
     def on_DelCurrentActs__activate(self, button):
-        act = self.acts_list.get_selected()
-        target = self.targets_list.get_selected()
+        act = self.acts_list.selected_item
+        target = self.targets_list.selected_item
         if act is None or target is None:
             return
         if self.confirm('Are you sure you want to remove this action?'):
@@ -273,20 +276,23 @@ class PuilderView(GladeSlaveDelegate):
             self.acts_list.remove(act)
 
     def on_act_up_act__activate(self, action):
-        pass
+        act = self.acts_list.selected_item
+        self.acts_list.move_item_up(act)
 
     def on_act_down_act__activate(self, action):
-        pass
+        act = self.acts_list.selected_item
+        self.acts_list.move_item_down(act)
 
-    def on_acts_list__selection_changed(self, ol, act):
-        self.action_changed(act)
+    def on_acts_list__selection_changed(self, ol):
+        self.action_changed(ol.selected_item)
 
-    def on_acts_type__content_changed(self, cmb):
-        act = self.acts_list.get_selected()
+    def on_proxy__changed(self, cmb, obj):
+        act = self.acts_list.selected_item
         if not act:
             return
-        name = cmb.read()
-        act.type = name
+        print obj
+        print cmb
+        act.type = obj
         self.action_type_changed(act)
 
     def on_name_edit_button__clicked(self, button):
@@ -312,12 +318,11 @@ class PuilderView(GladeSlaveDelegate):
         return yesno(question, parent=self.parent_window)
 
 
-class ActionView(GladeSlaveDelegate):
+class ActionView(SlaveView):
 
     def __init__(self, *args, **kw):
-        GladeSlaveDelegate.__init__(self)
+        SlaveView.__init__(self)
         self.action = None
-        self.create_ui()
 
     def _set_action(self, action):
         self.action = action
@@ -325,7 +330,14 @@ class ActionView(GladeSlaveDelegate):
             self.set_action(action)
 
     def set_action(self, action):
-        raise NotImplementedError
+        # call this from subclasses
+        if action.options.get('ignore_fail'):
+            self.ignore_fail.set_active(True)
+        else:
+            self.ignore_fail.set_active(False)
+
+    def on_ignore_fail__toggled(self, check):
+        self.action.options['ignore_fail'] = check.get_active()
 
     def create_ui(self):
         raise NotImplementedError
@@ -333,9 +345,10 @@ class ActionView(GladeSlaveDelegate):
 
 
 
+
 class ShellActionView(ActionView):
 
-    gladefile = 'action_shell'
+    builder_file = 'action_shell'
 
     def create_ui(self):
         #self.env_list.set_columns([
@@ -345,12 +358,14 @@ class ShellActionView(ActionView):
         pass
 
     def set_action(self, action):
+        ActionView.set_action(self, action)
         self.command.set_text(action.value)
-        if action.options.has_key('cwd') and action.options['cwd']:
+        if action.options.get('cwd'):
             self.cwd.set_current_folder(action.options['cwd'])
             self.cwd_on.props.active = True
         else:
             self.cwd_on.props.active = False
+
 
     def on_cwd_on__toggled(self, entry):
         self.cwd.props.sensitive = entry.props.active
@@ -372,16 +387,23 @@ class ShellActionView(ActionView):
 
 class PythonActionView(ActionView):
 
-    gladefile = 'action_python'
+    builder_file = 'action_python'
 
     def create_ui(self):
-        create_source_tv(self.text)
+        self.tag = self.text.get_buffer().create_tag('tt', family='Monospace')
+        self.proxy = GtkTextViewProxy(self.text)
+        self.proxy.connect_widget()
 
     def set_action(self, action):
-        self.text.update(action.value)
+        self.proxy.update(action.value)
 
-    def on_text__content_changed(self, textview):
-        self.action.value = self.text.read()
+    def on_proxy__changed(self, p, value):
+        self.action.value = value
+        b = self.text.get_buffer()
+        b.remove_all_tags(b.get_start_iter(), b.get_end_iter())
+        b.apply_tag(self.tag, b.get_start_iter(), b.get_end_iter())
+
+
 
 
 external_system_types = [
@@ -391,21 +413,24 @@ external_system_types = [
 
 class ExternalActionView(ActionView):
 
-    gladefile = 'action_external'
+    builder_file = 'action_external'
 
     def create_ui(self):
         self.action = None
-        self.system_types.prefill(external_system_types)
+        self.system_types.set_choices(external_system_types, None)
+        self.proxy = GtkComboBoxProxy(self.system_types)
+        self.proxy.connect_widget()
+
 
     def set_action(self, action):
-        self.system_types.update(action.options.get('system', 'make'))
+        self.proxy.update(action.options.get('system', 'make'))
         self.external_name.set_text(action.value)
         self.build_args.set_text(action.options.get('build_args', ''))
 
-    def on_system_types__content_changed(self, cmb):
+    def on_proxy__changed(self, cmb, obj):
         if self.action is None:
             return
-        self.action.options['system'] = cmb.read()
+        self.action.options['system'] = obj
 
     def on_external_name__changed(self, entry):
         self.action.value = entry.get_text()
@@ -416,28 +441,29 @@ class ExternalActionView(ActionView):
 
 class TargetActionView(ActionView):
 
-    gladefile = 'action_target'
+    builder_file = 'action_target'
 
     def create_ui(self):
         self.block = False
+        self.proxy = GtkComboBoxProxy(self.targets_combo)
+        self.proxy.connect_widget()
 
     def set_action(self, action):
         self.block = True
-        items = [('', None)] + [(t.name, t.name) for t in self.build.targets]
-        self.targets_combo.prefill(items)
+        items = [('', '')] + [(t.name, t.name) for t in self.build.targets]
+        self.targets_combo.set_choices(items, '')
         try:
-            self.targets_combo.update(action.value)
+            self.proxy.update(action.value)
         except KeyError:
-            self.targets_combo.update(None)
+            self.proxy.update(None)
         self.block = False
 
-    def on_targets_combo__content_changed(self, cmb):
+    def on_proxy__changed(self, cmb, obj):
         if self.action is None:
             return
         if self.block:
             return
-        print ['chann', cmb.read()]
-        self.action.value = cmb.read()
+        self.action.value = obj
 
 action_views = {
     'shell': ShellActionView,

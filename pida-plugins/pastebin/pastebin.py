@@ -22,7 +22,7 @@
 
 import gtk, gobject
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -33,7 +33,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView, PidaView
+from pida.ui.views import PidaView
 
 from pida.utils.web import fetch_url
 
@@ -208,10 +208,66 @@ class Twisted(Bin):
     def get_syntax_items(cls):
         return [('Python', '')]
 
-class PastebinEditorView(PidaGladeView):
+
+class HPaste(Bin):
+    PASTE_URL="http://hpaste.org/fastcgi/hpaste.fcgi/save"
+    
+    def create_data_dict(self, title, name, content, syntax):
+        return dict(
+            content=content,
+            author=name,
+            title=title,
+            save='save',      
+            language=syntax,
+            channel='none',
+        )
+    
+    @classmethod
+    def get_syntax_items(cls):
+        return [
+            ("apacheconf","ApacheConf"),
+            ("BBCode", "bbcode"),
+            ("Bash", "bash"),
+            ("C", "c"),
+            ("C#", "csharp"),
+            ("C++", "cpp"),
+            ("CSS", "css"),
+            ("Clojure", "clojure"),
+            ("Common Lisp", "common-lisp"),
+            ("D", "d"),
+            ("HTML", "html"),
+            ("Haskell", "haskell"),
+            ("INI", "ini"),
+            ("Io", "io"),
+            ("Java", "java"),
+            ("JavaScript", "js"),
+            ("Lighttpd configuration file", "lighty"),
+            ("Lua", "lua"),
+            ("Makefile", "make"),
+            ("Objective-C", "objective-c"),
+            ("PHP", "php"),
+            ("Perl", "perl"),
+            ("Python", "python"),
+            ("Python 3", "python3"),
+            ("Python 3.0 Traceback", "py3tb"),
+            ("Python Traceback", "pytb"),
+            ("Python console session", "pycon"),
+            ("Raw token data","raw"),
+            ("Ruby", "rb"),
+            ("SQL", "sql"),
+            ("Scala", "scala"),
+            ("Text only", "text"),
+            ("VimL", "vim"),
+            ("XML", "xml"),
+            ("YAML", "yaml"),
+            ("reStructuredText", "rst"),
+            ("sqlite3con", "sqlite3"),
+        ]
+
+class PastebinEditorView(PidaView):
 
     key = 'pastebin.editor'
-    gladefile = 'paste-editor'
+    gladefile = 'paste_editor'
     locale = locale
     label_text = _('Paste Editor')
     icon_name = gtk.STOCK_PASTE
@@ -477,7 +533,8 @@ class Pastebin(Service):
         return [
             ('DPaste', Dpaste),
             ('Rafb.net', Rafb),
-            ('LodgeIt', LodgeIt)
+            ('LodgeIt', LodgeIt),
+            ('HPaste', HPaste),
             #('Twisted', Twisted), #Broken for some reason
         ]
 

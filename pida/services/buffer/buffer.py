@@ -4,11 +4,10 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 import os
-from tempfile import mkstemp
 
 import gtk
+import time
 
-from kiwi.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -18,133 +17,29 @@ from pida.core.options import OptionsConfig, choices
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.ui.views import PidaGladeView
-from pida.ui.objectlist import AttrSortCombo
+from pida.ui.views import WindowConfig
 from pida.core.document import Document, DocumentException
 
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('buffer')
 _ = locale.gettext
 
+from .view import BufferListView, attributes
+
 LEXPORT = EXPORT(suffix='buffer')
 
-LIST_COLUMNS = {
-'onerow': [
-            Column('markup', use_markup=True),
-            Column("basename", visible=False, searchable=True),
-          ],
-'tworow': [
-            Column('markup_tworow', use_markup=True),
-            Column("basename", visible=False, searchable=True),
-          ]
-}
 
-class BufferListView(PidaGladeView):
-
-    key = 'buffer.list'
-    gladefile = 'buffer_list'
-    locale = locale
-    icon_name = 'package_office'
-
-    label_text = _('Buffers')
-
-    list_columns = LIST_COLUMNS
-
-    def create_ui(self):
-        val = self.svc.opt('display_type')
-        self.buffers_ol.set_columns(LIST_COLUMNS[val])
-        self.buffers_ol.set_headers_visible(False)
-        self._sort_combo = AttrSortCombo(self.buffers_ol,
-            [
-                ('creation_time', _('Time Opened')),
-                ('filename', _('File path')),
-                ('basename', _('File name')),
-                ('doctype', _('Document Type')),
-                ('mimetype', _('Mime Type')),
-                ('length', _('File Length')),
-                ('modified_time', _('Last Modified')),
-                #('Project', _('Project_name'))
-            ],
-            'creation_time' 
-        )
-        self._sort_combo.show()
-        self.main_vbox.pack_start(self._sort_combo, expand=False)
-
-    def add_document(self, document):
-        self.buffers_ol.append(document)
-
-    def remove_document(self, document):
-        self.buffers_ol.remove(document)
-
-    def set_document(self, document):
-        if self.buffers_ol.get_selected() is not document:
-            self.buffers_ol.select(document)
-
-    def view_document(self, document):
-        self.svc.view_document(document)
-        self.svc.boss.editor.cmd('grab_focus')
-
-    def on_buffers_ol__double_click(self, ol, item):
-        self.view_document(item)
-
-    def on_buffers_ol__row_activated(self, ol, item):
-        self.view_document(item)
-
-    def on_buffers_ol__right_click(self, ol, item, event=None):
-        menu = self.svc.boss.cmd('contexts', 'get_menu', context='file-menu',
-                                 document=item, file_name=item.filename)
-
-        # Add some stuff to the menu
-        sep = gtk.SeparatorMenuItem()
-        close = self.svc.get_action('close_selected').create_menu_item()
-        menu.append(sep)
-        menu.append(close)
-
-        menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
-
-        # Must leave the menu in the same state we found it!
-        def on_deactivate(menu):
-            menu.remove(sep)
-            menu.remove(close)
-
-        menu.connect('deactivate', on_deactivate)
-
-    def get_current_buffer_index(self):
-        return self.buffers_ol.index(self.svc.get_current())
-
-    def select_buffer_by_index(self, index):
-        self.buffers_ol.select(self.buffers_ol[index])
-        self.view_document(self.buffers_ol[index])
-
-    def next_buffer(self):
-        index = self.get_current_buffer_index()
-        newindex = index + 1
-        if newindex == len(self.buffers_ol):
-            newindex = 0
-        self.select_buffer_by_index(newindex)
-
-    def prev_buffer(self):
-        index = self.get_current_buffer_index()
-        newindex = index - 1
-        if newindex == -1:
-            newindex = len(self.buffers_ol) - 1
-        self.select_buffer_by_index(newindex)
-
-    def sort(self):
-        self._sort_combo._sort()
 
 class BufferActionsConfig(ActionsConfig):
 
     def create_actions(self):
         self.create_action(
             'open_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Open File'),
             _('Open a file with a graphical file browser'),
             gtk.STOCK_OPEN,
@@ -154,7 +49,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'open-for-file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Open File'),
             _('Open this file'),
             gtk.STOCK_OPEN,
@@ -163,7 +58,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'new_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_New File'),
             _('Create a new file'),
             gtk.STOCK_NEW,
@@ -173,7 +68,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'create_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Cr_eate File'),
             _('Create a new file'),
             gtk.STOCK_ADD,
@@ -183,7 +78,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'close',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Close Document'),
             _('Close the current document'),
             gtk.STOCK_CLOSE,
@@ -193,7 +88,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'close_all',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Close all Documents'),
             _('Close all documents'),
             '',
@@ -202,7 +97,7 @@ class BufferActionsConfig(ActionsConfig):
         )
         self.create_action(
             'switch_next_buffer',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Next Buffer'),
             _('Switch to the next buffer'),
             gtk.STOCK_GO_DOWN,
@@ -212,7 +107,7 @@ class BufferActionsConfig(ActionsConfig):
 
         self.create_action(
             'switch_prev_buffer',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Previous Buffer'),
             _('Switch to the previous buffer'),
             gtk.STOCK_GO_UP,
@@ -221,17 +116,18 @@ class BufferActionsConfig(ActionsConfig):
         )
         self.create_action(
             'show_buffer_list',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Show _buffer browser'),
             _('Displays the buffer window'),
             '',
             self.on_show_buffer,
             '<Shift><Control>b',
+            global_=True
         )
 
         self.create_action(
             'close_selected',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Close Document'),
             _('Close the selected document'),
             gtk.STOCK_CLOSE,
@@ -282,20 +178,44 @@ class BufferActionsConfig(ActionsConfig):
         document = action.contexts_kw.get('document')
         self.svc.close_file(document=document)
 
+class BufferListConfig(WindowConfig):
+    key = BufferListView.key
+    label_text = BufferListView.label_text
+    description = "Buffer List"
+
 class BufferFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'buffer-file-menu.xml'))
+            (self.svc, 'buffer-file-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            BufferListConfig)
 
 class BufferEventsConfig(EventsConfig):
 
     def create(self):
         self.publish('document-saved', 'document-changed', 
-            'document-typchanged', 'document-closed', 'document-opened')
+            'document-typchanged', 'document-closed', 'document-opened', 
+            'document-goto')
         self.subscribe('document-saved', self.on_document_change)
         self.subscribe('document-changed', self.on_document_change)
         self.subscribe('document-typchanged', self.on_document_change)
+
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('editor', 'started', self.on_editor_started)
+
+    def on_editor_started(self, *k, **kw):
+        print 'editor started'
+
+        try:
+            #XXX: will mess wuth the signaling doe opening files
+            #     will create inconsistent state while the default impl is
+            #     working
+            files = self.svc.opt('open_files')
+            print 'opening', files
+            self.svc.open_files(files)
+        except Exception as e:
+            self.svc.log.exception(e)
 
     def on_document_change(self, *args, **kwargs):
         # we have to update the document buffer when one doc changes as
@@ -309,30 +229,43 @@ class BufferOptionsConfig(OptionsConfig):
             _('Display notebook title'),
             choices({'onerow':_('One Row'), 
                      'tworow':_('Filename and Path seperate ')}),
-            'onerow',
+            'tworow',
             _('Type to display in the Buffer window'),
             self.on_display_type_change
         )
+        self.create_option(
+            'open_files',
+            'the currently open files',
+            list,
+            [],
+            ''
+            )
 
     def on_display_type_change(self, option):
-        self.svc.get_view().buffers_ol.set_columns(
-            LIST_COLUMNS[option.value])
+        self.svc.get_view().set_display_attr(attributes[option.value])
 
 
 class BufferCommandsConfig(CommandsConfig):
 
-    def open_file(self, file_name=None, document=None, line=None, offset=None):
-        if not file_name and not document:
-            return
-        self.svc.open_file(file_name, document, line=line, offset=offset)
+    def new_file(self, do_open=True, with_editor_id=None):
+        self.svc.new_file(do_open, with_editor_id)
+
+    def open_file(self, file_name=None, document=None, line=None, offset=None,
+                  editor_buffer_id=None, do_open=True):
+        #if not file_name and not document and not editor_buffer_id:
+        #    return
+        self.svc.open_file(file_name, document, line=line, offset=offset,
+                           editor_buffer_id=editor_buffer_id, do_open=do_open)
 
     def open_files(self, files):
         self.svc.open_files(files)
 
-    def close_file(self, file_name=None, document=None):
-        if not file_name and not document:
-            return
-        self.svc.close_file(file_name=file_name, document=document)
+    def close_file(self, file_name=None, document=None,
+                   editor_buffer_id=None):
+        #if not file_name and not document:
+        #    return
+        self.svc.close_file(file_name=file_name, document=document,
+                            editor_buffer_id=editor_buffer_id)
 
     def close_all(self):
         self.svc.close_all()
@@ -349,14 +282,21 @@ class BufferCommandsConfig(CommandsConfig):
     def get_documents(self):
         return self.svc.get_documents()
 
+    def get_buffer_names(self):
+        return [x.filename for x in self.get_documents().itervalues()]
+
     def present_view(self):
         view = self.svc.get_view()
         return self.svc.boss.cmd('window', 'present_view',
             view=view)
         view.buffers_ol.grab_focus()
 
+    def get_document_by_id(self, document_id=None):
+        if document_id:
+            return self.svc._documents.get(document_id, None)
+
 class BufferDbusConfig(DbusConfig):
-    
+
     @LEXPORT(in_signature='s')
     def open_file(self, file_name):
         self.svc.open_file(file_name)
@@ -376,14 +316,14 @@ class BufferDbusConfig(DbusConfig):
     @LEXPORT(out_signature='a(isiia{ss})')
     def get_documents(self):
         return [
-                 (x.unique_id, x.filename, 
+                 (id(x), x.filename, 
                        x.doctype and x.doctype.internal or '', 
                        x.creation_time,
                        # extended values
                        {})
                   for x in self.svc._documents.itervalues()
                ]
-               
+
 
 # Service class
 class Buffer(Service):
@@ -401,52 +341,55 @@ class Buffer(Service):
     def pre_start(self):
         self._documents = {}
         self._current = None
+        #XXX hideous hack for vim
+        self._last_added_document = None
         self._view = BufferListView(self)
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
 
-    def start(self):
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
+    def pre_stop(self):
+        self.set_opt('open_files', [
+            d.filename for d in self._documents.itervalues()
+            if d.filename is not None
+            ])
+        return True
 
     def get_view(self):
         return self._view
 
     def _refresh_buffer_action_sensitivities(self):
         for action_name in ['switch_next_buffer', 'switch_prev_buffer']:
-            self.get_action(action_name).set_sensitive(len(self._documents) > 0)
+            self.get_action(action_name).set_sensitive(bool(self._documents))
 
-    def new_file(self, temp_file=False):
-        # some editors don't support the new_file feature, so we have to 
-        # fall back and create a tmp file
-        if temp_file or not 'new_file' in self.boss.editor.features:
-            fd, file_name = mkstemp()
-            os.close(fd)
-            self.open_file(file_name)
-        else:
-            document = Document(self.boss)
-            self._add_document(document)
-            self._current = document
-            self._view.set_document(document)
-            self.boss.editor.cmd('open', document=document)
-            self.emit('document-changed', document=document)
-            self.emit('document-opened', document=document)
+    def new_file(self, do_open=True, with_editor_id=None):
+        return self.open_file(editor_buffer_id=with_editor_id)
 
-    def open_file(self, file_name=None, document=None, line=None, offset=None):
+    def open_file(self, file_name=None, document=None, line=None, offset=None,
+                  editor_buffer_id=None, do_open=True):
         if file_name:
             file_name = os.path.realpath(file_name)
-        if not document:
-            document = self._get_document_for_filename(file_name)
         if document is None:
-            if not os.path.isfile(file_name):
-                return False
-            document = Document(self.boss, file_name)
-            self._add_document(document)
-        self.view_document(document, line=line, offset=offset)
+            # try to find the document
+            if editor_buffer_id is not None:
+                document = self._get_document_for_editor_id(editor_buffer_id)
+            if document is None and file_name is not None:
+                document = self._get_document_for_filename(file_name)
+            elif file_name is None and editor_buffer_id is not None:
+                #XXX new file just switched, can't know, have to guess!
+                # normally fall back to filename
+                if self._last_added_document and self._last_added_document.is_new:
+                    document = self._last_added_document
+                    self._last_added_document = None
+            # can't find it
+            if document is None:
+                document = Document(self.boss, file_name)
+                if editor_buffer_id is not None:
+                    document.editor_buffer_id = editor_buffer_id
+                self._add_document(document)
+        self.view_document(document, line=line, offset=offset, do_open=do_open)
         self.emit('document-opened', document=document)
         return document
+
 
     def open_files(self, files):
         if not files:
@@ -468,7 +411,7 @@ class Buffer(Service):
         else:
             filename = ""
         self.notify_user(error.message, title=_("Can't load file %s") % filename )
-        self.log('error loading file(s): %s' %error.message)
+        self.log.warning('error loading file(s): %s' %error.message)
         if error.document:
             self._remove_document(error.document)
         # switch to the first doc to make sure editor gets consistent
@@ -481,22 +424,31 @@ class Buffer(Service):
         if document is not None:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
 
-    def close_file(self, file_name = None, document = None):
+    def close_file(self, file_name = None, document = None,
+                   editor_buffer_id=None):
+
         if not document:
-            document = self._get_document_for_filename(file_name)
+            if editor_buffer_id is not None:
+                document = self._get_document_for_editor_id(editor_buffer_id)
+            if not document and file_name is not None:
+                document = self._get_document_for_filename(file_name)
         if document is not None:
-            if self.boss.editor.cmd('close', document=document):
+            if editor_buffer_id is not None:
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
+            else:
+                if self.boss.editor.cmd('close', document=document):
+                    self._remove_document(document)
+                    self.emit('document-closed', document=document)
 
     def close_all(self):
         docs = self._documents.values()[:]
         for document in docs:
             if self.boss.editor.cmd('close', document=document):
                 self._remove_document(document)
-                self.emit('document-closed')
+                self.emit('document-closed', document=document)
             else:
                 break
 
@@ -505,23 +457,34 @@ class Buffer(Service):
             if doc.filename == file_name:
                 return doc
 
+    def _get_document_for_editor_id(self, bufid):
+        for uid, doc in self._documents.iteritems():
+            if doc.editor_buffer_id == bufid:
+                return doc
+
+
     def _add_document(self, document):
-        self._documents[document.unique_id] = document
+        self._last_added_document = document
+        self._documents[id(document)] = document
         self._view.add_document(document)
         self._refresh_buffer_action_sensitivities()
 
     def _remove_document(self, document):
         "_remove_doc", document
-        del self._documents[document.unique_id]
+        del self._documents[id(document)]
         self._view.remove_document(document)
         self._refresh_buffer_action_sensitivities()
 
-    def view_document(self, document, line=None, offset=None):
+    def view_document(self, document, line=None, offset=None, do_open=True):
+        self._view.buffers_ol.update(document)
         if document is not None and self._current != document:
             self._current = document
+            self._current.usage += 1
+            self._current.last_opend = time.time()
             self._view.set_document(document)
             try:
-                self.boss.editor.cmd('open', document=document)
+                if do_open:
+                    self.boss.editor.cmd('open', document=document)
             except DocumentException, e:
                 # document can't be loaded. we have to remove the document from 
                 # the system

@@ -4,29 +4,22 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
 
-import os, subprocess, re, sys
-
-import gtk
-import gtk.gdk
-import gobject
+import os
+import sys
 import pango
+import gtk
 
+from pida.utils import ostools
 # PIDA Imports
-from pida.core import environment
+import pida
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.options import OptionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida import PIDA_VERSION
 
-from pida.utils.gthreads import AsyncTask
 
-from pida.ui.views import PidaView
-from pida.ui.terminal import PidaTerminal
-from pida.ui.buttons import create_mini_button
 
 # locale
 from pida.core.locale import Locale
@@ -34,49 +27,7 @@ locale = Locale('commander')
 _ = locale.gettext
 
 
-#RE_ABSOLUTE_UNIX = r'^((?:\/[a-zA-Z0-9]+(?:_[a-zA-Z0-9]+)*(?:\-[a-zA-Z0-9]+)*)+)$'
-#RE_ABSOLUTE_UNIX = r'''((?:\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:[1-9]+)?)'''
-#RE_ABSOLUTE_UNIX = r'((\.\./|[a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(?:\:\d+)?)'
-
-RE_MATCHES = (r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+(\:[0-9]+)?)',
-              r'((\.\./|[-\.~a-zA-Z0-9_/\-\\])*\.[a-zA-Z0-9]+)'
-             )
-
-class System(object):
-    @classmethod
-    def get_default_system_shell(cls):
-        return ""
-
-    @classmethod
-    def get_absolute_path(cls, path, pid):
-        return path
-
-class UnixSystem(System):
-    # is this universal ?
-    PROC_MATCH = re.compile('PWD=(.*)')
-    
-    @classmethod
-    def get_default_system_shell(cls):
-        return os.environ.get('SHELL', 'bash')
-    
-    @classmethod
-    def get_absolute_path(cls, path, pid):
-        if os.path.isabs(path):
-            return path
-        try:
-            fp = open('/proc/%s/environ' %pid, 'r')
-        except IOError:
-            return path
-        cont = fp.read()
-        lines = cont.split('\x00')
-        for line in lines:
-            res = cls.PROC_MATCH.match(line)
-            if res:
-                return os.path.abspath(os.path.join(res.groups()[0], path))
-        return path
-
-# FIXME: windows port
-CurrentSystem = UnixSystem
+from .views import TerminalView, PythonView
 
 class CommanderOptionsConfig(OptionsConfig):
 
@@ -159,7 +110,7 @@ class CommanderOptionsConfig(OptionsConfig):
             'shell_command',
             _('The shell command'),
             str,
-            CurrentSystem.get_default_system_shell(),
+            ostools.get_default_system_shell(),
             _('The command that will be used for shells')
         )
 
@@ -193,7 +144,7 @@ class CommanderActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'shell',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Run Shell'),
             _('Open a shell prompt'),
             'terminal',
@@ -203,7 +154,7 @@ class CommanderActionsConfig(ActionsConfig):
 
         self.create_action(
             'python_shell',
-            TYPE_NORMAL,
+            gtk.Action,
             _('_Run Python Shell'),
             _('Open a python shell'),
             'terminal',
@@ -212,18 +163,8 @@ class CommanderActionsConfig(ActionsConfig):
         )
 
         self.create_action(
-            'python_shell_extern',
-            TYPE_NORMAL,
-            _('_Run Extern Python Shell'),
-            _('Open a python shell as extra window'),
-            'terminal',
-            self.execute_python_shell_extern,
-            '',
-        )
-
-        self.create_action(
             'terminal-for-file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Shell in file directory'),
             _('Open a shell prompt in the parent directory of this file'),
             'terminal',
@@ -232,7 +173,7 @@ class CommanderActionsConfig(ActionsConfig):
 
         self.create_action(
             'terminal-for-dir',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Shell in directory'),
             _('Open a shell prompt in the directory'),
             'terminal',
@@ -247,8 +188,6 @@ class CommanderActionsConfig(ActionsConfig):
         self.svc.cmd('execute_python_shell',
                      cwd=self.svc.get_current_project_directory())
 
-    def execute_python_shell_extern(self, action):
-        self.svc.execute_python_extern()
 
     def on_terminal_for_file(self, action):
         cwd = os.path.dirname(action.contexts_kw['file_name'])
@@ -261,13 +200,13 @@ class CommanderActionsConfig(ActionsConfig):
 
 class CommanderCommandsConfig(CommandsConfig):
 
-    def execute(self, commandargs, env=[], cwd=os.getcwd(), title=_('Command'),
+    def execute(self, commandargs, env=(), cwd=os.getcwd(), title=_('Command'),
                       icon='terminal', eof_handler=None, use_python_fork=False,
                       parser_func=None):
         return self.svc.execute(commandargs, env, cwd, title, icon,
                                 eof_handler, use_python_fork, parser_func)
 
-    def execute_shell(self, env=[], cwd=os.getcwd(), title='Shell'):
+    def execute_shell(self, env=(), cwd=os.getcwd(), title='Shell'):
         shell_command = self.svc.opt('shell_command')
         shell_args = self.svc.opt('shell_command_args')
         commandargs = [shell_command] + shell_args
@@ -280,17 +219,102 @@ class CommanderCommandsConfig(CommandsConfig):
 
 class CommanderFeaturesConfig(FeaturesConfig):
 
-    def subscribe_all(self):
-        self.publish('matches')
-        for match in RE_MATCHES:
-            self.subscribe('matches',
-                (match, self.svc.default_match))
+    def create(self):
+        self.publish('match', 'match-callback', 'match-menu', 'match-menu-callback')
+        for match in ostools.PATH_MATCHES:
+            self.subscribe('match-callback', ('File', match[0], match[1], 
+                                              self.on_default_match))
+            self.subscribe('match-menu-callback',
+                ('dir-match',
+                match[0], match[1],
+                self.on_highlight_path))
+
+        self.subscribe('match-menu-callback',
+            ('url-match',
+                r'https{0,1}://[A-Za-z0-9/\-\._]+',
+                r'(https{0,1}://[A-Za-z0-9/\-\._]+)',
+                self.on_highlight_url))
+        self.subscribe('match-menu-callback',
+            ('dir-match',
+            r'~{0,1}(/|\./)[a-zA-Z/\-\._]+',
+            r'(~{0,1}(/|\./)[A-Za-z0-9/\-\._]+)',
+            self.on_highlight_path))
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'commander-file-menu.xml'))
+            (self.svc, 'commander-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'commander-dir-menu.xml'))
+            (self.svc, 'commander-dir-menu.xml'))
+
+    def _mkactlst(self, lst):
+        rv = []
+        for item in lst:
+            act = item.get_action()
+            if act:
+                rv.append(act)
+        return rv
+
+
+    def on_highlight_url(self, term, event, url, *args, **kw):
+        return self._mkactlst(self.svc.boss.cmd('contexts', 'get_menu', 
+                                                context='url-menu', url=url))
+
+    def on_highlight_path(self, term, event, path, *args, **kw):
+        path = os.path.expanduser(path)
+        line = None
+        if path.find(":") != -1:
+            path, line = path.rsplit(":", 1)
+            try:
+                 line = int(line)
+            except ValueError:
+                 line = None
+
+        path = kw['usr'].get_absolute_path(path)
+
+        if not path:
+            return []
+
+        if os.path.isdir(path):
+            return self._mkactlst(self.svc.boss.cmd('contexts',
+                                'get_menu', context='dir-menu', dir_name=path))
+        elif os.path.isfile(path):
+            return self._mkactlst(self.svc.boss.cmd('contexts', 
+                              'get_menu', context='file-menu', file_name=path))
+        else:
+            return []
+
+    def on_default_match(self, term, event, match, *args, **kwargs):
+        match = os.path.expanduser(args[0])
+        line = None
+        if match.find(":") != -1:
+            rfile_name, line = match.rsplit(":", 1)
+            try:
+                 line = int(line)
+            except ValueError:
+                 line = None
+        else:
+            rfile_name = match
+        file_name = kwargs['usr'].get_absolute_path(rfile_name)
+
+        if file_name and os.path.isfile(file_name):
+            self.svc.boss.cmd('buffer', 'open_file', 
+                                file_name=file_name,
+                                line=line)
+        elif file_name and os.path.isdir(file_name):
+            self.svc.boss.cmd('filemanager', 'browse', 
+                        new_path=file_name)
+            self.svc.boss.cmd('filemanager', 'present_view')
+        else:
+            # fallback. look if there is a open file that matches this filename
+            for doc in self.svc.boss.cmd('buffer', 
+                                         'get_documents').itervalues():
+                rfile_name = os.path.basename(rfile_name)
+                if doc.basename == rfile_name:
+                    self.svc.boss.cmd('buffer', 'open_file', 
+                                        document=doc,
+                                        line=line)
+                    break
+
 
 class CommanderEvents(EventsConfig):
 
@@ -306,289 +330,10 @@ class CommanderEvents(EventsConfig):
         if (context == 'file-menu'):
             self.svc.get_action('terminal-for-file').set_visible(kw['file_name'] is not None)
 
-class TerminalView(PidaView):
-
-    icon_name = 'terminal'
-
-    def create_ui(self):
-        self._pwd = None
-        self._pid = None
-        self._hb = gtk.HBox()
-        self._hb.show()
-        self.add_main_widget(self._hb)
-        self._term = PidaTerminal(**self.svc.get_terminal_options())
-        self._matchids = {}
-        for match, callback in self.svc.list_matches():
-            i = self._term.match_add(match)
-            if i < 0:
-                continue
-            self._term.match_set_cursor_type(i, gtk.gdk.HAND2)
-            self._matchids[i] = match
-        self._term.parent_view = self
-        self._term.connect('window-title-changed', self.on_window_title_changed)
-        self._term.connect('selection-changed', self.on_selection_changed)
-        self._term.connect('button_press_event', self.on_button_pressed)
-        self._term.show()
-        self._create_scrollbar()
-        self._create_bar()
-        self._hb.pack_start(self._term)
-        if self.svc.opt('scrollbar_visible'):
-            self._hb.pack_start(self._scrollbar, expand=False)
-        self._hb.pack_start(self._bar, expand=False)
-        self.master = None
-        self.slave = None
-        self.prep_highlights()
-
-    def _create_scrollbar(self):
-        self._scrollbar = gtk.VScrollbar()
-        self._scrollbar.set_adjustment(self._term.get_adjustment())
-        self._scrollbar.show()
-
-    def _create_bar(self):
-        self._bar = gtk.VBox(spacing=1)
-        self._stick_button = create_mini_button(
-            'pin', _('Automatic change to the current buffer\'s directory'),
-            None, toggleButton=True)
-        self._bar.pack_start(self._stick_button, expand=False)
-        self._copy_button = create_mini_button(
-            gtk.STOCK_COPY, _('Copy the selection to the clipboard'),
-            self.on_copy_clicked)
-        self._copy_button.set_sensitive(False)
-        self._bar.pack_start(self._copy_button, expand=False)
-        self._paste_button = create_mini_button(
-            gtk.STOCK_PASTE, _('Paste the contents of the clipboard'),
-            self.on_paste_clicked)
-        self._bar.pack_start(self._paste_button, expand=False)
-        self._title = gtk.Label()
-        self._title.set_alignment(0.5, 1)
-        self._title.set_padding(0, 3)
-        self._title.set_angle(270)
-        self._title.set_size_request(0,0)
-        self._bar.pack_start(self._title)
-        self._bar.show_all()
-
-    def execute(self, commandargs, env, cwd, eof_handler=None,
-                use_python_fork=False, parser_func=None):
-        title_text = ' '.join(commandargs)
-        self._title.set_text(title_text)
-        if eof_handler is None:
-            eof_handler = self.on_exited
-        self.eof_handler = eof_handler
-        if use_python_fork:
-            if parser_func == None:
-                self._python_fork(commandargs, env, cwd)
-            else:
-                self._python_fork_parse(commandargs, env, cwd, parser_func)
-        else:
-            self._vte_fork(commandargs, env, cwd) 
-
-    def _python_fork_waiter(self, popen):
-        exit_code = popen.wait()
-        return exit_code
-
-    def _python_fork_complete(self, exit_code):
-        gobject.timeout_add(200, self.eof_handler, self._term)
-
-    def _python_fork_preexec_fn(self):
-        os.setpgrp()
-
-    def _python_fork(self, commandargs, env, cwd):
-        self._term.connect('commit', self.on_commit_python)
-        # TODO: Env broken
-        env = dict(os.environ)
-        env['TERM'] = 'xterm'
-        (master, slave) = os.openpty()
-        self.slave = slave
-        self.master = master
-        self._term.set_pty(master)
-        p = subprocess.Popen(commandargs, stdin=slave, stdout=slave,
-                             preexec_fn=self._python_fork_preexec_fn,
-                             stderr=slave, env=env, cwd=cwd, close_fds=True)
-        self._pid = p.pid
-        t = AsyncTask(self._python_fork_waiter, self._python_fork_complete)
-        t.start(p)
-
-    def _python_fork_parse(self, commandargs, env, cwd, parser_func):
-        self._term.connect('commit', self.on_commit_python)
-        env = dict(os.environ)
-        env['TERM'] = 'xterm'
-        master, self.slave = os.openpty()
-        self._term.set_pty(master)
-        self.master, slave = os.openpty()
-        p = subprocess.Popen(commandargs, stdout=slave,
-                         stderr=subprocess.STDOUT, stdin=slave,
-                         close_fds=True)
-        self._pid = p.pid
-        gobject.io_add_watch(self.master, gobject.IO_IN, 
-                                self._on_python_fork_parse_stdout, parser_func)
-        self._term.connect('key-press-event',
-                            self._on_python_fork_parse_key_press_event, self.master)
-
-    def _on_python_fork_parse_key_press_event(self, term, event, fd):
-        if event.hardware_keycode == 22:
-            os.write(fd, "")
-        elif event.hardware_keycode == 98:
-            os.write(fd, "OA")
-        elif event.hardware_keycode == 104:
-            os.write(fd, "OB")
-        elif event.hardware_keycode == 100:
-            os.write(fd, "OD")
-        elif event.hardware_keycode == 102:
-            os.write(fd, "OC")
-        else:
-            data = event.string
-            os.write(fd, data)
-        return True
-
-    def _on_python_fork_parse_stdout(self, fd, state, parser = None):
-        data = os.read(fd,1024)
-        os.write(self.slave, data)
-        if parser != None:
-            parser(data)
-        return True
-
-    def _vte_env_map_to_list(self, env):
-        return ['%s=%s' % (k, v) for (k, v) in env.items()]
-
-    def _vte_fork(self, commandargs, env, cwd):
-        self._term.connect('child-exited', self.eof_handler)
-        self._pid = self._term.fork_command(commandargs[0], commandargs, env, cwd)
-
-    def close_view(self):
-        self.svc.boss.cmd('window', 'remove_view', view=self)
-
-    def on_exited(self, term):
-        self._term.feed_text(_('Child exited')+'\r\n', '1;34')
-        self._term.feed_text(_('Press any key to close.'))
-        self._term.connect('commit', self.on_press_any_key)
-
-    def can_be_closed(self):
-        self.kill()
-        return True
-
-    def kill(self):
-        if self._pid is not None:
-            try:
-                os.kill(self._pid, 9)
-            except OSError:
-                self.svc.log_debug('PID %s has already gone' % self._pid)
-
-    def on_button_pressed(self, term, event):
-        if not event.button in [1,2] or \
-           not event.state & gtk.gdk.CONTROL_MASK:
-            return
-        line = int(event.y/self._term.get_char_height())
-        col = int(event.x/self._term.get_char_width())
-        chk = self._term.match_check(col, line)
-        if not chk:
-            return
-
-        (match, matchfun) = chk
-        if match and self._matchids.has_key(matchfun):
-            callbacks = self.svc.get_match_callbacks(self._matchids[matchfun])
-            for call in callbacks:
-                if call(self, event, match):
-                    return
-
-    def on_selection_changed(self, term):
-        self._copy_button.set_sensitive(self._term.get_has_selection())
-
-    def on_copy_clicked(self, button):
-        self._term.copy_clipboard()
-
-    def on_paste_clicked(self, button):
-        self._term.paste_clipboard()
-
-    def on_press_any_key(self, term, data, datalen):
-        self.close_view()
-
-    def on_commit_python(self, term, data, datalen):
-        if data == '\x03':
-            os.kill(self._pid, 2)
-
-    def on_window_title_changed(self, term):
-        self._title.set_text(term.get_window_title())
-
-    def prep_highlights(self):
-        self._term.match_add_menu_callback('url-match',
-            r'https{0,1}://[A-Za-z0-9/\-\._]+',
-            r'(https{0,1}://[A-Za-z0-9/\-\._]+)',
-            self.on_highlight_url)
-        self._term.match_add_menu_callback('dir-match',
-            r'~{0,1}/[a-zA-Z/\-\._]+',
-            r'(~{0,1}/[A-Za-z0-9/\-\._]+)',
-            self.on_highlight_path)
-
-    def on_highlight_path(self, path, *args, **kw):
-        path = os.path.expanduser(path)
-        if os.path.isdir(path):
-            return self.svc.boss.cmd('contexts', 'get_menu', context='dir-menu',
-                                     dir_name=path)
-        elif os.path.isfile(path):
-            return self.svc.boss.cmd('contexts', 'get_menu', context='file-menu',
-                                     file_name=path)
-        else:
-            return None
-
-    def on_highlight_url(self, url, *args, **kw):
-        return self.svc.boss.cmd('contexts', 'get_menu', context='url-menu',
-                                  url=url)
-    
-    def chdir(self, path):
-        # here we could look at the environment var to find out the real 
-        # directory
-        if self._pwd == path:
-            return
-        # maybe we find a good way to check if the term is currently
-        # in shell mode and maybe there is a better way to change
-        # directories somehow
-        # this is like kate does it
-        self._term.feed_child(u'cd %s\n' %path)
-        self._pwd = path
-
-    def get_absolute_path(self, path):
-        return CurrentSystem.get_absolute_path(path, self._pid)
-
-class PythonView(PidaView):
-
-    icon_name = 'terminal'
-
-    def create_ui(self):
-        self.pid = None
-        self._box = gtk.HBox()
-        self._socket = gtk.Socket()
-        self._box.add(self._socket)
-        self._socket.show()
-        self._box.show()
-        print "socket created"
-        self.add_main_widget(self._box)
-
-    def execute(self, file_=None, cwd=os.getcwd()):
-        command = os.path.join(environment.pida_root_path, "pida", "utils", "pycons", "main.py")
-        commandargs = [self.svc.opt('python_path'), command, "--embed",
-                       "--socket=%s" %self._socket.get_id()]
-        if self.svc.opt('use_ipython'):
-            commandargs.append('--ipython')
-        if file_:
-            commandargs.append(file_)
-        print commandargs
-        self.popen = p = subprocess.Popen(commandargs, cwd=cwd, close_fds=True)
-        self._pid = p.pid
-
-    def can_be_closed(self):
-        self.kill()
-        return True
-
-    def kill(self):
-        if self._pid is not None:
-            try:
-                os.kill(self._pid, 9)
-            except OSError:
-                self.svc.log_debug('PID %s has already gone' % self._pid)
 
 # Service class
 class Commander(Service):
-    """Describe your Service Here""" 
+    """Executes programms in a terminal window or background""" 
 
     commands_config = CommanderCommandsConfig
     actions_config = CommanderActionsConfig
@@ -603,8 +348,8 @@ class Commander(Service):
 
     def execute(self, commandargs, env, cwd, title, icon, eof_handler=None,
                 use_python_fork=False, parser_func=None):
-        env_pida = env
-        env_pida.append('PIDA_VERSION=%s' % PIDA_VERSION)
+        env_pida = list(env)
+        env_pida.append('PIDA_VERSION=%s' % pida.version)
         current_project = self.boss.cmd('project', 'get_current_project')
         if current_project:
             env_pida.append('PIDA_PROJECT=%s' % current_project.source_directory)
@@ -613,6 +358,7 @@ class Commander(Service):
                 env_pida, cwd))))
         t.execute(commandargs, env_pida, cwd, eof_handler, use_python_fork, parser_func)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
+        t.pane.connect('remove', self._on_termclose)
         self._terminals.append(t)
         return t
 
@@ -624,24 +370,19 @@ class Commander(Service):
         #t = TerminalView(self, title, icon)
         #self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
         #        env_pida, cwd))))
-        print file_, cwd, title, icon
-        #FIXME: we have to add it non dispatchable as dispatching
+        #FIXME: we have to add it non detachable as dispatching
         # causes the socket to not be realized for a short time 
         # and therefor kills the process
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t, detachable=False)
         t.execute(file_=None, cwd=cwd)
         self._terminals.append(t)
+        t.pane.connect('remove', self._on_termclose)
         return t
 
-    def execute_python_extern(self, file_=None, cwd=os.getcwd()):
-        command = os.path.join(environment.pida_root_path, "pida", "utils", "pycons", "main.py")
-        commandargs = [self.opt('python_path'), command]
-        if self.opt('use_ipython'):
-            commandargs.append('--ipython')
-        if file_:
-            commandargs.append(file_)
-        print commandargs
-        subprocess.Popen(commandargs, cwd=cwd).pid
+    def _on_termclose(self, pane):
+        for term in self._terminals:
+            if term.pane == pane:
+                self._terminals.remove(term)
 
     def get_terminal_options(self):
         options = dict(
@@ -679,21 +420,6 @@ class Commander(Service):
                term._term.window.is_visible():
                 term.chdir(document.directory)
 
-#     def register_matcher(self, match, callback):
-#         self.features['matcher'].add((match, callback))
-#         #if self._matches.has_key(match):
-#         #    self._matches[match].append(callback)
-#         #else:
-#         #    self._matches[match] = [callback]
-#     
-#     def unregister_matcher(self, match, callback):
-#         if not self._matches.has_key(match):
-#             return
-#         try:
-#             self._matches[match].remove(callback)
-#         except ValueError:
-#             pass
-#     
     def list_matches(self):
         # we use this so the default matchers are always the latest
         # added to a terminal. this was the more specific ones are matching 
@@ -706,31 +432,9 @@ class Commander(Service):
     def get_match_callbacks(self, match):
         rv = []
         for cmatch, ccall in self.features['matches']:
-            if match == ccall:
-                return rv.append(ccall)
+            if match == cmatch:
+                rv.append(ccall)
         return rv
-
-    def default_match(self, term, event, match):
-        match = os.path.expanduser(match)
-
-        if match.find(":") != -1:
-            file_name, line = match.rsplit(":", 1)
-            file_name = term.get_absolute_path(file_name)
-            if os.path.isfile(file_name):
-                self.boss.cmd('buffer', 'open_file', 
-                                    file_name=file_name,
-                                    line=int(line))
-            else:
-                self.boss.cmd('filemanager', 'browse', 
-                            new_path=file_name)
-                self.boss.cmd('filemanager', 'present_view')
-        else:
-            file_name = term.get_absolute_path(match)
-            if os.path.isfile(match):
-                self.boss.cmd('buffer', 'open_file', file_name=file_name)
-            else:
-                self.boss.cmd('filemanager', 'browse', new_path=file_name)
-                self.boss.cmd('filemanager', 'present_view')
 
 
 

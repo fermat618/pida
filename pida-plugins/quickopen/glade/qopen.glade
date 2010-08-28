@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkWindow" id="qopen">
+    <property name="default_height">250</property>
+    <property name="default_width">440</property>
+    <child>
+      <object class="GtkVBox" id="vbox1">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkComboBoxEntry" id="filter">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="has_focus">False</property>
+            <property name="is_focus">False</property>
+            <property context="yes" name="tooltip_markup" translatable="yes">Search for files in the project:
+#Type - Filetype
+!filename - Basename of file
+
+Arguments are space seperated and AND linked</property>
+            <property context="yes" name="tooltip_text" translatable="yes">Search for files in the project:
+#Type - Filetype
+!filename - Basename of file
+
+Arguments are space seperated and AND linked</property>
+            <property name="visible">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+          </packing>
+        </child>
+        <child>
+          <object class="ObjectList" id="olist">
+            <property name="visible">True</property>
+            <property name="vscrollbar_policy">automatic</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHButtonBox" id="hbuttonbox1">
+            <property name="layout_style">spread</property>
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkButton" id="button_close">
+                <property name="label">gtk-close</property>
+                <property name="use_stock">True</property>
+                <property name="visible">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_open">
+                <property name="label">gtk-open</property>
+                <property name="use_stock">True</property>
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

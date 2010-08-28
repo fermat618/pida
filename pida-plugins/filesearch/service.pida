@@ -1,9 +1,7 @@
-[plugin]
-plugin = filesearch
-name = File Search
-version = 0.1
-author = Benjamin Wiegand <beewee91@gmail.com>
-require_pida = 0.5
-description = Search files inside PIDA
-website = ""
-category = code
+Name: File Search
+Version: 0.5
+Author: Benjamin Wiegand <beewee91@gmail.com>
+Depends: pida>=0.6
+Category: code
+
+Search files inside PIDA

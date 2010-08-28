@@ -5,24 +5,22 @@
 """
 
 # stdlib
-import sys, compiler, os.path, keyword, re
+import sys, os.path 
 
-import threading, thread
-
-# gtk
-import gtk
+from threading import Semaphore
+import thread
 
 # PIDA Imports
 
 # core
 from pida.core import environment
-from pida.core.service import Service
-from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig, TYPE_NORMAL
+#from pida.core.service import Service
+#from pida.core.events import EventsConfig
+#from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.log import Log
 
-from pida.core.languages import (LanguageService, Validator)
+from pida.core.languages import (LanguageService, Validator, External)
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
    Definition, Suggestion, Documentation, ValidationError)
@@ -32,8 +30,12 @@ from pida.core.locale import Locale
 locale = Locale('skeleton')
 _ = locale.gettext
 
+# log
+import logging
+log = logging.getLogger('python_lint')
+
 try:
-    import pylint
+    #import pylint
     from pylint.reporters import BaseReporter
     from pylint.lint import PyLinter
     from pylint.interfaces import IReporter
@@ -87,16 +89,37 @@ except ImportError:
 #         #self.svc.execute_current_document()
 #         pass
 
-class PythonError(ValidationError):
+SUBTYPE_MAPPING = {
+'W0511': LANG_VALIDATOR_SUBTYPES.FIXME,
+'W0622': LANG_VALIDATOR_SUBTYPES.REDEFINED,
+'W0611': LANG_VALIDATOR_SUBTYPES.UNUSED,
+'W0612': LANG_VALIDATOR_SUBTYPES.UNUSED,
+'E1101': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
+'W0201': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
+'W0212': LANG_VALIDATOR_SUBTYPES.PROTECTION,
+'W0703': LANG_VALIDATOR_SUBTYPES.DANGEROUS,
+'W0107': LANG_VALIDATOR_SUBTYPES.UNUSED,
+
+}
+
+
+class PythonError(ValidationError, Log):
+    """
+    Validator class for PyLint errrors
+    """
     def get_markup(self):
         if self.message_args:
-            if isinstance(self.message_args, (list, tuple)):
-                args = [('<b>%s</b>' % arg) for arg in self.message_args]
-                message_string = self.message % tuple(args)
-            else:
-                args = '<b>%s</b>' % self.message_args
-                message_string = self.message % args
-                
+            try:
+                if isinstance(self.message_args, (list, tuple)):
+                    args = [('<b>%s</b>' % arg) for arg in self.message_args]
+                    message_string = self.message % tuple(args)
+                else:
+                    args = '<b>%s</b>' % self.message_args
+                    message_string = self.message % args
+            except TypeError, e:
+                self.log.warning("Can't convert arguments %s : %s" %(
+                                    self.message, self.message_args))
+                message_string = self.message
         else:
             message_string = self.message
         if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
@@ -138,8 +161,9 @@ from logilab.common.textutils import get_csv
 # import thread
 
 class PidaLinter(PyLinter, Log):
+
     def __init__(self, *args, **kwargs):
-        self.sema = threading.Semaphore(0)
+        self.sema = Semaphore(0)
         self._output = []
         self.running = True
         self._plugins = []
@@ -161,8 +185,11 @@ class PidaLinter(PyLinter, Log):
         if config_parser.has_option('MASTER', 'load-plugins'):
             plugins = get_csv(config_parser.get('MASTER', 'load-plugins'))
             self.load_plugin_modules(plugins)
-
-        self.load_config_file()
+        try:
+            self.load_config_file()
+        except Exception, e:
+            log.exception(e)
+            log.error(_("pylint couldn't load your config file: %s") %e)
         self.set_reporter(kwargs['reporter'])
         # now we can load file config and command line, plugins (which can
         # provide options) have been registered
@@ -201,7 +228,7 @@ class PidaLinter(PyLinter, Log):
             ty = LANG_VALIDATOR_TYPES.INFO
             sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
         elif msg_id[0] == 'C':
-            ty = LANG_VALIDATOR_TYPES.WARNING
+            ty = LANG_VALIDATOR_TYPES.INFO
             sty = LANG_VALIDATOR_SUBTYPES.BADSTYLE
         elif msg_id[0] == 'R':
             ty = LANG_VALIDATOR_TYPES.WARNING
@@ -226,6 +253,9 @@ class PidaLinter(PyLinter, Log):
         #    self.stats['by_msg'][msg_id] += 1
         #except KeyError:
         #    self.stats['by_msg'][msg_id] = 1
+        if SUBTYPE_MAPPING.has_key(msg_id):
+            sty = SUBTYPE_MAPPING[msg_id]
+
         msg = self._messages[msg_id].msg
         # expand message ?
         #if args:
@@ -286,7 +316,10 @@ class PidaReporter(BaseReporter):
 class PylintValidator(Validator):
 
     priority = LANG_PRIO.VERY_GOOD
-    
+    name = "pylint"
+    plugin = "python_lint"
+    description = _("A very good customizable, but slow validator")
+
     def __init__(self, *args, **kwargs):
         self.reporter = PidaReporter(self)
         Validator.__init__(self, *args, **kwargs)
@@ -314,6 +347,8 @@ class PylintValidator(Validator):
         else:
             return
 
+class PythonLintExternal(External):
+    validator = PylintValidator
 
 
 class PythonLintService(LanguageService):
@@ -321,6 +356,7 @@ class PythonLintService(LanguageService):
     language_name = 'Python'
     validator_factory = PylintValidator
 
+    external = PythonLintExternal
 #    features_config = SkeletonFeaturesConfig
 #    actions_config = SkeletonActionsConfig
 #    options_config = SkeletonOptionsConfig
@@ -332,12 +368,6 @@ class PythonLintService(LanguageService):
         except ImportError:
             self.notify_user('You need to install pylint')
             raise
-
-    def start(self):
-        pass
-        
-    def stop(self):
-        pass
 
 
 # Required Service attribute for service loading

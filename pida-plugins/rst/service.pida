@@ -1,0 +1,7 @@
+Name: ReStructuredText
+Author: Bernhard Leiner <bleiner@gmail.com>
+Version: 0.4
+Depends: pida>=0.6
+Category: documentation
+
+Show structure and errors of rst files.

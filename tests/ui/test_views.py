@@ -5,8 +5,6 @@ from pida.utils.testing import refresh_gui
 
 from pida.ui.views import PidaView
 
-import pida.ui.window
-
 
 class TestView(PidaView):
 
@@ -26,7 +24,7 @@ class ActionView(PidaView):
         self.svc._clicked = True
 
 class BasicViewTest(TestCase):
-        
+
     def setUp(self):
         self._v = TestView(self)
         refresh_gui()
@@ -62,5 +60,4 @@ class ViewActionsTest(TestCase):
     def test_actions(self):
         self.assertEqual(self._clicked, False)
         self._v.test_act.activate()
-    
 

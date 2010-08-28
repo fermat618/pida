@@ -3,7 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 
 # PIDA Imports
@@ -11,9 +11,6 @@ from pida.core.service import Service
 from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
-from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
-from pida.core.environment import get_uidef_path
 
 
 CONTEXT_TYPES = [
@@ -76,22 +73,25 @@ class Contexts(Service):
     commands_config = ContextCommandsConfig
     events_config = ContextEventsConfig
 
-    def start(self):
+    def start(self) :
         self.create_uims()
 
     def create_uims(self):
         self._uims = {}
         for context in CONTEXT_TYPES:
             uim = self._uims[context] = gtk.UIManager()
-            uim.add_ui_from_file(self.get_base_ui_definition_path(context))
-            for ag, uidef in self.features[context]:
+            uim.add_ui_from_string(self.get_base_ui_definition(context))
+            for service, uidef in self.features[context]:
+                ag = service.get_action_group()
                 uim.insert_action_group(ag, 0)
-                uidef_path = get_uidef_path(uidef)
-                uim.add_ui_from_file(uidef_path)
+                if not uidef.startswith('uidef'):
+                    uidef = 'uidef/'+uidef
+                uidef_data = pkgutil.get_data(service.__module__, uidef)
+                uim.add_ui_from_string(uidef_data)
 
-    def get_base_ui_definition_path(self, context):
-        file_name = '%s.xml' % context
-        return get_uidef_path(file_name)
+    def get_base_ui_definition(self, context):
+        file_name = 'uidef/%s.xml' % context
+        return pkgutil.get_data(__name__, file_name)
 
     def get_menu(self, context, **kw):
         for group in self._uims[context].get_action_groups():

@@ -10,13 +10,14 @@
 """
 from __future__ import with_statement
 import os
-from string import Template
-from weakref import proxy
 
 from pida.core.log import Log
+from pida.core.indexer import Indexer
 from pida.utils.path import get_relative_path
+from pida.utils.addtypes import Enumeration
 
 from pida.utils.puilder.model import Build
+
 
 # locale
 from pida.core.locale import Locale
@@ -26,6 +27,13 @@ _ = locale.gettext
 
 #FIXME: win32 fixup
 DATA_DIR = ".pida-metadata"
+
+
+REFRESH_PRIORITY = Enumeration("REFRESH_PRIORITY",
+            (("PRE_FILECACHE", 400), ("FILECACHE", 350),
+            ("POST_FILECACHE", 300), ("EARLY", 200), ("NORMAL", 100),
+            ("LATE", 0)))
+
 
 class Project(Log):
     """
@@ -39,6 +47,7 @@ class Project(Log):
     def __init__(self, source_dir):
         self.source_directory = source_dir
         self.name = os.path.basename(source_dir)
+        self.indexer = Indexer(self)
         self.__data = {}
         self.reload()
 
@@ -54,9 +63,6 @@ class Project(Log):
     def __contains__(self, key):
         return key in self.__data
 
-    def has_key(self, key):
-        return key in self.__data
-
     def reload(self):
         """Loads the project file"""
         self.build = Build.loadf(self.project_file)
@@ -66,13 +72,13 @@ class Project(Log):
         if not os.path.isdir(self.data_dir):
             try:
                 os.mkdir(self.data_dir)
-            except OSError, e:
-                self.log.exception(e)
-                
+            except OSError, err:
+                self.log.exception(err)
+
         #XXX: this might need wrappers for reload
-        for m in self.__data.values():
-            if hasattr(m, 'reload'):
-                m.reload()
+        for mod in self.__data.values():
+            if hasattr(mod, 'reload'):
+                mod.reload()
 
     @property
     def options(self):
@@ -81,10 +87,6 @@ class Project(Log):
     @property
     def targets(self):
         return self.build.targets
-
-    @property
-    def markup(self):
-        return '<b>%s</b>\n%s' % (self.display_name, self.source_directory)
 
     def get_meta_dir(self, *args, **kwargs):
         path = Project.data_dir_path(self.source_directory, *args)
@@ -130,3 +132,5 @@ class Project(Log):
     def data_dir_path(project_directory, *args):
         return os.path.join(project_directory, DATA_DIR, *args)
 
+    def __repr__(self):
+        return "<Project %s>" % self.source_directory

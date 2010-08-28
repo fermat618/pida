@@ -1,9 +1,7 @@
-[plugin]
-plugin = todo
-name = Todo parser
-author = Ali Afshar <aafshar@gmail.com>
-version = 0.2.1
-require_pida = 0.5
-depends = ""
-category = code
-description = "Parse current document for TODO, FIXME or XXX tag"
+Name: Todo parser
+Author: Ali Afshar <aafshar@gmail.com>
+Version: 0.2.4
+Depends: pida>=0.6
+Category: code
+
+Parse current document for TODO, FIXME or XXX tags

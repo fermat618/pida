@@ -1,5 +1,6 @@
 
-from simplejson import dumps
+import py
+from json import dumps
 
 from pida.utils.testing import refresh_gui
 
@@ -13,7 +14,8 @@ t = dict(
         dict(
             name = 'test',
             actions = [
-                dict(type='shell',value='echo 123', options={})
+                dict(type='shell',value='echo 123', options={}),
+                dict(type='shell',value='echo 234', options={})
             ],
         ),
         dict(
@@ -52,181 +54,139 @@ t = dict(
     options = {}
 )
 
-def _get_test_build():
+def pytest_funcarg__json(request):
     json = dumps(t, sort_keys=False, indent=2)
-    return Build.loads(json), json
 
-def _build_test(f):
-    b, j = _get_test_build()
-    def _f():
-        return f(b)
-    _f.__name__ = f.__name__
-    return _f
+def pytest_funcarg__b(request):
+    json = dumps(t, sort_keys=False, indent=2)
+    return Build.loads(json)
 
-def _target_test(name='test'):
-    def _decorator(f):
-        b, j = _get_test_build()
-        t = b.targets[0]
-        def _f():
-            return f(t)
-        _f.__name__ = f.__name__
-        return _f
-    return _decorator
+def pytest_funcarg__t(request):
+    b = request.getfuncargvalue('b')
+    return b.targets[0]
 
+def pytest_funcarg__a(request):
+    t = request.getfuncargvalue('t')
+    return t.actions[0]
 
+def target_or_test(function):
+    if hasattr(function, 'target'):
+        return function.target.args[0]
+    else:
+        return 'test'
 
-def _action_test(f):
-    b, j = _get_test_build()
-    t = b.targets[0]
-    a = t.actions[0]
-    def _f():
-        return f(a)
-    _f.__name__ = f.__name__
-    return _f
+def pytest_funcarg__g(request):
+    b = request.getfuncargvalue('b')
+    return generate_execution_graph(b, target_or_test(request.function))
+
+def pytest_funcarg__res(request):
+    b = request.getfuncargvalue('b')
+    target = target_or_test(request.function)
+    return list(execute_build(b, target))
 
 
-def _graph_test(target_name='test'):
-    def _decorator(f):
-        b, j = _get_test_build()
-        g = generate_execution_graph(b, target_name)
-        def _f():
-            return f(g)
-        _f.__name__ = f.__name__
-        return _f
-    return _decorator
-
-
-def _execution_result_test(target_name='test'):
-    def _decorator(f):
-        b, j = _get_test_build()
-        res = list(execute_build(b, target_name))
-        def _f():
-            return f(res)
-        _f.__name__ = f.__name__
-        return _f
-    return _decorator
-
-
-@_build_test
 def test_targets(b):
     assert len(b.targets) == len(t['targets'])
 
-
-@_target_test()
 def test_target_name(t):
     assert t.name == 'test'
 
-
-@_target_test()
 def test_target_actions(t):
-    assert(len(t.actions) == 1)
+    assert(len(t.actions) == 2)
 
-
-@_target_test()
 def test_target_serialise(t):
     assert t.for_serialize() == {'name':u'test',
-        'actions':[{'type':u'shell','value':u'echo 123','options':{}}]}
+        'actions':[
+            {'type':u'shell','value':u'echo 123','options':{}},
+            {'type':u'shell','value':u'echo 234','options':{}},
+        ]}
 
-
-@_action_test
 def test_action_type(a):
     assert a.type == 'shell'
 
-
-@_action_test
 def test_action_value(a):
     assert a.value == 'echo 123'
 
-
-@_action_test
 def test_action_options(a):
     assert a.options == {}
 
-
-@_action_test
 def test_action_serialize(a):
     assert a.for_serialize() == {'type':u'shell','value':u'echo 123','options':{}}
 
-
-@_build_test
 def test_create_graph(b):
     root = generate_execution_graph(b, 'test')
-    assert len(root.children) == 1
-    assert len(root.actions) == 1
+    assert len(root.children) == 2
+    assert len(root.actions) == 2
 
 
-@_graph_test()
 def test_simple_children(g):
-    assert len(g.children) == 1
+    assert len(g.children) == 2
 
 
-@_graph_test()
 def test_simple_actions(g):
-    assert len(g.actions) == 1
+    assert len(g.actions) == 2
 
 
-@_graph_test('test4')
+@py.test.mark.target('test4')
 def test_dependency(g):
     assert len(g.children) == 1
 
 
-@_graph_test('test4')
+@py.test.mark.target('test4')
 def test_dependency_children(g):
     assert len(g.children[0].children) == 1
 
 
-@_graph_test('test4')
+@py.test.mark.target('test4')
 def test_dependency_target(g):
     assert g.children[0].target.name == 'test5'
 
 
-@_graph_test('test4')
+@py.test.mark.target('test4')
 def test_dependency_actions(g):
     assert len(g.actions) == 1
 
 
-@_graph_test('test2')
+@py.test.mark.target('test2')
 def test_circular_graph(g):
     assert g.children[1].children[1].circular
 
 
-@_graph_test('test2')
+@py.test.mark.target('test2')
 def test_circular_nochildren(g):
     assert not g.children[1].children[1].children
 
 
-@_graph_test('test2')
+@py.test.mark.target('test2')
 def test_circular_actions(g):
     assert len(g.actions) == 3
 
 
-@_graph_test('test2')
+@py.test.mark.target('test2')
 def test_circular_flag_action(g):
     assert isinstance(g.actions[2], CircularAction)
 
 
-@_build_test
 def test_execute_shell(b):
     res = list(execute_build(b, 'test'))
-    assert res[0] == '123\n'
+    assert res[0].getvalue() == '123\n'
 
 
-@_execution_result_test('test5')
+@py.test.mark.target('test5')
 def test_execute_shell_result(res):
-    assert res[0] == 'hello\n'
+    assert res[0].getvalue() == 'hello\n'
 
 
-@_execution_result_test('test4')
+@py.test.mark.target('test4')
 def test_execute_circular_result(res):
-    assert res[0] == 'hello\n'
+    assert res[0].getvalue() == 'hello\n'
 
 
-@_execution_result_test('test6')
+@py.test.mark.target('test6')
 def test_execute_python_result(res):
     assert res[0] == 'byebye\n'
 
 
-@_action_test
 def test_shell_action_view_command(a):
     v = ShellActionView()
     v._set_action(a)
@@ -236,7 +196,6 @@ def test_shell_action_view_command(a):
     assert a.value == 'echo 456'
 
 
-@_action_test
 def test_shell_action_view_cwd(a):
     v = ShellActionView()
     v._set_action(a)
@@ -245,7 +204,6 @@ def test_shell_action_view_cwd(a):
     assert a.options == {'cwd':v.cwd.get_current_folder()}
 
 
-@_action_test
 def test_python_action_view(a):
     v = PythonActionView()
     v._set_action(a)
@@ -255,7 +213,6 @@ def test_python_action_view(a):
     assert a.value == 'print 1'
 
 
-@_build_test
 def test_main_view_targets(b):
     v = PuilderView()
     v.set_build(b)
@@ -264,25 +221,24 @@ def test_main_view_targets(b):
     assert list(v.targets_list) == list(b.targets)
 
 
-@_build_test
-def test_main_view_actions(b):
+def test_main_view_set_build(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
     assert list(v.acts_list) == v.targets_list[0].actions
 
 
-@_build_test
 def test_main_view_actions(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
-    v.targets_list.select(v.targets_list[1])
+    v.targets_list.selected_item = v.targets_list[1]
     refresh_gui()
+    print list(v.acts_list)
+    print v.targets_list[1].actions
     assert list(v.acts_list) == v.targets_list[1].actions
 
 
-@_build_test
 def test_main_view_add_action(b):
     v = PuilderView()
     v.set_build(b)
@@ -294,10 +250,9 @@ def test_main_view_add_action(b):
     assert len(v.acts_list) > t
     assert v.acts_list[-1].value == ''
     assert v.acts_list[-1].type == 'shell'
-    assert v.acts_list[-1] in v.targets_list.get_selected().actions
+    assert v.acts_list[-1] in v.targets_list.selected_item.actions
 
 
-@_build_test
 def test_main_view_add_target(b):
     v = PuilderView()
     v.set_build(b)
@@ -311,7 +266,6 @@ def test_main_view_add_target(b):
     assert v.targets_list[-1].actions == []
 
 
-@_build_test
 def test_main_view_add_target_shell(b):
     v = PuilderView()
     v.set_build(b)
@@ -326,8 +280,7 @@ def test_main_view_add_target_shell(b):
     assert b.targets[-1].actions[0].type == 'shell'
 
 
-@_build_test
-def test_main_view_add_target_shell(b):
+def test_main_view_add_target_python(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
@@ -342,24 +295,60 @@ def test_main_view_add_target_shell(b):
 
 
 
-@_build_test
 def test_main_view_action_view(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
-    act = v.acts_list.get_selected()
-    shouldbe = v.acts_holder.page_num(v.action_views[act.type].get_toplevel())
+    act = v.acts_list.selected_item
+    shouldbe = v.acts_holder.page_num(v.action_views[act.type].widget)
     assert shouldbe == v.acts_holder.get_current_page()
 
 
-@_build_test
+def test_main_view_switch_to_action(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    v.proxy.update('test1')
+
+
 def test_main_view_select_action(b):
     v = PuilderView()
     v.set_build(b)
     refresh_gui()
-    v.targets_list.select(v.targets_list[1])
-    v.acts_list.select(v.acts_list[1])
+    print list(v.targets_list)
+    v.targets_list.selected_item = v.targets_list[1]
     refresh_gui()
-    shouldbe = v.acts_holder.page_num(v.action_views['target'].get_toplevel())
+    print list(v.acts_list)
+    v.acts_list.selected_item = v.acts_list[1]
+    refresh_gui()
+    shouldbe = v.acts_holder.page_num(v.action_views['target'].widget)
     assert shouldbe == v.acts_holder.get_current_page()
+
+
+def test_main_view_reorder_targets(b):
+    v = PuilderView()
+    v.set_build(b)
+    refresh_gui()
+    choosen = v.acts_list[0]
+    print list(v.acts_list)
+
+    v.acts_list.selected_item = choosen
+    v.act_down_act.activate()
+    v.acts_list.move_item_down(choosen)
+    refresh_gui()
+    print list(v.acts_list)
+
+    assert v.acts_list[0] is not choosen
+    assert v.acts_list[1] is choosen
+    assert v.acts_list.selected_item is choosen
+
+    v.act_up_act.activate()
+    refresh_gui()
+    print list(v.acts_list)
+
+    assert v.acts_list[0] is choosen
+    assert v.acts_list[1] is not choosen
+    assert v.acts_list.selected_item is choosen
+
+
 

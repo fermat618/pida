@@ -16,28 +16,30 @@ import re
 from gtk import gdk
 
 # UGLY UGLY workarround as suggested by muntyan_
-# this will be changed someday when there will be a correct 
+# this will be changed someday when therue will be a correct 
 # api for this.
-from pida.core.environment import pida_home
+from pida.core.environment import pida_home, workspace_name
 
 SYS_DATA = os.environ.get("XDG_DATA_DIRS", 
                           "/usr/share:/usr/local/share")
 
-MOO_DATA_DIRS=":".join((
+MOO_DATA_DIRS=os.pathsep.join((
                 os.path.join(pida_home, 'moo'),
                 os.path.join(os.path.dirname(__file__), "shared"),
                 os.pathsep.join([os.path.join(x, "moo") 
                                 for x in SYS_DATA.split(os.pathsep)]),
-                "/usr/share/moo:/usr/local/share/moo",
+                "/usr/share/moo",
+                "/usr/local/share/moo",
+                "/usr/share/pida",
+                "/usr/local/share/pida",
                 ))
+
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
 
-from kiwi.environ import environ
-
-environ.add_resource('pixmaps', os.path.join(os.path.dirname(__file__), 'pixmaps'))
-
 def _load_pix(fn):
-    return gtk.gdk.pixbuf_new_from_file(environ.find_resource('pixmaps', fn))
+    #XXX: not zip save
+    path = os.path.join(os.path.dirname(__file__), 'pixmaps', fn)
+    return gtk.gdk.pixbuf_new_from_file(path)
 
 _PIXMAPS = {
     'bookmark':              _load_pix('bookmark.png'),
@@ -46,8 +48,10 @@ _PIXMAPS = {
 }
 
 # Moo Imports
-import moo
-
+try:
+    import moo
+except ImportError:
+    moo = None
 # PIDA Imports
 from pida.ui.views import PidaView
 from pida.core.editors import EditorService, EditorActionsConfig
@@ -55,16 +59,18 @@ from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.events import EventsConfig
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
-from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
-    SuggestionsList, PidaDocWindow)
-from pida.utils.gthreads import GeneratorTask, gcall, AsyncTask
+from pida.ui.completer import (PidaCompleter, PidaCompleterWindow, 
+    SuggestionsList)
+from pygtkhelpers.gthreads import GeneratorTask, gcall, AsyncTask
 from pida.core.languages import Suggestion
+from pida.ui.languages import PidaDocWindow
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('mooedit')
 _ = locale.gettext
 
+from .langs import build_mapping, MAPPINGS
 
 class MooeditMain(PidaView):
     """Main Mooedit View.
@@ -175,6 +181,10 @@ class MooeditPreferences(PidaView):
     def _apply(self):
         self._prefs.emit('apply')
         self.svc.save_moo_state()
+        try:
+             self.svc._editor_instance.apply_prefs()
+        except AttributeError:
+             pass
 
     def can_be_closed(self):
         self.svc.get_action('mooedit_preferences').set_active(False)
@@ -230,12 +240,16 @@ class MooeditView(gtk.ScrolledWindow):
     def __init__(self, document):
         gtk.ScrolledWindow.__init__(self)
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.editor = document.editor
-        self.editor.props.buffer.connect('changed', self.on_changed)
+        self.set_editor(document.editor)
         self.document = document
         self.line_markers = []
-        self.add(document.editor)
         self.show_all()
+
+    def set_editor(self, editor):
+        self.editor = editor
+        self.editor.props.buffer.connect('changed', self.on_changed)
+        self.add(self.editor)
+        self.editor.show()
 
     def on_changed(self, textbuffer):
         #FIXME: this doesn't work, nor does connect_after work correctly. 
@@ -298,6 +312,15 @@ class MooeditActionsConfig(EditorActionsConfig):
             gtk.STOCK_SAVE_AS,
             self.on_save_as,
             '<Shift><Control>S'
+        )
+        self.create_action(
+            'mooedit_reload',
+            TYPE_NORMAL,
+            _('Reload'),
+            _('Reload file content'),
+            gtk.STOCK_REFRESH,
+            self.on_reload,
+            ''
         )
         self.create_action(
             'mooedit_preferences',
@@ -467,7 +490,14 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.svc.show_preferences(action.get_active())
 
     def on_save_as(self, action):
+        # open in current filebrowser path
+        moo.utils.prefs_new_key_string('Editor/last_dir')
+        moo.utils.prefs_set_string('Editor/last_dir', 
+            self.svc.boss.cmd('filemanager', 'get_browsed_path'))
         self.svc._current.editor.save_as()
+
+    def on_reload(self, action):
+        self.svc.reload_document(self.svc._current.document)
 
     def on_find(self, action):
         self.svc._current.editor.emit('find-interactive')
@@ -488,7 +518,12 @@ class MooeditActionsConfig(EditorActionsConfig):
         self.svc._current.editor.emit('find-word-at-cursor', False)
 
     def on_goto(self, action):
+        cl = self.svc.get_current_line()
         self.svc._current.editor.emit('goto-line-interactive')
+        nl = self.svc.get_current_line()
+        if cl != nl:
+            self.svc.boss.get_service('buffer').emit('document-goto', 
+                                    document=self.svc._current, line=nl)
 
     def on_last_edit(self, action):
         self.svc.boss.editor.goto_last_edit()
@@ -527,6 +562,7 @@ class PidaMooInput(object):
         self.completer_start = None
         self.completer_end = None
         self.show_auto = False
+        self._task = None
 
         # db stuff for the autocompleter
         self.list_matcher = re.compile("""\w{3,100}""")
@@ -551,34 +587,42 @@ class PidaMooInput(object):
 
     #def on_
 
-    def update_completer_and_add(self, cmpl, start):
+    def update_completer_and_add(self, cmpl, start, ignore=()):
+        """
+        Returns items for completion widgets
+        """
         # we run the language completer first and the we add our own results
         # to the completer list
         if cmpl:
-            for i in cmpl.get_completions("", 
+            for i in cmpl.get_completions(self.svc.get_current_word(), 
                         unicode(self.editor.get_text()), start):
-                yield i
+                try:
+                    if i not in ignore:
+                        yield i
+                except Exception, e:
+                    self.svc.log.exception(e)
 
         #self.update_completer()
         y = 0
         clst = self.list_all.copy()
         for x in clst:
-            yield x
+            if x not in ignore:
+                yield x
 
     def get_completer_visible(self):
         if self.completer_window and self.completer_window.window and \
             self.completer_window.window.is_visible():
                 return True
         return False
-    
+
     def set_completer_visible(self, value):
         pass
-    
+
     completer_visible = property(get_completer_visible, set_completer_visible)
-    
+
     def on_do_hide(self, *args, **kwargs):
         self.hide()
-    
+
     def toggle_popup(self):
         if self.completer_visible:
             self.hide()
@@ -617,6 +661,11 @@ class PidaMooInput(object):
         #    self.editor.props.buffer.props.cursor_position
 
         cmpl = self.svc.boss.get_service('language').get_completer(self.document)
+        info = self.svc.boss.get_service('language').get_info(self.document)
+        if info:
+            self.completer.ignore_case = not info.case_sensitive
+        else:
+            self.completer.ignore_case = False
 
         buf = self.editor.get_buffer()
 
@@ -679,9 +728,9 @@ class PidaMooInput(object):
         else:
             self.completer.filter = ""
 
-        task = GeneratorTask(self.update_completer_and_add, 
+        self._task = GeneratorTask(self.update_completer_and_add, 
                              self.add_str)
-        task.start(cmpl, start)
+        self._task.start(cmpl, start, ignore=(self.svc.get_current_word(),))
 
         self.show_auto = show_auto
 
@@ -824,6 +873,13 @@ class PidaMooInput(object):
 
     def add_str(self, line):
         #print "add line", line
+        if len(self.completer) > 3000:
+            #emergency stop
+            self.svc.log.info(
+                        _("Emergency stop of completer: Too many entries"))
+            self._task.stop()
+            return
+
         if isinstance(line, Suggestion):
             self.completer.add_str(line, type_=line.type_)
         else:
@@ -939,7 +995,7 @@ class PidaMooInput(object):
             if self.svc.opt('auto_attr'):
                 # we have to build a small buffer, because the character 
                 # typed is not in the buffer yet
-                for x in info.attributerefs + info.open_backets:
+                for x in info.completer_open:
                     end = it.copy()
                     end.backward_chars(len(x))
                     rv = it.backward_search(x, gtk.TEXT_SEARCH_TEXT_ONLY, end)
@@ -994,9 +1050,16 @@ class MooeditEventsConfig(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('editor', 'marker-changed',
             self.marker_changed)
+        self.subscribe_foreign('buffer', 'document-typchanged',
+            self.doctype_changed)
 
     def marker_changed(self, marker):
         self.svc.on_marker_changed(marker)
+
+    def doctype_changed(self, document):
+        if document.doctype and getattr(document, 'editor', None):
+            document.editor.set_lang(MAPPINGS.get(document.doctype.internal, 
+                                                  None))
 
 # Service class
 class Mooedit(EditorService):
@@ -1018,7 +1081,17 @@ class Mooedit(EditorService):
         try:
             self.script_path = os.path.join(pida_home, 'pida_mooedit.rc')
             self._state_path = os.path.join(pida_home, 'pida_mooedit.state')
-            moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=self._state_path)
+            try:
+                moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=self._state_path)
+            except gobject.GError:
+                pass
+            # if a workspace specific rc file exists, load it and make it the current one
+            if os.path.exists(os.path.join(pida_home, 'pida_mooedit.%s.rc' %workspace_name())):
+                self.script_path = os.path.join(pida_home, 'pida_mooedit.%s.rc' %workspace_name())
+                try:
+                    moo.utils.prefs_load(sys_files=None, file_rc=self.script_path, file_state=None)
+                except gobject.GError:
+                    pass
             self._editor_instance = moo.edit.create_editor_instance()
             moo.edit.plugin_read_dirs()
             self._documents = {}
@@ -1051,6 +1124,11 @@ class Mooedit(EditorService):
         self.get_action('mooedit_last_edit').set_sensitive(False)
         self._update_keyvals()
         self.boss.get_service('editor').emit('started')
+
+        # build a mapping table
+        build_mapping(moo.edit.lang_mgr_default(), 
+                      self.boss.get_service('language').doctypes)
+
         return True
 
     def on_marker_changed(self, marker):
@@ -1138,10 +1216,9 @@ class Mooedit(EditorService):
         good = None
         for doc in documents:
             try:
-                if self._load_file(doc):
-                    good = doc
+                good = self._load_file(doc)
             except DocumentException, err:
-                self.log.exception(err)
+                #self.log.exception(err)
                 self.boss.get_service('editor').emit('document-exception', error=err)
         # we open the last good document now normally again to 
         # make system consistent
@@ -1168,12 +1245,19 @@ class Mooedit(EditorService):
 
     def save(self):
         """Save the current document"""
+        # man, medit resets the language on save
+        olang = self._current.editor.props.buffer.get_lang()
         self._current.editor.save()
+        self._current.editor.set_lang(olang)
+        gcall(self._current.editor.set_lang, olang)
         self.boss.cmd('buffer', 'current_file_saved')
 
     def save_as(self):
         """Save the current document"""
+        olang = self._current.editor.props.buffer.get_lang()
         self._current.editor.save_as()
+        self._current.editor.set_lang(olang)
+        gcall(self._current.editor.set_lang, olang)
         self.boss.cmd('buffer', 'current_file_saved')
 
     def cut(self):
@@ -1203,6 +1287,8 @@ class Mooedit(EditorService):
     def goto_line(self, line):
         """Goto a line"""
         self._current.editor.move_cursor(line-1, 0, False, True)
+        self.boss.get_service('buffer').emit('document-goto', 
+                                        document=self._current.document, line=line-1)
 
     def goto_last_edit(self):
         if self._last_modified:
@@ -1222,6 +1308,34 @@ class Mooedit(EditorService):
     def _changed_page(self, notebook, page, page_num):
         self._current = self._embed.get_nth_page(page_num)
         self.boss.cmd('buffer', 'open_file', document=self._current.document)
+
+    def reload_document(self, document):
+        """
+        Reloads a document from disc
+        """
+        # TODO: moo does no export reload functionality, so this really sucks
+        view = self._documents[document.unique_id]
+        buf = document.editor.get_buffer()
+        last_line = buf.get_iter_at_offset(buf.props.cursor_position)\
+                       .get_line()
+
+        document.editor.disconnect_by_func(self._buffer_status_changed)
+        document.editor.disconnect_by_func(self._buffer_renamed)
+        document.editor.get_buffer().disconnect_by_func(self._buffer_changed)
+        closing = document.editor.close()
+        if closing:
+            label = document.editor._label
+            view.remove(document.editor)
+            editor = self._editor_instance.create_doc(document.filename)
+            editor._label = label
+            editor.inputter = PidaMooInput(self, editor, document)
+            document.editor = editor
+            view.set_editor(editor)
+            gcall(editor.move_cursor, last_line, 0, False, True)
+        document.editor.connect("doc_status_changed", self._buffer_status_changed, view)
+        document.editor.connect("filename-changed", self._buffer_renamed, view)
+        document.editor.get_buffer().connect("changed", self._buffer_changed, view)
+        document.editor.emit("doc_status_changed")
 
     def _load_file(self, document):
         try:
@@ -1263,43 +1377,35 @@ class Mooedit(EditorService):
             if not view._star:
                 s = view.editor._label._markup
                 if view._exclam:
-                    s = s[1:]
                     view._exclam = False
                 ns = "*" + s
                 view.editor._label.set_markup(ns)
-                view.editor._label._markup = ns
                 view._star = True
                 self.get_action('undo').set_sensitive(True)
                 self.get_action('save').set_sensitive(True)
-                
+
         if moo.edit.EDIT_CLEAN & status == moo.edit.EDIT_CLEAN:
-            #print "clean"
-            pass
+            status = 0
         if moo.edit.EDIT_NEW & status == moo.edit.EDIT_NEW:
-            #print "new"
-            pass
+            status = 0
         if moo.edit.EDIT_CHANGED_ON_DISK & status == moo.edit.EDIT_CHANGED_ON_DISK:
             if not view._exclam:
                 s = view.editor._label._markup
                 if view._star:
-                    s = s[1:]
                     view._star = False
                 ns = "!" + s
                 view.editor._label.set_markup(ns)
-                view.editor._label._markup = ns
                 view._exclam = True
                 self.get_action('save').set_sensitive(True)
-                
+
         if status == 0:
             if view._star or view._exclam:
                 s = view.editor._label.get_text()
-                ns = s[1:]
+                ns = view.editor._label._markup
                 view._exclam = False
                 view._star = False
-                view.editor._label._markup = ns
                 view.editor._label.set_markup(ns)
             self.get_action('save').set_sensitive(False)
-                
 
     def _buffer_changed(self, buffer, view):
         self._last_modified = (view, buffer.props.cursor_position)
@@ -1323,7 +1429,7 @@ class Mooedit(EditorService):
     def _get_document_title(self, document):
         dsp = self.opt('display_type')
         if dsp == 'filename':
-            return document.get_markup(document.markup_string)
+            return document.get_markup(document.markup_string_if_project)
         elif dsp == 'fullpath':
             return document.get_markup(document.markup_string_fullpath)
         return document.markup
@@ -1393,6 +1499,15 @@ class Mooedit(EditorService):
             start -= 1
         start = max(start, 0)
         return (start, end, txt)
+
+    def get_current_word(self):
+        """
+        Returns the word the cursor is in or the selected text
+        """
+        
+        start, end, txt = self._get_current_word_pos()
+
+        return txt[start:end]
         
 
     def call_with_current_word(self, callback):
@@ -1418,7 +1533,14 @@ class Mooedit(EditorService):
             return
 
         callback(rv)
-    
+
+    def call_with_selection_or_word(self, callback):
+        if self._current.editor.has_selection():
+            self.call_with_selection(callback)
+        else:
+            self.call_with_current_word(callback)
+
+
     def insert_text(self, text):
         self._current.editor.get_buffer().insert_at_cursor(text)
     
@@ -1430,6 +1552,8 @@ class Mooedit(EditorService):
                    buf.get_iter_at_offset(end))
 
     def get_current_line(self):
+        if not self._current:
+            return None
         buf = self._current.editor.get_buffer()
         i = buf.get_iter_at_offset(buf.props.cursor_position)
         return i.get_line()+1
@@ -1491,6 +1615,11 @@ class Mooedit(EditorService):
                 data=_('No documentation found'), timeout=2000)
             return
         pd = PidaDocWindow(documentation=docu)
+        if not pd.valid:
+            self.notify_user(_("No documentation found"), 
+                             title=_("Show documentation"),
+                             quick=True)
+            return
         pd.connect("destroy-event", self.on_doc_destroy)
         self._current.editor.props.buffer.connect(
             'cursor-moved', self.do_doc_destroy)
@@ -1509,6 +1638,15 @@ class Mooedit(EditorService):
 
     def hide_sign(self, type, filename, line):
         pass
+
+
+    @staticmethod
+    def get_sanity_errors():
+        if moo is None:
+            return [
+                "medit python bindings are missing"
+            ]
+        #XXX: version checks
 
 
 

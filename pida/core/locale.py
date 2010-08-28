@@ -5,7 +5,6 @@
 """
 import gettext
 import os
-import gtk.glade
 
 class Locale(object):
 
@@ -26,10 +25,6 @@ class Locale(object):
 
     def gettext(self, message):
         return gettext.dgettext(self.modulename, message)
-
-    def bindglade(self):
-        gtk.glade.bindtextdomain(self.modulename, self.localepath)
-        gtk.glade.textdomain(self.modulename)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

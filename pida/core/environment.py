@@ -3,8 +3,7 @@
     Environment
     ~~~~~~~~~~~
 
-    This module provides some basic environment informations and
-    the kiwi resource libraries.
+    This module provides some basic environment informations
 
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
@@ -12,108 +11,128 @@
 
 import os
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
+from functools import partial
 
-from kiwi.environ import Library, environ
+import py
 
+import gtk
+import pida
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-library = Library('pida', root='../')
 
-library.add_global_resource('glade', 'resources/glade')
-library.add_global_resource('uidef', 'resources/uidef')
-library.add_global_resource('pixmaps', 'resources/pixmaps')
-library.add_global_resource('data', 'resources/data')
+base_path = py.path.local(pida.__file__).pypkgpath()
 
-def get_resource_path(resource, name):
-    return environ.find_resource(resource, name)
+resources = dict(uidef=[], pixmaps=[], data=[])
 
-def get_uidef_path(name):
-    return get_resource_path('uidef', name)
+def find_resource(kind, name):
+    for item in resources[kind]:
+        full = item/name
+        if full.check():
+            return str(full)
+    raise EnvironmentError('Could not find %s resource: %s' % (kind, name))
 
-def get_glade_path(name):
-    return get_resource_path('glade', name)
+def add_global_base(service_path):
+    service_path = py.path.local(service_path)
+    for kind in 'uidef', 'pixmaps', 'data':
+        path = service_path/kind
+        if path.check(dir=True):
+            resources[kind].append(path)
 
-def get_pixmap_path(name):
-    return get_resource_path('pixmaps', name)
+add_global_base(base_path/'resources')
 
-def get_data_path(name):
-    return get_resource_path('data', name)
-
-pida_home = os.path.expanduser('~/.pida2')
-firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
-plugins_dir = os.path.join(pida_home, 'plugins')
-settings_dir = os.path.join(pida_home, 'settings')
-
-pida_root_path = os.path.abspath(os.path.join(
-    __file__, os.path.pardir, os.path.pardir, os.path.pardir))
-
-for path in pida_home, plugins_dir:
-    if not os.path.exists(path):
-        os.mkdir(path)
-
-import gtk
-
-gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
-gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
-# we have to force reload the settings
-gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
-
-#XXX: development hack
-import pida
-buildin_plugins_dir = os.path.join(
-        os.path.dirname(pida.__path__[0]),
-        'pida-plugins')
-
-if os.path.exists(buildin_plugins_dir):
-    plugins_path = [plugins_dir, buildin_plugins_dir]
-else:
-    plugins_path = [plugins_dir]
+get_pixmap_path = partial(find_resource, 'pixmaps')
+get_data_path = partial(find_resource, 'data')
 
 
-op = OptionParser()
-op.add_option('-v', '--version', action='store_true',
+pida_home = None
+firstrun_filename = None
+
+def setup_paths(home):
+    global pida_home, firstrun_filename, settings_dir
+    global plugins_path, plugins_dir
+    pida_home = os.path.expanduser('~/.pida2')
+    firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
+    plugins_dir = os.path.join(pida_home, 'plugins')
+    settings_dir = os.path.join(pida_home, 'settings')
+
+
+    if not os.path.exists(plugins_dir):
+        os.makedirs(plugins_dir)
+
+    #XXX: development hack
+    buildin_plugins_dir = base_path.dirpath()/'pida-plugins'
+
+    if buildin_plugins_dir.check(dir=1):
+        plugins_path = [plugins_dir, str(buildin_plugins_dir)]
+    else:
+        plugins_path = [plugins_dir]
+
+def parse_gtk_rcfiles():
+    gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
+    gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
+    # we have to force reload the settings
+    gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
+
+
+
+parser = ArgumentParser()
+parser.add_argument(
+    '-v', '--version', action='store_true',
     help=_('Print version information and exit.'))
-op.add_option('-D', '--debug', action='store_true',
+parser.add_argument(
+    '-D', '--debug', action='store_true',
     help=_('Run PIDA with added debug information.'))
-op.add_option('-T', '--trace', action='store_true',
+parser.add_argument(
+    '-T', '--trace', action='store_true',
     help=_('Run PIDA with tracing.'))
-op.add_option('-F', '--firstrun', action='store_true',
+parser.add_argument(
+    '-F', '--firstrun', action='store_true',
     help=_('Run the PIDA first run wizard.'))
-op.add_option('--safe_mode', action='store_true',
+parser.add_argument(
+    '--safe_mode', action='store_true',
     help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
-op.add_option('-P', '--profile', dest="profile_path",
+parser.add_argument(
+    '-P', '--profile', dest="profile_path",
     help=_('Generate profile data on path.'))
-op.add_option('-w', '--workspace', dest="workspace",
+parser.add_argument(
+    '-w', '--workspace', dest="workspace",
     help=_('Use workspace name'))
-op.add_option('-m', '--manager', action='store_true',
+parser.add_argument(
+    '-m', '--manager', action='store_true',
     help=_('Show workspace Manager'))
-op.add_option('', '--killsettings', action="store_true",
+parser.add_argument(
+    '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
+parser.add_argument('--pida-home', default='~/.pida2')
+parser.add_argument('files', nargs='*', default=[])
 
-
-opts, args = op.parse_args([])
 
 env = dict(os.environ)
 
+on_windows = sys.platform == 'win32' #XXX: checked only on xp
+opts = None
+
 def parse_args(argv):
-    global opts, args
-    opts, args = op.parse_args(argv)
+    global opts
+    opts = parser.parse_args(argv)
 
     if opts.killsettings:
         opts.firstrun = True
- 
-def is_version():
-    return opts.version
+
+    setup_paths(opts.pida_home)
+    parse_gtk_rcfiles()
+    return opts
+
+
+parse_args([])
+
 
 def is_debug():
     return opts.debug
-
-def is_trace():
-    return opts.trace
 
 def is_firstrun():
     return not os.path.exists(firstrun_filename) or opts.firstrun
@@ -134,9 +153,6 @@ def workspace_manager():
 
 def killsettings():
     return opts.killsettings
-
-def get_args():
-    return args
 
 def get_plugin_global_settings_path(name, filename=None):
     path = os.path.join(pida_home, name)

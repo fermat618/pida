@@ -14,20 +14,23 @@ class MyActions(ActionsConfig):
 
     def my_handler(self, action):
         self.svc.banana = True
-        
-
 
 class ActionTestCase(TestCase):
 
-    def log(self, *k): #XXX: ignore log attempts of OptionsConfig
+    #XXX: ignore log attempts of OptionsConfig
+    def log(self, *k):
         pass
     log.debug = log
+
     def setUp(self):
         self.banana = False
         self.boss = None
         self._acts = MyActions(self)
         self._acts.create()
         self._act = self._acts._actions.get_action('banana')
+
+    def tearDown(self):
+        self._acts.unload()
 
     def get_name(self):
         return 'testcase'

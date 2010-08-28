@@ -1,11 +1,10 @@
 
 
-import sys
 import os
 
 meta_tmpl = """[meta]
-name = 
-title = 
+name =
+title =
 shortcut =
 
 [variables]

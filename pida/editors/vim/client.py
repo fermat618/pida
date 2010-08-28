@@ -7,40 +7,37 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 
 """
+import logging
 import os, time
 
-import gtk, dbus
+import gtk
+log = logging.getLogger(__name__)
 
-from dbus.mainloop.glib import DBusGMainLoop
+try:
+    import dbus
+    from dbus.mainloop.glib import DBusGMainLoop
 
-mainloop = DBusGMainLoop(set_as_default=True)
+    mainloop = DBusGMainLoop(set_as_default=True)
+except ImportError:
+    pass
 
-DBUS_NS = 'uk.co.pida.vim'
 
-def get_bus_name(uid):
-    return '.'.join([DBUS_NS, uid])
+DBUS_NS = 'uk.co.pida.vim.{uid}'
 
 def get_vim(uid):
+    name = DBUS_NS.format(uid=uid)
     session = dbus.SessionBus()
-    proxy = None
-    while proxy is None:
-        try:
-            proxy = session.get_object(get_bus_name(uid), '/vim')
-        except dbus.DBusException:
-            proxy = None
-            time.sleep(0.2)
-    print proxy
-    return proxy
-
-def connect_cb(proxy, cb):
-    for evt in ['VimEnter', 'VimLeave', 'BufEnter', 'BufDelete', 'BufWritePost',
-    'CursorMoved']:
-        proxy.connect_to_signal(evt, getattr(cb, 'vim_%s' % evt))
-
-def VimCom(cb, uid):
-    proxy = get_vim(uid)
-    connect_cb(proxy, cb)
-    return proxy
-
-
+    def cb(bn):
+        if bn: # may be empty
+            gtk.main_quit()
+    watch = session.watch_name_owner(name, cb)
+    gtk.main() #XXX: this might kill us if vim somehow fails
+    try:
+        log.info('trying vim connect')
+        return dbus.Interface(
+                session.get_object(name, '/vim'),
+                'uk.co.pida.vim')
+    except dbus.DBusException:
+        log.info('vim connect failed')
+        raise SystemExit('vim failed')
 

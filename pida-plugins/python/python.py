@@ -34,25 +34,28 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL
 from pida.core.options import OptionsConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
-    Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, Documentator)
+    Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, 
+    Documentator, External)
 
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, LANG_PRIO,
-    Definition, Suggestion, Documentation, ValidationError)
+    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, 
+    LANG_PRIO, Definition, Suggestion, Documentation, ValidationError)
 
 # services
 import pida.services.filemanager.filehiddencheck as filehiddencheck
 
 # utils
+from .pyflakes.checker import Checker
 from . import pyflakes
-
+from .pyflakes import messages
 # locale
 from pida.core.locale import Locale
 locale = Locale('python')
 _ = locale.gettext
 
-from ropebrowser import ModuleParser
+from .ropebrowser import ModuleParser
 
+MAX_FIXES = 10
 RE_MATCHES = (
     # traceback match
     (r'''File\s*"([^"]+)",\s*line\s*[0-9]+''',
@@ -68,6 +71,8 @@ class PythonEventsConfig(EventsConfig):
     def subscribe_all_foreign(self):
         self.subscribe_foreign('buffer', 'document-changed',
                     self.on_document_changed)
+        self.subscribe_foreign('buffer', 'document-typchanged',
+                    self.on_document_changed)
 
     def on_document_changed(self, document):
         self.svc.set_document(document)
@@ -80,8 +85,9 @@ class PythonFeaturesConfig(LanguageServiceFeaturesConfig):
         self.subscribe_foreign('filemanager', 'file_hidden_check',
             self.python)
         for match in RE_MATCHES:
-            self.subscribe_foreign('commander', 'matches',
-            (match[0], self.svc.match_call))
+            self.subscribe_foreign('commander', 'match-callback',
+            ('Python', match[0], match[1], self.svc.match_call))
+
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_PROJECT, 
         _("Hide Python Compiled Files"))
@@ -120,6 +126,10 @@ class PythonActionsConfig(ActionsConfig):
 class PythonOutliner(Outliner):
 
     priority = LANG_PRIO.VERY_GOOD
+    name = "rope"
+    plugin = "python"
+    description = _("A very deep and precises, but slow outliner")
+
 
     filter_type = (LANG_OUTLINER_TYPES.IMPORT,
                     LANG_OUTLINER_TYPES.BUILTIN,
@@ -159,6 +169,11 @@ class PythonOutliner(Outliner):
 
 class PythonDocumentator(Documentator):
 
+    name = "rope"
+    plugin = "python"
+    description = _("A very good documentator")
+
+
     def get_documentation(self, buffer, offset):
         mp = ModuleParser(self.document.filename,
                           project=self.document.project)
@@ -168,20 +183,19 @@ class PythonDocumentator(Documentator):
         from rope.base.exceptions import RopeError
         from rope.contrib import fixsyntax
         try:
-            pymodule = fixsyntax.get_pymodule(mp.project.pycore, buffer,
-                                               None, 4)
-            pyname = fixsyntax.find_pyname_at(mp.project, buffer,
-                                               offset, pymodule, 4)
+            fix = fixsyntax.FixSyntax(mp.project.pycore, buffer, None, maxfixes=MAX_FIXES)
+            pymodule = fix.get_pymodule()
+            pyname = fix.pyname_at(offset)
         except RopeError:
-            return None
+            return
         if pyname is None:
-            return None
+            return
         pyobject = pyname.get_object()
         rv = Documentation(
             short=PyDocExtractor().get_calltip(pyobject, False, False),
             long_=PyDocExtractor().get_doc(pyobject)
             )
-        return rv
+        yield rv
         
 class PythonLanguage(LanguageInfo):
     varchars = [chr(x) for x in xrange(97, 122)] + \
@@ -192,6 +206,10 @@ class PythonLanguage(LanguageInfo):
 
     # . in python
     attributerefs = ['.']
+
+    completer_open = ['[', '(', ',', '.']
+    completer_close = [']', ')', '}']
+
 
 
 def _create_exception_validation(e):
@@ -252,6 +270,9 @@ class PythonError(ValidationError):
 class PythonValidator(Validator):
 
     priority = LANG_PRIO.GOOD
+    name = "pyflakes"
+    plugin = "python"
+    description = _("A not very precise, non configurable validator, but fast")
 
     def get_validations(self):
         code_string = self.document.content
@@ -261,12 +282,14 @@ class PythonValidator(Validator):
         except (SyntaxError, IndentationError), e:
             messages = _create_exception_validation(e)
         else:
-            w = pyflakes.Checker(tree, filename)
+            w = Checker(tree, filename)
             messages = w.messages
         for m in messages:
             type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
             subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
 
+            #FIXME add pyflakes 0.3 types
+            #FIXME make mapping
             if isinstance(m, pyflakes.messages.UnusedImport):
                 type_ = LANG_VALIDATOR_TYPES.INFO
                 subtype = LANG_VALIDATOR_SUBTYPES.UNUSED
@@ -297,6 +320,9 @@ class PythonValidator(Validator):
 class PythonCompleter(Completer):
 
     priority = LANG_PRIO.VERY_GOOD
+    name = "rope"
+    plugin = "python"
+    description = _("Creates very exact suggestions at reasonable speed")
 
     def get_completions(self, base, buffer, offset):
 
@@ -307,11 +333,10 @@ class PythonCompleter(Completer):
             mp = ModuleParser(self.document.filename, 
                               project=self.document.project)
             buffer = buffer + ('\n' * 20)
-            co = code_assist(mp.project, buffer, offset, maxfixes=4)
-        except RopeError:
-            return []
+            co = code_assist(mp.project, buffer, offset, maxfixes=MAX_FIXES)
+        except RopeError, IndentationError:
+            return
         so = sorted_proposals(co)
-        rv = []
         for c in so:
             if c.name.startswith(base):
                 r = Suggestion(c.name)
@@ -333,11 +358,13 @@ class PythonCompleter(Completer):
                         r.type_ = LANG_COMPLETER_TYPES.PARAMETER
                 else:
                     r.type_ = LANG_COMPLETER_TYPES.UNKNOWN
-                rv.append(r)
-        return rv
-
+                yield r
 
 class PythonDefiner(Definer):
+
+    name = "rope"
+    plugin = "python"
+    description = _("Shows a good definition of a function")
 
     def get_definition(self, buffer, offset):
         mp = ModuleParser(self.document.filename,
@@ -348,12 +375,12 @@ class PythonDefiner(Definer):
         from rope.base.exceptions import RopeError
 
         try:
-            dl = find_definition(mp.project, buffer, offset)
+            dl = find_definition(mp.project, buffer, offset, maxfixes=MAX_FIXES)
         except RopeError:
-            return None
+            return
 
         if not dl:
-            return None
+            return
 
         if dl.resource is not None:
             file_name = dl.resource.path
@@ -364,8 +391,14 @@ class PythonDefiner(Definer):
         rv = Definition(file_name=file_name, offset=dl.offset,
                         line=dl.lineno, length=(dl.region[1]-dl.region[0]))
 
-        return rv
+        yield rv
 
+class PythonExternal(External):
+    outliner = PythonOutliner
+    validator = PythonValidator
+    completer = PythonCompleter
+    definer = PythonDefiner
+    documentator = PythonDocumentator
 
 class Python(LanguageService):
 
@@ -382,6 +415,8 @@ class Python(LanguageService):
     options_config = PythonOptionsConfig
     events_config = PythonEventsConfig
 
+    external = PythonExternal
+
     def pre_start(self):
         self.execute_action = self.get_action('execute_python')
         self.execute_action.set_sensitive(False)
@@ -396,12 +431,12 @@ class Python(LanguageService):
 #             self.boss.get_service('commander').unregister_matcher(
 #                 match[0], self.match_call)
 
-    def match_call(self, term, event, match):
+    def match_call(self, term, event, match, *args, **kwargs):
         for pattern in RE_MATCHES:
             test = pattern[1].match(match)
             if test:
                 self.boss.get_service('buffer').open_file(
-                    term.get_absolute_path(test.groups()[0]),
+                    kwargs['usr'].get_absolute_path(test.groups()[0]),
                     line=int(test.groups()[1]))
 
     def execute_current_document(self):
@@ -430,3 +465,4 @@ Service = Python
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+

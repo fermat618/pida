@@ -1,18 +1,15 @@
 style "pida"  {
 
-#stock["pida-terminal"] = "terminal.png"
-stock["pida-terminal"] = {
-    { "terminal.png", *, *, *}
-}
-
 color["pida-project"] = "#FF0000"
 color["pida-project-path"] = "#FFFF00"
+color["pida-nonproject"] = "#D64A4A"
 
 # Filemanager color settings
 color["pida-fm-unknown"] = "#242424"
 color["pida-fm-hidden"] = "#888888"
 color["pida-fm-ignored"] = "#888888"
 color["pida-fm-none"] = "#757575"
+color["pida-fm-clean"] = "black"
 color["pida-fm-normal"] = "black"
 color["pida-fm-error"] = "#FF0080"
 color["pida-fm-empty"] = "black"

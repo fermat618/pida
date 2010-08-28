@@ -1,9 +1,0 @@
-[plugin]
-plugin = skeleton
-name = Skeleton
-author = Pida
-version = 0.1
-require_pida = 0.6
-depends = ""
-category = code
-description = "Skeleton for new plugins"

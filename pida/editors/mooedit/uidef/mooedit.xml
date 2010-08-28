@@ -5,6 +5,7 @@
             <placeholder name="fm1">
                 <menuitem name="save" action="save" />
                 <menuitem name="mooedit_save_as" action="mooedit_save_as" />
+                <menuitem name="mooedit_reload" action="mooedit_reload" />
             </placeholder>
 
         </menu>
@@ -46,16 +47,17 @@
         </menu>
 
         <menu name="ToolsMenu" action="ToolsMenu">
-        </menu>
-
-        <menu name="ViewMenu" action="ViewMenu">
-            <placeholder name="tools" />
+            <placeholder name="toolstools"/>
             <separator />
-            <placeholder name="panes">
+            <placeholder name="toolstools2">
             </placeholder>
+            <separator />
             <placeholder name="prefs">
             <menuitem name="mooedit_preferences" action="mooedit_preferences" />
             </placeholder>
+        </menu>
+
+        <menu name="ViewMenu" action="ViewMenu">
         </menu>
 
         <menu name="HelpMenu" action="HelpMenu">

@@ -2,14 +2,19 @@ include *.txt *.py *.sh
 include AUTHORS
 include COPYING
 include INSTALL
-include CHANGELOG
 include README
-recursive-include pida *
-recursive-include pida-plugins *
+include pida/resources/data/gtkrc-2.0
+
+recursive-include pida *.py *.glade *.xml *.po *.png *.el *.vim *.gif *.svg *.pida *.xpm
+recursive-include pida-plugins *.py *.glade *.xml *.po *.png *.el *.vim *.gif *.svg *.pida *.xpm
 recursive-include contrib *
-recursive-include tests *
-recursive-include moo *
+recursive-include tests *.py
 recursive-include bin *
 recursive-include tools *
 recursive-include docs *
+
+prune pida/ui/moo_stub.so
+prune contrib/moo/marshals.*
+prune contrib/moo/stock-moo.h
+prune contrib/moo/moo-pygtk.c
 

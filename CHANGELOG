@@ -1,68 +1,39 @@
-0.5.2 "Cheese and Crackers"
-
-Features
-
-[1179] Prevent version control actions in non-versioned directories. Closes #103.
-[1192] Added ability to change pane label/icon for a view. Closes #116.
-[1239] Added terminal highlighting of filenames and urls. Closes #121
-[1241] Pida asks editor if files can be closed (for use with unsaved files).
-[1257] Make project controllers appear when added in the project preferences.
-
-Bugs
 
 
-[1183] Set correct controlling terminal for python-based VC commands. GC
-        Birzan. lp:154107.
-[1181] Allow plugins to be installed over a web proxy. lp:120543.
-[1210] Added the capability to run multiple instances of PIDA on Emacs. Closes #159.
-[1218] Added check of pygtk-dev in setup.py. Closes #156.
-[1222] Allow services to import local modules. Closes #173
-[1231] The project service now waits for the editor before setting
-         the current project. Closes #162.
 
-Non Core
+changes before 0.6.2
+---------------------
 
-[1213] Added LodgeIt (http://paste.pocoo.org) to the pastebin plugin
-[1214] Support for http authentication in trac plugin. Closes #172
+ * switch to hgdistver
+ * switch back to setuptools
+   * kill our build_doc command, build_sphinx works
+ * bump the required python version to 2.6
+   * settings are now stored using stdlib json
+   * puilder uses stdlib json
+   * window state is now stored in json
+ * add execnet/py to the depends
+   * port the nosetest plugin from dbus to execnet
+ * remove the last uses of the gtkforms module for pygtkhelpers
+ * fix up various transition-leftovers of the kiwi to pygtkhelpers switch
+ * ignore locales/translations for now
+ * switch to the most recent anyvc api
+ * use the real bpython-gtk since its availiable now
+ * beef up various core datatypes
+   * remove document.unique_id
+   * kill the buffer list markup helpers in document
+   * move indexer functionality from project to a dedicated type
 
-
-0.5.1 "Rhubarb Crumble"
-
-Features
-
-[1119] Added History to status bar.
-[1118] Added First run wizard.
-[1122] Shortcut to focus editor.
-[1129] Allow projects to change their names. Launchpad bug:123323. Closes #141.
-[1133] Shortcut to go to parent directory in file manager. Closes #111.
-[1137] Shortcut to focus terminal pane. Closes #143.
-[1138] Project-relative filenames in buffer list.
-[1170] Completion hooks for vim.
-[1178] Allow setting keyboard shortcuts for basic editor actions.
-[1182] Added and option to use Gamin. False by default. Closes #153.
-
-Bugs
-
-[1107] Corrected AUTHORS file.
-[1121] Update context menus on plugin load/unload. Fixes #122.
-[1126] Fixed bug reporting mechanism.
-[1130] Allow Vim filenames with commas. LP: 78773. Fixes: #142.
-[1132] Add missing subversion state Fixes #123.
-[1134] Handle pending merges output for bzr. Fixes LP 76368.
-[1162] Fix crash on plugin loading errors. Fixes #145.
-[1163] Allow PIDA to be started on any screen. Fixes #146.
-[1171] Add commit support for GIT.
-[1180] Good error message when Gvim is not isntalled. Fixes #152.
-[1186] Ensure plugin pixmaps get registered as stock icons. Fixes #154.
-[1189] Add missing Emacs UI Definition.
-
-Non Core
-
-[1111] Prototype debugger plugin based on WinPDB.
-[1115] Alphapetically sort documentation library book list.
-[1152] Python source viewer now jumps to line.
-[1177] Koders.com plugin.
+ * kill the bugtracker service since we dont use launchpad any more
+ * bugfixes in the trac plugin (thanks Christopher)
+ * remove all parts of pida.utils.gthreads we have in pygtkhelpers
+ * remove the gtkhtml fallbacks of browseweb - webkit is the future
+ * removed the document encoding from the statusbar
+ * kill the PidaGladeView alias
+ * better logging of service failures
+ * fix incorrect handling of missing libs on startup
+ * fix project removal (#411)
+ * revise the internal resource-finder
 
 
-0.5.0 "Strawberries and Cream"
+
 

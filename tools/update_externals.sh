@@ -1,67 +1,41 @@
 #!/bin/sh
+get_or_update() {
+    name=$1;repo=$2;
+    echo -n syncing $name :\ 
+    if [ ! -d "src/$name" ]
+    then
+        echo checkout
+        hg clone -q $repo src/$name
+    else
+        echo update
+        cd src/$name >/dev/null
+        HGPLAIN=1 hg pull -uq
+        cd ../.. >/dev/null
+    fi
 
-REPOSPATH="`pwd`/externals/src"
-OLDPATH=`pwd`
-REPOS="
-rope|hg|http://www.bitbucket.org/agr/rope/|rope/rope|rope
-anyvc|hg|http://bitbucket.org/RonnyPfannschmidt/anyvc/|anyvc/anyvc|anyvc
-"
+    ln -sf src/$name/$name $name #XXX: asume normal forms
+}
 
-mkdir -p $REPOSPATH
-cd "$REPOSPATH"
+if [ ! `which hg` ]
+then 
+    print "Error: You must install Mercurial to update the externals"
+    exit
+fi
 
+FROM_WD=`pwd`
+cd $(dirname $(dirname $PWD/$0))
+mkdir -p externals/src >/dev/null
+cd externals >/dev/null
 
-for x in $REPOS; do
-        dir=$(echo "$x" | cut -d\| -f1)
-        vcs=$(echo "$x" | cut -d\| -f2)
-        repo=$(echo "$x" | cut -d\| -f3)
-        linksrc=$(echo "$x" | cut -d\| -f4)
-        linkdest=$(echo "$x" | cut -d\| -f5)
+get_or_update rope http://www.bitbucket.org/agr/rope/
 
-        if [ ! -d "$dir/" ]; then
-            echo "[$vcs] $repo -> $dir"
-            case "$vcs" in
-            hg)
-                    hg clone "$repo" "$dir"
-                    ;;
-            bzr)
-                    bzr checkout "$repo" "$dir"
-                    ;;
-            esac
-            if test -n "$linksrc"; then
-                cd ..
-                ln -s src/$linksrc $linkdest
-                cd src
-            fi
-        fi
-done
+get_or_update anyvc http://bitbucket.org/RonnyPfannschmidt/anyvc/
+get_or_update pygtkhelpers http://bitbucket.org/aafshar/pygtkhelpers-main/
 
+get_or_update apipkg http://bitbucket.org/hpk42/apipkg/
+get_or_update py http://bitbucket.org/hpk42/py-trunk/
+get_or_update execnet http://bitbucket.org/hpk42/execnet/
 
+get_or_update flatland http://bitbucket.org/jek/flatland/
 
-for x in $REPOS; do
-        dir=$(echo "$x" | cut -d\| -f1)
-        vcs=$(echo "$x" | cut -d\| -f2)
-        repo=$(echo "$x" | cut -d\| -f3)
-        linksrc=$(echo "$x" | cut -d\| -f4)
-        linkdest=$(echo "$x" | cut -d\| -f5)
-
-        cd "$dir"
-
-        echo "[$dir] syncing"
-        case "$vcs" in
-        hg)        hg pull && hg update ;;
-        *)        echo "$vcs: not supported yet." ;;
-        esac
-
-        cat <<-EOT
-
-        [$dir] building...
-EOT
-        (
-        python setup.py build_ext -i
-        python setup.py build
-        ) 
-       cd - > /dev/null
-done
-echo "finished"
-cd $OLDPATH
+cd $FROM_WD

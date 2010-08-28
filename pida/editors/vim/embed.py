@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*- 
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     A library to embed vim in a gtk socket
@@ -15,9 +16,8 @@ import subprocess
 
 class VimEmbedWidget(gtk.EventBox):
 
-    def __init__(self, command, script_path, uid, args=[]):
+    def __init__(self, command, script_path, args=[]):
         gtk.EventBox.__init__(self)
-        self.server_name = uid
         self._command = command
         self._init_script = script_path
         self.pid = None
@@ -47,7 +47,8 @@ class VimEmbedWidget(gtk.EventBox):
             try:
                 popen = subprocess.Popen(
                     [self._command,
-                    '--servername', self.server_name,
+                    # XXX: leftover from vim com
+                    #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
                     '--cmd', 'so %s' % self._init_script,
                     '--socketid', str(xid),

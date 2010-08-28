@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     Chartype detection
@@ -6,123 +6,162 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
-
 import codecs
 import re
 
-class IEncodingDetector:
-    def __call__(self, stream, filename, mimetype):
-        """Should return None and not found and a string with the
-        encoding when it is found."""
+# list of mimetypes that are known to be text
+# will be filled by languge service
+text_mime = set()
 
-#def open_encoded(filename, *args, **kwargs):
-#    """Opens and auto detects the encoding"""
-#    stream = open(filename, "rb")
-#    encoding = find_encoding_stream(stream)
-#    stream.seek(0)
-#    return codecs.EncodedFile(stream, encoding, *args, **kwargs)
+dumb_encodings = ["utf-8", "iso-8859-15", "windows-1252"]
 
-
-
-class MimeDetector:
-    def __init__(self):
-        self.mimes = {}
-    
-    def register(self, mime, sniffer):
-        self.mimes[mime] = sniffer
-
-    def __call__(self, stream, filename, mimetype):
-    
+def dumb_detect(stream, filename, mimetype):
+    for encoding in dumb_encodings:
         try:
-            return self.mimes[mimetype](stream, filename, mimetype)
-        except KeyError:
+            codecs.open(filename, encoding=encoding).read()
+            return encoding
+        except UnicodeDecodeError:
             pass
 
-class DumbDetector:
-    encodings = ["utf-8", "iso-8859-15", "windows-1252"]
-    
-    def __call__(self, stream, filename, mimetype):
-        for encoding in self.encodings:
-            try:
-                codecs.open(filename, encoding=encoding).read()
-                return encoding
-            except UnicodeDecodeError:
-                pass
-        return "ascii"
-        
-class DetectorManager:
+PY_ENC = re.compile(r"coding: ([\w\-_0-9]+)")
+def python_detect(stream, filename, mimetype):
+    def find_one():
+        match = PY_ENC.search(stream.readline())
+        if match:
+            return match.group(1)
 
-    def __init__(self, *args):
-        self.detectors = list(args)
-        
-        self.last_resort = DumbDetector()
-    
-    def __call__(self, stream, filename, mimetype):
-        for encoder in self.detectors:
-            encoding = encoder(stream, filename, mimetype)
-            stream.seek(0)
-            if encoding is not None:
-                break
-            
-        if encoding is None:
-            return self.last_resort(stream, filename, mimetype)
-        
-        return encoding
+    return find_one() or find_one()
 
-    def append_detector(self, detector):
-        self.detectors.append(detector)
-    
-    def insert_detector(sef, index, detector):
-        self.detectors.insert(index, detector)
+try:
+    from pida.utils import magic
 
-##############################################################################
-# These are the singletons used so that other programs can register
-# XXX: this could be moved later to a plugin.Registry
-MIME_DETECTOR = MimeDetector()
-DETECTOR_MANAGER = DetectorManager(MIME_DETECTOR)
+    WELL_KNOWN = ['ISO-8859', 'ASCII', 'UTF-8', 'UTF-16LE', 'UTF-16BE',
+                  'UTF-32BE', 'UTF-32LE']
+    FAILED = []
 
-##############################################################################
-# Register a Mime-type sniffer
-class PythonDetector:
-
-    PY_ENC = re.compile(r"coding: ([\w\-_0-9]+)")
-    
-    def _sniff_python_line(self, line):
-        return self.PY_ENC.search(line).group(1)
-
-    def __call__(self, stream, filename, mimetype):
+    def _magic_enc(type_):
+        if type_ in WELL_KNOWN:
+            return type_
+        if type_ in FAILED:
+            return None
         try:
-            return self._sniff_python_line(stream.readline())
-        except AttributeError:
-            pass
-        
-        try:
-            return self._sniff_python_line(stream.readline())
-        except AttributeError:
-            pass
+            #why does codecs don't have a list of this ????
+            codecs.lookup(type_)
+            return type_
+        except LookupError:
+            FAILED.append(type_)
+            return None
 
 
-MIME_DETECTOR.register(("text", "x-python"), PythonDetector())
+    def magic_detect(stream, filename, mimetype):
+        if filename:
+            mime = magic.Magic(mime=True).from_file(filename)
+            if mime[:5] == 'text/':
+                # magic return often a to specific content that does not
+                # contain the encoding :-(
+                return _magic_enc(magic.Magic().from_file(filename).split()[0])
+        elif stream:
+            # very bad
+            chunk = stream.read()
+            mime = magic.Magic(mime=True).from_buffer(chunk)
+            if mime[:5] == 'text/':
+                return _magic_enc(magic.Magic().from_buffer(chunk).split()[0])
 
-##############################################################################
-# Register chardet, which is an optional detection scheme
+
+    def magic_test(stream, filename, mimetype):
+        if filename:
+            mime = magic.Magic(mime=True).from_file(filename)
+            if mime[:5] == 'text/':
+                return True
+            elif mime in text_mime:
+                return True
+            return False
+        elif stream:
+            # very bad
+            chunk = stream.read()
+            mime = magic.Magic(mime=True).from_buffer(chunk)
+            if mime[:5] == 'text/':
+                return True
+            elif mime in text_mime:
+                return True
+            return False
+
+
+except AttributeError, e:
+    print "can't load magic module"
+    magic_detect = lambda * k: None
+    magic_test = lambda * k: None
+
+
 try:
     from chardet.universaldetector import UniversalDetector
-    
+
     def chardet_sniff(stream, filename, mimetype):
         detector = UniversalDetector()
         chunk = stream.read(4086)
-        while chunk != "":
+        while chunk and not detector.done:
             detector.feed(chunk)
-            if detector.done:
-                break
             chunk = stream.read(4086)
-            
+
         detector.close()
         return detector.result["encoding"]
-        
-    DETECTOR_MANAGER.append_detector(chardet_sniff)
-    
+
 except ImportError:
-    pass
+    chardet_sniff = lambda * k: None
+
+mime_detectors = {
+    ('text', 'x-python'): python_detect,
+}
+
+def detect_mime(stream, filename, mimetype):
+    if mimetype in mime_detectors:
+        return mime_detectors[mimetype](stream, filename, mimetype)
+
+detectors = [detect_mime, magic_detect, chardet_sniff, dumb_detect]
+text_detectors = [magic_test]
+
+def detect_encoding(stream, filename, mimetype):
+    """
+    Detect and returns the encoding of:
+
+    @stream: fileobject
+    @filename: absolute path
+    @mimetype: mimetype
+    """
+    for encoder in detectors:
+        encoding = encoder(stream, filename, mimetype)
+        stream.seek(0)
+        if encoding is not None:
+            return encoding
+
+    return 'ASCII' #XXX this seems a bit insane
+
+def detect_text(stream, filename, mimetype):
+    """
+    Detects if the input is of type text and returns True
+
+    @stream: fileobject
+    @filename: absolute path
+    @mimetype: mimetype
+    """
+    if mimetype:
+        if mimetype[:5] == 'text/':
+            return True
+        if mimetype in text_mime:
+            return True
+
+    for encoder in text_detectors:
+        rv = encoder(stream, filename, mimetype)
+        if rv is not None:
+            return rv
+
+    #try the rest..
+    # chardetsniff wont work, it finds libraries as text..
+    for encoder in [dumb_detect]:
+        encoding = encoder(stream, filename, mimetype)
+        stream.seek(0)
+        if encoding is not None:
+            print encoder, encoding
+            return True
+
+    return False

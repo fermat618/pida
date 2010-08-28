@@ -1,0 +1,14 @@
+
+Please note here typo or documentation format rules that should be consistent
+throughout the whole document.
+
+- PIDA should always be written PIDA for now. A find and replace will change
+   this if necessary.
+
+- The attitude of the writer (using first person, using 'you' or 'the user' to
+   speak about the reader...) should be consistent throughout the whole
+   document. It is not decided what this attitude shall be yet.
+
+- Anchors should be explicit and composed using the hierarchy of the document
+   ie: services_project_manager for Project Manager title in Services.
+

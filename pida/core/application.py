@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """
     pida.core.application
     ~~~~~~~~~~~~~~~~~~~~~
@@ -11,15 +11,13 @@
 # system import(s)
 import os
 import sys
-import signal
 import warnings
 import traceback
+from pida.core.locale import Locale
 
-
-from pida.core.signalhandler import handle_signals
+from pida.core import environment
 
 # locale
-from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
@@ -36,64 +34,61 @@ def die_cli(message, exception=None):
 try:
     import gtk
     from gtk import gdk
-    gdk.threads_init()
     if gtk.pygtk_version < (2, 8):
         die_cli(_('PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s')
-                % {'major':gtk.pygtk_version[:2][0], 'minor':gtk.pygtk_version[:2][1]})
+                % {'major': gtk.pygtk_version[:2][0], 'minor': gtk.pygtk_version[:2][1]})
 except ImportError, e:
     die_cli(_('PIDA requires Python GTK bindings. They were not found.'), e)
 
 
 try:
-    from kiwi.ui.dialogs import error
+    from pygtkhelpers import gthreads
+    gthreads.initial_setup()
+    from pygtkhelpers.ui.dialogs import error
     def die_gui(message, exception):
         """Die in a GUI way."""
-        error(_('Fatal error, cannot start PIDA'), 
+        error(_('Fatal error, cannot start PIDA'),
               long='%s\n%s' % (message, exception))
         die_cli(message)
-
 except ImportError, e:
-    die_cli(_('Kiwi needs to be installed to run PIDA'), e)
+    die_cli(_('pygtkhelpers needs to be installed to run PIDA'), e)
 
 
-# Python 2.5
-if sys.version_info < (2, 5):
-    die_gui(_('Python 2.5 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
-        {'major':sys.version_info[:2][0], 'minor':sys.version_info[:2][1]})
+# Python 2.6
+if sys.version_info < (2, 6):
+    die_gui(_('Python 2.6 is required to run PIDA. Only %(major)s.%(minor)s was found.') %
+        {'major': sys.version_info[0], 'minor': sys.version_info[1]})
 
+
+# Prevent PIDA from being run as root.
+if os.getuid() == 0:
+    die_gui("Pida should not be run as root", "Pida is dying")
 
 # This can test if PIDA is installed
+# also we have to import pdbus here so it gets initialized very early
 try:
-    from pida.core.environment import opts
-    from pida.core.boss import Boss
-    from pida import PIDA_VERSION
-
+    import pida.core.pdbus
 except ImportError, e:
     die_gui(_('The pida package could not be found.'), e)
 
-# we have to import pdbus here so it gets initialized very early
-import pida.core.pdbus
 
 def run_pida():
-    b = Boss()
-    handle_signals(b)
+    from pida.core.boss import Boss
+    b = Boss() #XXX: relocate firstrun
+
     # handle start params
-    from pida.core import environment
-    if environment.get_args():
-        from pida.utils.gthreads import gcall
-        gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
     try:
-        start_success = b.start()
+        #XXX: this sucks, needs propper errors
+        b.start() # might raise runtime error
+        if environment.opts.files:
+            from pygtkhelpers.gthreads import gcall
+            gcall(b.cmd, 'buffer', 'open_files', files=environment.opts.files)
         b.loop_ui()
         return 0
     except Exception, e:
         traceback.print_exc()
+        die_gui("Pida has failed to start",  traceback.format_exc())
         return 1
-
-def force_quit(signum, frame):
-    os.kill(os.getpid(), 9)
-
-# Set the signal handler and a 5-second alarm
 
 def set_trace():
     import linecache
@@ -113,16 +108,12 @@ def set_trace():
 
 def main():
     global opts
-    from pida.core import environment
-    environment.parse_args(sys.argv)
-    opts = environment.opts
-    
-    from pida.core import options
+    opts = environment.parse_args(sys.argv[1:])
 
     #options.create_default_manager(pida.core.environment.workspace_name())
-    import pida.core.log
-    pida.core.log.setup()
-    
+    from pida.core import log
+    log.setup()
+
     if not opts.debug:
         warnings.filterwarnings("ignore")
 
@@ -136,17 +127,14 @@ def main():
     om = OptionsManager(workspace="default")
 
     def do_workspace_manager():
-        from pida.utils.pdbus import list_pida_instances
-        from pida.ui.window import WorkspaceWindow
 
         def kill(sm):
             sm.hide_and_quit()
 
-        file_names = []
-
-        if len(environment.get_args()) > 1:
-            for i in environment.get_args()[1:]:
-                file_names.append(os.path.abspath(i))
+        file_names = [
+            os.path.abspath(i)
+            for i in environment.opts.files
+        ]
 
         def command(sw, row=None):
             # command dispatcher for workspace window
@@ -174,13 +162,14 @@ def main():
                     sw.hide_and_quit()
                     gtk.main_quit()
 
+        from pida.ui.workspace import WorkspaceWindow
         sw = WorkspaceWindow(command=command)
-        sw.show()
-        #this mainloop will exist when the workspacewindow is closes
+        sw.widget.show()
+        #this mainloop will exit when the workspacewindow is closes
         gtk.main()
 
     if opts.version:
-        print _('PIDA, version %s') % PIDA_VERSION
+        print _('PIDA, version %s') % pida.version
         exit(0)
 
     if (om.open_workspace_manager() and not environment.workspace_set()) or \
@@ -190,34 +179,27 @@ def main():
         except ImportError:
             warnings.warn_explicit('python DBus bindings not available. '
                         'Not all functions available.', Warning, 'pida', '')
-        
+
     if opts.profile_path:
         print "---- Running in profile mode ----"
-        import hotshot, hotshot.stats, test.pystone
-        prof = hotshot.Profile(opts.profile_path)
-        prof.start()
+        import cProfile
         try:
-            run_pida()
+            cProfile.runctx('run_pida()', globals(), locals(), opts.profile_path)
             #benchtime, stones = prof.runcall(run_pida)
-        finally: 
-            prof.stop()
-            prof.close()
-        
+        finally:
+            pass
         #signal.signal(signal.SIGALRM, force_quit)
         #signal.alarm(3)
         print "---- Top 100 statistic ----"
-        stats = hotshot.stats.load(opts.profile_path)
-        #stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(100)
+        import pstats
+        p = pstats.Stats(opts.profile_path)
+        p.strip_dirs().sort_stats('time', 'cum').print_stats(100)
 
         sys.exit(0)
 
     else:
         exit_val = run_pida()
         #XXX: hack for killing threads - better soltions
-        signal.signal(signal.SIGALRM, force_quit)
-        signal.alarm(3)
         sys.exit(exit_val)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

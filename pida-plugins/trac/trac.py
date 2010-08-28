@@ -22,9 +22,9 @@
 
 from urlparse import urljoin
 
-import gtk
+import gtk, webkit
 
-from kiwi.ui.objectlist import Column
+from pygtkhelpers.ui.objectlist import Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -35,7 +35,7 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView
+from pida.ui.views import PidaView, WindowConfig
 from pida.ui.htmltextview import HtmlTextView
 
 from pida.utils.web import fetch_url
@@ -46,28 +46,28 @@ from pida.core.locale import Locale
 locale = Locale('trac')
 _ = locale.gettext
 
-class TracView(PidaGladeView):
+class TracView(PidaView):
 
     key = 'trac.browser'
 
-    gladefile = 'trac-browser'
+    gladefile = 'trac_browser'
     locale = locale
     icon_name = 'trac_logo'
     label_text = _('Trac')
 
     def create_ui(self):
-        self.tickets_list.set_columns(
-            [
-                Column('ticket', sorted=True, data_type=int),
-                Column('summary'),
-            ]
-        )
+        self.tickets_list.set_columns([
+            Column('ticket', sorted=True, type=int),
+            Column('summary'),
+        ])
+        self.tickets_list.connect('item-double-clicked', self.on_tickets_list__item_double_clicked)
         self.set_base_address('http://pida.co.uk/trac/')
-        self.item_text = HtmlTextView()
+        self.item_text = webkit.WebView()
         self.item_text_holder.add(self.item_text)
         self.item_text.show()
 
     def set_base_address(self, address):
+        self._address = address
         self.address_entry.set_text(address)
 
     def get_base_address(self):
@@ -81,9 +81,12 @@ class TracView(PidaGladeView):
         trac_report(self.get_base_address(), 1, self.report_received,
                     self.get_auth_data())
 
-    def on_tickets_list__selection_changed(self, ol, item):
-        self.item_text.clear_html()
-        self.item_text.display_html(item.description.strip())
+    def on_tickets_list__selection_changed(self, ol):
+        item = ol.selected_item
+        self.item_text.load_html_string(item.description.strip(), self._address)
+
+    def on_tickets_list__item_double_clicked(self, ot, item, event):
+        self.svc.browse(url=item.link)
 
     def on_toggle_auth__toggled(self, btn):
         self.auth_box.set_sensitive(btn.get_active())
@@ -110,6 +113,7 @@ class ReportItem(object):
         self.ticket = int(ticket.strip('#').strip())
         self.summary = summary.strip()
         self.description = entry['description']
+        self.link = entry['link']
 
 
 def parse_report(data):
@@ -117,15 +121,17 @@ def parse_report(data):
     for entry in feed.entries:
         yield ReportItem(entry)
 
+
 def trac_report(base_address, report_id, callback, auth):
     action_fragment = 'report/%s?format=rss' % report_id
     action_url = urljoin(base_address, action_fragment)
     fetch_url(action_url, callback, auth=auth)
 
+
 class TracActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        TracWindowConfig.action = self.create_action(
             'show_trac',
             TYPE_REMEMBER_TOGGLE,
             _('Trac Viewer'),
@@ -135,27 +141,33 @@ class TracActions(ActionsConfig):
             '<Shift><Control>j',
         )
 
-
     def on_show_trac(self, action):
         if action.get_active():
             self.svc.show_trac()
         else:
             self.svc.hide_trac()
 
+
+class TracWindowConfig(WindowConfig):
+    key = TracView.key
+    label_text = TracView.label_text
+
+
+class TracFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            TracWindowConfig)
+
+
 # Service class
 class Trac(Service):
     """Describe your Service Here"""
 
     actions_config = TracActions
+    features_config = TracFeaturesConfig
 
     def pre_start(self):
         self._view = TracView(self)
-
-    def start(self):
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_trac(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
@@ -172,6 +184,10 @@ class Trac(Service):
     def stop(self):
         if self.get_action('show_trac').get_active():
             self.hide_trac()
+
+    def browse(self, url):
+        self.boss.cmd('browseweb', 'browse', url=url)
+
 
 
 # Required Service attribute for service loading

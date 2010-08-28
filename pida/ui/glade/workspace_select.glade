@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkUIManager" id="uimanager">
+    <child>
+      <object class="GtkActionGroup" id="default">
+        <child>
+          <object class="GtkAction" id="DelWorkspace">
+            <property name="name">DelWorkspace</property>
+            <property name="label" translatable="yes">Delete</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="UseWorkspace">
+            <property name="name">UseWorkspace</property>
+            <property name="label" translatable="yes">Use</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkDialog" id="workspace_select">
+    <property name="border_width">5</property>
+    <property name="default_height">360</property>
+    <property name="default_width">460</property>
+    <property name="has_separator">False</property>
+    <property name="height_request">360</property>
+    <property context="yes" name="title" translatable="yes">Select Workspace</property>
+    <property name="type_hint">normal</property>
+    <property name="width_request">460</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="border_width">2</property>
+        <property name="spacing">2</property>
+        <property name="visible">True</property>
+        <child>
+          <object class="PyGTKHelpersObjectList" id="workspace_view">
+            <property name="can_default">True</property>
+            <property name="has_default">True</property>
+            <property name="receives_default">True</property>
+            <property name="visible">True</property>
+            <property name="vscrollbar_policy">automatic</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkExpander" id="expander1">
+            <property context="yes" name="label" translatable="yes">Advanced Options</property>
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkTable" id="table1">
+                <property name="n_columns">1</property>
+                <property name="n_rows">1</property>
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkCheckButton" id="safe_mode">
+                    <property context="yes" name="label" translatable="yes">Safe Mode</property>
+                    <property name="visible">True</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="border_width">5</property>
+            <property name="homogeneous">True</property>
+            <property name="layout_style">end</property>
+            <property name="spacing">6</property>
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkButton" id="new_workspace">
+                <property context="yes" name="label" translatable="yes">_New Workspace</property>
+                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <signal handler="on_new_workspace_clicked" name="clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="use_workspace">
+                <property context="yes" name="label" translatable="yes">_Use Workspace</property>
+                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <signal handler="on_use_workspace_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="quit">
+                <property context="yes" name="label" translatable="yes">_Quit</property>
+                <property name="use_underline">True</property>
+                <property name="visible">True</property>
+                <signal handler="gtk_main_quit" name="clicked"/>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

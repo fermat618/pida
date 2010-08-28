@@ -1,0 +1,7 @@
+Name: RegexToolkit
+Author: Ahmed Youssef <xmonader@gmail.com>
+Version: 0.2.7
+Depends: pida>=0.6
+Category: documentation
+
+RegexToolkit, is a toolkit for quick/dirty learning and checking regular expressions.

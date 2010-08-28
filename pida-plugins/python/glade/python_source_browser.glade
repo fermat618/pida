@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!--*- mode: xml -*-->
+<interface>
+  <object class="GtkWindow" id="python_source_browser">
+    <property name="visible">True</property>
+    <child>
+      <object class="GtkVBox" id="main_vbox">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkAlignment" id="alignment1">
+            <property name="border_width">3</property>
+            <property name="visible">True</property>
+            <child>
+              <object class="ObjectTree" id="source_tree">
+                <property name="visible">True</property>
+                <property name="vscrollbar_policy">automatic</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkExpander" id="options_expander">
+            <property name="is_focus">True</property>
+            <property context="yes" name="label" translatable="yes">Display Options</property>
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkHBox" id="hbox1">
+                <property name="border_width">3</property>
+                <property name="spacing">3</property>
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkCheckButton" id="show_imports">
+                    <property name="is_focus">True</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment30">
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkVBox" id="vbox3">
+                            <property name="visible">True</property>
+                            <child>
+                              <object class="GtkImage" id="image3">
+                                <property name="file">source-module.png</property>
+                                <property name="visible">True</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="label12">
+                                <property context="yes" name="label" translatable="yes">Imports</property>
+                                <property name="visible">True</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="show_super">
+                    <property name="is_focus">True</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment4">
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkVBox" id="vbox1">
+                            <property name="visible">True</property>
+                            <child>
+                              <object class="GtkImage" id="image1">
+                                <property name="file">source-extramethod.png</property>
+                                <property name="visible">True</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="label1">
+                                <property context="yes" name="label" translatable="yes">Super</property>
+                                <property name="visible">True</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="show_builtins">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment31">
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkVBox" id="vbox4">
+                            <property name="visible">True</property>
+                            <child>
+                              <object class="GtkImage" id="image4">
+                                <property name="file">source-import.png</property>
+                                <property name="visible">True</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="label13">
+                                <property context="yes" name="label" translatable="yes">Builtins</property>
+                                <property name="visible">True</property>
+                              </object>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+          <packing>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

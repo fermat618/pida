@@ -1,0 +1,116 @@
+style "pida"  {
+
+color["pida-project"] = "#FF0000"
+color["pida-project-path"] = "#FFFF00"
+
+# Filemanager color settings
+color["pida-fm-unknown"] = "#242424"
+color["pida-fm-hidden"] = "#4D4D4D"
+color["pida-fm-ignored"] = "#4D4D4D"
+color["pida-fm-none"] = "#757575"
+color["pida-fm-normal"] = "#DADADA"
+color["pida-fm-clean"] = "#B1B1B1"
+color["pida-fm-error"] = "#FF0080"
+color["pida-fm-empty"] = "#DADADA"
+color["pida-fm-modified"] = "#8B0000"
+color["pida-fm-conflict"] = "#FF0000"
+color["pida-fm-removed"] = "#c06060"
+color["pida-fm-missing"] = "#00c0c0"
+color["pida-fm-new"] = "#3232F3"
+color["pida-fm-max"] = "#c0c000" 
+color["pida-fm-external"] = "#A7A7A7"
+
+# general colors
+color["pida-match"] = "#c00000"
+color["pida-lineno"] = "#000099"
+
+# validator colors
+color["pida-val-def"] = "#242424"
+color["pida-val-info"] = "#0E8903"
+color["pida-val-warning"] = "#630389"
+color["pida-val-error"] = "#CC1D06"
+
+}
+
+
+style "pyshell"  {
+
+color["pida-pyshell-bg"] = "black"
+color["pida-pyshell-title-fg"] = "#2D6391"
+color["pida-pyshell-subtitle-fg"] = "#63912D"
+color["pida-pyshell-output-fg"] = "blue"
+color["pida-pyshell-error-fg"] = "red"
+color["pida-pyshell-prompt-fg"] = "#FF00FF"
+
+#base[NORMAL] = "white"
+#text[NORMAL]="#000000"
+bg[NORMAL] = "black"
+fg[NORMAL] = "#C5C5C5"
+base[NORMAL] = "black"
+text[NORMAL] = "#C5C5C5"
+bg[INSENSITIVE] = "black"
+fg[INSENSITIVE] = "#9F9A9A"
+
+
+color["ansi_0_32_fg"] = "#4E9A06"
+color["ansi_0_33_fg"] = "#C4A000"
+color["ansi_0_30_fg"] = "#2E3436"
+color["ansi_0_31_fg"] = "#CC0000"
+color["ansi_0_36_fg"] = "#06989A"
+color["ansi_0_37_fg"] = "#D3D7CF"
+color["ansi_0_34_fg"] = "#3465A4"
+color["ansi_0_35_fg"] = "#75507B"
+color["ansi_1_35_fg"] = "#AD7FA8"
+color["ansi_1_34_fg"] = "#729FCF"
+color["ansi_1_37_fg"] = "#EEEEEC"
+color["ansi_1_36_fg"] = "#34E2E2"
+color["ansi_1_31_fg"] = "#EF2929"
+color["ansi_1_30_fg"] = "#555753"
+color["ansi_1_33_fg"] = "#FCE94F"
+color["ansi_1_32_fg"] = "#8AE234"
+
+#base[NORMAL]="#000000"
+#
+#	GtkIMHtml::hyperlink-color="#007FFF"
+#	GtkWidget::cursor-color="#60AFFE"
+#	GtkWidget::secondary-cursor-color="#A4D3EE"
+
+}
+
+style "pida-filebrowser" {
+bg[NORMAL] = "white"
+text[NORMAL]="#000000"
+fg[NORMAL] = "white"
+}
+
+widget_class "*" style "pida"
+
+style "docwindow" { 
+    bg[NORMAL] = "#FFFFDC" 
+    fg[NORMAL] = "#000000" 
+}
+
+style "docwindow-long" = "docwindow" { 
+    fg[NORMAL] = "#888888" 
+}
+
+style "docwindow-path" = "docwindow" { 
+    fg[NORMAL] = "red" 
+}
+
+
+widget "pida-docwindow" style "docwindow"
+#widget "pida-docwindow.*" style "docwindow"
+widget "pida-docwindow.*.long" style "docwindow-long"
+widget "pida-docwindow.*.short" style "docwindow"
+widget "pida-docwindow.*.path" style "docwindow-path"
+
+#widget "PidaPyshell" style "pyshell"
+#widget "PidaPyshell.*" style "pyshell"
+widget "PidaPyshell.Pyconsole" style "pyshell"
+widget "PidaPyshell.Pyconsole.Text" style "pyshell"
+#widget "*" style "pyshell"
+#widget_class "*" style "pyshell"
+#widget "filebrowser_list" style "pida-filebrowser"
+#widget "filebrowser_list" style "pida"
+

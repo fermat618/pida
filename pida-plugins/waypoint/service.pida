@@ -1,0 +1,8 @@
+Name: Waypoint
+Author: Daniel Poelzleithner
+Version: 0.2
+Depends: pida>=0.6
+Category: ui
+
+The waypoint plugin generates automaticly waypoint when you surf or edit
+documents and generates a history which allows you to jump back and forth.

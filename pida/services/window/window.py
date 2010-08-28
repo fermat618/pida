@@ -7,7 +7,8 @@
 import os
 import gtk
 import string
-import simplejson
+import json
+from functools import partial
 
 # PIDA Imports
 from pida.core.service import Service
@@ -17,12 +18,67 @@ from pida.core.options import OptionsConfig, Color
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL
 from pida.core.document import Document
+from pida.core.features import FeaturesConfig
 from pida.core.environment import workspace_name, settings_dir
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('window')
 _ = locale.gettext
+
+
+
+class ActionWindowMapping(list):
+    """
+    Specialised mapping for persitant shortcuts on plugin windows
+    """
+    def __init__(self, svc):
+        self.svc = svc
+        self._actions = {}
+        super(ActionWindowMapping, self).__init__()
+
+    @staticmethod
+    def _genkey(key):
+        """Returns the key for a action"""
+        return 'window_config_%s' %key.replace(".", "_")
+
+    def add(self, config):
+        """
+        Add a new shortcut for focusing a window.
+        Get the shorcut from the window-config
+        """
+        self.append(config)
+        keya = self._genkey(config.key)
+        curshort = self.svc.actions.get_extra_value('window-config').\
+                                                                get(keya, '')
+
+        act = self.svc.actions.create_action(
+            keya,
+            TYPE_NORMAL,
+            "Focus %s" %_(config.label_text),
+            config.description or _('Focus %s window') %_(config.label_text),
+            "",
+            self.svc.actions.on_focus_window,
+            config.default_shortcut,
+            global_=True
+        )
+        act.key = config.key
+        act.visible_action = config.action
+        self._actions[config.key] = act
+        self.svc.actions.set_value(keya, curshort)
+        # make the shortcuts update to reflect change
+        self.svc.boss.get_service('shortcuts').update()
+
+    def remove(self, config):
+        """Unregister a WindowConfig"""
+        # unregister action
+        self.svc.actions.remove_action(self._actions[config.key])
+
+        del self._actions[config.key]
+        opt = self.svc.actions.get_option(self._genkey(config.key))
+        self.svc.actions.remove_option(opt)
+        #self.remove(config)
+        self.svc.boss.get_service('shortcuts').update()
 
 
 class WindowCommandsConfig(CommandsConfig):
@@ -36,6 +92,19 @@ class WindowCommandsConfig(CommandsConfig):
         self.detach_view(view, size)
         self.svc.save_state()
 
+    def close_focus_pane(self):
+        pane = self.svc.window.get_focus_pane()
+        if pane:
+            if pane.view.can_be_closed() and pane.view:
+                self.remove_view(pane.view)
+
+    def toggle_sticky_pane(self):
+        pane = self.svc.window.get_focus_pane()
+        if pane:
+            self.svc.window.paned.set_params(
+                    pane, 
+                    keep_on_top=not pane.get_params().keep_on_top)
+
     def remove_view(self, view):
         self.svc.window.remove_view(view)
         self.svc.save_state()
@@ -48,9 +117,15 @@ class WindowCommandsConfig(CommandsConfig):
         self.svc.window.present_view(view)
         self.svc.save_state()
 
+    def is_added(self, view):
+        return view in self.svc.window
+
 class WindowActionsConfig(ActionsConfig):
 
     def create_actions(self):
+        self.register_extra_option('window-config', safe=False, notify=True,
+                                   default={}, workspace=False)
+
         self.create_action(
             'show_toolbar',
             TYPE_TOGGLE,
@@ -78,8 +153,19 @@ class WindowActionsConfig(ActionsConfig):
             _('Toggle the fullscreen mode'),
             gtk.STOCK_FULLSCREEN,
             self.on_fullscreen,
+            '<Shift>F11',
+        )
+
+        self.create_action(
+            'max_editor',
+            TYPE_TOGGLE,
+            _('M_aximize Editor'),
+            _('Maximizes the editor by hiding panels'),
+            gtk.STOCK_FULLSCREEN,
+            self.on_max_editor,
             'F11',
         )
+
 
         self.create_action(
             'switch_next_term',
@@ -89,6 +175,7 @@ class WindowActionsConfig(ActionsConfig):
             gtk.STOCK_GO_FORWARD,
             self.on_switch_next_term,
             '<Alt>Right',
+            global_=True
         )
 
         self.create_action(
@@ -99,6 +186,7 @@ class WindowActionsConfig(ActionsConfig):
             gtk.STOCK_GO_BACK,
             self.on_switch_prev_term,
             '<Alt>Left',
+            global_=True
         )
 
         self.create_action(
@@ -109,46 +197,44 @@ class WindowActionsConfig(ActionsConfig):
             'terminal',
             self.on_focus_terminal,
             '<Shift><Control>i',
+            global_=True
+        )
+
+        self.create_action(
+            'close_pane',
+            TYPE_NORMAL,
+            _('Close Pane'),
+            _('Close the current active pane'),
+            gtk.STOCK_CLOSE,
+            self.on_close_pane,
+            '<Control>F4',
+            global_=True
+        )
+
+        self.create_action(
+            'toggle_sticky',
+            TYPE_NORMAL,
+            _('Toggle sticky'),
+            _('Toggle the sticky button on current pane'),
+            'pin',
+            self.on_toggle_sticky,
+            '',
+            global_=True
         )
 
         self.create_action(
             'WindowMenu',
             TYPE_MENUTOOL,
-            _('_Windows'),
+            _('Win_dows'),
             _('Show window list'),
             'package_utilities',
             self.on_windows,
         )
 
-    def register_window(self, key, title, help=None):
-        """
-        Registers a window key.
-        This window can get a shortcut assigned which will be shown
-        at the windows menu.
-        """
-        keya = 'focus_%s' %key.replace(".", "_")
-        curshort = ""
-        for name, value in self.read().items():
-
-            # ignore removed options that might have config entries
-            if name == keya:
-                curshort = value
-
-        act = self.create_action(
-            keya,
-            TYPE_NORMAL,
-            "Focus %s" %_(title),
-            help or _('Focus %s window') %_(title),
-            "",
-            self.on_focus_window,
-            curshort
-        )
-        act.key = key
-        self.set_value(keya, curshort)
-        self.subscribe_keyboard_shortcuts()
-        self.svc.boss.get_service('shortcuts').update()
-
     def on_focus_window(self, action):
+        if action.visible_action and isinstance(action.visible_action, 
+                                          (TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE)):
+                action.visible_action.set_active(True)
         self.svc.present_key_window(action.key)
 
     def on_windows(self, action):
@@ -163,13 +249,40 @@ class WindowActionsConfig(ActionsConfig):
     def on_switch_prev_term(self, action):
         self.svc.window.switch_prev_view('Terminal')
 
+    def on_close_pane(self, action):
+        self.svc.cmd('close_focus_pane')
+
+    def on_toggle_sticky(self, action):
+        self.svc.cmd('toggle_sticky_pane')
+
     def on_fullscreen(self, action):
         self.svc.set_fullscreen(action.get_active())
+
+    def on_max_editor(self, action):
+        self.svc.set_max_editor(action.get_active())
 
     def on_show_ui(self, action):
         val = action.get_active()
         self.svc.set_opt(action.get_name(), val)
         getattr(self.svc, action.get_name())(val)
+
+    def _on_option_change(self, option):
+        # hacky highjacking to put the options into a extra config :-)
+        self.svc.actions.get_extra_value('window-config')[option.name] = \
+            option.value
+        self.svc.actions.set_extra_value('window-config', 
+            self.svc.actions.get_extra_value('window-config'))
+        # call normal callback
+        self._set_action_keypress_from_option(option)
+
+    def _create_key_option(self, act, name, label, tooltip, accel, global_=False):
+        opt = super(WindowActionsConfig, self)._create_key_option(act, 
+                                            name, label, tooltip, accel, global_=global_)
+
+        if name[:14] == 'window_config_':
+            # we highjack the callback on the external defined options
+            # so we can set the extra option value so it gets persistent saved
+            opt.callback = self._on_option_change
 
 class WindowEvents(EventsConfig):
 
@@ -185,6 +298,21 @@ class WindowEvents(EventsConfig):
     def on_editor_started(self):
         self.svc.boss.hide_splash()
         self.svc.window.show()
+
+
+class WindowFeatures(FeaturesConfig):
+    def create(self):
+        nmapping = partial(ActionWindowMapping, self.svc)
+        self.publish_special(
+            nmapping,
+            'window-config',
+        )
+
+
+        #self.publish('window-config')
+        #self.subscribe('window-config', self.on_window_config)
+
+
 
 class WindowOptionsConfig(OptionsConfig):
 
@@ -229,6 +357,15 @@ class WindowOptionsConfig(OptionsConfig):
         )
 
         self.create_option(
+            'no_project_color',
+            _('No project color'),
+            Color,
+            '#CB4444',
+            _('The color projects shall have in PIDA'),
+            self.on_color_change,
+        )
+
+        self.create_option(
             'directory_color',
             _('Directory color'),
             Color,
@@ -255,15 +392,18 @@ class Window(Service):
     options_config = WindowOptionsConfig
     actions_config = WindowActionsConfig
     events_config = WindowEvents
-    
+    features_config = WindowFeatures
+
     def pre_start(self):
         self._title_template = None
         self._last_focus = None
         super(Window, self).pre_start()
         self.update_colors()
-        self.state_config = os.path.join(settings_dir, 'workspaces', 
-                                         workspace_name(), "window.state.json")
         self.restore_state(pre=True)
+
+    @property
+    def state_config(self):
+        return os.path.join(settings_dir, 'workspaces', workspace_name(), "window.state.json")
 
     def start(self):
         # Explicitly add the permanent views
@@ -277,6 +417,7 @@ class Window(Service):
         self.boss.window._uim._uim.insert_action_group(self._action_group, -1)
         self.restore_state()
         self.window.paned.connect('config-changed', self.save_state)
+        self.window.paned.connect('pane-attachment-changed', self._on_pane_detachment)
 
     def pre_stop(self):
         self.save_state()
@@ -289,9 +430,10 @@ class Window(Service):
         try:
             fp = open(self.state_config, "r")
         except (OSError, IOError), e:
-            self.log("Can't open state file %s" %self.state_config)
+            self.log.warning("Can't open window state file %s",
+                                    self.state_config)
             return
-        data = simplejson.load(fp)
+        data = json.load(fp)
 
         if pre:
             # in pre mode we restore the paned config and the window position/size, etc
@@ -317,14 +459,15 @@ class Window(Service):
             return
 
         for service in self.boss.get_services():
-            if not data.has_key(service.get_name()):
+            name = service.get_name()
+            info = data.get(name, {})
+
+            if not info:
                 continue
             for action in service.actions.list_actions():
                 if isinstance(action, TYPE_REMEMBER_TOGGLE):
-                    try:
-                        action.set_active(data[service.get_name()][action.get_name()])
-                    except KeyError:
-                        pass
+                    if action.get_name() in info:
+                        action.set_active(data[name][action.get_name()])
 
     def save_state(self, *args):
         if not self.started:
@@ -352,15 +495,23 @@ class Window(Service):
         
         try:
             fp = open(self.state_config, "w")
+            json.dump(data, fp, indent=4)
         except (OSError, IOError), e:
-            self.log("Can't open state file %s" %self.state_config)
-            return
-        simplejson.dump(data, fp)
+            self.log.warning("Can't open state file %s" %self.state_config)
+
+    def _on_pane_detachment(self, bigpaned, pane, detached):
+        if detached:
+            # thanks gtk for not letting me test if accel is already added
+            win = pane.get_child().get_toplevel()
+            if not getattr(win, '_pida_accel_added', False):
+                win.add_accel_group(self.actions.global_accelerator_group)
+                win._pida_accel_added = True
 
     def update_colors(self):
         # set the colors of Document
         Document.markup_directory_color = self.opt('directory_color')
         Document.markup_project_color = self.opt('project_color')
+        Document.markup_color_noproject = self.opt('no_project_color')
 
     def update_title(self, document=None):
         if self._title_template is None:
@@ -393,6 +544,13 @@ class Window(Service):
 
     def set_fullscreen(self, var):
         if var:
+            self.boss.window.fullscreen()
+        else:
+            self.window.unfullscreen()
+
+
+    def set_max_editor(self, var):
+        if var:
             # shall we do a weak ref here ?
             self._last_focus = self.boss.window.get_focus()
             self.window.set_fullscreen(var)
@@ -422,9 +580,6 @@ class Window(Service):
                 self.cmd('present_view', view=pane)
                 return
 
-    def register_window(self, key, title, help=None):
-        self.actions.register_window(self, key, title, help)
-
     def create_window_list(self):
         # update the window menu list
         # clean up the old list
@@ -438,15 +593,15 @@ class Window(Service):
         for pane in self.boss.window.paned.list_panes(every=True):
             action_name = "show_window_%s" %i
             act = gtk.Action(action_name,
-                "_%s" %pane.view.label_text,
+                "_%s" %pane.label_text,
                 '',
                 '')
-            act.connect('activate', self._on_window_action, pane.view)
+            act.connect('activate', self._on_window_action, pane)
             self._action_group.add_action(act)
             self.boss.window._uim._uim.add_ui(
                 self._window_list_id,
                 "ui/menubar/AddMenu/WindowMenu/window_list", 
-                "_%s" %pane.view.label_text, 
+                "_%s" %pane.label_text, 
                 action_name, 
                 gtk.UI_MANAGER_MENUITEM, 
                 False)            #mi = act.create_menu_item()
@@ -471,6 +626,7 @@ class Window(Service):
                 gtk.UI_MANAGER_MENUITEM, 
                 False)
             i += 1
+        self.boss.window._uim.ensure_update()
         return None
 
 # Required Service attribute for service loading

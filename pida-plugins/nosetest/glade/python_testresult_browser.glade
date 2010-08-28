@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--Generated with glade3 3.2.0 on Sun Apr 29 21:06:34 2007 by ali@book-->
+<interface>
+  <object class="GtkWindow" id="python_testresult_browser">
+    <child>
+      <object class="GtkVBox" id="main_vbox">
+        <property name="visible">True</property>
+        <property name="border_width">6</property>
+        <child>
+          <object class="GtkScrolledWindow" id="source_scroll">
+            <property name="visible">True</property>
+            <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+            <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+            <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+            <child>
+              <object class="PyGTKHelpersObjectTree" id="source_tree">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

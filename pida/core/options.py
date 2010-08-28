@@ -13,31 +13,30 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-from __future__ import with_statement
-from functools import partial
+import json
+
+import py
+
+from pango import Font
+from gtk.gdk import Color
+
 from .base import BaseConfig
 from .environment import is_safe_mode, killsettings, settings_dir
-from .pdbus import DbusOptionsManager
-from pango import Font
-from shutil import rmtree
-import simplejson
+# locale
+from pida.core.locale import Locale
+locale = Locale('core')
+_ = locale.gettext
 
-
-from os import path
-import os
-get_settings_path = partial(os.path.join, settings_dir)
+settings_dir = py.path.local(settings_dir)
 
 def add_directory(*parts):
-    dirn = get_settings_path(*parts)
-    if not os.path.exists(dirn):
-        os.makedirs(dirn)
-    return dirn
+    return settings_dir.ensure(*parts, dir=True)
 
 def unset_directory(*parts):
     #XXX: reload=!
-    path = get_settings_path(*parts)
-    if os.path.exists(path):
-        rmtree(get_settings_path(*parts))
+    path = settings_dir.join(*parts)
+    if path.check():
+        path.remove()
 
 def initialize():
     add_directory('keyboard_shortcuts')
@@ -45,12 +44,8 @@ def initialize():
 
 def list_workspaces():
     """Returns a list with all workspace names """
-    workspaces = get_settings_path('workspaces')
-    return [ x for x in os.listdir(workspaces)
-                if path.isdir(
-                    path.join(workspaces, x)
-                )
-            ]
+    workspaces = settings_dir.join('workspaces')
+    return [x.basename for x in workspaces.listdir() if x.check(dir=True)]
 
 class OptionsManager(object):
 
@@ -71,12 +66,11 @@ class OptionsManager(object):
         add_directory('workspaces', self.workspace)
 
     def open_workspace_manager(self):
-        data = {}
         try:
-            with open(get_settings_path('appcontroller.json')) as file:
-                data = simplejson.load(file)
+            with settings_dir.join('appcontroller.json').open() as file:
+                data = json.load(file)
                 return bool(data.get('open_workspace_manager', False))
-        except Exception, e:
+        except Exception:
             return False
 
     def _set_workspace(self, value):
@@ -106,12 +100,10 @@ def choices(choices):
 
     return Choices
 
-class Color(str): """Option which is a color in RGB Hex"""
-
 
 class OptionItem(object):
 
-    def __init__(self, group, name, label, rtype, default, doc, callback, 
+    def __init__(self, group, name, label, rtype, default, doc, callback,
                  workspace=None):
         self.group = group
         self.name = name
@@ -134,16 +126,35 @@ class OptionItem(object):
         warnings.warn("deprecated", DeprecationWarning)
 
     def _get_nlabel(self):
-        return self.label.replace("_","",1)
+        return self.label.replace("_", "", 1)
 
     def __repr__(self):
-        return '<OptionItem %s %s:%s>' %(self.group, self.name, self.type)
+        return '<OI %s %s:%s>' % (
+                self.group.svc.get_name(),
+                self.name, self.type.__name__,
+                )
 
     no_mnemomic_label = property(_get_nlabel)
 
 class ExtraOptionItem(object):
+    """
+    ExtraOptions a a little bit different from normal Options
 
-    def __init__(self, group, path, default, callback, 
+    They can be used for example to store larger amounts of data or types
+    that are not easy pickable or are very specific in form and data.
+    ExtraOptions can be workspace bound and there are two options of dbus
+    sharing.
+
+    - the hole data is sent over dbus
+    - no_submit is True: only a notify that the data changed is sent
+
+    In the later case, the cached value is marked dirty and the file is read
+    again from the filesystem on access.
+
+    New ExtraOptions are generated with OptionManager.register_extra_file(...)
+    """
+
+    def __init__(self, group, path, default, callback,
                  workspace=False, notify=True, no_submit=False):
         self.group = group
         self.path = path
@@ -166,26 +177,30 @@ class ExtraOptionItem(object):
         return self.path
 
     def __repr__(self):
-        return '<ExtraOptionItem %s>' %(self.path)
+        return '<ExtraOptionItem %s>' % (self.path)
 
 
 manager = OptionsManager()
 
-class OptionsConfig(BaseConfig, DbusOptionsManager): 
+class OptionsConfig(BaseConfig):
 
     #enable reuse for keyboard shortcuts that need different name
-    name='%s.json'
-    dbus_path = "options"
+    name = '%s.json'
+    name_extra = "%s_extra_%s.json"
 
     def __init__(self, service, *args, **kwargs):
-        DbusOptionsManager.__init__(self, service)
         BaseConfig.__init__(self, service, *args, **kwargs)
 
+
+    def unload(self):
+        pass #XXX: stub
+
     def create(self):
-        self.name = self.__class__.name%self.svc.get_name()
+        self.name = self.__class__.name % self.svc.get_name()
         add_directory('workspaces', manager.workspace)
-        self.workspace_path = get_settings_path('workspaces', manager.workspace, self.name)
-        self.global_path = get_settings_path(self.name)
+        self.workspace_path = settings_dir.join('workspaces',
+                                                manager.workspace, self.name)
+        self.global_path = settings_dir.join(self.name)
         self._options = {}
         self._extra_files = {}
         self._exports = {}
@@ -193,7 +208,7 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         self.register_options()
 
 
-    def create_options(self) :
+    def create_options(self):
         """Create the options here"""
 
     def register_options(self):
@@ -209,64 +224,89 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         if is_safe_mode() and False:#XXX: disabled
             for opt in self:
                 if not opt.save:
-                    self.set_value(opt.name, opt.default) #XXX: this writes on every change, BAD
+                    #XXX: this writes on every change, BAD
+                    self.set_value(opt.name, opt.default)
 
         for opt in self:
             if opt.value is None:
                 self.set_value(opt.name, opt.default)
 
 
-    def register_extra_file(self, path, default, callback=None, 
-                      safe=True, workspace=False, notify=True):
+    def register_extra_option(self, name, default, callback=None,
+                      safe=True, workspace=False, notify=True, path=None):
         """
         Registers an aditional option file a service uses.
-        
+
         The object stored in the extra file is only one object which
-        can be serialized by simplejson.
-        
+        can be serialized by json.
+
         All further accesses to the data object should happen over
-        get_extra(name) which will make sure that other pida
+        get_extra_value(name) which will make sure that other pida
         instances have syncronized data.
-        
+
+        The path is generated by the extra option name and the workspace flag,
+        but can be overwritten trough a path argument, which must be absolute.
+
         """
-        assert not (workspace and project)
+        #XXX: support for project-level files?
+        #assert not (workspace and project)
+        if not path:
+            path = self.__class__.name_extra % (self.svc.get_name(), name)
+            if workspace:
+                path = settings_dir.join('workspaces', manager.workspace, path)
+            else:
+                path = settings_dir.join(path)
+
         opt = ExtraOptionItem(self, path, default, callback, workspace,
                               notify=notify)
-        self._extra_files[path] = opt
-    
-    def get_extra(self, name):
+        self._extra_files[name] = opt
+
+    def get_extra_value(self, name):
+        """
+        Returns the extra value of option 'name'
+        """
         opt = self._extra_files[name]
         if opt.dirty:
             # reread the file
             opt.value = self.read_extra(opt.path, opt.default)
             opt.dirty = False
-        
-        return opt.value
-        
-    def save_extra(self, name, data):
-        """
-        Saves a data object to the extra file name
-        """
 
-    def create_option(self, name, label, type, default, doc, callback=None, 
+        return opt.value
+
+    def save_extra(self, name):
+        """
+        Saves the extra option 'name' to the filesystem
+        """
+        option = self._extra_files[name]
+        self.dump_data(option.path, option.value)
+
+    def create_option(self, name, label, type, default, doc, callback=None,
                       safe=True, workspace=False):
         opt = OptionItem(self, name, label, type, default, doc,
                          callback, workspace)
         self.add_option(opt)
         return opt
 
-
     def add_option(self, option):
         self._options[option.name] = option
+
+    def remove_option(self, option):
+        """
+        Removes a Option from OptionManager
+        """
+        del self._options[option.name]
 
     def get_option(self, optname):
         return self._options[optname]
 
+    def get_extra_option(self, optname):
+        return self._extra_files[optname]
+
     def get_value(self, name):
         return self._options[name].value
 
-    def set_extra_value(self, path, value, dbus_notify=True, save=True):
-        option = self._extra_files[path]
+    def set_extra_value(self, name, value, dbus_notify=True, save=True):
+        option = self._extra_files[name]
         option.set_value(value)
         self._on_change(option, dbus_notify=dbus_notify)
         if save:
@@ -286,7 +326,9 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
         if option.callback:
             option.callback(option)
 
-        self.notify_dbus(option)
+        if dbus_notify:
+            pass #XXX: handle somewhere else
+            #self.notify_dbus(option)
 
         self._emit_change_notification(option)
 
@@ -296,44 +338,45 @@ class OptionsConfig(BaseConfig, DbusOptionsManager):
             if hasattr(optionsmanager, 'events'):
                 optionsmanager.emit('option_changed', option=option)
 
-    def read_extra(self, filename, default):
+    def read_extra(self, path, default):
         try:
-            with open(filename) as file:
-                return simplejson.load(file)
-        except IOError:
-            return default
-        except Exception, e:
+            with path.open() as fp:
+                return json.load(fp)
+        except: #XXX: handle corrupt files better
             return default
 
-    def dump_data(self, filename, data):
+    def dump_data(self, path, data):
         try:
-            with open(filename, 'w') as out:
-                simplejson.dump(data, out)
+            with path.open('w') as out:
+                json.dump(data, out, indent=2)
         except Exception, e:
             self.svc.log.exception(e)
 
 
     def read(self):
         data = {}
-        for f in (self.workspace_path, self.global_path):
+        for f in (self.global_path, self.workspace_path):
             try:
-                with open(f) as file:
-                    data.update(simplejson.load(file))
-            except IOError:
+                with f.open() as fp:
+                    data.update(json.load(fp))
+            except ValueError, e:
+                self.svc.log.error(_('Settings file corrupted: %s'), f)
+            except py.error.ENOENT:
                 pass
             except Exception, e:
                 self.svc.log.exception(e)
         return data
 
     def dump(self, workspace):
-        data = dict((opt.name, opt.value) for opt in self if opt.workspace is workspace)
+        data = dict((opt.name, opt.value)
+                    for opt in self if opt.workspace is workspace)
         if workspace:
             f = self.workspace_path
         else:
             f = self.global_path
 
-        with open(f, 'w') as out:
-            simplejson.dump(data, out, sort_keys=True, indent=2)
+        with f.open('w') as out:
+            json.dump(data, out, sort_keys=True, indent=2)
 
     def __len__(self):
         return len(self._options)

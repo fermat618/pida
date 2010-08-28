@@ -1,4 +1,6 @@
 ^build
+.coverage
+coverage
 moo_stub.so
 moo/.*.o
 moo/moo-pygtk.c
@@ -8,9 +10,15 @@ moo/marshals.c
 moo/marshals.h
 moo/stock-moo.h
 moo/test
-^docs/.build
+^docs/build
 .ropeproject
 .*\.swp
 .*\.pyc
 tmp
 .pida-metadata
+pida.egg-info
+docs/_build
+.*\.*~
+externals
+dist
+MANIFEST

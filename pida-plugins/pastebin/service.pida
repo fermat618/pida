@@ -1,9 +1,7 @@
-[plugin]
-plugin = pastebin
-name = Pastebin
-author = Ali Afshar <aafshar@gmail.com>
-version = 0.2.2
-require_pida = 0.5
-depends = "gtk, gobject"
-category = code
-description = Send code to a pastebin service
+Name: Pastebin
+Author: Ali Afshar <aafshar@gmail.com>
+Version: 0.2.8
+Depends: pida>=0.6
+Category: code
+
+Send code to a pastebin service

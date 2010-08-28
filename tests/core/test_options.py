@@ -1,39 +1,35 @@
 from unittest import TestCase
-import os
 from pida.core.options import OptionsManager, OptionsConfig
-from pida.utils.testing.mock import Mock
 from tempfile import mktemp
-from .test_services import MYService, MockBoss
+from pida.core.service import Service
+from mock import Mock
 
-o = OptionsManager(None)
-boss = MockBoss()
-service = MYService(boss)
-service.started = True
 
-class OptionConfigTest(TestCase):
-    def setUp(self):
-        self.path = mktemp()
-        self.last_call = None
+def test_extra(tmpdir):
+    mock = Mock()
+    mock.started = False
+    opt = OptionsConfig(mock)
+    opt.SUPPORTS_MULTIPLE_CONNECTIONS = True
+    opt.register_extra_option(
+                    name='test',
+                    default=['default'],
+                    callback=mock,
+                    safe=True,
+                    workspace=False,
+                    path=tmpdir.join('opt.json'))
+    assert not tmpdir.join('opt.json').check()
+    assert opt.get_extra_value('test') == ['default']
+    opt.set_extra_value('test', [2])
+    # service is not started yet, so the callback didn't get fired
+    assert not mock.called
+    mock.started = True
+    # not we test the real stuff
+    opt.set_extra_value('test', [2])
+    opt.save_extra('test')
+    assert tmpdir.join('opt.json').check()
+    assert mock.called
+    assert not opt.get_extra_option('test').dirty
+    opt.get_extra_option('test').dirty = True
+    assert opt.get_extra_value('test') ==  [2]
 
-    def tearDown(self):
-        #os.unlink(self.path)
-        pass
 
-    def extra_callback(self, option):
-        self.last_call = option
-
-    def test_extra(self):
-        opt = OptionsConfig(service)
-        opt.SUPPORTS_MULTIPLE_CONNECTIONS = True
-        opt.register_extra_file(self.path, ['default'], 
-                      callback=self.extra_callback, 
-                      safe=True, workspace=False)
-        self.assertEqual(opt.get_extra(self.path), ['default'])
-        opt.set_extra_value(self.path, [2])
-        self.assertEqual(opt.get_extra(self.path), [2])
-        self.assertEqual(self.last_call.value, [2])
-        self.assertEqual(self.last_call.dirty, False)
-        self.last_call.dirty = True
-        self.assertEqual(opt.get_extra(self.path), [2])
-
-        #opt2 = OptionsConfig(service)

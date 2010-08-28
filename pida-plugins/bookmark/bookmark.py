@@ -23,6 +23,8 @@
 import gtk
 import os
 import cgi
+import pkgutil
+import json
 
 from kiwi.ui.objectlist import ObjectList, Column
 
@@ -34,15 +36,13 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
-from pida.core.environment import get_uidef_path
 
 from pida.core.editors import LineMarker, MarkerInterface
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 
-import simplejson
 
 # locale
 from pida.core.locale import Locale
@@ -194,7 +194,8 @@ class BookmarkView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('bookmark-toolbar.xml'))
+        uidef_data = pkgutil.get_data(__name__, 'uidef/bookmark-toolbar.xml')
+        self._uim.add_ui_from_string(uidef_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
@@ -224,7 +225,7 @@ class BookmarkView(PidaView):
 class BookmarkActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        BookmarkWindowConfig.action = self.create_action(
             'show_bookmark',
             TYPE_REMEMBER_TOGGLE,
             _('Bookmark Viewer'),
@@ -344,13 +345,19 @@ class BookmarkActions(ActionsConfig):
     def on_bookmark_for_dir(self, action):
         self.svc.bookmark_dir(path=action.contexts_kw['dir_name'])
 
+class BookmarkWindowConfig(WindowConfig):
+    key = BookmarkView.key
+    label_text = BookmarkView.label_text
+
 class BookmarkFeatures(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'bookmark-file-menu.xml'))
+            (self.svc, 'bookmark-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'bookmark-dir-menu.xml'))
+            (self.svc, 'bookmark-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+            BookmarkWindowConfig)
 
 class BookmarkEvents(EventsConfig):
 
@@ -383,12 +390,6 @@ class Bookmark(Service, MarkerInterface):
         self._project = None
         self.load()
 
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
-
-        
     def show_bookmark(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)
         if not self._has_loaded:
@@ -491,7 +492,10 @@ class Bookmark(Service, MarkerInterface):
             if not data.has_key(t.group):
                 data[t.group] = []
             if t.group == 'file':
-                path = self._project.get_relative_path_for(t.data)
+                if self._project:
+                    path = self._project.get_relative_path_for(t.data)
+                else:
+                    path = None
                 if path:
                     path = os.path.sep.join(path)
                 else:
@@ -526,7 +530,7 @@ class Bookmark(Service, MarkerInterface):
         if os.path.isfile(datafile):
             try:
                 fp = open(datafile, "r")
-                data = simplejson.load(fp)
+                data = json.load(fp)
                 self._unserialize(data)
             except Exception, e:
                 self.log.exception(e)
@@ -545,7 +549,7 @@ class Bookmark(Service, MarkerInterface):
             datafile = os.path.join(datadir, 'bookmark.json')
         try:
             fp = open(datafile, "w")
-            simplejson.dump(data, fp, indent=1)
+            json.dump(data, fp, indent=1)
         except Exception, e:
             self.log.exception(e)
             

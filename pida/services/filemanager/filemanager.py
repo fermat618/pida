@@ -3,13 +3,14 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 
 from os import listdir, path
 
 import os
 import shutil
+import sys
 
 import cgi
 
@@ -24,17 +25,18 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.core.environment import get_uidef_path
+from pida.core.environment import on_windows
 from pida.core.log import get_logger
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.utils.path import homedir
 
-from pida.ui.views import PidaView
-from pida.ui.objectlist import AttrSortCombo
+from pida.ui.views import PidaView, WindowConfig
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
-from pida.ui.gtkforms import DialogOptions, create_gtk_dialog
-from kiwi.ui.objectlist import Column, ColoredColumn, ObjectList
+
+from pygtkhelpers.ui.widgets import AttrSortCombo
+from pygtkhelpers.ui.objectlist import Column, ObjectList
+from pygtkhelpers.ui import dialogs
 
 import filehiddencheck
 
@@ -67,6 +69,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
         hidden=('pida-fm-hidden', False, True),
         ignored=('pida-fm-ignored', False, True),
         #TODO: better handling of normal directories
+        clean=('pida-fm-clean', False, False), 
         none=('pida-fm-none', False, True), 
         normal=('pida-fm-normal', False, False),
         error=('pida-fm-error', True, True),
@@ -88,26 +91,44 @@ def check_or_home(path):
         return homedir
     return path
 
+class AlwaysSmall(unicode):
+    """
+    Helper class to cheat ordering
+    """
+    def __cmp__(self, other):
+        return -1
 
 
 class FileEntry(object):
     """The model for file entries"""
 
-    def __init__(self, name, parent_path, manager):
+    def __init__(self, name, parent_path, manager, parent_link=False):
         self._manager = manager
         self.state = 'normal'
+        self.parent_link = parent_link
         self.name = name
-        self.lower_name = self.name.lower()
+
+        if parent_link:
+            self.lower_name = AlwaysSmall(self.name.lower())
+            self.name = AlwaysSmall(name)
+            self.path = parent_path
+            self.is_dir = True
+            self.is_dir_sort = AlwaysSmall(self.lower_name)
+        else:
+            self.lower_name = self.name.lower()
+            self.name = name
+            self.path = os.path.join(parent_path, name)
+            self.is_dir = os.path.isdir(self.path)
+            self.is_dir_sort = not self.is_dir, self.lower_name
+
         self.parent_path = parent_path
-        self.path = os.path.join(parent_path, name)
         self.extension = os.path.splitext(self.name)[-1]
         self.extension_sort = self.extension, self.lower_name
-        self.is_dir = os.path.isdir(self.path)
         self.is_dir_sort = not self.is_dir, self.lower_name
         self.visible = False
 
     @property
-    def markup(self):
+    def markup(self):  
         return self.format(cgi.escape(self.name))
 
     @property
@@ -128,14 +149,16 @@ class FileEntry(object):
     def format(self, text):
         color, b, i = state_style.get(self.state, (None, False, False))
         if color:
-            color = self._manager.file_list.style.lookup_color(color).to_string()
-        if not color:
+            color = self._manager.file_list.style.lookup_color(color)
+            color = color.to_string()
+        else:
             color = "black"
-        if b:
-            text = '<b>%s</b>' % text
-        if i:
-            text = '<i>%s</i>' % text
+        if b: text = '<b>%s</b>' % text
+        if i: text = '<i>%s</i>' % text
         return '<span color="%s">%s</span>' % (color, text)
+
+    def __repr__(self):
+        return 'file(%r)' % self.path
 
 
 class FilemanagerView(PidaView):
@@ -165,18 +188,27 @@ class FilemanagerView(PidaView):
     def create_file_list(self):
         self.file_list = ObjectList()
         self.file_list.set_headers_visible(False)
+
+        def visible_func(item):
+            return item is not None and item.visible
+        self.file_list.set_visible_func(visible_func)
         self.file_list.set_columns(self._columns);
-        self.file_list.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        #XXX: real file
-        self.file_list.get_treeview().connect('button-press-event',
-            self.on_file_button_press_event)
         self.file_list.connect('selection-changed', self.on_selection_changed)
-        self.file_list.connect('row-activated', self.on_file_activated)
-        self.file_list.connect('right-click', self.on_file_right_click)
+        self.file_list.connect('item-activated', self.on_file_activated)
+        self.file_list.connect('item-right-clicked', self.on_file_right_click)
         self.entries = {}
         self.update_to_path(self.svc.path)
         self.file_list.show()
-        self._vbox.pack_start(self.file_list)
+
+        self._file_scroll = gtk.ScrolledWindow(
+                hadjustment=self.file_list.props.hadjustment,
+                vadjustment=self.file_list.props.vadjustment,
+                )
+        self._file_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self._file_scroll.add(self.file_list)
+        self._file_scroll.show()
+
+        self._vbox.pack_start(self._file_scroll)
         self._sort_combo = AttrSortCombo(self.file_list,
             [
                 ('is_dir_sort', _('Directories First')),
@@ -189,12 +221,15 @@ class FilemanagerView(PidaView):
             'is_dir_sort')
         self._sort_combo.show()
         self._vbox.pack_start(self._sort_combo, expand=False)
-        self.on_selection_changed(self.file_list, None)
+        self.on_selection_changed(self.file_list)
 
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('filemanager-toolbar.xml'))
+        self._uim.add_ui_from_string(
+                pkgutil.get_data(
+                    __name__,
+                    'uidef/filemanager-toolbar.xml'))
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
@@ -202,16 +237,18 @@ class FilemanagerView(PidaView):
         self._vbox.pack_start(self._toolbar, expand=False)
         self._toolbar.show_all()
 
-    def add_or_update_file(self, name, basepath, state, select=False):
-        if basepath != self.path:
+    def add_or_update_file(self, name, basepath, state, select=False,
+                           parent_link=False):
+        if basepath != self.path and not parent_link:
             return
-        entry = self.entries.setdefault(name, FileEntry(name, basepath, self))
+        entry = self.entries.setdefault(name,
+                                        FileEntry(name, basepath, self,
+                                                  parent_link=parent_link))
         entry.state = state
 
         self.show_or_hide(entry, select=select)
 
     def show_or_hide(self, entry, select=False):
-        from operator import and_
         def check(checker):
             if (checker.identifier in self._file_hidden_check_actions) and \
                (self._file_hidden_check_actions[checker.identifier].get_active()):
@@ -220,24 +257,19 @@ class FilemanagerView(PidaView):
             else:
                 return True
 
-        if self.svc.opt('show_hidden'):
+        if self.svc.opt('show_hidden') or entry.parent_link:
             show = True
         else:
             show = all(check(x)
                         for x in self.svc.features['file_hidden_check'])
 
-        if show:
-            if entry.visible:
-                self.file_list.update(entry)
-            else:
-                self.file_list.append(entry)
-                entry.visible = True
-            if select:
-                self.file_list.select(entry)
-        else:
-            if entry.visible:
-                self.file_list.remove(entry)
-                entry.visible = False
+        entry.visible = show
+        if entry not in self.file_list:
+            self.file_list.append(entry)
+        self.file_list.update(entry)
+
+        if show and select:
+            self.file_list.selected_item = entry
 
     def update_to_path(self, new_path=None, select=None):
         if new_path is None:
@@ -247,7 +279,14 @@ class FilemanagerView(PidaView):
 
         self.file_list.clear()
         self.entries.clear()
-        
+
+        if self.svc.opt('show_parent'):
+            parent = os.path.normpath(os.path.join(new_path, os.path.pardir))
+            # skip if we are already on the root
+            if parent != new_path:
+                self.add_or_update_file(os.pardir, parent, 
+                                        'normal', parent_link=True)
+
         def work(basepath):
             dir_content = listdir(basepath)
             # add all files from vcs and remove the corresponding items 
@@ -276,58 +315,31 @@ class FilemanagerView(PidaView):
 
         self.create_ancest_tree()
 
-    # This is painful, and will always break
-    # So use the following method instead
-    def update_single_file(self, name, basepath):
-        def _update_file(oname, obasepath, state):
-            if oname == name and basepath == obasepath:
-                if name not in self.entries:
-                    self.entries[oname] = FileEntry(oname, obasepath, self)
-                self.entries[oname].state = state
-                self.show_or_hide(self.entries[oname])
-        for lister in self.svc.features['file_lister']:
-            GeneratorTask(lister, _update_file).start(self.path)
-
     def update_single_file(self, name, basepath, select=False):
         if basepath != self.path:
             return
         if name not in self.entries:
-            self.entries[name] = FileEntry(name, basepath, self)
-            self.show_or_hide(self.entries[name], select=select)
+            self.add_or_update_file(name, basepath, 'normal', select=select)
 
     def update_removed_file(self, filename):
         entry = self.entries.pop(filename, None)
         if entry is not None and entry.visible:
             self.file_list.remove(entry)
 
-    def on_file_button_press_event(self, file_list, event):
-        # unselect all rows if user clicked on the empty space below the last
-        # row
-        if (file_list.get_path_at_pos(int(event.x), int(event.y)) is None):
-            file_list.get_selection().unselect_all()
-            if (event.button == 3):
-                # right click on base directory
-                item = FileEntry(os.path.basename(self.path),
-                    os.path.dirname(self.path), self)
-                self.on_file_right_click(file_list, item, event)
-            return True
-        else:
-            return False
-
     def create_dir(self, name=None):
         if not name:
-            opts = DialogOptions().add('name', label=_("Directory name"), value="")
-            create_gtk_dialog(opts, parent=self.svc.boss.window).run()
-            name = opts.name
+            #XXX: inputdialog or filechooser
+            name = dialogs.input('Create New Directory',
+                                 label=_("Directory name"))
         if name:
-            npath = os.path.join(self.path, opts.name)
+            npath = os.path.join(self.path, name)
             if not os.path.exists(npath):
                 os.mkdir(npath)
-            self.update_single_file(opts.name, self.path, select=True)
-             
-    def on_file_activated(self, rowitem, fileentry):
-        if os.path.exists(fileentry.path):
-            if fileentry.is_dir:
+            self.update_single_file(name, self.path, select=True)
+
+    def on_file_activated(self, ol, fileentry):
+        if os.path.exists(fileentry.path): 
+            if fileentry.is_dir: 
                 self.svc.browse(fileentry.path)
             else:
                 self.svc.boss.cmd('buffer', 'open_file', file_name=fileentry.path)
@@ -335,16 +347,16 @@ class FilemanagerView(PidaView):
             self.update_removed_file(fileentry.name)
 
     def on_file_right_click(self, ol, item, event=None):
-        if item.is_dir:
+        if item.is_dir: 
             self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
                           dir_name=item.path, event=event, filemanager=True) 
         else:
             self.svc.boss.cmd('contexts', 'popup_menu', context='file-menu',
                           file_name=item.path, event=event, filemanager=True)
 
-    def on_selection_changed(self, ol, item):
-        for act_name in ['toolbar_copy', 'toolbar_delete']:
-            self.svc.get_action(act_name).set_sensitive(item is not None)
+    def on_selection_changed(self, ol):
+        for act_name in ['toolbar_copy',  'toolbar_delete']:
+            self.svc.get_action(act_name).set_sensitive(ol.selected_item is not None)
 
     def rename_file(self, old, new, entry):
         print 'renaming', old, 'to' ,new
@@ -369,8 +381,11 @@ class FilemanagerView(PidaView):
 
     def _get_ancestors(self, directory):
         ancs = [directory]
-        while directory != '/':
+        parent = None
+        while True:
             parent = os.path.dirname(directory)
+            if parent == directory:
+                break
             ancs.append(parent)
             directory = parent
         return ancs
@@ -449,7 +464,7 @@ class FilemanagerView(PidaView):
             toolitem.set_menu(menu)
 
     def get_selected_filename(self):
-        fileentry = self.file_list.get_selected()
+        fileentry = self.file_list.selected_item
         if fileentry is not None:
             return fileentry.path
 
@@ -466,19 +481,24 @@ class FilemanagerView(PidaView):
                                                            is not None)
 
     def paste_clipboard(self):
-        task = AsyncTask(self._paste_clipboard, lambda: None)
-        task.start()
-
-    def _paste_clipboard(self):
         newname = os.path.join(self.path, os.path.basename(self._clipboard_file))
         if newname == self._clipboard_file:
             self.svc.error_dlg(_('Cannot copy files to themselves.'))
             return
         if not os.path.exists(self._clipboard_file):
             self.svc.error_dlg(_('Source file has vanished.'))
+            return
         if os.path.exists(newname):
             self.svc.error_dlg(_('Destination already exists.'))
             return
+        
+        task = AsyncTask(self._paste_clipboard, lambda: None)
+        task.start()
+
+    def _paste_clipboard(self):
+        #XXX: in thread
+        newname = os.path.join(self.path, os.path.basename(self._clipboard_file))
+        #XXX: GIO?
         if os.path.isdir(self._clipboard_file):
             shutil.copytree(self._clipboard_file, newname)
         else:
@@ -495,7 +515,7 @@ class FilemanagerView(PidaView):
             os.remove(path)
         if path == self._clipboard_file:
             self._clipboard_file = None
-            self._fix_paste_sensitivity()
+            gcall(self._fix_paste_sensitivity)
 
 class FilemanagerEvents(EventsConfig):
 
@@ -526,18 +546,18 @@ class FilemanagerEvents(EventsConfig):
         self.svc.refresh_file_hidden_check_menu()
 
     def on_contexts__show_menu(self, menu, context, **kw):        
-        if (kw.has_key('filemanager')):
-            if (context == 'file-menu'):
+        if 'filemanager' in kw:
+            if context == 'file-menu':
                 self.svc.get_action('delete-file').set_visible(kw['file_name'] is not None)
             else:
                 self.svc.get_action('delete-dir').set_visible(
                     kw['dir_name'] != self.svc.get_view().path)
         else:
             self.svc.get_action('delete-file').set_visible(False)
-            self.svc.get_action('delete-dir').set_visible(False)            
+            self.svc.get_action('delete-dir').set_visible(False)
             self.svc.get_action('browse-for-file').set_visible(
-                (kw.has_key('file_name') and kw['file_name'] is not None) or
-                (kw.has_key('dir_name') and kw['dir_name'] is not None))
+                kw.get('file_name') is not None or
+                kw.get('dir_name') is not None)
 
     def on_contexts__menu_deactivated(self, menu, context, **kw):
         if (kw.has_key('filemanager')):
@@ -573,6 +593,11 @@ class FilemanagerCommandsConfig(CommandsConfig):
         self.svc.get_view().update_to_path()
 
 
+class FilemanagerWindowConfig(WindowConfig):
+    key = FilemanagerView.key
+    label_text = FilemanagerView.label_text
+    description = _("Filebrowser")
+
 class FilemanagerFeatureConfig(FeaturesConfig):
 
     def create(self):
@@ -583,14 +608,16 @@ class FilemanagerFeatureConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'file-menu',
-            (self.svc.get_action_group(), 'filemanager-file-menu.xml'))
+            (self.svc, 'filemanager-file-menu.xml'))
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'filemanager-dir-menu.xml'))
+            (self.svc, 'filemanager-dir-menu.xml'))
+        self.subscribe_foreign('window', 'window-config',
+                               FilemanagerWindowConfig)
 
     # File Hidden Checks
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, _("Hide Dot-Files"))
     def dot_files(self, name, path, state):
-        return name[0] != '.'
+        return len(name) and name[0] != '.'
 
     @filehiddencheck.fhc(filehiddencheck.SCOPE_GLOBAL, 
         _("Hide by User defined Regular Expression"))
@@ -611,6 +638,14 @@ class FileManagerOptionsConfig(OptionsConfig):
                 True,
                 _('Shows hidden files'),
                 workspace=True)
+
+        self.create_option(
+                'show_parent',
+                _('Show parent entry'),
+                bool,
+                True,
+                _('Shows a ".." entry in the filebrowser'))
+
         self.create_option(
                 'file_hidden_check',
                 _('Used file hidden checker'),
@@ -688,7 +723,7 @@ class FileManagerActionsConfig(ActionsConfig):
             gtk.STOCK_DELETE,
             self.on_delete
         )
-        
+
         self.create_action(
             'browse-for-file',
             TYPE_NORMAL,
@@ -697,7 +732,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'file-manager',
             self.on_browse_for_file,
         )
-        
+
         self.create_action(
             'delete-dir',
             TYPE_NORMAL,
@@ -723,7 +758,8 @@ class FileManagerActionsConfig(ActionsConfig):
             _('Show the file browser view'),
             'file-manager',
             self.on_show_filebrowser,
-            '<Shift><Control>f'
+            '<Shift><Control>f',
+            global_=True
         )
 
         self.create_action(
@@ -755,6 +791,16 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
         self.create_action(
+            'toolbar_search',
+            TYPE_NORMAL,
+            _('Find in directory'),
+            _('Find in directory'),
+            gtk.STOCK_FIND,
+            self.on_toolbar_find,
+        )
+
+
+        self.create_action(
             'toolbar_projectroot',
             TYPE_NORMAL,
             _('Project Root'),
@@ -780,7 +826,7 @@ class FileManagerActionsConfig(ActionsConfig):
             'user-home',
             self.on_toolbar_home,
         )
-        
+
         self.create_action(
             'toolbar_current_file',
             TYPE_NORMAL,
@@ -835,6 +881,9 @@ class FileManagerActionsConfig(ActionsConfig):
         )
 
 
+    def on_toolbar_find(self, action):
+        self.svc.boss.get_service('grepper').show_grepper(self.svc.path)
+
     def on_browse_for_file(self, action):
         new_path = path.dirname(action.contexts_kw['file_name'])
         self.svc.cmd('browse', new_path=new_path)
@@ -848,7 +897,7 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def on_show_filebrowser(self, action):
         self.svc.cmd('present_view')
-    
+
     def on_toolbar_create_dir(self, action):
         self.svc.create_dir()
 
@@ -866,7 +915,6 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def _on_menu_down(self, menu, action):
         action.set_active(False)
-        print "down"
     
     def on_toggle_hidden(self, action):
         self.svc.set_opt('show_hidden', action.get_active())
@@ -905,9 +953,10 @@ class Filemanager(Service):
     options_config = FileManagerOptionsConfig
     features_config = FilemanagerFeatureConfig
     events_config = FilemanagerEvents
-    dbus_config = FilemanagerDbusConfig
     commands_config = FilemanagerCommandsConfig
     actions_config = FileManagerActionsConfig
+    #XXX: disabled
+    #dbus_config = FilemanagerDbusConfig
 
     def pre_start(self):
         self.path = check_or_home(self.opt('last_browsed'))
@@ -916,11 +965,6 @@ class Filemanager(Service):
 
 
     def start(self):
-        acts = self.boss.get_service('window').actions
-        
-        acts.register_window(self.file_view.key,
-                             self.file_view.label_text)
-        
         self.on_project_switched(self.current_project)
         self.emit('browsed_path_changed', path=self.path)
         self.get_action('toolbar_toggle_hidden').set_active(
@@ -929,7 +973,9 @@ class Filemanager(Service):
         # I don't get it ! and why the hack is this happening
         for x in self.actions.list_actions():
             for p in x.get_proxies():
-                if x.props.stock_id is not None:
+                if hasattr(x.props, "stock_id") and \
+                   hasattr(p, "set_stock_id") and \
+                   x.props.stock_id is not None:
                     p.set_stock_id(x.props.stock_id)
 
     def get_view(self):

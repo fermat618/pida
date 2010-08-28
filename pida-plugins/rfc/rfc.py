@@ -24,18 +24,20 @@ import os
 import gtk
 import re
 import urllib
+import pkgutil
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.gthreads import GeneratorTask, gcall
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import pida_home, get_uidef_path
+from pida.core.environment import pida_home
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
+from pida.core.features import FeaturesConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE, TYPE_NORMAL
 
-from pida.ui.views import PidaView
+from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, gcall
 
 # locale
 from pida.core.locale import Locale
@@ -81,7 +83,8 @@ class RfcView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('rfc-toolbar.xml'))
+        uidef_data = pkgutil.get_data(__name__, 'uidef/rfc-toolbar.xml')
+        self._uim.add_ui_from_string(uidef_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
@@ -92,13 +95,14 @@ class RfcView(PidaView):
     def create_list(self):
         self._list = ObjectList(
                 [
-                    Column('number', data_type=str, title=_('Number')),
-                    Column('description', data_type=str,
-                        title=_('Description'))
+                    Column('number', title=_('Number')),
+                    Column('description', title=_('Description'))
                 ]
         )
-        self._list.connect('double-click', self._on_list_double_click)
-        self._vbox.pack_start(self._list)
+        self._scroll = gtk.ScrolledWindow()
+        self._scroll.add(self._list)
+        self._list.connect('item-activated', self._on_list_double_click)
+        self._vbox.pack_start(self._scroll)
         self._list.show_all()
 
     def create_progressbar(self):
@@ -120,7 +124,7 @@ class RfcView(PidaView):
             self._progressbar.hide()
 
     def set_items(self, items):
-        self._list.add_list(items, True)
+        self._list.extend(items)
 
     def clear(self):
         self._list.clear()
@@ -138,7 +142,7 @@ class RfcView(PidaView):
 class RfcActions(ActionsConfig):
 
     def create_actions(self):
-        self.create_action(
+        RfcWindowConfig.action = self.create_action(
             'show_rfc',
             TYPE_REMEMBER_TOGGLE,
             _('Rfc Viewer'),
@@ -179,13 +183,24 @@ class RfcActions(ActionsConfig):
     def on_rfc_refreshindex(self, action):
         self.svc.refresh_index()
 
+class RfcWindowConfig(WindowConfig):
+    key = RfcView.key
+    label_text = RfcView.label_text
+
+class RfcFeaturesConfig(FeaturesConfig):
+    def subscribe_all_foreign(self):
+        self.subscribe_foreign('window', 'window-config',
+            RfcWindowConfig)
+
+
 # Service class
 class Rfc(Service):
     """Fetch rfc list and show an rfc"""
 
     actions_config = RfcActions
+    features_config = RfcFeaturesConfig
 
-    url_rfcindex = 'http://www.ietf.org/iesg/1rfc_index.txt'
+    url_rfcindex = 'http://www.ietf.org/download/rfc-index.txt'
     url_rfctmpl = 'http://tools.ietf.org/html/rfc'
     buffer_len = 16384
 
@@ -198,11 +213,6 @@ class Rfc(Service):
         self.task = None
         self._filter_id = 0
         self.is_refresh = False
-
-        acts = self.boss.get_service('window').actions
-
-        acts.register_window(self._view.key,
-                             self._view.label_text)
 
     def show_rfc(self):
         self.boss.cmd('window', 'add_view', paned='Plugin', view=self._view)

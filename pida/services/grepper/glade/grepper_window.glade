@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<!--Generated with glade3 3.2.0 on Tue May  8 11:07:55 2007 by ali@rogue-->
+<interface>
+  <object class="GtkWindow" id="grepper_window">
+    <child>
+      <object class="GtkVBox" id="vbox1">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkHBox" id="hbox1">
+            <property name="visible">True</property>
+            <property name="border_width">6</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkComboBoxEntry" id="pattern_combo">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="has_focus">False</property>
+                <property name="is_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="re_check">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="tooltip-text" translatable="yes">Is this match a Regular Expression</property>
+                <property name="label" translatable="yes">RE</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFileChooserButton" id="path_chooser">
+                <property name="visible">True</property>
+                <property name="action">GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>
+                <property name="title" translatable="yes">Select A Directory to search in</property>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="current_folder">
+                <property name="has_tooltip">True</property>
+                <property name="is_focus">True</property>
+                <property context="yes" name="tooltip_markup" translatable="yes">Use current filebrowser folder</property>
+                <property context="yes" name="tooltip_text" translatable="yes">Use current filebrowser folder</property>
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkImage" id="image9">
+                    <property name="icon_size">1</property>
+                    <property name="stock">gtk-open</property>
+                    <property name="visible">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="recursive">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="tooltip-text" translatable="yes">recurse through directories</property>
+                <property name="label" translatable="yes">-r</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkVSeparator" id="vseparator1">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHButtonBox" id="hbuttonbox1">
+                <property name="visible">True</property>
+                <property name="spacing">3</property>
+                <property name="layout_style">GTK_BUTTONBOX_END</property>
+                <child>
+                  <object class="GtkButton" id="find_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="label" translatable="yes">gtk-find</property>
+                    <property name="use_stock">True</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">6</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox2">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkScrolledWindow" id="matches_scroll">
+                <property name="visible">True</property>
+                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+                <child>
+                  <object class="PyGTKHelpersObjectList" id="matches_list">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkProgressBar" id="progress_bar">
+                <property name="orientation">GTK_PROGRESS_TOP_TO_BOTTOM</property>
+                <property name="text" translatable="yes"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

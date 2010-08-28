@@ -1,90 +1,102 @@
 {
-  "targets": [
+  "targets":[
     {
-      "dependencies": [], 
-      "name": "debug", 
-      "actions": [
+      "name":"debug",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {
-            "cwd": null
-          }, 
-          "value": "./run-pida.py -D -w testing"
+          "type":"shell",
+          "options":{
+            "cwd":null
+          },
+          "value":"python -u ./run-pida.py -D -w testing"
         }
       ]
-    }, 
+    },
     {
-      "dependencies": [], 
-      "name": "run", 
-      "actions": [
+      "name":"run",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "./run-pida.py"
+          "type":"shell",
+          "options":{},
+          "value":"./run-pida.py"
         }
       ]
-    }, 
+    },
     {
-      "dependencies": [], 
-      "name": "genapi", 
-      "actions": [
+      "name":"genapi",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "pydoctor -c tools/pida-pydoctor.cfg"
+          "type":"shell",
+          "options":{},
+          "value":"pydoctor -c tools/pida-pydoctor.cfg"
         }
       ]
-    }, 
+    },
     {
-      "dependencies": [], 
-      "name": "tests", 
-      "actions": [
+      "name":"tests",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "nosetests"
+          "type":"shell",
+          "options":{},
+          "value":"nosetests"
         }
       ]
-    }, 
+    },
     {
-      "dependencies": [], 
-      "name": "build.ext", 
-      "actions": [
+      "name":"build.ext",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "python setup.py build_ext -i"
+          "type":"shell",
+          "options":{},
+          "value":"python setup.py build_ext -i"
         }
       ]
-    }, 
+    },
     {
-      "dependencies": [], 
-      "name": "clean", 
-      "actions": [
+      "name":"clean",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "python setup.py clean"
-        }, 
+          "type":"shell",
+          "options":{},
+          "value":"python setup.py clean"
+        },
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "make -C contrib/moo clean"
+          "type":"shell",
+          "options":{},
+          "value":"make -C contrib/moo clean"
         }
       ]
-    }, 
+    },
     {
-      "dependencies": [], 
-      "name": "pyshell", 
-      "actions": [
+      "name":"pyshell",
+      "actions":[
         {
-          "type": "shell", 
-          "options": {}, 
-          "value": "./run-pida-pyshell.py --ipython"
+          "type":"shell",
+          "options":{},
+          "value":"./run-pida-pyshell.py --ipython"
+        }
+      ]
+    },
+    {
+      "name":"gdb",
+      "actions":[
+        {
+          "type":"shell",
+          "options":{},
+          "value":"gdb --args python -u run-pida.py -w testing -D"
+        }
+      ]
+    },
+    {
+      "name":"debug disabled multiprocessing",
+      "actions":[
+        {
+          "type":"shell",
+          "options":{},
+          "value":"python -u ./run-pida.py -D -w testing --disable-multiprocessing"
         }
       ]
     }
-  ], 
-  "options": {
-  }
+  ],
+  "options":{}
 }

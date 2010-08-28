@@ -13,13 +13,12 @@
 
     :copyright: 2007-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
-
-"""
+ 
+""" 
 
 
 import logging
 import os
-import time
 
 # PIDA Imports
 import pida.core.environment as env
@@ -27,29 +26,26 @@ import pida.core.environment as env
 from pida.ui.views import PidaView
 
 from pida.core.log import get_logger
-from pida.core.editors import EditorService, _
+from pida.core.editors import EditorService 
 
 # Emacs specific
-from pida.utils.emacs.emacsembed import EmacsEmbedWidget
-from pida.utils.emacs.emacscom import EmacsClient, EmacsServer
-from pida.utils.emacs import emacscom
+from .emacsembed import EmacsEmbedWidget
+from .emacscom import EmacsClient
 
+from pida.core.pdbus import DbusConfig, EXPORT
 
+EEXPORT = EXPORT(suffix='emacs')
 
 class EmacsView(PidaView):
-
-    def __init__(self, service, script_path, instance_id, listen_port):
-        self._script_path = script_path
-        self._instance_id = instance_id
-        self._listen_port = listen_port
-        PidaView.__init__(self, service)
-        
+    """
+    UI class for emacs editor 
+    uses EmacsEmbedWidget to integrate into a PidaView widget
+    """
     def create_ui(self):
         self._emacs = EmacsEmbedWidget(
             'emacs',
-            self._script_path,
-            ['-eval', '(setq server-name "' + self._instance_id + '")', 
-             '-eval', '(pida-connect ' + str(self._listen_port) + ')']
+            self.svc.initscript,
+             ['-eval', '(pida-connect 1001)']
         )
         self.add_main_widget(self._emacs)
 
@@ -63,35 +59,23 @@ class EmacsView(PidaView):
 class EmacsCallback(object):
     """Emacs editor callback behaviours.
 
-    Communication with Emacs process is handled by EmacsClient in the pIDA->Emacs
-    way, and EmacsServer the other way. On occurence of a message, EmacsServer
-    extracts a request name and arguments, and then tries to invoke the matching
-    method on the EmacsCallback object.
-    
-    Callbacks' names are built with the Emacs message names, prefixed with 'cb_'.
-    Each callback accepts exactly one argument.
+    Communication is done over dbus 
     """
 
     def __init__(self, svc):
         """Constructor."""
         self._log = get_logger('emacs')
         self._svc = svc
-        self._server = EmacsServer(self)
 
-    def bind(self):
-        """Bind the listening socket and return the elected port."""
-        return self._server.bind()
-
-    def cb_pida_ping(self, foo):
-        """Emacs message to signal it is up and ready.
-        """
-        self._log.debug('emacs ready')
-        self._svc.emit_editor_started()
+    def em_BufferOpen(self, filename):
+        """File opened event."""
+        if filename:
+            self._log.debug('emacs buffer opened "%s"' % filename)
+            self._svc.boss.cmd('buffer', 'open_file', file_name=filename)
         return True
 
-    def cb_window_configuration_change_hook(self, filename):
+    def em_BufferChange(self, filename):
         """Buffer changed event.
-
         Actually, this hook is called whenever the window containing the
         buffer changes. So notification can occur only when window is resized
         or split for example.
@@ -102,62 +86,65 @@ class EmacsCallback(object):
             if filename and (not current or current.filename != filename):
                 self._log.debug('emacs buffer changed "%s"' % filename)
                 if os.path.isdir(filename):
-                    self._svc.boss.cmd('filemanager', 'browse', new_path=filename)
+                    self._svc.boss.cmd('filemanager', 'browse', 
+                                       new_path=filename)
                     self._svc.boss.cmd('filemanager', 'present_view')
                 else:
-                    self._svc.boss.cmd('buffer', 'open_file', file_name=filename)
+                    self._svc.boss.cmd('buffer', 'open_file', 
+                                       file_name=filename)
         except IOError:
             pass
         return True
-    
-    def cb_kill_buffer_hook(self, filename):
+
+
+    def em_BufferClose(self, filename):
         """Buffer closed event."""
         if filename:
             self._log.debug('emacs buffer killed "%s"' % filename)
             self._svc.remove_file(filename)
-            self._svc.boss.get_service('buffer').cmd('close_file', file_name=filename)
+            self._svc.boss.cmd('buffer', 'close_file', file_name=filename)
         return True
 
-    def cb_find_file_hooks(self, filename):
-        """File opened event."""
-        # Nothing to do here. The window configuration change hook will
-        # provide notification for the new buffer.
-        if filename:
-            self._log.debug('emacs buffer opened "%s"' % filename)
-        return True
-    
-    def cb_after_save_hook(self, filename):
+    def em_BufferSave(self, filename):
         """Buffer saved event."""
         self._log.debug('emacs buffer saved "%s"' % filename)
         self._svc.boss.cmd('buffer', 'current_file_saved')
         return True
-    
-    def cb_kill_emacs_hook(self, foo):
+
+    def em_EmacsKill(self):
         """Emacs killed event."""
         self._log.debug('emacs killed')
         self._svc.inactivate_client()
         self._svc.boss.stop(force=True)
         return False
 
-# Service class
+class EmacsDbusConfig(DbusConfig):
+    
+
+    @EEXPORT(out_signature = '', in_signature = '')
+    def EmacsEnter(self):
+        """
+        This method is called by emacs to notify emacs is started.
+        """
+        self.svc.emit_editor_started()
+
 class Emacs(EditorService):
     """The Emacs service.
-
-    This service is the Emacs editor driver. Emacs instance creation is decided
-    there and orders for Emacs are sent to it which forwards them to the
-    EmacsClient instance. 
+    This service is the Emacs editor driver. 
     """ 
+    dbus_config = EmacsDbusConfig
 
     def _create_initscript(self):
-        # This method does not create the script anymore but only
-        # returns the path of the new script.
-        return env.get_data_path('pida_emacs_init.el')
+        return env.get_data_path('pida_emacs_dbus.el')
 
     def emit_editor_started(self):
+        """called when emacs started: Let notify the other services 
+        and connect to dbus signals
+        """
+        self._cb = EmacsCallback(self)
+        self._client = EmacsClient(self._cb, self)
+        self._client.connect_signals()
         self.boss.get_service('editor').emit('started')
-        # At this point calling (pida-frame-setup nil) should work, so let's
-        # do it.
-        self._client.frame_setup()
         
     def pre_start(self):
         """Start the editor"""
@@ -184,26 +171,19 @@ class Emacs(EditorService):
         else:
             emacs_logger.setLevel(logging.INFO)
 
-        # Start Emacs server.
-        self._cb = EmacsCallback(self)
-
-        listen_port = self._cb.bind()
-        instance_id = 'pida-' + str(os.getpid())
-        self._client = EmacsClient(instance_id)
-
-        time.sleep(1)
-        self._view = EmacsView(
-            self, self._create_initscript(), instance_id, listen_port)
-
-        # Add the view to the top level window. Only after that, it will be
-        # possible to add a socket in the view.
-        self.boss.cmd('window', 'add_view', paned='Editor', view=self._view)
-
-        # Now create the socket and embed the Emacs window.
+        #Start Emacs view
+        self.initscript = self._create_initscript()
+        self._view = EmacsView(self)
+        self.boss.window.add_view(paned='Editor', view=self._view)
         self._view.run()
 
+
     def stop(self):
-        self._client.quit()
+        try:
+            self._client.quit()
+        except AttributeError:
+            # gets stopped before the client can register
+            pass
 
     def _get_current_document(self):
         return self._current
@@ -225,10 +205,10 @@ class Emacs(EditorService):
     top_buffer = property(fget=_get_top_buffer,
                           fset=_set_top_buffer,
                           fdel=None,
-                          doc="The last buffer reported as being viewed by emacs")
+                          doc="Last buffer reported as being viewed by emacs")
 
     def inactivate_client(self):
-        self._client.inactivate()
+        pass
 
     def open(self, document):
         """Open a document"""
@@ -241,10 +221,6 @@ class Emacs(EditorService):
                     self._documents[document.unique_id] = document
             self.current_document = document
 
-    def open_many(documents):
-        """Open a few documents"""
-        pass
-    
     def close(self, document):
         if document.unique_id in self._documents:
             self._remove_document(document)
@@ -275,13 +251,9 @@ class Emacs(EditorService):
         """Save the current document as another filename"""
         pass # TODO
 
-    def revert(self):
-        """Revert to the loaded version of the file"""
-        self._client.revert_buffer()
-
     def goto_line(self, line):
         """Goto a line"""
-        self._client.goto_line(line + 1)
+        self._client.goto_line(line)
         self.grab_focus()
 
     def cut(self):
@@ -314,15 +286,11 @@ class Emacs(EditorService):
         # TODO
         pass
     
-    #def _add_sign(self, type, filename, line):
-        
-    #def _del_sign(self, type, filename, line):
-
-    def show_sign(self, type, filename, line):
+    def show_sign(self, sign_type, filename, line):
         # TODO
         pass
     
-    def hide_sign(self, type, filename, line):
+    def hide_sign(self, sign_type, filename, line):
         # TODO
         pass
     
@@ -332,14 +300,33 @@ class Emacs(EditorService):
     def get_current_line(self):
         return self._current_line
 
-    #def call_with_current_word(self, callback):
-    #   return self._com.get_cword(self.server, callback)
-
-    #def call_with_selection(self, callback):
-    #   return self._com.get_selection(self.server, callback)
-
     def set_path(self, path):
-        return self._client.set_directory(path)        
+        return self._client.set_directory(path)
+
+    @classmethod
+    def get_sanity_errors(cls):
+        errors = []
+        from pida.core.pdbus import has_dbus
+        if not has_dbus:
+            errors = [
+                'dbus python disfunctional',
+                'please repair the python dbus bindings',
+                '(note that it won\'t work for root)'
+            ]
+
+        try:
+            import subprocess
+            p = subprocess.Popen(
+                    ['emacs', '--version'],
+                    stdout=subprocess.PIPE,
+                    )
+            data, _ = p.communicate()
+        except OSError:
+            errors.extend([
+                'emacs not found',
+                'please install emacs23 with python support'
+            ])
+        return errors
 
 
 # Required Service attribute for service loading

@@ -50,6 +50,7 @@ class Service(object):
         self.options = self.options_config(self)
         self.features = self.features_config(self)
         self.actions = self.actions_config(self)
+
         if self.dbus_config:
             self.dbus = self.dbus_config(self)
         else:
@@ -61,11 +62,10 @@ class Service(object):
         self.actions.subscribe_keyboard_shortcuts()
 
     def __repr__(self):
-        #XXX: bad factoring, get better types
-        if self.__class__.__module__.startswith('pida.service'):
-            return '<Service: %s>'%self.__class__.__name__
-        else:
-            return '<Plugin: %s>'%self.__class__.__name__
+        return '<{kind}: {name}>'.format(
+            kind=self.__class__.__module__.split('.')[1].capitalize().rstrip('s'),
+            name=self.__class__.__name__,
+        )
 
     @classmethod
     def get_name(cls):
@@ -90,6 +90,23 @@ class Service(object):
         """pre_stop allows a service to stop the shutdown process by returning
         False. In this phase all user interaction should take place"""
         return True
+
+    def destroy(self):
+        """
+        Stop and unregisters this service.
+        """
+        try:
+            self.stop()
+        except Exception, e:
+            self.log.exception(e)
+            # big fat warning to the user
+            self.log.error(
+              _('!!!! Warning !!!!\n'
+                'Exception while unloading. Pida is in an unpredictable state.'
+                'Consider a restart'
+                ))
+        finally:
+            self.stop_components()
 
     def stop(self):
         """Override to stop service"""
@@ -142,7 +159,10 @@ class Service(object):
 
     @cached_property
     def log(self):
-        return get_logger('pida.svc.' + self.get_name())
+        if self.__module__[:14] == 'pida.services.':
+            return get_logger('pida.svc.' + self.get_name())
+        else:
+            return get_logger('pida.plugin.' + self.get_name())
 
 
     # window proxy

@@ -13,43 +13,60 @@
 
 import re
 import os
+import sys
 import gobject
 import subprocess
 import gtk
+from collections import defaultdict
 
-from kiwi.utils import gsignal
+from pygtkhelpers.utils import gsignal
+#FIXME win32 should get a terminal
+if sys.platform != 'win32':
+    from vte import Terminal
+else:
+    #XXX: broken like hell
+    class Terminal(object):
+        pass
 
-from vte import Terminal
+from pida.utils.addtypes import Enumeration
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
+EVENTS = Enumeration('CLICK', 'MENU')
 
-class TerminalMatch(object):
+class BaseTerminalMatch(object):
     """
-    A match for terminal text
+    Base class for all Match classes
     """
-
-    def __init__(self, name, match_re, match_groups_re, callback):
+    def __init__(self, name, match_re, match_groups_re, callback, usr=None):
         self.name = name
         self.match_re = match_re
         self.match_groups_re = re.compile(match_groups_re)
         self.callback = callback
+        self.usr = usr
 
     def __call__(self, *args, **kw):
         self.callback(*args, **kw)
 
-
-class TerminalMenuMatch(TerminalMatch):
+class TerminalMatch(BaseTerminalMatch):
     """
-    A match for terminal text that pops up a menu
+    A match for terminal text
+    """
+    pass
+
+class TerminalMenuMatch(BaseTerminalMatch):
+    """
+    This Match has a list of actions that will be added to the menu that will
+    be shown.
+    
     """
     def __init__(self, name, match_re, match_groups_re, actions=None):
         TerminalMatch.__init__(self, name, match_re, match_groups_re,
                                self._popup)
-        self.actions = []
+        self.actions = actions or []
 
     def _popup(self, event, *args):
         menu = self._generate_menu(args)
@@ -73,13 +90,18 @@ class TerminalMenuMatch(TerminalMatch):
 
 
 
-class TerminalMenuCallbackMatch(TerminalMatch):
-
+class TerminalMenuCallbackMatch(BaseTerminalMatch):
+    """
+    This match return a list of action items which will be added to the
+    menu that will be shown.
+    The callback is generating the menu
+    """
     def __call__(self, event, *args, **kw):
         menu = self.callback(*args, **kw)
         # Don't popup anything for non matches
         if menu is not None:
-            menu.popup(None, None, None, event.button, event.time)
+            return menu
+            #menu.popup(None, None, None, event.button, event.time)
 
 
 class PidaTerminal(Terminal):
@@ -124,7 +146,8 @@ class PidaTerminal(Terminal):
         """
         Initialize the matching system
         """
-        self._matches = {}
+        self._matches = defaultdict(list)
+        self._matches_res = {}
 
     def _get_position_from_pointer(self, x, y):
         """
@@ -144,6 +167,24 @@ class PidaTerminal(Terminal):
             if match is not None:
                 match_str, match_num = match
                 self.emit('match-right-clicked', event, match_num, match_str)
+        elif event.button in [1,2] and event.state & gtk.gdk.CONTROL_MASK:
+            col, row = self._get_position_from_pointer(event.x, event.y)
+            match = self.match_check(col, row)
+            if match is not None:
+                match_str, match_num = match
+                for call in self._matches[match_num]:
+                    if not isinstance(call, TerminalMatch):
+                        continue
+                    match_str, match_num = match
+                    match_val = [match_str]
+                    rematch = call.match_groups_re.match(match_str)
+                    if rematch is not None:
+                        groups = rematch.groups()
+                        if groups:
+                            match_val = groups
+                    if call.callback(term, event, match_str, usr=call.usr,
+                                    *match_val):
+                        break
 
     def _on_match_right_clicked(self, term, event, match_num, match_str):
         """
@@ -152,13 +193,38 @@ class PidaTerminal(Terminal):
         back or menu.
         """
         if match_num in self._matches:
-            rematch = self._matches[match_num].match_groups_re.match(match_str)
             match_val = [match_str]
-            if rematch is not None:
-                groups = rematch.groups()
-                if groups:
-                    match_val = groups
-            self._matches[match_num](event, *match_val)
+            menu = gtk.Menu()
+
+            for call in self._matches[match_num]:
+                rematch = call.match_groups_re.match(match_str)
+                if rematch is not None:
+                    groups = rematch.groups()
+                    if groups:
+                        match_val = groups
+                print match_val
+
+                if not isinstance(call, (TerminalMenuMatch, 
+                                         TerminalMenuCallbackMatch)):
+                    continue
+
+                first = True
+                for action in call.callback(term, event, match_str,
+                                            usr=call.usr, *match_val):
+                    action.match_args = match_val
+                    if isinstance(action, gtk.Action):
+                        menu_item = action.create_menu_item()
+                    else:
+                        menu_item = action
+                    if len(menu) and first:
+                        menu.add(gtk.SeparatorMenuItem())
+                    menu.add(menu_item)
+                    first = False
+
+            if len(menu):
+                menu.show_all()
+                menu.popup(None, None, None, event.button, event.time)
+
 
     def get_named_match(self, name):
         """
@@ -176,11 +242,20 @@ class PidaTerminal(Terminal):
         """
         Add a match object.
         """
-        match_num = self.match_add(match.match_re)
-        self._matches[match_num] = match
+        # adding more then one match that does the same is not going to work
+        # very well :(
+        # instead we register it once and dispatch it later
+        if not match.match_re in self._matches_res:
+            match_num = self.match_add(match.match_re)
+            self._matches_res[match.match_re] = match_num
+        else:
+            match_num = self._matches_res[match.match_re]
+
+        self._matches[match_num].append(match)
+
         return match_num
 
-    def match_add_callback(self, name, match_str, match_groups, callback):
+    def match_add_callback(self, name, match_str, match_groups, callback, usr=None):
         """
         Add a match with a callback.
 
@@ -191,19 +266,23 @@ class PidaTerminal(Terminal):
         :param callback:        the callback function to be called with the result of
                                 the match
         """
-        match = TerminalMatch(name, match_str, match_groups, callback)
+        match = TerminalMatch(name, match_str, match_groups, callback, usr=usr)
         return self.match_add_match(match)
 
-    def match_add_menu_callback(self, name, match_str, match_groups, callback):
-        match = TerminalMenuCallbackMatch(name, match_str, match_groups,
-            callback)
-        return self.match_add_match(match)
-
-    def match_add_menu(self, name, match_str, match_groups, menu=None):
+    def match_add_menu(self, name, match_str, match_groups, menu=None, usr=None):
         """
         Add a menu match object.
         """
-        match = TerminalMenuMatch(name, match_str, match_groups, menu)
+        match = TerminalMenuMatch(name, match_str, match_groups, menu, usr=usr)
+        return self.match_add_match(match)
+
+    def match_add_menu_callback(self, name, match_str, match_groups, 
+                                callback, usr=None):
+        """
+        Add a match that will result in a menu item for right click
+        """
+        match = TerminalMenuCallbackMatch(name, match_str, match_groups,
+            callback, usr=usr)
         return self.match_add_match(match)
 
     def match_menu_register_action(self, name, action):
