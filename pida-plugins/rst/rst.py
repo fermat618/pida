@@ -12,9 +12,11 @@ from collections import defaultdict
 
 # PIDA imports
 from pida.core.languages import LanguageService, Outliner, Validator
-from pida.utils.languages import (LANG_PRIO,
-    LANG_OUTLINER_TYPES, OutlineItem,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, ValidationError)
+from pida.utils.languages import (
+    LANG_PRIO,
+    VALIDATOR_LEVEL, VALIDATOR_KIND,
+    OutlineItem, ValidationError,
+)
 from pida.services.language import DOCTYPES
 
 # docutils imports
@@ -246,8 +248,7 @@ class RSTOutliner(Outliner):
     name = "rst outliner"
     description = _("An outliner for ReStructuredText")
 
-    section_types = (LANG_OUTLINER_TYPES.SECTION,
-                     LANG_OUTLINER_TYPES.PARAGRAPH)
+    section_types = ('section', 'paragraph')
 
     def get_outline(self):
         self.doc_items = RSTTokenList()
@@ -279,7 +280,7 @@ class RSTOutliner(Outliner):
                   isinstance(node, nodes.figure)):
                 new_item = True
                 name = node.attributes['uri']
-                type = LANG_OUTLINER_TYPES.UNKNOWN
+                type = 'unknown'
                 is_container = False
                 # nodes with options have no line attribute
                 linenumber = node.line or node.parent.line
@@ -312,20 +313,20 @@ class RSTValidator(Validator):
     name = "rst validator"
     description = _("A validator for ReStructuredText")
 
-    subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
+    kind = VALIDATOR_KIND.SYNTAX
 
     def get_validations(self):
         self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
         if self.doctree:
             for msg in self.doctree.parse_messages :
-                message, type_, filename, lineno = self._parse_error(msg)
+                message, level, filename, lineno = self._parse_error(msg)
                 # TODO need to filter out duplicates with no lineno set
                 # not sure why this happens...
                 if lineno:
                     yield ValidationError (message=message,
-                                           type_=type_,
-                                           subtype=self.subtype,
+                                           level=level,
+                                           kind=self.kind,
                                            filename=filename,
                                            lineno=lineno)
 
@@ -335,9 +336,7 @@ class RSTValidator(Validator):
         message = textwrap.fill(msg.children[0].children[0].data, width)
         # docutils defines the following error levels:
         #     "info/1", '"warning"/"2" (default), "error"/"3", "severe"/"4"
-        type_ = (LANG_VALIDATOR_TYPES.INFO, LANG_VALIDATOR_TYPES.WARNING,
-                 LANG_VALIDATOR_TYPES.ERROR, LANG_VALIDATOR_TYPES.FATAL
-                )[msg['level'] - 1]
+        type_ = VALIDATOR_LEVEL[msg['level']]
         filename = msg.source
         lineno = msg.line
         return (message, type_, filename, lineno)

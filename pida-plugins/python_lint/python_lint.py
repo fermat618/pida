@@ -21,8 +21,7 @@ from pida.core.options import OptionsConfig
 from pida.core.log import Log
 
 from pida.core.languages import (LanguageService, Validator, External)
-from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
+from pida.utils.languages import (
    Definition, Suggestion, Documentation, ValidationError)
 
 # locale
@@ -45,61 +44,17 @@ except ImportError:
     pylint = None
     BaseReporter = object
 
-# class SkeletonEventsConfig(EventsConfig):
-#
-#     def subscribe_all_foreign(self):
-#         self.subscribe_foreign('buffer', 'document-changed',
-#                     self.on_document_changed)
-#
-#     def on_document_changed(self, document):
-#         pass
-#
-#
-# class SkeletonFeaturesConfig(FeaturesConfig):
-#
-#     def subscribe_all_foreign(self):
-#         pass
-#
-#
-# class SkeletonOptionsConfig(OptionsConfig):
-#
-#     def create_options(self):
-#         self.create_option(
-#             'Skeleton_for_executing',
-#             _('Skeleton Executable for executing'),
-#             str,
-#             'Skeleton',
-#             _('The Skeleton executable when executing a module'),
-#         )
-#
-#
-# class SkeletonActionsConfig(ActionsConfig):
-#
-#     def create_actions(self):
-#         self.create_action(
-#             'execute_Skeleton',
-#             TYPE_NORMAL,
-#             _('Execute Skeleton Module'),
-#             _('Execute the current Skeleton module in a shell'),
-#             gtk.STOCK_EXECUTE,
-#             self.on_Skeleton_execute,
-#         )
-#
-#     def on_Skeleton_execute(self, action):
-#         #self.svc.execute_current_document()
-#         pass
 
 SUBTYPE_MAPPING = {
-'W0511': LANG_VALIDATOR_SUBTYPES.FIXME,
-'W0622': LANG_VALIDATOR_SUBTYPES.REDEFINED,
-'W0611': LANG_VALIDATOR_SUBTYPES.UNUSED,
-'W0612': LANG_VALIDATOR_SUBTYPES.UNUSED,
-'E1101': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
-'W0201': LANG_VALIDATOR_SUBTYPES.UNDEFINED,
-'W0212': LANG_VALIDATOR_SUBTYPES.PROTECTION,
-'W0703': LANG_VALIDATOR_SUBTYPES.DANGEROUS,
-'W0107': LANG_VALIDATOR_SUBTYPES.UNUSED,
-
+    'W0511': 'fixme',
+    'W0622': 'redefined',
+    'W0611': 'unused',
+    'W0612': 'unused',
+    'E1101': 'undefined',
+    'W0201': 'undefined',
+    'W0212': 'protection',
+    'W0703': 'dangerous',
+    'W0107': 'unused',
 }
 
 
@@ -107,7 +62,7 @@ class PythonError(ValidationError, Log):
     """
     Validator class for PyLint errrors
     """
-    def get_markup(self):
+    def markup_args(self):
         if self.message_args:
             try:
                 if isinstance(self.message_args, (list, tuple)):
@@ -122,39 +77,9 @@ class PythonError(ValidationError, Log):
                 message_string = self.message
         else:
             message_string = self.message
-        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
-            typec = self.lookup_color('pida-val-error')
-        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
-            typec = self.lookup_color('pida-val-info')
-        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
-            typec = self.lookup_color('pida-val-warning')
-        else:
-            typec = self.lookup_color('pida-val-def')
-        if typec:
-            typec = typec.to_string()
-        else:
-            linecolor = "black"
-        linecolor = self.lookup_color('pida-lineno')
-        if linecolor:
-            linecolor = linecolor.to_string()
-        else:
-            linecolor = "black"
-        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
-    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>  -  """
-    """<span size="small" style="italic">%(msg_id)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno,
-                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
-                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
-                                    self.subtype).capitalize()),
-                      'message':message_string,
-                      'linecolor': linecolor,
-                      'typec': typec,
-                      'msg_id': self.msg_id
-                      })
-        return markup
-    markup = property(get_markup)
-
+        mapping = ValidationError.markup_args(self)
+        mapping['message'] = message_string
+        return mapping
 
 from logilab.common.ureports import TextWriter
 from logilab.common.textutils import get_csv
@@ -225,26 +150,26 @@ class PidaLinter(PyLinter, Log):
             return        
         # update stats
         if msg_id[0] == 'I':
-            ty = LANG_VALIDATOR_TYPES.INFO
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'info'
+            sty = 'unknown'
         elif msg_id[0] == 'C':
-            ty = LANG_VALIDATOR_TYPES.INFO
-            sty = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+            ty = 'info'
+            sty = 'badstyle'
         elif msg_id[0] == 'R':
-            ty = LANG_VALIDATOR_TYPES.WARNING
-            sty = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+            ty = 'info'
+            sty = 'badstyle'
         elif msg_id[0] == 'W':
-            ty = LANG_VALIDATOR_TYPES.WARNING
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'warning'
+            sty = 'unknown'
         elif msg_id[0] == 'E':
-            ty = LANG_VALIDATOR_TYPES.ERROR
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'error'
+            sty = 'unknown'
         elif msg_id[0] == 'F':
-            ty = LANG_VALIDATOR_TYPES.FATAL
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'fatal'
+            sty = 'unknown'
         else:
-            ty = LANG_VALIDATOR_TYPES.UNKNOWN
-            sty = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+            ty = 'unknown'
+            sty = 'unknown'
 
         #msg_cat = MSG_TYPES[msg_id[0]]
         #self.stats[msg_cat] += 1
@@ -269,8 +194,8 @@ class PidaLinter(PyLinter, Log):
             path = node.root().file
         # add the message
         cmsg = PythonError( message = msg,
-                            type_ = ty,
-                            subtype = sty,
+                            level = ty,
+                            kind = sty,
                             filename = path,
                             message_args = args or (),
                             lineno = line or 1,

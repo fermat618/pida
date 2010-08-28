@@ -14,6 +14,8 @@ import sys
 from argparse import ArgumentParser
 from functools import partial
 
+import py
+
 import gtk
 import pida
 # locale
@@ -22,23 +24,25 @@ locale = Locale('pida')
 _ = locale.gettext
 
 
-base_path = os.path.abspath(os.path.dirname(pida.__file__))
+base_path = py.path.local(pida.__file__).pypkgpath()
+
 resources = dict(uidef=[], pixmaps=[], data=[])
 
 def find_resource(kind, name):
     for item in resources[kind]:
-        full = os.path.join(item, name)
-        if os.path.exists(full):
-            return full
+        full = item/name
+        if full.check():
+            return str(full)
     raise EnvironmentError('Could not find %s resource: %s' % (kind, name))
 
 def add_global_base(service_path):
+    service_path = py.path.local(service_path)
     for kind in 'uidef', 'pixmaps', 'data':
-        path = os.path.join(service_path, kind)
-        if os.path.isdir(path):
+        path = service_path/kind
+        if path.check(dir=True):
             resources[kind].append(path)
 
-add_global_base(os.path.join(base_path, 'resources'))
+add_global_base(base_path/'resources')
 
 get_pixmap_path = partial(find_resource, 'pixmaps')
 get_data_path = partial(find_resource, 'data')
@@ -60,10 +64,10 @@ def setup_paths(home):
         os.makedirs(plugins_dir)
 
     #XXX: development hack
-    buildin_plugins_dir = os.path.join(base_path, 'pida-plugins')
+    buildin_plugins_dir = base_path.dirpath()/'pida-plugins'
 
-    if os.path.exists(buildin_plugins_dir):
-        plugins_path = [plugins_dir, buildin_plugins_dir]
+    if buildin_plugins_dir.check(dir=1):
+        plugins_path = [plugins_dir, str(buildin_plugins_dir)]
     else:
         plugins_path = [plugins_dir]
 
@@ -104,23 +108,24 @@ parser.add_argument(
     '--killsettings', action="store_true",
     help=_('Resets all settings of pida to their default'))
 parser.add_argument('--pida-home', default='~/.pida2')
+parser.add_argument('files', nargs='*', default=[])
 
 
 env = dict(os.environ)
 
 on_windows = sys.platform == 'win32' #XXX: checked only on xp
 opts = None
-args = None
 
 def parse_args(argv):
-    global opts, args
-    opts, args = parser.parse_known_args(argv)
+    global opts
+    opts = parser.parse_args(argv)
 
     if opts.killsettings:
         opts.firstrun = True
 
     setup_paths(opts.pida_home)
     parse_gtk_rcfiles()
+    return opts
 
 
 parse_args([])
@@ -148,9 +153,6 @@ def workspace_manager():
 
 def killsettings():
     return opts.killsettings
-
-def get_args():
-    return args
 
 def get_plugin_global_settings_path(name, filename=None):
     path = os.path.join(pida_home, name)

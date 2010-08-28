@@ -37,7 +37,7 @@ from pida.core.options import OptionsConfig
 from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, Documentator)
 
-from pida.utils.languages import (LANG_PRIO, LANG_OUTLINER_TYPES, OutlineItem )
+from pida.utils.languages import LANG_PRIO, OutlineItem
 
 # locale
 from pida.core.locale import Locale
@@ -282,19 +282,21 @@ class CtagsOutliner(Outliner):
 		v	variable        
         """
         def v2t(i):
-            if i == 'm': return LANG_OUTLINER_TYPES.MEMBER
-            if i == 'c': return LANG_OUTLINER_TYPES.CLASS
-            if i == 'd': return LANG_OUTLINER_TYPES.DEFINE
-            if i == 'e': return LANG_OUTLINER_TYPES.ENUMERATION
-            if i == 'f': return LANG_OUTLINER_TYPES.FUNCTION
-            if i == 'g': return LANG_OUTLINER_TYPES.ENUMERATION_NAME
-            if i == 'n': return LANG_OUTLINER_TYPES.NAMESPACE
-            if i == 'p': return LANG_OUTLINER_TYPES.PROTOTYPE
-            if i == 's': return LANG_OUTLINER_TYPES.STRUCTURE
-            if i == 't': return LANG_OUTLINER_TYPES.TYPEDEF
-            if i == 'u': return LANG_OUTLINER_TYPES.UNION
-            if i == 'v': return LANG_OUTLINER_TYPES.VARIABLE
-            return LANG_OUTLINER_TYPES.UNKNOWN
+            mapping = {
+                'm': 'member',
+                'c': 'class',
+                'd': 'define',
+                'e': 'enumeration',
+                'f': 'function',
+                'g': 'enumeration_name',
+                'n': 'namespace',
+                'p': 'prototype',
+                's': 'structure',
+                't': 'typedef',
+                'u': 'union',
+                'v': 'variable',
+            }
+            return mapping.get(i, 'unknown')
 
         if len(tokrow) == 4 and isinstance(tokrow[3], int):
             return tokrow[3]
@@ -304,8 +306,8 @@ class CtagsOutliner(Outliner):
                 return v2t(i)# most common case: just one char
             elif i[:4] == "kind":
                 return v2t(i[5:])
-            return LANG_OUTLINER_TYPES.UNKNOWN
-        return LANG_OUTLINER_TYPES.UNKNOWN
+            return 'unknown'
+        return 'unknown'
 
 
     def _get_container_name(self, tokrow):
@@ -327,15 +329,9 @@ class CtagsOutliner(Outliner):
         """ class, enumerations, structs and unions are considerer containers.
             See Issue 13 for some issues we had with this.
         """
-        if self._get_type(tokrow) in (
-            LANG_OUTLINER_TYPES.CLASS,
-            LANG_OUTLINER_TYPES.ENUMERATION_NAME,
-            LANG_OUTLINER_TYPES.STRUCTURE,
-            LANG_OUTLINER_TYPES.UNION,
-            LANG_OUTLINER_TYPES.TYPEDEF): 
-                return True
-        return False
-            
+        return self._get_type(tokrow) in (
+            'class', 'enumeration_name',
+            'structure', 'union', 'typedef')
         # remove temp file
         #os.remove(tmpfile)
 

@@ -1,56 +1,56 @@
-from pida.utils.languages import LANG_OUTLINER_TYPES
+from pida.utils.languages import OUTLINER
 
 FILTERMAP = {
-    LANG_OUTLINER_TYPES.IMPORT: {
+    OUTLINER.IMPORT: {
         "name": "import",
         "alias": "include",
         "display": "Imports",
         "icon": "source-import",
         "default": True 
     },
-    LANG_OUTLINER_TYPES.BUILTIN: {
+    OUTLINER.BUILTIN: {
         "name": "builtin",
         "alias": "",
         "display": "Builtins",
         "icon": "source-module",
         "default": True
     },
-    LANG_OUTLINER_TYPES.ATTRIBUTE: {
+    OUTLINER.ATTRIBUTE: {
         "name": "attribute",
         "alias": "",
         "display": "Attributes",
         "icon": "source-attribute",
         "default": True
     },
-    LANG_OUTLINER_TYPES.METHOD: {
+    OUTLINER.METHOD: {
         "name": "method",
         "alias": "",
         "display": "Methods",
         "icon": "source-method",
         "default": True
     },
-    LANG_OUTLINER_TYPES.PROPERTY: {
+    OUTLINER.PROPERTY: {
         "name": "property",
         "alias": "",
         "display": "Properties",
         "icon": "source-property",
         "default": True
     },
-    LANG_OUTLINER_TYPES.FUNCTION: {
+    OUTLINER.FUNCTION: {
         "name": "function",
         "alias": "",
         "display": "Functions",
         "icon": "source-function",
         "default": True
     },
-    LANG_OUTLINER_TYPES.SUPERMETHOD: {
+    OUTLINER.SUPERMETHOD: {
         "name": "import",
         "alias": "include",
         "display": "Super methods",
         "icon": "source-extramethod",
         "default": True 
     },
-    LANG_OUTLINER_TYPES.SUPERPROPERTY: {
+    OUTLINER.SUPERPROPERTY: {
         "name": "import",
         "alias": "include",
         "display": "Super properties",

@@ -15,8 +15,8 @@ from pida.core.document import Document
 from pida.core.projects import Project
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
-from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
+from pida.utils.languages import (
+    COMPLETER, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
 from pida.utils.path import get_relative_path
 # locale

@@ -2,6 +2,7 @@
 import os
 import fnmatch
 from collections import defaultdict
+from itertools import chain
 try:
     import cPickle as pickle
 except ImportError:
@@ -250,36 +251,28 @@ class Indexer(Log):
         @dirs: search for a directory
         @case: if True a case sensetive glob is used
         """
+        result = []
+        caches = []
         if case:
             match = fnmatch.fnmatchcase
         else:
             match = fnmatch.fnmatch
 
-        if filename is None:
-            glob = True
-
         if dirs:
-            if glob:
-                lst = sorted(self.cache['dirnames'])
-                for item in lst:
-                    if filename is None or \
-                       match(item, filename):
-                        for i in self.cache['dirnames'][item]:
-                            yield i
-            else:
-                if filename in self.cache['dirnames']:
-                    for i in self.cache['dirnames'][filename]:
-                        yield i
+            caches.append(self.cache['dirnames'])
 
         if files:
+            caches.append(self.cache['filenames'])
+
+        for cache in caches:
             if glob:
-                lst = sorted(self.cache['filenames'])
+                lst = sorted(cache)
                 for item in lst:
-                    if filename is None or \
-                       match(item, filename):
-                        for i in self.cache['filenames'][item]:
-                            yield i
-            else:
-                if filename in self.cache['filenames']:
-                    for i in self.cache['filenames'][filename]:
-                        yield i
+                    if match(item, filename):
+                        result.extend(cache[item])
+            elif filename in cache:
+                result.extend(cache[filename])
+            elif filename is None:
+                result.extend(chain.from_iterable(v for k, v in sorted(cache.items())))
+
+        return result

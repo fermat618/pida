@@ -212,9 +212,9 @@ class FilemanagerView(PidaView):
         self._sort_combo = AttrSortCombo(self.file_list,
             [
                 ('is_dir_sort', _('Directories First')),
-                ('lower_name', _('File Name')),
-                ('name', _('Case Sensitive File Name')),
                 ('path', _('File Path')),
+                ('lower_name', _('File Name')),
+                ('name', _('File Name (Case Sensitive)')),
                 ('extension_sort', _('Extension')),
                 ('state', _('Version Control Status')),
             ],
@@ -315,24 +315,11 @@ class FilemanagerView(PidaView):
 
         self.create_ancest_tree()
 
-    # This is painful, and will always break
-    # So use the following method instead
-    def update_single_file(self, name, basepath):
-        def _update_file(oname, obasepath, state):
-            if oname == name and basepath == obasepath:
-                if name not in self.entries:
-                    self.entries[oname] = FileEntry(oname, obasepath, self)
-                self.entries[oname].state = state
-                self.show_or_hide(self.entries[oname])
-        for lister in self.svc.features['file_lister']:
-            GeneratorTask(lister, _update_file).start(self.path)
-
     def update_single_file(self, name, basepath, select=False):
         if basepath != self.path:
             return
         if name not in self.entries:
-            self.entries[name] = FileEntry(name, basepath, self)
-            self.show_or_hide(self.entries[name], select=select)
+            self.add_or_update_file(name, basepath, 'normal', select=select)
 
     def update_removed_file(self, filename):
         entry = self.entries.pop(filename, None)
@@ -928,7 +915,6 @@ class FileManagerActionsConfig(ActionsConfig):
 
     def _on_menu_down(self, menu, action):
         action.set_active(False)
-        print "down"
     
     def on_toggle_hidden(self, action):
         self.svc.set_opt('show_hidden', action.get_active())

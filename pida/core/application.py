@@ -73,9 +73,6 @@ except ImportError, e:
 
 
 def run_pida():
-    #XXX: nasty compat hack
-    import os
-    os.environ['PIDA_PATH'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     from pida.core.boss import Boss
     b = Boss() #XXX: relocate firstrun
 
@@ -83,9 +80,9 @@ def run_pida():
     try:
         #XXX: this sucks, needs propper errors
         b.start() # might raise runtime error
-        if environment.get_args():
+        if environment.opts.files:
             from pygtkhelpers.gthreads import gcall
-            gcall(b.cmd, 'buffer', 'open_files', files=environment.get_args()[1:])
+            gcall(b.cmd, 'buffer', 'open_files', files=environment.opts.files)
         b.loop_ui()
         return 0
     except Exception, e:
@@ -111,8 +108,7 @@ def set_trace():
 
 def main():
     global opts
-    environment.parse_args(sys.argv)
-    opts = environment.opts
+    opts = environment.parse_args(sys.argv[1:])
 
     #options.create_default_manager(pida.core.environment.workspace_name())
     from pida.core import log
@@ -135,11 +131,10 @@ def main():
         def kill(sm):
             sm.hide_and_quit()
 
-        file_names = []
-
-        if len(environment.get_args()) > 1:
-            for i in environment.get_args()[1:]:
-                file_names.append(os.path.abspath(i))
+        file_names = [
+            os.path.abspath(i)
+            for i in environment.opts.files
+        ]
 
         def command(sw, row=None):
             # command dispatcher for workspace window
@@ -173,6 +168,9 @@ def main():
         #this mainloop will exit when the workspacewindow is closes
         gtk.main()
 
+    if opts.version:
+        print _('PIDA, version %s') % pida.version
+        exit(0)
 
     if (om.open_workspace_manager() and not environment.workspace_set()) or \
         environment.workspace_manager():
@@ -182,9 +180,7 @@ def main():
             warnings.warn_explicit('python DBus bindings not available. '
                         'Not all functions available.', Warning, 'pida', '')
 
-    if opts.version:
-        print _('PIDA, version %s') % pida.version
-    elif opts.profile_path:
+    if opts.profile_path:
         print "---- Running in profile mode ----"
         import cProfile
         try:

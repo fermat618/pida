@@ -37,8 +37,8 @@ from pida.core.languages import (LanguageService, Outliner, Validator,
     Completer, LanguageServiceFeaturesConfig, LanguageInfo, Definer, 
     Documentator, External)
 
-from pida.utils.languages import (LANG_COMPLETER_TYPES,
-    LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_OUTLINER_TYPES, 
+from pida.utils.languages import (
+    COMPLETER, VALIDATOR_LEVEL, VALIDATOR_KIND,
     LANG_PRIO, Definition, Suggestion, Documentation, ValidationError)
 
 # services
@@ -131,14 +131,10 @@ class PythonOutliner(Outliner):
     description = _("A very deep and precises, but slow outliner")
 
 
-    filter_type = (LANG_OUTLINER_TYPES.IMPORT,
-                    LANG_OUTLINER_TYPES.BUILTIN,
-                    LANG_OUTLINER_TYPES.METHOD,
-                    LANG_OUTLINER_TYPES.FUNCTION,
-                    LANG_OUTLINER_TYPES.PROPERTY,
-                    LANG_OUTLINER_TYPES.ATTRIBUTE,
-                    LANG_OUTLINER_TYPES.SUPERMETHOD,
-                    )
+    filter_type = (
+        'import', 'builtin', 'method', 'function',
+        'property', 'attribute', 'supermethod',
+        )
 
     def get_outline(self):
         from rope.base.exceptions import RopeError
@@ -222,50 +218,12 @@ def _create_exception_validation(e):
     msg.lineno = lineno
     msg.message_args = (line,)
     msg.message = '<tt>%%s</tt>\n<tt>%s^</tt>' % (' ' * (offset - 2))
-    msg.type_ = LANG_VALIDATOR_TYPES.ERROR
+    msg.type_ = 'error'
     if isinstance(e, SyntaxError):
-        msg.subtype = LANG_VALIDATOR_SUBTYPES.SYNTAX
+        msg.kind = 'syntax'
     else:
-        msg.subtype = LANG_VALIDATOR_SUBTYPES.INDENTATION
+        msg.kind = 'indentation'
     return [msg]
-
-class PythonError(ValidationError):
-    def get_markup(self):
-        args = [('<b>%s</b>' % arg) for arg in self.message_args]
-        message_string = self.message % tuple(args)
-        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
-            typec = self.lookup_color('pida-val-error')
-        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
-            typec = self.lookup_color('pida-val-info')
-        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
-            typec = self.lookup_color('pida-val-warning')
-        else:
-            typec = self.lookup_color('pida-val-def')
-        
-        if typec:
-            typec = typec.to_string()
-        else:
-            typec = "black"
-        
-        linecolor = self.lookup_color('pida-lineno')
-        if linecolor:
-            linecolor = linecolor.to_string()
-        else:
-            linecolor = "black"
-        
-        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
-    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno, 
-                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
-                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
-                                    self.subtype).capitalize()),
-                      'message':message_string,
-                      'linecolor': linecolor,
-                      'typec': typec,
-                      })
-        return markup
-    markup = property(get_markup)
 
 class PythonValidator(Validator):
 
@@ -285,33 +243,34 @@ class PythonValidator(Validator):
             w = Checker(tree, filename)
             messages = w.messages
         for m in messages:
-            type_ = getattr(m, 'type_', LANG_VALIDATOR_TYPES.UNKNOWN)
-            subtype = getattr(m, 'subtype', LANG_VALIDATOR_SUBTYPES.UNKNOWN)
 
             #FIXME add pyflakes 0.3 types
             #FIXME make mapping
             if isinstance(m, pyflakes.messages.UnusedImport):
-                type_ = LANG_VALIDATOR_TYPES.INFO
-                subtype = LANG_VALIDATOR_SUBTYPES.UNUSED
+                level = VALIDATOR_LEVEL.INFO
+                kind = VALIDATOR_KIND.UNUSED
             elif isinstance(m, pyflakes.messages.RedefinedWhileUnused):
-                type_ = LANG_VALIDATOR_TYPES.WARNING
-                subtype = LANG_VALIDATOR_SUBTYPES.REDEFINED
+                level = VALIDATOR_LEVEL.WARNING
+                kind = VALIDATOR_KIND.REDEFINED
             elif isinstance(m, pyflakes.messages.ImportStarUsed):
-                type_ = LANG_VALIDATOR_TYPES.WARNING
-                subtype = LANG_VALIDATOR_SUBTYPES.BADSTYLE
+                level = VALIDATOR_LEVEL.WARNING
+                kind = VALIDATOR_KIND.BADSTYLe
             elif isinstance(m, pyflakes.messages.UndefinedName):
-                type_ = LANG_VALIDATOR_TYPES.ERROR
-                subtype = LANG_VALIDATOR_SUBTYPES.UNDEFINED
+                level = VALIDATOR_LEVEL.ERROR
+                kind = VALIDATOR_KIND.UNDEFINED
             elif isinstance(m, pyflakes.messages.DuplicateArgument):
-                type_ = LANG_VALIDATOR_TYPES.ERROR
-                subtype = LANG_VALIDATOR_SUBTYPES.DUPLICATE
+                type_ = VALIDATOR_LEVEL.ERROR
+                kind = VALIDATOR_KIND.DUPLICATE
+            else:
+                level = VALIDATOR_LEVEL.UNKNOWN
+                kind = VALIDATOR_KIND.UNKNOWN
 
-            ve = PythonError(
+            ve = ValidationError(
                 message=m.message,
                 message_args=m.message_args,
                 lineno=m.lineno,
-                type_=type_,
-                subtype=subtype,
+                level=level,
+                kind=kind,
                 filename=filename
                 )
             yield ve
@@ -342,22 +301,15 @@ class PythonCompleter(Completer):
                 r = Suggestion(c.name)
                 #'variable', 'class', 'function', 'imported' , 'paramter'
                 if keyword.iskeyword(c.name):
-                    r.type_ = LANG_COMPLETER_TYPES.KEYWORD
-                elif c.type == 'variable':
-                    r.type_ = LANG_COMPLETER_TYPES.VARIABLE
-                elif c.type == 'class':
-                    r.type_ = LANG_COMPLETER_TYPES.CLASS
-                elif c.type == 'builtin':
-                    r.type_ = LANG_COMPLETER_TYPES.BUILTIN
-                elif c.type == 'function':
-                    r.type_ = LANG_COMPLETER_TYPES.FUNCTION
-                elif c.type == 'parameter':
-                    r.type_ = LANG_COMPLETER_TYPES.PARAMETER
+                    r.type_ = COMPLETER.KEYWORD
+                elif c.type in ('variable','class', 'builtin',
+                                'function', 'parameter',):
+                    r.type_ = getattr(COMPLETER, c.type.upper())
                 elif c.type == None:
                     if c.kind == "parameter_keyword":
-                        r.type_ = LANG_COMPLETER_TYPES.PARAMETER
+                        r.type_ = COMPLETER.PARAMETER
                 else:
-                    r.type_ = LANG_COMPLETER_TYPES.UNKNOWN
+                    r.type_ = COMPLETER.UNKNOWN
                 yield r
 
 class PythonDefiner(Definer):

@@ -8,8 +8,11 @@ List of general Language classes.
 
 """
 from .addtypes import Enumeration
+from .symbols import Symbols
 from .path import get_line_from_file
+from .descriptors import cached_property
 
+import itertools
 
 
 #!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -19,33 +22,42 @@ from .path import get_line_from_file
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+COMPLETER = Symbols('completer', [
+    'unknown',
+    'attribute',
+    'class',
+    'method',
+    'function',
+    'module',
+    'property',
+    'extramethod',
+    'variable',
+    'import',
+    'parameter',
+    'builtin',
+    'keyword',
+    'snippet',
+])
 
-# completer types
-LANG_COMPLETER_TYPES = Enumeration('LANG_COMPLETER_TYPES',
-    ('UNKNOWN', 'ATTRIBUTE', 'CLASS', 'METHOD', 'FUNCTION', 'MODULE', 
-    'PROPERTY', 'EXTRAMETHOD', 'VARIABLE', 'IMPORT', 'PARAMETER', 'BUILTIN', 
-    'KEYWORD', 'SNIPPET'))
 
 
-# main types
-LANG_VALIDATOR_TYPES = Enumeration('LANG_TYPES',
-    ('UNKNOWN', 'INFO', 'WARNING', 'ERROR', 'FATAL'))
+VALIDATOR_KIND = Symbols('validation errors',
+    ('unknown', 'syntax', 'indentation', 'undefined', 'redefined', 'badstyle',
+     'duplicate', 'unused', 'fixme', 'protection', 'dangerous'))
+
+VALIDATOR_LEVEL = Symbols('validation level',
+    ('unknown', 'info', 'warning', 'error', 'fatal'))
+
 
 # validation sub types
-LANG_VALIDATOR_SUBTYPES = Enumeration('LANG_VALIDATION_ERRORS',
-    ('UNKNOWN', 'SYNTAX', 'INDENTATION', 'UNDEFINED', 'REDEFINED', 'BADSTYLE',
-     'DUPLICATE', 'UNUSED', 'FIXME', 'PROTECTION', 'DANGEROUS'))
 
-# validation sub types
+OUTLINER = Symbols('outline',
+ ('unknown',
+ 'attribute', 'builtin', 'class', 'define', 'enumeration',
+ 'enumeration_name', 'function', 'import', 'member', 'method', 'property',
+ 'prototype', 'structure', 'supermethod', 'superproperty', 'typedef', 'union',
+ 'variable', 'namespace', 'element', 'section', 'chapter', 'paragraph'))
 
-LANG_TYPES = Enumeration('LANG_TYPES',
- ('', 'UNKNOWN', 
- 'ATTRIBUTE', 'BUILTIN', 'CLASS', 'DEFINE', 'ENUMERATION',
- 'ENUMERATION_NAME', 'FUNCTION', 'IMPORT', 'MEMBER', 'METHOD', 'PROPERTY',
- 'PROTOTYPE', 'STRUCTURE', 'SUPERMETHOD', 'SUPERPROPERTY', 'TYPEDEF', 'UNION',
- 'VARIABLE', 'NAMESPACE', 'ELEMENT', 'SECTION', 'CHAPTER', 'PARAGRAPH'))
-
-LANG_OUTLINER_TYPES = LANG_TYPES
 
 LANG_PRIO = Enumeration('LANG_PRIORITIES',
 (
@@ -59,29 +71,29 @@ LANG_PRIO = Enumeration('LANG_PRIORITIES',
 
 
 LANG_IMAGE_MAP = {
-    LANG_TYPES.ATTRIBUTE: 'source-attribute',
-    LANG_TYPES.BUILTIN: 'source-attribute',
-    LANG_TYPES.CLASS: 'source-class',
-    LANG_TYPES.DEFINE: 'source-define',
-    LANG_TYPES.ENUMERATION: 'source-enum',
-    LANG_TYPES.ENUMERATION_NAME: 'source-enumarator',
-    LANG_TYPES.FUNCTION: 'source-function',
-    LANG_TYPES.IMPORT: 'source-import',
-    LANG_TYPES.MEMBER: 'source-member',
-    LANG_TYPES.METHOD: 'source-method',
-    LANG_TYPES.PROTOTYPE: 'source-interface',
-    LANG_TYPES.PROPERTY: 'source-property',
-    LANG_TYPES.METHOD: 'source-method',
-    LANG_TYPES.SUPERMETHOD: 'source-extramethod',
+    OUTLINER.ATTRIBUTE: 'source-attribute',
+    OUTLINER.BUILTIN: 'source-attribute',
+    OUTLINER.CLASS: 'source-class',
+    OUTLINER.DEFINE: 'source-define',
+    OUTLINER.ENUMERATION: 'source-enum',
+    OUTLINER.ENUMERATION_NAME: 'source-enumarator',
+    OUTLINER.FUNCTION: 'source-function',
+    OUTLINER.IMPORT: 'source-import',
+    OUTLINER.MEMBER: 'source-member',
+    OUTLINER.METHOD: 'source-method',
+    OUTLINER.PROTOTYPE: 'source-interface',
+    OUTLINER.PROPERTY: 'source-property',
+    OUTLINER.METHOD: 'source-method',
+    OUTLINER.SUPERMETHOD: 'source-extramethod',
     #FIXME: superproperty icon
-    LANG_TYPES.SUPERPROPERTY: 'source-property',
-    LANG_TYPES.TYPEDEF: 'source-typedef',
-    LANG_TYPES.UNION: 'source-union',
-    LANG_TYPES.VARIABLE: 'source-variable',
-    LANG_TYPES.SECTION: 'source-section',
-    LANG_TYPES.PARAGRAPH: 'source-paragraph',
-    LANG_TYPES.NAMESPACE: 'source-namespace',
-    LANG_TYPES.ELEMENT: 'source-element',
+    OUTLINER.SUPERPROPERTY: 'source-property',
+    OUTLINER.TYPEDEF: 'source-typedef',
+    OUTLINER.UNION: 'source-union',
+    OUTLINER.VARIABLE: 'source-variable',
+    OUTLINER.SECTION: 'source-section',
+    OUTLINER.PARAGRAPH: 'source-paragraph',
+    OUTLINER.NAMESPACE: 'source-namespace',
+    OUTLINER.ELEMENT: 'source-element',
 }
 
 
@@ -102,10 +114,19 @@ class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
     message_args = None
-    type_ = LANG_VALIDATOR_TYPES.UNKNOWN
-    subtype = LANG_VALIDATOR_SUBTYPES.UNKNOWN
+    level = VALIDATOR_LEVEL.UNKNOWN
+    kind = VALIDATOR_KIND.UNKNOWN
     filename = None
     lineno = None
+
+    markup_string = (
+        '<tt><span color="{linecolor}">{lineno}</span> </tt>'
+        '<span foreground="{level_color}" style="italic" weight="bold">'
+        '{level}</span>:'
+        '<span style="italic">{kind}</span>\n'
+        '{message}'
+    )
+
 
     def __str__(self):
         return '%s:%s: %s' % (self.filename, self.lineno, self.message)
@@ -119,42 +140,27 @@ class ValidationError(InitObject):
         # FIXME
         pass
 
-    def get_markup(self):
-        if self.type_ == LANG_VALIDATOR_TYPES.ERROR:
-            typec = self.lookup_color('pida-val-error')
-        elif self.type_ == LANG_VALIDATOR_TYPES.INFO:
-            typec = self.lookup_color('pida-val-info')
-        elif self.type_ == LANG_VALIDATOR_TYPES.WARNING:
-            typec = self.lookup_color('pida-val-warning')
-        else:
-            typec = self.lookup_color('pida-val-def')
-        
-        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
-    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno, 
-                      'type':_(LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize()),
-                      'subtype':_(LANG_VALIDATOR_SUBTYPES.whatis(
-                                    self.subtype).capitalize()),
-                      'message':self.message,
-                      'linecolor': color_to_string(self.lookup_color('pida-lineno')),
-                      'typec': color_to_string(typec),
-                      })
-        return markup
-    markup = property(get_markup)
-#     def get_markup(self):
-#         #args = [('<b>%s</b>' % arg) for arg in msg.message_args]
-#         #message_string = self.message % tuple(args)
-#         #msg.name = msg.__class__.__name__
-#         markup = ('<tt>%s </tt><i>%s:%s</i>\n%s' % 
-#                       (self.lineno, 
-#                       LANG_VALIDATOR_TYPES.whatis(self.type_).capitalize(),
-#                       LANG_VALIDATOR_SUBTYPES.whatis(self.subtype).capitalize(),
-#                       self.message))
-#         return markup
-#     
-#     markup = property(get_markup)
 
+    @property
+    def markup(self):
+        return self.markup_string.format(**self.markup_args())
+
+    def markup_args(self):
+        mapping = {
+            VALIDATOR_LEVEL.ERROR: 'pida-val-error',
+            VALIDATOR_LEVEL.INFO: 'pida-val-info',
+            VALIDATOR_LEVEL.WARNING: 'pida-val-warning',
+        }
+        typec = mapping.get(self.kind, 'pida-val-def')
+
+        return {
+            'lineno': self.lineno,
+            'level': self.level.capitalize(),
+            'level_color': color_to_string(typec),
+            'kind': self.kind.capitalize(),
+            'message': self.message,
+            'linecolor': color_to_string(self.lookup_color('pida-lineno')),
+        }
 
 
 
@@ -162,7 +168,7 @@ class OutlineItem(InitObject):
     """
     Outlines are returned by an Outliner class
     """
-    type = LANG_TYPES.UNKNOWN
+    type = OUTLINER.UNKNOWN
     name = ''
     parent = None
     id = None
@@ -175,12 +181,9 @@ class OutlineItem(InitObject):
     def get_markup(self):
         return '<b>%s</b>' % self.name
 
-    def _get_icon_name(self):
-        return getattr(self, '_icon_name_set', 
-                                    LANG_IMAGE_MAP.get(self.type, ''))
-    def _set_icon_name(self, value):
-        self._icon_name_set = value
-    icon_name = property(_get_icon_name, _set_icon_name)
+    @cached_property
+    def icon_name(self):
+        return LANG_IMAGE_MAP.get(self.type, '')
 
     #XXX: these 2 hacks need tests!!!
     @property
@@ -202,7 +205,7 @@ class OutlineItem(InitObject):
 
 class Definition(InitObject):
     """Returned by a Definer instance"""
-    type = LANG_TYPES.UNKNOWN
+    type = OUTLINER.UNKNOWN
     file_name = None
     offset = None
     length = None
@@ -218,13 +221,9 @@ class Definition(InitObject):
             where = " line %s " % self.line
         return '<Definition %s%s>' % (self.file_name, where)
 
-    def _get_icon_name(self):
-        return getattr(self, '_icon_name_set', 
-                                    LANG_IMAGE_MAP.get(self.type, ''))
-    def _set_icon_name(self, value):
-        self._icon_name_set = value
-
-    icon_name = property(_get_icon_name, _set_icon_name)
+    @cached_property
+    def icon_name(self):
+        return LANG_IMAGE_MAP.get(self.type, '')
 
     def _get_signature(self):
         if self.line is None and self.offset is None:
@@ -243,7 +242,7 @@ class Suggestion(unicode):
     """
     Suggestions are returned by an Completer class
     """
-    type_ = LANG_TYPES.UNKNOWN
+    type_ = COMPLETER.UNKNOWN
     doc = None
     docpath = None
     signature = None

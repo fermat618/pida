@@ -517,7 +517,7 @@ class BrowserView(PidaView):
                 )
             for f in self.filter_map:
                 tool_button = gtk.ToggleToolButton()
-                tool_button.set_name(str(f))
+                tool_button.set_data('pida/outliner', f)
                 tool_button.set_active(self.filter_map[f])
                 #FIXME no tooltip on win32
                 if not on_windows:
@@ -539,7 +539,8 @@ class BrowserView(PidaView):
         self.options_vbox.show_all()
 
     def on_filter_toggled(self, but, outliner):
-        self.filter_map[int(but.get_name())] = not self.filter_map[int(but.get_name())]
+        name = but.get_data('pida/outliner')
+        self.filter_map[name] = not self.filter_map[name]
         #self.set_outliner(outliner, self.document)
         self.filter_model.refilter()
 

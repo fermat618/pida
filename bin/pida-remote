@@ -1,8 +1,20 @@
 #! /usr/bin/env python
 
-import os, sys
+import os
+import sys
 
-import pida
+
+import py
+bin = py.path.local(__file__).dirpath()
+base = bin.dirpath()
+
+try:
+    pida = base.join('pida').pyimport()
+    externals = base.join('externals')
+    if externals.check():
+        sys.path.insert(0, str(externals))
+except py.error.ENOENT:
+    import pida
 
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)

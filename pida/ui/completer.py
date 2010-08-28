@@ -7,8 +7,10 @@
 import gtk
 import gobject
 import os
-from pida.utils.languages import LANG_COMPLETER_TYPES
+from pida.utils.languages import COMPLETER
 
+
+#XXX: register as stock icons
 def _load_pix(fn):
     return gtk.gdk.pixbuf_new_from_file(
         os.path.join(os.path.dirname(__file__),
@@ -16,19 +18,19 @@ def _load_pix(fn):
 
 
 _PIXMAPS = {
-    LANG_COMPLETER_TYPES.UNKNOWN:     _load_pix('element-event-16.png'),
-    LANG_COMPLETER_TYPES.ATTRIBUTE:   _load_pix('source-attribute.png'),
-    LANG_COMPLETER_TYPES.CLASS:       _load_pix('source-class.png'),
-    LANG_COMPLETER_TYPES.FUNCTION:    _load_pix('source-attribute.png'), # FIXME
-    LANG_COMPLETER_TYPES.METHOD:      _load_pix('source-attribute.png'),
-    LANG_COMPLETER_TYPES.MODULE:      _load_pix('source-method.png'),
-    LANG_COMPLETER_TYPES.PROPERTY:    _load_pix('source-property.png'),
-    LANG_COMPLETER_TYPES.EXTRAMETHOD: _load_pix('source-extramethod.png'),
-    LANG_COMPLETER_TYPES.VARIABLE:    _load_pix('source-attribute.png'), # FIXME
-    LANG_COMPLETER_TYPES.IMPORT:      _load_pix('source-import.png'),
-    LANG_COMPLETER_TYPES.PARAMETER:   _load_pix('source-attribute.png'), # FIXME
-    LANG_COMPLETER_TYPES.BUILTIN:     _load_pix('source-attribute.png'), # FIXME
-    LANG_COMPLETER_TYPES.KEYWORD:     _load_pix('source-attribute.png'), # FIXME
+    COMPLETER.UNKNOWN:     _load_pix('element-event-16.png'),
+    COMPLETER.ATTRIBUTE:   _load_pix('source-attribute.png'),
+    COMPLETER.CLASS:       _load_pix('source-class.png'),
+    COMPLETER.FUNCTION:    _load_pix('source-attribute.png'), # FIXME
+    COMPLETER.METHOD:      _load_pix('source-attribute.png'),
+    COMPLETER.MODULE:      _load_pix('source-method.png'),
+    COMPLETER.PROPERTY:    _load_pix('source-property.png'),
+    COMPLETER.EXTRAMETHOD: _load_pix('source-extramethod.png'),
+    COMPLETER.VARIABLE:    _load_pix('source-attribute.png'), # FIXME
+    COMPLETER.IMPORT:      _load_pix('source-import.png'),
+    COMPLETER.PARAMETER:   _load_pix('source-attribute.png'), # FIXME
+    COMPLETER.BUILTIN:     _load_pix('source-attribute.png'), # FIXME
+    COMPLETER.KEYWORD:     _load_pix('source-attribute.png'), # FIXME
 }
 
 
@@ -39,10 +41,7 @@ class SuggestionsList(gtk.ListStore):
     @staticmethod
     def from_dbus(args):
         rv = list(args)
-        if args[0] in _PIXMAPS:
-            rv[0] = _PIXMAPS[args[0]]
-        else:
-            rv[0] = _PIXMAPS[LANG_COMPLETER_TYPES.UNKNOWN]
+        rv[0] = _PIXMAPS.get(args[0], _PIXMAPS[COMPLETER.UNKNOWN])
         return rv
 
 class PidaCompleterWindow(gtk.Window):
@@ -379,8 +378,8 @@ if __name__ == "__main__":
     i = 0
     for x in ['ase', 'assdf', 'Asdf', 'zasd', 'Zase', 'form', 'in', 'of', 'BLA',
               'taT', 'tUt', 'df', 'asdf', 'asdfa', 'sd', 'sdfsf', 'ssdfsdf', 'sd']:
-        l.append(SuggestionsList.from_dbus((i, x)))
-        i = i + 1%7
+        l.append(SuggestionsList.from_dbus((COMPLETER[i], x)))
+        i = (i + 1)%7
 
     p.set_model(l)
 
