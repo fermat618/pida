@@ -5,25 +5,25 @@
 """
 
 from functools import partial, wraps
-
+import os
 
 import dbus
 from dbus.service import BusName
 from dbus.lowlevel import MethodCallMessage
+from json import loads
 
 DBUS_NS_PREFIX = 'uk.co.pida.pida'
-DBUS_PATH_PREFIX = '/uk/co/pida/pida'
+DBUS_PATH_PREFIX = ('/uk/co/pida/pida',)
 
 BUS = dbus.SessionBus()
-UUID = "p" + BUS.get_unique_name()[1:].replace(".","_")
+UUID = "p" + str(os.getpid())
 
 def DBUS_NS(*path):
     return ".".join((DBUS_NS_PREFIX, ) + path)
 
 def DBUS_PATH(*path, **kwargs):
-    return "/".join((DBUS_PATH_PREFIX,) + path)
+    return "/".join(DBUS_PATH_PREFIX + path)
 
-BUS_NAME = BusName(DBUS_NS(UUID), bus=dbus.SessionBus())
 
 def _dbus_decorator(f, ns=None, suffix=None):
     @wraps(f)
@@ -44,84 +44,64 @@ def _dbus_decorator(f, ns=None, suffix=None):
 EXPORT = partial(_dbus_decorator, dbus.service.method)
 SIGNAL = partial(_dbus_decorator, dbus.service.signal)
 
-_ACTIVE_PIDAS = {}
-_CALLBACKS = {}
 
-def rec_pida_pong(*args):
-    global _ACTIVE_PIDAS
-    _ACTIVE_PIDAS[str(args[0])] = args
+def list_pida_bus_names(include_self=False):
+    session = dbus.SessionBus()
+    bus_names = map(str, session.list_names())
+    return [ name for name in bus_names 
+             if 'pida.pida' in name and
+             (include_self or UUID not in name) ]
 
-
-def list_pida_instances(include_this=False, callback=None, callback_done=None,
-                        ext=True, timeout=1, block=False):
+def list_pida_instances(include_this=False, timeout=1):
     """
     Return a tuple of running pida session identifiers.
     Each of this identifiers can be used to connect to a remote Pida
     instance
     """
-    global _ACTIVE_PIDAS
-    if not callback:
-        callback = rec_pida_pong
-        _ACTIVE_PIDAS = {}
-    if ext:
-        pong = 'PONG_PIDA_INSTANCE_EXT'
-        ping = 'PING_PIDA_INSTANCE_EXT'
-    else:
-        pong = 'PONG_PIDA_INSTANCE'
-        ping = 'PING_PIDA_INSTANCE'
+
+    pida_names = list_pida_bus_names(include_self=include_this)
+
     session = dbus.SessionBus()
-    
-    if not _CALLBACKS.has_key(rec_pida_pong):
-        _CALLBACKS[rec_pida_pong] = session.add_signal_receiver(
-            rec_pida_pong, pong, dbus_interface=DBUS_NS('appcontroller'))
-    
-    if not _CALLBACKS.has_key(callback):
-        # this is ugly but needed to prevent multi registration
-        _CALLBACKS[callback] = session.add_signal_receiver(
-            callback, pong, dbus_interface=DBUS_NS('appcontroller'))
-    m = dbus.lowlevel.SignalMessage('/', DBUS_NS('appcontroller'), ping)
+    result = []
+    for name in pida_names:
+        #XXX: this is sync, that may be evil
+        # we asume that only active and
+        # working instances expose the object
+        try:
+            app = session.get_object(
+                name,
+                '/uk/co/pida/pida/appcontroller',
+                )
+            stat = loads(app.get_instance_status(timeout=1))
+            stat['name'] = name
+            result.append(stat)
+        except Exception, e:
+            #XXX: log
+            print e
+            print 'failed to aks state of', name
+    return result
 
-    if block:
-        # this is ugly, but blocking calls with send_message doesn't work
-        import gtk
 
-        def gq(rep):
-            gtk.main_quit()
-
-        session.send_message_with_reply(m, gq, timeout)
-
-        gtk.main()
-        return _ACTIVE_PIDAS.values()
-    if callback_done:
-        session.send_message_with_reply(m, callback_done, timeout)
-    else:
-        session.send_message(m)
-
-    return None
 
 
 class PidaRemote(object):
     """
     Constructs a proxy object to a remote pida instance
     """
-    def __init__(self, pid, 
+    def __init__(self, pid,
                     object_path=(),
-                    conn=dbus.SessionBus(), 
+                    conn=dbus.SessionBus(),
                     bus_name=None):
 
         self._path = DBUS_PATH(*object_path)
-        assert len(pid)
+        assert pid
         # pid seem to be of 
-        if pid[0] == "p":
-            pid = ":" + pid[1:].replace("_", ".")
-            self._bus_name = pid
-        elif pid[0] == ":":
+        if bus_name:
+            self._bus_name = bus_name
+        elif pid[0] == ":": # a dbus unique name
             self._bus_name = pid
         else:
-            if not bus_name:
-                self._bus_name=DBUS_NS(pid)
-            else:
-                self._bus_name=bus_name
+            self._bus_name = DBUS_NS(pid)
 
         self._pid = pid
         self._conn = conn
@@ -136,7 +116,7 @@ class PidaRemote(object):
 
         ns = fpath.replace("/", ".")[1:]
 
-        if kwargs.has_key('signature'):
+        if 'signature' in kwargs:
             sig = kwargs['signature']
         else:
             sig = MethodCallMessage.guess_signature(*args)
@@ -166,7 +146,7 @@ class PidaRemote(object):
 
         ns = fpath.replace("/", ".")[1:]
 
-        if kwargs.has_key('signature'):
+        if 'signature' in kwargs:
             sig = kwargs['signature']
         else:
             sig = MethodCallMessage.guess_signature(*args)

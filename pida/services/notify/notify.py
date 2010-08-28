@@ -15,7 +15,8 @@ import datetime
 import locale
 import logging
 
-from kiwi.ui.objectlist import Column, ObjectList
+from pygtkhelpers.utils import gsignal
+from pygtkhelpers.ui.objectlist import Column, ObjectList
 from pida.ui.views import PidaView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
@@ -24,9 +25,8 @@ from pida.core.options import OptionsConfig, choices
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, 
                                TYPE_REMEMBER_TOGGLE)
 from pida.ui.buttons import create_mini_button
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 import gobject
-from kiwi.utils import gsignal
 
 # locale
 from pida.core.locale import Locale
@@ -205,11 +205,10 @@ class NotifyView(PidaView):
     def create_list(self):
         self.notify_list = ObjectList([
                 Column('stock', use_stock=True),
-                Column('time', sorted=True, order=gtk.SORT_DESCENDING),
+                Column('time', sorted=True),
                 Column('markup', use_markup=True, expand=True),
             ])
         self.notify_list.set_headers_visible(False)
-        self.notify_list.connect('double-click', self.on_notify_list_click)
         self._hbox.pack_start(self.notify_list)
 
     def create_toolbar(self):
@@ -221,7 +220,7 @@ class NotifyView(PidaView):
         self._hbox.pack_start(self._bar, expand=False)
         self._bar.show_all()
 
-    def on_notify_list_click(self, olist, item):
+    def on_notify_list__item_activated(self, olist, item):
         item.cb_clicked(None, None)
 
     def on_clear_button(self, w):

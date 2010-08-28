@@ -17,7 +17,6 @@ class DoctypeTest(TestCase):
         from pida.services.language import deflang
         self.doctypes._parse_map(deflang.DEFMAPPING)
 
-
     def test_new_doctype(self):
         self.assertRaises(TypeError, DocType)
         doc = DocType('test', 'Some Test')
@@ -55,35 +54,35 @@ class DoctypeTest(TestCase):
         self.assertEqual(self.doctypes.get_fuzzy_list('pyThoN'),
                          [self.doctypes['Python']])
         self.assertEqual(self.doctypes.get_fuzzy_list('py', True),
-                         [self.doctypes['PythonConsole'], 
-                         self.doctypes['PythonTraceback'], 
+                         [self.doctypes['PythonConsole'],
+                         self.doctypes['PythonTraceback'],
                          self.doctypes['Python']])
 
     def test_filename(self):
         self.build_doctypes()
-        self.assertEqual(self.doctypes.type_by_filename('source.c'), 
+        self.assertEqual(self.doctypes.type_by_filename('source.c'),
                          self.doctypes['C'])
-        self.assertEqual(self.doctypes.type_by_filename('source.h'), 
+        self.assertEqual(self.doctypes.type_by_filename('source.h'),
                          self.doctypes['C'])
-        self.assertEqual(self.doctypes.type_by_filename('source.cpp'), 
+        self.assertEqual(self.doctypes.type_by_filename('source.cpp'),
                          self.doctypes['Cpp'])
-        self.assertEqual(self.doctypes.type_by_filename('LICENSE'), 
+        self.assertEqual(self.doctypes.type_by_filename('LICENSE'),
                          None)
-        self.assertEqual(self.doctypes.type_by_filename('some.tk'), 
+        self.assertEqual(self.doctypes.type_by_filename('some.tk'),
                          self.doctypes['Tcl'])
-        self.assertEqual(self.doctypes.type_by_filename('some.tcl'), 
+        self.assertEqual(self.doctypes.type_by_filename('some.tcl'),
                          self.doctypes['Tcl'])
-        self.assertEqual(self.doctypes.type_by_filename('some.c.tcl'), 
+        self.assertEqual(self.doctypes.type_by_filename('some.c.tcl'),
                          self.doctypes['Tcl'])
-        self.assertEqual(self.doctypes.type_by_filename('sources.list'), 
+        self.assertEqual(self.doctypes.type_by_filename('sources.list'),
                          self.doctypes['SourcesList'])
-        self.assertEqual(self.doctypes.type_by_filename('1sources.list'), 
+        self.assertEqual(self.doctypes.type_by_filename('1sources.list'),
                          None)
-        self.assertEqual(self.doctypes.type_by_filename('sources.list_'), 
+        self.assertEqual(self.doctypes.type_by_filename('sources.list_'),
                          None)
-        self.assertEqual(self.doctypes.type_by_filename('makefile.am'), 
+        self.assertEqual(self.doctypes.type_by_filename('makefile.am'),
                          self.doctypes['Makefile'])
-        self.assertEqual(self.doctypes.type_by_filename('Makefile'), 
+        self.assertEqual(self.doctypes.type_by_filename('Makefile'),
                          self.doctypes['Makefile'])
-        self.assertEqual(self.doctypes.type_by_filename('Makefile.in'), 
+        self.assertEqual(self.doctypes.type_by_filename('Makefile.in'),
                          self.doctypes['Makefile'])

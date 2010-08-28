@@ -179,7 +179,11 @@ class Emacs(EditorService):
 
 
     def stop(self):
-        self._client.quit()
+        try:
+            self._client.quit()
+        except AttributeError:
+            # gets stopped before the client can register
+            pass
 
     def _get_current_document(self):
         return self._current
@@ -217,10 +221,6 @@ class Emacs(EditorService):
                     self._documents[document.unique_id] = document
             self.current_document = document
 
-    def open_many(self, documents):
-        """Open a few documents"""
-        pass
-    
     def close(self, document):
         if document.unique_id in self._documents:
             self._remove_document(document)
@@ -302,6 +302,31 @@ class Emacs(EditorService):
 
     def set_path(self, path):
         return self._client.set_directory(path)
+
+    @classmethod
+    def get_sanity_errors(cls):
+        errors = []
+        from pida.core.pdbus import has_dbus
+        if not has_dbus:
+            errors = [
+                'dbus python disfunctional',
+                'please repair the python dbus bindings',
+                '(note that it won\'t work for root)'
+            ]
+
+        try:
+            import subprocess
+            p = subprocess.Popen(
+                    ['emacs', '--version'],
+                    stdout=subprocess.PIPE,
+                    )
+            data, _ = p.communicate()
+        except OSError:
+            errors.extend([
+                'emacs not found',
+                'please install emacs23 with python support'
+            ])
+        return errors
 
 
 # Required Service attribute for service loading

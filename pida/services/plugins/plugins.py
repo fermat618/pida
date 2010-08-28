@@ -15,7 +15,6 @@
 
     :license: GPL2 or later
 """
-from __future__ import with_statement
 import StringIO
 
 
@@ -27,15 +26,15 @@ import os
 import shutil
 import pida.plugins
 
-from kiwi.ui.objectlist import Column
-from pida.ui.views import PidaGladeView, WindowConfig
+from pygtkhelpers.ui.objectlist import Column
+from pida.ui.views import PidaView, WindowConfig
 from pida.core.commands import CommandsConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig, TYPE_TOGGLE
-from pida.utils.gthreads import GeneratorTask, AsyncTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.core.servicemanager import ServiceLoader, ServiceLoadingError
 
 from pida.core.environment import plugins_dir
@@ -60,11 +59,11 @@ class PluginsEditItem(object):
         self.name = name
         self.value = value
 
-class PluginsEditView(PidaGladeView):
+class PluginsEditView(PidaView):
 
     key = 'plugins.editor'
 
-    gladefile = 'plugins_edit'
+    builder_file = 'plugins_edit'
     locale = locale
     label_text = _('Edit a plugin')
     icon_name = gtk.STOCK_EXECUTE
@@ -80,9 +79,8 @@ class PluginsEditView(PidaGladeView):
 
     def create_ui(self):
         self.attr_list.set_columns([
-            Column('name', title=_('Name'), data_type=str),
-            Column('value', title=_('Value'), 
-                   data_type=str,
+            Column('name', title=_('Name')),
+            Column('value', title=_('Value'),
                    editable=True,
                    expand=True),
             ])
@@ -98,7 +96,7 @@ class PluginsEditView(PidaGladeView):
         ]
         self.attr_list.add_list(listing, clear=True)
 
-    def on_attr_list__cell_edited(self, w, item, value):
+    def on_attr_list__item_changed(self, w, item, attr, value):
         setattr(self.item, getattr(item, 'key'), getattr(item, 'value'))
         self.svc._view.update_publish_infos()
         self.svc.write_informations(self.item)
@@ -107,11 +105,11 @@ class PluginsEditView(PidaGladeView):
         self.svc.hide_plugins_edit()
 
 
-class PluginsView(PidaGladeView):
+class PluginsView(PidaView):
 
     key = 'plugins.view'
 
-    gladefile = 'plugins_manager'
+    builder_file = 'plugins_manager'
     locale = locale
     label_text = _('Plugins manager')
     icon_name = gtk.STOCK_EXECUTE
@@ -122,15 +120,14 @@ class PluginsView(PidaGladeView):
         self.installed_item = None
         self.first_start = True
         self.installed_list.set_columns([
-            Column('name', title=_('Plugin'), sorted=True, data_type=str,
-                expand=True),
-            Column('enabled', title=_('Enabled'), data_type=bool,
-                editable=True)
+            Column('name', title=_('Plugin'), sorted=True, expand=True),
+            Column('enabled', title=_('Enabled'), type=bool,
+                              editable=True, use_checkbox=True)
             ])
         self.available_list.set_columns([
-            Column('markup', title=_('Plugin'), sorted=True, data_type=str,
+            Column('markup', title=_('Plugin'), sorted=True,
                 expand=True, use_markup=True),
-            Column('version', title=_('Version'), data_type=str),
+            Column('version', title=_('Version')),
             ])
         #XXX: reenable ui publisher after making a newui
     
@@ -164,11 +161,11 @@ class PluginsView(PidaGladeView):
         else:
             self.svc.update_installed_plugins()
 
-    def on_available_list__selection_changed(self, ot, item):
-        self._current = item
+    def on_available_list__selection_changed(self,  ot):
+        self._current = item = ot.selected_item
 
         # no item, clear fields
-        if item is None:
+        if item is None: 
             self.available_title.set_text(_('No plugin selected'))
             self.available_description.get_buffer().set_text('')
             self.available_install_button.set_sensitive(False)
@@ -180,11 +177,11 @@ class PluginsView(PidaGladeView):
         self.available_description.get_buffer().set_text(item.description)
         self.available_install_button.set_sensitive(True)
 
-    def on_installed_list__selection_changed(self, ot, item):
-        self.installed_item = item
+    def on_installed_list__selection_changed(self, ot):
+        self.installed_item = item = ot.selected_item
 
         # no item, clear fields
-        if item is None:
+        if item is None: 
             self.installed_title.set_text(_('No plugin selected'))
             self.installed_description.get_buffer().set_text('')
             self.installed_delete_button.set_sensitive(False)
@@ -200,7 +197,6 @@ class PluginsView(PidaGladeView):
         directory = self.publish_directory.get_filename()
         if self.svc.is_plugin_directory(directory):
             self.item = self.svc.read_plugin_informations(directory)
-            self.item.directory = directory
             self.publish_button.set_sensitive(True)
             self.publish_edit_button.set_sensitive(True)
             self.svc._viewedit.set_item(self.item)
@@ -217,10 +213,10 @@ class PluginsView(PidaGladeView):
             return
         self.svc.download(self._current)
 
-    def on_installed_list__cell_edited(self, w, item, value):
-        if value != 'enabled':
+    def on_installed_list__item_changed(self, w, item, attr, value):
+        if attr != 'enabled': 
             return
-        if item.enabled:
+        if item.enabled: 
             success = self.svc.start_plugin(item.plugin)
             item.enabled = success
         else:
@@ -510,12 +506,10 @@ class Plugins(Service):
 
     def install(self, item, content):
         item.base = plugins_dir
-        item.directory = os.path.join(plugins_dir, item.plugin)
 
         # this will gracefully ignore not installed plugins
         self.delete(item, force=True)
         
-        import tarfile
         io = StringIO.StringIO(content)
         tar = tarfile.TarFile.gzopen(None, fileobj=io)
         tar.extractall(plugins_dir)
@@ -608,20 +602,18 @@ class Plugins(Service):
         self.set_opt('start_list', list)
 
     def _get_item_markup(self, item):
-        markup = '<b>%s</b>' % cgi.escape(item.name or str(item))
-        if item.version:
-            markup += '\n<b>%s</b> : %s' % (_('Version'),
-                    cgi.escape(item.version))
-        if item.author:
-            markup += '\n<b>%s</b> : %s' % (_('Author'),
-                    cgi.escape(item.author))
-        if item.category:
-            markup += '\n<b>%s</b> : %s' % (_('Category'),
-                    cgi.escape(item.category))
-        if item.depends:
-            markup += '\n<b>%s</b> : %s' % (_('Depends'),
-                    cgi.escape(item.depends))
-        return markup
+        markup = ['<b>%s</b>' % cgi.escape(item.name or str(item))]
+        addstr = '<b>%s</b> : %s'
+        def maybe_markup(name, label):
+            attr = getattr(item, name)
+            if attr:
+                attr = cgi.escape(attr)
+                markup.append(addstr % (label, attr))
+        maybe_markup('version', _('Version'))
+        maybe_markup('author', _('Author'))
+        maybe_markup('category', _('Category'))
+        maybe_markup('depends', _('Depends'))
+        return '\n'.join(markup)
 
 
     def check_for_updates(self, check):

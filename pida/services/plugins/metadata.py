@@ -8,8 +8,6 @@
 
 """
 from __future__ import with_statement
-from simplejson import loads
-import urllib2
 
 import os
 
@@ -43,7 +41,14 @@ class PluginMessage(Message, object):
     description = property(
         Message.get_payload, 
         Message.set_payload)
-    
+
+    @property
+    def directory(self):
+        try:
+            return os.path.join(self.base, self.plugin)
+        except AttibuteError:
+            return None
+
     def __repr__(self):
         return '<Plugin metadata %s: %s>'%(getattr(self, 'plugin', None), self.name)
 
@@ -88,4 +93,7 @@ def serialize(base, plugin, meta):
         f.write(meta.as_string(False))
 
 def is_plugin(base, plugin):
-    return os.path.exists(os.path.join(base, plugin, 'service.pida'))
+    p = os.path.join(base, plugin, 'service.pida')
+    if os.path.exists(p):
+        with open(p) as f:
+            return f.read(1) != '[' # pida 0.5

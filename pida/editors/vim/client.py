@@ -22,33 +22,22 @@ except ImportError:
     pass
 
 
-DBUS_NS = 'uk.co.pida.vim'
-
-def get_bus_name(uid):
-    return '.'.join([DBUS_NS, uid])
+DBUS_NS = 'uk.co.pida.vim.{uid}'
 
 def get_vim(uid):
+    name = DBUS_NS.format(uid=uid)
     session = dbus.SessionBus()
-    proxy = None
-    while proxy is None:
-        try:
-            log.debug('trying vim connect')
-            proxy = session.get_object(get_bus_name(uid), '/vim')
-        except dbus.DBusException:
-            log.debug('vim connect failed, retrying')
-            proxy = None
-            time.sleep(0.2)
-    return proxy
-
-def connect_cb(proxy, cb):
-    for evt in ['VimEnter', 'VimLeave', 'BufEnter', 'BufDelete', 'BufWritePost',
-    'CursorMoved']:
-        proxy.connect_to_signal(evt, getattr(cb, 'vim_%s' % evt))
-
-def VimCom(cb, uid):
-    proxy = get_vim(uid)
-    connect_cb(proxy, cb)
-    return proxy
-
-
+    def cb(bn):
+        if bn: # may be empty
+            gtk.main_quit()
+    watch = session.watch_name_owner(name, cb)
+    gtk.main() #XXX: this might kill us if vim somehow fails
+    try:
+        log.info('trying vim connect')
+        return dbus.Interface(
+                session.get_object(name, '/vim'),
+                'uk.co.pida.vim')
+    except dbus.DBusException:
+        log.info('vim connect failed')
+        raise SystemExit('vim failed')
 

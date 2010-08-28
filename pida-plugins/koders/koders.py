@@ -26,7 +26,7 @@ import re
 import urllib
 import gobject
 
-from kiwi.ui.objectlist import ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -36,7 +36,7 @@ from pida.core.actions import TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, gcall
+from pygtkhelpers.gthreads import GeneratorTask, gcall
 from pida.utils.web import fetch_url
 from pida.utils.feedparser import parse
 
@@ -49,7 +49,6 @@ _ = locale.gettext
 class KodersItem(object):
 
     def __init__(self, entry):
-        print entry
         self.title = entry['title']
         self.link = entry['link']
         self.description = entry['description']
@@ -91,7 +90,7 @@ class KodersView(PidaView):
                 ]
         )
         self._list.connect('selection-changed', self._on_list_selected)
-        self._list.connect('double-click', self._on_list_double_click)
+        self._list.connect('item-double-clicked', self._on_list_item_double_clicked)
         self._vbox.pack_start(self._list)
         self._list.show_all()
 
@@ -119,10 +118,11 @@ class KodersView(PidaView):
     def can_be_closed(self):
         self.svc.get_action('show_koders').set_active(False)
 
-    def _on_list_selected(self, ot, item):
+    def _on_list_selected(self, olist):
+        item = olist.selected_item
         self._textview.get_buffer().set_text(item.description)
 
-    def _on_list_double_click(self, ot, item):
+    def _on_list_item_double_clicked(self, ot, item, event=None):
         self.svc.browse(url=item.link)
 
     def _on_search_changed(self, w):

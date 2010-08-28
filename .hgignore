@@ -1,4 +1,6 @@
 ^build
+.coverage
+coverage
 moo_stub.so
 moo/.*.o
 moo/moo-pygtk.c
@@ -14,6 +16,7 @@ moo/test
 .*\.pyc
 tmp
 .pida-metadata
+pida.egg-info
 docs/_build
 .*\.*~
 externals

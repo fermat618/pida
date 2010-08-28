@@ -1,0 +1,2557 @@
+# Translations template for pida.
+# Copyright (C) 2010 ORGANIZATION
+# This file is distributed under the same license as the pida project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: pida 0.6.2.dev6-10bf8cd49a79+20100805\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2010-08-05 09:57+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.5\n"
+
+#: pida/core/application.py:29
+msgid "Exiting. (this is fatal)"
+msgstr ""
+
+#: pida/core/application.py:38
+#, python-format
+msgid "PIDA requires PyGTK >= 2.8. It only found %(major)s.%(minor)s"
+msgstr ""
+
+#: pida/core/application.py:41
+msgid "PIDA requires Python GTK bindings. They were not found."
+msgstr ""
+
+#: pida/core/application.py:50
+msgid "Fatal error, cannot start PIDA"
+msgstr ""
+
+#: pida/core/application.py:54
+msgid "pygtkhelpers needs to be installed to run PIDA"
+msgstr ""
+
+#: pida/core/application.py:59
+#, python-format
+msgid "Python 2.6 is required to run PIDA. Only %(major)s.%(minor)s was found."
+msgstr ""
+
+#: pida/core/application.py:72
+msgid "The pida package could not be found."
+msgstr ""
+
+#: pida/core/application.py:183
+#, python-format
+msgid "PIDA, version %s"
+msgstr ""
+
+#: pida/core/boss.py:100
+msgid "Are you sure you want to quit PIDA ?"
+msgstr ""
+
+#: pida/core/document.py:140
+#, python-format
+msgid "failed to open file %s"
+msgstr ""
+
+#: pida/core/document.py:203
+#, python-format
+msgid "Untitled (%d)"
+msgstr ""
+
+#: pida/core/document.py:204
+msgid "Untitled"
+msgstr ""
+
+#: pida/core/document.py:219
+#, python-format
+msgid "<b>Untitled (%d)</b>"
+msgstr ""
+
+#: pida/core/document.py:220
+msgid "<b>Untitled</b>"
+msgstr ""
+
+#: pida/core/editors.py:33
+msgid "Undo"
+msgstr ""
+
+#: pida/core/editors.py:34
+msgid "Undo the last editor action"
+msgstr ""
+
+#: pida/core/editors.py:43
+msgid "Redo"
+msgstr ""
+
+#: pida/core/editors.py:44
+msgid "Redo the last editor action"
+msgstr ""
+
+#: pida/core/editors.py:53
+msgid "Cut"
+msgstr ""
+
+#: pida/core/editors.py:54
+msgid "Cut the selection in the editor"
+msgstr ""
+
+#: pida/core/editors.py:63
+msgid "Copy"
+msgstr ""
+
+#: pida/core/editors.py:64
+msgid "Copy the selection in the editor"
+msgstr ""
+
+#: pida/core/editors.py:73
+msgid "Paste"
+msgstr ""
+
+#: pida/core/editors.py:74
+msgid "Paste the clipboard in the editor"
+msgstr ""
+
+#: pida/core/editors.py:83 pida/ui/terminal.py:322
+msgid "Save"
+msgstr ""
+
+#: pida/core/editors.py:84
+msgid "Save the current document"
+msgstr ""
+
+#: pida/core/editors.py:93
+msgid "Focus Editor"
+msgstr ""
+
+#: pida/core/editors.py:94
+msgid "Focus the editor component window"
+msgstr ""
+
+#: pida/core/environment.py:81
+msgid "Print version information and exit."
+msgstr ""
+
+#: pida/core/environment.py:84
+msgid "Run PIDA with added debug information."
+msgstr ""
+
+#: pida/core/environment.py:87
+msgid "Run PIDA with tracing."
+msgstr ""
+
+#: pida/core/environment.py:90
+msgid "Run the PIDA first run wizard."
+msgstr ""
+
+#: pida/core/environment.py:93
+msgid "Starts PIDA in safe mode. Usefull when PIDA doesn't start anymore"
+msgstr ""
+
+#: pida/core/environment.py:96
+msgid "Generate profile data on path."
+msgstr ""
+
+#: pida/core/environment.py:99
+msgid "Use workspace name"
+msgstr ""
+
+#: pida/core/environment.py:102
+msgid "Show workspace Manager"
+msgstr ""
+
+#: pida/core/environment.py:105
+msgid "Resets all settings of pida to their default"
+msgstr ""
+
+#: pida/core/indexer.py:111
+#, python-format
+msgid "Error indexing %s:%s"
+msgstr ""
+
+#: pida/core/indexer.py:129
+msgid "Project refresh highly suggested"
+msgstr ""
+
+#: pida/core/languages.py:615
+#, python-format
+msgid "problems running external plugin: %s"
+msgstr ""
+
+#: pida/core/languages.py:717
+msgid "restart jobserver"
+msgstr ""
+
+#: pida/core/languages.py:786
+msgid "Completer"
+msgstr ""
+
+#: pida/core/languages.py:787
+msgid "Provides suggestions for autocompletion"
+msgstr ""
+
+#: pida/core/languages.py:790
+msgid "Definer"
+msgstr ""
+
+#: pida/core/languages.py:791
+msgid "Jumps to the code position where the current symbol is defined"
+msgstr ""
+
+#: pida/core/languages.py:795
+msgid "Documentator"
+msgstr ""
+
+#: pida/core/languages.py:796
+msgid "Provides the signature of the current symbol"
+msgstr ""
+
+#: pida/core/languages.py:799 pida/services/language/views.py:313
+msgid "Outliner"
+msgstr ""
+
+#: pida/core/languages.py:800
+msgid "Provides informations where symbols are defined"
+msgstr ""
+
+#: pida/core/languages.py:803 pida/services/language/views.py:180
+msgid "Validator"
+msgstr ""
+
+#: pida/core/languages.py:804
+msgid "Shows problems and style errors in the code"
+msgstr ""
+
+#: pida/core/options.py:379
+#, python-format
+msgid "Settings file corrupted: %s"
+msgstr ""
+
+#: pida/core/service.py:104
+msgid ""
+"!!!! Warning !!!!\n"
+"Exception while unloading. Pida is in an unpredictable state.Consider a "
+"restart"
+msgstr ""
+
+#: pida/core/servicemanager.py:181
+msgid "Stop broken components"
+msgstr ""
+
+#: pida/core/servicemanager.py:190
+#, python-format
+msgid "Could not load plugin %s"
+msgstr ""
+
+#: pida/core/servicemanager.py:217
+msgid "Register Components"
+msgstr ""
+
+#: pida/core/servicemanager.py:227
+msgid "Creating Components"
+msgstr ""
+
+#: pida/core/servicemanager.py:234
+msgid "Subscribing Components"
+msgstr ""
+
+#: pida/core/servicemanager.py:241
+msgid "Prepare Components"
+msgstr ""
+
+#: pida/core/servicemanager.py:250
+msgid "Start Components"
+msgstr ""
+
+#: pida/core/servicemanager.py:269
+msgid "Start Editor"
+msgstr ""
+
+#: pida/editors/mooedit/langs.py:30
+msgid "Your medit is to old for full support. Please upgrade to 0.9.5"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:101 pida/services/buffer/buffer.py:229
+msgid "Display notebook title"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:102 pida/services/language/views.py:598
+msgid "Filename"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:102
+msgid "Full path"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:103
+msgid "Project relative path or filename"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:105
+msgid "Text to display in the Notebook"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:109
+msgid "Enable Autocompleter"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:112
+msgid "Shall the Autocompleter be active"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:116
+msgid "Autocompleter chars"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:119
+msgid "Open Autocompleter after howmany characters"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:123
+msgid "On attribute"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:126
+msgid "Open Autocompleter after attribute accessor"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:137
+msgid "Mooedit Preferences"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:310
+msgid "Save _as"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:311
+msgid "Save file as"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:319
+msgid "Reload"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:320
+msgid "Reload file content"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:328
+msgid "Edit Mooedit Preferences"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:329
+msgid "Show the editors preferences dialog"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:336
+msgid "_Find in buffer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:337 pida/services/browseweb/browseweb.py:56
+msgid "Find"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:345
+msgid "Find _next in buffer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:354
+msgid "Find previous in buffer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:363
+msgid "Find and _replace"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:364
+msgid "Find & replace"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:372
+msgid "Find current word down"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:381
+msgid "Find _current word up"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:390
+msgid "_Goto line"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:391
+msgid "Goto line"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:399
+msgid "Goto _last edit place"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:400
+msgid "Goto last edit place"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:408
+msgid "Comment"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:409
+msgid "Comment current selection"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:417
+msgid "Uncomment"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:418
+msgid "Uncomment current selection"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:426 pida/editors/mooedit/mooedit.py:427
+msgid "Close completer"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:440 pida/editors/mooedit/mooedit.py:441
+msgid "Toggels the autocompleter"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:452 pida/editors/mooedit/mooedit.py:453
+msgid "Next suggestion"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:464 pida/editors/mooedit/mooedit.py:465
+msgid "Previous suggestion"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:476 pida/editors/mooedit/mooedit.py:477
+msgid "Accept suggestion"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:879
+msgid "Emergency stop of completer: Too many entries"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:1615 pida/editors/mooedit/mooedit.py:1619
+msgid "No documentation found"
+msgstr ""
+
+#: pida/editors/mooedit/mooedit.py:1620
+msgid "Show documentation"
+msgstr ""
+
+#: pida/editors/vim/vim.py:22
+msgid ""
+"There was a problem running the \"gvim\" executable. This is usually "
+"because it is not installed. Please check that you can run \"gvim\" from "
+"the command line."
+msgstr ""
+
+#: pida/editors/vim/vim.py:278
+msgid "Tried to remove non-existent sign"
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:32
+msgid "Always show workspace manager"
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:35
+msgid "Always open the workspace manager when no workspace name is given"
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:46
+msgid "Quit PIDA"
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:47
+msgid "Exit the application"
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:106
+msgid "Application"
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:112
+msgid "DBus python bindings are missing. Please don't start multiple Instances."
+msgstr ""
+
+#: pida/services/appcontroller/appcontroller.py:114
+msgid "DBus Modules missing"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:59
+msgid "Close"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:67
+msgid "Highlight"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:194
+msgid "Browser"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:285
+msgid "Open URL"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:286
+msgid "Open a url in the builtin browser"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:294
+msgid "Copy URL to clipboard"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:295
+msgid "Copy this URL to the clipboard"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:303
+msgid "Open URL in external web browser"
+msgstr ""
+
+#: pida/services/browseweb/browseweb.py:304
+msgid "Open the selected URL in an external web browser"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:43
+msgid "_Open File"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:44
+msgid "Open a file with a graphical file browser"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:53
+msgid "Open File"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:54 pida/ui/terminal.py:321
+msgid "Open this file"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:62
+msgid "_New File"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:63 pida/services/buffer/buffer.py:73
+msgid "Create a new file"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:72
+msgid "Cr_eate File"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:82 pida/services/buffer/buffer.py:131
+msgid "_Close Document"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:83
+msgid "Close the current document"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:92
+msgid "Close all Documents"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:93
+msgid "Close all documents"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:101
+msgid "_Next Buffer"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:102
+msgid "Switch to the next buffer"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:111
+msgid "_Previous Buffer"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:112
+msgid "Switch to the previous buffer"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:120
+msgid "Show _buffer browser"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:121
+msgid "Displays the buffer window"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:132
+msgid "Close the selected document"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:230
+msgid "One Row"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:231
+msgid "Filename and Path seperate "
+msgstr ""
+
+#: pida/services/buffer/buffer.py:233
+msgid "Type to display in the Buffer window"
+msgstr ""
+
+#: pida/services/buffer/buffer.py:413
+#, python-format
+msgid "Can't load file %s"
+msgstr ""
+
+#: pida/services/buffer/view.py:87
+msgid "Buffers"
+msgstr ""
+
+#: pida/services/buffer/view.py:105
+msgid "Time Opened"
+msgstr ""
+
+#: pida/services/buffer/view.py:106
+msgid "File path"
+msgstr ""
+
+#: pida/services/buffer/view.py:107
+msgid "File name"
+msgstr ""
+
+#: pida/services/buffer/view.py:108
+msgid "Mime Type"
+msgstr ""
+
+#: pida/services/buffer/view.py:109
+msgid "Document Type"
+msgstr ""
+
+#: pida/services/buffer/view.py:110
+msgid "File Length"
+msgstr ""
+
+#: pida/services/buffer/view.py:111
+msgid "Last Modified"
+msgstr ""
+
+#: pida/services/buffer/view.py:112
+msgid "View Counter"
+msgstr ""
+
+#: pida/services/buffer/view.py:113
+msgid "Last Opened"
+msgstr ""
+
+#: pida/services/commander/commander.py:43
+msgid "Terminal Font"
+msgstr ""
+
+#: pida/services/commander/commander.py:46
+msgid "The font used in terminals"
+msgstr ""
+
+#: pida/services/commander/commander.py:51
+msgid "Terminal Transparency"
+msgstr ""
+
+#: pida/services/commander/commander.py:54
+msgid "Whether terminals will be transparent"
+msgstr ""
+
+#: pida/services/commander/commander.py:59
+msgid "Use a background image"
+msgstr ""
+
+#: pida/services/commander/commander.py:62
+msgid "Whether a background image will be displayed"
+msgstr ""
+
+#: pida/services/commander/commander.py:67
+msgid "Background image file"
+msgstr ""
+
+#: pida/services/commander/commander.py:70
+msgid "The file used for the background image"
+msgstr ""
+
+#: pida/services/commander/commander.py:75
+msgid "Cursor Blinks"
+msgstr ""
+
+#: pida/services/commander/commander.py:78
+msgid "Whether the cursor will blink"
+msgstr ""
+
+#: pida/services/commander/commander.py:83
+msgid "Scrollback line numer"
+msgstr ""
+
+#: pida/services/commander/commander.py:86
+msgid "The number of lines in the terminal scrollback buffer"
+msgstr ""
+
+#: pida/services/commander/commander.py:91
+msgid "Show terminal scrollbar"
+msgstr ""
+
+#: pida/services/commander/commander.py:94
+msgid "Whether a scrollbar should be shown"
+msgstr ""
+
+#: pida/services/commander/commander.py:99
+msgid "Allow bold in the terminal"
+msgstr ""
+
+#: pida/services/commander/commander.py:102
+msgid "Whether bold text is allowed in the terminal"
+msgstr ""
+
+#: pida/services/commander/commander.py:107
+msgid "Emit audible bell in terminal"
+msgstr ""
+
+#: pida/services/commander/commander.py:110
+msgid "Whether an audible bell will be emitted in the terminal"
+msgstr ""
+
+#: pida/services/commander/commander.py:117
+msgid "The shell command"
+msgstr ""
+
+#: pida/services/commander/commander.py:120
+msgid "The command that will be used for shells"
+msgstr ""
+
+#: pida/services/commander/commander.py:125
+msgid "The shell arguments"
+msgstr ""
+
+#: pida/services/commander/commander.py:128
+msgid "The arguments to pass to the shell command"
+msgstr ""
+
+#: pida/services/commander/commander.py:133
+msgid "Python Path"
+msgstr ""
+
+#: pida/services/commander/commander.py:136
+msgid "Python executable to use"
+msgstr ""
+
+#: pida/services/commander/commander.py:141
+msgid "Use IPython"
+msgstr ""
+
+#: pida/services/commander/commander.py:144
+msgid "Use IPython in python shell"
+msgstr ""
+
+#: pida/services/commander/commander.py:154
+msgid "_Run Shell"
+msgstr ""
+
+#: pida/services/commander/commander.py:155
+msgid "Open a shell prompt"
+msgstr ""
+
+#: pida/services/commander/commander.py:164
+msgid "_Run Python Shell"
+msgstr ""
+
+#: pida/services/commander/commander.py:165
+msgid "Open a python shell"
+msgstr ""
+
+#: pida/services/commander/commander.py:174
+msgid "Shell in file directory"
+msgstr ""
+
+#: pida/services/commander/commander.py:175
+msgid "Open a shell prompt in the parent directory of this file"
+msgstr ""
+
+#: pida/services/commander/commander.py:183
+msgid "Shell in directory"
+msgstr ""
+
+#: pida/services/commander/commander.py:184
+msgid "Open a shell prompt in the directory"
+msgstr ""
+
+#: pida/services/commander/commander.py:209
+#: pida/services/openwith/openwith.py:55
+msgid "Command"
+msgstr ""
+
+#: pida/services/commander/commander.py:392
+msgid "Automatic change to the current buffer's directory"
+msgstr ""
+
+#: pida/services/commander/commander.py:396
+msgid "Copy the selection to the clipboard"
+msgstr ""
+
+#: pida/services/commander/commander.py:401
+msgid "Paste the contents of the clipboard"
+msgstr ""
+
+#: pida/services/commander/commander.py:510
+msgid "Child exited"
+msgstr ""
+
+#: pida/services/commander/commander.py:511
+msgid "Press Enter/Space key to close."
+msgstr ""
+
+#: pida/services/editor/editor.py:22
+msgid "Editor Type"
+msgstr ""
+
+#: pida/services/editor/editor.py:25
+msgid "The Editor used"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:90
+#, python-format
+msgid "Can't open directory: %s"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:173
+msgid "Files"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:214
+msgid "Directories First"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:215
+msgid "File Name"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:216
+msgid "Case Sensitive File Name"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:217
+msgid "File Path"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:218
+msgid "Extension"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:219
+msgid "Version Control Status"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:346
+msgid "Directory name"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:499
+msgid "Cannot copy files to themselves."
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:502
+msgid "Source file has vanished."
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:505
+msgid "Destination already exists."
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:612
+msgid "Filebrowser"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:631
+msgid "Hide Dot-Files"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:636
+msgid "Hide by User defined Regular Expression"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:649
+#: pida/services/filemanager/filemanager.py:883
+msgid "Show hidden files"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:652
+msgid "Shows hidden files"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:657
+msgid "Show parent entry"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:660
+msgid "Shows a \"..\" entry in the filebrowser"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:664
+msgid "Used file hidden checker"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:667
+msgid "The used file hidden checker"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:672
+msgid "Remember last Path"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:675
+msgid "Remembers the last browsed path"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:679
+msgid "Last browsed Path"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:682
+msgid "The last browsed path"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:688
+msgid "Hide regex"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:691
+msgid "Hides files that match the regex"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:734
+#: pida/services/filemanager/filemanager.py:874
+msgid "Delete File"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:735
+msgid "Delete selected file"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:743
+msgid "Browse the file directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:744
+msgid "Browse the parent directory of this file"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:752
+msgid "Delete Directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:753
+msgid "Delete selected directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:761
+#: pida/services/filemanager/filemanager.py:762
+msgid "Browse the directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:770
+msgid "Show _file browser"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:771
+msgid "Show the file browser view"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:781
+msgid "Go Up"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:782
+msgid "Go to the parent directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:791
+msgid "Open Terminal"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:792
+msgid "Open a terminal in this directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:800
+msgid "Refresh Directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:801
+msgid "Refresh the current directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:809
+#: pida/services/filemanager/filemanager.py:810
+#: pida/services/grepper/grepper.py:121 pida/services/grepper/grepper.py:122
+msgid "Find in directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:819
+msgid "Project Root"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:820
+msgid "Browse the root of the current project"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:828
+msgid "Create Directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:829
+msgid "Create a new directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:837
+msgid "Home"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:838
+msgid "Browse your home directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:846
+msgid "Current Directory"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:847
+msgid "Browse directory of current file"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:856
+msgid "Copy File"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:857
+msgid "Copy selected file to the clipboard"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:865
+msgid "Paste File"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:866
+msgid "Paste selected file from the clipboard"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:875
+msgid "Delete the selected file"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:882
+msgid "Show Hidden Files"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:891
+msgid "Setup which kind of files should be hidden"
+msgstr ""
+
+#: pida/services/filemanager/filemanager.py:953
+#, python-format
+msgid "Are you sure you want to delete the selected file: %s?"
+msgstr ""
+
+#: pida/services/filewatcher/filewatcher.py:38
+msgid "Enable FileMonitor"
+msgstr ""
+
+#: pida/services/filewatcher/filewatcher.py:41
+msgid "Whether FileMonitor will be enabled"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:91
+msgid "Find _in files"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:92
+msgid "Show the grepper view"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:101
+msgid "Find word in _project"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:102
+msgid "Find the current word in the current project"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:111
+msgid "Find word in document _directory"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:112
+msgid "Find the current word in current document directory"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:141
+msgid "There is no current document."
+msgstr ""
+
+#: pida/services/grepper/grepper.py:147
+msgid "Find in Files"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:208 pida/services/grepper/grepper.py:231
+msgid "Empty search string"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:235
+msgid "Path does not exist"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:246
+#, python-format
+msgid "Improper regular expression \"%s\""
+msgstr ""
+
+#: pida/services/grepper/grepper.py:295
+msgid "Maximum Results"
+msgstr ""
+
+#: pida/services/grepper/grepper.py:298
+msgid "The maximum number of results to find (approx)."
+msgstr ""
+
+#: pida/services/grepper/glade/grepper_window.glade:25
+msgid "Is this match a Regular Expression"
+msgstr ""
+
+#: pida/services/grepper/glade/grepper_window.glade:26
+msgid "RE"
+msgstr ""
+
+#: pida/services/grepper/glade/grepper_window.glade:38
+msgid "Select A Directory to search in"
+msgstr ""
+
+#: pida/services/grepper/glade/grepper_window.glade:48
+#: pida/services/grepper/glade/grepper_window.glade:49
+msgid "Use current filebrowser folder"
+msgstr ""
+
+#: pida/services/grepper/glade/grepper_window.glade:68
+msgid "recurse through directories"
+msgstr ""
+
+#: pida/services/grepper/glade/grepper_window.glade:69
+msgid "-r"
+msgstr ""
+
+#: pida/services/help/help.py:62
+msgid "Core Developers:"
+msgstr ""
+
+#: pida/services/help/help.py:63
+msgid "Contributors:"
+msgstr ""
+
+#: pida/services/help/help.py:81
+msgid "About"
+msgstr ""
+
+#: pida/services/help/help.py:82
+msgid "About PIDA"
+msgstr ""
+
+#: pida/services/help/help.py:89
+msgid "Documentation"
+msgstr ""
+
+#: pida/services/help/help.py:90 pida/services/language/language.py:394
+msgid "Show Documentation"
+msgstr ""
+
+#: pida/services/language/disabled.py:32 pida/services/language/disabled.py:51
+msgid "Disabled"
+msgstr ""
+
+#: pida/services/language/disabled.py:35
+msgid "Disables the functionality"
+msgstr ""
+
+#: pida/services/language/language.py:291
+#, python-format
+msgid "can't load data structure of type %s"
+msgstr ""
+
+#: pida/services/language/language.py:341
+#: pida/services/language/language.py:358
+msgid "_Type"
+msgstr ""
+
+#: pida/services/language/language.py:342
+msgid "Select Document Type"
+msgstr ""
+
+#: pida/services/language/language.py:350
+msgid "Show All Types"
+msgstr ""
+
+#: pida/services/language/language.py:351
+msgid "Show all available types"
+msgstr ""
+
+#: pida/services/language/language.py:359
+msgid "Select document type"
+msgstr ""
+
+#: pida/services/language/language.py:367
+msgid "_Validator"
+msgstr ""
+
+#: pida/services/language/language.py:368
+msgid "Show the language validator"
+msgstr ""
+
+#: pida/services/language/language.py:376
+msgid "_Outliner"
+msgstr ""
+
+#: pida/services/language/language.py:377
+msgid "Show the language browser"
+msgstr ""
+
+#: pida/services/language/language.py:385
+msgid "Goto _Definition"
+msgstr ""
+
+#: pida/services/language/language.py:386
+msgid "Goto the definition of current word"
+msgstr ""
+
+#: pida/services/language/language.py:395
+msgid "Show the documentation of cursor position"
+msgstr ""
+
+#: pida/services/language/language.py:403
+msgid "Refresh"
+msgstr ""
+
+#: pida/services/language/language.py:404
+msgid "Refresh all caches"
+msgstr ""
+
+#: pida/services/language/language.py:412
+msgid "Focus outline filter"
+msgstr ""
+
+#: pida/services/language/language.py:413
+msgid "Show outline browser and focus filter entry"
+msgstr ""
+
+#: pida/services/language/language.py:422
+msgid "_Plugin Priorities"
+msgstr ""
+
+#: pida/services/language/language.py:423
+msgid "Configure priorities for language plugins"
+msgstr ""
+
+#: pida/services/language/language.py:496
+msgid "Expand outline after n chars"
+msgstr ""
+
+#: pida/services/language/language.py:499
+msgid "Expand all entries when searching the outliner after n chars"
+msgstr ""
+
+#: pida/services/language/language.py:504
+msgid "Window that shows validation errors"
+msgstr ""
+
+#: pida/services/language/language.py:509
+msgid "Outliner shows file structure"
+msgstr ""
+
+#: pida/services/language/language.py:646
+#: pida/services/language/language.py:668
+msgid "Goto Definition"
+msgstr ""
+
+#: pida/services/language/language.py:647
+msgid "No support for this type found"
+msgstr ""
+
+#: pida/services/language/language.py:669
+msgid "No definition found"
+msgstr ""
+
+#: pida/services/language/language.py:790
+msgid "Try to set a priority list on non priority sublist"
+msgstr ""
+
+#: pida/services/language/views.py:69
+msgid "<i>All plugins before the Disabled entry are used</i>"
+msgstr ""
+
+#: pida/services/language/views.py:153
+msgid "Language Priorities"
+msgstr ""
+
+#: pida/services/language/views.py:202 pida/services/language/views.py:334
+msgid "Line Number"
+msgstr ""
+
+#: pida/services/language/views.py:203
+msgid "Message"
+msgstr ""
+
+#: pida/services/language/views.py:204
+#: pida/utils/puilder/glade/puild_properties.glade:262
+msgid "Type"
+msgstr ""
+
+#: pida/services/language/views.py:238
+#, python-format
+msgid "Validator task for %s already running"
+msgstr ""
+
+#: pida/services/language/views.py:333
+msgid "Alphabetical by type"
+msgstr ""
+
+#: pida/services/language/views.py:335 pida/services/openwith/openwith.py:54
+#: pida/services/plugins/plugins.py:82 pida/ui/prioritywindow.py:102
+msgid "Name"
+msgstr ""
+
+#: pida/services/language/views.py:410
+#, python-format
+msgid "Outliner task for %s already running"
+msgstr ""
+
+#: pida/services/language/views.py:588
+msgid "Definition"
+msgstr ""
+
+#: pida/services/language/views.py:595
+msgid "Symbol"
+msgstr ""
+
+#: pida/services/language/views.py:601
+msgid "Line"
+msgstr ""
+
+#: pida/services/manhole/manhole.py:32
+msgid "PIDA Internal Shell"
+msgstr ""
+
+#: pida/services/manhole/manhole.py:33
+msgid "Open the PIDA Internal Shell"
+msgstr ""
+
+#: pida/services/manhole/manhole.py:50
+msgid "Debug PIDA"
+msgstr ""
+
+#: pida/services/manhole/manhole.py:54
+msgid "PIDA Shell. Keep breathing."
+msgstr ""
+
+#: pida/services/notify/notify.py:173
+msgid "Pida Log"
+msgstr ""
+
+#: pida/services/notify/notify.py:194
+msgid "Notifications"
+msgstr ""
+
+#: pida/services/notify/notify.py:217
+msgid "Clear history"
+msgstr ""
+
+#: pida/services/notify/notify.py:256 pida/services/notify/notify.py:365
+msgid "North East"
+msgstr ""
+
+#: pida/services/notify/notify.py:258 pida/services/notify/notify.py:366
+msgid "North West"
+msgstr ""
+
+#: pida/services/notify/notify.py:260 pida/services/notify/notify.py:367
+#: pida/services/notify/notify.py:370
+msgid "South East"
+msgstr ""
+
+#: pida/services/notify/notify.py:262 pida/services/notify/notify.py:368
+msgid "South West"
+msgstr ""
+
+#: pida/services/notify/notify.py:341
+msgid "Show notifications"
+msgstr ""
+
+#: pida/services/notify/notify.py:344
+msgid "Show notifications popup"
+msgstr ""
+
+#: pida/services/notify/notify.py:351
+msgid "Timeout"
+msgstr ""
+
+#: pida/services/notify/notify.py:354
+msgid "Timeout before hiding a notification"
+msgstr ""
+
+#: pida/services/notify/notify.py:363
+msgid "Gravity"
+msgstr ""
+
+#: pida/services/notify/notify.py:371
+msgid "Position of notifications popup"
+msgstr ""
+
+#: pida/services/notify/notify.py:377
+msgid "On pida window"
+msgstr ""
+
+#: pida/services/notify/notify.py:380
+msgid "Attach notifications on pida window"
+msgstr ""
+
+#: pida/services/notify/notify.py:404
+msgid "Show notification _history"
+msgstr ""
+
+#: pida/services/notify/notify.py:405
+msgid "Show the notifications history"
+msgstr ""
+
+#: pida/services/notify/notify.py:413
+msgid "Show Pida Log"
+msgstr ""
+
+#: pida/services/notify/notify.py:414
+msgid "Show the log file pida generates"
+msgstr ""
+
+#: pida/services/notify/notify.py:440
+msgid "Window with notifications"
+msgstr ""
+
+#: pida/services/notify/notify.py:503
+#, python-format
+msgid "Pida error occured in %s"
+msgstr ""
+
+#: pida/services/openwith/__init__.py:21
+msgid "unnamed"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:50 pida/services/openwith/openwith.py:148
+msgid "Open With"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:56
+msgid "Glob"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:57
+msgid "Terminal"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:98
+#, python-format
+msgid "Are you sure you want to delete %s"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:138
+msgid "Configure Open With"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:139
+msgid "Show the Open With Editor"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:149
+msgid "Open a file with"
+msgstr ""
+
+#: pida/services/openwith/openwith.py:184
+msgid "The command assigned contains errors"
+msgstr ""
+
+#: pida/services/openwith/glade/openwith_editor.glade:64
+msgid "Terminal:"
+msgstr ""
+
+#: pida/services/openwith/glade/openwith_editor.glade:114
+msgid "Glob:"
+msgstr ""
+
+#: pida/services/openwith/glade/openwith_editor.glade:127
+#: pida/utils/puilder/glade/action_shell.glade:22
+msgid "Command:"
+msgstr ""
+
+#: pida/services/openwith/glade/openwith_editor.glade:140
+msgid "Name:"
+msgstr ""
+
+#: pida/services/optionsmanager/optionsmanager.py:204
+msgid "Edit Preferences"
+msgstr ""
+
+#: pida/services/optionsmanager/optionsmanager.py:205
+msgid "Edit the PIDA preferences"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:68
+msgid "Edit a plugin"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:72
+msgid "Plugin name"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:73 pida/services/plugins/plugins.py:613
+msgid "Author"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:74 pida/services/plugins/plugins.py:130
+#: pida/services/plugins/plugins.py:612
+msgid "Version"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:75
+#: pida/utils/puilder/glade/target_properties.glade:135
+msgid "Dependencies"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:76 pida/services/plugins/plugins.py:614
+#: pida/ui/prioritywindow.py:96
+msgid "Category"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:77 pida/ui/prioritywindow.py:104
+msgid "Description"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:83
+msgid "Value"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:114 pida/services/plugins/plugins.py:286
+msgid "Plugins manager"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:123 pida/services/plugins/plugins.py:128
+#: pida/ui/prioritywindow.py:103
+msgid "Plugin"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:124
+msgid "Enabled"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:169 pida/services/plugins/plugins.py:185
+#: pida/services/plugins/glade/plugins_manager.glade:31
+#: pida/services/plugins/glade/plugins_manager.glade:131
+msgid "No plugin selected"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:287
+msgid "Show the plugins manager"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:315
+msgid "Webservice Url"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:318
+msgid "URL of Webservice to download plugins"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:323
+msgid "Check updates"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:326
+msgid "Check for plugins updates in background"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:331
+msgid "Start plugin list"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:334
+msgid "List of plugin to start"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:389 pida/services/plugins/plugins.py:396
+#: pida/services/plugins/plugins.py:404 pida/services/plugins/plugins.py:454
+#: pida/services/plugins/plugins.py:519 pida/services/plugins/plugins.py:563
+msgid "Plugins"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:391
+#, python-format
+msgid "Started %(plugin)s pluginplugin"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:398
+#, python-format
+msgid ""
+"Could not start plugin: %(name)s\n"
+"%(error)serror"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:405
+#, python-format
+msgid "Stopped %(plugin)s pluginplugin"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:455
+#, python-format
+msgid "Version %(version)s of %(plugin)s is available !"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:464
+#: pida/services/plugins/glade/plugins_manager.glade:119
+msgid "Download available plugins"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:500
+#, python-format
+msgid "Download %s"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:520
+#, python-format
+msgid "Installation of %s completed"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:531
+#, python-format
+msgid "Are you sure to delete \"%s\" plugin ?"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:564
+msgid "Package upload success !"
+msgstr ""
+
+#: pida/services/plugins/plugins.py:615
+msgid "Depends"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:89
+msgid "Installed plugins"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:192
+msgid "Install/Upgrade"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:225
+msgid "Available plugins"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:245
+msgid ""
+"<b>Publish your plugin</b>\n"
+"\n"
+"You can create a package plugin, \n"
+"and upload it on community website : \n"
+"<i>http://pida.co.uk/community/</i>"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:301
+msgid "Plugin directory"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:308
+msgid "Login"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:319
+msgid "Password"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:415
+msgid "Make package and upload"
+msgstr ""
+
+#: pida/services/plugins/glade/plugins_manager.glade:449
+msgid "Publish"
+msgstr ""
+
+#: pida/services/project/project.py:111
+msgid "_Add New Project"
+msgstr ""
+
+#: pida/services/project/project.py:112
+msgid "Adds a new project"
+msgstr ""
+
+#: pida/services/project/project.py:120
+msgid "_Execute Default"
+msgstr ""
+
+#: pida/services/project/project.py:121
+msgid "Execute the project"
+msgstr ""
+
+#: pida/services/project/project.py:130
+msgid "Execute _last Controller"
+msgstr ""
+
+#: pida/services/project/project.py:131
+msgid "Execute last Controller"
+msgstr ""
+
+#: pida/services/project/project.py:140
+msgid "Open target popup"
+msgstr ""
+
+#: pida/services/project/project.py:141
+msgid "Opens a popup with the project targets"
+msgstr ""
+
+#: pida/services/project/project.py:151 pida/services/project/project.py:187
+msgid "Remove from workspace"
+msgstr ""
+
+#: pida/services/project/project.py:152
+msgid "Remove the current project from the workspace"
+msgstr ""
+
+#: pida/services/project/project.py:160
+msgid "Project _Properties"
+msgstr ""
+
+#: pida/services/project/project.py:161
+msgid "Show the project property editor"
+msgstr ""
+
+#: pida/services/project/project.py:169
+msgid "Execution Controllers"
+msgstr ""
+
+#: pida/services/project/project.py:170
+msgid "Configurations with which to execute the project"
+msgstr ""
+
+#: pida/services/project/project.py:178
+msgid "Add Directory as Project"
+msgstr ""
+
+#: pida/services/project/project.py:179
+msgid "Add this directory as a project in the workspace"
+msgstr ""
+
+#: pida/services/project/project.py:188
+msgid "Remove the project from the workspace"
+msgstr ""
+
+#: pida/services/project/project.py:196
+msgid "Update Project"
+msgstr ""
+
+#: pida/services/project/project.py:197
+msgid "Update the project caches"
+msgstr ""
+
+#: pida/services/project/project.py:213
+msgid "Select a directory to add"
+msgstr ""
+
+#: pida/services/project/project.py:225
+msgid "This project has no default controller"
+msgstr ""
+
+#: pida/services/project/project.py:262
+msgid "Project setup window"
+msgstr ""
+
+#: pida/services/project/project.py:302 pida/services/project/project.py:320
+msgid "Project Directories"
+msgstr ""
+
+#: pida/services/project/project.py:305 pida/services/project/project.py:323
+msgid "The current directories in the workspace"
+msgstr ""
+
+#: pida/services/project/project.py:312
+msgid "Use Filemanager Path"
+msgstr ""
+
+#: pida/services/project/project.py:315
+msgid "Use the current filemanager path as startpoint"
+msgstr ""
+
+#: pida/services/project/project.py:330
+msgid "Last Project"
+msgstr ""
+
+#: pida/services/project/project.py:333
+msgid "The last project selected. "
+msgstr ""
+
+#: pida/services/project/project.py:334
+msgid "(Do not change this unless you know what you are doing)"
+msgstr ""
+
+#: pida/services/project/project.py:340
+msgid "Autoclose targets"
+msgstr ""
+
+#: pida/services/project/project.py:343
+msgid "Autoclose old targets when new its restarted"
+msgstr ""
+
+#: pida/services/project/project.py:435
+msgid "The directory does not contain a project file, "
+msgstr ""
+
+#: pida/services/project/project.py:436
+msgid "do you want to create one?"
+msgstr ""
+
+#: pida/services/project/project.py:466
+msgid "Execute Last Controller"
+msgstr ""
+
+#: pida/services/project/project.py:490
+#, python-format
+msgid "Can't load project. Path does not exist: %s"
+msgstr ""
+
+#: pida/services/project/project.py:509
+#, python-format
+msgid "Are you sure you want to remove project \"%s\" from the workspace?"
+msgstr ""
+
+#: pida/services/project/project.py:524
+#, python-format
+msgid "Execute: %s"
+msgstr ""
+
+#: pida/services/project/project.py:545
+#, python-format
+msgid "%s:%s"
+msgstr ""
+
+#: pida/services/project/project.py:613
+msgid "Update already running"
+msgstr ""
+
+#: pida/services/project/project.py:613 pida/services/project/project.py:616
+#: pida/services/project/project.py:637 pida/ui/workspace.py:57
+msgid "Project"
+msgstr ""
+
+#: pida/services/project/project.py:616
+msgid "Update started"
+msgstr ""
+
+#: pida/services/project/project.py:636
+msgid "Update complete"
+msgstr ""
+
+#: pida/services/project/views.py:22
+msgid "Projects"
+msgstr ""
+
+#: pida/services/project/views.py:77
+msgid "Project Properties"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:40
+msgid "Shortcuts"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:62
+msgid "Capture Shortcut"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:73
+msgid "Default"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:77
+msgid "Clear"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:81
+msgid "Allow All"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:83
+msgid "This allows you to bind all/confusing keys to a shortcut (be warned :-))"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:179
+#, python-format
+msgid ""
+"Shortcut is already in use by: %s/%s\n"
+"Should it be cleared ?"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:220
+msgid "Edit Shortcuts"
+msgstr ""
+
+#: pida/services/shortcuts/shortcuts.py:221
+msgid "Show the PIDA keyboard shortcut editor"
+msgstr ""
+
+#: pida/services/statusbar/statusbar.py:36 pida/services/window/window.py:522
+#: pida/services/window/window.py:523
+msgid "New Document"
+msgstr ""
+
+#: pida/services/statusbar/statusbar.py:70
+msgid "Show the statusbar"
+msgstr ""
+
+#: pida/services/statusbar/statusbar.py:73
+msgid "Whether the statusbar will be shown"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:70
+msgid "Hide Ignored Files by Version Control"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:121
+#: pida/services/versioncontrol/views.py:99
+msgid "Version Control Log"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:122
+msgid "Show the version control log"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:131
+msgid "Commit Message"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:132
+msgid "Show the commit message"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:140
+msgid "More Version Control"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:141
+msgid "More Version Control Commands"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:149
+#: pida/services/versioncontrol/versioncontrol.py:159
+#: pida/services/versioncontrol/versioncontrol.py:168
+#: pida/services/versioncontrol/versioncontrol.py:177
+#: pida/services/versioncontrol/views.py:20
+#: pida/services/versioncontrol/views.py:47
+msgid "Differences"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:150
+msgid "Version Control differences for the current document"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:160
+msgid "Get the version control differences for the current project"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:169
+msgid "Get the version control diff on this file"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:178
+msgid "Get the version control diff on this directory"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:186
+#: pida/services/versioncontrol/versioncontrol.py:195
+#: pida/services/versioncontrol/versioncontrol.py:204
+#: pida/services/versioncontrol/versioncontrol.py:213
+#: pida/services/versioncontrol/views.py:153
+msgid "Commit"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:187
+msgid "Commit the current document"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:196
+msgid "Commit the current project"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:205
+msgid "Commit the selected file"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:214
+msgid "Commit the selected directory"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:222
+#: pida/services/versioncontrol/versioncontrol.py:231
+#: pida/services/versioncontrol/versioncontrol.py:240
+#: pida/services/versioncontrol/versioncontrol.py:249
+msgid "Update"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:223
+msgid "Update the current document"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:232
+msgid "Update the current project"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:241
+#: pida/services/versioncontrol/versioncontrol.py:250
+msgid "Update the selected file"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:258
+#: pida/services/versioncontrol/versioncontrol.py:267
+#: pida/services/versioncontrol/versioncontrol.py:276
+msgid "Add"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:259
+msgid "Add the current document"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:268
+#: pida/services/versioncontrol/versioncontrol.py:277
+msgid "Add the selected file"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:285
+#: pida/services/versioncontrol/versioncontrol.py:294
+#: pida/services/versioncontrol/versioncontrol.py:303
+msgid "Remove"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:286
+msgid "Remove the current document"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:295
+msgid "Remove the selected file"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:304
+msgid "Remove the selected directory"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:312
+#: pida/services/versioncontrol/versioncontrol.py:321
+#: pida/services/versioncontrol/versioncontrol.py:330
+#: pida/services/versioncontrol/versioncontrol.py:339
+msgid "Revert"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:313
+msgid "Revert the current document"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:322
+msgid "Revert the current project"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:331
+msgid "Revert the selected file"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:340
+msgid "Revert the selected directory"
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:498
+#: pida/services/versioncontrol/versioncontrol.py:506
+#: pida/services/versioncontrol/versioncontrol.py:533
+msgid "File or directory is not versioned."
+msgstr ""
+
+#: pida/services/versioncontrol/versioncontrol.py:516
+#, python-format
+msgid "Version Control %(action)s Completed"
+msgstr ""
+
+#: pida/services/versioncontrol/views.py:109
+msgid ""
+" Version Control Log Started\n"
+"\n"
+msgstr ""
+
+#: pida/services/versioncontrol/views.py:207
+msgid "No Commit Message."
+msgstr ""
+
+#: pida/services/versioncontrol/glade/commit_dialog.glade:21
+msgid "Please enter a commit message for:"
+msgstr ""
+
+#: pida/services/versioncontrol/glade/commit_dialog.glade:134
+msgid "_Diff"
+msgstr ""
+
+#: pida/services/window/window.py:59
+#, python-format
+msgid "Focus %s window"
+msgstr ""
+
+#: pida/services/window/window.py:132
+msgid "Show Toolbar"
+msgstr ""
+
+#: pida/services/window/window.py:133
+msgid "Toggle the visible state of the toolbar"
+msgstr ""
+
+#: pida/services/window/window.py:142
+msgid "Show _Menubar"
+msgstr ""
+
+#: pida/services/window/window.py:143
+msgid "Toggle the visible state of the menubar"
+msgstr ""
+
+#: pida/services/window/window.py:152
+msgid "F_ullscreen"
+msgstr ""
+
+#: pida/services/window/window.py:153
+msgid "Toggle the fullscreen mode"
+msgstr ""
+
+#: pida/services/window/window.py:162
+msgid "M_aximize Editor"
+msgstr ""
+
+#: pida/services/window/window.py:163
+msgid "Maximizes the editor by hiding panels"
+msgstr ""
+
+#: pida/services/window/window.py:173
+msgid "Next _terminal"
+msgstr ""
+
+#: pida/services/window/window.py:174
+msgid "Switch to the next terminal"
+msgstr ""
+
+#: pida/services/window/window.py:184
+msgid "Previous te_rminal"
+msgstr ""
+
+#: pida/services/window/window.py:185
+msgid "Switch to the previous terminal"
+msgstr ""
+
+#: pida/services/window/window.py:195
+msgid "F_ocus terminal"
+msgstr ""
+
+#: pida/services/window/window.py:196
+msgid "Focus terminal pane terminal"
+msgstr ""
+
+#: pida/services/window/window.py:206
+msgid "Close Pane"
+msgstr ""
+
+#: pida/services/window/window.py:207
+msgid "Close the current active pane"
+msgstr ""
+
+#: pida/services/window/window.py:217
+msgid "Toggle sticky"
+msgstr ""
+
+#: pida/services/window/window.py:218
+msgid "Toggle the sticky button on current pane"
+msgstr ""
+
+#: pida/services/window/window.py:228
+msgid "Win_dows"
+msgstr ""
+
+#: pida/services/window/window.py:229
+msgid "Show window list"
+msgstr ""
+
+#: pida/services/window/window.py:322
+msgid "Show the toolbar"
+msgstr ""
+
+#: pida/services/window/window.py:325
+msgid "Whether the main toolbar will be shown"
+msgstr ""
+
+#: pida/services/window/window.py:331
+msgid "Show the menubar"
+msgstr ""
+
+#: pida/services/window/window.py:334
+msgid "Whether the main menubar will be shown"
+msgstr ""
+
+#: pida/services/window/window.py:340
+msgid "Window title"
+msgstr ""
+
+#: pida/services/window/window.py:343
+msgid ""
+"Title template for the pida window.\n"
+"$basename : Filename of Document - $filepath : Full filepath \n"
+"$directory : Directory if file - $workspace : Workspace name \n"
+"$project_path - $project_name"
+msgstr ""
+
+#: pida/services/window/window.py:352
+msgid "Project color"
+msgstr ""
+
+#: pida/services/window/window.py:355 pida/services/window/window.py:364
+msgid "The color projects shall have in PIDA"
+msgstr ""
+
+#: pida/services/window/window.py:361
+msgid "No project color"
+msgstr ""
+
+#: pida/services/window/window.py:370
+msgid "Directory color"
+msgstr ""
+
+#: pida/services/window/window.py:373
+msgid "The color directories shall have in PIDA"
+msgstr ""
+
+#: pida/ui/splash.py:41
+msgid "Initialize"
+msgstr ""
+
+#: pida/ui/terminal.py:239
+#, python-format
+msgid "No match named \"%s\" was found"
+msgstr ""
+
+#: pida/ui/terminal.py:321
+msgid "Open"
+msgstr ""
+
+#: pida/ui/terminal.py:322
+msgid "Save This File"
+msgstr ""
+
+#: pida/ui/uimanager.py:12
+msgid "_File"
+msgstr ""
+
+#: pida/ui/uimanager.py:12
+msgid "File Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:13
+msgid "_Edit"
+msgstr ""
+
+#: pida/ui/uimanager.py:13
+msgid "Edit Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:14
+msgid "_Project"
+msgstr ""
+
+#: pida/ui/uimanager.py:14
+msgid "Project Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:15
+msgid "_Language"
+msgstr ""
+
+#: pida/ui/uimanager.py:15
+msgid "Language Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:16
+msgid "_Debug"
+msgstr ""
+
+#: pida/ui/uimanager.py:16
+msgid "Debug Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:17
+msgid "_Tools"
+msgstr ""
+
+#: pida/ui/uimanager.py:17
+msgid "Tools Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:18
+msgid "Debug Pida"
+msgstr ""
+
+#: pida/ui/uimanager.py:18
+msgid "Debug Pida Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:19
+msgid "_View"
+msgstr ""
+
+#: pida/ui/uimanager.py:19
+msgid "View Menu"
+msgstr ""
+
+#: pida/ui/uimanager.py:20
+msgid "_Help"
+msgstr ""
+
+#: pida/ui/uimanager.py:20
+msgid "Help Menu"
+msgstr ""
+
+#: pida/ui/views.py:24
+msgid "Pida View"
+msgstr ""
+
+#: pida/ui/widgets.py:35
+msgid "Select File"
+msgstr ""
+
+#: pida/ui/window.py:96
+msgid "PIDA Loves You!"
+msgstr ""
+
+#: pida/ui/workspace.py:56
+msgid "Workspace"
+msgstr ""
+
+#: pida/ui/workspace.py:58
+msgid "Open Files"
+msgstr ""
+
+#: pida/ui/workspace.py:135
+msgid "You can't delete a running workspace"
+msgstr ""
+
+#: pida/ui/workspace.py:138
+#, python-format
+msgid "Do you really want to delete workspace %s ?"
+msgstr ""
+
+#: pida/ui/glade/priority_editor.glade:7
+msgid "Priority Editor"
+msgstr ""
+
+#: pida/ui/glade/priority_editor.glade:36
+msgid "Show all"
+msgstr ""
+
+#: pida/ui/glade/priority_editor.glade:37
+#: pida/ui/glade/priority_editor.glade:38
+msgid "Shows all messages even with no plugins registered"
+msgstr ""
+
+#: pida/ui/glade/priority_editor.glade:123
+msgid "Customize"
+msgstr ""
+
+#: pida/ui/glade/priority_editor.glade:124
+#: pida/ui/glade/priority_editor.glade:125
+msgid "Allows you to change the order of the plugins in the list"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:10
+msgid "Delete"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:16
+msgid "Use"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:28
+msgid "Select Workspace"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:50
+msgid "Advanced Options"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:59
+msgid "Safe Mode"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:80
+msgid "_New Workspace"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:88
+msgid "_Use Workspace"
+msgstr ""
+
+#: pida/ui/glade/workspace_select.glade:99
+msgid "_Quit"
+msgstr ""
+
+#: pida/utils/puilder/view.py:36
+msgid "<i>default</i>"
+msgstr ""
+
+#: pida/utils/puilder/view.py:315
+msgid "Do not set empty project names"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_external.glade:22
+msgid "External Build System"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_external.glade:33
+msgid "Target Name"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_external.glade:46
+msgid "Build Arguments"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_external.glade:97
+#: pida/utils/puilder/glade/action_python.glade:47
+#: pida/utils/puilder/glade/action_shell.glade:78
+#: pida/utils/puilder/glade/action_target.glade:38
+msgid "Continue on failure"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_python.glade:15
+msgid "<i>Enter your Python Script:</i>"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_shell.glade:51
+msgid "cd"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_shell.glade:62
+msgid "Select directory to change to"
+msgstr ""
+
+#: pida/utils/puilder/glade/action_target.glade:17
+msgid "<i>Select the action to run:</i>"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:10
+msgid "_Action"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:16
+msgid "New _Action"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:23
+msgid "_Empty Dependency"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:30
+msgid "Import External Build"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:37
+msgid "Add Dependency"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:44
+msgid "New Target with Python Action"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:51
+msgid "New Target with Shell Action"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:58
+msgid "New Empty _Target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:59
+msgid "Create a new target for the current build"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:66
+msgid "Delete Selected Action"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:73
+msgid "Delete Selected Dependency"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:80
+msgid "Delete Selected Target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:81
+msgid "Delete the selected target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:88
+msgid "_Dependency"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:94
+msgid "Test Execute Selected Target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:101
+msgid "Create _New"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:108
+msgid "_Set As Default Target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:109
+msgid "Use this target as default"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:115
+msgid "_Target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:121
+msgid "_Execute Current Target"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:128
+msgid "Move Down"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:135
+msgid "Move Up"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:216
+msgid "Targets"
+msgstr ""
+
+#: pida/utils/puilder/glade/puild_properties.glade:231
+#: pida/utils/puilder/glade/target_properties.glade:31
+msgid "Actions"
+msgstr ""
+
+#: pida/utils/puilder/glade/target_properties.glade:13
+msgid "<b>Target Properties</b>"
+msgstr ""
+
+#: pida/utils/puilder/glade/target_properties.glade:240
+msgid "Action Type:"
+msgstr ""
+

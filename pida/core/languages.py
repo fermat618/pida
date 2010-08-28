@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
 Language Support Superclasses
@@ -15,7 +15,6 @@ from pida.core.document import Document
 from pida.core.projects import Project
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
-from pida.core.environment import opts
 from pida.utils.languages import (LANG_COMPLETER_TYPES,
     LANG_VALIDATOR_TYPES, LANG_VALIDATOR_SUBTYPES, LANG_PRIO,
     Suggestion, Definition, ValidationError, Documentation)
@@ -25,53 +24,14 @@ from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
 
-from pida.core.log import get_logger
-log = get_logger('core.languages')
+from pida.core.log import Log
 
-if opts.multiprocessing:
-    try:
-        import multiprocessing
-        from multiprocessing.managers import (BaseManager, BaseProxy, 
-            SyncManager, RemoteError)
+import multiprocessing
+from multiprocessing.managers import (
+    BaseManager, BaseProxy,
+    SyncManager, RemoteError,
+)
 
-#         does not detect work yet :-(
-#         class TestResult(object):
-#             def __init__(self, i):
-#                 self.i = i
-#
-#         class TestManager(BaseManager):
-#             @staticmethod
-#             def test():
-#                 for i in (TestResult(1), TestResult(2)):
-#                     yield i
-#
-#         m = TestManager()
-#         m.start()
-#         for i in m.test():
-#             print i
-#         m.shutdown()
-
-    except ImportError:
-        log.info(_("Can't find multiprocessing, disabled work offload"))
-        multiprocessing = None
-        BaseManager = BaseProxy = SyncManager = object
-        class RemoteError(Exception):
-            pass
-else:
-    multiprocessing = None
-    BaseManager = BaseProxy = SyncManager = object
-    class RemoteError(Exception):
-        pass
-
-#FIXME: maybe we should fill the plugin values with a metaclass ???
-# class LanguageMetaclass(type):
-#     def __new__(meta, name, bases, dct):
-#         print "Creating class %s using CustomMetaclass" % name
-#         print meta, name, bases, dct
-#         klass = type.__new__(meta, name, bases, dct)
-#         #meta.addParentContent(klass)
-#         klass.plugin = dct['__module__']
-#         return klass
 
 # priorities for running language plugins
 
@@ -147,37 +107,37 @@ class BaseDocumentHandler(object):
 class BaseCachedDocumentHandler(BaseDocumentHandler):
     """
     Default cache implementation for Languge Plugins.
-    
+
     The cache is valid until the file is changed on disk
     """
-    
+
     def _default_cache(self, fnc):
         """
         Default implementation of outline cache.
         We cache as long as the file on disk does not change
         """
-        if not self.__dict__.has_key('_cache_'):
-            self._cache_ = []
-            self._lastmtime_ = 0
+        if not hasattr(self, '_cache'):
+            self._cache = []
+            self._lastmtime = 0
         if not self.document.is_new:
-            if self.document.modified_time != self._lastmtime_:
-                self._cache_ = []
+            if self.document.modified_time != self._lastmtime:
+                self._cache = []
                 iterf = fnc()
                 if iterf is None:
                     return
                 for x in fnc():
-                    self._cache_.append(x)
+                    self._cache.append(x)
                     yield x
-                self._lastmtime_ = self.document.modified_time
+                self._lastmtime = self.document.modified_time
             else:
-                for x in self._cache_:
+                for x in self._cache:
                     yield x
         else:
             iterf = fnc()
             if iterf is None:
                 return
             for x in iterf:
-                yield xpida/services/openwith/openwith.py
+                yield x
 
 
 class Outliner(BaseCachedDocumentHandler):
@@ -258,11 +218,11 @@ class LanguageInfo(object):
     # the first character of variables have an own list
     varchars_first = [chr(x) for x in xrange(97, 122)] + \
                      [chr(x) for x in xrange(48, 58)] + \
-                     ['_',]
+                     ['_', ]
     varchars = [chr(x) for x in xrange(97, 122)] + \
                [chr(x) for x in xrange(65, 90)] + \
                [chr(x) for x in xrange(48, 58)] + \
-               ['_',]
+               ['_', ]
 
     word = varchars
     word_first = varchars_first
@@ -298,10 +258,10 @@ class LanguageInfo(object):
 class TooManyResults(Exception):
     """
     Indicates that the Outliner had to many suggestions returned.
-    
+
     This will cause the cache to be cleared and will cause a rerun of the
     get_outliner on the next character entered
-    
+
     @base: base string used
     @expect_length: integer of additional characters needed so the Exception
                     won't happen again
@@ -310,7 +270,7 @@ class TooManyResults(Exception):
         super(TooManyResults, self).__init__()
         self.base = base
         if expected_length is None:
-            self.expected_length = len(base)+1
+            self.expected_length = len(base) + 1
         else:
             self.expected_length = expected_length
 
@@ -323,7 +283,7 @@ class Completer(BaseDocumentHandler):
     def get_completions(self, base, buffer_, offset):
         """
         Gets a list of completitions.
-        
+
         @base - string which starts completions
         @buffer - document to parse
         @offset - cursor position
@@ -340,14 +300,14 @@ def make_iterable(inp):
 class LanguageServiceFeaturesConfig(FeaturesConfig):
     """
     An advanced version of FeaturesConfig used for language plugins.
-    
+
     Please remember to call the overloaded function
     """
 
     def subscribe_all_foreign(self):
         all_langs = make_iterable(self.svc.language_name)
         mapping = {
-            'outliner_factory':'outliner',
+            'outliner_factory': 'outliner',
             'definer_factory': 'definer',
             'validator_factory': 'validator',
             'completer_factory': 'completer',
@@ -356,14 +316,14 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
         # register all language info classes
         for lname in all_langs:
             if self.svc.language_info is not None:
-                self.subscribe_foreign('language', 'info', lname, 
+                self.subscribe_foreign('language', 'info', lname,
                                        self.svc.language_info)
 
 
         for factory_name, feature in mapping.iteritems():
             factory = getattr(self.svc, factory_name)
             if factory is not None:
-                # a language_name of a factory overrides the service 
+                # a language_name of a factory overrides the service
                 # language_name
                 if hasattr(factory, 'language_name'):
                     cur_langs = make_iterable(factory.language_name)
@@ -371,7 +331,7 @@ class LanguageServiceFeaturesConfig(FeaturesConfig):
                     cur_langs = all_langs
                 for lname in cur_langs:
                     self.subscribe_foreign(
-                            'language', feature, lname, 
+                            'language', feature, lname,
                             partial(factory, self.svc))
 
 
@@ -447,7 +407,7 @@ class ExternalMeta(type):
                 continue
             cls.register(type_, dct[type_])
             for mfunc in funcs:
-                nname = "%s_%s" %(type_, mfunc)
+                nname = "%s_%s" % (type_, mfunc)
                 # we register the function as a callable external
                 cls.register(nname, getattr(dct[type_], mfunc), proxytype=GeneratorProxy)
 
@@ -460,12 +420,12 @@ class External(SyncManager):
     Create a new class inhereting from External and define the class
     variables of the types you want to externalize. This class must be the
     'extern' class variable of your LanguageService
-    
+
     @validator: validator class
     @outliner
     @definer
     @documentator
-    
+
     You can define additional static functions here that can be run on the
     external process.
     """
@@ -478,7 +438,7 @@ class External(SyncManager):
     documentator = None
     definer = None
     completer = None
-    
+
     @staticmethod
     def validator_get_validations(instance):
         for i in instance.get_validations():
@@ -617,7 +577,7 @@ class Merger(BaseDocumentHandler):
     def set_sources(self, sources):
         """
         Set all sources that will be used to build the results.
-        
+
         The order of the sources will define the order which create the results
         """
         self.sources = sources
@@ -651,6 +611,10 @@ def safe_remote(func):
         try:
             for i in func(self, *args, **kwargs):
                 yield i
+        except RuntimeError, e:
+            self.log.warning(_("problems running external plugin: %s"), e)
+            self.restart()
+            return
         except:
             if self.stopped:
                 return
@@ -658,9 +622,9 @@ def safe_remote(func):
     return safe
 
 
-class JobServer(object):
+class JobServer(Log):
     """
-    The Jobserver dispatches language plugin jobs to external processes it 
+    The Jobserver dispatches language plugin jobs to external processes it
     manages.
     """
     def __init__(self, svc, external, max_processes=2):
@@ -668,8 +632,8 @@ class JobServer(object):
         self.max_processes = max_processes
         self.stopped = False
         # we have to map the proxy objects to
-        self._processes = [] 
         self._external = external
+        self._processes = []
         self._proxy_map = WeakKeyDictionary()
         self._instances = {}
 
@@ -691,7 +655,7 @@ class JobServer(object):
         """
         Returns the manager and the real instance of language plugin type of
         the proxy.
-        
+
         Everything called on this objects are done in the external process
         """
         manager = self._proxy_map.get(proxy, None)
@@ -699,12 +663,12 @@ class JobServer(object):
             manager = self.get_process(proxy)
             self._proxy_map[proxy] = manager
         instances = self._instances[manager]
-        if proxy.document.unique_id not in instances:
-            instances[proxy.document.unique_id] = manager.dict()
-        if type_ not in instances[proxy.document.unique_id]:
+        if id(proxy.document) not in instances:
+            instances[id(proxy.document)] = manager.dict()
+        if type_ not in instances[id(proxy.document)]:
             #no = getattr(manager, type_)(manager)(None, proxy.document)
-            instances[proxy.document.unique_id][type_] = getattr(manager, type_)(None, proxy.get_external_document())
-        return manager, instances[proxy.document.unique_id][type_]
+            instances[id(proxy.document)][type_] = getattr(manager, type_)(None, proxy.get_external_document())
+        return manager, instances[id(proxy.document)][type_]
 
     @safe_remote
     def validator_get_validations(self, proxy):
@@ -749,6 +713,15 @@ class JobServer(object):
             i.is_shutdown = True
             i.shutdown()
 
+    def restart(self):
+        self.log.info(_("restart jobserver"))
+        self.stop()
+        self.stopped = False
+        self._processes = []
+        self._proxy_map = WeakKeyDictionary()
+        self._instances = {}
+
+
 class LanguageService(Service):
     """
     Base class for easily implementing a language service
@@ -772,6 +745,8 @@ class LanguageService(Service):
             # if we have multiprocessing support we exchange the
             # language factories to the proxy objects
             def newproxy(old, factory):
+                if old is None:
+                    return factory
                 class NewProxy(factory):
                     pass
                 NewProxy._uuid = old.uuid()
@@ -808,16 +783,16 @@ class LanguageService(Service):
 
 LANGUAGE_PLUGIN_TYPES = {
 'completer': {
-    'name':_('Completer'),
+    'name': _('Completer'),
     'description': _('Provides suggestions for autocompletion'),
     'class': Completer},
 'definer': {
-    'name':_('Definer'),
+    'name': _('Definer'),
     'description': _(
         'Jumps to the code position where the current symbol is defined'),
     'class': Definer},
 'documentator': {
-    'name':_('Documentator'),
+    'name': _('Documentator'),
     'description': _('Provides the signature of the current symbol'),
     'class': Documentator},
 'outliner': {
@@ -825,7 +800,7 @@ LANGUAGE_PLUGIN_TYPES = {
     'description': _('Provides informations where symbols are defined'),
     'class': Outliner},
 'validator': {
-    'name':_('Validator'),
+    'name': _('Validator'),
     'description': _('Shows problems and style errors in the code'),
     'class': Validator}
 }

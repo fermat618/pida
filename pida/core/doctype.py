@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     pida.core.doctype
@@ -13,32 +13,25 @@ from glob import fnmatch
 import charfinder
 from collections import defaultdict
 
-def ensure_list(data):
-    if not data:
-        return []
-    if not isinstance(data, (list, tuple)):
-        return (data,)
-    return data
-
 class DocType(object):
     """Represents a type of document. Like a python sourcecode file, a xml
     file, etc.
     """
-    __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes', 
+    __slots__ = ('internal', 'aliases', 'human', 'extensions', 'mimes',
                  'section', 'parsers', 'validators', 'support')
 
-    def __init__(self, internal, human, aliases = None, extensions = None, 
-                 mimes = None, section = 'Others'):
+    def __init__(self, internal, human, aliases=None, extensions=None,
+                 mimes=None, section='Others'):
         self.internal = internal
         self.human = human
-        self.aliases = ensure_list(aliases)
-        self.extensions = ensure_list(extensions)
-        self.mimes = ensure_list(mimes)
+        self.aliases = aliases
+        self.extensions = extensions
+        self.mimes = mimes
         self.section = section
         # the support counter tracs how much support this document type gets
         # 0 means that he is currently not supported by something special
         self.support = 0
-        
+
         self.parsers = []
         self.validators = []
 
@@ -61,12 +54,12 @@ class DocType(object):
         return self.human
 
     def __repr__(self):
-        return '<DocType %s %s>' %(self.internal, self.human)
+        return '<DocType %s %s>' % (self.internal, self.human)
 
 class TypeManager(dict):
     """
     DocType Library
-    
+
     This class manages a list of DocType instances and features selection
     """
 
@@ -75,7 +68,7 @@ class TypeManager(dict):
         self._mimetypes = defaultdict(list)
 
     def add(self, doctype):
-        if self.has_key(doctype.internal):
+        if doctype.internal in self:
             raise "doctype already registed"
         self[doctype.internal] = doctype
         for ext in doctype.extensions:
@@ -87,7 +80,7 @@ class TypeManager(dict):
 
     def _parse_map(self, lst):
         for intname, data in lst.iteritems():
-            nd = DocType(intname, data['human'], aliases=data['alias'], 
+            nd = DocType(intname, data['human'], aliases=data['alias'],
                          extensions=data['glob'], mimes=data['mime'],
                          section=data.get('section', None))
 
@@ -109,9 +102,9 @@ class TypeManager(dict):
         for test in self._globs.keys():
             if fnmatch.fnmatch(filename, test):
                 rv += self._globs[test]
-        
+
         return rv
-        
+
     def type_by_filename(self, filename):
         """Tries to find only one, the best guess for the type."""
         if not filename:
@@ -128,7 +121,7 @@ class TypeManager(dict):
         if best_glob == '':
             return None
         return self._globs[best_glob][0]
-        
+
         if len(best_list) > 1:
             # erks. got more then one result. try different approach
             # guess the mimetype through the python mimetype lib
@@ -150,7 +143,7 @@ class TypeManager(dict):
                 best = best_list[0]
         elif len(best_list):
             best = best_list[0]
-        
+
         return best
 
     def get_fuzzy(self, pattern):

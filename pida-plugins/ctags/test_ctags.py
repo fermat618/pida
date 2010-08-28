@@ -31,7 +31,7 @@ from pida.utils.testing.mock import Mock
 
 class TestCtags(unittest.TestCase):
     def test_parser(self):
-        self.doc = Document(Mock(), os.path.join(TESTDIR, 'test.py'))
+        self.doc = Document(None, os.path.join(TESTDIR, 'test.py'))
         self.outliner = CtagsOutliner(None, document=self.doc)
         lst = list(self.outliner.get_outline())
         outer = None

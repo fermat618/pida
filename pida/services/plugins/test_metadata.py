@@ -1,7 +1,7 @@
 
 
 from .test_packer import skeleton_path
-from .metadata import from_plugin, from_dict
+from .metadata import from_plugin, from_dict, is_plugin
 
 def test_metadata_from_plugin():
     data = from_plugin(skeleton_path, 'skeleton')
@@ -19,5 +19,14 @@ def test_metadata_from_dict():
     assert data.is_new
     assert data['Name'] == 'abc'
 
+
+
+def test_is_plugin(tmpdir):
+    file = tmpdir.ensure('service/service.pida')
+    file.write('a') # how mime messages usually could start
+    assert is_plugin(str(tmpdir), 'service')
+
+    file.write('[') # how the 0.5 plugins did start
+    assert not is_plugin(str(tmpdir), 'service')
 
 

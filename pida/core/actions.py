@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     Action support for PIDA services.
@@ -6,19 +6,10 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
-# gtk import(s)
+import pkgutil
 import gtk
-import gobject
-
-# pida core import(s)
-from pida.core.base import BaseConfig
 from pida.core.options import OptionsConfig
-import warnings
-
-# kiwi imports
 from pida.ui.dropdownmenutoolbutton import DropDownMenuToolButton
-
 
 
 class PidaMenuToolAction(gtk.Action):
@@ -90,7 +81,6 @@ class ActionsConfig(OptionsConfig):
     instance.
     """
     name = '%s.keys.json'
-    dbus_path = "actions"
     accelerator_group = accelerator_group
     global_accelerator_group = global_accelerator_group
 
@@ -110,7 +100,8 @@ class ActionsConfig(OptionsConfig):
         if self.svc.boss is not None:
             self.ui_merge_id = self.svc.boss.add_action_group_and_ui(
                 self._actions,
-                '%s.xml' % self.svc.get_name()
+                self.svc.__class__.__module__,
+                'uidef/%s.xml' % self.svc.get_name(),
             )
 
     def create_actions(self):
@@ -181,7 +172,7 @@ class ActionsConfig(OptionsConfig):
             act.connect('activate', callback)
 
         if accel is not None:
-            self._create_key_option(act, name, label, tooltip, accel, 
+            self._create_key_option(act, name, label, tooltip, accel,
                                     global_=global_)
 
         return act
@@ -204,7 +195,7 @@ class ActionsConfig(OptionsConfig):
 
 # XXX: for some reason this does not work. the changed function gets called
 # when it shouldn't and doesn't detect the wrong path
-# if fixed and the action acceleration is changed the acceleration_group.lock 
+# if fixed and the action acceleration is changed the acceleration_group.lock
 # can be removed
 #         print "subsribe", act, opt
 #         def on_accel_changed(accelgroup, accel_key, accel_mods, closure, nopt, nact):
@@ -222,7 +213,7 @@ class ActionsConfig(OptionsConfig):
 #             #print act.props.name
 #             pass
 #
-#         self.accelerator_group.connect('accel-changed', on_accel_changed, 
+#         self.accelerator_group.connect('accel-changed', on_accel_changed,
 #                 opt, act)
 
 

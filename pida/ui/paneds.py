@@ -3,13 +3,8 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
-import os
-
 import gtk
 import gobject
-
-from pida.core.environment import pida_home
 
 # Don't import moo twice from different locations when the full editor is
 # being used.
@@ -30,8 +25,8 @@ except ImportError:
     from pida.ui.moo_stub import PANE_POS_BOTTOM, PANE_POS_TOP, PANE_POS_RIGHT, PANE_POS_LEFT
     use_old = False
 
-from kiwi.utils import gsignal
-from pida.utils.gthreads import gcall
+from pygtkhelpers.utils import gsignal
+from pygtkhelpers.gthreads import gcall
 
 PANE_TERMINAL = 'Terminal'
 PANE_EDITOR = 'Editor'
@@ -360,7 +355,7 @@ class PidaPaned(BigPaned):
             for pos in self.get_all_pos():
                 paned = self.get_paned(pos)
                 self._fullscreen_vis[pos] = {
-                     'pane':paned.get_open_pane(),
+                     'pane': paned.get_open_pane(),
                      'sticky': paned.props.sticky_pane
                      }
                 paned.set_sticky_pane(False)
@@ -369,7 +364,7 @@ class PidaPaned(BigPaned):
         else:
              for pos in self.get_all_pos(True):
                 paned = self.get_paned(pos)
-                if self._fullscreen_vis.has_key(pos) and \
+                if pos in self._fullscreen_vis and \
                     self._fullscreen_vis[pos]['pane']:
                     paned.open_pane(self._fullscreen_vis[pos]['pane'])
                     paned.set_sticky_pane(self._fullscreen_vis[pos]['sticky'])

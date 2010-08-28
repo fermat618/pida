@@ -36,12 +36,10 @@ MOO_DATA_DIRS=os.pathsep.join((
 
 os.environ['MOO_DATA_DIRS'] = MOO_DATA_DIRS
 
-from kiwi.environ import environ
-
-environ.add_resource('pixmaps', os.path.join(os.path.dirname(__file__), 'pixmaps'))
-
 def _load_pix(fn):
-    return gtk.gdk.pixbuf_new_from_file(environ.find_resource('pixmaps', fn))
+    #XXX: not zip save
+    path = os.path.join(os.path.dirname(__file__), 'pixmaps', fn)
+    return gtk.gdk.pixbuf_new_from_file(path)
 
 _PIXMAPS = {
     'bookmark':              _load_pix('bookmark.png'),
@@ -61,9 +59,9 @@ from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE
 from pida.core.events import EventsConfig
 from pida.core.document import DocumentException
 from pida.core.options import OptionsConfig, choices
-from pida.utils.completer import (PidaCompleter, PidaCompleterWindow, 
+from pida.ui.completer import (PidaCompleter, PidaCompleterWindow, 
     SuggestionsList)
-from pida.utils.gthreads import GeneratorTask, gcall, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, gcall, AsyncTask
 from pida.core.languages import Suggestion
 from pida.ui.languages import PidaDocWindow
 
@@ -1247,12 +1245,19 @@ class Mooedit(EditorService):
 
     def save(self):
         """Save the current document"""
+        # man, medit resets the language on save
+        olang = self._current.editor.props.buffer.get_lang()
         self._current.editor.save()
+        self._current.editor.set_lang(olang)
+        gcall(self._current.editor.set_lang, olang)
         self.boss.cmd('buffer', 'current_file_saved')
 
     def save_as(self):
         """Save the current document"""
+        olang = self._current.editor.props.buffer.get_lang()
         self._current.editor.save_as()
+        self._current.editor.set_lang(olang)
+        gcall(self._current.editor.set_lang, olang)
         self.boss.cmd('buffer', 'current_file_saved')
 
     def cut(self):

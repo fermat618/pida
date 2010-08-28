@@ -5,11 +5,14 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
+import os
 import gtk
-from pida.core.environment import get_pixmap_path
+import pida
 
 pida_icon = gtk.Image()
-pida_icon.set_from_file(get_pixmap_path('pida-icon.png'))
+pida_icon.set_from_file(os.path.join(
+    pida.__path__[0],
+    'resources/pixmaps/pida-icon.png'))
 
 class FirstTimeWindow(object):
 
@@ -93,8 +96,10 @@ class FirstTimeWindow(object):
         f.close()
 
 if __name__ == '__main__':
-    ftw = FirstTimeWindow([])
-    print ftw.run('/home/ali/firstrun')
+    from pida.editors.vim.vim import Vim
+    from pida.editors.mooedit.mooedit import Mooedit
+    ftw = FirstTimeWindow([Vim, Mooedit])
+    print ftw.run('~/firstrun')
 
 
 

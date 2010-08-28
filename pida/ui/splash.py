@@ -7,18 +7,16 @@
 import gtk, gobject
 
 from pida.utils.testing import refresh_gui
+from pida.core.environment import get_pixmap_path
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-from kiwi.environ import environ
+class SplashScreen(gtk.Window): 
 
-
-class SplashScreen(gtk.Window):
-
-    def __init__(self):
+    def __init__(self): 
         gtk.Window.__init__(self)
         self.set_decorated(False)
         vb = gtk.VBox()
@@ -32,7 +30,7 @@ class SplashScreen(gtk.Window):
 #         l.set_alignment(0.5, 0)
 #         l.show()
         self.img = gtk.Image()
-        self.img.set_from_file(environ.find_resource('pixmaps', 'pida-splash.png'))
+        self.img.set_from_file(get_pixmap_path('pida-splash.png'))
         vb.pack_start(self.img)
         self.img.show()
         self.p = gtk.ProgressBar()

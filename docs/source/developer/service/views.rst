@@ -9,8 +9,14 @@ main toolbar and menubar). All of these views belong to a service.
 Creating Views
 --------------
 
-Views may be designed in Glade3, or in pure <<PyGTK>>. Each method of view
-creation has its advantages and disadvantages, and these are discussed below.
+Views may be designed in Glade3, or in pure :ref:`PyGTK`.
+Each method of view creation has its advantages and disadvantages,
+and these are discussed below.
+
+.. note::
+
+  the sematics of views are affected by the recent pygtkhelpers refactoring
+
 
 Glade3 Views
 ------------

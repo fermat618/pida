@@ -42,16 +42,16 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import (TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, 
                                TYPE_REMEMBER_TOGGLE)
 
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 
-from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('library')
 _ = locale.gettext
 
-class LibraryView(PidaGladeView):
+class LibraryView(PidaView):
 
     key = 'library.list'
     

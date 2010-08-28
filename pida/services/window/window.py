@@ -7,7 +7,7 @@
 import os
 import gtk
 import string
-import simplejson
+import json
 from functools import partial
 
 # PIDA Imports
@@ -393,15 +393,17 @@ class Window(Service):
     actions_config = WindowActionsConfig
     events_config = WindowEvents
     features_config = WindowFeatures
-    
+
     def pre_start(self):
         self._title_template = None
         self._last_focus = None
         super(Window, self).pre_start()
         self.update_colors()
-        self.state_config = os.path.join(settings_dir, 'workspaces', 
-                                         workspace_name(), "window.state.json")
         self.restore_state(pre=True)
+
+    @property
+    def state_config(self):
+        return os.path.join(settings_dir, 'workspaces', workspace_name(), "window.state.json")
 
     def start(self):
         # Explicitly add the permanent views
@@ -428,9 +430,10 @@ class Window(Service):
         try:
             fp = open(self.state_config, "r")
         except (OSError, IOError), e:
-            self.log("Can't open state file %s" %self.state_config)
+            self.log.warning("Can't open window state file %s",
+                                    self.state_config)
             return
-        data = simplejson.load(fp)
+        data = json.load(fp)
 
         if pre:
             # in pre mode we restore the paned config and the window position/size, etc
@@ -456,14 +459,15 @@ class Window(Service):
             return
 
         for service in self.boss.get_services():
-            if not data.has_key(service.get_name()):
+            name = service.get_name()
+            info = data.get(name, {})
+
+            if not info:
                 continue
             for action in service.actions.list_actions():
                 if isinstance(action, TYPE_REMEMBER_TOGGLE):
-                    try:
-                        action.set_active(data[service.get_name()][action.get_name()])
-                    except KeyError:
-                        pass
+                    if action.get_name() in info:
+                        action.set_active(data[name][action.get_name()])
 
     def save_state(self, *args):
         if not self.started:
@@ -491,10 +495,9 @@ class Window(Service):
         
         try:
             fp = open(self.state_config, "w")
+            json.dump(data, fp, indent=4)
         except (OSError, IOError), e:
-            self.log("Can't open state file %s" %self.state_config)
-            return
-        simplejson.dump(data, fp, indent=4)
+            self.log.warning("Can't open state file %s" %self.state_config)
 
     def _on_pane_detachment(self, bigpaned, pane, detached):
         if detached:
@@ -590,15 +593,15 @@ class Window(Service):
         for pane in self.boss.window.paned.list_panes(every=True):
             action_name = "show_window_%s" %i
             act = gtk.Action(action_name,
-                "_%s" %pane.view.label_text,
+                "_%s" %pane.label_text,
                 '',
                 '')
-            act.connect('activate', self._on_window_action, pane.view)
+            act.connect('activate', self._on_window_action, pane)
             self._action_group.add_action(act)
             self.boss.window._uim._uim.add_ui(
                 self._window_list_id,
                 "ui/menubar/AddMenu/WindowMenu/window_list", 
-                "_%s" %pane.view.label_text, 
+                "_%s" %pane.label_text, 
                 action_name, 
                 gtk.UI_MANAGER_MENUITEM, 
                 False)            #mi = act.create_menu_item()
@@ -623,6 +626,7 @@ class Window(Service):
                 gtk.UI_MANAGER_MENUITEM, 
                 False)
             i += 1
+        self.boss.window._uim.ensure_update()
         return None
 
 # Required Service attribute for service loading

@@ -9,7 +9,7 @@ import base64
 from urllib import urlencode
 from urllib2 import urlopen, Request
 
-from pida.utils.gthreads import AsyncTask
+from pygtkhelpers.gthreads import AsyncTask
 
 def fetch_url(url, content_callback, data={}, auth=None):
     """

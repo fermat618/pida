@@ -22,10 +22,10 @@ from pida.core.features import FeaturesConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import (ActionsConfig, TYPE_NORMAL)
 from pida.core.options import OptionsConfig
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 from pida.services.language import DOCTYPES
-from pida.core.projects import RESULT
-from pida.utils.gthreads import gcall
+from pida.core.indexer import Result
+from pygtkhelpers.gthreads import gcall
 import time
 
 
@@ -38,7 +38,7 @@ class QItem(object):
     name = ''
     path = ''
 
-class QOpenView(PidaGladeView):
+class QOpenView(PidaView):
 
     key = 'qopen.view'
     gladefile = 'qopen'
@@ -88,7 +88,7 @@ class QOpenView(PidaGladeView):
 
         def do_filter(item):
             if len(self.olist) > 200:
-                RESULT.ABORT
+                Result(abort=True)
             if not len(item.basename) or not len(item.relpath):
                 return
             if "/." in item.relpath or item.relpath[0] == ".":
@@ -102,14 +102,14 @@ class QOpenView(PidaGladeView):
                all((x in item.basename for x in fnames)):
                 if len(ftypes):
                     if item.doctype in ftypes:
-                        return RESULT.YES
+                        return Result(accept=True)
                 else:
-                    return RESULT.YES
+                    return Result(accept=True)
 
         project = self.svc.boss.cmd('project', 'get_current_project')
         if not project:
             return
-        for result in project.query(do_filter):
+        for result in project.indexer.query(do_filter):
             self.olist.append(result)
 
         return False

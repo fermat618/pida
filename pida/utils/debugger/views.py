@@ -3,14 +3,13 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+import pkgutil
 import gtk
 
-from kiwi.ui.objectlist import ObjectTree, ObjectList, Column
+from pygtkhelpers.ui.objectlist import ObjectTree, ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import get_uidef_path
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 
 from pida.ui.views import PidaView
 
@@ -29,14 +28,12 @@ class DebuggerBreakPointsView(PidaView):
     def create_ui(self):
         self._prebreakpoints = {}
         self._breakpoints = {}
-        self._breakpoint_list = ObjectList(
-            [
+        self._breakpoint_list = ObjectList([
                 Column('line'),
                 Column('file', sorted=True),
                 Column('status')
-            ]
-        )
-        self._breakpoint_list.connect('double-click', self._on_breakpoint_double_click)
+        ])
+        self._breakpoint_list.connect('item-activated', self._on_breakpoint_double_click)
         self.add_main_widget(self._breakpoint_list)
         self._breakpoint_list.show_all()
 
@@ -152,16 +149,14 @@ class DebuggerStackView(PidaView):
         self.create_toolbar()
 
         # Tree
-        self._stack_list = ObjectTree(
-            [
-                Column('thread'), 
-                Column('frame'), 
-                Column('line'),
-                Column('function'),
-                Column('file'),
-            ]
-        )
-        self._stack_list.connect('double-click', self._on_frame_double_click)
+        self._stack_list = ObjectTree([
+            Column('thread'),
+            Column('frame'),
+            Column('line'),
+            Column('function'),
+            Column('file'),
+        ])
+        self._stack_list.connect('item-activated', self._on_frame_double_click)
 
         # Arrange the UI
         self._vbox = gtk.VBox()
@@ -185,7 +180,9 @@ class DebuggerStackView(PidaView):
     def create_toolbar(self):
         self._uim = gtk.UIManager()
         self._uim.insert_action_group(self.svc.get_action_group(), 0)
-        self._uim.add_ui_from_file(get_uidef_path('debugger_stackview_toolbar.xml'))
+        uidef_data = pkgutil.get_data(__name__,
+                'debugger_stackview_toolbar.xml')
+        self._uim.add_ui_from_string(uidef_data)
         self._uim.ensure_update()
         self._toolbar = self._uim.get_toplevels('toolbar')[0]
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)

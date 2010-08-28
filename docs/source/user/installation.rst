@@ -122,8 +122,10 @@ or to be more precise::
 Installation from Source
 ------------------------
 
-**Installation is the recommended method of running PIDA for users.
-Running from source should be reserved for people intending to develop pida itself or a plugion.**
+.. note::
+  Installation is the recommended method of running PIDA for users.
+  Running from source should be reserved for people 
+  intending to develop pida itself or a plugion.
 
 To install PIDA, the following command should be run as root (or using sudo) if you are installing to a global location.  This command is run from the PIDA directory either created from the Mercurial checkout, or the stable tarball::
 
@@ -163,6 +165,7 @@ Some pointers on how to install PIDA dependencies
 and perform a `Windows Installation`_ can be found on the Trac_.
 
 Due to lack of developers on Win32 we can't maintain official support.
+
 
 Mac OS X
 --------

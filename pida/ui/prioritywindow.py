@@ -5,8 +5,8 @@
 """
 
 import gtk
-from pida.ui.views import PidaGladeView
-from kiwi.ui.objectlist import Column
+from pida.ui.views import PidaView
+from pygtkhelpers.ui.objectlist import Column
 
 # locale
 from pida.core.locale import Locale
@@ -71,20 +71,11 @@ def display_or_repr(obj):
     return unicode(obj)
 
 
-from kiwi.environ import environ
-pic_unedited = gtk.gdk.pixbuf_new_from_file(
-            environ.find_resource('pixmaps', 'unedited.png'))
-pic_edited = gtk.gdk.pixbuf_new_from_file(
-            environ.find_resource('pixmaps', 'edited.png'))
-#print pic_edited
-def customized_icon(obj):
-    if obj is None:
-        return None
-    if obj:
-        return pic_edited
-    return pic_unedited
+def edited(obj):
+    return 'edited' if obj else 'unedited'
 
-class PriorityEditorView(PidaGladeView):
+
+class PriorityEditorView(PidaView):
     gladefile = 'priority_editor'
     locale = locale
 
@@ -93,10 +84,13 @@ class PriorityEditorView(PidaGladeView):
         self._root_category = None
         self.simple = kwargs.pop('simple', False)
         super(PriorityEditorView, self).__init__(*args, **kwargs)
+
+    def create_ui(self):
+
         self.selection_tree.set_columns([
             Column('customized', title=' ',
-                   data_type=gtk.gdk.Pixbuf,
-                   format_func=customized_icon, expand=False,
+                   format_func=edited,
+                   use_stock=True,
                    justify=gtk.JUSTIFY_RIGHT,
                    ),
             Column('display', title=_('Category'), 
@@ -109,13 +103,7 @@ class PriorityEditorView(PidaGladeView):
             Column('plugin', title=_('Plugin')),
             Column('description', title=_('Description'), 
                    expand=True)])
-        #self.priority_list.set_headers_visible(False)
-        #self.selection_tree.set_headers_visible(False)
-        #try:
-        #self.priority_list.enable_dnd()
-        #except: pass
 
-    def create_ui(self):
         if self.simple:
             self.category_splitter.set_position(0)
             self.selection_tree.hide()
@@ -137,7 +125,7 @@ class PriorityEditorView(PidaGladeView):
         self.priority_list.clear()
 
         def add_sub(root, sub):
-            self.selection_tree.append(root, sub)
+            self.selection_tree.append(sub, parent=root)
             for ssub in sub.get_subcategories():
                 add_sub(sub, ssub)
 
@@ -148,7 +136,7 @@ class PriorityEditorView(PidaGladeView):
 
     def on_selection_tree__selection_changed(self, *args):
         self.save_list()
-        cur = self.selection_tree.get_selected()
+        cur = self.selection_tree.selected_item
         # we have to update the priority list only if the customize checkbox
         # does not change
         if not cur:
@@ -165,7 +153,7 @@ class PriorityEditorView(PidaGladeView):
         self.update_priority_list()
         self.customize_button.set_sensitive(len(self.priority_list))
         # open the submenu
-        self.selection_tree.expand(cur, open_all=True)
+        self.selection_tree.expand_item(cur, open_all=True)
 
     def save_list(self):
         if self._current_selection:
@@ -176,30 +164,28 @@ class PriorityEditorView(PidaGladeView):
 
     def update_priority_list(self, default=False):
         self.priority_list.clear()
-        cur = self.selection_tree.get_selected()
+        cur = self.selection_tree.selected_item
         self._current_selection = cur
         if cur:
             if cur.temporary_list is not None and not default:
-                self.priority_list.add_list(
-                    cur.temporary_list,
-                    clear=False)
+                self.priority_list.clear()
+                self.priority_list.extend(cur.temporary_list)
             else:
                 if default or not cur.customized:
                     default = True
-                self.priority_list.add_list(
-                    cur.get_entries(default=default),
-                    clear=False)
+                self.priority_list.extend(cur.get_entries(default=default))
 
 
     def on_customize_button__toggled(self, action):
-        cur = self.selection_tree.get_selected()
+        cur = self.selection_tree.selected_item
         customized = False
         if cur:
             cur.customized = customized = self.customize_button.get_active()
         for wid in [self.button_move_up, self.button_move_down, 
                     self.priority_list]:
             wid.set_sensitive(customized)
-        self.selection_tree.refresh()
+        if cur:
+            self.selection_tree.update(cur)
         #self.priority_list.set_sensitive(True)
         self.update_priority_list()
         #self.priority_list.set_sensitive(cur.customized)
@@ -208,10 +194,10 @@ class PriorityEditorView(PidaGladeView):
         self.set_category_root(self._root_category)
 
     def on_button_move_up__clicked(self, action):
-        self._move_row(-1)
+        self.priority_list.move_item_up(self.priority_list.selected_item)
 
     def on_button_move_down__clicked(self, action):
-        self._move_row(1)
+        self.priority_list.move_item_down(self.priority_list.selected_item)
 
     def on_button_reset__clicked(self, action):
         #self.reset_caches()
@@ -235,27 +221,10 @@ class PriorityEditorView(PidaGladeView):
             item.temporary_list = None
 
 
-    def _move_row(self, direction):
-        row_n = self.priority_list.get_selected_row_number()
-        if row_n is None:
-            return
-        model = self.priority_list.get_model()
-        tmr = model[row_n]
-        if direction < 0:
-            model.move_before(tmr.iter,
-                              model[max(row_n+direction,0)].iter)
-        elif direction > 0:
-            if row_n+direction > len(model)-1:
-                return
-            model.move_after(tmr.iter,
-                             model[max(row_n+direction,0)].iter)
-
-
 if __name__ == "__main__":
     from pida.core import environment
     from tests.ui.test_priorityeditor import TestRootCategory
     import sys
-    import gtk
     environment.parse_args(sys.argv)
     twin = gtk.Window()
     twin.connect('delete-event', gtk.main_quit)

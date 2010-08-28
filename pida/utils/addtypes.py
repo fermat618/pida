@@ -98,7 +98,7 @@ class PriorityList(list):
                     cache[i] = i
             j = 0
             for i in self._sort_iterator():
-                if cache.has_key(i):
+                if i in cache:
                     addo = cache[i]
                     self.insert(j+1, addo)
                     try:

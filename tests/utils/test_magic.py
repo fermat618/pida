@@ -1,4 +1,4 @@
-DO_STRESS=False
+DO_STRESS = False
 
 from unittest import TestCase
 from threading import Thread

@@ -20,7 +20,11 @@ import os, sys
 import vim
 
 # just in case, our pida might not be in the default path
-sys.path.insert(0, os.path.dirname(vim.eval('$PIDA_PATH')))
+path = vim.eval('$PIDA_PATH')
+if path is None:
+    #XXX: hackish, asume we are in the main pida dir
+    path = os.getcwd()
+sys.path.insert(0, os.path.dirname(path))
 
 
 import gtk, gobject
@@ -73,6 +77,17 @@ class VimDBUSService(Object):
 
     # File opening
 
+    @method(DBUS_NS)
+    def new_file(self):
+        buf = vim.current.buffer
+        #XXX yet another vim hack
+        if len(buf) == 1 and buf[0:1] == [''] and buf.name is None:
+            buf[0] = 'a'
+            vim.command('confirm enew')
+            buf[0] = ''
+        else:
+            vim.command('confirm enew')
+
     @method(DBUS_NS, in_signature='s')
     def open_file(self, path):
         vim.command('confirm e %s' % path)
@@ -97,10 +112,13 @@ class VimDBUSService(Object):
     def get_buffer_number(self, path):
         return int(vim.eval("bufnr('%s')" % path))
 
-
     @method(DBUS_NS, in_signature='s')
     def open_buffer(self, path):
         vim.command('b!%s' % self.get_buffer_number(path))
+
+    @method(DBUS_NS, in_signature='i')
+    def open_buffer_id(self, bufid):
+        vim.command('b!%s' % bufid)
 
     # Saving
 
@@ -117,6 +135,11 @@ class VimDBUSService(Object):
     @method(DBUS_NS, in_signature='s')
     def close_buffer(self, path):
         vim.command('confirm bd%s' % self.get_buffer_number(path))
+
+    @method(DBUS_NS, in_signature='i')
+    def close_buffer_id(self, bufid):
+        if int(vim.eval("bufexists(%s)" % bufid)):
+            vim.command('confirm bd%s' % bufid)
 
     @method(DBUS_NS)
     def close_current_buffer(self):
@@ -136,6 +159,10 @@ class VimDBUSService(Object):
     def get_current_buffer(self):
         return vim.current.buffer.name or ''
 
+    @method(DBUS_NS, out_signature='i')
+    def get_current_buffer_id(self):
+        return int(vim.current.buffer.number)
+
     @method(DBUS_NS)
     def quit(self):
         vim.command('q!')
@@ -143,6 +170,10 @@ class VimDBUSService(Object):
     @method(DBUS_NS)
     def get_current_line(self):
         return vim.current.buffer[vim.current.window.cursor[0] - 1]
+
+    @method(DBUS_NS)
+    def get_current_linenumber(self):
+        return vim.current.window.cursor[0] - 1
 
     @method(DBUS_NS)
     def get_current_character(self):
@@ -256,15 +287,47 @@ class VimDBUSService(Object):
     @method(DBUS_NS, out_signature='i')
     def get_cursor_offset(self):
         return get_offset()
+
+    @method(DBUS_NS, out_signature='s')
+    def get_buffer_contents(self):
+        return '\n'.join(vim.current.buffer)
     # Signals
 
-    @signal(DBUS_NS)
-    def BufEnter(self):
+    @signal(DBUS_NS, signature='ss')
+    def BufEnter(self, bufid, filename):
         pass
 
     @signal(DBUS_NS, signature='s')
-    def BufDelete(self, filename):
-        print 'BufDelete'
+    def BufNew(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufDelete(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufWipeout(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufLeave(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufUnload(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufHidden(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufAdd(self, bufid):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufNewFile(self, bufid):
+        pass
 
     @signal(DBUS_NS)
     def VimEnter(self):
@@ -275,7 +338,19 @@ class VimDBUSService(Object):
         pass
 
     @signal(DBUS_NS)
-    def BufWritePost(self):
+    def BufWritePre(self, signature='s'):
+        pass
+
+    @signal(DBUS_NS, signature='s')
+    def BufWritePost(self, bufid):
+        pass
+
+    @signal(DBUS_NS)
+    def BufReadPre(self, bufid):
+        pass
+
+    @signal(DBUS_NS)
+    def BufReadPost(self, bufid):
         pass
 
     @signal(DBUS_NS)
@@ -311,112 +386,35 @@ def _offset_to_position(offset):
         colno = offset
     return lineno, colno
 
-
-def get_completions(base):
-    b = '\n'.join(vim.current.buffer)
-    o = int(vim.eval("s:pida_completion_offset"))
-    c = client.call('language', 'get_completions', base, b, o)
-    c = [str(i) for i in c]
-    vim.command('let s:pida_completions = %r' % c)
-
-def is_keyword_char(c):
-    return c.isalnum() or (c in '_')
-
-def set_start_var(col):
-    vim.command('let s:pida_completion_start = %r' % (col + 1))
-
-def find_start():
-    o = get_offset()
-    vim.command('let s:pida_completion_offset = %r' % o)
-
-    # we have to find the start of the word to replace
-    # we could use rope, but we want an inclusive thing
-
-    # get the cursor position
-    row, col = vim.current.window.cursor
-
-    # now row is index 1, and column is index 0,
-    # But(!) column can be len(line)
-
-    # current line
-    l = vim.current.buffer[row - 1]
-
-    # we are on the first character of the line
-    if col == 0:
-        set_start_var(col)
-    else:
-        col = col - 1
-        c = l[col]
-        while is_keyword_char(c) and col > 0:
-            col -= 1
-            c = l[col]
-        set_start_var(col)
-
-
-    #vim.command('let s:pida_completion_start = %r' % (col + 1))
-
-
-
-
-
-
-
 endpython
 
-" Completion function
-
-silent function! Find_Start()
-" locate the start of the word
-    let line = getline('.')
-    let start = col('.') - 1
-    while start > 0 && line[start - 1] =~ '\a'
-        let start -= 1
-    endwhile
-    return start
-
-endfunction
-
-
-silent function! Pida_Complete(findstart, base)
-    " locate the start of the word
-    if a:findstart
-        python find_start()
-	    return s:pida_completion_start
-    else
-        python get_completions(vim.eval('a:base'))
-        return s:pida_completions
-    endif
-endfunction
-set completefunc=Pida_Complete
-
-
-
-function! CleverTab()
-    if pumvisible()
-        return "\<C-N>"
-    endif
-    let col = col('.') - 1
-    if strpart( getline('.'), 0, col('.')-1 ) =~ '^\s*$'
-        return "\<Tab>"
-    elseif getline('.')[col - 1] !~ '\.'
-        return "\<C-N>"
-    else
-        return "\<C-X>\<C-U>"
-    endif
-endfunction
-inoremap <expr> <TAB> CleverTab()
 
 
 " Now the vim events
 silent augroup VimCommsDBus
 silent au! VimCommsDBus
-silent au VimCommsDBus BufEnter * silent call VimSignal('BufEnter')
-silent au VimCommsDBus BufDelete * silent call VimSignal('BufDelete', expand('<amatch>'))
+silent au VimCommsDBus BufEnter * silent call VimSignal('BufEnter', expand('<abuf>'), expand('<amatch>'))
+silent au VimCommsDBus BufNew * silent call VimSignal('BufNew', expand('<abuf>'))
+silent au VimCommsDBus BufNewFile * silent call VimSignal('BufNewFile', expand('<abuf>'))
+
+silent au VimCommsDBus BufReadPre * silent call VimSignal('BufReadPre', expand('<abuf>'))
+silent au VimCommsDBus BufReadPost * silent call VimSignal('BufReadPost', expand('<abuf>'))
+
+silent au VimCommsDBus BufWritePre * silent call VimSignal('BufWritePre', expand('<abuf>'))
+silent au VimCommsDBus BufWritePost * silent call VimSignal('BufWritePost', expand('<abuf>'))
+
+silent au VimCommsDBus BufAdd * silent call VimSignal('BufAdd', expand('<abuf>'))
+silent au VimCommsDBus BufDelete * silent call VimSignal('BufDelete', expand('<abuf>'))
+silent au VimCommsDBus BufUnload * silent call VimSignal('BufUnload', expand('<abuf>'))
+silent au VimCommsDBus BufUnload * silent call VimSignal('BufHidden', expand('<abuf>'))
+silent au VimCommsDBus BufWipeout * silent call VimSignal('BufWipeout', expand('<abuf>'))
+
 silent au VimCommsDBus VimLeave * silent call VimSignal('VimLeave')
 silent au VimCommsDBus VimEnter * silent call VimSignal('VimEnter')
-silent au VimCommsDBus BufWritePost * silent call VimSignal('BufWritePost')
 silent au VimCommsDBus CursorMovedI,CursorMoved * silent call VimSignal('CursorMoved')
-silent au VimCommsDBus SwapExists * silent call VimSignal('SwapExists')
+silent au VimCommsDBus SwapExists * let v:swapchoice='d'
+
+set hidden
 
 " Some UI Stuffs
 set nomore

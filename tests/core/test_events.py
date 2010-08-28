@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 
@@ -27,18 +27,18 @@ class EventTestCase(unittest.TestCase):
 
     def test_emit_event(self):
         self.e.emit('initial')
-        self.assertEqual(len(self.c.calls) , 1)
+        self.assertEqual(len(self.c.calls), 1)
         self.assertEqual(self.c.calls[0], {})
 
     def test_emit_event_multiple(self):
         self.e.emit('initial')
         self.e.emit('initial')
         self.e.emit('initial')
-        self.assertEqual(len(self.c.calls) , 3)
+        self.assertEqual(len(self.c.calls), 3)
 
-    def test_emit_event_with_argument(self) :
+    def test_emit_event_with_argument(self):
         self.e.emit('initial', parameter=1)
-        self.assertEqual(len(self.c.calls) , 1)
+        self.assertEqual(len(self.c.calls), 1)
         self.assertEqual(self.c.calls[0], {'parameter': 1})
 
     def test_emit_event_bad_argument(self):

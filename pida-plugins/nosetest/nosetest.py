@@ -1,114 +1,131 @@
 # -*- coding: utf-8 -*- 
 
-# Copyright (c) 2007 The PIDA Project
-
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
+from __future__ import print_function
 # stdlib
 import subprocess
 import os
-from xml.sax.saxutils import escape
 
-from xml.etree.ElementTree import iterparse
-# gtk
+import execnet
 import gtk
 
-# kiwi
-from kiwi.ui.objectlist import Column
-
 # PIDA Imports
+from . import pidanose
 
 # core
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_TOGGLE
-from pida.core.pdbus import DbusConfig, EXPORT
+from pygtkhelpers.ui.objectlist import Column, Cell
 
 # ui
-from pida.ui.views import PidaView, PidaGladeView
+from pida.ui.views import PidaView
 
 # utils
-from pida.utils.gthreads import GeneratorTask, AsyncTask
+from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('nosetest')
 _ = locale.gettext
 
-export = EXPORT(suffix='nosetest')
-
-
-
-class NosetestDBusConfig(DbusConfig):
-
-    @export(sender_keyword='sender',  in_signature='s')
-    def beginProcess(self, cwd, sender):
-        self.svc.log.info('beginning suite of %s in %s', sender, cwd)
-        self.sender = sender
-        self.svc._tests.clear()
-
-    @export(sender_keyword='sender')
-    def endProcess(self, sender):
-        pass
-
-    @export(sender_keyword='sender', in_signature='s')
-    def addSuccess(self, test, sender):
-        if sender == self.sender:
-            self.svc._tests.add_success(test)
-
-    @export(sender_keyword='sender', in_signature='ss')
-    def addError(self, test, err, sender):
-        if sender == self.sender:
-            self.svc._tests.add_error(test, err)
-
-    @export(sender_keyword='sender', in_signature='ss')
-    def addFailure(self, test, err, sender):
-        if sender == self.sender:
-            self.svc._tests.add_failure(test, err)
-
-    @export(sender_keyword='sender', in_signature='ss')
-    def startContext(self, name, file, sender):
-        if sender == self.sender:
-            self.svc._tests.start_context(name, file)
-
-    @export(sender_keyword='sender')
-    def stopContext(self, sender):
-        if sender == self.sender:
-            self.svc._tests.stop_context()
-
-    @export(sender_keyword='sender', in_signature='s')
-    def startTest(self, test, sender):
-        if sender == self.sender:
-            self.svc._tests.start_test(test)
-
-    @export(sender_keyword='sender')
-    def stopTest(self, sender):
-        if sender == self.sender:
-            self.svc._tests.stop_test()
 
 status_map= { # 1 is for sucess, 2 for fail
               # used for fast tree updates
-        'success': 'gtk-apply',
-        'failure': 'gtk-no',
-        'error': 'gtk-cancel',
-        'mixed': 'gtk-dialog-warning',
-        'running': 'gtk-refresh',
-        }
+    'success': 'gtk-apply',
+    'failure': 'gtk-no',
+    'error': 'gtk-cancel',
+    'mixed': 'gtk-dialog-warning',
+    'running': 'gtk-refresh',
+}
+
+
+mapping = {
+    'success': 'add_success',
+    'error': 'add_error',
+    'failure': 'add_failure',
+    'start_ctx': 'start_context',
+    'stop_ctx': 'stop_context',
+    'start': 'start_test',
+    'stop': 'stop_test',
+}
+
+
+class NoseTester(object):
+    def __init__(self, view, channel):
+        self.tree = {}
+        self.stack = [ None ]
+
+        self.view = view
+        self.channel = channel
+        channel.setcallback(lambda msg: gcall(self.callback, *msg))
+
+    def __repr__(self):
+        return '<test dispatcher %s>' % (self.channel,)
+
+    def close(self):
+        self.channel.close()
+
+    def task(self):
+        for item in self.channel:
+            print(item)
+            yield item
+
+    def callback(self, kind, *message):
+        if message is self:
+            return # end of stream
+        else:
+            method = getattr(self, mapping[kind])
+            method(*message)
+
+    def start_test(self, test, *ignored):
+        item = TestItem(test, self.stack[-1])
+        self.view.append(item, parent=self.stack[-1])
+        self.stack.append(item)
+        self.view.expand_item(item.parent)
+
+    def stop_test(self, *ignored):
+        self.view.update(self.stack[-1])
+        self.stack.pop()
+
+    def add_success(self, test, error):
+        if self.stack[-1]:
+            self.stack[-1].status = 'success'
+
+    def add_error(self, test, error):
+        if self.stack[-1]:
+            item = self.stack[-1]
+            item.status = 'error'
+            item.trace = error
+
+    def add_failure(self, test, error):
+        if self.stack[-1]:
+            item = self.stack[-1]
+            item.status = 'failure'
+            item.trace = error
+
+    def start_context(self, name, file):
+        item = TestItem(name, self.stack[-1])
+        item.file = file
+        self.view.append(item, parent=self.stack[-1])
+        self.stack.append(item)
+        if item.parent is not None:
+            self.view.expand_item(item.parent)
+
+    def stop_context(self):
+        #XXX: new status
+        current = self.stack.pop()
+        if not current.children:
+            self.view.remove(current)
+            return
+
+        states = set(x.status for x in current.children.itervalues())
+        if len(states) > 1:
+            current.status = 'mixed'
+        else:
+            current.status = iter(states).next()
+
+        self.view.update(current)
+        if current.status == 'success':
+            self.view.collapse_item(current)
 
 def parse_test_name (self, name):
     if '(' in name:
@@ -142,9 +159,9 @@ class TestItem(object):
 
     @property
     def output(self):
-        return getattr(self, trace, 'Nothing is wrong directly here, i think')
+        return getattr(self, 'trace', 'Nothing is wrong directly here, i think')
 
-class TestResultBrowser(PidaGladeView):
+class TestResultBrowser(PidaView):
 
     key = 'nosetests.results'
 
@@ -153,95 +170,41 @@ class TestResultBrowser(PidaGladeView):
     icon_name = 'python-icon'
     label_text = _('TestResults')
 
-    def __init__(self,* k,**kw):
-        PidaGladeView.__init__(self,*k,**kw)
-        self.clear()
-
     def create_ui(self):
-        self.source_tree.set_columns([
-                Column('icon', use_stock=True, justify=gtk.JUSTIFY_LEFT),
-                Column('short_name', title='status',),
-            ])
+        self.tester = None
+        self._group = execnet.Group()
+        self.source_tree.set_columns([Column(title='Result', cells=[
+                Cell('icon', use_stock=True, expand=False),
+                Cell('short_name', title='status',),
+            ])])
         self.source_tree.set_headers_visible(False)
+        self.clear()
 
     def clear(self):
         self.source_tree.clear()
-        self.tree = {}
-        self.stack = [ None ]
 
 
     def can_be_closed(self):
         self.svc.get_action('show_test_python').set_active(False)
 
     def run_tests(self):
+        if self.tester:
+            self.tester.close()
+            self.tester = None
+        self.clear()
         project = self.svc.boss.cmd('project','get_current_project')
         if not project:
             self.svc.notify_user(_("No project found"))
             return
         src = project.source_directory
-        def call(*k, **kw): 
-            subprocess.call(*k, **kw)
 
-        AsyncTask(call).start([
-                    os.path.join(os.path.dirname(__file__), 'pidanose.py'),
-                    '--with-dbus-reporter', '-q',
-                ],
-                cwd=src,
-        )
+        gw = self._group.makegateway()
+        channel = gw.remote_exec(pidanose)
+        channel.send(str(src))
+        self.tester = NoseTester(self.source_tree, channel)
 
-    def on_source_tree__double_click(self, tv, item):
+    def on_source_tree__item_activated(self, tv, item):
             self.svc.show_result(item.output)
-
-    def start_test(self, test):
-        item = TestItem(test, self.stack[-1])
-        self.source_tree.append(self.stack[-1], item)
-        self.stack.append(item)
-        self.source_tree.expand(item.parent)
-
-    def stop_test(self):
-        self.source_tree.update(self.stack[-1])
-        self.stack.pop()
-
-    def add_success(self, test):
-        if self.stack[-1]:
-            self.stack[-1].status = 'success'
-
-    def add_error(self, test, error):
-        if self.stack[-1]:
-            item = self.stack[-1]
-            item.status = 'error'
-            item.trace = error
-
-    def add_failure(self, test, error):
-        if self.stack[-1]:
-            item = self.stack[-1]
-            item.status = 'failure'
-            item.trace = error
-
-    def start_context(self, name, file):
-        item = TestItem(name, self.stack[-1])
-        item.file = file
-        self.source_tree.append(self.stack[-1], item)
-        self.stack.append(item)
-        if item.parent is not None:
-            self.source_tree.expand(item.parent)
-
-    def stop_context(self):
-        #XXX: new status
-        current = self.stack.pop()
-        if not current.children:
-            self.source_tree.remove(current)
-            return
-
-        states = set(x.status for x in current.children.itervalues())
-        if len(states) > 1:
-            current.status = 'mixed'
-        else:
-            current.status = iter(states).next()
-
-        self.source_tree.update(current)
-        if current.status == 'success':
-            self.source_tree.collapse(current)
 
 
 class TestOutputView(PidaView):
@@ -282,7 +245,7 @@ class PythonActionsConfig(ActionsConfig):
     def create_actions(self):
         self.create_action(
             'test_python',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Python Unit Tester'),
             _('Run the python unitTester'),
             'gtk-apply',
@@ -290,7 +253,7 @@ class PythonActionsConfig(ActionsConfig):
         )
         self.create_action(
             'show_test_python',
-            TYPE_TOGGLE,
+            gtk.ToggleAction,
             _('Python Unit Tester'),
             _('Show the python unitTester'),
             'none',
@@ -315,9 +278,8 @@ class PythonTestResults(Service):
     """Service for all things Python""" 
 
     actions_config = PythonActionsConfig
-    dbus_config = NosetestDBusConfig
 
-    def pre_start(self):
+    def start(self):
         """Start the service"""
         self._tests = TestResultBrowser(self)
         self.output_visible = False

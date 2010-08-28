@@ -1,15 +1,17 @@
 """
 The PIDA Installer
 """
+import hgdistver
 
 import os
 import subprocess
 import sys
+from glob import glob
 
-from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
-
+from setuptools import setup, find_packages, Extension
 import pida
+
 
 # Check availability of pygtk 2.0
 NO_PYGTK_ERROR_MESSAGE = """pkg-config reports your system misses pygtk 2.0.
@@ -22,7 +24,12 @@ if subprocess.call(['pkg-config', '--exists', 'pygtk-2.0']) != 0:
 
 
 # Moo Extension
-from dsutils import pkc_get_include_dirs, pkc_get_libraries, pkc_get_library_dirs
+from commands import getoutput
+
+def pkc_get_dirs(option, *names):
+    output = getoutput(' '.join(['pkg-config', option] + list(names)))
+    return output.replace(option[-2:], '').split()
+
 moo = Extension(
     'pida.ui.moo_stub', 
     [ 'contrib/moo/%s'%c for c in [
@@ -34,9 +41,9 @@ moo = Extension(
         'moo-stub.c',
         'moopython-utils.c',
     ]],
-    include_dirs=pkc_get_include_dirs('gtk+-2.0', 'pygtk-2.0'),
-    libraries=pkc_get_libraries('gtk+-2.0', 'pygtk-2.0'),
-    library_dirs=pkc_get_library_dirs('gtk+-2.0', 'pygtk-2.0'),
+    include_dirs=pkc_get_dirs('--cflags-only-I', 'gtk+-2.0', 'pygtk-2.0'),
+    libraries=pkc_get_dirs('--libs-only-l', 'gtk+-2.0', 'pygtk-2.0'),
+    library_dirs=pkc_get_dirs('--libs-only-L', 'gtk+-2.0', 'pygtk-2.0'),
 )
 
 
@@ -49,69 +56,21 @@ class BuildExt(build_ext):
         build_ext.build_extension(self, ext)
 
 
-# Modified from kiwi
-def listpackages(root):
-    packages = []
-    if os.path.exists(os.path.join(root, '__init__.py')):
-        packages.append(root.replace('/', '.'))
-    for filename in os.listdir(root):
-        full = os.path.join(root, filename)
-        if os.path.isdir(full):
-            packages.extend(listpackages(full))
-    return packages
-
-
-def list_pida_packages():
-    packages = []
-    for package in ['pida', 'pida/core', 'pida/ui', 'pida/utils']:
-        packages.extend(listpackages(package))
-    return packages
-
-
-
-def list_pida_services(package_data):
-    packages = listpackages('pida/services') + listpackages('pida/editors')
-    for package in packages:
-        package_data[package] = [
-            'service.pida',
-            'glade/*',
-            'pixmaps/*',
-            'uidef/*',
-            'data/*',
-            'locale/fr_FR/LC_MESSAGES/*',
-        ]
-    return packages
-
-
-def get_main_data():
-    return {
-        'pida':
-        [
-            'resources/glade/*',
-            'resources/pixmaps/*',
-            'resources/uidef/*',
-            'resources/data/*',
-            'resources/locale/fr_FR/LC_MESSAGES/*',
-            'utils/puilder/glade/*',
-        ]
-    }
-
-all_package_data = get_main_data()
-
-all_packages = list_pida_packages() + list_pida_services(all_package_data)
-
 setup(
     name = 'pida',
-    version = pida.version,
-    packages = all_packages,
-    package_data = all_package_data,
+    version = hgdistver.get_version(),
+    license='GPL',
+    packages = find_packages(exclude=['tests', 'tests.*']),
     ext_modules = [moo],
     cmdclass={'build_ext': BuildExt},
-    scripts=['bin/pida', 'bin/pida-remote', 'bin/pida-build', 'bin/pida-pyshell'],
+    scripts = [
+        'bin/pida',
+        'bin/pida-remote',
+        'bin/pida-build',
+    ],
     author = pida.author,
     author_email = pida.author,
     url = pida.website,
-    download_url = pida.website + 'download/',
     description = pida.short_description,
     classifiers = [
         'Development Status :: 4 - Beta',
@@ -124,18 +83,38 @@ setup(
         'Topic :: Software Development',
         'Topic :: Software Development :: Version Control',
         'Topic :: Text Editors',
+        'Topic :: Text Editors :: Integrated Development Environments (IDE)',
+        'Topic :: Text Editors :: Emacs',
         'Topic :: Utilities',
+        'Programming Language :: Python'
     ],
-    requires = [
-        #XXX: more ?
-        'anyvc (>= 0.2)',
-        'simplejson',
-        'PyGtk (>= 2.14)',
-        #'kiwi-gtk (>= 1.9.23)', #XXX distutils doesnt like the -
+    install_requires = [
+        'anyvc>=0.3.2',
+        'py>=1.3',
+        'bpython>=0.9.7',
+        'pygtkhelpers>0.4.2'
+        'argparse',
+        'flatland',
         #'vte',
         #'dbus ?',
         #'rope ?',
         #'moo ?'
-    ]
+        #XXX: more ?
+    ],
+    data_files=[('share/doc/pida/contrib/gtkrc', glob('contrib/gtkrc/*'))],
+    package_data = {
+        'pida': [
+            'resources/glade/*',
+            'resources/pixmaps/*',
+            'resources/uidef/*',
+            'resources/data/*',
+        ],
+        '': [
+            'glade/*',
+            'pixmaps/*',
+            'uidef/*',
+            'data/*',
+        ]
+    },
 )
 

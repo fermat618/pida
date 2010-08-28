@@ -7,8 +7,6 @@
 from textwrap import wrap
 
 import gtk
-from weakref import proxy
-
 
 # PIDA Imports
 from pida.core.service import Service
@@ -16,10 +14,10 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_TOGGLE
 
-from pida.ui.views import PidaGladeView
-from pida.ui.widgets import get_widget_for_type
+from pida.ui.views import PidaView
+from pida.ui.widgets import get_widget_for_type, get_proxy_for_widget
 
-from kiwi import ValueUnset
+
 # locale
 from pida.core.locale import Locale
 locale = Locale('optionsmanager')
@@ -28,6 +26,9 @@ _ = locale.gettext
 
 
 class OptionsPage(gtk.VBox):
+    #XXX: this should be a slaveview
+    #     it should try to use the options.ui from a service
+    #     and add other items below
     def __init__(self, view, svc):
         gtk.VBox.__init__(self, spacing=0)
         self.set_border_width(6)
@@ -35,6 +36,7 @@ class OptionsPage(gtk.VBox):
         self.view = view
         self.svc = svc
         self.widgets = {}
+        self.proxies = {}
 
         label = gtk.Label()
         label.set_markup('<big><b>%s</b></big>' % svc.get_label())
@@ -77,77 +79,95 @@ class OptionsPage(gtk.VBox):
             optlabel.set_alignment(0, 0)
             labelsizer.add_widget(optlabel)
             hb.pack_start(optlabel, expand=False)
-            optwidget = get_widget_for_type(opt.type)
-            widgetsizer.add_widget(optwidget)
-            hb.pack_start(optwidget, expand=True)
-            optwidget.update(opt.value)
-            optwidget.connect('content-changed', self._on_option_changed, opt)
-            self.widgets[opt.name] = optwidget
+
+            opt_widget = get_widget_for_type(opt.type)
+            opt_proxy = get_proxy_for_widget(opt_widget)
+            opt_proxy.connect_widget()
+            widgetsizer.add_widget(opt_widget)
+            hb.pack_start(opt_widget, expand=True)
+            opt_proxy.update(opt.value)
+            opt_proxy.connect('changed', self._on_option_changed, opt)
+            self.widgets[opt.name] = opt_widget
+            self.proxies[opt.name] = opt_proxy
             view._tips.set_tip(eb, doc)
 
-    def _on_option_changed(self, widget, option):
-        widgval = widget.read()
+    def _on_option_changed(self, proxy, value, option):
         optval = option.value
         # various hacks
-        if widgval is None:
+        if value is None:
             return
-        if widgval == ValueUnset:
-            widgval = ''
-        if widgval != optval:
-            option.group.set_value(option.name, widgval)
+        if value != optval:
+            option.group.set_value(option.name, value)
 
     def _on_option_changed_elsewhere(self, option):
-        widgval = self.widgets[option.name].read()
+        widgval = self.proxies[option.name].read()
         optval = option.value
         if optval != widgval:
-            self.widgets[option.name].update(option.value)
+            self.proxies[option.name].update(option.value)
 
-class PidaOptionsView(PidaGladeView):
+class PidaOptionsView(PidaView):
 
     key = 'optionsmanager.editor'
 
-    gladefile = 'options_editor'
     locale = locale
     label_text = 'Preferences'
 
     icon_name = 'gnome-settings'
 
     def create_ui(self):
+        self.service_list = gtk.ListStore(str, object)
+        self.service_combo = gtk.ComboBox(self.service_list)
+        self.service_proxy = get_proxy_for_widget(self.service_combo)
+        self.service_proxy.connect_widget()
+        renderer = gtk.CellRendererText()
+        self.service_combo.pack_start(renderer)
+        self.service_combo.add_attribute(renderer, 'text', 0)
+
+        self.options_book = ob = gtk.Notebook()
+        ob.set_property('width-request',400)
+        ob.set_property('border-width', 6)
+        ob.set_property('show_tabs', False)
+
+        self.widget.pack_start(self.service_combo, expand=False)
+        self.widget.pack_start(ob)
+        self.widget.show_all()
         self.svc.events.subscribe('option_changed',
                                   self._on_option_changed_elsewhere)
         self.current = None
+
         self.refresh_ui()
 
     def clear_ui(self):
         while self.options_book.get_n_pages():
             self.options_book.remove_page(-1)
-        self._services_display = []
         self._service_pages = {}
         self._service_page_widgets = {}
+        self._services = []
+        self.service_list.clear()
 
     def refresh_ui(self):
         current = self.current
         self.clear_ui()
-        self._services = []
 
         for svc in self.svc.boss.get_services():
             if svc.options:
                 self._services.append(svc)
-                self._services_display.append(
+                self.service_list.append(
                     (svc.get_label(), svc),
                 )
 
         self._services.sort(key=Service.sort_key)
 
         self._tips = gtk.Tooltips()
+        if current:
+            self.service_proxy.update(current)
 
-        self.service_combo.prefill(self._services_display)
 
         if current is not None:
             try:
-                self.service_combo.update(current)
+                self.service_proxy.update(current)
             except KeyError:
-                self.service_combo.update(self.current)
+                self.service_proxy.update(self.current)
 
     def _add_service(self, svc):
         self._service_pages[svc.get_name()] = self.options_book.get_n_pages()
@@ -156,8 +176,8 @@ class PidaOptionsView(PidaGladeView):
         self.options_book.append_page(page)
         self.options_book.show_all()
 
-    def on_service_combo__content_changed(self, cmb):
-        self.current = svc = self.service_combo.read()
+    def on_service_proxy__changed(self, p, svc):
+        self.current = svc
         if not svc:
             return # no service was selected
         if not svc.get_name() in self._service_pages:

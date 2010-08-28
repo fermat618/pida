@@ -33,7 +33,7 @@ class BaseConfig(object):
 class SimpleMap(dict):
     """
     simple data mapping for use in SubscriberConfig
-    
+
     .. warning::
         double subscriptions are destructive
     """
@@ -43,7 +43,7 @@ class SimpleMap(dict):
 
 class SubscriberConfig(BaseConfig):
     """
-    .. warning::
+    warning
         double subscriptions are ignored
         double unsubscriptions are breaking stuff
     """
@@ -57,7 +57,7 @@ class SubscriberConfig(BaseConfig):
 
     def publish(self, *points):
         """publish new subscription points
-        
+
         using the default collection type of set
         """
         self.publish_special(set, *points)
@@ -76,7 +76,7 @@ class SubscriberConfig(BaseConfig):
         """subscribe `data` to a subscription `point`
         ignores double subscriptions
 
-        .. note::
+        note
             for the default implementation using set,
             something will have only one element
 
@@ -90,8 +90,8 @@ class SubscriberConfig(BaseConfig):
     def unsubscribe(self, point, *data):
         """unsubscribe an `instance` to the subscription point `name`
 
-        raises `KeyError` if 
-                  `name` is not published 
+        raises `KeyError` if
+                  `name` is not published
            or `instance` is not subscribed to `name`
         """
         self.published[point].remove(*data)
@@ -101,7 +101,7 @@ class SubscriberConfig(BaseConfig):
         if not self.foreign_name:
             raise TypeError(
                     "%s cant use foreign configs, "
-                    "please set its foreign_name"%self.__class__.__name__)
+                    "please set its foreign_name" % self.__class__.__name__)
         service = self.svc.boss.get_service(service)
         return getattr(service, self.foreign_name)
 
@@ -128,8 +128,8 @@ class SubscriberConfig(BaseConfig):
 
     def has_foreign(self, service, point):
         #XXX: O(N) sucks, but the N shouldn't be that high
-        return any( fservice == service and fpoint == point 
-                    for fservice, fpoint, i in self.foreign_subscriptions)
+        return any(fservice == service and fpoint == point
+                   for fservice, fpoint, i in self.foreign_subscriptions)
 
     def __getitem__(self, point):
         return self.published[point]

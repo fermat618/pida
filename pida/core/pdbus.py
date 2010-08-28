@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """
     Dbus integration
     ~~~~~~~~~~~~~~~~
@@ -12,7 +12,7 @@
 
 import os
 from pango import Font
-from pida.utils.gthreads import gcall
+from pygtkhelpers.gthreads import gcall
 from pida.core.environment import workspace_name
 
 try:
@@ -30,9 +30,11 @@ try:
 
     # Is dbus available?
     # Throws dbus.exceptions.DBusException if not.
-    #XXX: 
+    #XXX:
     try:
-        dbus.SessionBus()
+        BUS_NAME = dbus.service.BusName(
+                'uk.co.pida.pida.p%s' % os.getpid(),
+                bus=dbus.SessionBus())
         has_dbus = True
     except dbus.exceptions.DBusException:
         has_dbus = False
@@ -49,12 +51,8 @@ class DbusConfigReal(Object):
 
     def __init__(self, service):
         self.svc = service
-        if hasattr(self, 'export_name'):
-            path = DBUS_PATH(self.export_name)
-            ns = DBUS_NS(self.export_name)
-        else:
-            path = DBUS_PATH(service.get_name())
-            ns = DBUS_NS(service.get_name())
+        path = DBUS_PATH(service.get_name())
+        ns = DBUS_NS(service.get_name())
         self.dbus_ns = ns
         Object.__init__(self, BUS_NAME, path)
 
@@ -80,25 +78,22 @@ class DbusOptionsManagerReal(Object):
 
     def __init__(self, service):
         self.svc = service
-        if hasattr(self, 'export_name'):
-            path = DBUS_PATH(self.export_name, self.dbus_path)
-            ns = DBUS_NS(self.export_name, self.dbus_path)
-        else:
-            path = DBUS_PATH(service.get_name(), self.dbus_path)
-            ns = DBUS_NS(service.get_name(),self.dbus_path)
+        path = DBUS_PATH(service.get_name(), self.dbus_path)
+        ns = DBUS_NS(service.get_name(), self.dbus_path)
         self.dbus_ns = ns
         self.dbus_path = path
         Object.__init__(self, BUS_NAME, path)
         self.config_match = BUS.add_signal_receiver(
-                                self.on_config_changed, 'CONFIG_CHANGED', 
+                                self.on_config_changed, 'CONFIG_CHANGED',
                                 ns, None, path, sender_keyword='sender')
         self.config_extra_match = BUS.add_signal_receiver(
-                                self.on_config_changed_extra, 
-                                'CONFIG_EXTRA_CHANGED', 
+                                self.on_config_changed_extra,
+                                'CONFIG_EXTRA_CHANGED',
                                 ns, None, path, sender_keyword='sender')
 
     def unload(self):
         self.config_match.remove()
+        self.config_extra_match.remove()
         self.remove_from_connection()
 
     def on_config_changed(self, workspace, name, value, sender=None):
@@ -147,7 +142,7 @@ class DbusOptionsManagerReal(Object):
                 # emptry dicts can't be detected
                 signature = 'a{ss}'
             elif isinstance(value, (tuple, list)) and not len(value):
-                # empty lists can't be detected, so we assume 
+                # empty lists can't be detected, so we assume
                 # list of strings
                 signature = "ssas"
 
@@ -164,22 +159,22 @@ class DbusOptionsManagerReal(Object):
             from pida.core.options import BaseChoice, Color
             if issubclass(type_, (BaseChoice, Color)):
                 return 's'
-            raise ValueError, "No object type found for %s" %type_
+            raise ValueError, "No object type found for %s" % type_
 
     def dbus_custom_introspect(self):
-        rv = '  <interface name="%s">\n' %(self.dbus_ns)
+        rv = '  <interface name="%s">\n' % (self.dbus_ns)
         for option in self._options.itervalues():
             try:
                 typ = self.object_to_dbus(option.type)
             except ValueError, e:
                 print "Can't find conversation dbus conversation for ", option
                 continue
-            rv += '    <property name="%s" type="%s" access="readwrite"/>\n' %(option.name, typ)
+            rv += '    <property name="%s" type="%s" access="readwrite"/>\n' % (option.name, typ)
 
         if hasattr(self, '_actions'):
             for action in self._actions.list_actions():
                 if action.get_name() not in self.dbus_no_activate:
-                    rv += '    <method name="activate_%s" />\n' %(action.get_name())
+                    rv += '    <method name="activate_%s" />\n' % (action.get_name())
 
         rv += '  </interface>\n'
         return rv
@@ -188,7 +183,7 @@ class DbusOptionsManagerReal(Object):
         method_name = message.get_member()
         interface_name = message.get_interface()
 
-        # should we move this stuff into the OptionsConfig and ActionConfig 
+        # should we move this stuff into the OptionsConfig and ActionConfig
         # classes ?
         args = message.get_args_list()
 
@@ -197,10 +192,10 @@ class DbusOptionsManagerReal(Object):
             if method_name == "Get":
                 opt = self._options[args[1]]
                 typ = self.object_to_dbus(opt.type)
-                _method_reply_return(connection, 
-                                     message, 
-                                     method_name, 
-                                     Signature(typ), 
+                _method_reply_return(connection,
+                                     message,
+                                     method_name,
+                                     Signature(typ),
                                      opt.value)
                 return
             elif method_name == "Set":
@@ -210,10 +205,10 @@ class DbusOptionsManagerReal(Object):
                 rv = {}
                 for name, opt in self._options.iteritems():
                     rv[name] = opt.value
-                _method_reply_return(connection, 
-                                     message, 
-                                     method_name, 
-                                     Signature('{sv}'), 
+                _method_reply_return(connection,
+                                     message,
+                                     method_name,
+                                     Signature('{sv}'),
                                      rv)
                 return
 
@@ -224,9 +219,9 @@ class DbusOptionsManagerReal(Object):
                 try:
                     #_method_reply_error(connection, message, exception)
                     gcall(act.emit, 'activate')
-                    _method_reply_return(connection, 
-                                         message, 
-                                         method_name, 
+                    _method_reply_return(connection,
+                                         message,
+                                         method_name,
                                          Signature(''))
                 except Exception, exception:
                     _method_reply_error(connection, message, exception)
@@ -236,7 +231,7 @@ class DbusOptionsManagerReal(Object):
                     return
         # do a normal lookup
         return super(DbusOptionsManagerReal, self)._message_cb(connection, message)
-        
+
     @method(INTROSPECTABLE_IFACE, in_signature='', out_signature='s',
             path_keyword='object_path', connection_keyword='connection')
     def Introspect(self, object_path, connection):
@@ -287,14 +282,14 @@ class DbusOptionsManagerNoop(object):
 
 if has_dbus:
 
-    from pida.utils.pdbus import (UUID, DBUS_PATH, DBUS_NS, EXPORT, 
-        SIGNAL, BUS_NAME, BUS)
+    from pida.utils.pdbus import (UUID, DBUS_PATH, DBUS_NS, EXPORT,
+        SIGNAL, BUS)
     from dbus.mainloop.glib import DBusGMainLoop
 
     DBusMainloop = DBusGMainLoop(set_as_default=True)
 
 
-    # export the PIDA UUID to the environment for 
+    # export the PIDA UUID to the environment for
 
     os.environ['PIDA_DBUS_UUID'] = UUID
 
@@ -311,7 +306,7 @@ else:
                 return func
             return noop
         return wrapper
-    
+
     UUID = None
     DBUS_PATH = noop
     DBUS_NS = noop

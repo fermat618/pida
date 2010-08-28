@@ -14,7 +14,7 @@ from pida.core.log import get_logger
 try:
     import dbus
     from dbus.mainloop.glib import DBusGMainLoop
-    MAINLOOP = DBusGMainLoop(set_as_default=True)
+    mainloop = DBusGMainLoop(set_as_default=True)
 except ImportError:
     pass
 
@@ -28,12 +28,12 @@ class EmacsClient(object):
         proxy = None
         namespace = '.'.join(['uk.co.pida.Emacs', 
                        os.environ["PIDA_DBUS_UUID"]])
-        while proxy is None:
-            try:
-                proxy = session.get_object(namespace, '/uk/co/pida/Emacs')
-            except dbus.DBusException:
-                proxy = None
-                time.sleep(0.2)
+        try:
+            proxy = dbus.Interface(
+                session.get_object(namespace, '/uk/co/pida/Emacs'),'uk.co.pida.Emacs')
+        except dbus.DBusException:
+            log.debug('emacs connect failed')
+            raise SystemExit('emacs failed')
         self.proxy = proxy
 
     def connect_signals(self):

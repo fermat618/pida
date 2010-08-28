@@ -9,13 +9,13 @@
     :license: GPL 2 or later
 """
 from __future__ import with_statement
-import os, sys, os.path
+import os
+import sys
 from collections import defaultdict
 from functools import partial
 
 import gtk
 
-from kiwi.ui.objectlist import Column
 
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -25,13 +25,11 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL, \
     TYPE_TOGGLE
 from pida.core.projects import Project
-from pida.ui.views import PidaGladeView, PidaView, WindowConfig
-from pida.ui.objectlist import AttrSortCombo
+from pida.ui.views import WindowConfig
 from pida.core.pdbus import DbusConfig, EXPORT
 from pida.core import environment
 
-from pida.utils.puilder.view import PuilderView
-from pida.utils.gthreads import AsyncTask, gcall
+from pygtkhelpers.gthreads import AsyncTask, gcall
 
 from pida.core.projects import REFRESH_PRIORITY
 
@@ -39,6 +37,8 @@ from pida.core.projects import REFRESH_PRIORITY
 from pida.core.locale import Locale
 locale = Locale('project')
 _ = locale.gettext
+
+from .views import ProjectListView, ProjectSetupView
 
 LEXPORT = EXPORT(suffix='project')
 
@@ -64,94 +64,6 @@ def open_directory_dialog(parent, title, folder=''):
         return path
 
 
-class ProjectListView(PidaGladeView):
-
-    key = 'project.list'
-
-    gladefile = 'project_list'
-    locale = locale
-    label_text = _('Projects')
-
-    icon_name = 'package_utilities'
-
-    def create_ui(self):
-        self.project_ol.set_headers_visible(False)
-        self.project_ol.set_columns([Column('markup', use_markup=True)])
-        self._sort_combo = AttrSortCombo(self.project_ol,
-            [
-                ('display_name', 'Name'),
-                ('source_directory', 'Full Path'),
-                ('name', 'Directory Name'),
-            ],
-            'display_name'
-        )
-        self._sort_combo.show()
-        self.main_vbox.pack_start(self._sort_combo, expand=False)
-
-    def on_project_ol__selection_changed(self, ol, project):
-        self.svc.set_current_project(project)
-
-    def on_project_ol__double_click(self, ol, project):
-        self.svc.boss.cmd('filemanager', 'browse', new_path=project.source_directory)
-        self.svc.boss.cmd('filemanager', 'present_view')
-
-    def on_project_ol__right_click(self, ol, project, event):
-        self.svc.boss.cmd('contexts', 'popup_menu', context='dir-menu',
-            dir_name=project.source_directory, event=event,
-            project=project)
-
-    def set_current_project(self, project):
-        self.project_ol.select(project)
-
-    def update_project(self, project):
-        self.project_ol.update(project)
-
-    def can_be_closed(self):
-        self.svc.get_action('project_properties').set_active(False)
-
-class ProjectSetupView(PidaView):
-
-    key = 'project.editor'
-
-    label_text = _('Project Properties')
-
-    def create_ui(self):
-        self.script_view = PuilderView()
-        self.script_view.show()
-        self.script_view.set_execute_method(self.test_execute)
-        self.script_view.connect('cancel-request',
-                                 self._on_script_view__cancel_request)
-        self.script_view.connect('project-saved',
-                                 self._on_script_view__project_saved)
-        self.add_main_widget(self.script_view.get_toplevel())
-
-    def test_execute(self, target, project):
-        self.svc.execute_target(None, target, project)
-
-    def set_project(self, project):
-        #XXX: should we have more than one project viev ?
-        #     for different projects each
-        #XXX: ask on case of unsaved changes?
-        self.project = project
-        #self.script_view.load_script(
-        #        os.path.join(
-        #            project.source_directory,
-        #            'build.vel'
-        #            )
-        #        )
-        self.script_view.set_build(project.build)
-        self.script_view.set_project(project)
-
-    def _on_script_view__cancel_request(self, script_view):
-        self.svc.get_action('project_properties').set_active(False)
-
-    def _on_script_view__project_saved(self, script_view, project):
-        # reload the project when it gets saved
-        if self.svc._current is project:
-            self.svc.update_execution_menus()
-
-    def can_be_closed(self):
-        self.svc.get_action('project_properties').set_active(False)
 
 
 class ProjectEventsConfig(EventsConfig):
@@ -371,13 +283,13 @@ class ProjectFeaturesConfig(FeaturesConfig):
 
     def subscribe_all_foreign(self):
         self.subscribe_foreign('contexts', 'dir-menu',
-            (self.svc.get_action_group(), 'project-dir-menu.xml'))
+            (self.svc, 'project-dir-menu.xml'))
         self.subscribe_foreign('window', 'window-config',
             ProjectWindowConfig)
 
     def do_refresh(self, project, callback):
-        project.index(recrusive=True, rebuild=True)
-        project.save_cache()
+        project.indexer.index(recrusive=True, rebuild=True)
+        project.indexer.save_cache()
         callback()
     
     do_refresh.priority = REFRESH_PRIORITY.FILECACHE
@@ -491,18 +403,18 @@ class ProjectService(Service):
 
     def stop(self):
         if self._current:
-            self._current.save_cache()
+            self._current.indexer.save_cache()
 
     def _read_options(self):
         for dirname in self.opt('project_dirs'):
             dirname = os.path.realpath(dirname)
             if not os.path.exists(dirname):
-                self.log("%s does not exist", dirname)
+                self.log.warn("%s does not exist", dirname)
                 continue
             try:
                 self._load_project(dirname)
             except Exception, e: #XXX: specific?!
-                self.log("couldn't load project from %s", dirname)
+                self.log.warn("couldn't load project from %s", dirname)
                 self.log.exception(e)
 
     def _save_options(self):
@@ -542,7 +454,7 @@ class ProjectService(Service):
         self.get_action('project_execution_menu').set_sensitive(project is not None)
         if project is not None:
             project.reload()
-            loaded = project.load_cache()
+            loaded = project.indexer.load_cache()
             self.emit('project_switched', project=project)
             self.update_execution_menus()
             self.project_properties_view.set_project(project)
@@ -575,13 +487,13 @@ class ProjectService(Service):
 
     def _load_project(self, project_path):
         if not os.path.isdir(project_path):
-            self.log(_("Can't load project. Path does not exist: %s") %project_path)
+            self.log.warn(_("Can't load project. Path does not exist: %s") %project_path)
             return None
         try:
             project = Project(project_path)
         except (IOError, OSError), e:
-            self.log(_("Can't load project. %s") % e)
-            return None
+            self.log.warn("Can't load project. %s", e)
+            return
         if project not in self._projects:
             self._projects.append(project)
             self.project_list.project_ol.append(project)
@@ -598,7 +510,8 @@ class ProjectService(Service):
             % project.name
         ):
             self._projects.remove(project)
-            self.project_list.project_ol.remove(project, select=True)
+            self.project_list.remove(project)
+
             self._save_options()
             return True
 
@@ -611,9 +524,7 @@ class ProjectService(Service):
             _('Execute: %s') %target.name
         self._target_last = target
 
-        script = environment.get_data_path('project_execute.py')
-
-        env = ['PYTHONPATH=%s%s%s' %(environment.pida_root_path ,os.pathsep,
+        env = ['PYTHONPATH=%s%s%s' %(environment.base_path ,os.pathsep,
                                     os.environ.get('PYTHONPATH', sys.path[0]))]
 
         if self.opt("autoclose") and target in self._running_targets:
@@ -626,9 +537,9 @@ class ProjectService(Service):
         t = self.boss.cmd(
             'commander', 'execute',
                 commandargs=[
-                    'python', script,
-                    '--directory', project.source_directory,
-                    '--target', target.name
+                    'python',
+                        '-m', 'pida.utils.puilder.execute',
+                        target.name,
                 ],
                 cwd=project.source_directory,
                 title=_('%s:%s') % (project.name, target.name),
@@ -690,7 +601,7 @@ class ProjectService(Service):
         Updates the index of one file
         """
         if self._current:
-            self._current.index_path(path)
+            self._current.indexer.index_path(path)
 
     def refresh_project(self):
         """

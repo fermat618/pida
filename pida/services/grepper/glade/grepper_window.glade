@@ -2,15 +2,12 @@
 <!--Generated with glade3 3.2.0 on Tue May  8 11:07:55 2007 by ali@rogue-->
 <interface>
   <object class="GtkWindow" id="grepper_window">
-    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
-        <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
         <child>
           <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
-            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <property name="border_width">6</property>
             <property name="spacing">6</property>
             <child>
@@ -19,14 +16,12 @@
                 <property name="can_focus">True</property>
                 <property name="has_focus">False</property>
                 <property name="is_focus">False</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </object>
             </child>
             <child>
               <object class="GtkCheckButton" id="re_check">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="tooltip-text" translatable="yes">Is this match a Regular Expression</property>
                 <property name="label" translatable="yes">RE</property>
                 <property name="draw_indicator">True</property>
@@ -39,7 +34,6 @@
             <child>
               <object class="GtkFileChooserButton" id="path_chooser">
                 <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="action">GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>
                 <property name="title" translatable="yes">Select A Directory to search in</property>
               </object>
@@ -71,7 +65,6 @@
               <object class="GtkCheckButton" id="recursive">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="tooltip-text" translatable="yes">recurse through directories</property>
                 <property name="label" translatable="yes">-r</property>
                 <property name="draw_indicator">True</property>
@@ -84,7 +77,6 @@
             <child>
               <object class="GtkVSeparator" id="vseparator1">
                 <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -94,7 +86,6 @@
             <child>
               <object class="GtkHButtonBox" id="hbuttonbox1">
                 <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="spacing">3</property>
                 <property name="layout_style">GTK_BUTTONBOX_END</property>
                 <child>
@@ -102,7 +93,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <property name="label" translatable="yes">gtk-find</property>
                     <property name="use_stock">True</property>
                   </object>
@@ -122,20 +112,22 @@
         <child>
           <object class="GtkHBox" id="hbox2">
             <property name="visible">True</property>
-            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <child>
-              <object class="ObjectList" id="matches_list">
+              <object class="GtkScrolledWindow" id="matches_scroll">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
                 <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
                 <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+                <child>
+                  <object class="PyGTKHelpersObjectList" id="matches_list">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
               <object class="GtkProgressBar" id="progress_bar">
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="orientation">GTK_PROGRESS_TOP_TO_BOTTOM</property>
                 <property name="text" translatable="yes"/>
               </object>

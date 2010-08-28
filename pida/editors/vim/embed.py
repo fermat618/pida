@@ -18,8 +18,6 @@ class VimEmbedWidget(gtk.EventBox):
 
     def __init__(self, command, script_path, args=[]):
         gtk.EventBox.__init__(self)
-        # XXX: leftover from vim com
-        # self.server_name = uid
         self._command = command
         self._init_script = script_path
         self.pid = None

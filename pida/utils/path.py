@@ -51,25 +51,22 @@ def walktree(top = ".", depthfirst = True, skipped_directory = []):
 
 def get_line_from_file(file_name, line=None, offset=None):
     """
-    Returns the line of a file. It removes trailing newlines and whitespaces.
-    
-    @line: linenumber 
-    @offset: offset of file
-    """ 
-    if line is None and offset is None:
-        raise ValueError('At least on of line or offset must be set')
+    returns a stripped line from a file
+    either iterates previous lines or seeks to the offset
+
+    :param line: linenumber
+    :param offset: offset in file
+    """
     fp = open(file_name)
     if line is not None:
-        i = 0
-        for fline in fp:
-            i += 1
-            if i == line:
+        for i, fline in enumerate(fp):
+            if i+1 == line:
                 return fline.strip()
-    else:
+    elif offset is not None:
         fp.seek(offset)
         return fp.readline().strip()
-        
-    return None
+    else:
+        raise ValueError('At least one of line or offset must be set')
 
 if __name__ == '__main__':
     print get_relative_path('/a/b/c/d', '/a/b/c1/d1')

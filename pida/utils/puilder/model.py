@@ -1,7 +1,7 @@
 
 # Very basic build system. Designed to be friendly for UI generation.
 
-from simplejson import dumps, loads
+from json import dumps, loads
 
 def dump(data):
     return dumps(data, sort_keys=False, indent=2, separators=(',',':'))
@@ -139,11 +139,16 @@ class Target(object):
 
 class Action(object):
     """A single action"""
+    
+    def __repr__(self):
+        return '<puild-action %s %r>' % (self.type, self.value)
 
     def __init__(self):
         self.type = ''
         self.value = ''
-        self.options = {}
+        self.options = {
+            'ignore_fail': False,
+        }
 
     def for_serialize(self):
         return {
@@ -162,10 +167,10 @@ class Action(object):
 
 
 action_types = [
-    ('Shell Command', 'shell'),
-    ('Python Script', 'python'),
-    ('Existing Target', 'target'),
-    ('External Build', 'external'),
+    ('shell', 'Shell Command'),
+    ('python', 'Python Script'),
+    ('target', 'Existing Target'),
+    ('external', 'External Build')
 ]
 
 

@@ -14,16 +14,15 @@ class BaseTests(object):
     def setup_method(self, method):
         self.setUp()
 
-
     def test_setget_text(self):
         txt = 'some text to test with\nwith two lines'
         self.textview.get_buffer().set_text(txt)
         print txt
-        assert txt==self.textview.get_buffer().props.text
+        assert txt == self.textview.get_buffer().props.text
         txt = u'some \u1234text to test \u4321 with\nwith two lines'
         self.textview.get_buffer().set_text(txt)
         print txt
-        assert txt==self.textview.get_buffer().props.text
+        assert txt == self.textview.get_buffer().props.text
 
     def test_sethighligting(self):
         assert self.textview.get_doctype() is None
@@ -45,9 +44,9 @@ class BaseTests(object):
             event = gtk.gdk.Event(gtk.gdk.KEY_PRESS)
             event.keyval = gtk.keysyms.a
             #event.state = gtk.gdk.SHIFT_MASK
-            event.window = self.textview.window#self.textview.get_to
+            event.window = self.textview.window
 
-            #widget.emit('key-press-event', event) 
+            #widget.emit('key-press-event', event)
 
             event = gtk.gdk.Event(gtk.gdk.KEY_PRESS)
             event.keyval = gtk.keysyms.a
@@ -55,29 +54,28 @@ class BaseTests(object):
             buffer_ = self.textview.get_buffer()
             buffer_.place_cursor(buffer_.get_iter_at_offset(0))
             #self.textview.do_event(self.textview, event)
-            self.textview.emit('key-press-event', event) 
+            self.textview.emit('key-press-event', event)
             refresh_gui()
             if do:
-                assert self.textview.get_buffer().props.text == "a%s" %txt
+                assert self.textview.get_buffer().props.text == "a%s" % txt
             else:
                 assert self.textview.get_buffer().props.text == txt
         win.destroy()
 try:
     from pida.ui.besttextview.mooview import MooTextView
-    
-    class TestMoo(ViewTest):
+    class TestMoo(BaseTests):
         TextView = MooTextView
-    
+
 except ImportError:
     #FIXME: how to report skipped tests properly ???
     print "can't import moo, skipping MooTextView tests"
 
 try:
     from pida.ui.besttextview.sourceview import SourceTextView
-    
+
     class TestSourceView(BaseTests):
         TextView = SourceTextView
-    
+
 except ImportError:
     #FIXME: how to report skipped tests properly ???
     print "can't import gtksourceview, skipping SourceView tests"

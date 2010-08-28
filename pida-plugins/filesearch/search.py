@@ -12,6 +12,7 @@ import cgi
 from os import walk, path
 
 from pida.services.filemanager.filemanager import state_style, state_text
+from pida.core.environment import on_windows
 
 from filters import filter_list
 
@@ -21,10 +22,11 @@ class SearchMatch(object):
     Symbolizes a file that matched all search filters.
     You can add it directly to a ``kiwi.ObjectList`` object.
     """
-    def __init__(self, dirpath, name):
+    def __init__(self, dirpath, name, manager=None):
         self.state = 'normal'
         self.name = name
         self.path = dirpath
+        self.manager = manager
         self.visible = False
         self.extension = path.splitext(self.name)[-1]
         self.icon_stock_id = self.get_icon_stock_id()
@@ -47,7 +49,16 @@ class SearchMatch(object):
         return wrap % self.format(text)
 
     def format(self, text):
-        color, b, i = state_style.get(self.state, ('black', False, False))
+        color, b, i = state_style.get(self.state, (None, False, False))
+        if self.manager and color:
+            #FIXME to_string is missing on win32
+            color = self.manager.match_list.style.lookup_color(color)
+            if not on_windows:
+                color = color.to_string()
+            else:
+                color = '#%s%s%s' % (color.red,color.green,color.blue)
+        else:
+            color = "black"
         if b:
             text = '<b>%s</b>' % text
         if i:

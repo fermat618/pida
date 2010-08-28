@@ -5,7 +5,7 @@
 """
 import gtk
 
-from kiwi.ui.objectlist import ObjectTree, Column
+from pygtkhelpers.ui.objectlist import ObjectTree, Column
 
 # PIDA Imports
 from pida.core.service import Service
@@ -21,13 +21,16 @@ locale = Locale('shortcuts')
 _ = locale.gettext
 
 class ServiceListItem(object):
-    
+
     def __init__(self, svc):
         self.svc = svc
         self.label = self.no_mnemomic_label = svc.get_name().capitalize()
         self.doc = ''
+        self.value = ''
         self.stock_id = ''
-        
+
+    def __repr__(self):
+        return '<SLI %s>' % self.label.lower()
 
 class ShortcutsView(PidaView):
 
@@ -37,19 +40,17 @@ class ShortcutsView(PidaView):
     label_text = _('Shortcuts')
 
     def create_ui(self):
-        self.shortcuts_list = ObjectTree(
-            [
-                Column('stock_id', use_stock=True),
-                Column('no_mnemomic_label', sorted=True, searchable=True),
-                Column('value', searchable=True),
-                Column('doc', searchable=True),
-            ]
-        )
+        self.shortcuts_list = ObjectTree([
+            Column('stock_id', use_stock=True),
+            Column('no_mnemomic_label', sorted=True, searchable=True),
+            Column('value', searchable=True),
+            Column('doc', searchable=True),
+        ])
         self.shortcuts_list.set_headers_visible(False)
         self._current = None
         self.shortcuts_list.connect('selection-changed',
                                     self._on_selection_changed)
-        self.shortcuts_list.connect('double-click',
+        self.shortcuts_list.connect('item-activated',
                                     self._on_list_double_click)
         vbox = gtk.VBox(spacing=6)
         vbox.set_border_width(6)
@@ -91,18 +92,16 @@ class ShortcutsView(PidaView):
 
     def update(self):
         self.shortcuts_list.clear()
-        for service in self.svc.boss.get_services() + [
-                                self.svc.boss.editor]:
-            if len(service.get_keyboard_options()):
+        for service in self.svc.boss.get_services():
+            opts = service.get_keyboard_options().values()
+            if opts:
                 sli = ServiceListItem(service)
-                self.shortcuts_list.append(None, sli)
-                for opt in service.get_keyboard_options().values():
-                    self.shortcuts_list.append(sli, opt)
+                self.shortcuts_list.append(sli)
+                for opt in opts:
+                    self.shortcuts_list.append(opt, parent=sli)
 
-    def decorate_service(self, service):
-        return ServiceListItem(service)
-
-    def _on_selection_changed(self, otree, item):
+    def _on_selection_changed(self, otree):
+        item = otree.selected_item
         if isinstance(item, ServiceListItem):
             self._current = None
             self._capture_entry.set_sensitive(False)

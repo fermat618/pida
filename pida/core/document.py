@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
     pida.core.document
@@ -13,6 +13,7 @@ import mimetypes
 mimetypes.init() # expensive shit to keep mimetypes.guess_type threadsave
 import stat
 import time
+import itertools
 
 from charfinder import detect_encoding
 import codecs
@@ -27,12 +28,12 @@ from pida.core.locale import Locale
 locale = Locale('pida')
 _ = locale.gettext
 
-new_file_index = 1
+new_file_counter = itertools.count(1)
 
 class Document(object):
     """
     Represents a document.
-    
+
     A document can eighter be just a file. Or be opened by the editor component
     and is then a live document (live is True).
 
@@ -40,65 +41,17 @@ class Document(object):
     however does have its tailing newline character as it's supposed not
     to alter data.
 
-    
     """
 
-    markup_prefix = ''
-    markup_directory_color = '#FFFF00'
-    markup_project_color = '#FF0000'
-    markup_color_noproject = "#FF0000"
-
-    markup_attributes = ['project_name', 'project_relative_path', 'basename',
-                         'markup_project_color', 'markup_directory_color', 
-                         'filename', 'directory', 'markup_color_noproject']
-
-    markup_string_project = (
-                     u'<span color="%(markup_project_color)s">'
-                     u'%(project_name)s</span><tt>:</tt>'
-                     u'<span color="%(markup_directory_color)s">'
-                     u'%(project_relative_path)s/</span>'
-                     u'<b>%(basename)s</b>')
-
-    markup_string_fullpath = (
-                     u'<span color="%(markup_directory_color)s">'
-                     u'%(directory)s/</span>'
-                     u'<b>%(basename)s</b>')
-    
-    markup_string_tworow = (
-                     u'<b>%(basename)s</b>\n'
-                     u'<small>%(markup_inc)s</small>')
-
-    markup_string_tworow_project = (
-                     u'<span foreground="%(markup_project_color)s">'
-                     u'%(project_name)s</span><tt>:</tt>'
-                     u'<span foreground="%(markup_directory_color)s">'
-                     u'%(project_relative_path)s/</span>'
-                     u'%(basename)s')
-
-    markup_string_tworow_fullpath = (
-                     u'<span foreground="%(markup_directory_color)s">'
-                     u'%(directory)s/</span>'
-                     u'%(basename)s')
-
-    markup_string_noproject_file = (
-                     u'<span foreground="%(markup_color_noproject)s">'
-                     u'<b>%(basename)s</b></span>'
-                     )
-
-    markup_string = u'<b>%(basename)s</b>'
-
     usage = 0
+    last_opened = 0
 
-    @property
-    def markup_string_if_project(self):
-        if not self.project:
-            return self.markup_string_noproject_file
-        return self.markup_string
+    editor_buffer_id = None
 
     def __init__(self, boss, filename=None, project=None):
         """
         Create a new Document instance.
-        
+
         @boss: boss this document belongs to
         @filename: path to the file or None (unamed buffer)
         @project: project this document belongs to
@@ -106,27 +59,42 @@ class Document(object):
         self.boss = boss
         if filename is not None:
             self.filename = os.path.realpath(filename)
+            self.newfile_index = None
         else:
             self.filename = None
-        self.project = project
+            self.newfile_index = next(new_file_counter)
+
         self.editor = None
         self._list = []
         self._str = ""
         self.creation_time = time.time()
-
-        if filename is None:
-            global new_file_index
-            self.newfile_index = new_file_index
-            new_file_index = new_file_index + 1
-        else:
-            self.newfile_index = None
-
-        if project is None:
-            self.project, self.project_relative_path = self.get_project_relative_path()
-        else:
-            self.project_relative_path = project.get_relative_path_for(filename)
+        self._project = project
 
         self.clear()
+
+
+    def project_and_path(self):
+        if self.filename is None:
+            return None, None
+        if self.boss is not None:
+            return self.boss.cmd('project', 'get_project_for_document', document=self)
+
+    @property
+    def project(self):
+        if self._project is not None:
+            return self._project
+        pp = self.project_and_path()
+        if pp is not None:
+            self._project = pp[0]
+            return pp[0]
+
+    @property
+    def project_relative_path(self):
+        pp = self.project_and_path()
+        if pp is not None:
+            return pp[1]
+        return os.path.join(*os.path.split(self.directory)[-2:])
+
 
     def clear(self):
         """
@@ -173,7 +141,7 @@ class Document(object):
 
 
     def _get_doctype(self):
-        #FIXME: need a interface to pull doctype from the editor if 
+        #FIXME: need a interface to pull doctype from the editor if
         # we are live
         if hasattr(self, '_doctype'):
             return self._doctype
@@ -201,7 +169,7 @@ class Document(object):
         try:
             return os.stat(self.filename)
         except (OSError, TypeError):
-            return (0,)*10
+            return (0,) * 10
 
     @cached_property
     def mimetype(self):
@@ -225,19 +193,19 @@ class Document(object):
 
     def __repr__(self):
         if self.filename is None:
-            return u'<New Document %d (%s)>' %(self.newfile_index, self.unique_id)
+            return u'<New Document %d at 0x%x>' % (self.newfile_index, id(self))
         else:
-            return u'<Document %r (%s)>' %(self.filename, self.unique_id)
+            return u'<Document %r at 0x%x>' % (self.filename, id(self))
 
     def __unicode__(self):
         if self.filename is None:
             if self.newfile_index > 1:
-                return _(u'Untitled (%d)') %(self.newfile_index)
+                return _(u'Untitled (%d)') % (self.newfile_index)
             return _(u'Untitled')
         else:
             if self.project:
-                return u'%s:%s/%s' %(self.project_name,
-                                     self.project_relative_path, self.basename)
+                return u'%s:%s/%s' % (self.project_name,
+                                      self.project_relative_path, self.basename)
             else:
                 return os.path.basename(self.filename)
 
@@ -248,15 +216,16 @@ class Document(object):
         """
         if self.filename is None:
             if self.newfile_index > 1:
-                return _(u'<b>Untitled (%d)</b>') %(self.newfile_index)
+                return _(u'<b>Untitled (%d)</b>') % (self.newfile_index)
             return _(u'<b>Untitled</b>')
         else:
             if self.project:
-                return u'%s:%s/<b>%s</b>' %(escape(self.project_name),
-                                     escape(self.project_relative_path), 
-                                     escape(self.basename))
+                return u'%s:%s/<b>%s</b>' % (
+                        escape(self.project_name),
+                        escape(self.project_relative_path),
+                        escape(self.basename))
             else:
-                return '<b>%s</b>' %escape(os.path.basename(self.filename))
+                return '<b>%s</b>' % escape(os.path.basename(self.filename))
 
     @property
     def modified_time(self):
@@ -377,32 +346,8 @@ class Document(object):
         return os.path.basename(self.filename)
 
     @property
-    def directory_colour(self):
-        return self.markup_directory_color
-
-    @property
     def unique_id(self):
         return id(self)
-
-    def get_markup(self, markup_string=None, style=None):
-        """
-        Returns a markup version the Document designed for
-        beeing embedded in gtk views
-        """
-        if markup_string is None:
-            if self.project:
-                markup_string = self.markup_string_project
-            else:
-                markup_string = self.markup_string
-
-        prefix = u'<b><tt>%s </tt></b>' % self.markup_prefix
-        if self.filename is not None:
-            s = markup_string % self._build_markup_dict(style=style)
-        else:
-            s = u'<b>%s</b>' % escape(self.__unicode__())
-        return '%s%s' % (prefix, s)
-
-    markup = property(get_markup)
 
     def get_markup_tworow(self, style=None):
         """
@@ -412,24 +357,13 @@ class Document(object):
             mark = self.get_markup(self.markup_string_tworow_project)
         else:
             mark = self.get_markup(self.markup_string_tworow_fullpath)
-        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict = {
+        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict={
             'markup_inc': mark
             }, style=style)
         return rv
 
     markup_tworow = property(get_markup_tworow)
 
-    def _build_markup_dict(self, markup_dict=None, style=None):
-        if not markup_dict:
-            markup_dict = {}
-        for attr in self.markup_attributes:
-            var = getattr(self, attr)
-            if var:
-                markup_dict[attr] = escape(var)
-            else:
-                markup_dict[attr] = ''
-
-        return markup_dict
 
     @property
     def project_name(self):
@@ -440,24 +374,6 @@ class Document(object):
             return self.project.display_name
         else:
             return ''
-
-    def get_project_relative_path(self):
-        """
-        Returns the relative path to Project's root
-        """
-        if self.filename is None:
-            return None, None
-
-        #XXX: move to buffer manager
-        if self.boss is None:
-            return None, os.path.join(*os.path.split(self.directory)[-2:])
-        match = self.boss.cmd('project', 'get_project_for_document', document=self)
-        if match is None:
-            return None, os.path.join(*os.path.split(self.directory)[-2:])
-        else:
-            project, path = match
-            return project, path
-
 
     @property
     def is_new(self):

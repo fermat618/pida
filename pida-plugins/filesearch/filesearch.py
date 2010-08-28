@@ -19,14 +19,14 @@ from os import path
 from kiwi.ui.objectlist import Column
 
 from pida.core.locale import Locale
-from pida.ui.views import PidaGladeView, WindowConfig
+from pida.ui.views import PidaView, WindowConfig
 from pida.core.service import Service
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.features import FeaturesConfig
 from pida.core.actions import TYPE_REMEMBER_TOGGLE
 from pida.core.options import OptionsConfig
-from pida.utils.gthreads import GeneratorTask
+from pygtkhelpers.gthreads import GeneratorTask
 
 from filters import ValidationError, FileNameMatchesFilter
 from search import get_filters, do_search, SearchMatch
@@ -36,7 +36,7 @@ locale = Locale('filesearch')
 _ = locale.gettext
 
 
-class SearchView(PidaGladeView):
+class SearchView(PidaView):
 
     key = 'filesearch.form'
 
@@ -193,7 +193,8 @@ class SearchView(PidaGladeView):
 
     def add_or_update_file(self, name, basepath, state):
         entry = self.entries.setdefault(path.join(basepath, name),
-                                            SearchMatch(basepath, name))
+                                            SearchMatch(basepath, name, 
+                                                        manager=self))
         entry.state = state
 
         if entry.visible:
