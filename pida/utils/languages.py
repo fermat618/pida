@@ -119,6 +119,15 @@ class ValidationError(InitObject):
     filename = None
     lineno = None
 
+    markup_string = (
+        '<tt><span color="{linecolor}">{lineno}</span> </tt>'
+        '<span foreground="{level_color}" style="italic" weight="bold">'
+        '{level}</span>:'
+        '<span style="italic">{kind}</span>\n'
+        '{message}'
+    )
+
+
     def __str__(self):
         return '%s:%s: %s' % (self.filename, self.lineno, self.message)
 
@@ -131,7 +140,12 @@ class ValidationError(InitObject):
         # FIXME
         pass
 
-    def get_markup(self):
+
+    @property
+    def markup(self):
+        return self.markup_string.format(**self.markup_args())
+
+    def markup_args(self):
         mapping = {
             VALIDATOR_LEVEL.ERROR: 'pida-val-error',
             VALIDATOR_LEVEL.INFO: 'pida-val-info',
@@ -139,18 +153,14 @@ class ValidationError(InitObject):
         }
         typec = mapping.get(self.kind, 'pida-val-def')
 
-        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
-    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno, 
-                      'type': self.level.capitalize(),
-                      'subtype': self.kind.capitalize(),
-                      'message':self.message,
-                      'linecolor': color_to_string(self.lookup_color('pida-lineno')),
-                      'typec': color_to_string(typec),
-                      })
-        return markup
-    markup = property(get_markup)
+        return {
+            'lineno': self.lineno,
+            'level': self.level.capitalize(),
+            'level_color': color_to_string(typec),
+            'kind': self.kind.capitalize(),
+            'message': self.message,
+            'linecolor': color_to_string(self.lookup_color('pida-lineno')),
+        }
 
 
 

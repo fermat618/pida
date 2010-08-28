@@ -62,7 +62,7 @@ class PythonError(ValidationError, Log):
     """
     Validator class for PyLint errrors
     """
-    def get_markup(self):
+    def markup_args(self):
         if self.message_args:
             try:
                 if isinstance(self.message_args, (list, tuple)):
@@ -77,38 +77,9 @@ class PythonError(ValidationError, Log):
                 message_string = self.message
         else:
             message_string = self.message
-        if self.type_ == 'error':
-            typec = self.lookup_color('pida-val-error')
-        elif self.type_ == 'error':
-            typec = self.lookup_color('pida-val-info')
-        elif self.type_ == 'warning':
-            typec = self.lookup_color('pida-val-warning')
-        else:
-            typec = self.lookup_color('pida-val-def')
-        if typec:
-            typec = typec.to_string()
-        else:
-            linecolor = "black"
-        linecolor = self.lookup_color('pida-lineno')
-        if linecolor:
-            linecolor = linecolor.to_string()
-        else:
-            linecolor = "black"
-        markup = ("""<tt><span color="%(linecolor)s">%(lineno)s</span> </tt>"""
-    """<span foreground="%(typec)s" style="italic" weight="bold">%(type)s</span"""
-    """>:<span style="italic">%(subtype)s</span>  -  """
-    """<span size="small" style="italic">%(msg_id)s</span>\n%(message)s""" % 
-                      {'lineno':self.lineno,
-                      'type': self.level.capitalize(),
-                      'subtype': self.kind.capitalize(),
-                      'message': message_string,
-                      'linecolor': linecolor,
-                      'typec': typec,
-                      'msg_id': self.msg_id
-                      })
-        return markup
-    markup = property(get_markup)
-
+        mapping = ValidationError.markup_args(self)
+        mapping['message'] = message_string
+        return mapping
 
 from logilab.common.ureports import TextWriter
 from logilab.common.textutils import get_csv
