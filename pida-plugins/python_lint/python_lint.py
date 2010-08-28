@@ -44,49 +44,6 @@ except ImportError:
     pylint = None
     BaseReporter = object
 
-# class SkeletonEventsConfig(EventsConfig):
-#
-#     def subscribe_all_foreign(self):
-#         self.subscribe_foreign('buffer', 'document-changed',
-#                     self.on_document_changed)
-#
-#     def on_document_changed(self, document):
-#         pass
-#
-#
-# class SkeletonFeaturesConfig(FeaturesConfig):
-#
-#     def subscribe_all_foreign(self):
-#         pass
-#
-#
-# class SkeletonOptionsConfig(OptionsConfig):
-#
-#     def create_options(self):
-#         self.create_option(
-#             'Skeleton_for_executing',
-#             _('Skeleton Executable for executing'),
-#             str,
-#             'Skeleton',
-#             _('The Skeleton executable when executing a module'),
-#         )
-#
-#
-# class SkeletonActionsConfig(ActionsConfig):
-#
-#     def create_actions(self):
-#         self.create_action(
-#             'execute_Skeleton',
-#             TYPE_NORMAL,
-#             _('Execute Skeleton Module'),
-#             _('Execute the current Skeleton module in a shell'),
-#             gtk.STOCK_EXECUTE,
-#             self.on_Skeleton_execute,
-#         )
-#
-#     def on_Skeleton_execute(self, action):
-#         #self.svc.execute_current_document()
-#         pass
 
 SUBTYPE_MAPPING = {
     'W0511': 'fixme',
