@@ -407,9 +407,8 @@ class ExternalMeta(type):
                 continue
             cls.register(type_, dct[type_])
             for mfunc in funcs:
-                nname = "%s_%s" % (type_, mfunc)
                 # we register the function as a callable external
-                cls.register(nname, getattr(dct[type_], mfunc), proxytype=GeneratorProxy)
+                cls.register(mfunc, getattr(dct[type_], mfunc), proxytype=GeneratorProxy)
 
 
 class External(SyncManager):
@@ -440,22 +439,22 @@ class External(SyncManager):
     completer = None
 
     @staticmethod
-    def validator_get_validations(instance):
+    def get_validations(instance):
         for i in instance.get_validations():
             yield i
 
     @staticmethod
-    def outliner_get_outline(instance):
+    def get_outline(instance):
         for i in instance.get_outline():
             yield i
 
     @staticmethod
-    def definer_get_definition(instance, buffer, offset):
+    def get_definition(instance, buffer, offset):
         for i in instance.get_definition(buffer, offset):
             yield i
 
     @staticmethod
-    def documentator_get_documentation(instance, buffer, offset):
+    def get_documentation(instance, buffer, offset):
         for i in instance.get_documentation(buffer, offset):
             yield i
 
@@ -525,46 +524,37 @@ class ExternalProxy(object):
 class ExternalValidatorProxy(ExternalProxy, Validator):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_validations(self):
-        for result in self.svc.jobserver.validator_get_validations(self):
+        for result in self.svc.jobserver.get_validations(self):
             yield result
 
 class ExternalOutlinerProxy(ExternalProxy, Outliner):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_outline(self):
-        for result in self.svc.jobserver.outliner_get_outline(self):
+        for result in self.svc.jobserver.get_outline(self):
             yield result
 
 class ExternalDefinerProxy(ExternalProxy, Definer):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_definition(self, buffer, offset):
-        rv = self.svc.jobserver.definer_get_definition(self, buffer, offset)
-        if hasattr(rv, '__iter__'):
-            for result in rv:
-                yield result
-        else:
-            yield rv
+        rv = self.svc.jobserver.get_definition(self, buffer, offset)
+        for result in rv:
+            yield result
 
 class ExternalDocumentatorProxy(ExternalProxy, Documentator):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_documentation(self, buffer, offset):
-        rv = self.svc.jobserver.documentator_get_documentation(self, buffer,
+        rv = self.svc.jobserver.get_documentation(self, buffer,
                                                                offset)
-        if hasattr(rv, '__iter__'):
-            for result in rv:
-                yield result
-        else:
-            yield rv
+        for result in rv:
+            yield result
 
 class ExternalCompleterProxy(ExternalProxy, Completer):
     """Proxies to the jobmanager and therefor to the external process"""
     def get_completions(self, base, buffer_, offset):
-        rv = self.svc.jobserver.completer_get_completions(self, base,
+        rv = self.svc.jobserver.get_completions(self, base,
                                                           buffer_, offset)
-        if hasattr(rv, '__iter__'):
-            for result in rv:
-                yield result
-        else:
-            yield rv
+        for result in rv:
+            yield result
 
 class Merger(BaseDocumentHandler):
     """
@@ -671,39 +661,39 @@ class JobServer(Log):
         return manager, instances[id(proxy.document)][type_]
 
     @safe_remote
-    def validator_get_validations(self, proxy):
+    def get_validations(self, proxy):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'validator')
-        for i in manager.validator_get_validations(instance):
+        for i in manager.get_validations(instance):
             yield i
 
     @safe_remote
-    def outliner_get_outline(self, proxy):
+    def get_outline(self, proxy):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'outliner')
-        for i in manager.outliner_get_outline(instance):
+        for i in manager.get_outline(instance):
             yield i
 
     @safe_remote
-    def definer_get_definition(self, proxy, buffer, offset):
+    def get_definition(self, proxy, buffer, offset):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'definer')
-        for i in manager.definer_get_definition(instance, buffer, offset):
+        for i in manager.get_definition(instance, buffer, offset):
             yield i
 
     @safe_remote
-    def documentator_get_documentation(self, proxy, buffer, offset):
+    def get_documentation(self, proxy, buffer, offset):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'documentator')
-        for i in manager.documentator_get_documentation(instance, buffer,
+        for i in manager.get_documentation(instance, buffer,
                                                         offset):
             yield i
 
     @safe_remote
-    def completer_get_completions(self, proxy, base, buffer, offset):
+    def get_completions(self, proxy, base, buffer, offset):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy, 'completer')
-        for i in manager.completer_get_completions(instance, base, buffer,
+        for i in manager.get_completions(instance, base, buffer,
                                                         offset):
             yield i
 
