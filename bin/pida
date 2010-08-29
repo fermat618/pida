@@ -5,7 +5,10 @@
 # Licence
 
 import os
+import sys
+
 import py
+
 bin = py.path.local(__file__).dirpath()
 base = bin.dirpath()
 
