@@ -45,7 +45,7 @@ try:
     from pygtkhelpers import gthreads
     gthreads.initial_setup()
     from pygtkhelpers.ui.dialogs import error
-    def die_gui(message, exception):
+    def die_gui(message, exception=None):
         """Die in a GUI way."""
         error(_('Fatal error, cannot start PIDA'),
               long='%s\n%s' % (message, exception))
