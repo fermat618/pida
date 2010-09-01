@@ -193,7 +193,7 @@ class GtagsCompleter(Completer):
     plugin = "gtags"
     description = _("a per project global completer list")
 
-    def get_completions(self, base, buffer_, offset):
+    def run(self, base, buffer_, offset):
         """
         Gets a list of completitions.
         

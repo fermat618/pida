@@ -8,6 +8,8 @@ Language Support Superclasses
 """
 from functools import partial
 from weakref import WeakKeyDictionary
+import abc
+
 import gobject
 
 from pida.core.document import Document
@@ -47,7 +49,7 @@ class BaseDocumentHandler(object):
     """
     Base class for all language plugins
     """
-
+    __metaclass__ = abc.ABCMeta
     #__metaclass__ = LanguageMetaclass
     priority = LANG_PRIO.DEFAULT
     name = "NAME MISSING"
@@ -104,12 +106,26 @@ class BaseDocumentHandler(object):
         """Returns the priority this plugin will have for this document"""
         return cls.priority
 
+    @abc.abstractmethod
+    def run(self, document=None, offset=None):
+        """
+        run this handler, iterate over its items
+        may optionally take document/offset
+        """
+        pass
+
 class BaseCachedDocumentHandler(BaseDocumentHandler):
     """
     Default cache implementation for Languge Plugins.
 
     The cache is valid until the file is changed on disk
     """
+
+    def run_cached(self):
+        """
+        Returns a cached iterator of this handler
+        """
+        return self._default_cache(self.run)
 
     def _default_cache(self, fnc):
         """
@@ -149,62 +165,21 @@ class Outliner(BaseCachedDocumentHandler):
 
     filter_type = ()
 
-    def get_outline_cached(self):
-        """
-        Returns a cached iterator of OutlineItems
-        """
-        return self._default_cache(self.get_outline)
-
-    def get_outline(self):
-        """
-        Returns a fresh computed iterator of OutlineItems
-        """
-        raise NotImplementedError('Outliner must define get_outline')
-
 
 class Validator(BaseCachedDocumentHandler):
-
-
-    def get_validations_cached(self):
-        """
-        Returns a cached iterator of ValidatorItems
-        """
-        return self._default_cache(self.get_validations)
-
-    def get_validations(self):
-        """
-        Returns a fresh computed iterator of ValidatorItems
-        """
-        raise NotImplementedError('Validator must define get_validations')
+    pass
 
 class Definer(BaseDocumentHandler):
     """
     The definer class is used to allow the user to the definition of a
     word.
     """
-    def get_definition(self, buffer, offset):
-        """
-        Returns the Definition class pointing to document defining the word
-        searched for. The Definier has to find out which word the offset is on.
-
-        @buffer - the text to search in
-        @offset - nth char in the document point is on
-        """
-        raise NotImplementedError('Definer must define get_definition')
 
 class Documentator(BaseDocumentHandler):
     """
     Documentation receiver returns a Documentation object
     """
 
-    def get_documentation(self, buffer, offset):
-        """
-        Returns the Documentation object for a offset of an file.
-
-        @buffer - the text to search in
-        @offset - nth char in the document point is on
-        """
-        raise NotImplementedError('Documentator must define get_definition')
 
 class LanguageInfo(object):
     """
@@ -384,6 +359,10 @@ class GeneratorProxy(BaseProxy):
             else:
                 raise
 
+def run(x, *k, **kw):
+    return x.run(*k, **kw)
+
+
 class ExternalMeta(type):
     """
     MetaClass for Extern classes. registers the functions for beeing extern
@@ -406,10 +385,7 @@ class ExternalMeta(type):
             if not type_ in dct or not dct[type_]:
                 continue
             cls.register(type_, dct[type_])
-            for mfunc in funcs:
-                # we register the function as a callable external
-                cls.register(mfunc, getattr(dct[type_], mfunc), proxytype=GeneratorProxy)
-
+        cls.register('run', run, proxytype=GeneratorProxy)
 
 class External(SyncManager):
     """
@@ -439,24 +415,12 @@ class External(SyncManager):
     completer = None
 
     @staticmethod
-    def get_validations(instance):
-        for i in instance.get_validations():
+    def run(instance):
+        for i in instance.run():
             yield i
 
-    @staticmethod
-    def get_outline(instance):
-        for i in instance.get_outline():
-            yield i
 
-    @staticmethod
-    def get_definition(instance, buffer, offset):
-        for i in instance.get_definition(buffer, offset):
-            yield i
 
-    @staticmethod
-    def get_documentation(instance, buffer, offset):
-        for i in instance.get_documentation(buffer, offset):
-            yield i
 
 class ExternalDocument(Document):
     """
@@ -521,40 +485,29 @@ class ExternalProxy(object):
         """
         return self._uuid
 
+    def run(self, *k, **kw):
+        return self.svc.jobserver.run(self)
+
+
 class ExternalValidatorProxy(ExternalProxy, Validator):
     """Proxies to the jobmanager and therefor to the external process"""
-    def get_validations(self):
-        for result in self.svc.jobserver.get_validations(self):
-            yield result
+    mytype = 'validator'
 
 class ExternalOutlinerProxy(ExternalProxy, Outliner):
     """Proxies to the jobmanager and therefor to the external process"""
-    def get_outline(self):
-        for result in self.svc.jobserver.get_outline(self):
-            yield result
+    mytype = 'outliner'
 
 class ExternalDefinerProxy(ExternalProxy, Definer):
     """Proxies to the jobmanager and therefor to the external process"""
-    def get_definition(self, buffer, offset):
-        rv = self.svc.jobserver.get_definition(self, buffer, offset)
-        for result in rv:
-            yield result
+    mytype = 'definer'
 
 class ExternalDocumentatorProxy(ExternalProxy, Documentator):
     """Proxies to the jobmanager and therefor to the external process"""
-    def get_documentation(self, buffer, offset):
-        rv = self.svc.jobserver.get_documentation(self, buffer,
-                                                               offset)
-        for result in rv:
-            yield result
+    mytype = 'documenter'
 
 class ExternalCompleterProxy(ExternalProxy, Completer):
     """Proxies to the jobmanager and therefor to the external process"""
-    def get_completions(self, base, buffer_, offset):
-        rv = self.svc.jobserver.get_completions(self, base,
-                                                          buffer_, offset)
-        for result in rv:
-            yield result
+    mytype = 'completer'
 
 class Merger(BaseDocumentHandler):
     """
@@ -585,12 +538,12 @@ class Merger(BaseDocumentHandler):
 
 
 class MergeCompleter(Completer, Merger):
-    def get_completions(self, base, buffer_, offset):
+    def run(self, base, buffer_, offset):
         if not self.instances:
             self.create_instances()
         results = set()
         for prov in self.instances:
-            for res in prov.get_completions(base, buffer_, offset):
+            for res in prov.run(base, buffer_, offset):
                 if res in results:
                     continue
                 results.add(res)
@@ -641,7 +594,7 @@ class JobServer(Log):
             self._processes.append(np)
         return self._processes[0]
 
-    def get_instance(self, proxy, type_):
+    def get_instance(self, proxy):
         """
         Returns the manager and the real instance of language plugin type of
         the proxy.
@@ -655,47 +608,17 @@ class JobServer(Log):
         instances = self._instances[manager]
         if id(proxy.document) not in instances:
             instances[id(proxy.document)] = manager.dict()
-        if type_ not in instances[id(proxy.document)]:
+        if proxy.mytype not in instances[id(proxy.document)]:
             #no = getattr(manager, type_)(manager)(None, proxy.document)
-            instances[id(proxy.document)][type_] = getattr(manager, type_)(None, proxy.get_external_document())
-        return manager, instances[id(proxy.document)][type_]
+            instances[id(proxy.document)][proxy.mytype] = getattr(manager, proxy.mytype)(None, proxy.get_external_document())
+        return manager, instances[id(proxy.document)][proxy.mytype]
 
     @safe_remote
-    def get_validations(self, proxy):
+    def run(self, proxy):
         """Forwards to the external process"""
-        manager, instance = self.get_instance(proxy, 'validator')
-        for i in manager.get_validations(instance):
-            yield i
+        manager, instance = self.get_instance(proxy)
+        return manager.run(instance)
 
-    @safe_remote
-    def get_outline(self, proxy):
-        """Forwards to the external process"""
-        manager, instance = self.get_instance(proxy, 'outliner')
-        for i in manager.get_outline(instance):
-            yield i
-
-    @safe_remote
-    def get_definition(self, proxy, buffer, offset):
-        """Forwards to the external process"""
-        manager, instance = self.get_instance(proxy, 'definer')
-        for i in manager.get_definition(instance, buffer, offset):
-            yield i
-
-    @safe_remote
-    def get_documentation(self, proxy, buffer, offset):
-        """Forwards to the external process"""
-        manager, instance = self.get_instance(proxy, 'documentator')
-        for i in manager.get_documentation(instance, buffer,
-                                                        offset):
-            yield i
-
-    @safe_remote
-    def get_completions(self, proxy, base, buffer, offset):
-        """Forwards to the external process"""
-        manager, instance = self.get_instance(proxy, 'completer')
-        for i in manager.get_completions(instance, base, buffer,
-                                                        offset):
-            yield i
 
     def stop(self):
         self.stopped = True

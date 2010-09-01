@@ -594,7 +594,7 @@ class PidaMooInput(object):
         # we run the language completer first and the we add our own results
         # to the completer list
         if cmpl:
-            for i in cmpl.get_completions(self.svc.get_current_word(), 
+            for i in cmpl.run(self.svc.get_current_word(), 
                         unicode(self.editor.get_text()), start):
                 try:
                     if i not in ignore:

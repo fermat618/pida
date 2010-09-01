@@ -33,7 +33,7 @@ class TestCtags(unittest.TestCase):
     def test_parser(self):
         self.doc = Document(None, os.path.join(TESTDIR, 'test.py'))
         self.outliner = CtagsOutliner(None, document=self.doc)
-        lst = list(self.outliner.get_outline())
+        lst = list(self.outliner.run())
         outer = None
         inner = None
         for x in lst:

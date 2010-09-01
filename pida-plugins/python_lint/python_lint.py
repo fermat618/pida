@@ -249,7 +249,7 @@ class PylintValidator(Validator):
         self.reporter = PidaReporter(self)
         Validator.__init__(self, *args, **kwargs)
 
-    def get_validations(self):
+    def run(self):
         if self.document.filename:
             pylintrc = None
             if self.document.project:

@@ -272,7 +272,7 @@ class ValidatorView(PidaView):
             else:
                 prio = PRIO_DEFAULT
 
-            task = GeneratorTask(validator.get_validations_cached, 
+            task = GeneratorTask(validator.run_cached, 
                                  radd,
                                  complete_callback=rcomp,
                                  priority=prio)
@@ -446,7 +446,7 @@ class BrowserView(PidaView):
             else:
                 prio = PRIO_DEFAULT
 
-            task = GeneratorTask(outliner.get_outline_cached, 
+            task = GeneratorTask(outliner.run_cached, 
                                  radd,
                                  complete_callback=rcomp,
                                  priority=prio)

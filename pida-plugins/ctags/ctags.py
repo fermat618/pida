@@ -145,7 +145,7 @@ class CtagsOutliner(Outliner):
     plugin = "ctags"
     description = _("A very fast but only shallow outliner")
 
-    def get_outline(self):
+    def run(self):
         if not self.document.filename:
             return
         try:

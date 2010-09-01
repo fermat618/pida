@@ -250,7 +250,7 @@ class RSTOutliner(Outliner):
 
     section_types = ('section', 'paragraph')
 
-    def get_outline(self):
+    def run(self):
         self.doc_items = RSTTokenList()
         self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
@@ -315,7 +315,7 @@ class RSTValidator(Validator):
 
     kind = VALIDATOR_KIND.SYNTAX
 
-    def get_validations(self):
+    def run(self):
         self.rstplugin = RSTPlugin(self.svc)
         self.doctree = self.rstplugin.parse_rst(self.document)
         if self.doctree:

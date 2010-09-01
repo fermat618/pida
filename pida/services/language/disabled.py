@@ -40,7 +40,7 @@ class NoopOutliner(NoopBase, Outliner):
     """
     Noop outliner
     """
-    def get_outline(self):
+    def run(self):
         return []
 
 
@@ -50,14 +50,14 @@ class NoopValidator(NoopBase, Validator):
     """
     name = _("Disabled")
 
-    def get_validations(self):
+    def run(self):
         return []
 
 class NoopDefiner(NoopBase, Definer):
     """
     Noop definer
     """
-    def get_definition(self, buffer, offset):
+    def run(self, buffer, offset):
         """
         returns None
         """
@@ -68,7 +68,7 @@ class NoopDocumentator(NoopBase, Documentator):
     Documentation receiver returns a Documentation object
     """
 
-    def get_documentation(self, buffer, offset):
+    def run(self, buffer, offset):
         """
         return None
         """
@@ -77,7 +77,7 @@ class NoopDocumentator(NoopBase, Documentator):
 
 class NoopCompleter(NoopBase, Completer):
 
-    def get_completions(self, base, buffer_, offset):
+    def run(self, base, buffer_, offset):
         """
         Gets a list of completitions.
         

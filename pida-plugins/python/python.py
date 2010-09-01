@@ -136,7 +136,7 @@ class PythonOutliner(Outliner):
         'property', 'attribute', 'supermethod',
         )
 
-    def get_outline(self):
+    def run(self):
         from rope.base.exceptions import RopeError
         try:
             mp = ModuleParser(self.document.filename,
@@ -232,7 +232,7 @@ class PythonValidator(Validator):
     plugin = "python"
     description = _("A not very precise, non configurable validator, but fast")
 
-    def get_validations(self):
+    def run(self):
         code_string = self.document.content
         filename = self.document.filename
         try:
@@ -283,7 +283,7 @@ class PythonCompleter(Completer):
     plugin = "python"
     description = _("Creates very exact suggestions at reasonable speed")
 
-    def get_completions(self, base, buffer, offset):
+    def run(self, base, buffer, offset):
 
         from rope.contrib.codeassist import code_assist, sorted_proposals
         from rope.base.exceptions import RopeError
@@ -318,7 +318,7 @@ class PythonDefiner(Definer):
     plugin = "python"
     description = _("Shows a good definition of a function")
 
-    def get_definition(self, buffer, offset):
+    def run(self, buffer, offset):
         mp = ModuleParser(self.document.filename,
                           project=self.document.project)
         buffer = buffer + ('\n' * 20)

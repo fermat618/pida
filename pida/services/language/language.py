@@ -571,7 +571,7 @@ class LanguageDbusConfig(DbusConfig):
         doc = self.svc.boss.cmd('buffer', 'get_current')
         completer = self.svc.get_completer(doc)
         if completer is not None:
-            return list(completer.get_completions(base, buffer, offset))
+            return list(completer.run(base, buffer, offset))
         else:
             return []
 
@@ -646,7 +646,7 @@ class Language(LanguageService):
             title=_('Goto Definition'),
             data=_('No support for this type found'), timeout=2000)
             return
-        res = definer.get_definition(doc.content,
+        res = definer.run(doc.content,
                                      self.boss.editor.get_cursor_position())
 
         if isinstance(res, Definition):
