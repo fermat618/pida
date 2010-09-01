@@ -456,7 +456,7 @@ class ExternalDocument(Document):
         pass
     project = property(_get_project, _set_project)
 
-class ExternalProxy(object):
+class ExternalProxy(BaseCachedDocumentHandler):
     """
     Base Class for all proxy objects.
     """
@@ -487,27 +487,6 @@ class ExternalProxy(object):
 
     def run(self, *k, **kw):
         return self.svc.jobserver.run(self)
-
-
-class ExternalValidatorProxy(ExternalProxy, Validator):
-    """Proxies to the jobmanager and therefor to the external process"""
-    mytype = 'validator'
-
-class ExternalOutlinerProxy(ExternalProxy, Outliner):
-    """Proxies to the jobmanager and therefor to the external process"""
-    mytype = 'outliner'
-
-class ExternalDefinerProxy(ExternalProxy, Definer):
-    """Proxies to the jobmanager and therefor to the external process"""
-    mytype = 'definer'
-
-class ExternalDocumentatorProxy(ExternalProxy, Documentator):
-    """Proxies to the jobmanager and therefor to the external process"""
-    mytype = 'documenter'
-
-class ExternalCompleterProxy(ExternalProxy, Completer):
-    """Proxies to the jobmanager and therefor to the external process"""
-    mytype = 'completer'
 
 class Merger(BaseDocumentHandler):
     """
@@ -657,30 +636,28 @@ class LanguageService(Service):
         if self.external is not None and multiprocessing:
             # if we have multiprocessing support we exchange the
             # language factories to the proxy objects
-            def newproxy(old, factory):
-                if old is None:
-                    return factory
-                class NewProxy(factory):
-                    pass
-                NewProxy._uuid = old.uuid()
-                NewProxy.priority = old.priority
-                NewProxy.name = old.name
-                NewProxy.plugin = old.plugin
-                NewProxy.description = old.description
+            def newproxy(old, mytype_):
+                class NewProxy(ExternalProxy):
+                    mytype = mytype_
+                    _uuid = old.uuid()
+                    priority = old.priority
+                    name = old.name
+                    plugin = old.plugin
+                    description = old.description
+                    __name__ = 'External%sProxy' % mytype.capitalize()
+                    try:
+                        filter_type = old.filter_type
+                    except AttributeError:
+                        pass
                 return NewProxy
 
-            if self.external.validator:
-                self.validator_factory = newproxy(self.validator_factory, ExternalValidatorProxy)
-            if self.external.outliner:
-                ofac = self.outliner_factory
-                self.outliner_factory = newproxy(self.outliner_factory, ExternalOutlinerProxy)
-                self.outliner_factory.filter_type = ofac.filter_type
-            if self.external.documentator:
-                self.documentator_factory = newproxy(self.documentator_factory, ExternalDocumentatorProxy)
-            if self.external.definer:
-                self.definer_factory = newproxy(self.definer_factory, ExternalDefinerProxy)
-            if self.external.completer:
-                self.completer_factory = newproxy(self.completer_factory, ExternalCompleterProxy)
+            for name in 'validator outliner documentator definer completer'.split():
+                if getattr(self.external, name):
+                    attr = name + '_factory'
+                    old = getattr(self, attr)
+                    proxy = newproxy(old, name)
+                    setattr(self, attr, proxy)
+
 
         super(LanguageService, self).__init__(boss)
         self.boss = boss
