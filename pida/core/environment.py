@@ -94,7 +94,7 @@ parser.add_argument(
     help=_('Run the PIDA first run wizard.'))
 parser.add_argument(
     '--safe_mode', action='store_true',
-    help=_('Starts PIDA in safe mode. Usefull when PIDA doesn\'t start anymore'))
+    help=_('Starts PIDA in safe mode. Useful when PIDA doesn\'t start anymore'))
 parser.add_argument(
     '-P', '--profile', dest="profile_path",
     help=_('Generate profile data on path.'))
