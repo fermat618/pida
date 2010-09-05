@@ -1,4 +1,23 @@
+changes before 0.6.3
+--------------------
 
+ * begin using py.path in pida.core.environment/options
+ * bump the pygtkhelpers dependency version
+ * clean up the filemanager file update callbacks
+ * clean up the update_externals script
+ * enhance handling of old anyvc versions
+ * fix environment missed startup bugs
+ * fix order of file/buffer list sort dropdown (#261)
+ * inline and clean up and minimize dsutils.py
+ * kill the run-pida(-remote) wrapper scripts, handle it in bin/pida(-remote)
+ * make a textual notice in the window of a closed bpython shell
+ * move the commander views to a own module
+ * remove the custom oackage data finding from setup.py (solved by setuptools)
+ * remove the custom package finding from setup.py (solved by setuptools)
+ * remove various dead codepaths
+ * stop workspace manager appearing for pida -v (fixes #283)
+ * switch the language enum's to symbols
+ * unify the api of the different language tool classes
 
 
 changes before 0.6.2
