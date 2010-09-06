@@ -486,7 +486,7 @@ class ExternalProxy(BaseCachedDocumentHandler):
         return self._uuid
 
     def run(self, *k, **kw):
-        return self.svc.jobserver.run(self)
+        return self.svc.jobserver.run(self, *k, **kw)
 
 class Merger(BaseDocumentHandler):
     """
@@ -529,6 +529,8 @@ class MergeCompleter(Completer, Merger):
                 yield res
 
 def safe_remote(func):
+    import functools
+    @functools.wraps(func)
     def safe(self, *args, **kwargs):
         try:
             for i in func(self, *args, **kwargs):
@@ -593,10 +595,10 @@ class JobServer(Log):
         return manager, instances[id(proxy.document)][proxy.mytype]
 
     @safe_remote
-    def run(self, proxy):
+    def run(self, proxy, *k, **kw):
         """Forwards to the external process"""
         manager, instance = self.get_instance(proxy)
-        return manager.run(instance)
+        return manager.run(instance, *k, **kw)
 
 
     def stop(self):
@@ -637,9 +639,15 @@ class LanguageService(Service):
             # if we have multiprocessing support we exchange the
             # language factories to the proxy objects
             def newproxy(old, mytype_):
+                if not old:
+                    return type(
+                        'External%sProxy'%mytype_,
+                        (ExternalProxy,),
+                        {'mytype': mytype_},
+                    )
                 class NewProxy(ExternalProxy):
                     mytype = mytype_
-                    _uuid = old.uuid()
+                    _uuid = old.uuid() if old else None
                     priority = old.priority
                     name = old.name
                     plugin = old.plugin

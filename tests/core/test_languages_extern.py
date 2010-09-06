@@ -5,7 +5,7 @@ import os
 from pida.utils.languages import OutlineItem, ValidationError, Definition, \
     Suggestion, Documentation
 from pida.core.languages import (Validator, Outliner, External, JobServer,
-    ExternalValidatorProxy, ExternalOutlinerProxy,
+    ExternalProxy,
     Documentator, Definer, Completer, LanguageService)
 from pida.core.document import Document
 
@@ -14,20 +14,20 @@ from .test_services import MockBoss
 
 class TestExternalValidator(Validator):
 
-    def get_validations(self):
+    def run(self):
         yield os.getpid()
         for i in xrange(50):
             yield ValidationError(message="error %s" % i)
 
 class TestExternalOutliner(Outliner):
 
-    def get_outline(self):
+    def run(self):
         yield os.getpid()
         for i in xrange(50):
             yield OutlineItem(name="run %s" % i, line=i)
 
 class TestDocumentator(Documentator):
-    def get_documentation(self, buffer, offset):
+    def run(self, buffer, offset):
         yield os.getpid()
         yield buffer
         yield offset
@@ -37,7 +37,7 @@ class TestDocumentator(Documentator):
 
 class TestCompleter(Completer):
 
-    def get_completions(self, base, buffer, offset):
+    def run(self, base, buffer, offset):
         yield os.getpid()
         yield base
         yield buffer
@@ -48,7 +48,7 @@ class TestCompleter(Completer):
 
 class TestDefiner(Definer):
 
-    def get_definition(self, buffer, offset):
+    def run(self, buffer, offset, *k):
         yield os.getpid()
         yield buffer
         yield offset
@@ -97,14 +97,14 @@ def pytest_funcarg__doc(request):
 
 def test_service_override(svc):
     assert isinstance(svc.jobserver, JobServer)
-    assert issubclass(svc.validator_factory, ExternalValidatorProxy)
-    assert issubclass(svc.outliner_factory, ExternalOutlinerProxy)
+    assert issubclass(svc.validator_factory, ExternalProxy)
+    assert issubclass(svc.outliner_factory, ExternalProxy)
 
 
 def test_outliner(svc, doc):
     # test iterators
     outliner = svc.outliner_factory(svc, doc)
-    for i, v in enumerate(outliner.get_outline()):
+    for i, v in enumerate(outliner.run()):
         if i == 0:
             assert os.getpid() != v
         else:
@@ -114,7 +114,7 @@ def test_outliner(svc, doc):
 
 def test_validator(svc, doc):
     validator = svc.validator_factory(svc, doc)
-    for i, v in enumerate(validator.get_validations()):
+    for i, v in enumerate(validator.run()):
         if i == 0:
             assert os.getpid() != v
         else:
@@ -124,8 +124,7 @@ def test_validator(svc, doc):
 
 def test_completer(svc, doc):
     completer = svc.completer_factory(svc, doc)
-    for i, v in enumerate(completer.get_completions('base',
-                          'some text', 3)):
+    for i, v in enumerate(completer.run('base', 'some text', 3)):
         if i == 0:
             assert os.getpid() != v
         elif i == 1:
@@ -141,8 +140,7 @@ def test_completer(svc, doc):
 
 def test_documenter(svc, doc):
     documentator = svc.documentator_factory(svc, doc)
-    for i, v in enumerate(documentator.get_documentation('base',
-                          'some text')):
+    for i, v in enumerate(documentator.run('base', 'some text')):
         if i == 0:
             assert v != os.getpid()
         elif i == 1:
@@ -157,7 +155,7 @@ def test_documenter(svc, doc):
 
 def test_definer(svc, doc):
     definer = svc.definer_factory(svc, doc)
-    for i, v in enumerate(definer.get_definition('some text', 4)):
+    for i, v in enumerate(definer.run('some text', 4)):
         if i == 0:
             assert os.getpid() != v
         elif i == 1:
