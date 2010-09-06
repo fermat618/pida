@@ -47,9 +47,6 @@ def test_real_file(file, doc):
 def test_file_text(file, doc):
     assert doc.content == file.read()
 
-def test_file_lines(doc):
-    assert len(doc.lines) == 2
-
 def test_file_len(file, doc):
     assert doc.filesize == file.size()
 
@@ -75,13 +72,13 @@ def test_repr_new():
     from pida.core import document as document_module
     doc = document()
     rep = repr(doc)
-    expected = '<New Document {0:d} at 0x{1:x}>'.format(
-            next(document_module.new_file_counter) - 1, id(doc))
+    expected = '<New Document {0:d}>'.format(
+            next(document_module.new_file_counter) - 1)
     assert rep == expected
 
 def test_repr_known():
     doc = document(filename='test')
-    expected = "<Document '%s' at 0x%x>" % (os.path.abspath('test'), id(doc))
+    expected = "<Document '%s'>" % (os.path.abspath('test'),)
     assert repr(doc) == expected
 
 def test_unicode_new():

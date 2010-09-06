@@ -193,9 +193,9 @@ class Document(object):
 
     def __repr__(self):
         if self.filename is None:
-            return u'<New Document %d at 0x%x>' % (self.newfile_index, id(self))
+            return u'<New Document {self.newfile_index}>'.format(self=self)
         else:
-            return u'<Document %r at 0x%x>' % (self.filename, id(self))
+            return u'<Document {self.filename!r}>'.format(self=self)
 
     def __unicode__(self):
         if self.filename is None:
@@ -208,24 +208,6 @@ class Document(object):
                                       self.project_relative_path, self.basename)
             else:
                 return os.path.basename(self.filename)
-
-    @property
-    def markup_title(self):
-        """
-        Returns a markup version of unicode
-        """
-        if self.filename is None:
-            if self.newfile_index > 1:
-                return _(u'<b>Untitled (%d)</b>') % (self.newfile_index)
-            return _(u'<b>Untitled</b>')
-        else:
-            if self.project:
-                return u'%s:%s/<b>%s</b>' % (
-                        escape(self.project_name),
-                        escape(self.project_relative_path),
-                        escape(self.basename))
-            else:
-                return '<b>%s</b>' % escape(os.path.basename(self.filename))
 
     @property
     def modified_time(self):
@@ -242,25 +224,6 @@ class Document(object):
         # FIXME: if self.is_new we should run the _encode detection from
         # the editors buffer if possible
         return self._encoding
-
-    @property
-    def lines(self):
-        import warnings
-        warnings.warn("Deprecated. Access the document as a list")
-        self._load()
-        return self._lines
-
-    @property
-    def live(self):
-        """
-        Returns a boolean if the document is loaded in the editor
-        """
-        # live indicates that this object has a editor instance which get_content
-        #self.live = False
-        if self.editor and hasattr(self.editor, 'get_content'):
-            return True
-
-        return False
 
     def get_content(self, live=True):
         """
@@ -349,22 +312,6 @@ class Document(object):
     def unique_id(self):
         return id(self)
 
-    def get_markup_tworow(self, style=None):
-        """
-        Two rowed version of above
-        """
-        if self.project:
-            mark = self.get_markup(self.markup_string_tworow_project)
-        else:
-            mark = self.get_markup(self.markup_string_tworow_fullpath)
-        rv = self.markup_string_tworow % self._build_markup_dict(markup_dict={
-            'markup_inc': mark
-            }, style=style)
-        return rv
-
-    markup_tworow = property(get_markup_tworow)
-
-
     @property
     def project_name(self):
         """
@@ -381,32 +328,6 @@ class Document(object):
         True if the Document is not associated to a filename
         """
         return self.filename is None
-
-    # emulate a container element. this allows access to a document
-    # as a list of lines
-    def __len__(self):
-        return len(self._list)
-
-    def __getitem__(self, key):
-        return self._list[key]
-
-    def __setitem__(self, key, value):
-        self._list[key] = value
-        self._update_content_from_lines()
-
-    def __delitem__(self, key):
-        del self._list[key]
-        self._update_content_from_lines()
-
-    def __iter__(self):
-        return iter(self._list)
-
-    def append(self, line):
-        """
-        Add a line to the Document
-        """
-        self._list.append(line)
-        self._update_content_from_lines()
 
     def __nonzero__(self):
         # documents are always True
