@@ -5,7 +5,7 @@
 set nocompatible
 
 silent function! VimSignal(name, ...)
-    python getattr(service, vim.eval('a:name'))(*clean_signal_args(vim.eval('a:000')))
+    python call_signal(vim.eval('a:name'), vim.eval('a:000'))
 endfunction
 
 
@@ -21,6 +21,12 @@ sys.path.insert(0, path)
 
 from pida.editors.vim.server import VimDBUSService, get_offset, clean_signal_args
 from pida.utils.pdbus import PidaRemote
+
+
+def call_signal(name, args):
+    args = clean_signal_args(args)
+    method = getattr(service, name)
+    method(*args)
 
 uid = os.environ['PIDA_DBUS_UUID']
 service = VimDBUSService(uid)
