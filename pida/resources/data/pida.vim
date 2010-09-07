@@ -11,16 +11,18 @@ endfunction
 
 python << endpython
 # Do this before we even breath
-
 import vim
+
+import os
+import sys
 # just in case, our pida might not be in the default path
-path = vim.eval('$PIDA_SITE')
+path = os.environ['PIDA_BASE']
 sys.path.insert(0, path)
 
 from pida.editors.vim.server import VimDBUSService, get_offset, clean_signal_args
 from pida.utils.pdbus import PidaRemote
 
-uid = vim.eval('$PIDA_DBUS_UUID')
+uid = os.environ['PIDA_DBUS_UUID']
 service = VimDBUSService(uid)
 client = PidaRemote(uid)
 
