@@ -1,7 +1,7 @@
 """
 Vim Integration for PIDA
 """
-
+from __future__ import absolute_import
 import vim
 
 
