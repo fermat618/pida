@@ -36,10 +36,6 @@ class Document(object):
     A document can eighter be just a file. Or be opened by the editor component
     and is then a live document (live is True).
 
-    A document can be accessed like a List object (list of lines). Each line
-    however does have its tailing newline character as it's supposed not
-    to alter data.
-
     """
 
     usage = 0
@@ -64,12 +60,9 @@ class Document(object):
             self.newfile_index = next(new_file_counter)
 
         self.editor = None
-        self._list = []
-        self._str = ""
         self.creation_time = time.time()
         self._project = project
 
-        self.clear()
 
 
     def project_and_path(self):
@@ -94,44 +87,6 @@ class Document(object):
             return pp[1]
         return os.path.join(*os.path.split(self.directory)[-2:])
 
-
-    def clear(self):
-        """
-        Clear document caches
-        """
-        self._str = None
-        self._lines = None
-        self._last_mtime = None
-
-    def _load(self):
-        """loads the document content
-
-        sets the attributes _str and _lines
-        """
-
-        if self.filename is None or self.modified_time == self._last_mtime:
-            return
-
-
-        stream = None
-        try:
-            stream = open(self.filename, "rb")
-            fname = self.filename
-            mime = self.mimetype
-
-            stream.seek(0)
-            self._str = stream.read()
-            self._lines = self._str.splitlines(True)
-        except IOError:
-            if stream is not None:
-                stream.close()
-
-            # set the encoding to None and the rest too empty
-            self.clear()
-            self._str = ''
-            self._lines = []
-
-            log.warn(_('failed to open file %s'), self.filename)
 
 
     def _get_doctype(self):
@@ -209,61 +164,17 @@ class Document(object):
             return self.stat[stat.ST_MTIME]
         return self.creation_time
 
-    def get_content(self, live=True):
+    @property
+    def content(self):
         """
-        Returns the content of the document.
-        If live is true and the document is loaded into an editor the
-        content of the editor is returned
+        the content of the document.
+        tries buffer content, falls back to file conten
         """
-        if live and hasattr(self.editor, 'get_content'):
+        if hasattr(self.editor, 'get_content'):
             return self.boss.editor.get_content(self.editor)
-        self._load()
-        return self._str
+        with open(self.filename) as fp:
+            return fp.read()
 
-    def set_content(self, value, flush=True, live=True):
-        """
-        Sets the content of the document.
-        If live is True and the document is loaded, it's content is returned
-        """
-        if self.boss is not None and hasattr(self.boss.editor, 'set_content') and self.editor:
-            return self.boss.editor.set_content(self.editor, value)
-
-        self._str = value
-        self._lines = self._str.splitlines(True)
-
-        if flush:
-            self.flush()
-
-    content = property(get_content, set_content)
-
-    def flush(self):
-        """
-        Flush the buffer.
-        If editor has loaded this document, it's value
-        is fetched befor writing to disc
-        """
-        if self.boss is not None and hasattr(self.editor, 'get_content') and self.editor:
-            value = self.boss.editor.get_content(self.editor)
-        else:
-            value = self._str
-
-        stream = None
-        try:
-            stream = open(self.filename, "wb")
-            stream.write(value)
-            stream.close()
-            # update the _last_mtime var, so the next access
-            # will not cause a file read
-            self._last_mtime = self.modified_time
-        except IOError:
-            if stream is not None:
-                stream.close()
-
-    def _update_content_from_lines(self):
-        self._str = "".join(self._lines)
-        if hasattr(self.boss.editor, 'set_content') and self.editor:
-            return self.boss.editor.set_content(self.editor, self._str)
-        self.set_content(self._str, flush=False)
 
     @property
     def directory(self):
