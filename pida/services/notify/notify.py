@@ -33,7 +33,8 @@ from pida.core.locale import Locale
 _locale = Locale('notify')
 _ = _locale.gettext
 
-import StringIO
+import pynotify
+pynotify.init('PIDA')
 
 class PidaLogHandler(gobject.GObject, logging.Handler):
     """
@@ -97,49 +98,6 @@ PIDAHANDLER.setFormatter(
 logging.Formatter("%(asctime)s - %(levelname)s -  %(name)s - %(message)s"))
 
 logging.getLogger('').addHandler(PIDAHANDLER)
-
-
-class BaseNotifier(object):
-
-    def __init__(self, svc):
-        self.svc = svc
-
-    def notify(self, item):
-        raise NotImplementedError
-
-
-class NIHNotifier(BaseNotifier):
-
-    def __init__(self, svc):
-        BaseNotifier.__init__(self, svc)
-        self._popup = NotifyPopupView(self.svc)
-        self._popup.on_pida_window = self.svc.opt('pidawindow')
-        self._popup.set_gravity(self.svc.opt('gravity'))
-
-    def notify(self, item):
-        self._popup.add_item(item)
-
-
-class LibNotifyNotifier(BaseNotifier):
-
-    def notify(self, item):
-        n = pynotify.Notification(item.title, item.data, item.stock)
-        n.set_timeout(item.timeout)
-        try:
-            n.show()
-        except:
-            # depending on the notifier daemon, sometimes a glib.GError is raised
-            # here.
-            pass
-
-try:
-    import pynotify
-    pynotify.init('PIDA')
-    Notifier = LibNotifyNotifier
-except ImportError:
-    pynotify = None
-    Notifier = NIHNotifier
-
 
 
 class NotifyItem(object):
@@ -342,7 +300,6 @@ class NotifyOptionsConfig(OptionsConfig):
             bool,
             True,
             _('Show notifications popup'),
-            self.on_show_notify
         )
 
 
@@ -352,47 +309,7 @@ class NotifyOptionsConfig(OptionsConfig):
             int,
             6000,
             _('Timeout before hiding a notification'),
-            self.on_change_timeout
         )
-
-        if pynotify is not None:
-            return
-
-        self.create_option(
-            'gravity',
-            _('Gravity'),
-            choices([
-                _('North East'),
-                _('North West'),
-                _('South East'),
-                _('South West'),
-                ]),
-            _('South East'),
-            _('Position of notifications popup'),
-            self.on_gravity_change
-           )
-
-        self.create_option(
-            'pidawindow',
-            _('On pida window'),
-            bool,
-            False,
-            _('Attach notifications on pida window'),
-            self.on_pida_window_change
-        )
-
-
-    def on_show_notify(self, option):
-        self.svc._show_notify = option.value
-
-    def on_change_timeout(self, option):
-        self.svc._timeout = option.value
-
-    def on_gravity_change(self, option):
-        self.svc.notifier._popup.set_gravity(option.value)
-
-    def on_pida_window_change(self, option):
-        self.svc.notifier._popup.on_pida_window = option.value
 
 
 class NotifyActionsConfig(ActionsConfig):
@@ -461,10 +378,7 @@ class Notify(Service):
         self._view = NotifyView(self)
         self._log = LogView(self)
 
-        self.notifier = Notifier(self)
-
         self._has_loaded = False
-        self._show_notify = self.opt('show_notify')
 
         # send already occured errors
         #while True:
@@ -495,8 +409,15 @@ class Notify(Service):
             gcall(self.add_notify, item)
             return
         self._view.add_item(item)
-        if self._show_notify:
-            self.notifier.notify(item)
+        if self.opt('show_notify'):
+            n = pynotify.Notification(item.title, item.data, item.stock)
+            n.set_timeout(item.timeout)
+            try:
+                n.show()
+            except:
+                # depending on the notifier daemon, sometimes a glib.GError is raised
+                # here.
+                pass
 
     def _on_error(self, handler, msg):
         self.notify(msg.getMessage(), timeout=20000,
@@ -504,12 +425,9 @@ class Notify(Service):
 
 
     def notify(self, data, title='', stock=gtk.STOCK_DIALOG_INFO,
-            timeout=-1, callback=None, quick=False):
-        if timeout == -1:
-            if quick:
-                timeout = 700
-            else:
-                timeout = self.opt('timeout')
+            timeout=None, callback=None, quick=False):
+        if timeout is None:
+            timeout = 700 if quick else self.opt('timeout')
         self.add_notify(NotifyItem(data=data, title=title, stock=stock,
             timeout=timeout, callback=callback))
 
