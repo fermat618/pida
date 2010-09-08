@@ -15,17 +15,8 @@ import stat
 import time
 import itertools
 
-import codecs
-
 from pida.core.log import log
 from pida.utils.descriptors import cached_property
-
-from xml.sax.saxutils import escape
-
-# locale
-from pida.core.locale import Locale
-locale = Locale('pida')
-_ = locale.gettext
 
 new_file_counter = itertools.count(1)
 
@@ -148,9 +139,7 @@ class Document(object):
 
     def __unicode__(self):
         if self.filename is None:
-            if self.newfile_index > 1:
-                return _(u'Untitled (%d)') % (self.newfile_index)
-            return _(u'Untitled')
+            return u'Untitled (%d)' % (self.newfile_index)
         else:
             if self.project:
                 return u'%s:%s/%s' % (self.project_name,
