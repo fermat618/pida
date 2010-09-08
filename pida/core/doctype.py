@@ -10,7 +10,6 @@
 """
 
 from glob import fnmatch
-import charfinder
 from collections import defaultdict
 
 class DocType(object):
@@ -74,9 +73,6 @@ class TypeManager(dict):
         for ext in doctype.extensions:
             if ext:
                 self._globs[ext].append(doctype)
-        # we fill the list of known mimetypes as we see them
-        for mime in doctype.mimes:
-            charfinder.text_mime.add(mime)
 
     def _parse_map(self, lst):
         for intname, data in lst.iteritems():
