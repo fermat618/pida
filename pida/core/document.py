@@ -15,7 +15,6 @@ import stat
 import time
 import itertools
 
-from charfinder import detect_encoding
 import codecs
 
 from pida.core.log import log
@@ -102,29 +101,25 @@ class Document(object):
         """
         self._str = None
         self._lines = None
-        self._encoding = None
         self._last_mtime = None
 
     def _load(self):
-        """loads the document content/encoding
+        """loads the document content
 
-        sets the attributes _str, _lines and _encoding
+        sets the attributes _str and _lines
         """
 
         if self.filename is None or self.modified_time == self._last_mtime:
             return
 
 
-        # lines and string depend on encoding
         stream = None
         try:
             stream = open(self.filename, "rb")
             fname = self.filename
             mime = self.mimetype
 
-            self._encoding = detect_encoding(stream, fname, mime)
             stream.seek(0)
-            stream = codecs.EncodedFile(stream, self._encoding)
             self._str = stream.read()
             self._lines = self._str.splitlines(True)
         except IOError:
@@ -135,7 +130,6 @@ class Document(object):
             self.clear()
             self._str = ''
             self._lines = []
-            self._encoding = 'none'
 
             log.warn(_('failed to open file %s'), self.filename)
 
@@ -214,16 +208,6 @@ class Document(object):
         if self.filename:
             return self.stat[stat.ST_MTIME]
         return self.creation_time
-
-    @property
-    def encoding(self):
-        """
-        Encoding of file
-        """
-        self._load()
-        # FIXME: if self.is_new we should run the _encode detection from
-        # the editors buffer if possible
-        return self._encoding
 
     def get_content(self, live=True):
         """
