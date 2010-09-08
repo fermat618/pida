@@ -60,10 +60,6 @@ def test_directory_basename(doc, file):
 def test_basename(file, doc):
     assert doc.basename == file.basename
 
-def test_file_missing_load():
-    doc = document(filename='/this_is_hopefully_missing_for_sure')
-    doc._load()
-
 def test_file_missing_stat():
     doc = document(filename='/this_is_hopefully_missing_for_sure')
     assert doc.stat == (0,) * 10
@@ -90,22 +86,4 @@ def test_unicode_knows():
     doc = document(filename='test')
     assert unicode(doc) == doc.basename
 
-def test_content_nonlife(tmpdir):
-    tempfile = tmpdir.ensure('foo')
-    name = str(tempfile)
-    d = document(filename=name)
-    STR1 = u'i write something'
-    STR2 = u'other text too'
-    d.content = STR1
-    assert d.content == STR1
-    del d
-    d = document(filename=name)
-    assert d.content == STR1
-    d.content = STR2
-    assert d.content == STR2
-    d.content += STR1
-    assert d.content == "%s%s" % (STR2, STR1)
-    del d
-    d = document(filename=name)
-    assert d.content == "%s%s" % (STR2, STR1)
 
