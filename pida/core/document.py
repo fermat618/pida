@@ -212,10 +212,7 @@ class Document(object):
         """
         Name of Project or None
         """
-        if self.project is not None:
-            return self.project.display_name
-        else:
-            return ''
+        return getattr(self.project, 'display_name', '')
 
     @property
     def is_new(self):
