@@ -9,7 +9,7 @@ Language Support Superclasses
 from functools import partial
 from weakref import WeakKeyDictionary
 import abc
-
+import string
 import gobject
 
 from pida.core.document import Document
@@ -191,25 +191,20 @@ class LanguageInfo(object):
     """
     # variable have usually only chars a-zA-Z0-9_
     # the first character of variables have an own list
-    varchars_first = [chr(x) for x in xrange(97, 122)] + \
-                     [chr(x) for x in xrange(48, 58)] + \
-                     ['_', ]
-    varchars = [chr(x) for x in xrange(97, 122)] + \
-               [chr(x) for x in xrange(65, 90)] + \
-               [chr(x) for x in xrange(48, 58)] + \
-               ['_', ]
+    varchars_first = string.ascii_letters + '_'
+    varchars = varchars_first + string.digits
 
     word = varchars
     word_first = varchars_first
 
-    open_backets = ['[', '(', '{']
-    close_backets = [']', ')', '}']
+    open_backets = '[({'
+    close_backets = '])}'
 
     # . in python; -> in c, ...
-    attributerefs = []
+    attributerefs = ''
 
-    completer_open = ['[', '(', '{']
-    completer_close = [']', ')', '}']
+    completer_open = '[({'
+    completer_close = '])}'
 
     keywords = []
     operators = []

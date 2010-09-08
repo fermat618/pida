@@ -22,6 +22,7 @@
 
 # stdlib
 import sys, compiler, os.path, keyword, re
+import string
 
 # gtk
 import gtk
@@ -192,19 +193,16 @@ class PythonDocumentator(Documentator):
             long_=PyDocExtractor().get_doc(pyobject)
             )
         yield rv
-        
+
 class PythonLanguage(LanguageInfo):
-    varchars = [chr(x) for x in xrange(97, 122)] + \
-               [chr(x) for x in xrange(65, 90)] + \
-               [chr(x) for x in xrange(48, 58)] + \
-               ['_',]
+    varchars = string.ascii_letters + string.digits + '_'
     word = varchars
 
     # . in python
-    attributerefs = ['.']
+    attributerefs = '.'
 
-    completer_open = ['[', '(', ',', '.']
-    completer_close = [']', ')', '}']
+    completer_open = '[(,.'
+    completer_close = '])}'
 
 
 
