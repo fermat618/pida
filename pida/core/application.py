@@ -112,7 +112,7 @@ def main():
 
     #options.create_default_manager(pida.core.environment.workspace_name())
     from pida.core import log
-    log.setup()
+    log.configure()
 
     if not opts.debug:
         warnings.filterwarnings("ignore")

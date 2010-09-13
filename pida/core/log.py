@@ -22,7 +22,7 @@ from logging import getLogger as get_logger
 
 log = get_logger('pida')
 
-def setup():
+def configure():
     if is_debug():
         pida_handler.level = logbook.DEBUG
     else:
