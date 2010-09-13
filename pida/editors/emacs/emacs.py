@@ -64,7 +64,7 @@ class EmacsCallback(object):
 
     def __init__(self, svc):
         """Constructor."""
-        self._log = get_logger('emacs')
+        self._log = svc.log
         self._svc = svc
 
     def em_BufferOpen(self, filename):
@@ -159,17 +159,6 @@ class Emacs(EditorService):
         self._top_buffer = ''
 
         self._current_line = 1
-
-        # Prepare logger for emacs related stuff.
-        format = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-        emacs_logger = get_logger('emacs')
-        handler = logging.StreamHandler()
-        handler.setFormatter(format)
-        emacs_logger.addHandler(handler)
-        if env.is_debug():
-            emacs_logger.setLevel(logging.DEBUG)
-        else:
-            emacs_logger.setLevel(logging.INFO)
 
         #Start Emacs view
         self.initscript = self._create_initscript()
