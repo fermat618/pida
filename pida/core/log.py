@@ -11,27 +11,22 @@
 """
 
 
-import logging
-import logging.handlers
-
-from logging import getLogger as get_logger
+import logbook.compat
+logbook.compat.redirect_logging()
 
 from pida.core.environment import is_debug
 from pida.utils.descriptors import cached_property
 
-format_str = '%(levelname)s %(name)s: %(message)s'
-format = logging.Formatter(format_str)
+#XXX: replace with logbook.logger later
+from logging import getLogger as get_logger
 
 log = get_logger('pida')
-handler = logging.StreamHandler()
-handler.setFormatter(format)
-log.addHandler(handler)
 
 def setup():
     if is_debug():
-        get_logger().setLevel(logging.DEBUG)
+        pida_handler.level = logbook.DEBUG
     else:
-        get_logger().setLevel(logging.INFO)
+        pida_handler.level = logbook.NOTICE
 
 class Log(object):
 
@@ -42,3 +37,15 @@ class Log(object):
     def log(self):
         return get_logger(self.get_name())
 
+
+class RollOverHandler(logbook.Handler):
+    pass
+
+
+
+null = logbook.NullHandler()
+pida_handler = logbook.StderrHandler()
+rollover = RollOverHandler(bubble=True)
+
+nested_setup = logbook.NestedSetup([ null, pida_handler, rollover ])
+nested_setup.push_application()
