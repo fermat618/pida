@@ -12,6 +12,7 @@
 from functools import partial
 
 import gtk
+import logbook
 
 from pida.core.doctype import DocType
 from pida.core.languages import LanguageInfo
@@ -31,7 +32,6 @@ from pida.core.options import OptionsConfig
 #from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.pdbus import DbusConfig, EXPORT
-from pida.core.log import get_logger
 from pida.utils.languages import Definition
 
 # ui
@@ -48,7 +48,7 @@ from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
 
-logger = get_logger('service.language')
+logger = logbook.Logger('service.language')
 
 LEXPORT = EXPORT(suffix='language')
 
@@ -288,6 +288,7 @@ class CustomLanguageMapping(dict):
         Loads the priority data into the internal structure
         """
         if not isinstance(data, dict):
+            #XXX: wtf?
             logger(_("can't load data structure of type %s") %type(data))
             return
         for key, pluglist in data.iteritems():

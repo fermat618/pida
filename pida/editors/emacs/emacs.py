@@ -17,7 +17,6 @@
 """ 
 
 
-import logging
 import os
 
 # PIDA Imports
@@ -25,7 +24,6 @@ import pida.core.environment as env
 
 from pida.ui.views import PidaView
 
-from pida.core.log import get_logger
 from pida.core.editors import EditorService 
 
 # Emacs specific

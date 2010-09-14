@@ -23,7 +23,6 @@ from .outlinefilter import FILTERMAP
 
 from pida.core.environment import on_windows
 from pida.core.languages import LANGUAGE_PLUGIN_TYPES
-from pida.core.log import get_logger
 
 from pygtkhelpers.gthreads import GeneratorTask
 
@@ -38,7 +37,6 @@ from pida.core.locale import Locale
 locale = Locale('plugins')
 _ = locale.gettext
 
-logger = get_logger('service.language')
 
 class LanguageEntry(Entry):
 

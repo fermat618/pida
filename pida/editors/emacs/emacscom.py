@@ -9,7 +9,6 @@
 
 import os
 import time
-from pida.core.log import get_logger
 
 try:
     import dbus
@@ -21,7 +20,7 @@ except ImportError:
 class EmacsClient(object):
     
     def __init__(self, callback, svc):
-        self._log = get_logger('emacs')
+        self._log = svc.log
         self._callback = callback
         self._svc = svc
         session = dbus.SessionBus()

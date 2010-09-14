@@ -7,6 +7,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL2 or later
 """
+import Logbook
 
 # PIDA Imports
 from pida.core.events import EventsConfig
@@ -14,7 +15,6 @@ from pida.core.options import OptionsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.commands import CommandsConfig
 from pida.core.features import FeaturesConfig
-from pida.core.log import get_logger
 from pida.utils.descriptors import cached_property
 
 # locale
@@ -160,9 +160,9 @@ class Service(object):
     @cached_property
     def log(self):
         if self.__module__[:14] == 'pida.services.':
-            return get_logger('pida.svc.' + self.get_name())
+            return logbook.Logger('pida.svc.' + self.get_name())
         else:
-            return get_logger('pida.plugin.' + self.get_name())
+            return logbook.Logger('pida.plugin.' + self.get_name())
 
 
     # window proxy

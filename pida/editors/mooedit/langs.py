@@ -26,5 +26,5 @@ def build_mapping(langmgr, docmanager):
         from pida.core.locale import Locale
         locale = Locale('medit')
         _ = locale.gettext
-        from pida.core.log import get_logger
-        get_logger("medit").warning(_("Your medit is to old for full support. Please upgrade to 0.9.5"))
+        import warnings
+        warnings.warn(_("Your medit is to old for full support. Please upgrade to 0.9.5"))

@@ -20,10 +20,8 @@ from pida.utils.descriptors import cached_property
 from collections import deque
 from threading import Lock
 
-#XXX: replace with logbook.logger later
-from logging import getLogger as get_logger
 
-log = get_logger('pida')
+log = logbook.Logger('pida')
 
 def configure():
     if is_debug():
@@ -38,7 +36,7 @@ class Log(object):
 
     @cached_property
     def log(self):
-        return get_logger(self.get_name())
+        return logbook.Logger(self.get_name())
 
 
 class RollOverHandler(logbook.Handler):

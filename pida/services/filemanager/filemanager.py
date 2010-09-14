@@ -16,6 +16,8 @@ import cgi
 
 import re
 
+import logbook
+
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -26,7 +28,6 @@ from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_DROPDOWNMENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 from pida.core.options import OptionsConfig
 from pida.core.environment import on_windows
-from pida.core.log import get_logger
 
 from pygtkhelpers.gthreads import GeneratorTask, AsyncTask, gcall
 from pida.utils.path import homedir
@@ -87,7 +88,7 @@ state_style = dict( # tuples of (color, is_bold, is_italic)
 
 def check_or_home(path):
     if not os.path.isdir(path):
-        get_logger('pida.svc.filemanager').info(_("Can't open directory: %s") %path)
+        logbook.Logger('pida.svc.filemanager').info(_("Can't open directory: %s") %path)
         return homedir
     return path
 
