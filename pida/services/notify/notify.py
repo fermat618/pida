@@ -10,10 +10,10 @@
 #
 
 import cgi
-import gtk, gobject
+import gtk
 import datetime
 import locale
-import logging
+import logbook
 
 from pygtkhelpers.utils import gsignal
 from pygtkhelpers.ui.objectlist import Column, ObjectList
@@ -26,7 +26,6 @@ from pida.core.actions import (ActionsConfig, TYPE_NORMAL, TYPE_MENUTOOL,
                                TYPE_REMEMBER_TOGGLE)
 from pida.ui.buttons import create_mini_button
 from pygtkhelpers.gthreads import gcall
-import gobject
 
 # locale
 from pida.core.locale import Locale
@@ -36,68 +35,48 @@ _ = _locale.gettext
 import pynotify
 pynotify.init('PIDA')
 
-class PidaLogHandler(gobject.GObject, logging.Handler):
-    """
-    The PidaLogHandler saved all log entries to be displayed in a log window,
-    and let the notify service popup a notify on errors
-    """
+from logbook.handlers import Handler, StreamHandler
+from pida.core.log import rollover
 
-    gsignal('errors', object)
+class MainloopSendHandler(Handler):
+    def __init__(self, handlers):
+        Handler.__init__(self)
+        self.handlers = handlers
 
-    def __init__(self, *args, **kwargs):
-        self.error_stack = []
-        self.max_length = kwargs.get('max_length', 50000)
-        self.buffer = gtk.TextBuffer()
-        gobject.GObject.__init__(self)
-        logging.Handler.__init__(self, *args, **kwargs)
-    
+    def _in_mainloop(self, record):
+        for handler in self.handlers:
+            handler.emit(record)
+
+    def close(self):
+        for handler in self:
+            handler.close()
+
     def emit(self, record):
-        """
-        Emit a record.
+        gcall(self._in_mainloop, record)
 
-        If a formatter is specified, it is used to format the record.
-        The record is then written to the stream with a trailing newline.  If
-        exception information is present, it is formatted using
-        traceback.print_exception and appended to the stream.  If the stream
-        has an 'encoding' attribute, it is used to encode the message before
-        output to the stream.
-        """
-        try:
-            if record.levelno >= logging.ERROR and \
-               isinstance(self.error_stack, list):
-                self.error_stack.append(record)
-                gobject.GObject.emit(self, 'errors', record)
 
-            msg = self.format(record)
-            #stream = self.stream
-            fs = "%s\n"
-            try:
-                if (isinstance(msg, unicode)):
-                    self.buffer.insert(self.buffer.get_end_iter(),
-                                       fs % msg)
-                else:
-                    self.buffer.insert(self.buffer.get_end_iter(),
-                                       fs % msg.encode('UTF-8'))
+class TextBufferStream(object):
+    def __init__(self, max_length=50000):
+        self.max_length = max_length
+        self.buffer = gtk.TextBuffer()
 
-            except UnicodeError:
-                self.buffer.insert(self.buffer.get_end_iter(),
-                                        fs % msg.encode('UTF-8'))
-        except:
-            self.handleError(record)
-
-        # cleanup size
+    def write(self, data):
+        self.buffer.insert(self.buffer.get_end_iter(), data)
         drang = self.buffer.get_char_count() - self.max_length
         if drang > 0:
-            self.buffer.delete(self.buffer.get_start_iter(),
-                               self.buffer.get_iter_at_offset(drang))
+            titer = self.buffer.get_end_iter(drang)
+            titer.forward_to_line_end()
+            self.buffer.delete(self.buffer.get_start_iter(), titer)
 
-gobject.type_register(PidaLogHandler)
+class ErrorCallerHandler(Handler):
+    def __init__(self, callback):
+        Handler.__init__(self, level=logbook.ERROR)
+        self.callback = callback
 
-PIDAHANDLER = PidaLogHandler()
-PIDAHANDLER.setFormatter(
-logging.Formatter("%(asctime)s - %(levelname)s -  %(name)s - %(message)s"))
+    def emit(self, record):
+        if record.level>=self.level:
+            self.callback(self, record)
 
-logging.getLogger('').addHandler(PIDAHANDLER)
 
 
 class NotifyItem(object):
@@ -131,10 +110,14 @@ class LogView(PidaView):
     label_text = _('Pida Log')
     icon_name = gtk.STOCK_INDEX
 
+    def __init__(self, svc, buffer):
+        self.buffer = buffer
+        PidaView.__init__(self, svc)
+
     def create_ui(self):
         self._hbox = gtk.HBox(spacing=3)
         self._hbox.set_border_width(6)
-        self.text_view = gtk.TextView(PIDAHANDLER.buffer)
+        self.text_view = gtk.TextView(self.buffer)
         self._scroll = gtk.ScrolledWindow()
         self._scroll.add(self.text_view)
         self._hbox.add(self._scroll)
@@ -276,21 +259,17 @@ class Notify(Service):
     features_config = NotifyFeaturesConfig
     
     def start(self):
-        self._error_handler = PIDAHANDLER.connect('errors', self._on_error)
-
+        self._error_handler =  ErrorCallerHandler(self._on_error)
+        self._log_stream = TextBufferStream()
+        self._log_handler = MainloopSendHandler([
+            self._error_handler,
+            logbook.StreamHandler(self._log_stream),
+        ])
+        rollover.rollover(self._log_handler)
         self._view = NotifyView(self)
-        self._log = LogView(self)
+        self._log = LogView(self, self._log_stream.buffer)
 
         self._has_loaded = False
-
-        # send already occured errors
-        #while True:
-        #    try:
-        #        error = PIDAHANDLER.error_stack.pop()
-        #    except IndexError:
-        #        break
-        #    self._on_error(None, error)
-        #PIDAHANDLER.error_stack = None
 
     def show_notify(self):
         self.boss.cmd('window', 'add_view', paned='Terminal', view=self._view)
@@ -322,9 +301,9 @@ class Notify(Service):
                 # here.
                 pass
 
-    def _on_error(self, handler, msg):
-        self.notify(msg.getMessage(), timeout=20000,
-                    title=_("Pida error occured in %s") %msg.name)
+    def _on_error(self, handler, record):
+        self.notify(record.message, timeout=20000,
+                    title=_("Pida error occured in %s") %record.channel)
 
 
     def notify(self, data, title='', stock=gtk.STOCK_DIALOG_INFO,
@@ -337,7 +316,6 @@ class Notify(Service):
     def stop(self):
         if self.get_action('show_notify').get_active():
             self.hide_notify()
-        PIDAHANDLER.disconnect(self._error_handler)
 
 
 
