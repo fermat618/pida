@@ -11,7 +11,7 @@ import os, time
 
 import gtk
 import logbook
-log = Logbook.Logger('Pida Vim Client')
+log = logbook.Logger('Pida Vim Client')
 
 try:
     import dbus
