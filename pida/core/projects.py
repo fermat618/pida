@@ -72,8 +72,10 @@ class Project(Log):
         if not os.path.isdir(self.data_dir):
             try:
                 os.mkdir(self.data_dir)
-            except OSError, err:
-                self.log.exception(err)
+            except OSError:
+                self.log.exception(
+                    'cant create {data_dir}',
+                    data_dir=self.data_dir)
 
         #XXX: this might need wrappers for reload
         for mod in self.__data.values():
