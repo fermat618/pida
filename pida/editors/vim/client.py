@@ -7,11 +7,11 @@
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 
 """
-import logging
 import os, time
 
 import gtk
-log = logging.getLogger(__name__)
+import logbook
+log = Logbook.Logger('Pida Vim Client')
 
 try:
     import dbus
@@ -33,11 +33,11 @@ def get_vim(uid):
     watch = session.watch_name_owner(name, cb)
     gtk.main() #XXX: this might kill us if vim somehow fails
     try:
-        log.info('trying vim connect')
+        log.info('trying to connect to {name}', name=name)
         return dbus.Interface(
                 session.get_object(name, '/vim'),
                 'uk.co.pida.vim')
     except dbus.DBusException:
-        log.info('vim connect failed')
+        log.info('connect failed')
         raise SystemExit('vim failed')
 
