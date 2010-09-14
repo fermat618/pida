@@ -14,8 +14,8 @@ from pida.core.service import Service
 from pida.core import environment
 
 # log
-import logging
-log = logging.getLogger('pida.servicemanager')
+import logbook
+log = logbook.Logger('Pida Servicemanager')
 # locale
 from pida.core.locale import Locale
 locale = Locale('pida')
@@ -147,14 +147,15 @@ class ServiceManager(object):
     def start_plugin(self, name):
         plugin_class = self._plugins.get_one(name)
         if plugin_class is None:
-            log.error('Unable to load plugin %s' % name)
+            log.error('Unable to load plugin {name}', name=name)
             return
 
         #XXX: test this more roughly
         plugin = plugin_class(self._boss)
         try:
             if hasattr(plugin, 'started'):
-                log.error("plugin.started shouldn't be set by %r", plugin)
+                log.warning("plugin.started shouldn't be set by {plugin!r}", 
+                            plugin=plugin)
 
             plugin.started = False # not yet started
 
@@ -176,8 +177,9 @@ class ServiceManager(object):
                     assert plugin.started is False # this shouldn't change
                     plugin.started = True
                     return plugin
-                except Exception, e:
-                    log.exception(e)
+                except:
+                    log.exception('plugin startup failed for {plugin}',
+                                 plugin=plugin)
                     log.debug(_('Stop broken components'))
                     plugin.stop_components()
                     raise
@@ -185,9 +187,8 @@ class ServiceManager(object):
                 del self._reg[name]
                 raise
 
-        except Exception, e:
-            log.exception(e)
-            log.error(_('Could not load plugin %s'), name)
+        except:
+            log.exception('Could not load plugin {name}', name=name)
             self._plugins.unload(name)
             raise ServiceLoadingError(name)
 
