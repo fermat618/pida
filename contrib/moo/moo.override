@@ -6,6 +6,7 @@ headers
 #include <pygobject.h>
 #include <pygtk/pygtk.h>
 #include "moobigpaned.h"
+#include "moopython-utils.h"
 %%
 modulename moo_stub
 %%
