@@ -21,7 +21,7 @@ from pida.core.options import OptionsConfig
 from pida.core.log import Log
 
 from pida.core.languages import (LanguageService, Validator, External)
-from pida.utils.languages import (
+from pida.utils.languages import (LANG_PRIO,
    Definition, Suggestion, Documentation, ValidationError)
 
 # locale
