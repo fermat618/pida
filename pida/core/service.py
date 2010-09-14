@@ -7,7 +7,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL2 or later
 """
-import Logbook
+import logbook
 
 # PIDA Imports
 from pida.core.events import EventsConfig
