@@ -56,6 +56,24 @@ class BuildExt(build_ext):
         build_ext.build_extension(self, ext)
 
 
+
+
+install_requires = [
+    'anyvc>=0.3.2',
+    'py>=1.3',
+    'bpython>=0.9.7',
+    'pygtkhelpers>0.4.2'
+    'flatland',
+    #'vte',
+    #'dbus ?',
+    #'rope ?',
+    #'moo ?'
+    #XXX: more ?
+]
+
+if sys.version_info < (2, 7):
+    install_requires.append('argparse')
+
 setup(
     name = 'pida',
     version = hgdistver.get_version(),
@@ -88,20 +106,8 @@ setup(
         'Topic :: Utilities',
         'Programming Language :: Python'
     ],
-    install_requires = [
-        'anyvc>=0.3.2',
-        'py>=1.3',
-        'bpython>=0.9.7',
-        'pygtkhelpers>0.4.2'
-        'argparse',
-        'flatland',
-        #'vte',
-        #'dbus ?',
-        #'rope ?',
-        #'moo ?'
-        #XXX: more ?
-    ],
     data_files=[('share/doc/pida/contrib/gtkrc', glob('contrib/gtkrc/*'))],
+    install_requires=install_requires,
     package_data = {
         'pida': [
             'resources/glade/*',
