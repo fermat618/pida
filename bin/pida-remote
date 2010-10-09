@@ -16,17 +16,12 @@ try:
 except py.error.ENOENT:
     import pida
 
-from dbus.mainloop.glib import DBusGMainLoop
-DBusGMainLoop(set_as_default=True)
-
 os.environ['PIDA_PATH'] = os.path.dirname(os.path.abspath(pida.__file__))
 
-from pida.utils.pdbus import DBUS_NS, DBUS_PATH_PREFIX, \
-                            list_pida_instances, PidaRemote
+from pida.utils.pdbus import list_pida_instances, PidaRemote
 from pida.core import environment
 import dbus
 import dbus.service
-import re
 
 session = dbus.SessionBus()
 
@@ -81,8 +76,6 @@ def command(sw, row=None):
 
 def open_workspace():
     from pida.ui.window import WorkspaceWindow
-    import gtk
-
     view = WorkspaceWindow(command=command)
     view.show_and_run()
     sys.exit(0)
@@ -110,4 +103,4 @@ elif len(lst) == 1:
     call_open('p%d' % lst[0]['pid'])
 
 else:
-    open_session()
+    open_workspace()
