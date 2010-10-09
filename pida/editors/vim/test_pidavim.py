@@ -24,7 +24,6 @@ def refresh_ui():
 def _start_vim(sid, uuid):
     env = os.environ.copy()
     env['PIDA_DBUS_UUID'] = uuid
-    env['PIDA_PATH'] = '.'
     env['PIDA_BASE'] = '.'
     p = subprocess.Popen([
         'gvim', '--socketid', str(sid), '-f',

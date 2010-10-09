@@ -5,28 +5,22 @@
 # Licence
 
 import os
+from os.path import dirname, abspath, exists, join
 import sys
 
-import py
+prefix = dirname(dirname(abspath(__file__)))
+if exists(join(prefix, 'pida')):
+    sys.path.insert(0, prefix)
 
-bin = py.path.local(__file__).dirpath()
-base = bin.dirpath()
-
-try:
-    pida = base.join('pida').pyimport()
-    externals = base.join('externals')
-    if externals.check():
-        sys.path.insert(0, str(externals))
-except py.error.ENOENT:
-    import pida
+externals = join(prefix, 'externals')
+if exists(externals):
+    sys.path.insert(0, externals)
 
 
 if __name__ == '__main__':
     from pida.core import application
 
-    os.environ['PIDA_PATH'] = str(base)
-    os.environ['PIDA_BASE'] = str(base)
-    os.environ['PIDA_SITE'] = str(py.path.local(pida.__file__).dirpath())
+    os.environ['PIDA_BASE'] = prefix
     application.main()
 
 
