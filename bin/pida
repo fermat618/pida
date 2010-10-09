@@ -26,7 +26,6 @@ if __name__ == '__main__':
 
     os.environ['PIDA_PATH'] = str(base)
     os.environ['PIDA_BASE'] = str(base)
-    os.environ['PIDA_BIN'] = str(bin)
     os.environ['PIDA_SITE'] = str(py.path.local(pida.__file__).dirpath())
     application.main()
 
