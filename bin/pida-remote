@@ -24,30 +24,23 @@ import dbus
 import dbus.service
 
 session = dbus.SessionBus()
-
-# check if pida is running
 lst = list_pida_instances()
 
 
-environment.parse_args(sys.argv)
+environment.parse_args(sys.argv[1:])
 
-file_names = []
-
-for i in environment.get_args()[1:]:
-    file_names.append(os.path.abspath(i))
-
+file_names = [os.path.abspath(x) for x in environment.opts.files]
 
 def spawn(workspace=None):
-    #XXX: this seems somehow ugly. but i have no idea how to spawn this correctly
+    #XXX: this seems somehow ugly
     import subprocess
-    nargs = [sys.argv[0]] + file_names
-    for i in xrange(len(nargs)):
-        v = nargs[i]
-        if v[-11:] == "pida-remote":
-            nargs[i] = v[:-7]
+    cmd = sys.argv[0]
+    if cmd[-11:] == "pida-remote":
+        cmd = cmd[:-7]
+    nargs = [cmd] + file_names
     if workspace:
-        nargs += ['-w', workspace]
-    subprocess.Popen(nargs, env=os.environ.copy()).pid
+        nargs.extend(['-w', workspace])
+    subprocess.Popen(nargs, env=os.environ.copy())
 
 def call_open(pid):
     from pida.utils.pdbus import PidaRemote
@@ -89,8 +82,11 @@ if environment.workspace_manager() or om.open_workspace_manager():
 elif environment.workspace_set():
     for i in lst:
         pr = PidaRemote(i[0])
-        try:    name = pr.call('appcontroller', 'get_workspace_name')
-        except: name = "default"
+        try:
+            name = pr.call('appcontroller', 'get_workspace_name')
+        except:
+            name = "default"
+
         if name == environment.workspace_name():
             pr.call('buffer', 'open_files', file_names)
             sys.exit(0)
@@ -101,6 +97,5 @@ elif len(lst) == 0:
 
 elif len(lst) == 1:
     call_open('p%d' % lst[0]['pid'])
-
 else:
     open_workspace()
