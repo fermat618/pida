@@ -21,7 +21,7 @@ locale = Locale('pida')
 _ = locale.gettext
 
 
-base_path = os.path.dirname(pida.__file__)
+pida_root_path = os.path.dirname(os.path.abspath(pida.__path__[0]))
 
 class FakeLibrary(dict):
     def find_resource(self, resource, name):
@@ -39,7 +39,7 @@ class FakeLibrary(dict):
                 self[kind].append(path)
 
 library = FakeLibrary(glade=[], uidef=[], pixmaps=[], data=[])
-library.add_global_base(os.path.join(base_path, 'resources'))
+library.add_global_base(os.path.join(pida_root_path, 'pida/resources'))
 
 get_resource_path = library.find_resource
 get_pixmap_path = partial(get_resource_path, 'pixmaps')
@@ -50,7 +50,6 @@ firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
 plugins_dir = os.path.join(pida_home, 'plugins')
 settings_dir = os.path.join(pida_home, 'settings')
 
-pida_root_path = os.path.dirname(os.path.abspath(pida.__path__[0]))
 
 for path in pida_home, plugins_dir:
     if not os.path.exists(path):
@@ -64,7 +63,7 @@ gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
 gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
 #XXX: development hack
-buildin_plugins_dir = os.path.join(base_path, 'pida-plugins')
+buildin_plugins_dir = os.path.join(pida_root_path, 'pida-plugins')
 
 if os.path.exists(buildin_plugins_dir):
     plugins_path = [plugins_dir, buildin_plugins_dir]
