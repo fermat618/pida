@@ -120,8 +120,8 @@ class ValidationError(InitObject):
     lineno = None
 
     markup_string = (
-        '<tt><span color="{linecolor}">{lineno}</span> </tt>'
-        '<span foreground="{level_color}" style="italic" weight="bold">'
+        '<tt><span>{lineno}</span> </tt>'
+        '<span style="italic" weight="bold">'
         '{level}</span>:'
         '<span style="italic">{kind}</span>\n'
         '{message}'
@@ -131,15 +131,11 @@ class ValidationError(InitObject):
     def __str__(self):
         return '%s:%s: %s' % (self.filename, self.lineno, self.message)
 
-    def lookup_color(self, color):
-        return "#000000"
-
     @staticmethod
     def from_exception(exc):
         """Returns a new Message from a python exception"""
         # FIXME
         pass
-
 
     @property
     def markup(self):
@@ -156,10 +152,10 @@ class ValidationError(InitObject):
         return {
             'lineno': self.lineno,
             'level': self.level.capitalize(),
-            'level_color': color_to_string(typec),
+            'level_color': typec,
             'kind': self.kind.capitalize(),
             'message': self.message,
-            'linecolor': color_to_string(self.lookup_color('pida-lineno')),
+            'linecolor': 'pida-lineno',
         }
 
 
