@@ -360,7 +360,7 @@ class OptionsConfig(BaseConfig):
                 with f.open() as fp:
                     data.update(json.load(fp))
             except ValueError, e:
-                self.svc.log.error(_('Settings file corrupted: %s'), f)
+                self.svc.log.error(_('Settings file corrupted: {file}'), file=f)
             except py.error.ENOENT:
                 pass
             except Exception, e:

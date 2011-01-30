@@ -58,7 +58,7 @@ class Indexer(Log):
             with open(path, "w") as fp:
                 pickle.dump(self.cache, fp)
         except OSError, err:
-            self.log.error("can't save cache: %s", err)
+            self.log.error("can't save cache: {err}", err=err)
 
     def load_cache(self):
         path = self.project.get_meta_dir(filename=CACHE_NAME)
@@ -68,7 +68,7 @@ class Indexer(Log):
                     self.cache = pickle.load(fp)
                 return True
             except Exception, err:
-                self.log.error("can't load cache of %r", self)
+                self.log.error("can't load cache of {indexer!r}", indexer=self)
                 os.unlink(path)
         return False
 
@@ -109,7 +109,7 @@ class Indexer(Log):
             try:
                 info = FileInfo(path, rpath)
             except OSError, err:
-                self.log.info(_("Error indexing %s:%s") % (path, err))
+                self.log.info(_("Error indexing {path}:{err}"), path=path, err=err)
                 return
         info.doctype = doctype and doctype.internal or None
         self.cache["paths"][info.relpath] = info

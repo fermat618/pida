@@ -531,7 +531,8 @@ def safe_remote(func):
             for i in func(self, *args, **kwargs):
                 yield i
         except RuntimeError, e:
-            self.log.warning(_("problems running external plugin: %s"), e)
+            self.log.warning(_("problems running external plugin: {err}"),
+                             err=e)
             self.restart()
             return
         except:
