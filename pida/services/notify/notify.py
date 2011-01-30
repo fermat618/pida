@@ -82,8 +82,8 @@ class ErrorCallerHandler(Handler):
 class NotifyItem(object):
 
     def __init__(self, data, title, stock, timeout, callback):
-        self.data = cgi.escape(data or "")
-        self.title = cgi.escape(title or "")
+        self.data = cgi.escape(str(data) or "")
+        self.title = cgi.escape(str(title) or "")
         self.stock = stock
         self.timeout = timeout
         try:
