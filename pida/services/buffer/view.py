@@ -177,7 +177,7 @@ class BufferListView(PidaView):
         self.svc.open_file(document=prev)
 
     def sort(self):
-        self.buffers_ol.get_model().sort_column_changed()
+        self.buffers_ol.model_sort.sort_column_changed()
 
     def set_display_attr(self, newattr):
         for attr in attributes.values():
