@@ -287,7 +287,9 @@ class GtagsUpdateThread(Thread):
                                             project=self.project)
             if args:
                 self.svc.log.debug(
-                            _('Run Gtags with %s in %s') %(args, cwd))
+                            _('Run Gtags with {args} in {cwd}'),
+                            args=args,
+                            cwd=cwd)
                 try:
                     pid  = subprocess.Popen(args, stdin=None, 
                                             stdout=subprocess.PIPE, 
@@ -297,14 +299,15 @@ class GtagsUpdateThread(Thread):
                     stdout, stderr = pid.communicate()
                     if pid.returncode:
                         self.svc.log.error(
-                             _('Error executing background gtags: %s') %stderr)
+                             _('Error executing background gtags: {stderr}'),
+                            stderr=stderr)
 
                     else:
                         self.svc.log.info(
                              _('Ran gtags in backgroud successfully'))
                 except OSError, err:
                     self.svc.log.error(
-                         _('Error running gtags %s' %err))
+                         _('Error running gtags {err}'), err=err)
 
                 self.clean = False
 
