@@ -414,7 +414,7 @@ class ProjectService(Service):
             try:
                 self._load_project(dirname)
             except Exception, e: #XXX: specific?!
-                self.log.warn("couldn't load project from %s", dirname)
+                self.log.warn("couldn't load project from {dir}", dir=dirname)
                 self.log.exception(e)
 
     def _save_options(self):
@@ -487,12 +487,14 @@ class ProjectService(Service):
 
     def _load_project(self, project_path):
         if not os.path.isdir(project_path):
-            self.log.warn(_("Can't load project. Path does not exist: %s") %project_path)
+            self.log.warn(_("Can't load project. Path does not exist: {path}")
+                          , path=project_path)
             return None
         try:
             project = Project(project_path)
         except (IOError, OSError), e:
-            self.log.warn("Can't load project. %s", e)
+            self.log.warn("Can't load project. {path}", path=project_path)
+            self.log.exception(e)
             return
         if project not in self._projects:
             self._projects.append(project)
