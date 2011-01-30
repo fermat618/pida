@@ -15,7 +15,6 @@ import stat
 import time
 import itertools
 
-from pida.core.log import log
 from pida.utils.descriptors import cached_property
 
 new_file_counter = itertools.count(1)
@@ -209,10 +208,6 @@ class Document(object):
         True if the Document is not associated to a filename
         """
         return self.filename is None
-
-    def __nonzero__(self):
-        # documents are always True
-        return True
 
 
 class DocumentException(Exception):
