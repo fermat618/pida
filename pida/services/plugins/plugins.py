@@ -480,7 +480,7 @@ class Plugins(Service):
                     'http://packages.pida.co.uk/simple/'
             )
             for item in items:
-                self.log.debug('found plugin %s', item.name)
+                self.log.debug('found plugin {item.name}', item=item)
                 inst = None
                 isnew = False
                 for plugin in installed_list:
