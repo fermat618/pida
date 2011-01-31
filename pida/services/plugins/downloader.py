@@ -4,9 +4,9 @@ import re
 import urllib2
 from . import metadata
 from urllib import basejoin
-import logging
-log = logging.getLogger('pida.services.plugins.downloader')
-#XXX: ugly hack to avout dealing with html trees
+import logbook
+log = logbook.Logger(__name__)
+#XXX: ugly hack for dealing with html trees
 link_re = re.compile(r'''href=['"](.*?)["'].*?>(.*?)</''', re.M)
 plugin_name_re = re.compile("""
     .* # prefix crud
@@ -19,10 +19,10 @@ plugin_name_re = re.compile("""
 def find_latest_metadata(url):
     for name, version, data in find_latest(url):
         if 'meta' not in data:
-            log.error('%s-%s doesnt supply metadata', name, version)
+            log.warning('{name}-{version} doesnt supply metadata', name=name, version=version)
             continue
         if 'tar.gz' not in data:
-            log.error('%s-%s doesnt supply a packed plugin', name, version)
+            log.warning('{name}-{version} doesnt supply a packed plugin', name=name, version=version)
             continue
         plugin = name.split('.')[-1].rstrip('/')
         try:
@@ -72,6 +72,7 @@ def find_urls(url,):
         fd = urllib2.urlopen(url)
     except urllib2.URLError, e:
         log.warning("Can't contact plugin website")
+        log.exception(e)
         return ()
     data = fd.read()
     return link_re.findall(data)
