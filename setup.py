@@ -64,6 +64,7 @@ install_requires = [
     'bpython>=0.9.7',
     'pygtkhelpers>0.4.2'
     'flatland',
+    'logbook',
     #'vte',
     #'dbus ?',
     #'rope ?',
