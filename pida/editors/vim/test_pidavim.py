@@ -11,7 +11,6 @@ import gtk, dbus
 from dbus.mainloop.glib import DBusGMainLoop
 import logging
 from .client import get_vim, log
-log.setLevel(logging.WARNING)
 
 mainloop = DBusGMainLoop(set_as_default=True)
 vim_script = os.path.abspath('pida/resources/data/pida.vim')
