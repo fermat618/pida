@@ -67,14 +67,17 @@ def markup_dict(doc, **kw):
     return kw
 
 
-def render(doc, markup):
+def render(cell, doc, renderer, markup):
     if doc.project:
         markup = markup_strings['%s_project' % markup]
     else:
         markup = markup_strings['%s_fullpath' % markup]
     data = markup_dict(doc)
     data.update(markup_extras)
-    return markup.format(**data)
+    renderer.props.markup = markup.format(**data)
+
+
+
 
 
 class BufferListView(PidaView):
@@ -90,11 +93,11 @@ class BufferListView(PidaView):
         self.buffers_ol.set_columns([
             Column('markup', cells=[
                 Cell(None, use_markup=True,
-                     format_func=partial(render, markup='onerow'))
+                     mappers=[partial(render, markup='onerow')])
             ]),
             Column('markup_tworow', visible=False, cells=[
                 Cell(None, use_markup=True,
-                     format_func=partial(render, markup='tworow'))
+                     mappers=[partial(render, markup='tworow')])
             ]),
             Column("basename", visible=False, searchable=True),
         ])
