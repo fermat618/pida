@@ -9,8 +9,10 @@ from pida.ui.views import PidaView
 
 from .project import _, locale
 
-def format_project(proj):
-    return '<b>%s</b>\n%s' % (proj.display_name, proj.source_directory)
+def project_mapper(cell, proj, renderer):
+    renderer.props.markup = (
+        '<b>{proj.display_name}</b>\n'
+        '{proj.source_directory})').format(proj=proj)
 
 
 class ProjectListView(PidaView):
@@ -27,8 +29,7 @@ class ProjectListView(PidaView):
     def create_ui(self):
         self.project_ol.set_columns([
             Column(title='Ignored',
-                   use_markup=True,
-                   format_func=format_project)
+                   mappers=[project_mapper])
         ])
         self._sort_combo = AttrSortCombo(self.project_ol, [
                 ('display_name', 'Name'),
