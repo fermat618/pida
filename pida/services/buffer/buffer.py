@@ -205,14 +205,13 @@ class BufferEventsConfig(EventsConfig):
         self.subscribe_foreign('editor', 'started', self.on_editor_started)
 
     def on_editor_started(self, *k, **kw):
-        print 'editor started'
 
         try:
             #XXX: will mess wuth the signaling doe opening files
             #     will create inconsistent state while the default impl is
             #     working
             files = self.svc.opt('open_files')
-            print 'opening', files
+            self.svc.log.info( 'opening {files}', files=files)
             self.svc.open_files(files)
         except Exception as e:
             self.svc.log.exception(e)
