@@ -555,7 +555,7 @@ class BrowserView(PidaView):
                     open_all=True)
         else:
             for i in self.source_tree:
-                self.source_tree.collapse(i)
+                self.source_tree.collapse_item(i)
 
         self.filter_model.refilter()
 
