@@ -108,13 +108,13 @@ class DropDownMenuToolButton(gtk.ToggleToolButton):
 
     def do_set_property(self, pspec, value):
         if (pspec.name == 'menu'):
-            self.set_menu(value)
+            self.set_menu(pspec.value)
         else:
             raise AttributeError, 'unknown property %s' % pspec.name
 
     def do_get_property(self, pspec):
         if (pspec.name == 'menu'):
-            return self.get_menu(menu)
+            return self.get_menu(pspec.value)
         else:
             raise AttributeError, 'unknown property %s' % pspec.name
     

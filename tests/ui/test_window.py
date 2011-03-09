@@ -25,7 +25,7 @@ def test_create(svc):
 
 def test_svc_setup(boss, monkeypatch, tmpdir):
     monkeypatch.setattr(WindowSvc, 'state_config',
-                                str(tmpdir.join('really/missing.json')))
+                        tmpdir.join('really/missing.json'))
     svc = WindowSvc(boss)
     svc.started = 1
     svc.restore_state(pre=True)

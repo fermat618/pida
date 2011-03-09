@@ -429,7 +429,7 @@ class Window(Service):
     def restore_state(self, pre=False):
         try:
             fp = self.state_config.open("r")
-        except (OSError, IOError), e:
+        except:
             self.log.warning("Can't open window state file {config}",
                              config=self.state_config)
             return
@@ -496,7 +496,7 @@ class Window(Service):
         try:
             with self.state_config.open("w") as fp:
                 json.dump(data, fp, indent=4)
-        except (OSError, IOError), e:
+        except:
             self.log.warning("Can't open state file {config}",
                              config=self.state_config)
 
