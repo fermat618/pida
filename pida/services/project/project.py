@@ -409,7 +409,7 @@ class ProjectService(Service):
         for dirname in self.opt('project_dirs'):
             dirname = os.path.realpath(dirname)
             if not os.path.exists(dirname):
-                self.log.warn("%s does not exist", dirname)
+                self.log.warn("{dir} does not exist", dir=dirname)
                 continue
             try:
                 self._load_project(dirname)
@@ -625,16 +625,17 @@ class ProjectService(Service):
         not_recalled = self.features['project_refresh'][:]
 
         for job in self.features['project_refresh']:
-            self.log.debug('Run update job: %s of project %s' %(
-                            job, project.source_directory))
+            self.log.debug('Run update job: {job} of project {project_dir}',
+                           job=job,
+                           project_dir=project.source_directory)
             def do_callback(job):
                 try:
                     not_recalled.remove(job)
                 except ValueError:
                     pass
                 if not len(not_recalled):
-                    self.log.debug('Update job done of %s' %\
-                                        project.source_directory)
+                    self.log.debug('Update job done of {project_dir}',
+                                   project_dir=project.source_directory)
                     gcall(self.notify_user, _("Update complete"), 
                                            title=_("Project"))
                     del self._update_tasks[project]

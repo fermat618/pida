@@ -430,8 +430,8 @@ class Window(Service):
         try:
             fp = open(self.state_config, "r")
         except (OSError, IOError), e:
-            self.log.warning("Can't open window state file %s",
-                                    self.state_config)
+            self.log.warning("Can't open window state file {config}",
+                             config=self.state_config)
             return
         data = json.load(fp)
 
@@ -497,7 +497,8 @@ class Window(Service):
             fp = open(self.state_config, "w")
             json.dump(data, fp, indent=4)
         except (OSError, IOError), e:
-            self.log.warning("Can't open state file %s" %self.state_config)
+            self.log.warning("Can't open state file {config}",
+                             config=self.state_config)
 
     def _on_pane_detachment(self, bigpaned, pane, detached):
         if detached:

@@ -197,7 +197,7 @@ class TerminalView(PidaView):
             try:
                 ostools.kill_pid(self._pid)
             except (ostools.NoSuchProcess, ostools.AccessDenied):
-                self.svc.log.debug('PID %s has already gone' % self._pid)
+                self.svc.log.debug('PID {pid} has already gone', pid=self._pid)
 
     def on_button_pressed(self, term, event):
         if not event.button in [1,2] or \
@@ -311,7 +311,7 @@ class PythonView(PidaView):
             try:
                 ostools.kill_pid(self._pid)
             except ostools.NoSuchProcess:
-                self.svc.log_debug('PID %s has already gone' % self._pid)
+                self.svc.log_debug('PID {pid} has already gone', pid=self._pid)
 
 
 

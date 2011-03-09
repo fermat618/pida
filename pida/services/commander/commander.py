@@ -354,8 +354,10 @@ class Commander(Service):
         if current_project:
             env_pida.append('PIDA_PROJECT=%s' % current_project.source_directory)
         t = TerminalView(self, title, icon)
-        self.log.debug(" ".join((unicode(x) for x in ("execute", commandargs, 
-                env_pida, cwd))))
+        self.log.debug("exec {args} {env} {cwd}",
+                       args=commandargs,
+                       env=env_pida,
+                       cwd=cwd)
         t.execute(commandargs, env_pida, cwd, eof_handler, use_python_fork, parser_func)
         self.boss.cmd('window', 'add_view', paned='Terminal', view=t)
         t.pane.connect('remove', self._on_termclose)

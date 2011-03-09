@@ -233,7 +233,8 @@ class ValidatorView(PidaView):
             # list gets updated from the validator cache. this happens when
             # the buffer switched to another file and back again
             self.restart = True
-            self.svc.log.debug(_('Validator task for %s already running'), document)
+            self.svc.log.debug(_('Validator task for {doc} already running'),
+                               doc=document)
             return
 
         self.restart = False
@@ -405,7 +406,8 @@ class BrowserView(PidaView):
             # list gets updated from the validator cache. this happens when
             # the buffer switched to another file and back again
             self.restart = True
-            self.svc.log.debug(_('Outliner task for %s already running'), document)
+            self.svc.log.debug(_('Outliner task for {doc} already running'),
+                               doc=document)
             return
 
         self.restart = False

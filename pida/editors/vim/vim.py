@@ -160,7 +160,8 @@ class Vim(EditorService):
                                     error_handler=lambda *a: None)
 
     def close(self, document):
-        self.log.info('close %s %s', document, document.editor_buffer_id)
+        self.log.info('close {document} {document.editor_buffer_id}',
+                      document=document)
         if document.editor_buffer_id is not None:
             self._com.close_buffer_id(document.editor_buffer_id,
                                       **_ignore)
