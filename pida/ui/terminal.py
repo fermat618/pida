@@ -12,22 +12,11 @@
 """
 
 import re
-import os
-import sys
-import gobject
-import subprocess
 import gtk
 from collections import defaultdict
 
+from vte import Terminal
 from pygtkhelpers.utils import gsignal
-#FIXME win32 should get a terminal
-if sys.platform != 'win32':
-    from vte import Terminal
-else:
-    #XXX: broken like hell
-    class Terminal(object):
-        pass
-
 from pida.utils.addtypes import Enumeration
 
 # locale
