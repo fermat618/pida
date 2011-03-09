@@ -403,7 +403,7 @@ class Window(Service):
 
     @property
     def state_config(self):
-        return os.path.join(settings_dir, 'workspaces', workspace_name(), "window.state.json")
+        return settings_dir.join('workspaces', workspace_name(), "window.state.json")
 
     def start(self):
         # Explicitly add the permanent views
@@ -428,7 +428,7 @@ class Window(Service):
 
     def restore_state(self, pre=False):
         try:
-            fp = open(self.state_config, "r")
+            fp = self.state_config.open("r")
         except (OSError, IOError), e:
             self.log.warning("Can't open window state file {config}",
                              config=self.state_config)
@@ -494,8 +494,8 @@ class Window(Service):
                 data[service.get_name()] = cur
         
         try:
-            fp = open(self.state_config, "w")
-            json.dump(data, fp, indent=4)
+            with self.state_config.open("w") as fp:
+                json.dump(data, fp, indent=4)
         except (OSError, IOError), e:
             self.log.warning("Can't open state file {config}",
                              config=self.state_config)

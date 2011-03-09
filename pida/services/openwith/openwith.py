@@ -207,10 +207,10 @@ class Openwith(Service):
     actions_config = OpenWithActions
     features_config = OpenWithFeatures
 
-    _filename = os.path.join(pida_home, 'openwith.json')
+    _filename = pida_home/'openwith.json'
 
     def pre_start(self):
-        if not os.path.exists(self._filename):
+        if not self._filename.check():
             self.save([default])
         self._view = OpenWithEditor(self)
         self._view.prefill(self.get_items())
@@ -225,12 +225,12 @@ class Openwith(Service):
     def save(self, items):
         #XXX: list option
         json.dump(items,
-            open(self._filename, 'w'),
+            self._filename.open('w'),
             indent=2,
             )
 
     def get_items(self):
-        for section in json.load(open(self._filename)):
+        for section in json.load(self._filename.open()):
             yield OpenWithItem(section)
 
     def get_items_for_file(self, file_name):

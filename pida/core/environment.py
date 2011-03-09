@@ -48,32 +48,27 @@ get_pixmap_path = partial(find_resource, 'pixmaps')
 get_data_path = partial(find_resource, 'data')
 
 
-pida_home = None
-firstrun_filename = None
+pida_home = py.path.local(os.path.expanduser('~/.pida2'))
+firstrun_file = pida_home/'first_run_wizard'
+settings_dir = pida_home/'settings'
+plugins_dir = pida_home.ensure('plugins', dir=1)
 
 def setup_paths(home):
-    global pida_home, firstrun_filename, settings_dir
-    global plugins_path, plugins_dir
-    pida_home = os.path.expanduser('~/.pida2')
-    firstrun_filename = os.path.join(pida_home, 'first_run_wizard')
-    plugins_dir = os.path.join(pida_home, 'plugins')
-    settings_dir = os.path.join(pida_home, 'settings')
+    global plugins_path
 
 
-    if not os.path.exists(plugins_dir):
-        os.makedirs(plugins_dir)
 
     #XXX: development hack
     buildin_plugins_dir = base_path.dirpath()/'pida-plugins'
 
     if buildin_plugins_dir.check(dir=1):
-        plugins_path = [plugins_dir, str(buildin_plugins_dir)]
+        plugins_path = [str(plugins_dir), str(buildin_plugins_dir)]
     else:
-        plugins_path = [plugins_dir]
+        plugins_path = [str(plugins_dir)]
 
 def parse_gtk_rcfiles():
     gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
-    gtk.rc_add_default_file(os.path.join(pida_home, "gtkrc-2.0"))
+    gtk.rc_add_default_file(str(pida_home/"gtkrc-2.0"))
     # we have to force reload the settings
     gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
@@ -135,7 +130,7 @@ def is_debug():
     return opts.debug
 
 def is_firstrun():
-    return not os.path.exists(firstrun_filename) or opts.firstrun
+    return not firstrun_file.check() or opts.firstrun
 
 def is_safe_mode():
     return opts.safe_mode

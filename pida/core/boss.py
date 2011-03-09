@@ -15,7 +15,7 @@ import os
 import sys
 import pida
 
-from pida.core.environment import (is_firstrun, firstrun_filename)
+from pida.core.environment import (is_firstrun, firstrun_file)
 from pida.core.servicemanager import ServiceManager, ServiceModuleError
 from pida.ui.icons import IconRegister
 from pida.ui.window import PidaWindow
@@ -55,7 +55,7 @@ class Boss(object):
         if is_firstrun() or force:
             from pida.utils.firstrun import FirstTimeWindow
             ft = FirstTimeWindow(self.servicemanager.get_available_editors())
-            success, editor = ft.run(firstrun_filename)
+            success, editor = ft.run(firstrun_file.strpath)
             self.override_editor = editor
             self.quit_before_started = not success
             return editor
