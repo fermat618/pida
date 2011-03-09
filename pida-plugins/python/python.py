@@ -264,8 +264,7 @@ class PythonValidator(Validator):
                 kind = VALIDATOR_KIND.UNKNOWN
 
             ve = ValidationError(
-                message=m.message,
-                message_args=m.message_args,
+                message=m.message%m.message_args,
                 lineno=m.lineno,
                 level=level,
                 kind=kind,
