@@ -14,14 +14,43 @@ import os
 
 import subprocess
 
+class VimStarter(gtk.EventBox):
+
+    def __init__(self, command, script_path, args=None):
+        gtk.EventBox.__init__(self)
+        self.command = command
+        self.init_script = script_path
+        self.pid = None
+        self.args = args or []
+
+    def run(self):
+        if not self.pid:
+            try:
+                popen = subprocess.Popen(
+                    [self.command,
+                    # XXX: leftover from vim com
+                    #'--servername', self.server_name,
+                    '--cmd', 'let PIDA_EMBEDDED=1',
+                    '--cmd', 'so %s' % self.init_script,
+                    ] + self.args,
+                    close_fds=True,
+                )
+                self.pid = popen.pid
+            except OSError:
+                raise
+                return False
+        self.show_all()
+        return True
+
+
 class VimEmbedWidget(gtk.EventBox):
 
-    def __init__(self, command, script_path, args=[]):
+    def __init__(self, command, script_path, args=None):
         gtk.EventBox.__init__(self)
         self._command = command
         self._init_script = script_path
         self.pid = None
-        self.args = args
+        self.args = args or []
         self.r_cb_plugged = None
         self.r_cb_unplugged = None
         self.__eb = None
