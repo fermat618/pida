@@ -180,7 +180,7 @@ class CtagsOutliner(Outliner):
         #os.system(command)
         rv = subprocess.check_call(command)
         if rv:
-            self.log.error('failed execute ctags. Returned %s' %rv)
+            self.log.error('failed execute ctags. Returned {rv}', rv=rv)
             raise OSError, "can't execute ctags"
         
         return (taglib, temp)
