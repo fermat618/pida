@@ -37,7 +37,6 @@ def unset_directory(*parts):
         path.remove()
 
 def initialize():
-    add_directory('keyboard_shortcuts')
     add_directory('workspaces')
 
 def list_workspaces():
