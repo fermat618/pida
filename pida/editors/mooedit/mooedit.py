@@ -24,7 +24,7 @@ SYS_DATA = os.environ.get("XDG_DATA_DIRS",
                           "/usr/share:/usr/local/share")
 
 MOO_DATA_DIRS=os.pathsep.join((
-                os.path.join(pida_home, 'moo'),
+                str(pida_home/'moo'),
                 os.path.join(os.path.dirname(__file__), "shared"),
                 os.pathsep.join([os.path.join(x, "moo") 
                                 for x in SYS_DATA.split(os.pathsep)]),
