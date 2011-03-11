@@ -13,7 +13,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-import json
+from pida.utils import json
 
 import py
 
@@ -64,9 +64,8 @@ class OptionsManager(object):
 
     def open_workspace_manager(self):
         try:
-            with settings_dir.join('appcontroller.json').open() as file:
-                data = json.load(file)
-                return bool(data.get('open_workspace_manager', False))
+            data = json.load(settings_dir/'appcontroller.json')
+            return bool(data.get('open_workspace_manager', False))
         except Exception:
             return False
 
@@ -267,6 +266,7 @@ class OptionsConfig(BaseConfig):
         Saves the extra option 'name' to the filesystem
         """
         option = self._extra_files[name]
+        print 'extra', name, option.value
         self.dump_data(option.path, option.value)
 
     def create_option(self, name, label, type, default, doc, callback=None,
@@ -329,15 +329,13 @@ class OptionsConfig(BaseConfig):
 
     def read_extra(self, path, default):
         try:
-            with path.open() as fp:
-                return json.load(fp)
+            return json.load(path)
         except: #XXX: handle corrupt files better
             return default
 
     def dump_data(self, path, data):
         try:
-            with path.open('w') as out:
-                json.dump(data, out, indent=2)
+            json.dump(data, path)
         except Exception, e:
             self.svc.log.exception(e)
 
@@ -346,8 +344,7 @@ class OptionsConfig(BaseConfig):
         data = {}
         for f in (self.global_path, self.workspace_path):
             try:
-                with f.open() as fp:
-                    data.update(json.load(fp))
+                data.update(json.load(f))
             except ValueError, e:
                 self.svc.log.error(_('Settings file corrupted: {file}'), file=f)
             except py.error.ENOENT:
@@ -364,8 +361,7 @@ class OptionsConfig(BaseConfig):
         else:
             f = self.global_path
 
-        with f.open('w') as out:
-            json.dump(data, out, sort_keys=True, indent=2)
+        json.dump(data, path)
 
     def __len__(self):
         return len(self._options)

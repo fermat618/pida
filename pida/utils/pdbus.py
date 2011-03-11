@@ -3,7 +3,7 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
-
+from __future__ import absolute_import
 from functools import partial, wraps
 import os
 
