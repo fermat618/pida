@@ -112,14 +112,7 @@ class OptionItem(object):
         self.value = None
 
     def set_value(self, value):
-        if self.group:
-            self.group.set_value(self.name, value)
-        else:
-            self.value = value
-
-    def add_notify(self, callback, *args):
-        import warnings
-        warnings.warn("deprecated", DeprecationWarning)
+        self.group.set_value(self.name, value)
 
     def _get_nlabel(self):
         return self.label.replace("_", "", 1)
