@@ -21,13 +21,11 @@ from pango import Font
 from gtk.gdk import Color
 
 from .base import BaseConfig
-from .environment import is_safe_mode, killsettings, settings_dir
+from .environment import is_safe_mode, killsettings, settings_dir, workspace_name
 # locale
 from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
-
-settings_dir = py.path.local(settings_dir)
 
 def add_directory(*parts):
     return settings_dir.ensure(*parts, dir=True)
@@ -81,8 +79,7 @@ class OptionsManager(object):
         if self._workspace is None:
             # we need this form of lazy loading because the default manager
             # is created so early that the workspace name is not known then
-            import pida.core.environment
-            self._workspace = pida.core.environment.workspace_name()
+            self._workspace = workspace_name()
         return self._workspace
 
     workspace = property(_get_workspace, _set_workspace)
