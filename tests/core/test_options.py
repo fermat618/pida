@@ -1,7 +1,4 @@
-from unittest import TestCase
-from pida.core.options import OptionsManager, OptionsConfig
-from tempfile import mktemp
-from pida.core.service import Service
+from pida.core.options import OptionsConfig
 from mock import Mock
 
 

@@ -1,5 +1,4 @@
 import py
-from unittest import TestCase
 
 from pida.core.service import Service
 

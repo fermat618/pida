@@ -1,4 +1,3 @@
-import py
 import os
 #from pida.core.doctype import DocType
 #from pida.core.testing import test, assert_equal, assert_notequal
