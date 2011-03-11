@@ -357,9 +357,9 @@ class OptionsConfig(BaseConfig):
         data = dict((opt.name, opt.value)
                     for opt in self if opt.workspace is workspace)
         if workspace:
-            f = self.workspace_path
+            path = self.workspace_path
         else:
-            f = self.global_path
+            path = self.global_path
 
         json.dump(data, path)
 
