@@ -20,11 +20,6 @@ build_mapping()
 EDITOR_INSTANCE = moo.edit.create_editor_instance()
 moo.edit.plugin_read_dirs()
 moo.utils.PrefsPage()
-#import os
-#from pida.core.environment import pida_home
-#script_path = os.path.join(pida_home, 'pida_mooedit.rc')
-#_state_path = os.path.join(pida_home, 'pida_mooedit.state')
-#moo.utils.prefs_load(sys_files=None, file_rc=script_path, file_state=_state_path)
 
 
 class MooTextView(BaseTextView, moo.edit.TextView):

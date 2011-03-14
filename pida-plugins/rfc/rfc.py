@@ -30,7 +30,7 @@ from pygtkhelpers.gthreads import GeneratorTask, gcall
 from pygtkhelpers.ui.objectlist import ObjectList, Column
 
 # PIDA Imports
-from pida.core.environment import pida_home
+from pida.core.environment import home
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
 from pida.core.features import FeaturesConfig
@@ -205,7 +205,7 @@ class Rfc(Service):
     buffer_len = 16384
 
     def start(self):
-        self._filename = os.path.join(pida_home, 'rfc-index.txt')
+        self._file = home()/'rfc-index.txt'
         self._view = RfcView(self)
         self._has_loaded = False
         self.list = []
@@ -248,7 +248,7 @@ class Rfc(Service):
 
         def _refresh_index():
             try:
-                fp = open(self._filename)
+                fp = self._file.open()
             except IOError:
                 return
             data = ''
@@ -291,7 +291,7 @@ class Rfc(Service):
         self.get_action('rfc_downloadindex').set_sensitive(False)
         self._view.show_progressbar(True)
         sock = urllib.urlopen(self.url_rfcindex)
-        fp = open(self._filename, 'w', 0)
+        fp = self._filename.open('w')
         progress_max = 0
         progress_current = 0
         if sock.headers.has_key('content-length'):

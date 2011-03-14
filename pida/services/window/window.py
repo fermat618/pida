@@ -403,7 +403,7 @@ class Window(Service):
 
     @property
     def state_config(self):
-        return settings_dir.join('workspaces', workspace_name(), "window.state.json")
+        return settings_dir().join('workspaces', workspace_name(), "window.state.json")
 
     def start(self):
         # Explicitly add the permanent views

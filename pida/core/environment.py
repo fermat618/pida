@@ -48,27 +48,30 @@ get_pixmap_path = partial(find_resource, 'pixmaps')
 get_data_path = partial(find_resource, 'data')
 
 
-pida_home = py.path.local(os.path.expanduser('~/.pida2'))
-firstrun_file = pida_home/'first_run_wizard'
-settings_dir = pida_home/'settings'
-plugins_dir = pida_home.ensure('plugins', dir=1)
+def home():
+    return py.path.local(os.path.expanduser(opts.pida_home))
 
-def setup_paths(home):
-    global plugins_path
+def firstrun_file():
+    return home()/'first_run_wizard'
 
+def settings_dir():
+    return home()/'settings'
 
-
+def plugins_dir():
+    return home().ensure('plugins', dir=1)
+plugins_path = []
+def setup_plugins_paths():
     #XXX: development hack
     buildin_plugins_dir = base_path.dirpath()/'pida-plugins'
 
     if buildin_plugins_dir.check(dir=1):
-        plugins_path = [str(plugins_dir), str(buildin_plugins_dir)]
+        plugins_path[:] = [str(plugins_dir()), str(buildin_plugins_dir)]
     else:
-        plugins_path = [str(plugins_dir)]
+        plugins_path[:] = [str(plugins_dir())]
 
 def parse_gtk_rcfiles():
     gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
-    gtk.rc_add_default_file(str(pida_home/"gtkrc-2.0"))
+    gtk.rc_add_default_file(str(home()/"gtkrc-2.0"))
     # we have to force reload the settings
     gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
@@ -118,7 +121,7 @@ def parse_args(argv):
     if opts.killsettings:
         opts.firstrun = True
 
-    setup_paths(opts.pida_home)
+    setup_plugins_paths()
     parse_gtk_rcfiles()
     return opts
 
@@ -130,7 +133,7 @@ def is_debug():
     return opts.debug
 
 def is_firstrun():
-    return not firstrun_file.check() or opts.firstrun
+    return not firstrun_file().check() or opts.firstrun
 
 def is_safe_mode():
     return opts.safe_mode
@@ -150,11 +153,9 @@ def killsettings():
     return opts.killsettings
 
 def get_plugin_global_settings_path(name, filename=None):
-    path = os.path.join(pida_home, name)
-    if not os.path.exists(path):
-        os.makedirs(path)
+    path = home().ensure(name, dir=1)
     if filename is not None:
-        return os.path.join(path, filename)
-    return path
+        return str(path/filename)
+    return str(path)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -21,7 +21,7 @@ from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
 from pida.core.actions import TYPE_NORMAL, TYPE_MENUTOOL, TYPE_RADIO, TYPE_TOGGLE
 
-from pida.core.environment import pida_home
+from pida.core import environment as env
 
 from pida.ui.views import PidaView
 
@@ -207,7 +207,7 @@ class Openwith(Service):
     actions_config = OpenWithActions
     features_config = OpenWithFeatures
 
-    _filename = pida_home/'openwith.json'
+    _filename = env.home()/'openwith.json'
 
     def pre_start(self):
         if not self._filename.check():

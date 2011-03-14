@@ -9,7 +9,7 @@ import py
 import gtk
 
 # PIDA Imports
-from pida.core.environment import pida_home, workspace_name
+from pida.core.environment import home, workspace_name
 from pida.core.service import Service
 from pida.core.actions import ActionsConfig
 from pida.ui.views import PidaView
@@ -58,8 +58,8 @@ class ManholeView(PidaView):
         sw.show_all()
         self.add_main_widget(sw)
         for path in (py.path.local(__file__).dirpath()/"manholerc.py",
-                      pida_home/"manhole.rc",
-                      pida_home/("manhole.%s.rc" %workspace_name())):
+                      home()/"manhole.rc",
+                      home()/("manhole.%s.rc" %workspace_name())):
             if path.check():
                 #console.do_raw_input(line)
                 console.execfile(str(path))

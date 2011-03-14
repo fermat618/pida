@@ -28,11 +28,11 @@ locale = Locale('core')
 _ = locale.gettext
 
 def add_directory(*parts):
-    return settings_dir.ensure(*parts, dir=True)
+    return settings_dir().ensure(*parts, dir=True)
 
 def unset_directory(*parts):
     #XXX: reload=!
-    path = settings_dir.join(*parts)
+    path = settings_dir().join(*parts)
     if path.check():
         path.remove()
 
@@ -41,7 +41,7 @@ def initialize():
 
 def list_workspaces():
     """Returns a list with all workspace names """
-    workspaces = settings_dir.join('workspaces')
+    workspaces = settings_dir().join('workspaces')
     return [x.basename for x in workspaces.listdir() if x.check(dir=True)]
 
 class OptionsManager(object):
@@ -64,7 +64,7 @@ class OptionsManager(object):
 
     def open_workspace_manager(self):
         try:
-            data = json.load(settings_dir/'appcontroller.json')
+            data = json.load(settings_dir()/'appcontroller.json')
             return bool(data.get('open_workspace_manager', False))
         except Exception:
             return False
@@ -186,9 +186,9 @@ class OptionsConfig(BaseConfig):
     def create(self):
         self.name = self.__class__.name % self.svc.get_name()
         add_directory('workspaces', manager.workspace)
-        self.workspace_path = settings_dir.join('workspaces',
+        self.workspace_path = settings_dir().join('workspaces',
                                                 manager.workspace, self.name)
-        self.global_path = settings_dir.join(self.name)
+        self.global_path = settings_dir().join(self.name)
         self._options = {}
         self._extra_files = {}
         self._exports = {}
@@ -241,9 +241,9 @@ class OptionsConfig(BaseConfig):
         if not path:
             path = self.__class__.name_extra % (self.svc.get_name(), name)
             if workspace:
-                path = settings_dir.join('workspaces', manager.workspace, path)
+                path = settings_dir().join('workspaces', manager.workspace, path)
             else:
-                path = settings_dir.join(path)
+                path = settings_dir().join(path)
 
         opt = ExtraOptionItem(self, path, default, callback, workspace,
                               notify=notify)
