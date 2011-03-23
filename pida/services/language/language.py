@@ -63,9 +63,6 @@ from .views import (
     LanguageEntry, LanguagePriorityView,
 )
 
-def get_value(tab, key):
-    return tab.get(key, None)
-
 
 def prio_path():
     return environment.settings_dir().join(
