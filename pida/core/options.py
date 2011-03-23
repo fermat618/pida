@@ -49,41 +49,9 @@ def must_open_workspace_manager():
     data = json.load(settings_dir()/'appcontroller.json', fallback={})
     return bool(data.get('open_workspace_manager', False))
 
+def workspace_dir():
+    return settings_dir().ensure('workspaces', workspace_name(), dir=1)
 
-class OptionsManager(object):
-
-    def __init__(self, workspace=None):
-
-        initialize()
-        self._workspace = None
-        if workspace:
-            self.workspace = workspace
-        if killsettings():
-            unset_directory()
-
-    @staticmethod
-    def delete_workspace(workspace):
-        unset_directory('workspaces', workspace)
-
-    def initialize_workspace(self):
-        add_directory('workspaces', self.workspace)
-
-
-    def _set_workspace(self, value):
-        self._workspace = value
-        self.initialize_workspace()
-
-    def _get_workspace(self):
-        if self._workspace is None:
-            # we need this form of lazy loading because the default manager
-            # is created so early that the workspace name is not known then
-            self._workspace = workspace_name()
-        return self._workspace
-
-    workspace = property(_get_workspace, _set_workspace)
-
-    def on_change(self, option):
-        pass #XXX: implement
 
 class BaseChoice(str): pass
 
@@ -125,13 +93,10 @@ class OptionItem(object):
     no_mnemomic_label = property(_get_nlabel)
 
 
-manager = OptionsManager()
-
 class OptionsConfig(BaseConfig):
 
     #enable reuse for keyboard shortcuts that need different name
-    name = '%s.json'
-    name_extra = "%s_extra_%s.json"
+    ext = '.json'
 
     def __init__(self, service, *args, **kwargs):
         BaseConfig.__init__(self, service, *args, **kwargs)
@@ -141,11 +106,7 @@ class OptionsConfig(BaseConfig):
         pass #XXX: stub
 
     def create(self):
-        self.name = self.__class__.name % self.svc.get_name()
-        add_directory('workspaces', manager.workspace)
-        self.workspace_path = settings_dir().join('workspaces',
-                                                manager.workspace, self.name)
-        self.global_path = settings_dir().join(self.name)
+        self.name = self.svc.get_name() + self.ext
         self._options = {}
         self._extra_files = {}
         self._exports = {}
@@ -249,11 +210,11 @@ class OptionsConfig(BaseConfig):
 
     def read(self):
         data = {}
-        for f in (self.global_path, self.workspace_path):
+        for d in (settings_dir, workspace_dir):
             try:
-                data.update(json.load(f))
+                data.update(json.load(d()/self.name))
             except ValueError, e:
-                self.svc.log.error(_('Settings file corrupted: {file}'), file=f)
+                self.svc.log.error(_('Settings file corrupted: {file}'), file=d())
             except py.error.ENOENT:
                 pass
             except Exception, e:
@@ -264,11 +225,11 @@ class OptionsConfig(BaseConfig):
         data = dict((opt.name, opt.value)
                     for opt in self if opt.workspace is workspace)
         if workspace:
-            path = self.workspace_path
+            config_dir = workspace_dir
         else:
-            path = self.global_path
+            config_dir = settings_dir
 
-        json.dump(data, path)
+        json.dump(data, config_dir()/self.name)
 
     def __len__(self):
         return len(self._options)

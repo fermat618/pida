@@ -80,7 +80,7 @@ class ActionsConfig(OptionsConfig):
     service will be available as the svc attribute in the configurator
     instance.
     """
-    name = '%s.keys.json'
+    ext = '.keys.json'
     accelerator_group = accelerator_group
     global_accelerator_group = global_accelerator_group
 

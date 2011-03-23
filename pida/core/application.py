@@ -109,7 +109,8 @@ def set_trace():
 def main():
     global opts
     opts = environment.parse_args(sys.argv[1:])
-
+    if opts.killsettings:
+        environment.settings_dir().remove()
     #options.create_default_manager(pida.core.environment.workspace_name())
     from pida.core import log
     log.configure()
