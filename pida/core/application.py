@@ -121,10 +121,9 @@ def main():
         set_trace()
 
     # open workspace manager is asked for
-    from pida.core.options import OptionsManager
+    from pida.core.options import must_open_workspace_manager
     # we need a new optionsmanager so the default manager does not workspace
     # lookup yet
-    om = OptionsManager(workspace="default")
 
     def do_workspace_manager():
 
@@ -172,7 +171,7 @@ def main():
         print _('PIDA, version %s') % pida.version
         exit(0)
 
-    if (om.open_workspace_manager() and not environment.workspace_set()) or \
+    if (must_open_workspace_manager() and not environment.workspace_set()) or \
         environment.workspace_manager():
         try:
             do_workspace_manager()

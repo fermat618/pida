@@ -44,6 +44,12 @@ def list_workspaces():
     workspaces = settings_dir().join('workspaces')
     return [x.basename for x in workspaces.listdir() if x.check(dir=True)]
 
+
+def must_open_workspace_manager():
+    data = json.load(settings_dir()/'appcontroller.json', fallback={})
+    return bool(data.get('open_workspace_manager', False))
+
+
 class OptionsManager(object):
 
     def __init__(self, workspace=None):
@@ -62,12 +68,6 @@ class OptionsManager(object):
     def initialize_workspace(self):
         add_directory('workspaces', self.workspace)
 
-    def open_workspace_manager(self):
-        try:
-            data = json.load(settings_dir()/'appcontroller.json')
-            return bool(data.get('open_workspace_manager', False))
-        except Exception:
-            return False
 
     def _set_workspace(self, value):
         self._workspace = value
