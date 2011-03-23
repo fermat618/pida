@@ -803,17 +803,17 @@ class Language(LanguageService):
         # save list in options
         pp = load_prio()
         if lst:
-            if not pp.has_key(lang):
+            if lang not in pp:
                 pp[lang] = {}
             pp[lang][type_] = lst
 
         else:
-            if not pp.has_key(lang):
+            if lang not in pp:
                 return
-            if not pp[lang].has_key(type_):
+            if type_ not in pp[lang]:
                 return
             del pp[lang][type_]
-            if len(pp[lang]) == 0:
+            if not pp[lang]:
                 del pp[lang]
         if save:
             json.dump(pp, prio_path()
