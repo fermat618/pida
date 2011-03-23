@@ -66,7 +66,7 @@ from .views import (
 
 def prio_path():
     return environment.settings_dir().join(
-        'workspaces', environment.workspace_path(),
+        'workspaces', environment.workspace_name(),
         'language_extra_plugin_priorities.json')
 
 
