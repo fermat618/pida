@@ -16,6 +16,9 @@ import logbook
 
 from pida.core.doctype import DocType
 from pida.core.languages import LanguageInfo
+from pida.core import environment
+
+from pida.utils import json
 
 from pygtkhelpers.gthreads import gcall
 #from pida.utils.languages import LANG_OUTLINER_TYPES
@@ -62,6 +65,16 @@ from .views import (
 
 def get_value(tab, key):
     return tab.get(key, None)
+
+
+def prio_path():
+    return environment.settings_dir().join(
+        'workspaces', environment.workspace_path(),
+        'language_extra_plugin_priorities.json')
+
+
+def load_prio():
+    return json.load(prio_path(), fallback={})
 
 
 class SimpleLanguageMapping(dict):
@@ -622,8 +635,6 @@ class Language(LanguageService):
 
         # we should fill this quite early or the wrong plugins will be used
         # in the beginning
-        self.options.register_extra_option("plugin_priorities", {}, 
-                            callback=None, workspace=True, notify=True)
         self.load_priority_lists()
 
     def show_validator(self):
@@ -761,8 +772,7 @@ class Language(LanguageService):
         """
         Fill the priority lists by analyzing the options
         """
-        for lang, data in \
-            self.options.get_extra_value('plugin_priorities').iteritems():
+        for lang, data in load_prio().iteritems():
             for type_, lst in data.iteritems():
                 self.set_priority_list(lang, type_, lst, save=False)
 
@@ -770,7 +780,7 @@ class Language(LanguageService):
         """
         Returns the current priority list for a language and type
         """
-        opt = self.options.get_extra_value("plugin_priorities")
+        opt = load_prio()
         if not lang in opt:
             return []
         if not type_ in opt[lang]:
@@ -791,7 +801,7 @@ class Language(LanguageService):
             self.log.warning(_("Try to set a priority list on non priority sublist"))
 
         # save list in options
-        pp = self.options.get_extra_value("plugin_priorities")
+        pp = load_prio()
         if lst:
             if not pp.has_key(lang):
                 pp[lang] = {}
@@ -806,9 +816,7 @@ class Language(LanguageService):
             if len(pp[lang]) == 0:
                 del pp[lang]
         if save:
-            self.options.set_extra_value(
-                "plugin_priorities",
-                self.options.get_extra_value("plugin_priorities"))
+            json.dump(pp, prio_path()
 
 
     def on_buffer_changed(self, document):
