@@ -7,7 +7,6 @@
 import os
 import gtk
 import string
-import json
 from functools import partial
 
 # PIDA Imports
@@ -20,12 +19,19 @@ from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TY
 from pida.core.document import Document
 from pida.core.features import FeaturesConfig
 from pida.core.environment import workspace_name, settings_dir
+from pida.utils import json
 
 # locale
 from pida.core.locale import Locale
 locale = Locale('window')
 _ = locale.gettext
 
+
+def window_config():
+    return settings_dir()/'window_extra_window-config.json'
+
+def load_window_config():
+    return json.load(window_config(), fallback={})
 
 
 class ActionWindowMapping(list):
@@ -49,8 +55,7 @@ class ActionWindowMapping(list):
         """
         self.append(config)
         keya = self._genkey(config.key)
-        curshort = self.svc.actions.get_extra_value('window-config').\
-                                                                get(keya, '')
+        curshort = load_window_config().get(keya, '')
 
         act = self.svc.actions.create_action(
             keya,
@@ -123,8 +128,6 @@ class WindowCommandsConfig(CommandsConfig):
 class WindowActionsConfig(ActionsConfig):
 
     def create_actions(self):
-        self.register_extra_option('window-config', safe=False, notify=True,
-                                   default={}, workspace=False)
 
         self.create_action(
             'show_toolbar',
@@ -268,10 +271,9 @@ class WindowActionsConfig(ActionsConfig):
 
     def _on_option_change(self, option):
         # hacky highjacking to put the options into a extra config :-)
-        self.svc.actions.get_extra_value('window-config')[option.name] = \
-            option.value
-        self.svc.actions.set_extra_value('window-config', 
-            self.svc.actions.get_extra_value('window-config'))
+        data = load_window_config()
+        data[option.name] = option.value
+        json.dump(data, window_config())
         # call normal callback
         self._set_action_keypress_from_option(option)
 
@@ -428,12 +430,11 @@ class Window(Service):
 
     def restore_state(self, pre=False):
         try:
-            fp = self.state_config.open("r")
+            data = json.load(self.state_config)
         except:
             self.log.warning("Can't open window state file {config}",
                              config=self.state_config)
             return
-        data = json.load(fp)
 
         if pre:
             # in pre mode we restore the paned config and the window position/size, etc
@@ -494,8 +495,7 @@ class Window(Service):
                 data[service.get_name()] = cur
         
         try:
-            with self.state_config.open("w") as fp:
-                json.dump(data, fp, indent=4)
+            json.dump(data, self.state_config)
         except:
             self.log.warning("Can't open state file {config}",
                              config=self.state_config)
