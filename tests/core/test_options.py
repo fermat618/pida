@@ -1,7 +1,8 @@
-from pida.core.options import OptionsConfig
+import pytest
 from mock import Mock
+from pida.core.options import OptionsConfig
 
-
+@pytest.mark.xfail(reason='removed', run=False)
 def test_extra(tmpdir):
     mock = Mock()
     mock.started = False
