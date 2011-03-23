@@ -816,7 +816,7 @@ class Language(LanguageService):
             if not pp[lang]:
                 del pp[lang]
         if save:
-            json.dump(pp, prio_path()
+            json.dump(pp, prio_path())
 
 
     def on_buffer_changed(self, document):
