@@ -27,17 +27,6 @@ from pida.core.locale import Locale
 locale = Locale('core')
 _ = locale.gettext
 
-def add_directory(*parts):
-    return settings_dir().ensure(*parts, dir=True)
-
-def unset_directory(*parts):
-    #XXX: reload=!
-    path = settings_dir().join(*parts)
-    if path.check():
-        path.remove()
-
-def initialize():
-    add_directory('workspaces')
 
 def list_workspaces():
     """Returns a list with all workspace names """
