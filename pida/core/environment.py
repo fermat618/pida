@@ -48,21 +48,21 @@ get_pixmap_path = partial(find_resource, 'pixmaps')
 get_data_path = partial(find_resource, 'data')
 
 
-def home():
-    return py.path.local(os.path.expanduser(opts.pida_home))
+def home(*parts):
+    return py.path.local(os.path.expanduser(opts.pida_home)).join(*parts)
 
 def firstrun_file():
-    return home()/'first_run_wizard'
+    return home('first_run_wizard')
 
-def settings_dir():
-    return home()/'settings'
+def settings_dir(*parts):
+    return home('settings', *parts)
 
 def plugins_dir():
     return home().ensure('plugins', dir=1)
 plugins_path = []
 def setup_plugins_paths():
     #XXX: development hack
-    buildin_plugins_dir = base_path.dirpath()/'pida-plugins'
+    buildin_plugins_dir = base_path.join('../pida-plugins')
 
     if buildin_plugins_dir.check(dir=1):
         plugins_path[:] = [str(plugins_dir()), str(buildin_plugins_dir)]
@@ -71,7 +71,7 @@ def setup_plugins_paths():
 
 def parse_gtk_rcfiles():
     gtk.rc_add_default_file(get_data_path('gtkrc-2.0'))
-    gtk.rc_add_default_file(str(home()/"gtkrc-2.0"))
+    gtk.rc_add_default_file(home("gtkrc-2.0").strpath)
     # we have to force reload the settings
     gtk.rc_reparse_all_for_settings(gtk.settings_get_default(), True)
 
