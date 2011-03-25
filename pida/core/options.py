@@ -97,8 +97,6 @@ class OptionsConfig(BaseConfig):
     def create(self):
         self.name = self.svc.get_name() + self.ext
         self._options = {}
-        self._extra_files = {}
-        self._exports = {}
         self.create_options()
         self.register_options()
 
