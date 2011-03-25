@@ -143,50 +143,25 @@ class OptionsConfig(BaseConfig):
     def get_option(self, optname):
         return self._options[optname]
 
-    def get_extra_option(self, optname):
-        return self._extra_files[optname]
-
     def get_value(self, name):
         return self._options[name].value
-
-    def set_extra_value(self, name, value, dbus_notify=True, save=True):
-        option = self._extra_files[name]
-        option.set_value(value)
-        self._on_change(option, dbus_notify=dbus_notify)
-        if save:
-            self.dump_data(option.path, option.value)
 
     def set_value(self, name, value, dbus_notify=True, save=True):
         option = self._options[name]
         option.value = value
-        self._on_change(option, dbus_notify=dbus_notify)
+        self._on_change(option)
         if save:
             self.dump(option.workspace)
 
-    def _on_change(self, option, dbus_notify=True):
+    def _on_change(self, option):
         # we dont do anything smart, till we are started
         if not self.svc.started:
             return
         if option.callback:
             option.callback(option)
-
-        if dbus_notify:
-            pass #XXX: handle somewhere else
-            #self.notify_dbus(option)
-
-        self._emit_change_notification(option)
-
-    def _emit_change_notification(self, option):
-        if isinstance(option, OptionItem):
-            optionsmanager = self.svc.boss.get_service('optionsmanager')
-            if hasattr(optionsmanager, 'events'):
-                optionsmanager.emit('option_changed', option=option)
-
-    def read_extra(self, path, default):
-        try:
-            return json.load(path)
-        except: #XXX: handle corrupt files better
-            return default
+        optionsmanager = self.svc.boss.get_service('optionsmanager')
+        if hasattr(optionsmanager, 'events'):
+            optionsmanager.emit('option_changed', option=option)
 
     def dump_data(self, path, data):
         try:
