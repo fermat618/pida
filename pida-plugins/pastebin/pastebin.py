@@ -3,7 +3,7 @@
 import gtk, gobject
 
 from pygtkhelpers.ui.objectlist import ObjectList, Column
-
+from pygtkhelpers.proxy import proxy_for
 # PIDA Imports
 from pida.core.service import Service
 from pida.core.features import FeaturesConfig
@@ -244,6 +244,16 @@ class HPaste(Bin):
             ("sqlite3con", "sqlite3"),
         ]
 
+
+pastebin_types = [
+    ('DPaste', Dpaste),
+    ('Rafb.net', Rafb),
+    ('LodgeIt', LodgeIt),
+    ('HPaste', HPaste),
+    #('Twisted', Twisted), #Broken for some reason
+]
+
+
 class PastebinEditorView(PidaView):
 
     key = 'pastebin.editor'
@@ -253,10 +263,13 @@ class PastebinEditorView(PidaView):
     icon_name = gtk.STOCK_PASTE
 
     def create_ui(self):
-        self.paste_location.prefill(self.svc.get_pastebin_types())
+        self.paste_location.set_choices(self.svc.get_pastebin_types(), None)
+        self.paste_proxy = proxy_for(self.paste_location)
+        self.syntax_proxy = proxy_for(self.paste_syntax)
 
-    def on_paste_location__content_changed(self, cmb):
-        self.paste_syntax.prefill(self.paste_location.read().get_syntax_items())
+    def on_paste_proxy__changed(self, proxy, value):
+        if value is not None:
+            self.paste_syntax.set_choices(value.get_syntax_items(), None)
 
     def on_post_button__clicked(self, button):
         paste_type = self.paste_location.read()
@@ -272,7 +285,7 @@ class PastebinEditorView(PidaView):
                     self.paste_content.get_buffer().get_start_iter(),
                     self.paste_content.get_buffer().get_end_iter(),
                 ),
-                self.paste_syntax.read(),
+                self.syntax_proxy.read(),
         )
 
     def can_be_closed(self):
@@ -288,70 +301,61 @@ class PasteHistoryView(PidaView):
     #glade_file_name = 'paste-history.glade'
 
     def create_ui(self):
-        self.__history_tree = ObjectList(
+        self.history_tree = ObjectList(
             [Column('markup', use_markup=True, expand=True)])
-        self.__history_tree.set_headers_visible(False)
-        self.add_main_widget(self.__history_tree)
-        self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
-        self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
-        self.__tree_selected = None
-        #self.__history_tree.connect('selection-changed', self.cb_paste_clicked)
-        self.__history_tree.connect('double-click', self.cb_paste_db_clicked)
-        #self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
-        self.__history_tree.connect('right-click', self.on_paste_rclick)
+        self.history_tree.set_headers_visible(False)
+        self.add_main_widget(self.history_tree)
+        self.x11_clipboard = gtk.Clipboard(selection="PRIMARY")
+        self.gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
+        self.history_tree.connect('item-right-clicked', self.on_paste_rclick)
         self.__pulse_bar = gtk.ProgressBar()
         self.add_main_widget(self.__pulse_bar, expand=False)
         # only show pulse bar if working
         self.__pulse_bar.hide()
         self.__pulse_bar.set_size_request(-1, 12)
         self.__pulse_bar.set_pulse_step(0.01)
-        self.__history_tree.show_all()
+        self.history_tree.show_all()
+
+    @property
+    def tree_selected(self):
+        return self.history_tree.selected_item
 
     def set(self, pastes):
         '''Sets the paste list to the tree view.
            First reset it, then rebuild it.
         '''
-        self.__history_tree.clear()
-        for paste in pastes:
-            self.__history_tree.append(paste)
-        self.__tree_selected = None
+        self.history_tree.clear()
+        self.history_tree.expand(pastes)
+        self.tree_selected = None
 
     def add_paste(self, item):
-        self.__history_tree.append(item)
-
-    #def on_add__clicked(self, but):
-    #    '''Callback function bound to the toolbar button new that creates a new
-    #    paste to post'''
-    #    self.service.boss.call_command('pastemanager','create_paste')
+        self.history_tree.append(item)
 
     def copy_current_paste(self):
         '''Callback function bound to the toolbar button view that copies the
         selected paste'''
-        if self.__tree_selected != None:
-            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
-            self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
+        if self.tree_selected != None:
+            self.x11_clipboard.set_text(self.tree_selected.get_url())
+            self.gnome_clipboard.set_text(self.tree_selected.get_url())
 
     def view_current_paste(self):
         '''Callback function bound to the toolbar button view that shows the
         selected paste'''
-        if self.__tree_selected != None:
+        if self.tree_selected != None:
             self.service.boss.call_command('pastemanager','view_paste',
-                paste=self.__tree_selected)
+                paste=self.tree_selected)
         else:
             print _("ERROR: No paste selected")
 
     def remove_current_paste(self):
         '''Callback function bound to the toolbar button delete that removes the
         selected paste'''
-        if self.__tree_selected != None:
+        if self.tree_selected != None:
             self.service.boss.call_command('pastemanager','delete_paste',
-                paste=self.__tree_selected)
+                paste=self.tree_selected)
         else:
             print _("ERROR: No paste selected")
 
-    def cb_paste_clicked(self,paste,tree_item):
-        '''Callback function called when an item is selected in the TreeView'''
-        self.__tree_selected = tree_item.value
 
     def cb_paste_db_clicked(self, ol, item):
         """
@@ -510,13 +514,7 @@ class Pastebin(Service):
             act.set_active(True)
 
     def get_pastebin_types(self):
-        return [
-            ('DPaste', Dpaste),
-            ('Rafb.net', Rafb),
-            ('LodgeIt', LodgeIt),
-            ('HPaste', HPaste),
-            #('Twisted', Twisted), #Broken for some reason
-        ]
+        return pastebin_types
 
     def stop(self):
         if not self.get_action('new_paste').get_sensitive():

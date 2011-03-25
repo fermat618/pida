@@ -96,7 +96,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="ProxyComboBox" id="paste_location">
+                          <object class="PyGTKHelpersSimpleComboBox" id="paste_location">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                           </object>
@@ -122,7 +122,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="ProxyComboBox" id="paste_syntax">
+                          <object class="PyGTKHelpersSimpleComboBox" id="paste_syntax">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                           </object>
