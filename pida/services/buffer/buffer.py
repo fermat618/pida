@@ -343,6 +343,7 @@ class Buffer(Service):
         #XXX hideous hack for vim
         self._last_added_document = None
         self._view = BufferListView(self)
+        self._view.set_display_attr(attributes[self.opt('display_type')])
         self.get_action('close').set_sensitive(False)
         self._refresh_buffer_action_sensitivities()
 

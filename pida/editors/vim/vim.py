@@ -11,9 +11,10 @@ import os
 
 from pida.core.environment import get_data_path
 from pida.core.editors import EditorService, _
+from pida.core.options import OptionsConfig, choices
 from pida.ui.views import PidaView
 
-from .embed import VimEmbedWidget
+from .embed import VimEmbedWidget, VimStarter
 from .client import get_vim
 
 _ignore = dict(reply_handler=lambda *a: None,
@@ -28,7 +29,11 @@ VIM_LAUNCH_ERR = _('There was a problem running the "gvim" '
 class VimView(PidaView):
 
     def create_ui(self):
-        self._vim = VimEmbedWidget('gvim', self.svc.script_path)
+        if self.svc.opt('embed_vim'):
+            vim_factory = VimEmbedWidget
+        else:
+            vim_factory = VimStarter
+        self._vim = vim_factory('gvim', self.svc.script_path)
         self.add_main_widget(self._vim)
 
     def run(self):
@@ -114,10 +119,25 @@ class VimCallback(object):
         pass
 
 
+class VimOptionsConfig(OptionsConfig):
+
+    def create_options(self):
+        self.create_option(
+            'embed_vim',
+            _('Embed Vim inside PIDA (requires restart)'),
+            bool,
+            True,
+            _('Embed Vim inside PIDA (requires restart).'),
+        )
+
+
 # Service class
 class Vim(EditorService):
     """Vim Editor Service
     """
+
+    options_config = VimOptionsConfig
+
     def __init__(self, *args, **kw):
         EditorService.__init__(self, *args, **kw)
         self._sign_index = 0
