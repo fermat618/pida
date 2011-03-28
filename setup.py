@@ -1,7 +1,7 @@
 """
 The PIDA Installer
 """
-import hgdistver
+from pida.utils import hgdistver
 
 import os
 import subprocess
