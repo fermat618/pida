@@ -111,7 +111,7 @@ class ServiceManager(object):
 
     def __init__(self, boss, update_progress=None):
         from pida import plugins, services, editors
-        if update_progress:
+        if update_progress is not None:
             self.update_progress = update_progress
         self._boss = boss
         self.started = False
@@ -290,22 +290,12 @@ class ServiceManager(object):
 
         return True
 
-    def _get_update(self):
-        if hasattr(self, "_update_progress"):
-            return self._update_progress
-        else:
-            def update_progress(percent, what):
-                pass
-            return update_progress
-    def _set_update(self, value):
-        if value:
-            self._update_progress = value
-        else:
-            try:
-                del self._update_progress
-            except AttributeError:
-                pass
-    update_progress = property(_get_update, _set_update)
+    def update_progress(self, percent, what):
+        """
+        dummy, gets replaced by the splash screen
+        OK to be monkey-patched
+        """
+        pass
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

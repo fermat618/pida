@@ -33,7 +33,7 @@ class Boss(object):
     def __init__(self):
         self.show_splash()
         self.servicemanager = ServiceManager(self,
-                                  update_progress=self._splash.update_progress)
+                                update_progress=self._splash.update_progress)
         self._run_first_time()
         self.window = PidaWindow(self)
 
@@ -148,7 +148,7 @@ class Boss(object):
     def hide_splash(self):
         if not hasattr(self, "_splash"):
             return
-        self.servicemanager.update_progress = None
+        del self.servicemanager.update_progress
         self._splash.hide_splash()
         del self._splash
 
