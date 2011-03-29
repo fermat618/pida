@@ -12,9 +12,9 @@ from pida.core.features import FeaturesConfig
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.actions import ActionsConfig
-from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE
 
 from pida.ui.views import WindowConfig
+from pida.ui.actions import PidaRememberToggle
 
 
 from pygtkhelpers.gthreads import AsyncTask, gcall
@@ -118,7 +118,7 @@ class VersionControlActions(ActionsConfig):
     def create_actions(self):
         VersioncontrolLogWindowConfig.action = self.create_action(
             'show_vc_log',
-            TYPE_REMEMBER_TOGGLE,
+            PidaRememberToggle,
             _('Version Control Log'),
             _('Show the version control log'),
             gtk.STOCK_CONNECT,
@@ -128,7 +128,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'show_commit',
-            TYPE_TOGGLE,
+            gtk.ToggleAction,
             _('Commit Message'),
             _('Show the commit message'),
             gtk.STOCK_GO_UP,
@@ -137,7 +137,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'more_vc_menu',
-            TYPE_NORMAL,
+            gtk.Action,
             _('More Version Control'),
             _('More Version Control Commands'),
             gtk.STOCK_CONNECT,
@@ -146,7 +146,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'diff_document',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Differences'),
             _('Version Control differences for the current document'),
             gtk.STOCK_COPY,
@@ -156,7 +156,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'diff_project',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Differences'),
             _('Get the version control differences for the current project'),
             gtk.STOCK_COPY,
@@ -165,7 +165,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'diff_for_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Differences'),
             _('Get the version control diff on this file'),
             gtk.STOCK_COPY,
@@ -174,7 +174,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'diff_for_directory',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Differences'),
             _('Get the version control diff on this directory'),
             gtk.STOCK_COPY,
@@ -183,7 +183,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'commit_document',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Commit'),
             _('Commit the current document'),
             gtk.STOCK_GO_UP,
@@ -192,7 +192,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'commit_project',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Commit'),
             _('Commit the current project'),
             gtk.STOCK_GO_UP,
@@ -201,7 +201,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'commit_for_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Commit'),
             _('Commit the selected file'),
             gtk.STOCK_GO_UP,
@@ -210,7 +210,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'commit_for_dir',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Commit'),
             _('Commit the selected directory'),
             gtk.STOCK_GO_UP,
@@ -219,7 +219,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'update_document',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Update'),
             _('Update the current document'),
             gtk.STOCK_GO_DOWN,
@@ -228,7 +228,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'update_project',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Update'),
             _('Update the current project'),
             gtk.STOCK_GO_DOWN,
@@ -237,7 +237,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'update_for_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Update'),
             _('Update the selected file'),
             gtk.STOCK_GO_DOWN,
@@ -246,7 +246,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'update_for_dir',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Update'),
             _('Update the selected file'),
             gtk.STOCK_GO_DOWN,
@@ -255,7 +255,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'add_document',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Add'),
             _('Add the current document'),
             gtk.STOCK_ADD,
@@ -264,7 +264,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'add_for_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Add'),
             _('Add the selected file'),
             gtk.STOCK_ADD,
@@ -273,7 +273,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'add_for_dir',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Add'),
             _('Add the selected file'),
             gtk.STOCK_ADD,
@@ -282,7 +282,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'remove_document',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Remove'),
             _('Remove the current document'),
             gtk.STOCK_DELETE,
@@ -291,7 +291,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'remove_for_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Remove'),
             _('Remove the selected file'),
             gtk.STOCK_DELETE,
@@ -300,7 +300,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'remove_for_dir',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Remove'),
             _('Remove the selected directory'),
             gtk.STOCK_DELETE,
@@ -309,7 +309,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'revert_document',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Revert'),
             _('Revert the current document'),
             gtk.STOCK_UNDO,
@@ -318,7 +318,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'revert_project',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Revert'),
             _('Revert the current project'),
             gtk.STOCK_UNDO,
@@ -327,7 +327,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'revert_for_file',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Revert'),
             _('Revert the selected file'),
             gtk.STOCK_UNDO,
@@ -336,7 +336,7 @@ class VersionControlActions(ActionsConfig):
 
         self.create_action(
             'revert_for_dir',
-            TYPE_NORMAL,
+            gtk.Action,
             _('Revert'),
             _('Revert the selected directory'),
             gtk.STOCK_UNDO,
