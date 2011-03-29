@@ -14,7 +14,7 @@ from pida.core.service import Service
 from pida.core.commands import CommandsConfig
 from pida.core.events import EventsConfig
 from pida.core.options import OptionsConfig, Color
-from pida.core.actions import ActionsConfig
+from pida.core.actions import ActionsConfig, global_accelerator_group
 from pida.core.actions import TYPE_NORMAL, TYPE_TOGGLE, TYPE_REMEMBER_TOGGLE, TYPE_MENUTOOL
 from pida.core.document import Document
 from pida.core.features import FeaturesConfig
@@ -505,7 +505,7 @@ class Window(Service):
             # thanks gtk for not letting me test if accel is already added
             win = pane.get_child().get_toplevel()
             if not getattr(win, '_pida_accel_added', False):
-                win.add_accel_group(self.actions.global_accelerator_group)
+                win.add_accel_group(global_accelerator_group)
                 win._pida_accel_added = True
 
     def update_colors(self):
