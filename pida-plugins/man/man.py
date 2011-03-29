@@ -209,7 +209,7 @@ class Man(Service):
 
 
             # add in list
-            self._view.add_item(ManItem(name, group, desc, pattern))
+            self._view.add_item(ManItem(name, int(group), desc, pattern))
 
         # launch man subprocess
         self.task = GeneratorSubprocessTask(_line)
