@@ -55,7 +55,7 @@ class Boss(object):
         if is_firstrun() or force:
             from pida.utils.firstrun import FirstTimeWindow
             ft = FirstTimeWindow(self.servicemanager.get_available_editors())
-            success, editor = ft.run(firstrun_file.strpath)
+            success, editor = ft.run(firstrun_file().strpath)
             self.override_editor = editor
             self.quit_before_started = not success
             return editor
