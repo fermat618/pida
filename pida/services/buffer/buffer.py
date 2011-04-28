@@ -237,7 +237,8 @@ class BufferOptionsConfig(OptionsConfig):
             'the currently open files',
             list,
             [],
-            ''
+            '',
+            workspace=True,
             )
 
     def on_display_type_change(self, option):
