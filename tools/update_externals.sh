@@ -17,8 +17,8 @@ get_or_update() {
 }
 
 if [ ! `which hg` ]
-then 
-    print "Error: You must install Mercurial to update the externals"
+then
+    echo "Error: You must install Mercurial to update the externals"
     exit
 fi
 
