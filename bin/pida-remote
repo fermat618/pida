@@ -2,21 +2,20 @@
 
 import os
 import sys
+from os.path import normpath, abspath, join, exists, dirname
 
+bin = dirname(abspath(__file__))
+base = dirname(bin)
 
-import py
-bin = py.path.local(__file__).dirpath()
-base = bin.dirpath()
+if exists(join(base, 'pida', '__init__.py')):
+    sys.path.insert(0, base)
 
-try:
-    pida = base.join('pida').pyimport()
-    externals = base.join('externals')
-    if externals.check():
-        sys.path.insert(0, str(externals))
-except py.error.ENOENT:
-    import pida
+externals = join(base, 'externals')
+if exists(externals):
+    sys.path.insert(0, externals)
+os.environ['PIDA_PATH'] = bin
+import pida
 
-os.environ['PIDA_PATH'] = os.path.dirname(os.path.abspath(pida.__file__))
 
 from pida.utils.pdbus import list_pida_instances, PidaRemote
 from pida.core import environment
@@ -29,7 +28,7 @@ lst = list_pida_instances()
 
 environment.parse_args(sys.argv[1:])
 
-file_names = [os.path.abspath(x) for x in environment.opts.files]
+file_names = [abspath(x) for x in environment.opts.files]
 
 def spawn(workspace=None):
     #XXX: this seems somehow ugly
@@ -73,10 +72,9 @@ def open_workspace():
     view.show_and_run()
     sys.exit(0)
 
-from pida.core.options import OptionsManager
-om = OptionsManager(workspace="default")
+from pida.core import options
 
-if environment.workspace_manager() or om.open_workspace_manager():
+if environment.workspace_manager() or options.must_open_workspace_manager():
     open_workspace()
 
 elif environment.workspace_set():
