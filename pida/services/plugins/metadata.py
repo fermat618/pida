@@ -46,7 +46,7 @@ class PluginMessage(Message, object):
     def directory(self):
         try:
             return os.path.join(self.base, self.plugin)
-        except AttibuteError:
+        except AttributeError:
             return None
 
     def __repr__(self):

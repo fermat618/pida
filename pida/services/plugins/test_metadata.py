@@ -20,6 +20,11 @@ def test_metadata_from_dict():
     assert data['Name'] == 'abc'
 
 
+def test_directory():
+    data = from_dict(name='foo')
+    assert data.directory is None
+
+
 
 def test_is_plugin(tmpdir):
     file = tmpdir.ensure('service/service.pida')
