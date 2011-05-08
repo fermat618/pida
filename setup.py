@@ -62,7 +62,7 @@ install_requires = [
     'anyvc>=0.3.2',
     'py>=1.3',
     'bpython>=0.9.7',
-    'pygtkhelpers>0.4.2'
+    'pygtkhelpers>0.4.2',
     'flatland',
     'logbook',
     #'vte',
