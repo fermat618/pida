@@ -1,2 +1,14 @@
 *.pyc
 moo_stub.so
+*~
+*.sw?
+tags
+TAGS
+/.pida-metadata
+/GPATH
+/GRTAGS
+/GSYMS
+/GTAGS
+/dist/
+/docs/_build/
+/pida.egg-info/
