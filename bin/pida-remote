@@ -4,7 +4,10 @@ import os
 import sys
 from os.path import normpath, abspath, join, exists, dirname
 
-bin = dirname(abspath(__file__))
+curfile = __file__
+while os.path.islink(curfile):
+    curfile = os.readlink(curfile)
+bin = dirname(curfile)
 base = dirname(bin)
 
 if exists(join(base, 'pida', '__init__.py')):
