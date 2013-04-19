@@ -16,7 +16,7 @@ import gobject
 import pkgutil
 import os
 
-from pygtkhelpers.ui.objectlist import Column, ObjectList
+from pygtkhelpers.ui.objectlist import Cell, Column, ObjectList
 from pygtkhelpers.ui.widgets import AttrSortCombo
 
 from .outlinefilter import FILTERMAP
@@ -316,11 +316,13 @@ class BrowserView(PidaView):
         self.tasks = {}
         self.restart = False
         self.source_tree.set_columns([
-            Column('icon_name', use_stock=True),
-            Column('markup', use_markup=True, expand=True),
+            Column(title='name', cells=[
+                Cell('icon_name', use_stock=True),
+                Cell('markup', use_markup=True, expand=True)]),
             Column('type_markup', use_markup=True),
-            Column('sort_hack', visible=False),
-            Column('line_sort_hack', visible=False),
+            Column('sort_by_type_by_name', visible=False),
+            Column('sort_by_type_by_line', visible=False),
+            Column('sort_by_line', visible=False),
         ])
         self.source_tree.set_headers_visible(False)
         # faster lookups on the id property
@@ -329,11 +331,11 @@ class BrowserView(PidaView):
         self.sort_box = AttrSortCombo(
             self.source_tree,
             [
-                ('sort_hack', _('Alphabetical by type')),
-                ('line_sort_hack', _('Line Number')),
-                ('name', _('Name')),
+                ('sort_by_type_by_name', _('Alphabetical by type')),
+                ('sort_by_type_by_line', _('By type by line number')),
+                ('sort_by_line', _('By line number')),
             ],
-            'sort_hack'
+            'sort_by_type_by_name'
         )
         self.sort_box.show()
         self.sort_vbox.pack_start(self.sort_box, expand=False)
@@ -412,7 +414,7 @@ class BrowserView(PidaView):
 
         self.restart = False
 
-        if outliner: 
+        if outliner:
 #            if self.task:
 #                self.task.stop()
 #            self.task = GeneratorTask(outliner.get_outline_cached, self.add_node)
@@ -446,7 +448,7 @@ class BrowserView(PidaView):
             else:
                 prio = PRIO_DEFAULT
 
-            task = GeneratorTask(outliner.run_cached, 
+            task = GeneratorTask(outliner.run_cached,
                                  radd,
                                  complete_callback=rcomp,
                                  priority=prio)
@@ -489,7 +491,7 @@ class BrowserView(PidaView):
 
         try:
             self.source_tree.append(node, parent=parent)
-        except Exception, e:
+        except Exception as e:
             self.log.exception(e)
 
     def can_be_closed(self):
@@ -505,6 +507,8 @@ class BrowserView(PidaView):
             self.svc.boss.editor.cmd('grab_focus')
 
     def update_filterview(self, outliner):
+        if outliner is None:
+            return
         if ((outliner and not self._last_outliner) or
             (self._last_outliner and self._last_outliner.name != outliner.name)):
             self._last_outliner = outliner

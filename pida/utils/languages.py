@@ -12,8 +12,6 @@ from .symbols import Symbols
 from .path import get_line_from_file
 from .descriptors import cached_property
 
-import itertools
-
 
 #!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #!!!! these are inter process interfaces, too                     !!!!
@@ -38,7 +36,6 @@ COMPLETER = Symbols('completer', [
     'keyword',
     'snippet',
 ])
-
 
 
 VALIDATOR_KIND = Symbols('validation errors',
@@ -110,6 +107,7 @@ def color_to_string(color):
     # gtk color
     return color.to_string()
 
+
 class ValidationError(InitObject):
     """Message a Validator should return"""
     message = ''
@@ -126,7 +124,6 @@ class ValidationError(InitObject):
         '<span style="italic">{kind}</span>\n'
         '{message}'
     )
-
 
     def __str__(self):
         return '%s:%s: %s' % (self.filename, self.lineno, self.message)
@@ -159,7 +156,6 @@ class ValidationError(InitObject):
         }
 
 
-
 class OutlineItem(InitObject):
     """
     Outlines are returned by an Outliner class
@@ -177,27 +173,30 @@ class OutlineItem(InitObject):
     def get_markup(self):
         return '<b>%s</b>' % self.name
 
+    markup = property(get_markup)
+
     @cached_property
     def icon_name(self):
         return LANG_IMAGE_MAP.get(self.type, '')
 
     #XXX: these 2 hacks need tests!!!
     @property
-    def sort_hack(self):
-        try:
-            #XXX: python only?!
-            return '%s%s' % (self.options.position, self.name)
-        except: #XXX: evil handling
-            return self.name
+    def sort_by_type_by_name(self):
+        # try:
+        #     #XXX: python only?!
+        #     return '%s%s' % (self.options.position, self.name)
+        # except: #XXX: evil handling
+        #     return self.name
+        return (self.type, self.name)
 
     @property
-    def line_sort_hack(self):
-        if self.filename:
-            return 'yyy%s%s' % (self.filename, self.linenumber)
-        elif self.linenumber:
-            return str(self.linenumber)
-        else:
-            return 'zzz'
+    def sort_by_type_by_line(self):
+        return (self.type, self.linenumber)
+
+    @property
+    def sort_by_line(self):
+        return self.linenumber
+
 
 class Definition(InitObject):
     """Returned by a Definer instance"""
@@ -234,6 +233,7 @@ class Definition(InitObject):
 
     signature = property(_get_signature, _set_signature)
 
+
 class Suggestion(unicode):
     """
     Suggestions are returned by an Completer class
@@ -252,6 +252,7 @@ class Suggestion(unicode):
         """
         return self.signature or self
 
+
 class Documentation(InitObject):
     """
     Documentation of a object in the text
@@ -266,4 +267,3 @@ class Documentation(InitObject):
     def __nonzero__(self):
         # a documentation object is true if it holds any value
         return bool(self.path) or bool(self.short) or bool(self.long_)
-
