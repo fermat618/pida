@@ -2,6 +2,7 @@
 from functools import partial
 from xml.sax.saxutils import escape
 
+from gtk import keysyms
 from pygtkhelpers.ui.objectlist import Column, Cell
 from pygtkhelpers.ui.widgets import AttrSortCombo
 
@@ -77,9 +78,6 @@ def render(cell, doc, renderer, markup):
     renderer.props.markup = markup.format(**data)
 
 
-
-
-
 class BufferListView(PidaView):
 
     key = 'buffer.list'
@@ -89,7 +87,7 @@ class BufferListView(PidaView):
 
     label_text = _('Buffers')
 
-    def create_ui(self ):
+    def create_ui(self):
         self.buffers_ol.set_columns([
             Column('markup', cells=[
                 Cell(None, use_markup=True,
@@ -116,7 +114,7 @@ class BufferListView(PidaView):
                 ('last_opend', _('Last Opened')),
                 #('Project', _('Project_name'))
             ],
-            'creation_time' 
+            'creation_time'
         )
         self._sort_combo.show()
         self.toplevel.pack_start(self._sort_combo, expand=False)
@@ -159,6 +157,15 @@ class BufferListView(PidaView):
 
         menu.connect('deactivate', on_deactivate)
 
+    def on_buffers_ol__key_press_event(self, ol, event):
+        if event.keyval == keysyms.Delete:
+            cur = self.buffers_ol.selected_item
+            next_ = self.buffers_ol.item_after(cur)
+            if next_ is None:
+                next_ = self.buffers_ol[0]
+            self.svc.close_file(document=cur)
+            self.svc.open_file(document=next_)
+
     def get_current_buffer_index(self):
         return self.buffers_ol.selected_item
 
@@ -185,5 +192,4 @@ class BufferListView(PidaView):
     def set_display_attr(self, newattr):
         for attr in attributes.values():
             for col in self.buffers_ol._viewcols_for_attr(attr):
-                col.props.visible = attr==newattr
-
+                col.props.visible = (attr == newattr)
