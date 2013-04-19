@@ -5,7 +5,6 @@ from __future__ import absolute_import
 import vim
 
 
-import gtk, gobject
 import dbus
 from dbus import SessionBus
 from dbus.service import Object, method, signal, BusName
@@ -13,10 +12,8 @@ from dbus.service import Object, method, signal, BusName
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 
-
-
-
 DBUS_NS = 'uk.co.pida.vim'
+
 
 def clean_signal_args(args):
     args = list(args)
@@ -80,7 +77,7 @@ class VimDBUSService(Object):
         # we don't want those
         return [
             buffer.name for buffer in vim.buffers
-            if int(vim.eval("buflisted(%s)"%buffer.number))
+            if int(vim.eval("buflisted(%s)" % buffer.number))
         ]
 
     @method(DBUS_NS, in_signature='s', out_signature='i')
@@ -238,7 +235,7 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='sssss')
     def define_sign(self, name, icon, linehl, text, texthl):
-        cmd = ('sign define %s icon=%s linehl=%s text=%s texthl=%s '%
+        cmd = ('sign define %s icon=%s linehl=%s text=%s texthl=%s ' %
                              (name, icon, linehl, text, texthl))
         vim.command(cmd)
 
@@ -337,16 +334,17 @@ class VimDBUSService(Object):
         pass
 
 
-
 def get_offset():
     result = _position_to_offset(*vim.current.window.cursor)
     return result
 
+
 def _position_to_offset(lineno, colno):
     result = colno
-    for line in vim.current.buffer[:lineno-1]:
+    for line in vim.current.buffer[:lineno - 1]:
         result += len(line) + 1
     return result
+
 
 def _offset_to_position(offset):
     text = '\n'.join(vim.current.buffer) + '\n'

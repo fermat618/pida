@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 """
@@ -13,6 +13,13 @@ import os
 
 
 import subprocess
+
+#XXX: the problem may not be here.
+os.environ['PIDA_BASE'] = os.path.dirname(
+                          os.path.dirname(
+                          os.path.dirname(
+                          os.path.dirname(__file__))))
+
 
 class VimStarter(gtk.EventBox):
 
@@ -31,7 +38,7 @@ class VimStarter(gtk.EventBox):
                     # XXX: leftover from vim com
                     #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '--cmd', 'so %s' % self.init_script,
+                    '-S', '%s' % self.init_script,
                     ] + self.args,
                     close_fds=True,
                 )
@@ -79,7 +86,7 @@ class VimEmbedWidget(gtk.EventBox):
                     # XXX: leftover from vim com
                     #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '--cmd', 'so %s' % self._init_script,
+                    '-S', '%s' % self._init_script,
                     '--socketid', str(xid),
                     ] + self.args,
                     close_fds=True,
@@ -93,4 +100,3 @@ class VimEmbedWidget(gtk.EventBox):
 
     def grab_input_focus(self):
         self.child_focus(gtk.DIR_TAB_FORWARD)
-

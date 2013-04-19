@@ -4,12 +4,19 @@
 
 set nocompatible
 
+if has('python')
+    command! -nargs=1 Python python <args>
+elseif has('python3')
+    command! -nargs=1 Python python3 <args>
+else
+    finish
+end
+
 silent function! VimSignal(name, ...)
-    python call_signal(vim.eval('a:name'), vim.eval('a:000'))
+    Python call_signal(vim.eval('a:name'), vim.eval('a:000'))
 endfunction
 
-
-python << endpython
+Python << endpython
 # Do this before we even breath
 import vim
 

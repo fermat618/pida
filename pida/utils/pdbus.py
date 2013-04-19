@@ -3,7 +3,9 @@
     :copyright: 2005-2008 by The PIDA Project
     :license: GPL 2 or later (see README/COPYING/LICENSE)
 """
+
 from __future__ import absolute_import
+
 from functools import partial, wraps
 import os
 
@@ -47,7 +49,7 @@ SIGNAL = partial(_dbus_decorator, dbus.service.signal)
 
 def list_pida_bus_names(include_self=False):
     session = dbus.SessionBus()
-    bus_names = map(str, session.list_names())
+    bus_names = list(map(str, session.list_names()))
     return [ name for name in bus_names 
              if 'pida.pida' in name and
              (include_self or UUID not in name) ]
@@ -75,10 +77,10 @@ def list_pida_instances(include_this=False, timeout=1):
             stat = loads(app.get_instance_status(timeout=1))
             stat['name'] = name
             result.append(stat)
-        except Exception, e:
+        except Exception as e:
             #XXX: log
-            print e
-            print 'failed to aks state of', name
+            print(e)
+            print('failed to aks state of', name)
     return result
 
 
