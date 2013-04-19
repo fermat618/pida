@@ -54,7 +54,7 @@ def build_language_list(typemanager):
     try:
         output = Popen(["ctags", "--list-languages"], 
                        stdout=PIPE).communicate()[0]
-    except OSError, e:
+    except OSError as e:
         # can't find ctags -> no support :-)
         return []
     output = output.splitlines()
@@ -63,7 +63,7 @@ def build_language_list(typemanager):
         output.append("vala")
     for name in output:
         clang = typemanager.get_fuzzy(name)
-        if clang:
+        if clang is not None:
             rv.append(clang)
 
     return rv
@@ -89,23 +89,44 @@ SUPPORTED_LANGS = build_language_list(DOCTYPES)
 
 class CtagsTokenList(object):
     def __init__(self, *args, **kwargs):
+        self._count = 0
         self._items = {}
         self._names = {}
+        self._all_parent_id_updated = False
 
     def add(self, item):
-        if not self._items.has_key(item.filename):
+        if item.filename is None:
+            return
+        if item.filename not in self._items:
             self._items[item.filename] = []
             self._names[item.filename] = {}
         self._items[item.filename].append(item)
         cnames = self._names[item.filename]
         cnames[item.fullname] = item
 
+        self._count += 1
+        item.id = self._count
+        item.parent_id = None
+        self._all_parent_id_updated = False
+
+    def update_parent_id(self):
+        if self._all_parent_id_updated:
+            return
+        for j in self._items.values():
+            for i in j:
+                if i.parent is None and i.parent_name is not None:
+                    i.parent = self.get_parent(i)
+                    if i.parent is not None:
+                        i.parent_id = i.parent.id
+                        i.parent.is_parent = True
+        self._all_parent_id_updated = True
+
+
     def filter_items(self, filename):
-        if not self._items.has_key(filename):
+        self.update_parent_id()
+        if filename not in self._items:
             return
         for i in self._items[filename]:
-            if not i.parent and  i.parent_name:
-                i.parent = self.get_parent(i)
             yield i
 
     def clear(self):
@@ -117,23 +138,41 @@ class CtagsTokenList(object):
         del self._names[filename]
 
     def get_parent(self, item):
-        if item.parent:
+        if item.parent is not None:
             return item.parent
         return self._names[item.filename].get(item.parent_name, None)
 
     def __iter__(self):
-        for j in self._items.itervalues():
+        self.update_parent_id()
+        for j in self._items.values():
             for i in j:
-                if not i.parent and  i.parent_name:
-                    i.parent = self._names[i.filename].get(i.parent_name, None)
                 yield i
 
 class CtagItem(OutlineItem):
+    def __init__(self, *args, **kwargs):
+        self.filename = None
+        self.is_parent = False
+        super(OutlineItem, self).__init__(*args, **kwargs)
+
     def _get_fullname(self):
-        if not self.parent_name:
+        if self.parent_name is None:
             return self.name
         return "%s.%s" %(self.parent_name, self.name)
+
     fullname = property(_get_fullname)
+
+    @property
+    def type_markup(self):
+        return self.type
+
+    def get_markup(self):
+        if self.is_parent:
+            return '<b>{}</b>'.format(self.name)
+        elif self.parent_id is not None:
+            return '<i>{}</i>'.format(self.name)
+        else:
+            return '{}'.format(self.name)
+    markup = property(get_markup)
 
     def __repr__(self):
         return "<CtagItem %s %s %s >" %(self.name, self.parent_name, self.fullname)
@@ -150,7 +189,7 @@ class CtagsOutliner(Outliner):
             return
         try:
             filename, istmp = self._update_tagfile()
-        except OSError, e:
+        except OSError as e:
             return
         tags = self._parse_tagfile(filename)
 
@@ -166,7 +205,7 @@ class CtagsOutliner(Outliner):
         """ filestr is a string, could be *.* or explicit paths """
 
         # create tempfile
-        if not self.document.project or temp:
+        if self.document.project is None or temp:
             h, taglib = tempfile.mkstemp()
             os.close(h)
             temp = True
@@ -177,11 +216,12 @@ class CtagsOutliner(Outliner):
         if self.document.doctype and self.document.doctype.internal == 'Vala':
             options = options + ('--language-force=C#',)
         command = ("ctags",) + options + ("-f", taglib, self.document.filename)
-        #os.system(command)
-        rv = subprocess.check_call(command)
-        if rv:
-            self.log.error('failed execute ctags. Returned {rv}', rv=rv)
-            raise OSError, "can't execute ctags"
+        try:
+            subprocess.check_call(command)
+        except subprocess.CalledProcessError as e:
+            self.log.error('failed execute ctags. Returned {rv}',
+                    rv=e.returncode)
+            raise OSError("can't execute ctags")
         
         return (taglib, temp)
 
@@ -190,6 +230,9 @@ class CtagsOutliner(Outliner):
         
         The parser uses the ctags command from the shell to create a ctags file,
         then parses the file, and finally populates a treemodel. """
+        #TODO: the type is language dependent, and tagfile should by parsed 
+        # language dependent.
+
         # refactoring noise    
         #doc = self.document
         #ls = self.model        
@@ -208,12 +251,14 @@ class CtagsOutliner(Outliner):
             if tokens[0][:2] == "!_": continue
 
             # convert line numbers to an int
-            tokens[2] =  int(filter( lambda x: x in '1234567890', tokens[2] ))
+            tokens[2] =  int(''.join(x for x in tokens[2] if x in '1234567890'))
             
             # prepend container elements, append member elements. Do this to
             # make sure that container elements are created first.
-            if self._is_container(tokens): tokenlist = [tokens] + tokenlist
-            else: tokenlist.append(tokens)
+            if self._is_container(tokens):
+                tokenlist.insert(0, tokens)
+            else:
+                tokenlist.append(tokens)
         h.close()
 
         # add tokens to the treestore---------------------------------------
@@ -244,8 +289,10 @@ class CtagsOutliner(Outliner):
             #tokens[1] =  str( gnomevfs.get_uri_from_local_path(tokens[1]) )
             
             # make sure tokens[4] contains type code
-            if len(tokens) == 3: tokens.append("")
-            else: tokens[3] = self._get_type(tokens)
+            if len(tokens) == 3:
+                tokens.append("")
+            else:
+                tokens[3] = self._get_type(tokens)
             
             # append to treestore
             #it = ls.append( node, tokens[:4] )
@@ -259,8 +306,8 @@ class CtagsOutliner(Outliner):
                             linenumber=int(tokens[2]),
                             type=tokens[3],
                             filter_type=tokens[3],
-                            is_container = is_container,
-                            parent_name = parent_name)
+                            is_container=is_container,
+                            parent_name=parent_name)
             rv.add(item)
         return rv
 
@@ -268,18 +315,18 @@ class CtagsOutliner(Outliner):
         """ Returns a char representing the token type or False if none were found.
 
         According to the ctags docs, possible types are:
-		c	class name
-		d	define (from #define XXX)
-		e	enumerator
-		f	function or method name
-		F	file name
-		g	enumeration name
-		m	member (of structure or class data)
-		p	function prototype
-		s	structure name
-		t	typedef
-		u	union name
-		v	variable        
+        c   class name
+        d   define (from #define XXX)
+        e   enumerator
+        f   function or method name
+        F   file name
+        g   enumeration name
+        m   member (of structure or class data)
+        p   function prototype
+        s   structure name
+        t   typedef
+        u   union name
+        v   variable        
         """
         def v2t(i):
             mapping = {
@@ -302,8 +349,8 @@ class CtagsOutliner(Outliner):
             return tokrow[3]
         if len(tokrow) == 3: return
         for i in tokrow[3:]:
-            if len(i) == 1: 
-                return v2t(i)# most common case: just one char
+            if len(i) == 1:
+                return v2t(i)  # most common case: just one char
             elif i[:4] == "kind":
                 return v2t(i[5:])
             return 'unknown'
@@ -315,11 +362,11 @@ class CtagsOutliner(Outliner):
             as the name of the token. In some cases (typedefs), this
             doesn't work (see Issue 13) """
         
-        if self.__get_type(tokrow) == "t":
+        if self._get_type(tokrow) == "t":
             try:
                 t = tokrow[4]
                 a = t.split(":")
-                return a[ len(a)-1 ]
+                return a[len(a)-1]
             except:
                 pass
         return tokrow[0]
@@ -332,16 +379,16 @@ class CtagsOutliner(Outliner):
         return self._get_type(tokrow) in (
             'class', 'enumeration_name',
             'structure', 'union', 'typedef')
-        # remove temp file
-        #os.remove(tmpfile)
 
     def _get_parent(self, tokrow):
         if len(tokrow) == 3: return
         # Iterate through all items in the tag.
         # TODO: Not sure if needed
-        for i in tokrow[3:]: 
+        for i in tokrow[3:]:
             a = i.split(":")
-            if a[0] in ("class","struct","union","enum"): 
+            # if a[0] in ("class","struct","union","enum"): 
+            #     return a[1]
+            if len(a) >= 2:
                 return a[1]
         return None
 
