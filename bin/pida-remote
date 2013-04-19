@@ -29,7 +29,6 @@ lst = list_pida_instances()
 environment.parse_args(sys.argv[1:])
 
 file_names = [abspath(x) for x in environment.opts.files]
-
 def spawn(workspace=None):
     #XXX: this seems somehow ugly
     import subprocess
@@ -67,7 +66,7 @@ def command(sw, row=None):
             sys.exit(0)
 
 def open_workspace():
-    from pida.ui.window import WorkspaceWindow
+    from pida.ui.workspace import WorkspaceWindow
     view = WorkspaceWindow(command=command)
     view.show_and_run()
     sys.exit(0)
@@ -76,7 +75,6 @@ from pida.core import options
 
 if environment.workspace_manager() or options.must_open_workspace_manager():
     open_workspace()
-
 elif environment.workspace_set():
     for i in lst:
         pr = PidaRemote(i[0])
@@ -89,10 +87,8 @@ elif environment.workspace_set():
             pr.call('buffer', 'open_files', file_names)
             sys.exit(0)
     spawn(None, session=environment.workspace_name()) 
-
 elif len(lst) == 0:
     spawn(None)
-
 elif len(lst) == 1:
     call_open('p%d' % lst[0]['pid'])
 else:
