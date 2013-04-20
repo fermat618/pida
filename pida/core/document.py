@@ -160,8 +160,13 @@ class Document(object):
         """
         if hasattr(self.editor, 'get_content'):
             return self.boss.editor.get_content(self.editor)
-        with open(self.filename) as fp:
-            return fp.read()
+        if self.filename is None:
+            return None
+        try:
+            with open(self.filename) as fp:
+                return fp.read()
+        except IOError:
+            return None
 
 
     @property

@@ -58,8 +58,8 @@ class TodoView(PidaView):
     def create_ui(self):
         self.todo_list = ObjectList([
             Column('line', sorted=True),
-            Column('todo'),
-            Column('marker'),
+            Column('todo', resizable=True, width=200, tooltip_attr='todo'),
+            Column('marker', width=50),
         ])
         self.add_main_widget(self.todo_list)
         self.todo_list.show_all()
@@ -146,9 +146,9 @@ class Todo(Service):
     def check_document(self, document):
         """Check the given lines for TODO messages."""
         self._view.clear_items()
-        if not document or not document.lines:
+        if not document or not document.content:
             return
-        for i, line in enumerate(document.lines):
+        for i, line in enumerate(document.content.splitlines()):
             for marker in self._markers:
                 if marker in line:
                     pre, post = line.split(marker, 1)
