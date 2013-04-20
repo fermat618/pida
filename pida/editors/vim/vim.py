@@ -19,6 +19,8 @@ from .client import get_vim
 
 _ignore = dict(reply_handler=lambda *a: None,
                error_handler=lambda *a: None)
+#Evil handling
+_ignore = {}
 
 VIM_LAUNCH_ERR = _('There was a problem running the "gvim" '
                    'executable. This is usually because it is not '

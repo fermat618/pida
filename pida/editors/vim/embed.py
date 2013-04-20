@@ -11,8 +11,9 @@
 import gtk
 import os
 
-
 import subprocess
+
+from .vim_escape import vim_fnameescape
 
 #XXX: the problem may not be here.
 os.environ['PIDA_BASE'] = os.path.dirname(
@@ -38,7 +39,7 @@ class VimStarter(gtk.EventBox):
                     # XXX: leftover from vim com
                     #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '--cmd', 'so {}'.format(self.init_script),
+                    '--cmd', 'so {}'.format(vim_fnameescape(self.init_script)),
                     ] + self.args,
                     close_fds=True,
                 )
@@ -86,7 +87,7 @@ class VimEmbedWidget(gtk.EventBox):
                     # XXX: leftover from vim com
                     #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '--cmd', 'so {}'.format(self._init_script),
+                    '--cmd', 'so {}'.format(vim_fnameescape(self._init_script)),
                     '--socketid', str(xid),
                     ] + self.args,
                     close_fds=True,

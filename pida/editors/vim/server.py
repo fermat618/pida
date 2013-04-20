@@ -8,8 +8,10 @@ import vim
 import dbus
 from dbus import SessionBus
 from dbus.service import Object, method, signal, BusName
-
 from dbus.mainloop.glib import DBusGMainLoop
+
+from .vim_escape import vim_quote, vim_fnameescape, vim_cmd_with_esc, vim_call
+
 DBusGMainLoop(set_as_default=True)
 
 DBUS_NS = 'uk.co.pida.vim'
@@ -45,7 +47,7 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s')
     def echo(self, s):
-        vim.command('echo "%s"' % s)
+        vim_cmd_with_esc('echo {}', s)
 
     # File opening
 
@@ -62,7 +64,7 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s')
     def open_file(self, path):
-        vim.command('confirm e %s' % path)
+        vim_cmd_with_esc('confirm e {}', path)
 
     @method(DBUS_NS, in_signature='as')
     def open_files(self, paths):
@@ -77,20 +79,22 @@ class VimDBUSService(Object):
         # we don't want those
         return [
             buffer.name for buffer in vim.buffers
-            if int(vim.eval("buflisted(%s)" % buffer.number))
+            # if int(vim.eval("buflisted(%s)" % buffer.number))
+            if int(vim_call("buflisted", int(buffer.number)))
         ]
 
     @method(DBUS_NS, in_signature='s', out_signature='i')
     def get_buffer_number(self, path):
-        return int(vim.eval("bufnr('%s')" % path))
+        # return int(vim.eval("bufnr(%s)" % vim_quote(path)))
+        return int(vim_call("bufnr", str(path)))
 
     @method(DBUS_NS, in_signature='s')
     def open_buffer(self, path):
-        vim.command('b!%s' % self.get_buffer_number(path))
+        vim_cmd_with_esc('b! {}', self.get_buffer_number(path))
 
     @method(DBUS_NS, in_signature='i')
     def open_buffer_id(self, bufid):
-        vim.command('b!%s' % bufid)
+        vim_cmd_with_esc('b! {}', int(bufid))
 
     # Saving
 
@@ -100,22 +104,22 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s')
     def save_as_current_buffer(self, path):
-        vim.command('saveas! %s' % path)
+        vim_cmd_with_esc('saveas! {}', path)
 
     # Closing
 
     @method(DBUS_NS, in_signature='s')
     def close_buffer(self, path):
-        vim.command('confirm bd%s' % self.get_buffer_number(path))
+        vim_cmd_with_esc('confirm bdelete {}', self.get_buffer_number(path))
 
     @method(DBUS_NS, in_signature='i')
     def close_buffer_id(self, bufid):
-        if int(vim.eval("bufexists(%s)" % bufid)):
-            vim.command('confirm bd%s' % bufid)
+        if int(vim_call('bufexists', int(bufid))):
+            vim_cmd_with_esc('confirm bdelete {}', bufid)
 
     @method(DBUS_NS)
     def close_current_buffer(self):
-        vim.command('confirm bd')
+        vim.command('confirm bdelete')
 
     # Current cursor
 
@@ -152,6 +156,7 @@ class VimDBUSService(Object):
         y, x = vim.current.window.cursor
         return self.get_current_line()[x]
 
+    # There four commands may break
     @method(DBUS_NS, in_signature='s')
     def insert_at_cursor(self, text):
         vim.command("normal i%s" % text)
@@ -168,6 +173,7 @@ class VimDBUSService(Object):
     def append_at_lineend(DBUS_NS, text):
         vim.command("normal A%s" % text)
 
+
     @method(DBUS_NS, in_signature='i')
     def goto_line(self, linenumber):
         vim.command('%s' % linenumber)
@@ -183,7 +189,7 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s')
     def cut_current_word(self, text):
-        vim.command('normal ciw%s' % text)
+        vim.command('normal ciw%s' % text)  # XXX: seems an error.
 
     @method(DBUS_NS, in_signature='s')
     def replace_current_word(self, text):
@@ -191,7 +197,8 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s', out_signature='s')
     def get_register(self, name):
-        return vim.eval('getreg("%s")' % name)
+        # return vim.eval('getreg(%s)' % vim_quote(name))
+        return vim_call('getreg', str(name))
 
     @method(DBUS_NS)
     def select_current_word(self):
@@ -223,34 +230,33 @@ class VimDBUSService(Object):
 
     @method(DBUS_NS, in_signature='s')
     def set_colorscheme(self, name):
-        vim.command('colorscheme %s' % name)
+        vim_cmd_with_esc('colorscheme {}', name)
 
     @method(DBUS_NS, in_signature='si')
     def set_font(self, name, size):
-        vim.command('set guifont=%s\\ %s' % (name, size))
+        vim_cmd_with_esc('set guifont={}', '{} {}'.format(name, size))
 
     @method(DBUS_NS, in_signature='s')
     def cd(self, path):
-        vim.command('cd %s' % path)
+        vim_cmd_with_esc('cd {}', path)
 
     @method(DBUS_NS, in_signature='sssss')
     def define_sign(self, name, icon, linehl, text, texthl):
-        cmd = ('sign define %s icon=%s linehl=%s text=%s texthl=%s ' %
-                             (name, icon, linehl, text, texthl))
-        vim.command(cmd)
+        vim_cmd_with_esc('sign define {} icon={} linehl={} text={} texthl={}',
+                name, icon, linehl, text, texthl)
 
     @method(DBUS_NS, in_signature='s')
     def undefine_sign(self, name):
-        vim.command('sign undefine %s' % name)
+        vim_cmd_with_esc('sign undefine {}', name)
 
     @method(DBUS_NS, in_signature='issi')
     def show_sign(self, index, type, filename, line):
-        vim.command('sign place %s line=%s name=%s file=%s' %
-                             (index + 1, line, type, filename))
+        vim_cmd_with_esc('sign place {} line={} name={} file={}',
+                index + 1, line, type, filename)
 
     @method(DBUS_NS, in_signature='is')
     def hide_sign(self, index, filename):
-        vim.command('sign unplace %s' % (index + 1))
+        vim_cmd_with_esc('sign unplace {}', index + 1)
 
     @method(DBUS_NS, in_signature='i')
     def set_cursor_offset(self, offset):
