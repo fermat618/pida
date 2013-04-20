@@ -74,12 +74,13 @@ class BookmarkItemFile(BookmarkItem, LineMarker):
     keys = BookmarkItem.keys + ('line',)
     type = 'bookmark'
 
-    def __init__(self, svc, data=None, line=1):
+    def __init__(self, svc, data=None, line=1, title=None):
         #self.line = line
         self.svc = svc
         BookmarkItem.__init__(self,  title='', data=data)
         self.data = data
         self._lineno = line
+        self._title = title
 
     def _get_title(self):
         try:
@@ -87,12 +88,18 @@ class BookmarkItemFile(BookmarkItem, LineMarker):
                     to_string()
         except:
             color = "black"
+
         try:
             line = int(self.line)
         except ValueError:
             line = 1
-        return '%s:<span color="%s">%d</span>' % (
+
+        if self._title is not None:
+            title = self._title
+        else:
+            title = '%s:<span color="%s">%d</span>' % (
                 cgi.escape(os.path.basename(self.data)), color, line)
+        return title
 
     def _set_title(self, value): pass
 
@@ -448,10 +455,21 @@ class Bookmark(Service, MarkerInterface):
             line = self.boss.editor.cmd('get_current_line_number')
         return (filename, line)
 
-    def bookmark_file(self, filename=None, line=None):
+    def bookmark_file(self, filename=None, line=None, title=None):
         filename, line = self._fill_file(filename, line)
-        filename_title = os.path.basename(filename)
-        item = BookmarkItemFile(self, data=filename, line=line)
+
+        home = os.path.expanduser('~')
+        title = filename
+        cur_pro = self.boss.cmd('project', 'get_current_project')
+        if cur_pro is not None:
+            source_directory = cur_pro.source_directory
+            if title.startswith(source_directory):
+                title = title[len(source_directory)+1:]
+        if title.startswith(home):
+            title = '~' + title[len(home):]
+        title = '{}:{}'.format(title, line)
+
+        item = BookmarkItemFile(self, data=filename, line=line, title=title)
         self.add_item(item)
         self.boss.get_service('editor').emit('marker-changed', marker=item)
 
