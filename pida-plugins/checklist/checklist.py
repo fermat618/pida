@@ -26,6 +26,7 @@ import gtk
 import os
 import pkgutil
 
+import json
 from pygtkhelpers.ui.widgets import AttrSortCombo
 from kiwi.ui.objectlist import ObjectList, Column
 from kiwi.python import enum
