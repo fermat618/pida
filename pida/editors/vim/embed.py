@@ -38,7 +38,7 @@ class VimStarter(gtk.EventBox):
                     # XXX: leftover from vim com
                     #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '-S', '%s' % self.init_script,
+                    '--cmd', 'so {}'.format(self.init_script),
                     ] + self.args,
                     close_fds=True,
                 )
@@ -86,7 +86,7 @@ class VimEmbedWidget(gtk.EventBox):
                     # XXX: leftover from vim com
                     #'--servername', self.server_name,
                     '--cmd', 'let PIDA_EMBEDDED=1',
-                    '-S', '%s' % self._init_script,
+                    '--cmd', 'so {}'.format(self._init_script),
                     '--socketid', str(xid),
                     ] + self.args,
                     close_fds=True,
