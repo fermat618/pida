@@ -197,8 +197,20 @@ class CtagsOutliner(Outliner):
             self.document.project['ctags_cache'] = tags
         if istmp:
             os.unlink(filename)
-        for node in tags.filter_items(self.document.filename):
-            yield node
+        items = list(tags.filter_items(self.document.filename))
+
+        def pop_parent_first(item):
+            p = item.parent
+            if p is not None and p in items:
+                for i in pop_parent_first(p):
+                    yield i
+            else:
+                items.remove(item)
+                yield item
+        while len(items) != 0:
+            item = items[0]
+            for x in pop_parent_first(item):
+                yield x
 
 
     def _update_tagfile(self, options = ("-n",), temp=False):
@@ -253,36 +265,12 @@ class CtagsOutliner(Outliner):
             # convert line numbers to an int
             tokens[2] =  int(''.join(x for x in tokens[2] if x in '1234567890'))
             
-            # prepend container elements, append member elements. Do this to
-            # make sure that container elements are created first.
-            if self._is_container(tokens):
-                tokenlist.insert(0, tokens)
-            else:
-                tokenlist.append(tokens)
+            tokenlist.append(tokens)
         h.close()
 
-        # add tokens to the treestore---------------------------------------
-        containers = { None: None } # keep dict: token's name -> treeiter
-        
-        # iterate through the list of tags, 
-        # Note: Originally sorted by line number, bit it did break some
-        # formatting in c
-        #set_parents = []
         for tokens in tokenlist:
-            #if not names.has_key(tokens[1]):
-            #    names[tokens[1]] = {}
-            #cnames = names[tokens[1]]
-            # skip enums
-            #if self.__get_type(tokens) in 'de': continue
         
-            # append current token to parent iter, or to trunk when there is none
             parent_name = self._get_parent(tokens)
-            is_container = self._is_container(tokens)
-            #if parent in containers: node = containers[parent]
-            #else:
-            #    # create a dummy element in case the parent doesn't exist
-            #    rv.append( None, [parent,"",0,""] )
-            #    containers[parent] = node
             
             # escape blanks in file path
             # FIXME
@@ -294,19 +282,11 @@ class CtagsOutliner(Outliner):
             else:
                 tokens[3] = self._get_type(tokens)
             
-            # append to treestore
-            #it = ls.append( node, tokens[:4] )
-            
-            # if this element was a container, remember its treeiter
-            #if self._is_container(tokens):
-            #    containername = self._get_container_name(tokens)
-            #    containers[ containername ] = it
             item = CtagItem(name=tokens[0],
                             filename=tokens[1],
                             linenumber=int(tokens[2]),
                             type=tokens[3],
                             filter_type=tokens[3],
-                            is_container=is_container,
                             parent_name=parent_name)
             rv.add(item)
         return rv
@@ -372,23 +352,25 @@ class CtagsOutliner(Outliner):
         return tokrow[0]
     
         
-    def _is_container(self, tokrow):
-        """ class, enumerations, structs and unions are considerer containers.
-            See Issue 13 for some issues we had with this.
-        """
-        return self._get_type(tokrow) in (
-            'class', 'enumeration_name',
-            'structure', 'union', 'typedef')
+    # def _is_container(self, tokrow):
+    #     """ class, enumerations, structs and unions are considerer containers.
+    #         See Issue 13 for some issues we had with this.
+    #     """
+    #     # XXX: whether it is a container should be decided by whether it has 
+    #     # children, not by type.
+    #     return self._get_type(tokrow) in (
+    #         'class', 'enumeration_name',
+    #         'structure', 'union', 'typedef')
 
     def _get_parent(self, tokrow):
-        if len(tokrow) == 3: return
+        if len(tokrow) <= 3: return
         # Iterate through all items in the tag.
         # TODO: Not sure if needed
-        for i in tokrow[3:]:
-            a = i.split(":")
+        for i in tokrow[4:]:
+            a = i.split(":", 1)
             # if a[0] in ("class","struct","union","enum"): 
             #     return a[1]
-            if len(a) >= 2:
+            if len(a) == 2:
                 return a[1]
         return None
 
